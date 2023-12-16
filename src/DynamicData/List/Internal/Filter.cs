@@ -8,7 +8,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class Filter<T>
+internal class Filter<T>
     where T : notnull
 {
     private readonly ListFilterPolicy _policy;

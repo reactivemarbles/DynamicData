@@ -8,7 +8,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class DeferUntilLoaded<T>(IObservable<IChangeSet<T>> source)
+internal class DeferUntilLoaded<T>(IObservable<IChangeSet<T>> source)
     where T : notnull
 {
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));

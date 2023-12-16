@@ -7,7 +7,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class TransformAsync<TSource, TDestination>
+internal class TransformAsync<TSource, TDestination>
     where TSource : notnull
     where TDestination : notnull
 {

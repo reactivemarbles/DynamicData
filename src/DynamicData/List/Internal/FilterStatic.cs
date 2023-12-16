@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class FilterStatic<T>(IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
+internal class FilterStatic<T>(IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
     where T : notnull
 {
     private readonly Func<T, bool> _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));

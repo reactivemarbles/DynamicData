@@ -4,7 +4,7 @@
 
 namespace DynamicData.List.Internal;
 
-internal sealed class Group<TObject, TGroup>(TGroup groupKey) : IGroup<TObject, TGroup>, IDisposable, IEquatable<Group<TObject, TGroup>>
+internal class Group<TObject, TGroup>(TGroup groupKey) : IGroup<TObject, TGroup>, IDisposable, IEquatable<Group<TObject, TGroup>>
     where TObject : notnull
 {
     public TGroup GroupKey { get; } = groupKey;

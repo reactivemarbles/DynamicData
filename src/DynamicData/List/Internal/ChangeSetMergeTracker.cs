@@ -4,7 +4,7 @@
 
 namespace DynamicData.List.Internal;
 
-internal sealed class ChangeSetMergeTracker<TObject>
+internal class ChangeSetMergeTracker<TObject>
     where TObject : notnull
 {
     private readonly ChangeAwareList<TObject> _resultList = new();

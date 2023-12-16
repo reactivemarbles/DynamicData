@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class ClonedListChangeSet<TObject>
+internal class ClonedListChangeSet<TObject>
     where TObject : notnull
 {
     public ClonedListChangeSet(IObservable<IChangeSet<TObject>> source, IEqualityComparer<TObject>? equalityComparer) =>
