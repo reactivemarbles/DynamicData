@@ -41,7 +41,7 @@ internal class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObse
                 {
                     foreach (var change in changes.ToConcreteType())
                     {
-                        var leftCurent = change.Current;
+                        var leftCurrent = change.Current;
                         var rightLookup = rightGrouped.Lookup(change.Key);
 
                         if (rightLookup.HasValue)
@@ -52,7 +52,7 @@ internal class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObse
                                 case ChangeReason.Update:
                                     foreach (var keyvalue in rightLookup.Value.KeyValues)
                                     {
-                                        joinedCache.AddOrUpdate(_resultSelector((change.Key, keyvalue.Key), leftCurent, keyvalue.Value), (change.Key, keyvalue.Key));
+                                        joinedCache.AddOrUpdate(_resultSelector((change.Key, keyvalue.Key), leftCurrent, keyvalue.Value), (change.Key, keyvalue.Key));
                                     }
 
                                     break;
@@ -117,6 +117,9 @@ internal class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObse
                     return joinedCache.CaptureChanges();
                 });
 
-                return new CompositeDisposable(leftLoader.Merge(rightLoader).SubscribeSafe(observer), leftCache, rightCache, rightShare.Connect());
+                lock (locker)
+                {
+                    return new CompositeDisposable(leftLoader.Merge(rightLoader).SubscribeSafe(observer), leftCache, rightCache, rightShare.Connect());
+                }
             });
 }

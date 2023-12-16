@@ -118,6 +118,9 @@ internal class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObser
                     return joinedCache.CaptureChanges();
                 });
 
-                return new CompositeDisposable(leftLoader.Merge(rightLoader).SubscribeSafe(observer), leftCache, rightCache);
+                lock (locker)
+                {
+                    return new CompositeDisposable(leftLoader.Merge(rightLoader).SubscribeSafe(observer), leftCache, rightCache);
+                }
             });
 }
