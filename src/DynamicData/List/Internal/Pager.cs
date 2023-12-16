@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
-internal class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
+internal sealed class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
     where T : notnull
 {
     private readonly IObservable<IPageRequest> _requests = requests ?? throw new ArgumentNullException(nameof(requests));
