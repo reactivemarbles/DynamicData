@@ -707,7 +707,7 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         using var results = fixedMarketList.Select(m => m.LatestPrices).MergeChangeSets(completable: true).AsAggregator();
 
         // then
-        results.Completed.Should().Be(true);
+        results.IsCompleted.Should().Be(true);
         results.Data.Count.Should().Be(PricesPerMarket * MarketCount);
         results.Summary.Overall.Adds.Should().Be(PricesPerMarket * MarketCount);
         results.Summary.Overall.Removes.Should().Be(0);
@@ -727,7 +727,7 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         using var results = fixedMarketList.Select(m => m.LatestPrices).MergeChangeSets(completable: true).AsAggregator();
 
         // then
-        results.Completed.Should().Be(completeSources);
+        results.IsCompleted.Should().Be(completeSources);
     }
 
     [Theory]
@@ -744,7 +744,7 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         using var results = fixedMarketList.Select(m => m.LatestPrices).MergeChangeSets(completable: completeSource).AsAggregator();
 
         // then
-        results.Completed.Should().Be(completeSource && completeChildren);
+        results.IsCompleted.Should().Be(completeSource && completeChildren);
     }
 
     [Fact]
@@ -846,7 +846,7 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         using var results = observableObservable.MergeChangeSets().AsAggregator();
 
         // then
-        results.Completed.Should().Be(completeSource && completeChildren);
+        results.IsCompleted.Should().Be(completeSource && completeChildren);
     }
 
     public void Dispose() => _marketList.ForEach(m => (m as IDisposable)?.Dispose());
