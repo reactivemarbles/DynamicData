@@ -5,7 +5,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using VerifyTests;
 
 namespace DynamicData.Tests.Utilities;
 
@@ -108,8 +107,7 @@ internal static class ObservableSpy
         where TKey : notnull
     {
         formatter ??= (t => t?.ToString() ?? "{Null}");
-        return Spy(source, opName, logger, cs => "[Cache Change Set]" + ChangeSetEntrySpacing + string.Join(ChangeSetEntrySpacing,
-            cs.Select((change, n) => $"#{n} [{change.Reason}] {change.Key}: {FormatChange(formatter!, change)}")), showSubs, showTimestamps);
+        return Spy(source, opName, logger, CreateCacheChangeSetFormatter<T, TKey>(formatter!), showSubs, showTimestamps);
     }
 
     public static IObservable<IChangeSet<T>> Spy<T>(this IObservable<IChangeSet<T>> source,
@@ -122,9 +120,11 @@ internal static class ObservableSpy
         return Spy(source, opName, logger, CreateListChangeSetFormatter(formatter!), showSubs, showTimestamps);
     }
 
+    private static Func<IChangeSet<T, TKey>, string> CreateCacheChangeSetFormatter<T, TKey>(Func<T, string> formatter) where T : notnull where TKey : notnull =>
+        cs => "[Cache Change Set]" + ChangeSetEntrySpacing + string.Join(ChangeSetEntrySpacing, cs.Select((change, n) => $"#{n} {FormatChange(formatter, change)}"));
+
     private static Func<IChangeSet<T>, string> CreateListChangeSetFormatter<T>(Func<T, string> formatter) where T : notnull =>
-        cs => "[List Change Set]" + ChangeSetEntrySpacing + string.Join(ChangeSetEntrySpacing,
-                        cs.Select((change, n) => $"#{n} [{change.Reason}] {FormatChange(formatter, change)}"));
+        cs => "[List Change Set]" + ChangeSetEntrySpacing + string.Join(ChangeSetEntrySpacing, cs.Select((change, n) => $"#{n} {FormatChange(formatter, change)}"));
 
     public static IObservable<T> DebugSpy<T>(this IObservable<T> source, string? opName = null,
                                                                   Func<T, string?>? formatter = null, bool showSubs = true,
@@ -161,20 +161,41 @@ internal static class ObservableSpy
     private static string FormatChange<T, TKey>(Func<T, string> formatter, Change<T, TKey> change)
         where T : notnull
         where TKey : notnull =>
-        change.Reason switch
-        {
-            ChangeReason.Update => $"{formatter(change.Current)} [Previous: {formatter(change.Previous.Value)}]",
-            _ => formatter(change.Current),
-        };
+        $"[{change.Reason}] " +
+            change.Reason switch
+            {
+                ChangeReason.Update => $"{formatter(change.Current)} [Previous: {formatter(change.Previous.Value)}]",
+                _ => formatter(change.Current),
+            };
 
     private static string FormatChange<T>(Func<T, string> formatter, Change<T> change)
         where T : notnull =>
-        change.Reason switch
-        {
-            ListChangeReason.AddRange => string.Join(", ", change.Range.Select(n => formatter(n))),
-            ListChangeReason.RemoveRange => string.Join(", ", change.Range.Select(n => formatter(n))),
-            _ => formatter(change.Item.Current),
-        };
+        $"[{change.Reason}] " +
+            change.Reason switch
+            {
+                ListChangeReason.AddRange => FormatRangeChange(formatter, change.Range),
+                ListChangeReason.RemoveRange => FormatRangeChange(formatter, change.Range),
+                _ => FormatItemChange(formatter, change.Item),
+            };
+
+    private static string FormatRangeChange<T>(Func<T, string> formatter, RangeChange<T> range) where T : notnull =>
+        $"({range.Count} Values) "
+            + (range.Index == -1 ? string.Empty : $"[Index: {range.Index}] ")
+            + string.Join(", ", range.Select(n => formatter(n)));
+
+    private static string FormatItemChange<T>(Func<T, string> formatter, ItemChange<T> item) where T : notnull =>
+        formatter(item.Current)
+            + ((item.CurrentIndex, item.PreviousIndex) switch
+            {
+                (-1, -1) => string.Empty,
+                (int i, int j) when i == j || (j == -1) => $" [Index: {i}]",
+                (int i, int j) => $" [Index: {i}, Prev: {j}]",
+            })
+            + (item.Previous switch
+            {
+                { HasValue: true, Value: T val } => $" [Previous: {formatter(val)}]",
+                _ => string.Empty,
+            });
 
     private static Action<string> CreateLogger(Action<string> baseLogger, Func<string> timeStamper, string opName) =>
             msg => baseLogger($"{timeStamper()}[{Environment.CurrentManagedThreadId:X2}] |{opName}| {msg}");
