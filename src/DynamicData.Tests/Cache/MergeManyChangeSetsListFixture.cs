@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -37,13 +38,6 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     private readonly Faker<AnimalOwner> _animalOwnerFaker;
     private readonly Faker<Animal> _animalFaker;
     private readonly Randomizer _randomizer;
-
-    private static class NativeMethods
-    {
-        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, EntryPoint = "OutputDebugStringW")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "SYSLIB1054:Use 'LibraryImportAttribute' instead of 'DllImportAttribute' to generate P/Invoke marshalling code at compile time", Justification = "Affects operation")]
-        public static extern void OutputDebugString(string lpOutputString);
-    }
 
     public MergeManyChangeSetsListFixture()
     {
@@ -99,7 +93,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         var populateOwners = Observable.Interval(TimeSpan.FromMilliseconds(1), testingScheduler)
                                                     .Select(_ => _animalOwnerFaker.Generate())
                                                     .Take(ownerCount)
-                                                    .Do(owner => _animalOwners.AddOrUpdate(owner), () => _animalOwners.Dispose());
+                                                    .Do(owner => _animalOwners.AddOrUpdate(owner), _animalOwners.Dispose);
 
         // Act
         using var subOwners = populateOwners.Subscribe();
@@ -114,49 +108,59 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         CheckResultContents();
     }
 
-    [Fact]
-    public void NoDeadlockOrExceptionIfSubscribeDuringModify()
+    [Theory]
+    [InlineData(5, 7)]
+    [InlineData(5, 200)]
+    [InlineData(10, 100)]
+    [InlineData(20, 50)]
+    [InlineData(100, 10)]
+    public void NoDeadlockOrExceptionIfSubscribeDuringModify(int ownerCount, int animalCount)
     {
-        IScheduler testingScheduler = TaskPoolScheduler.Default;
-
         // Not used so don't let it waste time
         _animalResults.Dispose();
 
         // Arrange
-        Action test = () =>
-        {
-            var mergeAnimals = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect());
-
-            var addingOwners = true;
-            var addingAnimals = true;
-
-            using var addOwners = GenerateOwners(testingScheduler)
-                .Take(100)
-                .StressAddRemove(_animalOwners, _ => GetRemoveTime(), testingScheduler)
-                .Finally(() => _animalOwners.Dispose())
-                .Finally(() => addingOwners = false)
-                .Subscribe();
-
-            using var addAnimals = _animalOwners.Connect()
-                .MergeMany(owner => AddRemoveAnimals(owner, testingScheduler, 100))
-                .Finally(() => addingAnimals = false)
-                .Subscribe();
-
-            do
+        Func<Task> CreateTest(IScheduler sch, int owners, int animals) =>
+            async () =>
             {
-                // Ensure items are being added asynchronously before subscribing to the animal changes
-                Thread.Yield();
+                var mergeAnimals = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect());
 
-                // Subscribe for a bit and then unsubscribe
-                using var mergedSub = mergeAnimals.Subscribe();
+                var addingAnimals = true;
 
-                Thread.Yield();
-            }
-            while (addingOwners || addingAnimals);
-        };
+                using var addOwners = GenerateOwners(sch)
+                    .Take(owners)
+                    .StressAddRemove(_animalOwners, _ => GetRemoveTime(), sch)
+                    .Finally(() => _animalOwners.Dispose())
+                    .Subscribe();
+
+                using var addAnimals = _animalOwners.Connect()
+                    .MergeMany(owner => AddRemoveAnimals(owner, sch, animals))
+                    .Finally(() => addingAnimals = false)
+                    .Subscribe();
+
+                do
+                {
+                    // Ensure items are being added asynchronously before subscribing to the animal changes
+                    await Task.Yield();
+
+                    {
+                        // Subscribe
+                        var mergedSub = mergeAnimals.Subscribe();
+
+                        // Let other threads run
+                        await Task.Yield();
+
+                        // Unsubscribe
+                        mergedSub.Dispose();
+                    }
+                }
+                while (addingAnimals);
+            };
 
         // Act
-        test.Should().NotThrow();
+
+        // Assert
+        CreateTest(TaskPoolScheduler.Default, ownerCount, animalCount).Should().NotThrowAsync();
     }
 
     [Fact]
@@ -484,27 +488,34 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         _animalOwners.Dispose();
     }
 
-    private IObservable<bool> AddRemoveAnimalsStress(int ownerCount, int animalCount, IScheduler scheduler) =>
-        Observable.Create<bool>(observer => new CompositeDisposable
+    private IObservable<Unit> AddRemoveAnimalsStress(int ownerCount, int animalCount, IScheduler scheduler) =>
+        Observable.Create<Unit>(observer => new CompositeDisposable
             {
                 GenerateOwners(scheduler)
                         .Take(ownerCount)
                         .StressAddRemove(_animalOwners, _ => GetRemoveTime(), scheduler)
-                        .Subscribe(_ => { }, ex => observer.OnError(ex)),
+                        .Finally(() => _animalOwners.Dispose())
+                        .Subscribe(
+                            onNext: _ => { },
+                            onError: ex => observer.OnError(ex)),
+
                 _animalOwners.Connect()
-                        .Take(ownerCount)
                         .MergeMany(owner => AddRemoveAnimals(owner, scheduler, animalCount))
-                        .Subscribe(_ => { }, ex => observer.OnError(ex), () =>
-                        {
-                            observer.OnNext(true);
-                            observer.OnCompleted();
-                        })
+                        .Subscribe(
+                            onNext: _ => { },
+                            onError: ex => observer.OnError(ex),
+                            onCompleted: () =>
+                                {
+                                    observer.OnNext(Unit.Default);
+                                    observer.OnCompleted();
+                                })
             });
 
     private IObservable<Animal> AddRemoveAnimals(AnimalOwner owner, IScheduler sch, int addCount) =>
         GenerateAnimals(sch)
             .Take(addCount)
-            .StressAddRemove(owner.Animals, _ => GetRemoveTime(), sch);
+            .StressAddRemove(owner.Animals, _ => GetRemoveTime(), sch)
+            .Finally(owner.Animals.Dispose);
 
     private IObservable<AnimalOwner> GenerateOwners(IScheduler scheduler) =>
         _randomizer.Interval(s_MaxAddTime, scheduler).Select(_ => _animalOwnerFaker.Generate());
