@@ -127,7 +127,7 @@ internal static class ObservableSpy
         cs => "[List Change Set]" + ChangeSetEntrySpacing + string.Join(ChangeSetEntrySpacing, cs.Select((change, n) => $"#{n} {FormatChange(formatter, change)}"));
 
     public static IObservable<T> DebugSpy<T>(this IObservable<T> source, string? opName = null,
-                                                                  Func<T, string?>? formatter = null, bool showSubs = true,
+                                                                  Func<T, string>? formatter = null, bool showSubs = true,
                                                                   bool showTimestamps = true) =>
 #if DEBUG || DEBUG_SPY_ALWAYS
         source.Spy(opName, DebugLogger, formatter, showSubs, showTimestamps);
@@ -137,7 +137,7 @@ internal static class ObservableSpy
 
     public static IObservable<IChangeSet<T, TKey>> DebugSpy<T, TKey>(this IObservable<IChangeSet<T, TKey>> source,
                                                                     string? opName = null,
-                                                                    Func<T, string?>? formatter = null, bool showSubs = true,
+                                                                    Func<T, string>? formatter = null, bool showSubs = true,
                                                                       bool showTimestamps = true)
         where T : notnull
         where TKey : notnull =>
@@ -149,7 +149,7 @@ internal static class ObservableSpy
 
     public static IObservable<IChangeSet<T>> DebugSpy<T>(this IObservable<IChangeSet<T>> source,
                                                                     string? opName = null,
-                                                                    Func<T, string?>? formatter = null, bool showSubs = true,
+                                                                    Func<T, string>? formatter = null, bool showSubs = true,
                                                                       bool showTimestamps = true)
                                                                       where T : notnull =>
 #if DEBUG || DEBUG_SPY_ALWAYS
