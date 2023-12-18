@@ -11,7 +11,7 @@ namespace DynamicData.Cache.Internal;
 /// </summary>
 /// <typeparam name="TObject">ChangeSet Object Type.</typeparam>
 /// <typeparam name="TKey">ChangeSet Key Type.</typeparam>
-internal class ChangeSetCache<TObject, TKey>
+internal sealed class ChangeSetCache<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {

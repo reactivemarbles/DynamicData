@@ -9,7 +9,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class SizeExpirer<TObject, TKey>
+internal sealed class SizeExpirer<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {

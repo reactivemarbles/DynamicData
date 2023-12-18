@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
+internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
     where TObject : notnull
     where TKey : notnull
 {

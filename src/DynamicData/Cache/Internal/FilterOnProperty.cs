@@ -9,7 +9,7 @@ using System.Reactive.Concurrency;
 namespace DynamicData.Cache.Internal;
 
 [Obsolete("Use AutoRefresh(), followed by Filter() instead")]
-internal class FilterOnProperty<TObject, TKey, TProperty>(IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TProperty>> propertySelector, Func<TObject, bool> predicate, TimeSpan? throttle = null, IScheduler? scheduler = null)
+internal sealed class FilterOnProperty<TObject, TKey, TProperty>(IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TProperty>> propertySelector, Func<TObject, bool> predicate, TimeSpan? throttle = null, IScheduler? scheduler = null)
     where TObject : INotifyPropertyChanged
     where TKey : notnull
 {

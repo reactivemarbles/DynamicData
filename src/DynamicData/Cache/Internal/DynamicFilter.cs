@@ -8,7 +8,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class DynamicFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, IObservable<Unit>? refilterObservable = null, bool suppressEmptyChangeSets = true)
+internal sealed class DynamicFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, IObservable<Unit>? refilterObservable = null, bool suppressEmptyChangeSets = true)
     where TObject : notnull
     where TKey : notnull
 {

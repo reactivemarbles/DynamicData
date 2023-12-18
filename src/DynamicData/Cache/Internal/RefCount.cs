@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class RefCount<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source)
+internal sealed class RefCount<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source)
     where TObject : notnull
     where TKey : notnull
 {

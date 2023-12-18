@@ -6,7 +6,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
+internal sealed class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {

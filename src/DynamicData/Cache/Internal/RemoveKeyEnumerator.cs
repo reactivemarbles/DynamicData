@@ -12,7 +12,7 @@ namespace DynamicData.Cache.Internal;
 /// An optional list, if provided it allows the refresh from a key based cache to find the index for the resulting list based refresh.
 /// If not provided a refresh will dropdown to a replace which may ultimately result in a remove+add change downstream.
 /// </param>
-internal class RemoveKeyEnumerator<TObject, TKey>(IChangeSet<TObject, TKey> source, IExtendedList<TObject>? list = null) : IEnumerable<Change<TObject>>
+internal sealed class RemoveKeyEnumerator<TObject, TKey>(IChangeSet<TObject, TKey> source, IExtendedList<TObject>? list = null) : IEnumerable<Change<TObject>>
     where TObject : notnull
     where TKey : notnull
 {

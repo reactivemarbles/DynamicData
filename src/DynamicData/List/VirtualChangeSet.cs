@@ -7,7 +7,7 @@ using System.Collections;
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
-internal class VirtualChangeSet<T>(IChangeSet<T> virtualChangeSet, IVirtualResponse response) : IVirtualChangeSet<T>
+internal sealed class VirtualChangeSet<T>(IChangeSet<T> virtualChangeSet, IVirtualResponse response) : IVirtualChangeSet<T>
     where T : notnull
 {
     private readonly IChangeSet<T> _virtualChangeSet = virtualChangeSet ?? throw new ArgumentNullException(nameof(virtualChangeSet));

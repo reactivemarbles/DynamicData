@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class FinallySafe<T>(IObservable<T> source, Action finallyAction)
+internal sealed class FinallySafe<T>(IObservable<T> source, Action finallyAction)
 {
     private readonly Action _finallyAction = finallyAction ?? throw new ArgumentNullException(nameof(finallyAction));
 

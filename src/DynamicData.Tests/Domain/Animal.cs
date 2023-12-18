@@ -19,7 +19,7 @@ public enum AnimalFamily
     Bird
 }
 
-public class Animal(string name, string type, AnimalFamily family, bool include = true, int? id = null) : AbstractNotifyPropertyChanged
+public sealed class Animal(string name, string type, AnimalFamily family, bool include = true, int? id = null) : AbstractNotifyPropertyChanged
 {
     private static int s_counter;
 
@@ -46,7 +46,7 @@ public class Animal(string name, string type, AnimalFamily family, bool include 
     public override int GetHashCode() => HashCode.Combine(Id, Name, Family, Type);
 }
 
-public class AnimalEqualityComparer : IEqualityComparer<Animal>
+public sealed class AnimalEqualityComparer : IEqualityComparer<Animal>
 {
     public static AnimalEqualityComparer Instance { get; } = new();
 

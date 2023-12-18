@@ -6,7 +6,7 @@ using System.Collections;
 
 namespace DynamicData.List.Linq;
 
-internal class AddKeyEnumerator<TObject, TKey>(IChangeSet<TObject> source, Func<TObject, TKey> keySelector) : IEnumerable<Change<TObject, TKey>>
+internal sealed class AddKeyEnumerator<TObject, TKey>(IChangeSet<TObject> source, Func<TObject, TKey> keySelector) : IEnumerable<Change<TObject, TKey>>
     where TObject : notnull
     where TKey : notnull
 {
