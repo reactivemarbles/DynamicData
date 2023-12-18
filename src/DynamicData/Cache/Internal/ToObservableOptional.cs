@@ -7,7 +7,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class ToObservableOptional<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, TKey key, IEqualityComparer<TObject>? equalityComparer = null)
+internal sealed class ToObservableOptional<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, TKey key, IEqualityComparer<TObject>? equalityComparer = null)
     where TObject : notnull
     where TKey : notnull
 {

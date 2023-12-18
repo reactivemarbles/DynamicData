@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class SpecifiedGrouper<TObject, TKey, TGroupKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelector, IObservable<IDistinctChangeSet<TGroupKey>> resultGroupSource)
+internal sealed class SpecifiedGrouper<TObject, TKey, TGroupKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelector, IObservable<IDistinctChangeSet<TGroupKey>> resultGroupSource)
     where TObject : notnull
     where TKey : notnull
     where TGroupKey : notnull

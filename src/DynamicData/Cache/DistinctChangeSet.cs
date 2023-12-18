@@ -5,7 +5,7 @@
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
-internal class DistinctChangeSet<T> : ChangeSet<T, T>, IDistinctChangeSet<T>
+internal sealed class DistinctChangeSet<T> : ChangeSet<T, T>, IDistinctChangeSet<T>
     where T : notnull
 {
     public DistinctChangeSet(IEnumerable<Change<T, T>> items)

@@ -4,7 +4,7 @@
 
 namespace DynamicData.Cache.Internal;
 
-internal class KeyValueComparer<TObject, TKey>(IComparer<TObject>? comparer = null) : IComparer<KeyValuePair<TKey, TObject>>
+internal sealed class KeyValueComparer<TObject, TKey>(IComparer<TObject>? comparer = null) : IComparer<KeyValuePair<TKey, TObject>>
 {
     public int Compare(KeyValuePair<TKey, TObject> x, KeyValuePair<TKey, TObject> y)
     {

@@ -11,7 +11,7 @@ namespace DynamicData.List.Linq;
 /// Otherwise these operators could break subsequent operators when the subsequent operator relies on the index.
 /// </summary>
 /// <typeparam name="T">The type of the item.</typeparam>
-internal class WithoutIndexEnumerator<T>(IEnumerable<Change<T>> changeSet) : IEnumerable<Change<T>>
+internal sealed class WithoutIndexEnumerator<T>(IEnumerable<Change<T>> changeSet) : IEnumerable<Change<T>>
     where T : notnull
 {
     public IEnumerator<Change<T>> GetEnumerator()

@@ -11,7 +11,7 @@ using DynamicData.Kernel;
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
 {
-    internal class PFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
+    internal sealed class PFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
         where TObject : notnull
         where TKey : notnull
     {

@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class UniquenessEnforcer<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source)
+internal sealed class UniquenessEnforcer<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source)
     where TObject : notnull
     where TKey : notnull
 {

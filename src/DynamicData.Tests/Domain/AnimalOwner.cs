@@ -3,7 +3,7 @@ using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain;
 
-internal class AnimalOwner(string name, Guid? id = null, bool include = true) : AbstractNotifyPropertyChanged, IDisposable
+internal sealed class AnimalOwner(string name, Guid? id = null, bool include = true) : AbstractNotifyPropertyChanged, IDisposable
 {
     private bool _includeInResults = include;
 

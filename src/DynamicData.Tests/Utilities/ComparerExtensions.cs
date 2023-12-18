@@ -4,19 +4,19 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DynamicData.Tests.Utilities;
 
-internal class NoOpComparer<T> : IComparer<T>
+internal sealed class NoOpComparer<T> : IComparer<T>
 {
     public int Compare(T x, T y) => throw new NotImplementedException();
 }
 
-internal class NoOpEqualityComparer<T> : IEqualityComparer<T>
+internal sealed class NoOpEqualityComparer<T> : IEqualityComparer<T>
 {
     public bool Equals(T x, T y) => throw new NotImplementedException();
     public int GetHashCode([DisallowNull] T obj) => throw new NotImplementedException();
 }
 
 
-internal class InvertedComparer<T>(IComparer<T> original) : IComparer<T>
+internal sealed class InvertedComparer<T>(IComparer<T> original) : IComparer<T>
 {
     private readonly IComparer<T> _original = original;
 

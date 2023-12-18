@@ -8,7 +8,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class Cast<TSource, TKey, TDestination>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> converter)
+internal sealed class Cast<TSource, TKey, TDestination>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> converter)
     where TSource : notnull
     where TKey : notnull
     where TDestination : notnull

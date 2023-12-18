@@ -12,7 +12,7 @@ internal static class IndexAndNode
 }
 
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same class name, different generics.")]
-internal class IndexAndNode<TNodeValue>(int index, LinkedListNode<TNodeValue> node)
+internal sealed class IndexAndNode<TNodeValue>(int index, LinkedListNode<TNodeValue> node)
 {
     public int Index { get; } = index;
 
