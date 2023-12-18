@@ -99,6 +99,8 @@ internal sealed class Market : IMarket, IDisposable
 
     public Market SetPrices(int minId, int maxId, decimal newPrice) => SetPrices(minId, maxId, _ => newPrice);
 
+    public Market SetPrice(int id, Func<decimal> getPrice) => this.With(_ => _latestPrices.AddOrUpdate(CreatePrice(id, getPrice())));
+
     public void Dispose() => _latestPrices.Dispose();
 
     public override string ToString() => $"Market '{Name}' [{Id}] (Rating: {Rating})";

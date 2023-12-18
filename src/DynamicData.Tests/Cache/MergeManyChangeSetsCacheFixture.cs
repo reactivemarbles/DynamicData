@@ -35,9 +35,6 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
     const decimal HighestPrice = BasePrice + PriceOffset + 1.0m;
     const decimal LowestPrice = BasePrice - 1.0m;
 
-    private static readonly TimeSpan s_MaxAddTime = TimeSpan.FromSeconds(1.0);
-    private static readonly TimeSpan s_MaxRemoveTime = TimeSpan.FromSeconds(2.0);
-
     private readonly ISourceCache<IMarket, Guid> _marketCache = new SourceCache<IMarket, Guid>(p => p.Id);
 
     private readonly ChangeSetAggregator<IMarket, Guid> _marketCacheResults;
@@ -51,67 +48,81 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
     [Theory]
     [InlineData(5, 7)]
     [InlineData(10, 50)]
-    [InlineData(10, 100)]
+    [InlineData(5, 100)]
     [InlineData(200, 500)]
-    [InlineData(100, 10)]
+    [InlineData(100, 5)]
     public async Task MultiThreadedStressTest(int marketCount, int priceCount)
     {
-        using var priceResults = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices).AsAggregator();
+        var MaxAddTime = TimeSpan.FromSeconds(0.250);
+        var MaxRemoveTime = TimeSpan.FromSeconds(0.100);
 
-        _ = await AddRemoveStress(marketCount, priceCount, TaskPoolScheduler.Default)
-            .Finally(() => CheckResultContents(_marketCacheResults, priceResults));
-    }
+        TimeSpan? GetRemoveTime() => _randomizer.Bool() ? _randomizer.TimeSpan(MaxRemoveTime) : null;
 
-    [Theory]
-    [InlineData(5, 7)]
-    [InlineData(5, 200)]
-    [InlineData(10, 100)]
-    [InlineData(20, 50)]
-    [InlineData(100, 10)]
-    public void NoDeadlockOrExceptionIfSubscribeDuringModify(int marketCount, int priceCount)
-    {
-        // Arrange
-        Func<Task> CreateTest(IScheduler sch, int markets, int prices) =>
-            async () =>
-            {
-                var merged = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices);
-
-                var adding = true;
-
-                using var addMarkets = GenerateMarkets(sch)
-                    .Take(markets)
-                    .StressAddRemove(_marketCache, _ => GetRemoveTime(), sch)
-                    .Finally(() => _marketCache.Dispose())
-                    .Subscribe();
-
-                using var addPrices = _marketCache.Connect()
-                    .MergeMany(market => AddRemove((Market)market, sch, prices))
-                    .Finally(() => adding = false)
-                    .Subscribe();
-
-                do
+        IObservable<Unit> AddRemoveStress(int marketCount, int priceCount, int parallel, IScheduler scheduler) =>
+            Observable.Create<Unit>(observer => new CompositeDisposable
                 {
-                    // Ensure items are being added asynchronously before subscribing to the animal changes
-                    await Task.Yield();
+                    AddRemoveMarkets(marketCount, parallel, scheduler)
+                            .Subscribe(
+                                onNext: _ => { },
+                                onError: ex => observer.OnError(ex)),
 
-                    {
-                        // Subscribe
-                        var mergedSub = merged.Subscribe();
+                    _marketCache.Connect()
+                            .MergeMany(market => AddRemovePrices((Market)market, priceCount, parallel, scheduler))
+                            .Subscribe(
+                                onNext: _ => { },
+                                onError: ex => observer.OnError(ex),
+                                onCompleted: () =>
+                                    {
+                                        observer.OnNext(Unit.Default);
+                                        observer.OnCompleted();
+                                    })
+                });
 
-                        // Let other threads run
-                        await Task.Yield();
+        IObservable<IMarket> AddRemoveMarkets(int ownerCount, int parallel, IScheduler scheduler) =>
+            _randomizer.Interval(MaxAddTime, scheduler).Select(_ => new Market(_randomizer.Utf16String(5, 10, true)))
+                //.Parallelize(ownerCount, parallel, obs => obs.StressAddRemove(_marketCache, _ => GetRemoveTime(), scheduler))
+                .Take(ownerCount)
+                .StressAddRemove(_marketCache, _ => GetRemoveTime(), scheduler)
+                .Finally(_marketCache.Dispose);
 
-                        // Unsubscribe
-                        mergedSub.Dispose();
-                    }
-                }
-                while (adding);
-            };
+        IObservable<MarketPrice> AddRemovePrices(Market market, int priceCount, int parallel, IScheduler scheduler) =>
+            _randomizer.Interval(MaxAddTime, scheduler).Select(_ => market.CreatePrice(Interlocked.Increment(ref _uniquePriceId), GetRandomPrice()))
+                //.Parallelize(animalCount, parallel, obs => obs.StressAddRemove(owner.Animals, _ => GetRemoveTime(), scheduler))
+                .Take(priceCount)
+                .StressAddRemove(market.PricesCache, _ => GetRemoveTime(), scheduler)
+                .Finally(market.PricesCache.Dispose);
 
-        // Act
+        var merged = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices);
+        using var priceResults = merged.AsAggregator();
 
-        // Assert
-        CreateTest(TaskPoolScheduler.Default, marketCount, priceCount).Should().NotThrowAsync();
+        var adding = true;
+
+        // Start asynchrononously modifying the parent list and the child lists
+        using var addingSub = AddRemoveStress(marketCount, priceCount, Environment.ProcessorCount, TaskPoolScheduler.Default)
+            .Finally(() => adding = false)
+            .Subscribe();
+
+        // Subscribe / unsubscribe over and over while the collections are being modified
+        do
+        {
+            // Ensure items are being added asynchronously before subscribing to changes
+            await Task.Yield();
+
+            {
+                // Subscribe
+                var mergedSub = merged.Subscribe();
+
+                // Let other threads run
+                await Task.Yield();
+
+                // Unsubscribe
+                mergedSub.Dispose();
+            }
+        }
+        while (adding);
+
+        // Verify the results
+        CheckResultContents(_marketCacheResults, priceResults);
     }
 
     [Fact]
@@ -211,7 +222,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
         using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.EqualityComparer).AsAggregator();
-        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.SetPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
+        AddUniquePrices(markets);
 
         // when
         _marketCache.AddOrUpdate(markets);
@@ -235,7 +246,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         _marketCache.AddOrUpdate(markets);
 
         // when
-        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.SetPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
+        AddUniquePrices(markets);
 
         // then
         _marketCacheResults.Data.Count.Should().Be(MarketCount);
@@ -254,7 +265,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
         using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.EqualityComparer).AsAggregator();
         _marketCache.AddOrUpdate(markets);
-        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.SetPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
+        AddUniquePrices(markets);
 
         // when
         markets.ForEach(m => m.RefreshAllPrices(GetRandomPrice));
@@ -360,7 +371,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
         using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.EqualityComparer).AsAggregator();
         _marketCache.AddOrUpdate(markets);
-        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.SetPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
+        AddUniquePrices(markets);
 
         // when
         markets.ForEach(m => m.PricesCache.Edit(updater => updater.RemoveKeys(updater.Keys.Take(RemoveCount))));
@@ -381,7 +392,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
         using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.EqualityComparer).AsAggregator();
         _marketCache.AddOrUpdate(markets);
-        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.SetPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
+        AddUniquePrices(markets);
 
         // when
         _marketCache.Edit(updater => updater.RemoveKeys(updater.Keys.Take(RemoveCount)));
@@ -766,40 +777,8 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         DisposeMarkets();
     }
 
-    private IObservable<Unit> AddRemoveStress(int marketCount, int priceCount, IScheduler scheduler) =>
-        Observable.Create<Unit>(observer => new CompositeDisposable
-            {
-                GenerateMarkets(scheduler)
-                        .Take(marketCount)
-                        .StressAddRemove(_marketCache, _ => GetRemoveTime(), scheduler)
-                        .Finally(() => _marketCache.Dispose())
-                        .Subscribe(
-                            onNext: _ => { },
-                            onError: ex => observer.OnError(ex)),
-
-                _marketCache.Connect()
-                        .MergeMany(market => AddRemove((Market)market, scheduler, priceCount))
-                        .Subscribe(
-                            onNext: _ => { },
-                            onError: ex => observer.OnError(ex),
-                            onCompleted: () =>
-                                {
-                                    observer.OnNext(Unit.Default);
-                                    observer.OnCompleted();
-                                })
-            });
-
-    private IObservable<MarketPrice> AddRemove(Market market, IScheduler sch, int addCount) =>
-        GeneratePrices(market, sch)
-            .Take(addCount)
-            .StressAddRemove(market.PricesCache, _ => GetRemoveTime(), sch)
-            .Finally(market.PricesCache.Dispose);
-
-    private IObservable<IMarket> GenerateMarkets(IScheduler scheduler) =>
-        _randomizer.Interval(s_MaxAddTime, scheduler).Select(_ => new Market(_randomizer.Utf16String(5, 10, true)));
-
-    private IObservable<MarketPrice> GeneratePrices(Market market, IScheduler scheduler) =>
-        _randomizer.Interval(s_MaxAddTime, scheduler).Select(_ => market.CreatePrice(Interlocked.Increment(ref _uniquePriceId), GetRandomPrice()));
+    private void AddUniquePrices(Market[] markets) =>
+        markets.ForEach(m => Enumerable.Range(0, PricesPerMarket).ForEach(_ => m.SetPrice(Interlocked.Increment(ref _uniquePriceId), GetRandomPrice)));
 
     private void CheckResultContents(ChangeSetAggregator<IMarket, Guid> marketResults, ChangeSetAggregator<MarketPrice, int> priceResults)
     {
@@ -823,7 +802,4 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
     }
 
     private decimal GetRandomPrice() => MarketPrice.RandomPrice(_randomizer, BasePrice, PriceOffset);
-
-    private TimeSpan? GetRemoveTime() => _randomizer.Bool() ? NextRemoveTime() : null;
-    private TimeSpan NextRemoveTime() => _randomizer.TimeSpan(s_MaxRemoveTime);
 }
