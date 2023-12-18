@@ -41,8 +41,6 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
 
     private readonly Randomizer _randomizer = new (0x21123737);
 
-    private int _uniquePriceId;
-
     public MergeManyChangeSetsCacheFixture() => _marketCacheResults = _marketCache.Connect().AsAggregator();
 
     [Theory]
@@ -86,7 +84,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
                 .Finally(_marketCache.Dispose);
 
         IObservable<MarketPrice> AddRemovePrices(Market market, int priceCount, int parallel, IScheduler scheduler) =>
-            _randomizer.Interval(MaxAddTime, scheduler).Select(_ => market.CreatePrice(Interlocked.Increment(ref _uniquePriceId), GetRandomPrice()))
+            _randomizer.Interval(MaxAddTime, scheduler).Select(_ => market.CreateUniquePrice(_ => GetRandomPrice()))
                 //.Parallelize(animalCount, parallel, obs => obs.StressAddRemove(owner.Animals, _ => GetRemoveTime(), scheduler))
                 .Take(priceCount)
                 .StressAddRemove(market.PricesCache, _ => GetRemoveTime(), scheduler)
@@ -777,8 +775,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         DisposeMarkets();
     }
 
-    private void AddUniquePrices(Market[] markets) =>
-        markets.ForEach(m => Enumerable.Range(0, PricesPerMarket).ForEach(_ => m.SetPrice(Interlocked.Increment(ref _uniquePriceId), GetRandomPrice)));
+    private void AddUniquePrices(Market[] markets) => markets.ForEach(m => m.AddUniquePrices(PricesPerMarket, _ => GetRandomPrice()));
 
     private void CheckResultContents(ChangeSetAggregator<IMarket, Guid> marketResults, ChangeSetAggregator<MarketPrice, int> priceResults)
     {

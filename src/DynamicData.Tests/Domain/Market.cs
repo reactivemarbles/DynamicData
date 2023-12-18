@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using DynamicData.Kernel;
 using DynamicData.Tests.Utilities;
 
@@ -21,6 +22,8 @@ internal interface IMarket
 
 internal sealed class Market : IMarket, IDisposable
 {
+    private static int s_UniquePriceId;
+
     private readonly ISourceCache<MarketPrice, int> _latestPrices = new SourceCache<MarketPrice, int>(p => p.ItemId);
 
     public static IComparer<IMarket> RatingCompare { get; } = new RatingComparer();
@@ -54,6 +57,12 @@ internal sealed class Market : IMarket, IDisposable
     public ISourceCache<MarketPrice, int> PricesCache => _latestPrices;
 
     public MarketPrice CreatePrice(int itemId, decimal price) => new(itemId, price, Id);
+
+    public MarketPrice CreateUniquePrice(Func<int, decimal> getPrice)
+    {
+        var id = Interlocked.Increment(ref s_UniquePriceId);
+        return CreatePrice(id, getPrice(id));
+    }
 
     public Market AddRandomIdPrices(Random r, int count, int minId, int maxId, Func<decimal> randPrices)
     {
@@ -101,9 +110,15 @@ internal sealed class Market : IMarket, IDisposable
 
     public Market SetPrice(int id, Func<decimal> getPrice) => this.With(_ => _latestPrices.AddOrUpdate(CreatePrice(id, getPrice())));
 
+    public Market AddUniquePrices(int count, Func<int, decimal> getPrice) =>
+        this.With(_ => _latestPrices.AddOrUpdate(CreateUniquePrices(count, getPrice)));
+
     public void Dispose() => _latestPrices.Dispose();
 
     public override string ToString() => $"Market '{Name}' [{Id}] (Rating: {Rating})";
+
+    private IEnumerable<MarketPrice> CreateUniquePrices(int count, Func<int, decimal> getPrice) =>
+        Enumerable.Range(0, count).Select(_ => CreateUniquePrice(getPrice));
 
     private class RatingComparer : IComparer<IMarket>
     {
