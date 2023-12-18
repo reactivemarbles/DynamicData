@@ -1055,7 +1055,7 @@ public static class ObservableListEx
             throw new ArgumentNullException(nameof(observableSelector));
         }
 
-        return new MergeManyListChangeSets<TObject, TDestination>(source, observableSelector).Run();
+        return new MergeManyListChangeSets<TObject, TDestination>(source, observableSelector, equalityComparer).Run();
     }
 
     /// <summary>
