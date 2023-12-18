@@ -39,6 +39,10 @@ internal class Market : IMarket, IDisposable
     {
     }
 
+    public Market(string name) : this(name, Guid.NewGuid())
+    {
+    }
+
     public string Name { get; }
 
     public Guid Id { get; }

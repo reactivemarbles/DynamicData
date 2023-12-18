@@ -21,29 +21,26 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
             {
                 var locker = new object();
 
-                // Transform to an observable cache of merge containers.
+                // Transform to an observable changeset of cached changesets
                 var sourceCacheOfCaches = source
-                                            .IgnoreSameReferenceUpdate()
-                                            .WhereReasonsAre(ChangeReason.Add, ChangeReason.Remove, ChangeReason.Update)
-                                            .Transform((obj, key) => new ChangeSetCache<TDestination, TDestinationKey>(selector(obj, key)))
-                                            .Synchronize(locker)
-                                            .AsObservableCache();
+                    .Transform((obj, key) => new ChangeSetCache<TDestination, TDestinationKey>(selector(obj, key).Synchronize(locker)))
+                    .AsObservableCache();
+
+                // This is manages all of the changes
+                var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => sourceCacheOfCaches.Items, comparer, equalityComparer);
 
                 var shared = sourceCacheOfCaches.Connect().Publish();
 
-                // this is manages all of the changes
-                var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => sourceCacheOfCaches.Items, comparer, equalityComparer);
-
-                // merge the items back together
+                // Merge the child changeset changes together and apply to the tracker
                 var allChanges = shared.MergeMany(mc => mc.Source)
-                                                 .Synchronize(locker)
                                                  .Subscribe(
                                                         changes => changeTracker.ProcessChangeSet(changes, observer),
                                                         observer.OnError,
                                                         observer.OnCompleted);
 
-                // when a source item is removed, all of its sub-items need to be removed
+                // When a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
+                    .Synchronize(locker)
                     .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer))
                     .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
                     .Subscribe();

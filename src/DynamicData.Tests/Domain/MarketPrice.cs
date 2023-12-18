@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using Bogus;
 
 namespace DynamicData.Tests.Domain;
 
@@ -41,6 +42,8 @@ internal class MarketPrice
     public override string ToString() => $"{ItemId:D5} - {Price:c} ({MarketId}) [{TimeStamp:HH:mm:ss.fffffff}]";
 
     public static decimal RandomPrice(Random r, decimal basePrice, decimal offset) => basePrice + (decimal)r.NextDouble() * offset;
+
+    public static decimal RandomPrice(Randomizer r, decimal basePrice, decimal offset) => r.Decimal(basePrice, basePrice + offset);
 
     private class CurrentPriceEqualityComparer : IEqualityComparer<MarketPrice>
     {
