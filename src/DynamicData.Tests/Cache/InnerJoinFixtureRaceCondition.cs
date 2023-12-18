@@ -32,6 +32,46 @@ public class InnerJoinFixtureRaceCondition
         ids.InnerJoin(itemsCache.Connect(), x => x.Id, (_, thing) => thing).Subscribe((z) => { }, ex => { }, () => { });
     }
 
+    // See https://github.com/reactivemarbles/DynamicData/issues/787 
+    [Fact]
+    public void LetsSeeWhetherWeCanRandomlyHitADifferentRaceCondition()
+    {
+        using var leftSource = new SourceCache<Thing, long>(thing => thing.Id);
+        using var rightSource = new SourceCache<Thing, long>(thing => thing.Id);
+
+        var resultStream = ObservableCacheEx.InnerJoin(
+            left: leftSource.Connect(),
+            right: rightSource.Connect(),
+            rightKeySelector: rightThing => rightThing.Id,
+            (keys, leftThing, rightThing) => new Thing()
+            {
+                Id = keys.leftKey,
+                Name = $"{leftThing.Name} x {rightThing.Name}"
+            });
+
+        using var leftThingGenerator = BeginGeneratingThings(leftSource, "Left");
+        using var rightThingGenerator = BeginGeneratingThings(rightSource, "Left");
+
+        for (var i = 0; i < 100; ++i)
+        {
+            using var subscription = resultStream.Subscribe();
+        }
+
+        IDisposable BeginGeneratingThings(SourceCache<Thing, long> source, string namePrefix)
+            // Generate items infinitely. The runtime of the test is limited by the .Subscribe() loop.
+            => Observable.Range(1, int.MaxValue, ThreadPoolScheduler.Instance)
+                .Subscribe(id =>
+                {
+                    source.AddOrUpdate(new Thing()
+                    {
+                        Id = id,
+                        Name = $"{namePrefix}Thing #{id}"
+                    });
+                    // Start removing items after the first 100, to keep the overhead of calling .Subscribe() down.
+                    source.RemoveKey(id - 100);
+                });
+    }
+
     public class Thing
     {
         public long Id { get; set; }

@@ -33,7 +33,7 @@ public class ChangeSetAggregator<TObject, TKey> : IDisposable
 
         Data = published.AsObservableCache();
 
-        var results = published.Subscribe(updates => Messages.Add(updates), ex => Error = ex, () => Completed = true);
+        var results = published.Subscribe(updates => Messages.Add(updates), ex => Error = ex, () => IsCompleted = true);
         var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary, _ => { });
         var connected = published.Connect();
 
@@ -69,7 +69,7 @@ public class ChangeSetAggregator<TObject, TKey> : IDisposable
     /// <value>
     /// Boolean Value.
     /// </value>
-    public bool Completed { get; private set; }
+    public bool IsCompleted { get; private set; }
 
     /// <summary>
     /// Gets the messages.

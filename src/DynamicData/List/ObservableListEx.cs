@@ -1038,9 +1038,10 @@ public static class ObservableListEx
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
     /// <param name="source">The Source Observable ChangeSet.</param>
     /// <param name="observableSelector">Factory Function used to create child changesets.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
     /// <returns>The result from merging the children list changesets together.</returns>
     /// <exception cref="ArgumentNullException">Parameter was null.</exception>
-    public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> observableSelector)
+    public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TObject : notnull
         where TDestination : notnull
     {
