@@ -95,19 +95,16 @@ internal static class ObservableExtensions
         });
 
     // Emits "parallel" number of values that add up to "count"
-    private static IEnumerable<int> Distribute(int count, int parallel)
-    {
-        if (count <= parallel)
+    private static IEnumerable<int> Distribute(int count, int parallel) =>
+        (count, parallel, count / parallel) switch
         {
-            return Enumerable.Repeat(1, count);
-        }
+            // Not enough count for each parallel, so just return as many as needed
+            (int c, int p, _) when c <= p => Enumerable.Repeat(1, c),
 
-        if ((count % parallel) == 0)
-        {
-            return Enumerable.Repeat(count / parallel, parallel);
-        }
+            // Divides equally, so return the ratio for the parallel quantity
+            (int c, int p, int ratio) when (c % p) == 0 => Enumerable.Repeat(ratio, p),
 
-        var num = count / parallel;
-        return Enumerable.Repeat(num, parallel - 1).Append(count - (num * (parallel - 1)));
-    }
+            // Doesn't divide equally, so return the ratio for the parallel quantity, and the remainder for the last one
+            (int c, int p, int ratio) => Enumerable.Repeat(ratio, p - 1).Append(c - (ratio * (p - 1))),
+        };
 }
