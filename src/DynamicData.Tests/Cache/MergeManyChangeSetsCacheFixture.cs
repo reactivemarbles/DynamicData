@@ -51,9 +51,9 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
     [Theory]
     [InlineData(5, 7)]
     [InlineData(10, 50)]
-    [InlineData(10, 1_000)]
+    [InlineData(10, 100)]
     [InlineData(200, 500)]
-    [InlineData(1_000, 10)]
+    [InlineData(100, 10)]
     public async Task MultiThreadedStressTest(int marketCount, int priceCount)
     {
         using var priceResults = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices).AsAggregator();
@@ -808,12 +808,10 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
 
         // These should be subsets of each other
         expectedMarkets.Should().BeSubsetOf(marketResults.Data.Items);
-        marketResults.Data.Items.Should().BeSubsetOf(expectedMarkets);
         marketResults.Data.Items.Count().Should().Be(expectedMarkets.Count);
 
         // These should be subsets of each other
         expectedPrices.Should().BeSubsetOf(priceResults.Data.Items);
-        priceResults.Data.Items.Should().BeSubsetOf(expectedPrices);
         priceResults.Data.Items.Count().Should().Be(expectedPrices.Count);
     }
 

@@ -45,18 +45,26 @@ internal class MarketPrice
 
     public static decimal RandomPrice(Randomizer r, decimal basePrice, decimal offset) => r.Decimal(basePrice, basePrice + offset);
 
+    public override bool Equals(object? obj) => obj is MarketPrice price && Price == price.Price && TimeStamp.Equals(price.TimeStamp) && MarketId.Equals(price.MarketId) && ItemId == price.ItemId;
+
+    public override int GetHashCode() => HashCode.Combine(Price, TimeStamp, MarketId, ItemId);
+
+    public static bool operator ==(MarketPrice? left, MarketPrice? right) => EqualityComparer<MarketPrice>.Default.Equals(left, right);
+
+    public static bool operator !=(MarketPrice? left, MarketPrice? right) => !(left == right);
+
     private class CurrentPriceEqualityComparer : IEqualityComparer<MarketPrice>
     {
         public virtual bool Equals([DisallowNull] MarketPrice x, [DisallowNull] MarketPrice y) => x.MarketId.Equals(x.MarketId) && x.ItemId == y.ItemId && x.Price == y.Price;
         public int GetHashCode([DisallowNull] MarketPrice obj) => throw new NotImplementedException();
     }
 
-    private class TimeStampPriceEqualityComparer : CurrentPriceEqualityComparer, IEqualityComparer<MarketPrice>
+    private sealed class TimeStampPriceEqualityComparer : CurrentPriceEqualityComparer, IEqualityComparer<MarketPrice>
     {
         public override bool Equals([DisallowNull] MarketPrice x, [DisallowNull] MarketPrice y) => base.Equals(x, y) && x.TimeStamp == y.TimeStamp;
     }
 
-    private class LowestPriceComparer : IComparer<MarketPrice>
+    private sealed class LowestPriceComparer : IComparer<MarketPrice>
     {
         public int Compare([DisallowNull] MarketPrice x, [DisallowNull] MarketPrice y)
         {
@@ -65,7 +73,7 @@ internal class MarketPrice
         }
     }
 
-    private class HighestPriceComparer : IComparer<MarketPrice>
+    private sealed class HighestPriceComparer : IComparer<MarketPrice>
     {
         public int Compare([DisallowNull] MarketPrice x, [DisallowNull] MarketPrice y)
         {
@@ -74,7 +82,7 @@ internal class MarketPrice
         }
     }
 
-    private class LatestPriceComparer : IComparer<MarketPrice>
+    private sealed class LatestPriceComparer : IComparer<MarketPrice>
     {
         public int Compare([DisallowNull] MarketPrice x, [DisallowNull] MarketPrice y)
         {
