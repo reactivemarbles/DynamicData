@@ -8,7 +8,7 @@ using DynamicData.Cache;
 
 namespace DynamicData.Aggregation;
 
-internal class AggregateEnumerator<T>(IChangeSet<T> source) : IAggregateChangeSet<T>
+internal sealed class AggregateEnumerator<T>(IChangeSet<T> source) : IAggregateChangeSet<T>
     where T : notnull
 {
     public IEnumerator<AggregateItem<T>> GetEnumerator()
@@ -54,7 +54,7 @@ internal class AggregateEnumerator<T>(IChangeSet<T> source) : IAggregateChangeSe
 }
 
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same name, different generics.")]
-internal class AggregateEnumerator<TObject, TKey>(IChangeSet<TObject, TKey> source) : IAggregateChangeSet<TObject>
+internal sealed class AggregateEnumerator<TObject, TKey>(IChangeSet<TObject, TKey> source) : IAggregateChangeSet<TObject>
     where TObject : notnull
     where TKey : notnull
 {

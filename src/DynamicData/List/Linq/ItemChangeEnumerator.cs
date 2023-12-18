@@ -6,7 +6,7 @@ using System.Collections;
 
 namespace DynamicData.List.Linq;
 
-internal class ItemChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnumerable<ItemChange<T>>
+internal sealed class ItemChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnumerable<ItemChange<T>>
     where T : notnull
 {
     public IEnumerator<ItemChange<T>> GetEnumerator()

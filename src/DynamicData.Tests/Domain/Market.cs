@@ -19,7 +19,7 @@ internal interface IMarket
     public IObservable<IChangeSet<MarketPrice, int>> LatestPrices { get; }
 }
 
-internal class Market : IMarket, IDisposable
+internal sealed class Market : IMarket, IDisposable
 {
     private readonly ISourceCache<MarketPrice, int> _latestPrices = new SourceCache<MarketPrice, int>(p => p.ItemId);
 
@@ -108,7 +108,7 @@ internal class Market : IMarket, IDisposable
 }
 
 
-internal class FixedMarket : IMarket
+internal sealed class FixedMarket : IMarket
 {
     public FixedMarket(Func<decimal> getPrice, int minId, int maxId, bool completable = true)
     {

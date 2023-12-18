@@ -6,7 +6,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class EditDiff<TObject, TKey>(ISourceCache<TObject, TKey> source, Func<TObject, TObject, bool> areEqual)
+internal sealed class EditDiff<TObject, TKey>(ISourceCache<TObject, TKey> source, Func<TObject, TObject, bool> areEqual)
     where TObject : notnull
     where TKey : notnull
 {

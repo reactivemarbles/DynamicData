@@ -6,7 +6,7 @@ using System.Collections;
 
 namespace DynamicData.Cache.Internal;
 
-internal class KeyValueCollection<TObject, TKey> : IKeyValueCollection<TObject, TKey>
+internal sealed class KeyValueCollection<TObject, TKey> : IKeyValueCollection<TObject, TKey>
 {
     private readonly IReadOnlyCollection<KeyValuePair<TKey, TObject>> _items;
 

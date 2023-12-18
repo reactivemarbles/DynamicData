@@ -10,7 +10,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class StatusMonitor<T>(IObservable<T> source)
+internal sealed class StatusMonitor<T>(IObservable<T> source)
 {
     public IObservable<ConnectionStatus> Run() => Observable.Create<ConnectionStatus>(
             observer =>

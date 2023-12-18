@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DynamicData.Tests.Domain;
 
-internal class MarketPrice
+internal sealed class MarketPrice
 {
     public static IEqualityComparer<MarketPrice> EqualityComparer { get; } = new CurrentPriceEqualityComparer();
     public static IEqualityComparer<MarketPrice> EqualityComparerWithTimeStamp { get; } = new TimeStampPriceEqualityComparer();

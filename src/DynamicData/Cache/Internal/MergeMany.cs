@@ -8,7 +8,7 @@ using System.Reactive.Subjects;
 
 namespace DynamicData.Cache.Internal;
 
-internal class MergeMany<TObject, TKey, TDestination>
+internal sealed class MergeMany<TObject, TKey, TDestination>
     where TObject : notnull
     where TKey : notnull
 {

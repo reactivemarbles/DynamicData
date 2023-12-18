@@ -9,7 +9,7 @@ using System.Reactive.Linq;
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
 {
-    internal class PSubscribeMany<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions)
+    internal sealed class PSubscribeMany<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions)
         where TObject : notnull
         where TKey : notnull
     {

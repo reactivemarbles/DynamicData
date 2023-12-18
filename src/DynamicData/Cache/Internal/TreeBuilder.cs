@@ -11,7 +11,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey> pivotOn, IObservable<Func<Node<TObject, TKey>, bool>>? predicateChanged)
+internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey> pivotOn, IObservable<Func<Node<TObject, TKey>, bool>>? predicateChanged)
     where TObject : class
     where TKey : notnull
 {
