@@ -86,6 +86,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// Create a change set from recorded changes and clears known changes.
     /// </summary>
     /// <returns>A change set with the key/value changes.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0301:Simplify collection initialization", Justification = "This would result in differing operation")]
     public ChangeSet<TObject, TKey> CaptureChanges()
     {
         if (_changes.Count == 0)

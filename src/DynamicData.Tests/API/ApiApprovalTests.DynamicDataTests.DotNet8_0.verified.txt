@@ -1504,6 +1504,14 @@ namespace DynamicData
         public static System.IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, TKey, System.IObservable<TDestination>> observableSelector)
             where TObject :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination>> MergeManyChangeSets<TObject, TKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.IObservable<DynamicData.IChangeSet<TDestination>>> observableSelector, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null)
+            where TObject :  notnull
+            where TKey :  notnull
+            where TDestination :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination>> MergeManyChangeSets<TObject, TKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, TKey, System.IObservable<DynamicData.IChangeSet<TDestination>>> observableSelector, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null)
+            where TObject :  notnull
+            where TKey :  notnull
+            where TDestination :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>>> observableSelector, System.Collections.Generic.IComparer<TDestination> comparer)
             where TObject :  notnull
             where TKey :  notnull
@@ -2128,7 +2136,7 @@ namespace DynamicData
             where TKey :  notnull { }
         public static System.IObservable<TDestination> MergeMany<T, TDestination>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, System.IObservable<TDestination>> observableSelector)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination>> MergeManyChangeSets<TObject, TDestination>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, System.IObservable<DynamicData.IChangeSet<TDestination>>> observableSelector)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination>> MergeManyChangeSets<TObject, TDestination>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, System.IObservable<DynamicData.IChangeSet<TDestination>>> observableSelector, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null)
             where TObject :  notnull
             where TDestination :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TDestination, TDestinationKey>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>>> observableSelector, System.Collections.Generic.IComparer<TDestination> comparer)
@@ -2708,9 +2716,9 @@ namespace DynamicData.Tests
         where TKey :  notnull
     {
         public ChangeSetAggregator(System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source) { }
-        public bool Completed { get; }
         public DynamicData.IObservableCache<TObject, TKey> Data { get; }
         public System.Exception? Error { get; }
+        public bool IsCompleted { get; }
         public System.Collections.Generic.IList<DynamicData.IChangeSet<TObject, TKey>> Messages { get; }
         public DynamicData.Diagnostics.ChangeSummary Summary { get; }
         public void Dispose() { }

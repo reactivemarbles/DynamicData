@@ -6,11 +6,11 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
-internal class ChangeSetCache<TObject>
+internal sealed class ClonedListChangeSet<TObject>
     where TObject : notnull
 {
-    public ChangeSetCache(IObservable<IChangeSet<TObject>> source) =>
-        Source = source.Do(List.Clone);
+    public ClonedListChangeSet(IObservable<IChangeSet<TObject>> source, IEqualityComparer<TObject>? equalityComparer) =>
+        Source = source.Do(changeSet => List.Clone(changeSet, equalityComparer));
 
     public List<TObject> List { get; } = [];
 
