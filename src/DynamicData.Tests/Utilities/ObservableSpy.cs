@@ -200,12 +200,10 @@ internal static class ObservableSpy
     private static Action<string> CreateLogger(Action<string> baseLogger, Func<string> timeStamper, string opName) =>
             msg => baseLogger($"{timeStamper()}[{Environment.CurrentManagedThreadId:X2}] |{opName}| {msg}");
 
-#if DEBUG || DEBUG_SPY_ALWAYS
-#if DEBUG_SPY_ALWAYS
-    private static void DebugLogger(string str) => NativeMethods.OutputDebugString(str);
-#else
-    private static void DebugLogger(string str) => Debug.WriteLine(str);
-#endif
+#if DEBUG
+    private static void DebugLogger(string str) => Debug.WriteLine(str); 
+#elif DEBUG_SPY_ALWAYS
+    private static void DebugLogger(string str) => NativeMethods.OutputDebugString(str); 
 #endif
 
 }
