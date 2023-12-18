@@ -8,7 +8,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class MergeManyItems<TObject, TKey, TDestination>
+internal sealed class MergeManyItems<TObject, TKey, TDestination>
     where TObject : notnull
     where TKey : notnull
 {

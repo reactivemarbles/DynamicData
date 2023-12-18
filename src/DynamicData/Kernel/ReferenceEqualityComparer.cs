@@ -4,7 +4,7 @@
 
 namespace DynamicData.Kernel;
 
-internal class ReferenceEqualityComparer<T> : IEqualityComparer<T>
+internal sealed class ReferenceEqualityComparer<T> : IEqualityComparer<T>
 {
     public static readonly IEqualityComparer<T> Instance = new ReferenceEqualityComparer<T>();
 

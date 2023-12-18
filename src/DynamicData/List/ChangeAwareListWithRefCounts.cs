@@ -8,7 +8,7 @@ using DynamicData.List.Internal;
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
-internal class ChangeAwareListWithRefCounts<T> : ChangeAwareList<T>
+internal sealed class ChangeAwareListWithRefCounts<T> : ChangeAwareList<T>
     where T : notnull
 {
     private readonly ReferenceCountTracker<T> _tracker = new();

@@ -8,7 +8,7 @@ using DynamicData.List.Internal;
 
 namespace DynamicData.List.Linq;
 
-internal class UnifiedChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnumerable<UnifiedChange<T>>
+internal sealed class UnifiedChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnumerable<UnifiedChange<T>>
     where T : notnull
 {
     public IEnumerator<UnifiedChange<T>> GetEnumerator()

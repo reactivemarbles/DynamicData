@@ -11,7 +11,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class GroupOnPropertyWithImmutableState<TObject, TKey, TGroup>(IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TGroup>> groupSelectorKey, TimeSpan? throttle = null, IScheduler? scheduler = null)
+internal sealed class GroupOnPropertyWithImmutableState<TObject, TKey, TGroup>(IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TGroup>> groupSelectorKey, TimeSpan? throttle = null, IScheduler? scheduler = null)
     where TObject : INotifyPropertyChanged
     where TKey : notnull
     where TGroup : notnull

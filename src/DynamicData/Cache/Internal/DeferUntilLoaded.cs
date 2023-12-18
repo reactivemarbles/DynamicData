@@ -8,7 +8,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class DeferUntilLoaded<TObject, TKey>
+internal sealed class DeferUntilLoaded<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {

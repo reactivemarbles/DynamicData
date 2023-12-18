@@ -9,7 +9,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Binding;
 
-internal class ObservablePropertyFactory<TObject, TProperty>
+internal sealed class ObservablePropertyFactory<TObject, TProperty>
     where TObject : INotifyPropertyChanged
 {
     private readonly Func<TObject, bool, IObservable<PropertyValue<TObject, TProperty>>> _factory;

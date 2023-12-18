@@ -4,7 +4,7 @@
 
 namespace DynamicData.List.Linq;
 
-internal class Reverser<T>
+internal sealed class Reverser<T>
     where T : notnull
 {
     private int _length;
