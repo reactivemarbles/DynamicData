@@ -10,7 +10,7 @@ namespace DynamicData.List.Internal;
 /// <summary>
 /// Operator that is similiar to MergeMany but intelligently handles List ChangeSets.
 /// </summary>
-internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> selector, IEqualityComparer<TDestination>? equalityComparer = null)
+internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> selector, IEqualityComparer<TDestination>? equalityComparer)
     where TObject : notnull
     where TDestination : notnull
 {
@@ -24,11 +24,9 @@ internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable
                 var changeTracker = new ChangeSetMergeTracker<TDestination>();
 
                 // Transform to a changeset of Cloned Child Lists and then Share
-                var sourceListofLists = source
+                var shared = source
                                             .Transform(obj => new ClonedListChangeSet<TDestination>(selector(obj).Synchronize(locker), equalityComparer))
-                                            .AsObservableList();
-
-                var shared = sourceListofLists.Connect().Publish();
+                                            .Publish();
 
                 // Merge the items back together
                 var allChanges = shared.MergeMany(clonedList => clonedList.Source.RemoveIndex())
@@ -43,6 +41,6 @@ internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable
                     .OnItemRemoved(mc => changeTracker.RemoveItems(mc.List, observer), invokeOnUnsubscribe: false)
                     .Subscribe();
 
-                return new CompositeDisposable(sourceListofLists, allChanges, removedItems, shared.Connect());
+                return new CompositeDisposable(allChanges, removedItems, shared.Connect());
             });
 }
