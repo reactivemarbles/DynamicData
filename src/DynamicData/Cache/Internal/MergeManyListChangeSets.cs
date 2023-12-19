@@ -11,7 +11,7 @@ namespace DynamicData.Cache.Internal;
 /// <summary>
 /// Operator that is similiar to MergeMany but intelligently handles List ChangeSets.
 /// </summary>
-internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination>>> selector, IEqualityComparer<TDestination>? equalityComparer = null)
+internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination>>> selector, IEqualityComparer<TDestination>? equalityComparer)
     where TObject : notnull
     where TKey : notnull
     where TDestination : notnull
