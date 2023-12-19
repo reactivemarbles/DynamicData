@@ -50,7 +50,7 @@ internal sealed class MergeChangeSets<TObject, TKey>
                 var changeTracker = new ChangeSetMergeTracker<TObject, TKey>(() => localCache.Items, _comparer, _equalityComparer);
 
                 // Merge all of the changeset streams together and Process them with the change tracker which will emit the results
-                var subscription = localCache.Connect().MergeMany(mc => mc.Source.Do(_ => { }, observer.OnError))
+                var subscription = localCache.Connect().MergeMany(mc => mc.Source.Do(static _ => { }, observer.OnError))
                                                         .Synchronize(locker)
                                                         .Subscribe(
                                                                 changes => changeTracker.ProcessChangeSet(changes, observer),
