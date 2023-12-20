@@ -50,13 +50,17 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
     }
 
     [Theory]
+#if DEBUG
     [InlineData(5, 7)]
     [InlineData(10, 50)]
-    [InlineData(5, 100)]
-    [InlineData(200, 500)]
-    [InlineData(100, 5)]
+#else
+    [InlineData(10, 1_000)]
+    [InlineData(100, 100)]
+    [InlineData(1_000, 10)]
+#endif
     public async Task MultiThreadedStressTest(int marketCount, int priceCount)
     {
+        const int MaxItemId = 50;
         var MaxAddTime = TimeSpan.FromSeconds(0.250);
         var MaxRemoveTime = TimeSpan.FromSeconds(0.100);
 
@@ -67,18 +71,14 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
                 {
                     AddRemoveMarkets(marketCount, parallel, scheduler)
                             .Subscribe(
-                                onNext: _ => { },
-                                onError: ex => observer.OnError(ex)),
+                                onNext: static _ => { },
+                                onError: observer.OnError),
                     _marketCache.Connect()
                             .MergeMany(market => AddRemovePrices((Market)market, priceCount, parallel, scheduler))
                             .Subscribe(
-                                onNext: _ => { },
-                                onError: ex => observer.OnError(ex),
-                                onCompleted: () =>
-                                    {
-                                        observer.OnNext(Unit.Default);
-                                        observer.OnCompleted();
-                                    })
+                                onNext: static _ => { },
+                                onError: observer.OnError,
+                                onCompleted: observer.OnCompleted)
                 });
 
         IObservable<IMarket> AddRemoveMarkets(int ownerCount, int parallel, IScheduler scheduler) =>
@@ -86,19 +86,14 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
                 .Parallelize(ownerCount, parallel, obs => obs.StressAddRemove(_marketCache, _ => GetRemoveTime(), scheduler))
                 .Finally(_marketCache.Dispose);
 
-        IObservable<MarketPrice> AddRemovePrices(Market market, int priceCount, int parallel, IScheduler scheduler)
-        {
-            const int MaxItemId = 50;
-
-            return _randomizer.Interval(MaxAddTime, scheduler).Select(_ => market.CreatePrice(_randomizer.Number(MaxItemId), GetRandomPrice()))
+        IObservable<MarketPrice> AddRemovePrices(Market market, int priceCount, int parallel, IScheduler scheduler) =>
+            _randomizer.Interval(MaxAddTime, scheduler).Select(_ => market.CreatePrice(_randomizer.Number(MaxItemId), GetRandomPrice()))
                 .Parallelize(priceCount, parallel, obs => obs.StressAddRemove(market.PricesCache, _ => GetRemoveTime(), scheduler))
                 .Finally(market.PricesCache.Dispose);
-        }
 
         var merged = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices, Market.RatingCompare);
-        using var priceResults = merged.AsAggregator();
-
         var adding = true;
+        using var priceResults = merged.AsAggregator();
 
         // Start asynchrononously modifying the parent list and the child lists
         using var addingSub = AddRemoveStress(marketCount, priceCount, Environment.ProcessorCount, TaskPoolScheduler.Default)
@@ -125,7 +120,7 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         while (adding);
 
         // Verify the results
-        CheckResultContents(_marketCacheResults, priceResults);
+        CheckResultContents(_marketCacheResults, priceResults, Market.RatingCompare);
     }
 
     [Fact]
@@ -1074,7 +1069,7 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         DisposeMarkets();
     }
 
-    private void CheckResultContents(ChangeSetAggregator<IMarket, Guid> marketResults, ChangeSetAggregator<MarketPrice, int> priceResults)
+    private void CheckResultContents(ChangeSetAggregator<IMarket, Guid> marketResults, ChangeSetAggregator<MarketPrice, int> priceResults, IComparer<IMarket> comparer)
     {
         var expectedMarkets = _marketCache.Items.ToList();
 
@@ -1082,8 +1077,12 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         expectedMarkets.Should().BeSubsetOf(marketResults.Data.Items);
         marketResults.Data.Items.Count().Should().Be(expectedMarkets.Count);
 
-        expectedMarkets.Select(m => (Market)m).SelectMany(m => m.PricesCache.Items)
-            .GroupBy(price => price.ItemId);
+        // Pair up all the Markets/Prices, Group them by ItemId, and sort each Group by the Market comparer
+        // Then pull out the first value from each group, which should be the price from the best market for each ItemId
+        var expectedPrices = expectedMarkets.Select(m => (Market)m).SelectMany(m => m.PricesCache.Items.Select(mp => (Market: m, MarketPrice: mp)))
+            .GroupBy(tuple => tuple.MarketPrice.ItemId)
+            .Select(group => group.OrderBy(tuple => tuple.Market, comparer).Select(tuple => tuple.MarketPrice).First())
+            .ToList();
 
         // These should be subsets of each other
         expectedPrices.Should().BeSubsetOf(priceResults.Data.Items);

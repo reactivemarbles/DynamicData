@@ -19,7 +19,7 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
 {
     private readonly Func<TObject, TKey, IObservable<IChangeSet<ParentChildEntry, TDestinationKey>>> _changeSetSelector = (obj, key) => selector(obj, key).Transform(dest => new ParentChildEntry(obj, dest));
 
-    private readonly IComparer<ParentChildEntry>? _comparer = (childCompare is null) ? new ParentOnlyCompare(parentCompare) : new ParentChildCompare(parentCompare, childCompare);
+    private readonly IComparer<ParentChildEntry> _comparer = (childCompare is null) ? new ParentOnlyCompare(parentCompare) : new ParentChildCompare(parentCompare, childCompare);
 
     private readonly IEqualityComparer<ParentChildEntry>? _equalityComparer = (equalityComparer != null) ? new ParentChildEqualityCompare(equalityComparer) : null;
 
@@ -30,25 +30,25 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
 
                 // Transform to an observable cache of merge containers.
                 var sourceCacheOfCaches = source
-                                            .Transform((obj, key) => new ChangeSetCache<ParentChildEntry, TDestinationKey>(_changeSetSelector(obj, key)))
-                                            .Synchronize(locker)
+                                            .Transform((obj, key) => new ChangeSetCache<ParentChildEntry, TDestinationKey>(_changeSetSelector(obj, key).Synchronize(locker)))
                                             .AsObservableCache();
 
+                // Share a single connection to the cache
                 var shared = sourceCacheOfCaches.Connect().Publish();
 
-                // this is manages all of the changes
+                // This is manages all of the changes
                 var changeTracker = new ChangeSetMergeTracker<ParentChildEntry, TDestinationKey>(() => sourceCacheOfCaches.Items, _comparer, _equalityComparer);
 
-                // merge the items back together
+                // Merge the child changeset changes together and apply to the tracker
                 var allChanges = shared.MergeMany(mc => mc.Source)
-                                                 .Synchronize(locker)
                                                  .Subscribe(
                                                         changes => changeTracker.ProcessChangeSet(changes, observer),
                                                         observer.OnError,
                                                         observer.OnCompleted);
 
-                // when a source item is removed, all of its sub-items need to be removed
+                // When a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
+                    .Synchronize(locker)
                     .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer))
                     .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
                     .Subscribe();
@@ -56,11 +56,13 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
                 // If requested, when the source sees a refresh event, re-evaluate all the keys associated with that source because the priority may have changed
                 // Because the comparison is based on the parent, which has just been refreshed.
                 var refreshItems = reevalOnRefresh
-                    ? shared.OnItemRefreshed(mc => changeTracker.RefreshItems(mc.Cache.Keys, observer)).Subscribe()
+                    ? shared.Synchronize(locker)
+                        .OnItemRefreshed(mc => changeTracker.RefreshItems(mc.Cache.Keys, observer))
+                        .Subscribe()
                     : Disposable.Empty;
 
                 return new CompositeDisposable(sourceCacheOfCaches, allChanges, removedItems, refreshItems, shared.Connect());
-            }).Transform(entry => entry.Child);
+            }).Select(changes => changes.Transform(entry => entry.Child));
 
     private sealed class ParentChildEntry(TObject parent, TDestination child)
     {
