@@ -39,9 +39,16 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
 
     private readonly ChangeSetAggregator<IMarket, Guid> _marketCacheResults;
 
-    private readonly Randomizer _randomizer = new (0x21123737);
+    private readonly Faker<Market> _marketFaker;
 
-    public MergeManyChangeSetsCacheFixture() => _marketCacheResults = _marketCache.Connect().AsAggregator();
+    private readonly Randomizer _randomizer;
+
+    public MergeManyChangeSetsCacheFixture()
+    {
+        _randomizer = new(0x21123737);
+        _marketFaker = Fakers.Market.WithSeed(_randomizer);
+        _marketCacheResults = _marketCache.Connect().AsAggregator();
+    }
 
     [Theory]
     [InlineData(5, 7)]
@@ -77,17 +84,13 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
                 });
 
         IObservable<IMarket> AddRemoveMarkets(int ownerCount, int parallel, IScheduler scheduler) =>
-            _randomizer.Interval(MaxAddTime, scheduler).Select(_ => new Market(_randomizer.Utf16String(5, 10, true)))
-                //.Parallelize(ownerCount, parallel, obs => obs.StressAddRemove(_marketCache, _ => GetRemoveTime(), scheduler))
-                .Take(ownerCount)
-                .StressAddRemove(_marketCache, _ => GetRemoveTime(), scheduler)
+            _marketFaker.IntervalGenerate(MaxAddTime, scheduler)
+                .Parallelize(ownerCount, parallel, obs => obs.StressAddRemove(_marketCache, _ => GetRemoveTime(), scheduler))
                 .Finally(_marketCache.Dispose);
 
         IObservable<MarketPrice> AddRemovePrices(Market market, int priceCount, int parallel, IScheduler scheduler) =>
             _randomizer.Interval(MaxAddTime, scheduler).Select(_ => market.CreateUniquePrice(_ => GetRandomPrice()))
-                //.Parallelize(animalCount, parallel, obs => obs.StressAddRemove(owner.Animals, _ => GetRemoveTime(), scheduler))
-                .Take(priceCount)
-                .StressAddRemove(market.PricesCache, _ => GetRemoveTime(), scheduler)
+                .Parallelize(priceCount, parallel, obs => obs.StressAddRemove(market.PricesCache, _ => GetRemoveTime(), scheduler))
                 .Finally(market.PricesCache.Dispose);
 
         var merged = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices);
