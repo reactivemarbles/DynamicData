@@ -56,7 +56,8 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
                 // If requested, when the source sees a refresh event, re-evaluate all the keys associated with that source because the priority may have changed
                 // Because the comparison is based on the parent, which has just been refreshed.
                 var refreshItems = reevalOnRefresh
-                    ? shared.Synchronize(locker)
+                    ? shared
+                        .Synchronize(locker)
                         .OnItemRefreshed(mc => changeTracker.RefreshItems(mc.Cache.Keys, observer))
                         .Subscribe()
                     : Disposable.Empty;
