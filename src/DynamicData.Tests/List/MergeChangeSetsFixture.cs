@@ -2,13 +2,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
+using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using Bogus;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
 using FluentAssertions;
+using Microsoft.Reactive.Testing;
 using Xunit;
+using System.Collections.Concurrent;
 
 namespace DynamicData.Tests.List;
 
@@ -17,16 +23,12 @@ public sealed class MergeChangeSetsFixture : IDisposable
 #if DEBUG
     const int InitialOwnerCount = 7;
     const int AddRangeSize = 5;
-    const int RemoveRangeSize = 3;
 #else
     const int InitialOwnerCount = 103;
     const int AddRangeSize = 53;
-    const int RemoveRangeSize = 37;
 #endif
 
-    private readonly ISourceList<AnimalOwner> _animalOwners = new SourceList<AnimalOwner>();
-    private readonly ChangeSetAggregator<AnimalOwner> _animalOwnerResults;
-    private readonly ChangeSetAggregator<Animal> _animalResults;
+    private readonly IList<AnimalOwner> _animalOwners = new List<AnimalOwner>();
     private readonly Faker<AnimalOwner> _animalOwnerFaker;
     private readonly Faker<Animal> _animalFaker;
     private readonly Randomizer _randomizer;
@@ -35,11 +37,83 @@ public sealed class MergeChangeSetsFixture : IDisposable
     {
         _randomizer = new Randomizer(0x10131948);
         _animalFaker = Fakers.Animal.Clone().WithSeed(_randomizer);
-        _animalOwnerFaker = Fakers.AnimalOwner.Clone().WithSeed(_randomizer).WithInitialAnimals(_animalFaker);
-        _animalOwners.AddRange(_animalOwnerFaker.Generate(InitialOwnerCount));
+        _animalOwnerFaker = Fakers.AnimalOwner.Clone().WithSeed(_randomizer).WithInitialAnimals(_animalFaker, AddRangeSize, AddRangeSize);
+        _animalOwners.Add(_animalOwnerFaker.Generate(InitialOwnerCount));
+    }
 
-        _animalOwnerResults = _animalOwners.Connect().AsAggregator();
-        _animalResults = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect()).AsAggregator();
+    [Theory]
+    [InlineData(5, 7)]
+    [InlineData(10, 50)]
+    [InlineData(10, 100)]
+    [InlineData(200, 50)]
+    [InlineData(100, 10)]
+    public async Task MultiThreadedStressTest(int ownerCount, int animalCount)
+    {
+        var MaxAddTime = TimeSpan.FromSeconds(0.250);
+        var MaxRemoveTime = TimeSpan.FromSeconds(0.100);
+
+        TimeSpan? GetRemoveTime() => _randomizer.Bool() ? _randomizer.TimeSpan(MaxRemoveTime) : null;
+
+        IObservable<IObservable<IChangeSet<Animal>>> CreateStressObservable(int ownerCount, int animalCount, int parallel, ConcurrentBag<AnimalOwner> added, IScheduler scheduler) =>
+            Observable.Create<IObservable<IChangeSet<Animal>>>(observer =>
+            {
+                var shared = _animalOwnerFaker.IntervalGenerate(_randomizer, MaxAddTime, scheduler)
+                    .Parallelize(ownerCount, parallel)
+                    .Merge(_animalOwners.ToObservable())
+                    .Do(owner => added.Add(owner))
+                    .Publish();
+
+                var addAnimalsSub = shared.SelectMany(owner => AddRemoveAnimals(owner, animalCount, parallel, scheduler))
+                    .Subscribe(
+                        onNext: static _ => { },
+                        onError: observer.OnError,
+                        onCompleted: observer.OnCompleted);
+
+                var changeSetSub = shared.Select(owner => owner.Animals.Connect())
+                    .Subscribe(
+                        onNext: observer.OnNext,
+                        onError: observer.OnError);
+
+                return new CompositeDisposable(addAnimalsSub, changeSetSub, shared.Connect());
+            });
+
+        IObservable<Animal> AddRemoveAnimals(AnimalOwner owner, int animalCount, int parallel, IScheduler scheduler) =>
+            _animalFaker.IntervalGenerate(_randomizer, MaxAddTime, scheduler)
+                .Parallelize(animalCount, parallel, obs => obs.StressAddRemove(owner.Animals, _ => GetRemoveTime(), scheduler))
+                .Finally(owner.Animals.Dispose);
+
+        var addedOwners = new ConcurrentBag<AnimalOwner>();
+        var addingAnimals = true;
+        var observableObservable = CreateStressObservable(ownerCount, animalCount, Environment.ProcessorCount, addedOwners, TaskPoolScheduler.Default)
+                .Finally(() => addingAnimals = false)
+                .Publish()
+                .RefCount();
+        var mergedObservable = observableObservable.MergeChangeSets();
+
+        // Start asynchrononously modifying the parent list and the child lists
+        using var results = mergedObservable.AsAggregator();
+
+        // Subscribe / unsubscribe over and over while the collections are being modified
+        do
+        {
+            // Ensure items are being added asynchronously before subscribing to the animal changes
+            await Task.Yield();
+
+            {
+                // Subscribe
+                var mergedSub = mergedObservable.Subscribe();
+
+                // Let other threads run
+                await Task.Yield();
+
+                // Unsubscribe
+                mergedSub.Dispose();
+            }
+        }
+        while (addingAnimals);
+
+        // Verify the results
+        CheckResultContents(addedOwners.ToList(), results);
     }
 
     [Fact]
@@ -67,364 +141,178 @@ public sealed class MergeChangeSetsFixture : IDisposable
     }
 
     [Fact]
-    public void ResultContainsAllInitialChildren()
+    public void ResultContainsAllInitialChildrenObsObs()
     {
         // Arrange
+        var obs = GetObservableObservable();
 
         // Act
+        using var results = obs.MergeChangeSets().AsAggregator();
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount);
-        CheckResultContents();
+        CheckResultContents(_animalOwners, results);
     }
 
     [Fact]
-    public void ResultContainsChildrenFromParentsAddedWithAddRange()
+    public void ResultContainsAllInitialChildrenEnum()
     {
         // Arrange
-        var addThese = _animalOwnerFaker.Generate(AddRangeSize);
+        var obs = GetEnumerableObservable();
 
         // Act
-        _animalOwners.AddRange(addThese);
+        using var results = obs.MergeChangeSets().AsAggregator();
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount + AddRangeSize);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + AddRangeSize);
-        addThese.SelectMany(added => added.Animals.Items).ForEach(added => _animalResults.Data.Items.Should().Contain(added));
-        CheckResultContents();
+        CheckResultContents(_animalOwners, results);
     }
 
     [Fact]
-    public void ResultContainsChildrenFromParentsAddedWithAdd()
+    public void ResultEmptyIfSourceIsClearedObs()
     {
         // Arrange
-        var addThis = _animalOwnerFaker.Generate();
+        var obs = GetObservableObservable();
+        using var results = obs.MergeChangeSets().AsAggregator();
 
         // Act
-        _animalOwners.Add(addThis);
+        _animalOwners.ForEach(owner => owner.Animals.Clear());
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount + 1);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        addThis.Animals.Items.ForEach(added => _animalResults.Data.Items.Should().Contain(added));
-        CheckResultContents();
+        results.Data.Count.Should().Be(0);
     }
 
     [Fact]
-    public void ResultContainsChildrenFromParentsAddedWithInsert()
+    public void ResultEmptyIfSourceIsClearedEnum()
     {
         // Arrange
-        var insertIndex = _randomizer.Number(_animalOwners.Count);
-        var insertThis = _animalOwnerFaker.Generate();
+        var obs = GetEnumerableObservable();
+        using var results = obs.MergeChangeSets().AsAggregator();
 
         // Act
-        _animalOwners.Insert(insertIndex, insertThis);
+        _animalOwners.ForEach(owner => owner.Animals.Clear());
 
         // Assert
-        _animalOwners.Items.ElementAt(insertIndex).Should().Be(insertThis);
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount + 1);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        insertThis.Animals.Items.ForEach(added => _animalResults.Data.Items.Should().Contain(added));
-        CheckResultContents();
+        results.Data.Count.Should().Be(0);
     }
 
     [Fact]
-    public void ResultDoesNotContainChildrenFromParentsRemovedWithRemove()
+    public async Task ResultContainsChildrenAddedWithAddRangeObs()
     {
         // Arrange
-        var removeThis = _randomizer.ListItem(_animalOwners.Items.ToList());
+        var obs = GetObservableObservable();
+        using var results = obs.MergeChangeSets().AsAggregator();
 
         // Act
-        _animalOwners.Remove(removeThis);
+        var added = (await ForOwnersAsync(UseAddRange)).SelectMany(list => list).ToList();
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount - 1);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        removeThis.Animals.Items.ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
-        CheckResultContents();
-        removeThis.Dispose();
+        added.Should().BeSubsetOf(results.Data.Items);
+        CheckResultContents(_animalOwners, results);
     }
 
     [Fact]
-    public void ResultDoesNotContainChildrenFromParentsRemovedWithRemoveAt()
+    public async Task ResultContainsChildrenAddedWithAddRangeEnum()
     {
         // Arrange
-        var removeIndex = _randomizer.Number(_animalOwners.Count - 1);
-        var removeThis = _animalOwners.Items.ElementAt(removeIndex);
+        var obs = GetEnumerableObservable();
+        using var results = obs.MergeChangeSets().AsAggregator();
 
         // Act
-        _animalOwners.RemoveAt(removeIndex);
+        var added = (await ForOwnersAsync(UseAddRange)).SelectMany(list => list).ToList();
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount - 1);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        removeThis.Animals.Items.ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
-        CheckResultContents();
-        removeThis.Dispose();
+        added.Should().BeSubsetOf(results.Data.Items);
+        CheckResultContents(_animalOwners, results);
     }
 
     [Fact]
-    public void ResultDoesNotContainChildrenFromParentsRemovedWithRemoveRange()
+    public async Task ResultContainsChildrenAddedWithAddObs()
     {
         // Arrange
-        var removeIndex = _randomizer.Number(_animalOwners.Count - RemoveRangeSize - 1);
-        var removeThese = _animalOwners.Items.Skip(removeIndex).Take(RemoveRangeSize);
+        var obs = GetObservableObservable();
+        using var results = obs.MergeChangeSets().AsAggregator();
 
         // Act
-        _animalOwners.RemoveRange(removeIndex, RemoveRangeSize);
+        var added = await ForOwnersAsync(UseAdd);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount - RemoveRangeSize);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + RemoveRangeSize);
-        removeThese.SelectMany(owner => owner.Animals.Items).ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
-        CheckResultContents();
-        removeThese.ForEach(owner => owner.Dispose());
+        added.Should().BeSubsetOf(results.Data.Items);
+        CheckResultContents(_animalOwners, results);
     }
 
     [Fact]
-    public void ResultDoesNotContainChildrenFromParentsRemovedWithRemoveMany()
+    public async Task ResultContainsChildrenAddedWithAddEnum()
     {
         // Arrange
-        var removeThese = _randomizer.ListItems(_animalOwners.Items.ToList(), RemoveRangeSize);
+        var obs = GetEnumerableObservable();
+        using var results = obs.MergeChangeSets().AsAggregator();
 
         // Act
-        _animalOwners.RemoveMany(removeThese);
+        await ForOwnersAsync(owner => owner.Animals.Add(_animalFaker.Generate()));
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount - RemoveRangeSize);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + RemoveRangeSize);
-        removeThese.SelectMany(owner => owner.Animals.Items).ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
-        CheckResultContents();
-        removeThese.ForEach(owner => owner.Dispose());
+        CheckResultContents(_animalOwners, results);
+    }
+    [Fact]
+    public async Task ResultContainsChildrenAddedWithInsertObs()
+    {
+        // Arrange
+        var obs = GetObservableObservable();
+        using var results = obs.MergeChangeSets().AsAggregator();
+
+        // Act
+        var added = await ForOwnersAsync(UseInsert);
+
+        // Assert
+        added.Should().BeSubsetOf(results.Data.Items);
+        CheckResultContents(_animalOwners, results);
     }
 
     [Fact]
-    public void ResultContainsCorrectItemsAfterParentReplacement()
+    public async Task ResultContainsChildrenAddedWithInsertEnum()
     {
         // Arrange
-        var replaceThis = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var withThis = _animalOwnerFaker.Generate();
+        var obs = GetEnumerableObservable();
+        using var results = obs.MergeChangeSets().AsAggregator();
 
         // Act
-        _animalOwners.Replace(replaceThis, withThis);
+        var added = await ForOwnersAsync(UseInsert);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount); // Owner Count should not change
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 2); // +2 = 1 Message removing animals from old value, +1 message adding from new value
-        replaceThis.Animals.Items.ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
-        withThis.Animals.Items.ForEach(added => _animalResults.Data.Items.Should().Contain(added));
-        CheckResultContents();
-        replaceThis.Dispose();
+        added.Should().BeSubsetOf(results.Data.Items);
+        CheckResultContents(_animalOwners, results);
+    }
+
+
+    [Fact]
+    public async Task ResultContainsCorrectItemsAfterChildReplacementObs()
+    {
+        // Arrange
+        var obs = GetObservableObservable();
+        using var results = obs.MergeChangeSets().AsAggregator();
+
+        // Act
+        var replacements = await ForOwnersAsync(ReplaceAnimal);
+
+        // Assert
+        replacements.Select(r => r.New).Should().BeSubsetOf(results.Data.Items);
+        replacements.Select(r => r.Old).ForEach(old => results.Data.Items.Should().NotContain(old));
+        CheckResultContents(_animalOwners, results);
     }
 
     [Fact]
-    public void ResultEmptyIfSourceIsCleared()
+    public async Task ResultContainsCorrectItemsAfterChildReplacementEnum()
     {
         // Arrange
-        var items = _animalOwners.Items.ToList();
+        var obs = GetEnumerableObservable();
+        using var results = obs.MergeChangeSets().AsAggregator();
 
         // Act
-        _animalOwners.Clear();
+        var replacements = await ForOwnersAsync(ReplaceAnimal);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(0);
-        _animalResults.Data.Count.Should().Be(0);
-        CheckResultContents();
-        items.ForEach(owner => owner.Dispose());
-    }
-
-    [Fact]
-    public void ResultContainsChildrenAddedWithAddRange()
-    {
-        // Arrange
-        var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var addThese = _animalFaker.Generate(AddRangeSize);
-        var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
-
-        // Act
-        randomOwner.Animals.AddRange(addThese);
-
-        // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        addThese.ForEach(animal => _animalResults.Data.Items.Should().Contain(animal));
-        _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount + AddRangeSize);
-        CheckResultContents();
-    }
-
-    [Fact]
-    public void ResultContainsChildrenAddedWithAdd()
-    {
-        // Arrange
-        var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var addThis = _animalFaker.Generate();
-        var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
-
-        // Act
-        randomOwner.Animals.Add(addThis);
-
-        // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        _animalResults.Data.Items.Should().Contain(addThis);
-        _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount + 1);
-        CheckResultContents();
-    }
-
-    [Fact]
-    public void ResultContainsChildrenAddedWithInsert()
-    {
-        // Arrange
-        var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var insertIndex = _randomizer.Number(randomOwner.Animals.Items.Count());
-        var insertThis = _animalFaker.Generate();
-        var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
-
-        // Act
-        randomOwner.Animals.Insert(insertIndex, insertThis);
-
-        // Assert
-        randomOwner.Animals.Items.ElementAt(insertIndex).Should().Be(insertThis);
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        _animalResults.Data.Items.Should().Contain(insertThis);
-        _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount + 1);
-        CheckResultContents();
-    }
-
-    [Fact]
-    public void ResultDoesNotContainChildrenRemovedWithRemove()
-    {
-        // Arrange
-        var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var removeThis = _randomizer.ListItem(randomOwner.Animals.Items.ToList());
-        var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
-
-        // Act
-        randomOwner.Animals.Remove(removeThis);
-
-        // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        _animalResults.Data.Items.Should().NotContain(removeThis);
-        _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount - 1);
-        CheckResultContents();
-    }
-
-    [Fact]
-    public void ResultDoesNotContainChildrenRemovedWithRemoveAt()
-    {
-        // Arrange
-        var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var removeIndex = _randomizer.Number(randomOwner.Animals.Count - 1);
-        var removeThis = randomOwner.Animals.Items.ElementAt(removeIndex);
-        var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
-
-        // Act
-        randomOwner.Animals.RemoveAt(removeIndex);
-
-        // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        _animalResults.Data.Items.Should().NotContain(removeThis);
-        _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount - 1);
-        CheckResultContents();
-    }
-
-    [Fact]
-    public void ResultDoesNotContainChildrenRemovedWithRemoveRange()
-    {
-        // Arrange
-        var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var removeCount = _randomizer.Number(1, randomOwner.Animals.Count - 1);
-        var removeIndex = _randomizer.Number(randomOwner.Animals.Count - removeCount - 1);
-        var removeThese = randomOwner.Animals.Items.Skip(removeIndex).Take(removeCount);
-
-        // Act
-        randomOwner.Animals.RemoveRange(removeIndex, removeCount);
-
-        // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        removeThese.ForEach(removed => randomOwner.Animals.Items.Should().NotContain(removed));
-        CheckResultContents();
-    }
-
-    [Fact]
-    public void ResultDoesNotContainChildrenRemovedWithRemoveMany()
-    {
-        // Arrange
-        var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var removeCount = _randomizer.Number(1, randomOwner.Animals.Count - 1);
-        var removeThese = _randomizer.ListItems(randomOwner.Animals.Items.ToList(), removeCount);
-
-        // Act
-        randomOwner.Animals.RemoveMany(removeThese);
-
-        // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        removeThese.ForEach(removed => randomOwner.Animals.Items.Should().NotContain(removed));
-        CheckResultContents();
-    }
-
-    [Fact]
-    public void ResultContainsCorrectItemsAfterChildReplacement()
-    {
-        // Arrange
-        var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var replaceThis = _randomizer.ListItem(randomOwner.Animals.Items.ToList());
-        var withThis = _animalFaker.Generate();
-
-        // Act
-        randomOwner.Animals.Replace(replaceThis, withThis);
-
-        // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        randomOwner.Animals.Items.Should().NotContain(replaceThis);
-        randomOwner.Animals.Items.Should().Contain(withThis);
-        CheckResultContents();
-    }
-
-    [Fact]
-    public void ResultContainsCorrectItemsAfterChildClear()
-    {
-        // Arrange
-        var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var removedAnimals = randomOwner.Animals.Items.ToList();
-
-        // Act
-        randomOwner.Animals.Clear();
-
-        // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        randomOwner.Animals.Count.Should().Be(0);
-        removedAnimals.ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
-        CheckResultContents();
-    }
-
-    [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public void ResultCompletesOnlyWhenSourceAndAllChildrenComplete(bool completeSource, bool completeChildren)
-    {
-        // Arrange
-
-        // Act
-        _animalOwners.Items.Skip(completeChildren ? 0 : 1).ForEach(owner => owner.Dispose());
-        if (completeSource)
-        {
-            _animalOwners.Dispose();
-        }
-
-        // Assert
-        _animalOwnerResults.IsCompleted.Should().Be(completeSource);
-        _animalResults.IsCompleted.Should().Be(completeSource && completeChildren);
+        replacements.Select(r => r.New).Should().BeSubsetOf(results.Data.Items);
+        replacements.Select(r => r.Old).ForEach(old => results.Data.Items.Should().NotContain(old));
+        CheckResultContents(_animalOwners, results);
     }
 
     [Fact]
@@ -432,35 +320,132 @@ public sealed class MergeChangeSetsFixture : IDisposable
     {
         // Arrange
         var expectedError = new Exception("Expected");
-        var throwObservable = Observable.Throw<IChangeSet<AnimalOwner>>(expectedError);
-        using var results = _animalOwners.Connect().Concat(throwObservable).MergeManyChangeSets(owner => owner.Animals.Connect()).AsAggregator();
+        var throwObservable = Observable.Throw<IObservable<IChangeSet<Animal>>>(expectedError);
+        var obs = GetObservableObservable();
 
         // Act
-        _animalOwners.Dispose();
+        using var results = obs.Concat(throwObservable).MergeChangeSets().AsAggregator();
 
         // Assert
         results.Exception.Should().Be(expectedError);
     }
 
-    private void CheckResultContents()
+    [Fact]
+    public void ResultFailsIfAnyChildChangeSetFails()
     {
-        var expectedOwners = _animalOwners.Items.ToList();
-        var expectedAnimals = expectedOwners.SelectMany(owner => owner.Animals.Items).ToList();
+        // Arrange
+        var expectedError = new Exception("Test exception");
+        var throwObservable = Observable.Throw<IChangeSet<Animal>>(expectedError);
+        var obs = GetEnumerableObservable().Append(throwObservable);
 
-        // These should be subsets of each other, so check one subset and the size
-        expectedOwners.Should().BeSubsetOf(_animalOwnerResults.Data.Items);
-        _animalOwnerResults.Data.Items.Count().Should().Be(expectedOwners.Count);
+        // Act
+        using var results = obs.MergeChangeSets().AsAggregator();
 
-        // These should be subsets of each other, so check one subset and the size
-        expectedAnimals.Should().BeSubsetOf(_animalResults.Data.Items);
-        _animalResults.Data.Items.Count().Should().Be(expectedAnimals.Count);
+        // Assert
+        results.Exception.Should().Be(expectedError);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ResultCompletesOnlyWhenSourceAndAllChildrenComplete(bool completeAll)
+    {
+        // Arrange
+        var obs = GetObservableObservable();
+        using var results = obs.MergeChangeSets().AsAggregator();
+
+        // Act
+        _animalOwners.Skip(completeAll ? 0 : 1).ForEach(owner => owner.Animals.Dispose());
+
+        // Assert
+        results.IsCompleted.Should().Be(completeAll);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void MergedObservableRespectsCompletableFlag(bool completeSource, bool completeChildren)
+    {
+        // Arrange
+        var obs = GetEnumerableObservable();
+        using var results = obs.MergeChangeSets(completable: completeSource).AsAggregator();
+
+        // Act
+        _animalOwners.Skip(completeChildren ? 0 : 1).ForEach(owner => owner.Animals.Dispose());
+
+        // Assert
+        results.IsCompleted.Should().Be(completeSource && completeChildren);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void EnumObservableUsesTheScheduler(bool advance)
+    {
+        // Arrange
+        var scheduler = new TestScheduler();
+        var obs = GetEnumerableObservable();
+        using var results = obs.MergeChangeSets(scheduler: scheduler).AsAggregator();
+
+        // Act
+        if (advance)
+        {
+            scheduler.AdvanceBy(1);
+        }
+
+        // Assert
+        if (advance)
+        {
+            CheckResultContents(_animalOwners, results);
+        }
+        else
+        {
+            results.Data.Count.Should().Be(0);
+            results.Messages.Count.Should().Be(0);
+        }
     }
 
     public void Dispose()
     {
-        _animalOwners.Items.ForEach(owner => owner.Dispose());
-        _animalOwnerResults.Dispose();
-        _animalResults.Dispose();
-        _animalOwners.Dispose();
+        _animalOwners.ForEach(owner => owner.Dispose());
     }
+
+    private static void CheckResultContents(IList<AnimalOwner> expectedOwners, ChangeSetAggregator<Animal> animalResults)
+    {
+        var expectedAnimals = expectedOwners.SelectMany(owner => owner.Animals.Items).ToList();
+
+        // These should be subsets of each other, so check one subset and the size
+        expectedAnimals.Should().BeSubsetOf(animalResults.Data.Items);
+        animalResults.Data.Items.Count().Should().Be(expectedAnimals.Count);
+    }
+
+    Task ForOwnersAsync(Action<AnimalOwner> action) => Task.WhenAll(_animalOwners.Select(owner => Task.Run(() => action(owner))));
+
+    Task<T[]> ForOwnersAsync<T>(Func<AnimalOwner, T> func) => Task.WhenAll(_animalOwners.Select(owner => Task.Run(() => func(owner))));
+
+    private Animal UseAdd(AnimalOwner owner) =>
+        _animalFaker.Generate().With(animal => owner.Animals.Add(animal));
+
+    private List<Animal> UseAddRange(AnimalOwner owner) =>
+        _animalFaker.Generate(_randomizer.Number(AddRangeSize)).With(animals => owner.Animals.AddRange(animals));
+
+    private (Animal Old, Animal New) ReplaceAnimal(AnimalOwner owner)
+    {
+        var replaceThis = _randomizer.ListItem(owner.Animals.Items.ToList());
+        var withThis = _animalFaker.Generate();
+        owner.Animals.Replace(replaceThis, withThis);
+        return (replaceThis, withThis);
+    }
+
+    private Animal UseInsert(AnimalOwner owner)
+    {
+        var newAnimal = _animalFaker.Generate();
+        owner.Animals.Insert(_randomizer.Number(owner.Animals.Count), newAnimal);
+        return newAnimal;
+    }
+
+    private IEnumerable<IObservable<IChangeSet<Animal>>> GetEnumerableObservable() => _animalOwners.Select(owner => owner.Animals.Connect());
+    private IObservable<IObservable<IChangeSet<Animal>>> GetObservableObservable() => GetEnumerableObservable().ToObservable();
 }
