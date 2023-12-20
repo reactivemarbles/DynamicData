@@ -2122,6 +2122,26 @@ namespace DynamicData
             where TGroupKey :  notnull { }
         public static System.IObservable<System.Collections.Generic.IEnumerable<T>> LimitSizeTo<T>(this DynamicData.ISourceList<T> source, int sizeLimit, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where T :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.IObservable<System.IObservable<DynamicData.IChangeSet<TObject>>> source)
+            where TObject :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this DynamicData.IObservableList<System.IObservable<DynamicData.IChangeSet<TObject>>> source, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null)
+            where TObject :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.IObservable<DynamicData.IChangeSet<System.IObservable<DynamicData.IChangeSet<TObject>>>> source, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null)
+            where TObject :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.IObservable<System.IObservable<DynamicData.IChangeSet<TObject>>> source, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer)
+            where TObject :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject>>> source, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+            where TObject :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject>>> source, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+            where TObject :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject>>> others, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+            where TObject :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.IObservable<DynamicData.IChangeSet<TObject>> other, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+            where TObject :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject>>> others, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+            where TObject :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.IObservable<DynamicData.IChangeSet<TObject>> other, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+            where TObject :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this DynamicData.IObservableList<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Collections.Generic.IComparer<TObject> comparer)
             where TObject :  notnull
             where TKey :  notnull { }
