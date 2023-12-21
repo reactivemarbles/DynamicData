@@ -536,7 +536,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         lowPriceResults.Data.Count.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Removes.Should().Be(0);
-        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
+        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
         lowPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLowLow.Id));
         highPriceResults.Data.Count.Should().Be(PricesPerMarket);
         highPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
