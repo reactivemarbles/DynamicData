@@ -20,27 +20,30 @@ internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable
             {
                 var locker = new object();
 
+                // Transform to a Cloned List and create an Observable List
+                var sourceListOfLists = source
+                    .Transform(obj => new ClonedListChangeSet<TDestination>(selector(obj).Synchronize(locker), equalityComparer))
+                    .AsObservableList();
+
                 // This is manages all of the changes
                 var changeTracker = new ChangeSetMergeTracker<TDestination>();
 
-                // Transform to a changeset of Cloned Child Lists and then Share
-                var shared = source
-                                            .Transform(obj => new ClonedListChangeSet<TDestination>(selector(obj).Synchronize(locker), equalityComparer))
-                                            .Publish();
+                // Share a connection to the source list
+                var shared = sourceListOfLists.Connect().Synchronize(locker).Publish();
 
                 // Merge the items back together
-                var allChanges = shared.MergeMany(clonedList => clonedList.Source.RemoveIndex())
-                                                 .Subscribe(
-                                                        changes => changeTracker.ProcessChangeSet(changes, observer),
-                                                        observer.OnError,
-                                                        observer.OnCompleted);
+                var allChanges = shared
+                    .MergeMany(clonedList => clonedList.Source.RemoveIndex())
+                    .Subscribe(
+                        changes => changeTracker.ProcessChangeSet(changes, observer),
+                        observer.OnError,
+                        observer.OnCompleted);
 
                 // When a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
-                    .Synchronize(locker)
                     .OnItemRemoved(mc => changeTracker.RemoveItems(mc.List, observer), invokeOnUnsubscribe: false)
                     .Subscribe();
 
-                return new CompositeDisposable(allChanges, removedItems, shared.Connect());
+                return new CompositeDisposable(sourceListOfLists, allChanges, removedItems, shared.Connect());
             });
 }
