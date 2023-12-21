@@ -36,6 +36,18 @@ internal static class ObservableExtensions
     public static IObservable<U> Parallelize<T, U>(this IObservable<T> source, int count, int parallel, Func<IObservable<T>, IObservable<U>> fnAttachParallelWork) =>
         Observable.Merge(Distribute(count, parallel).Select(n => fnAttachParallelWork(source.Take(n))));
 
+    /// <summary>
+    /// Creates an observable that parallelizes some given work by taking the source observable, creates multiple subscriptions, limiting each to a certain number of values, and 
+    /// merging them back together.
+    /// </summary>
+    /// <typeparam name="T">Observable type.</typeparam>
+    /// <param name="source">Source Observable.</param>
+    /// <param name="count">Total number of values to process.</param>
+    /// <param name="parallel">Total number of subscriptions to create.</param>
+    /// <returns>An Observable that contains the values resulting from the merged sequences.</returns>
+    public static IObservable<T> Parallelize<T>(this IObservable<T> source, int count, int parallel) =>
+        Observable.Merge(Distribute(count, parallel).Select(n => source.Take(n)));
+
     public static IObservable<T> ValidateSynchronization<T>(this IObservable<T> source)
         // Using Raw observable and observer classes to bypass normal RX safeguards, which prevent out-of-sequence notifications.
         // This allows the operator to be combined with TestableObserver, for correctness-testing of operators.
