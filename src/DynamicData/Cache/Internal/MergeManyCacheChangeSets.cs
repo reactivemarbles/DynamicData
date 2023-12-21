@@ -41,8 +41,7 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
 
                 // When a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
-                    .Synchronize(locker)
-                    .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer))
+                    .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer), invokeOnUnsubscribe: false)
                     .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
                     .Subscribe();
 
