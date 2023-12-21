@@ -34,7 +34,7 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
                                             .AsObservableCache();
 
                 // Share a single connection to the cache
-                var shared = sourceCacheOfCaches.Connect().Publish();
+                var shared = sourceCacheOfCaches.Connect().Synchronize(locker).Publish();
 
                 // This is manages all of the changes
                 var changeTracker = new ChangeSetMergeTracker<ParentChildEntry, TDestinationKey>(() => sourceCacheOfCaches.Items, _comparer, _equalityComparer);
@@ -48,7 +48,6 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
 
                 // When a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
-                    .Synchronize(locker)
                     .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer))
                     .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
                     .Subscribe();
@@ -57,7 +56,6 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
                 // Because the comparison is based on the parent, which has just been refreshed.
                 var refreshItems = reevalOnRefresh
                     ? shared
-                        .Synchronize(locker)
                         .OnItemRefreshed(mc => changeTracker.RefreshItems(mc.Cache.Keys, observer))
                         .Subscribe()
                     : Disposable.Empty;
