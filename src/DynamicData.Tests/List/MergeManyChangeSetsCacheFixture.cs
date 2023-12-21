@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
+using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
+using Bogus;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
@@ -28,15 +33,97 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
     const decimal HighestPrice = BasePrice + PriceOffset + 1.0m;
     const decimal LowestPrice = BasePrice - 1.0m;
 
-    private static readonly Random Random = new (0x03251976);
-
-    private static decimal GetRandomPrice() => MarketPrice.RandomPrice(Random, BasePrice, PriceOffset);
-
     private readonly ISourceList<IMarket> _marketList = new SourceList<IMarket>();
 
     private readonly ChangeSetAggregator<IMarket> _marketListResults;
 
-    public MergeManyChangeSetsCacheFixture() => _marketListResults = _marketList.Connect().AsAggregator();
+    private readonly Faker<Market> _marketFaker;
+
+    private readonly Randomizer _randomizer;
+
+    public MergeManyChangeSetsCacheFixture()
+    {
+        _randomizer = new(0x03251976);
+        _marketFaker = Fakers.Market.WithSeed(_randomizer);
+        _marketListResults = _marketList.Connect().AsAggregator();
+    }
+
+
+    [Theory]
+    [InlineData(5, 7)]
+    [InlineData(10, 50)]
+    [InlineData(5, 100)]
+    [InlineData(200, 500)]
+    [InlineData(100, 5)]
+    public async Task MultiThreadedStressTest(int marketCount, int priceCount)
+    {
+        var MaxAddTime = TimeSpan.FromSeconds(0.250);
+        var MaxRemoveTime = TimeSpan.FromSeconds(0.100);
+
+        TimeSpan? GetRemoveTime() => _randomizer.Bool() ? _randomizer.TimeSpan(MaxRemoveTime) : null;
+
+        IObservable<Unit> AddRemoveStress(int marketCount, int priceCount, int parallel, IScheduler scheduler) =>
+            Observable.Create<Unit>(observer => new CompositeDisposable
+                {
+                    AddRemoveMarkets(marketCount, parallel, scheduler)
+                            .Subscribe(
+                                onNext: _ => { },
+                                onError: ex => observer.OnError(ex)),
+
+                    _marketList.Connect()
+                            .MergeMany(market => AddRemovePrices((Market)market, priceCount, parallel, scheduler))
+                            .Subscribe(
+                                onNext: _ => { },
+                                onError: ex => observer.OnError(ex),
+                                onCompleted: () =>
+                                    {
+                                        observer.OnNext(Unit.Default);
+                                        observer.OnCompleted();
+                                    })
+                });
+
+        IObservable<IMarket> AddRemoveMarkets(int ownerCount, int parallel, IScheduler scheduler) =>
+            _marketFaker.IntervalGenerate(MaxAddTime, scheduler)
+                .Parallelize(ownerCount, parallel, obs => obs.StressAddRemove(_marketList, _ => GetRemoveTime(), scheduler))
+                .Finally(_marketList.Dispose);
+
+        IObservable<MarketPrice> AddRemovePrices(Market market, int priceCount, int parallel, IScheduler scheduler) =>
+            _randomizer.Interval(MaxAddTime, scheduler).Select(_ => market.CreateUniquePrice(_ => GetRandomPrice()))
+                .Parallelize(priceCount, parallel, obs => obs.StressAddRemove(market.PricesCache, _ => GetRemoveTime(), scheduler))
+                .Finally(market.PricesCache.Dispose);
+
+        var merged = _marketList.Connect().MergeManyChangeSets(market => market.LatestPrices);
+        using var priceResults = merged.AsAggregator();
+
+        var adding = true;
+
+        // Start asynchrononously modifying the parent list and the child lists
+        using var addingSub = AddRemoveStress(marketCount, priceCount, Environment.ProcessorCount, TaskPoolScheduler.Default)
+            .Finally(() => adding = false)
+            .Subscribe();
+
+        // Subscribe / unsubscribe over and over while the collections are being modified
+        do
+        {
+            // Ensure items are being added asynchronously before subscribing to changes
+            await Task.Yield();
+
+            {
+                // Subscribe
+                var mergedSub = merged.Subscribe();
+
+                // Let other threads run
+                await Task.Yield();
+
+                // Unsubscribe
+                mergedSub.Dispose();
+            }
+        }
+        while (adding);
+
+        // Verify the results
+        CheckResultContents(_marketListResults, priceResults);
+    }
 
     [Fact]
     public void NullChecks()
@@ -449,7 +536,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         lowPriceResults.Data.Count.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Removes.Should().Be(0);
-        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
+        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
         lowPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLowLow.Id));
         highPriceResults.Data.Count.Should().Be(PricesPerMarket);
         highPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
@@ -739,10 +826,28 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         DisposeMarkets();
     }
 
+    private void AddUniquePrices(Market[] markets) => markets.ForEach(m => m.AddUniquePrices(PricesPerMarket, _ => GetRandomPrice()));
+
+    private void CheckResultContents(ChangeSetAggregator<IMarket> marketResults, ChangeSetAggregator<MarketPrice, int> priceResults)
+    {
+        var expectedMarkets = _marketList.Items.ToList();
+        var expectedPrices = expectedMarkets.SelectMany(market => ((Market)market).PricesCache.Items).ToList();
+
+        // These should be subsets of each other
+        expectedMarkets.Should().BeSubsetOf(marketResults.Data.Items);
+        marketResults.Data.Items.Count().Should().Be(expectedMarkets.Count);
+
+        // These should be subsets of each other
+        expectedPrices.Should().BeSubsetOf(priceResults.Data.Items);
+        priceResults.Data.Items.Count().Should().Be(expectedPrices.Count);
+    }
+
     private void DisposeMarkets()
     {
         _marketList.Items.ForEach(m => (m as IDisposable)?.Dispose());
         _marketList.Dispose();
         _marketList.Clear();
     }
+
+    private decimal GetRandomPrice() => MarketPrice.RandomPrice(_randomizer, BasePrice, PriceOffset);
 }

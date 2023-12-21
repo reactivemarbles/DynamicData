@@ -29,8 +29,6 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     const int AddRangeSize = 53;
     const int RemoveRangeSize = 37;
 #endif
-    private static readonly TimeSpan s_MaxAddTime = TimeSpan.FromSeconds(0.250);
-    private static readonly TimeSpan s_MaxRemoveTime = TimeSpan.FromSeconds(0.100);
 
     private readonly ISourceCache<AnimalOwner, Guid> _animalOwners = new SourceCache<AnimalOwner, Guid>(o => o.Id);
     private readonly ChangeSetAggregator<AnimalOwner, Guid> _animalOwnerResults;
