@@ -1078,7 +1078,7 @@ public static class ObservableListEx
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        return source.Connect().MergeChangeSets(comparer: comparer);
+        return source.Connect().MergeChangeSets(comparer);
     }
 
     /// <summary>
@@ -1115,7 +1115,7 @@ public static class ObservableListEx
     {
         comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
 
-        return source.MergeChangeSets(comparer: comparer);
+        return source.MergeChangeSets(comparer);
     }
 
     /// <summary>

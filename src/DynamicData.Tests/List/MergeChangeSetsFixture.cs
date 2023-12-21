@@ -120,24 +120,15 @@ public sealed class MergeChangeSetsFixture : IDisposable
     public void NullChecks()
     {
         // Arrange
-        var emptyChangeSetObs = Observable.Empty<IObservable<IChangeSet<int>>>();
         var nullChangeSetObs = (IObservable<IObservable<IChangeSet<int>>>)null!;
-        var noOpComparer = new NoOpEqualityComparer<int>();
-        var nullComparer = (IEqualityComparer<int>)null!;
-
 
         // Act
-        var checkParam1 = () => nullChangeSetObs.MergeChangeSets(noOpComparer);
-        var checkParam2 = () => emptyChangeSetObs.MergeChangeSets(nullComparer);
+        var checkParam1 = () => nullChangeSetObs.MergeChangeSets();
 
         // Assert
-        emptyChangeSetObs.Should().NotBeNull();
-        noOpComparer.Should().NotBeNull();
         nullChangeSetObs.Should().BeNull();
-        nullComparer.Should().BeNull();
 
         checkParam1.Should().Throw<ArgumentNullException>();
-        checkParam2.Should().Throw<ArgumentNullException>();
     }
 
     [Fact]
