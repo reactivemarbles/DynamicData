@@ -29,11 +29,11 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
                 // This is manages all of the changes
                 var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => sourceCacheOfCaches.Items, comparer, equalityComparer);
 
-                var shared = sourceCacheOfCaches.Connect().Publish();
+                // Share a connection to the source cache
+                var shared = sourceCacheOfCaches.Connect().Synchronize(locker).Publish();
 
                 // Merge the child changeset changes together and apply to the tracker
                 var allChanges = shared
-                    .Synchronize(locker)
                     .MergeMany(mc => mc.Source)
                     .Subscribe(
                         changes => changeTracker.ProcessChangeSet(changes, observer),
@@ -42,7 +42,6 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
 
                 // When a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
-                    .Synchronize(locker)
                     .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer))
                     .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
                     .Subscribe();
