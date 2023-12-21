@@ -30,7 +30,7 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
                 var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => sourceCacheOfCaches.Items, comparer, equalityComparer);
 
                 // Share a connection to the source cache
-                var shared = sourceCacheOfCaches.Connect().Publish();
+                var shared = sourceCacheOfCaches.Connect().Synchronize(locker).Publish();
 
                 // Merge the child changeset changes together and apply to the tracker
                 var allChanges = shared.MergeMany(mc => mc.Source)
