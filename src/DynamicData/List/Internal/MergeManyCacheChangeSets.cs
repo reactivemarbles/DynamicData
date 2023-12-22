@@ -31,11 +31,10 @@ internal sealed class MergeManyCacheChangeSets<TObject, TDestination, TDestinati
                 var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => sourceListOfCaches.Items.ToArray(), comparer, equalityComparer);
 
                 // Share a connection to the source list
-                var shared = sourceListOfCaches.Connect().Publish();
+                var shared = sourceListOfCaches.Connect().Synchronize(locker).Publish();
 
                 // Merge the child changeset changes together and apply to the tracker
                 var allChanges = shared
-                    .Synchronize(locker)
                     .MergeMany(mc => mc.Source)
                     .Subscribe(
                         changes => changeTracker.ProcessChangeSet(changes, observer),
@@ -44,8 +43,7 @@ internal sealed class MergeManyCacheChangeSets<TObject, TDestination, TDestinati
 
                 // When a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
-                    .Synchronize(locker)
-                    .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer))
+                    .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer), invokeOnUnsubscribe: false)
                     .Subscribe();
 
                 return new CompositeDisposable(sourceListOfCaches, allChanges, removedItems, shared.Connect());
