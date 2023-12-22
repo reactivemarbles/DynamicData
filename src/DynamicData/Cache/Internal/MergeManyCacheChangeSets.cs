@@ -34,7 +34,7 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
                 .Do(cache.Clone)
 
                 // When a source item is removed, all of its sub-items need to be removed
-                .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer), invokeOnUnsubscribe: false)
+                .OnItemRemoved(changeSetCache => changeTracker.RemoveItems(changeSetCache.Cache.KeyValues, observer), invokeOnUnsubscribe: false)
                 .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
 
                 // Merge the child changeset changes together and apply to the tracker

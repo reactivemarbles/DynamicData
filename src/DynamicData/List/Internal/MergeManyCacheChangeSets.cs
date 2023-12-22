@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Cache.Internal;
 
@@ -36,7 +35,7 @@ internal sealed class MergeManyCacheChangeSets<TObject, TDestination, TDestinati
                     .Do(list.Clone)
 
                     // When a source item is removed, all of its sub-items need to be removed
-                    .OnItemRemoved(cachedChangeSet => changeTracker.RemoveItems(cachedChangeSet.Cache.KeyValues, observer), invokeOnUnsubscribe: false)
+                    .OnItemRemoved(changeSetCache => changeTracker.RemoveItems(changeSetCache.Cache.KeyValues, observer), invokeOnUnsubscribe: false)
 
                     // Merge the child changeset changes together and apply to the tracker
                     .MergeMany(mc => mc.Source)
