@@ -48,9 +48,11 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     [Theory]
     [InlineData(5, 7)]
     [InlineData(10, 50)]
+#if !DEBUG
     [InlineData(10, 1_000)]
     [InlineData(200, 500)]
     [InlineData(1_000, 10)]
+#endif
     public async Task MultiThreadedStressTest(int ownerCount, int animalCount)
     {
         var MaxAddTime = TimeSpan.FromSeconds(0.250);
@@ -60,23 +62,19 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         IObservable<Unit> AddRemoveAnimalsStress(int ownerCount, int animalCount, int parallel, IScheduler scheduler) =>
             Observable.Create<Unit>(observer => new CompositeDisposable
-            {
-                AddRemoveOwners(ownerCount, parallel, scheduler)
-                    .Subscribe(
-                        onNext: static _ => { },
-                        onError: ex => observer.OnError(ex)),
+                (
+                    AddRemoveOwners(ownerCount, parallel, scheduler)
+                        .Subscribe(
+                            onNext: static _ => { },
+                            onError: observer.OnError),
 
-                _animalOwners.Connect()
+                    _animalOwners.Connect()
                         .MergeMany(owner => AddRemoveAnimals(owner, animalCount, parallel, scheduler))
                         .Subscribe(
                             onNext: static _ => { },
-                            onError: ex => observer.OnError(ex),
-                            onCompleted: () =>
-                                {
-                                    observer.OnNext(Unit.Default);
-                                    observer.OnCompleted();
-                                })
-            });
+                            onError: observer.OnError,
+                            onCompleted: observer.OnCompleted)
+                ));
 
         IObservable<AnimalOwner> AddRemoveOwners(int ownerCount, int parallel, IScheduler scheduler) =>
             _animalOwnerFaker.IntervalGenerate(_randomizer, MaxAddTime, scheduler)

@@ -24,44 +24,42 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
     private readonly IEqualityComparer<ParentChildEntry>? _equalityComparer = (equalityComparer != null) ? new ParentChildEqualityCompare(equalityComparer) : null;
 
     public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => Observable.Create<IChangeSet<ParentChildEntry, TDestinationKey>>(
-            observer =>
-            {
-                var locker = new object();
+        observer =>
+        {
+            var locker = new object();
+            var cache = new Cache<ChangeSetCache<ParentChildEntry, TDestinationKey>, TKey>();
 
-                // Transform to an observable cache of merge containers.
-                var sourceCacheOfCaches = source
-                                            .Transform((obj, key) => new ChangeSetCache<ParentChildEntry, TDestinationKey>(_changeSetSelector(obj, key).Synchronize(locker)))
-                                            .AsObservableCache();
+            // This is manages all of the changes
+            var changeTracker = new ChangeSetMergeTracker<ParentChildEntry, TDestinationKey>(() => cache.Items, _comparer, _equalityComparer);
 
-                // Share a single connection to the cache
-                var shared = sourceCacheOfCaches.Connect().Synchronize(locker).Publish();
+            // Transform to an cache changeset of child caches of ParentChildEntry, synchronize, update the local copy, and publish.
+            var shared = source
+                .Transform((obj, key) => new ChangeSetCache<ParentChildEntry, TDestinationKey>(_changeSetSelector(obj, key).Synchronize(locker)))
+                .Synchronize(locker)
+                .Do(cache.Clone)
+                .Publish();
 
-                // This is manages all of the changes
-                var changeTracker = new ChangeSetMergeTracker<ParentChildEntry, TDestinationKey>(() => sourceCacheOfCaches.Items, _comparer, _equalityComparer);
+            // Merge the child changeset changes together and apply to the tracker
+            var subMergeMany = shared
+                .MergeMany(changeSetCache => changeSetCache.Source)
+                .Subscribe(
+                    changes => changeTracker.ProcessChangeSet(changes, observer),
+                    observer.OnError,
+                    observer.OnCompleted);
 
-                // Merge the child changeset changes together and apply to the tracker
-                var allChanges = shared.MergeMany(mc => mc.Source)
-                                                 .Subscribe(
-                                                        changes => changeTracker.ProcessChangeSet(changes, observer),
-                                                        observer.OnError,
-                                                        observer.OnCompleted);
+            // When a source item is removed, all of its sub-items need to be removed
+            var subRemove = shared
+                .OnItemRemoved(cacheChangeSet => changeTracker.RemoveItems(cacheChangeSet.Cache.KeyValues, observer), invokeOnUnsubscribe: false)
+                .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
+                .Subscribe();
 
-                // When a source item is removed, all of its sub-items need to be removed
-                var removedItems = shared
-                    .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer))
-                    .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
-                    .Subscribe();
+            // Optionally attach a handler for Refresh events
+            var subRefresh = reevalOnRefresh
+                ? shared.OnItemRefreshed(cacheChangeSet => changeTracker.RefreshItems(cacheChangeSet.Cache.Keys, observer)).Subscribe()
+                : Disposable.Empty;
 
-                // If requested, when the source sees a refresh event, re-evaluate all the keys associated with that source because the priority may have changed
-                // Because the comparison is based on the parent, which has just been refreshed.
-                var refreshItems = reevalOnRefresh
-                    ? shared
-                        .OnItemRefreshed(mc => changeTracker.RefreshItems(mc.Cache.Keys, observer))
-                        .Subscribe()
-                    : Disposable.Empty;
-
-                return new CompositeDisposable(sourceCacheOfCaches, allChanges, removedItems, refreshItems, shared.Connect());
-            }).Select(changes => changes.Transform(entry => entry.Child));
+            return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove, subRefresh);
+        }).Select(changes => changes.Transform(entry => entry.Child));
 
     private sealed class ParentChildEntry(TObject parent, TDestination child)
     {

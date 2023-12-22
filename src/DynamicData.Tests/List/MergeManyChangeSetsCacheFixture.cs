@@ -52,9 +52,11 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
     [Theory]
     [InlineData(5, 7)]
     [InlineData(10, 50)]
-    [InlineData(5, 100)]
+#if !DEBUG
+    [InlineData(10, 1_000)]
     [InlineData(200, 500)]
-    [InlineData(100, 5)]
+    [InlineData(1_000, 10)]
+#endif
     public async Task MultiThreadedStressTest(int marketCount, int priceCount)
     {
         var MaxAddTime = TimeSpan.FromSeconds(0.250);
@@ -64,23 +66,19 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
 
         IObservable<Unit> AddRemoveStress(int marketCount, int priceCount, int parallel, IScheduler scheduler) =>
             Observable.Create<Unit>(observer => new CompositeDisposable
-                {
+                (
                     AddRemoveMarkets(marketCount, parallel, scheduler)
-                            .Subscribe(
-                                onNext: _ => { },
-                                onError: ex => observer.OnError(ex)),
+                        .Subscribe(
+                            onNext: static _ => { },
+                            onError: observer.OnError),
 
                     _marketList.Connect()
-                            .MergeMany(market => AddRemovePrices((Market)market, priceCount, parallel, scheduler))
-                            .Subscribe(
-                                onNext: _ => { },
-                                onError: ex => observer.OnError(ex),
-                                onCompleted: () =>
-                                    {
-                                        observer.OnNext(Unit.Default);
-                                        observer.OnCompleted();
-                                    })
-                });
+                        .MergeMany(market => AddRemovePrices((Market)market, priceCount, parallel, scheduler))
+                        .Subscribe(
+                            onNext: static _ => { },
+                            onError: observer.OnError,
+                            onCompleted: observer.OnCompleted)
+                ));
 
         IObservable<IMarket> AddRemoveMarkets(int ownerCount, int parallel, IScheduler scheduler) =>
             _marketFaker.IntervalGenerate(MaxAddTime, scheduler)
@@ -521,7 +519,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         using var lowPriceResults = _marketList.Connect().DebugSpy("List").MergeManyChangeSets(m => m.LatestPrices, MarketPrice.LowPriceCompare).DebugSpy("MergedLow").AsAggregator();
         var marketOriginal = new Market(0);
         var marketLow = new Market(1);
-        var marketLowLow = new Market(marketLow);
+        var marketLowLow = new Market(2);
         marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
         marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
         marketLowLow.SetPrices(0, PricesPerMarket, LowestPrice - 1);

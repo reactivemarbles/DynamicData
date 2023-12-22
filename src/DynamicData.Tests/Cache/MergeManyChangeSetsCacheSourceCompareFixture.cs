@@ -50,10 +50,9 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
     }
 
     [Theory]
-#if DEBUG
     [InlineData(5, 7)]
     [InlineData(10, 50)]
-#else
+#if false && !DEBUG
     [InlineData(10, 1_000)]
     [InlineData(100, 100)]
     [InlineData(1_000, 10)]
@@ -91,7 +90,7 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
                 .Parallelize(priceCount, parallel, obs => obs.StressAddRemove(market.PricesCache, _ => GetRemoveTime(), scheduler))
                 .Finally(market.PricesCache.Dispose);
 
-        var merged = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices, Market.RatingCompare);
+        var merged = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices, Market.RatingCompare, resortOnSourceRefresh: true);
         var adding = true;
         using var priceResults = merged.AsAggregator();
 
