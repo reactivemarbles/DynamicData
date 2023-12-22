@@ -24,6 +24,7 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
                 // Transform to a Cloned List and create an Observable Cache
                 var sourceCacheOfLists = source
                     .Transform((obj, key) => new ClonedListChangeSet<TDestination>(selector(obj, key).Synchronize(locker), equalityComparer))
+                    .Synchronize(locker)
                     .AsObservableCache();
 
                 // This is manages all of the changes
