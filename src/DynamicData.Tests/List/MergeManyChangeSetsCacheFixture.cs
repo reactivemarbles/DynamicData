@@ -519,7 +519,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         using var lowPriceResults = _marketList.Connect().DebugSpy("List").MergeManyChangeSets(m => m.LatestPrices, MarketPrice.LowPriceCompare).DebugSpy("MergedLow").AsAggregator();
         var marketOriginal = new Market(0);
         var marketLow = new Market(1);
-        var marketLowLow = new Market(marketLow);
+        var marketLowLow = new Market(2);
         marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
         marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
         marketLowLow.SetPrices(0, PricesPerMarket, LowestPrice - 1);

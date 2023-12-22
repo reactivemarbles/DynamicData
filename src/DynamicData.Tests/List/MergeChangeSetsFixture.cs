@@ -44,9 +44,11 @@ public sealed class MergeChangeSetsFixture : IDisposable
     [Theory]
     [InlineData(5, 7)]
     [InlineData(10, 50)]
-    [InlineData(10, 100)]
-    [InlineData(200, 50)]
-    [InlineData(100, 10)]
+#if !DEBUG
+    [InlineData(10, 1_000)]
+    [InlineData(200, 500)]
+    [InlineData(1_000, 10)]
+#endif
     public async Task MultiThreadedStressTest(int ownerCount, int animalCount)
     {
         var MaxAddTime = TimeSpan.FromSeconds(0.250);
@@ -383,7 +385,7 @@ public sealed class MergeChangeSetsFixture : IDisposable
         // Act
         if (advance)
         {
-            scheduler.AdvanceBy(1);
+            scheduler.AdvanceBy(InitialOwnerCount);
         }
 
         // Assert

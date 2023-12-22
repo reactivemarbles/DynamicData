@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
@@ -31,33 +32,33 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<ParentChildEntry, TDestinationKey>(() => cache.Items, _comparer, _equalityComparer);
 
-            // Transform to an cache changeset of child caches of ParentChildEntry
-            var mergeObservable = source.Transform((obj, key) => new ChangeSetCache<ParentChildEntry, TDestinationKey>(_changeSetSelector(obj, key).Synchronize(locker)))
-
-                // Everything below has to happen inside of the same lock (that is shared with the child collection changes)
+            // Transform to an cache changeset of child caches of ParentChildEntry, synchronize, update the local copy, and publish.
+            var shared = source
+                .Transform((obj, key) => new ChangeSetCache<ParentChildEntry, TDestinationKey>(_changeSetSelector(obj, key).Synchronize(locker)))
                 .Synchronize(locker)
+                .Do(cache.Clone)
+                .Publish();
 
-                // Update the local collection of parent items
-                .Do(cache.Clone);
-
-            // Optionally attach a handler for Refresh events
-            if (reevalOnRefresh)
-            {
-                mergeObservable = mergeObservable.OnItemRefreshed(cacheChangeSet => changeTracker.RefreshItems(cacheChangeSet.Cache.Keys, observer));
-            }
-
-            return mergeObservable
-
-                // When a source item is removed, all of its sub-items need to be removed
-                .OnItemRemoved(cacheChangeSet => changeTracker.RemoveItems(cacheChangeSet.Cache.KeyValues, observer), invokeOnUnsubscribe: false)
-                .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
-
-                // Merge the child changeset changes together and apply to the tracker
+            // Merge the child changeset changes together and apply to the tracker
+            var subMergeMany = shared
                 .MergeMany(changeSetCache => changeSetCache.Source)
                 .Subscribe(
                     changes => changeTracker.ProcessChangeSet(changes, observer),
                     observer.OnError,
                     observer.OnCompleted);
+
+            // When a source item is removed, all of its sub-items need to be removed
+            var subRemove = shared
+                .OnItemRemoved(cacheChangeSet => changeTracker.RemoveItems(cacheChangeSet.Cache.KeyValues, observer), invokeOnUnsubscribe: false)
+                .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
+                .Subscribe();
+
+            // Optionally attach a handler for Refresh events
+            var subRefresh = reevalOnRefresh
+                ? shared.OnItemRefreshed(cacheChangeSet => changeTracker.RefreshItems(cacheChangeSet.Cache.Keys, observer)).Subscribe()
+                : Disposable.Empty;
+
+            return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove, subRefresh);
         }).Select(changes => changes.Transform(entry => entry.Child));
 
     private sealed class ParentChildEntry(TObject parent, TDestination child)

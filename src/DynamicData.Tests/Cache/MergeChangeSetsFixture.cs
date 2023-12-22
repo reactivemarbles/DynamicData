@@ -565,7 +565,7 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         using var results = pricesCache.Connect().AsAggregator();
 
         // when
-        scheduler.AdvanceBy(1);
+        scheduler.AdvanceBy(MarketCount);
 
         // then
         _marketList.Count.Should().Be(MarketCount);
