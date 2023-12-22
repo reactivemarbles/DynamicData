@@ -50,10 +50,9 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
     }
 
     [Theory]
-#if DEBUG
     [InlineData(5, 7)]
     [InlineData(10, 50)]
-#else
+#if !DEBUG
     [InlineData(10, 1_000)]
     [InlineData(100, 100)]
     [InlineData(1_000, 10)]
