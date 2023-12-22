@@ -24,6 +24,7 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
                 // Transform to a changeset of Cloned Child Lists and Share
                 var shared = source
                     .Transform((obj, key) => new ClonedListChangeSet<TDestination>(selector(obj, key).Synchronize(locker), equalityComparer))
+                    .Synchronize(locker)
                     .Publish();
 
                 // This is manages all of the changes

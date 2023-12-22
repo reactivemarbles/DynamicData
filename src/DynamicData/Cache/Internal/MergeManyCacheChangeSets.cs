@@ -33,11 +33,12 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
                 var shared = sourceCacheOfCaches.Connect().Synchronize(locker).Publish();
 
                 // Merge the child changeset changes together and apply to the tracker
-                var allChanges = shared.MergeMany(mc => mc.Source)
-                                                 .Subscribe(
-                                                        changes => changeTracker.ProcessChangeSet(changes, observer),
-                                                        observer.OnError,
-                                                        observer.OnCompleted);
+                var allChanges = shared
+                    .MergeMany(mc => mc.Source)
+                    .Subscribe(
+                        changes => changeTracker.ProcessChangeSet(changes, observer),
+                        observer.OnError,
+                        observer.OnCompleted);
 
                 // When a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
