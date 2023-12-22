@@ -22,7 +22,7 @@ internal sealed class MergeManyCacheChangeSets<TObject, TDestination, TDestinati
             {
                 var locker = new object();
 
-                // Transform to an observable list of merge containers.
+                // Transform to a List of child caches
                 var sourceListOfCaches = source
                     .Transform(obj => new ChangeSetCache<TDestination, TDestinationKey>(changeSetSelector(obj).Synchronize(locker)))
                     .AsObservableList();

@@ -20,7 +20,7 @@ internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable
             {
                 var locker = new object();
 
-                // Transform to a Cloned List and create an Observable List
+                // Transform to a list of child lists
                 var sourceListOfLists = source
                     .Transform(obj => new ClonedListChangeSet<TDestination>(selector(obj).Synchronize(locker), equalityComparer))
                     .AsObservableList();

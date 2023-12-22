@@ -28,7 +28,7 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
             {
                 var locker = new object();
 
-                // Transform to an observable cache of merge containers.
+                // Transform to an cache of child caches of ParentChildEntry
                 var sourceCacheOfCaches = source
                     .Transform((obj, key) => new ChangeSetCache<ParentChildEntry, TDestinationKey>(_changeSetSelector(obj, key).Synchronize(locker)))
                     .AsObservableCache();
