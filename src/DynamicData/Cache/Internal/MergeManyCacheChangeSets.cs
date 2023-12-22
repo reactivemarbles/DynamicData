@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
@@ -17,35 +16,32 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
     where TDestinationKey : notnull
 {
     public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => Observable.Create<IChangeSet<TDestination, TDestinationKey>>(
-            observer =>
-            {
-                var locker = new object();
+        observer =>
+        {
+            var locker = new object();
+            var cache = new Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey>();
 
-                // Transform to an observable changeset of cached changesets
-                var sourceCacheOfCaches = source
-                    .Transform((obj, key) => new ChangeSetCache<TDestination, TDestinationKey>(selector(obj, key).Synchronize(locker)))
-                    .AsObservableCache();
+            // This is manages all of the changes
+            var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => cache.Items, comparer, equalityComparer);
 
-                // This is manages all of the changes
-                var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => sourceCacheOfCaches.Items, comparer, equalityComparer);
+            // Transform to a cache changeset of child caches
+            return source.Transform((obj, key) => new ChangeSetCache<TDestination, TDestinationKey>(selector(obj, key).Synchronize(locker)))
 
-                // Share a connection to the source cache
-                var shared = sourceCacheOfCaches.Connect().Synchronize(locker).Publish();
+                // Everything below has to happen inside of the same lock (that is shared with the child collection changes)
+                .Synchronize(locker)
 
-                // Merge the child changeset changes together and apply to the tracker
-                var allChanges = shared
-                    .MergeMany(mc => mc.Source)
-                    .Subscribe(
-                        changes => changeTracker.ProcessChangeSet(changes, observer),
-                        observer.OnError,
-                        observer.OnCompleted);
+                // Update the local collection of parent items
+                .Do(cache.Clone)
 
                 // When a source item is removed, all of its sub-items need to be removed
-                var removedItems = shared
-                    .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer), invokeOnUnsubscribe: false)
-                    .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
-                    .Subscribe();
+                .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer), invokeOnUnsubscribe: false)
+                .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
 
-                return new CompositeDisposable(sourceCacheOfCaches, allChanges, removedItems, shared.Connect());
-            });
+                // Merge the child changeset changes together and apply to the tracker
+                .MergeMany(mc => mc.Source)
+                .Subscribe(
+                    changes => changeTracker.ProcessChangeSet(changes, observer),
+                    observer.OnError,
+                    observer.OnCompleted);
+        });
 }

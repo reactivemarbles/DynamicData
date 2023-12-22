@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.List.Internal;
 
@@ -21,32 +20,24 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
             {
                 var locker = new object();
 
-                // Transform to a Cloned List and create an Observable Cache
-                var sourceCacheOfLists = source
-                    .Transform((obj, key) => new ClonedListChangeSet<TDestination>(selector(obj, key).Synchronize(locker), equalityComparer))
-                    .Synchronize(locker)
-                    .AsObservableCache();
-
                 // This is manages all of the changes
                 var changeTracker = new ChangeSetMergeTracker<TDestination>();
 
-                // Share a connection to the source cache
-                var shared = sourceCacheOfLists.Connect().Synchronize(locker).Publish();
+                // Transform to a cache changeset of child lists
+                return source.Transform((obj, key) => new ClonedListChangeSet<TDestination>(selector(obj, key).Synchronize(locker), equalityComparer))
 
-                // Merge all of the children changesets together and apply to the tracker
-                var allChanges = shared
+                    // Everything below has to happen inside of the same lock (that is shared with the child collection changes)
+                    .Synchronize(locker)
+
+                    // When a source item is removed, all of its sub-items need to be removed
+                    .OnItemRemoved(clonedList => changeTracker.RemoveItems(clonedList.List, observer), invokeOnUnsubscribe: false)
+                    .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.List, observer))
+
+                    // Merge all the child changesets together and send downstream
                     .MergeMany(clonedList => clonedList.Source.RemoveIndex())
                     .Subscribe(
                         changes => changeTracker.ProcessChangeSet(changes, observer),
                         observer.OnError,
                         observer.OnCompleted);
-
-                // When a source item is removed, all of its sub-items need to be removed
-                var removedItems = shared
-                    .OnItemRemoved(clonedList => changeTracker.RemoveItems(clonedList.List, observer), invokeOnUnsubscribe: false)
-                    .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.List, observer))
-                    .Subscribe();
-
-                return new CompositeDisposable(allChanges, removedItems, shared.Connect());
             });
 }
