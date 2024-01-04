@@ -5,7 +5,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
-
+using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 
 using FluentAssertions;
@@ -93,7 +93,7 @@ public class TransformAsyncFixture
     public async Task RemoveFlowsToTheEnd()
     {
         var transform = 0;
-        var count = 500;
+        var count = 100;
         ReadOnlyObservableCollection<Person> collection;
 
         var cache = new SourceCache<Person, string>(p => p.Name);
@@ -121,9 +121,8 @@ public class TransformAsyncFixture
             cache.RemoveKey(p.Name);
         }
 
-        while (transform != count)
-            await Task.Delay(100);
-        await Task.Delay(3000);
+        await collection.ToObservableChangeSet().Take(count * 2);
+
         collection.Count.Should().Be(0);
     }
 

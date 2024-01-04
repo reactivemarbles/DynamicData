@@ -3,71 +3,60 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Linq;
-
+using System.Reactive.Threading.Tasks;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class TransformAsync<TDestination, TSource, TKey>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>>? exceptionCallback, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
+internal class TransformAsync<TDestination, TSource, TKey>(
+    IObservable<IChangeSet<TSource, TKey>> source,
+    Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory,
+    Action<Error<TSource, TKey>>? exceptionCallback,
+    IObservable<Func<TSource, TKey, bool>>? forceTransform = null,
+    int maximumConcurrency = 4,
+    bool transformOnRefresh = false)
     where TDestination : notnull
     where TSource : notnull
     where TKey : notnull
 {
-    public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
-                                                                     {
-                                                                         var cache = new ChangeAwareCache<TransformedItemContainer, TKey>();
-                                                                         var asyncLock = new SemaphoreSlim(1, 1);
+    public IObservable<IChangeSet<TDestination, TKey>> Run() =>
+        Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
+        {
+            var cache = new ChangeAwareCache<TransformedItemContainer, TKey>();
 
-                                                                         var transformer = source.Select(async changes =>
-                                                                         {
-                                                                             try
-                                                                             {
-                                                                                 await asyncLock.WaitAsync();
-                                                                                 return await DoTransform(cache, changes).ConfigureAwait(false);
-                                                                             }
-                                                                             finally
-                                                                             {
-                                                                                 asyncLock.Release();
-                                                                             }
-                                                                         }).Concat();
+            var transformer = source.Select(changes => DoTransform(cache, changes)).Concat();
 
-                                                                         if (forceTransform is not null)
-                                                                         {
-                                                                             var locker = new object();
-                                                                             var forced = forceTransform.Synchronize(locker)
-                                                                             .Select(async shouldTransform =>
-                                                                             {
-                                                                                 try
-                                                                                 {
-                                                                                     await asyncLock.WaitAsync();
-                                                                                     return await DoTransform(cache, shouldTransform).ConfigureAwait(false);
-                                                                                 }
-                                                                                 finally
-                                                                                 {
-                                                                                     asyncLock.Release();
-                                                                                 }
-                                                                             }).Concat();
+            if (forceTransform is not null)
+            {
+                var locker = new object();
+                var forced = forceTransform.Synchronize(locker)
+                    .Select(shouldTransform => DoTransform(cache, shouldTransform)).Concat();
 
-                                                                             transformer = transformer.Synchronize(locker).Merge(forced);
-                                                                         }
+                transformer = transformer.Synchronize(locker).Merge(forced);
+            }
 
-                                                                         return transformer.SubscribeSafe(observer);
-                                                                     });
+            return transformer.SubscribeSafe(observer);
+        });
 
-    private async Task<IChangeSet<TDestination, TKey>> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey> cache, Func<TSource, TKey, bool> shouldTransform)
+    private IObservable<IChangeSet<TDestination, TKey>> DoTransform(
+        ChangeAwareCache<TransformedItemContainer, TKey> cache, Func<TSource, TKey, bool> shouldTransform)
     {
-        var toTransform = cache.KeyValues.Where(kvp => shouldTransform(kvp.Value.Source, kvp.Key)).Select(kvp => new Change<TSource, TKey>(ChangeReason.Update, kvp.Key, kvp.Value.Source, kvp.Value.Source)).ToArray();
+        var toTransform = cache.KeyValues.Where(kvp => shouldTransform(kvp.Value.Source, kvp.Key)).Select(kvp =>
+            new Change<TSource, TKey>(ChangeReason.Update, kvp.Key, kvp.Value.Source, kvp.Value.Source)).ToArray();
 
-        var transformed = await Task.WhenAll(toTransform.Select(Transform)).ConfigureAwait(false);
-
-        return ProcessUpdates(cache, transformed);
+        return toTransform.Select(change => Observable.Defer(() => Transform(change).ToObservable()))
+            .Merge(maximumConcurrency < 1 ? int.MaxValue : maximumConcurrency)
+            .ToArray()
+            .Select(transformed => ProcessUpdates(cache, transformed));
     }
 
-    private async Task<IChangeSet<TDestination, TKey>> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey> cache, IChangeSet<TSource, TKey> changes)
+    private IObservable<IChangeSet<TDestination, TKey>> DoTransform(
+        ChangeAwareCache<TransformedItemContainer, TKey> cache, IChangeSet<TSource, TKey> changes)
     {
-        var transformed = await Task.WhenAll(changes.Select(Transform)).ConfigureAwait(false);
-
-        return ProcessUpdates(cache, transformed);
+        return changes.Select(change => Observable.Defer(() => Transform(change).ToObservable()))
+            .Merge(maximumConcurrency < 1 ? int.MaxValue : maximumConcurrency)
+            .ToArray()
+            .Select(transformed => ProcessUpdates(cache, transformed));
     }
 
     private ChangeSet<TDestination, TKey> ProcessUpdates(ChangeAwareCache<TransformedItemContainer, TKey> cache, TransformResult[] transformedItems)
@@ -76,7 +65,8 @@ internal sealed class TransformAsync<TDestination, TSource, TKey>(IObservable<IC
         var errors = transformedItems.Where(t => !t.Success).ToArray();
         if (errors.Length > 0)
         {
-            errors.ForEach(t => exceptionCallback?.Invoke(new Error<TSource, TKey>(t.Error, t.Change.Current, t.Change.Key)));
+            errors.ForEach(t =>
+                exceptionCallback?.Invoke(new Error<TSource, TKey>(t.Error, t.Change.Current, t.Change.Key)));
         }
 
         foreach (var result in transformedItems.Where(t => t.Success))
@@ -100,6 +90,7 @@ internal sealed class TransformAsync<TDestination, TSource, TKey>(IObservable<IC
         }
 
         var changes = cache.CaptureChanges();
+
         var transformed = changes.Select(change => new Change<TDestination, TKey>(change.Reason, change.Key, change.Current.Destination, change.Previous.Convert(x => x.Destination), change.CurrentIndex, change.PreviousIndex));
 
         return new ChangeSet<TDestination, TKey>(transformed);
@@ -109,9 +100,10 @@ internal sealed class TransformAsync<TDestination, TSource, TKey>(IObservable<IC
     {
         try
         {
-            if (change.Reason == ChangeReason.Add || change.Reason == ChangeReason.Update)
+            if (change.Reason is ChangeReason.Add or ChangeReason.Update || (change.Reason is ChangeReason.Refresh && transformOnRefresh))
             {
-                var destination = await transformFactory(change.Current, change.Previous, change.Key).ConfigureAwait(false);
+                var destination = await transformFactory(change.Current, change.Previous, change.Key)
+                    .ConfigureAwait(false);
                 return new TransformResult(change, new TransformedItemContainer(change.Current, destination));
             }
 
