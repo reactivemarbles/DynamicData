@@ -16,10 +16,8 @@ namespace DynamicData.Tests
         public void EnumerableIListTests()
         {
             var data = new byte[40];
-            using (var generator = RandomNumberGenerator.Create())
-            {
-                generator.GetBytes(data);
-            }
+            var rng = new Random(1234567);
+            rng.NextBytes(data);
 
             var inputData = new byte[39];
             var lastItem = data[data.Length - 1];
