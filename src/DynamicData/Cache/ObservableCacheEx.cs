@@ -4849,7 +4849,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TSourceKey : notnull => new MergeManyCacheChangeSets<TSource, TSourceKey, TDestination, TDestinationKey>(
             source,
-            (val, _) => Observable.FromAsync(() => manySelector(val)).Select(coll => coll.AsObservableChangeSet().AddKey(keySelector)).Merge(),
+            (val, _) => Observable.FromAsync(() => manySelector(val)).Select(coll => coll.AsObservableChangeSet(keySelector)).Merge(),
             null,
             null).Run();
 
@@ -4870,7 +4870,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TSourceKey : notnull => new MergeManyCacheChangeSets<TSource, TSourceKey, TDestination, TDestinationKey>(
             source,
-            (val, _) => Observable.FromAsync(() => manySelector(val)).Select(coll => coll.AsObservableChangeSet().AddKey(keySelector)).Merge(),
+            (val, _) => Observable.FromAsync(() => manySelector(val)).Select(coll => coll.AsObservableChangeSet(keySelector)).Merge(),
             null,
             null).Run();
 
@@ -4891,7 +4891,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TSourceKey : notnull => new MergeManyCacheChangeSets<TSource, TSourceKey, TDestination, TDestinationKey>(
             source,
-            (val, _) => Observable.FromAsync(() => manySelector(val)).Select(coll => coll.AsObservableChangeSet().AddKey(keySelector)).Merge(),
+            (val, _) => Observable.FromAsync(() => manySelector(val)).Select(coll => coll.AsObservableChangeSet(keySelector)).Merge(),
             null,
             null).Run();
 
