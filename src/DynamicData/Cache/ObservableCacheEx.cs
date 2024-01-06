@@ -4833,6 +4833,89 @@ public static class ObservableCacheEx
         where TSourceKey : notnull => new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manySelector, keySelector).Run();
 
     /// <summary>
+    /// Equivalent to a select many transform. To work, the key must individually identify each child.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+    /// <returns>An observable with the transformed change set.</returns>
+    /// <param name="source">The source.</param>
+    /// <param name="manySelector">Will select a enumerable of values.</param>
+    /// <param name="keySelector">The key selector which must be unique across all.</param>
+    public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, Task<IEnumerable<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector)
+        where TDestination : notnull
+        where TDestinationKey : notnull
+        where TSource : notnull
+        where TSourceKey : notnull => new MergeManyCacheChangeSets<TSource, TSourceKey, TDestination, TDestinationKey>(
+            source,
+            (val, _) => Observable.FromAsync(() => manySelector(val)).Select(coll => coll.AsObservableChangeSet().AddKey(keySelector)).Merge(),
+            null,
+            null).Run();
+
+    /// <summary>
+    /// Flatten the nested observable collection, and subsequently observe observable collection changes.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+    /// <returns>An observable with the transformed change set.</returns>
+    /// <param name="source">The source.</param>
+    /// <param name="manySelector">Will select a enumerable of values.</param>
+    /// <param name="keySelector">The key selector which must be unique across all.</param>
+    public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, Task<ObservableCollection<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector)
+        where TDestination : notnull
+        where TDestinationKey : notnull
+        where TSource : notnull
+        where TSourceKey : notnull => new MergeManyCacheChangeSets<TSource, TSourceKey, TDestination, TDestinationKey>(
+            source,
+            (val, _) => Observable.FromAsync(() => manySelector(val)).Select(coll => coll.AsObservableChangeSet().AddKey(keySelector)).Merge(),
+            null,
+            null).Run();
+
+    /// <summary>
+    /// Flatten the nested observable collection, and subsequently observe observable collection changes.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+    /// <returns>An observable with the transformed change set.</returns>
+    /// <param name="source">The source.</param>
+    /// <param name="manySelector">Will select a enumerable of values.</param>
+    /// <param name="keySelector">The key selector which must be unique across all.</param>
+    public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, Task<ReadOnlyObservableCollection<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector)
+        where TDestination : notnull
+        where TDestinationKey : notnull
+        where TSource : notnull
+        where TSourceKey : notnull => new MergeManyCacheChangeSets<TSource, TSourceKey, TDestination, TDestinationKey>(
+            source,
+            (val, _) => Observable.FromAsync(() => manySelector(val)).Select(coll => coll.AsObservableChangeSet().AddKey(keySelector)).Merge(),
+            null,
+            null).Run();
+
+    /// <summary>
+    /// Flatten the nested observable cache, and subsequently observe observable cache changes.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+    /// <returns>An observable with the transformed change set.</returns>
+    /// <param name="source">The source.</param>
+    /// <param name="manySelector">Will select an observable cache of values.</param>
+    public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, Task<IObservableCache<TDestination, TDestinationKey>>> manySelector)
+        where TDestination : notnull
+        where TDestinationKey : notnull
+        where TSource : notnull
+        where TSourceKey : notnull => new MergeManyCacheChangeSets<TSource, TSourceKey, TDestination, TDestinationKey>(
+            source,
+            (val, _) => Observable.FromAsync(() => manySelector(val)).Select(cache => cache.Connect()).Merge(),
+            null,
+            null).Run();
+
+    /// <summary>
     /// Projects each update item to a new form using the specified transform function,
     /// providing an error handling action to safely handle transform errors without killing the stream.
     /// </summary>
