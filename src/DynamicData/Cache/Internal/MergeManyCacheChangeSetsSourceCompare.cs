@@ -4,6 +4,7 @@
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -28,6 +29,7 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
         {
             var locker = new object();
             var cache = new Cache<ChangeSetCache<ParentChildEntry, TDestinationKey>, TKey>();
+            var parentUpdate = false;
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<ParentChildEntry, TDestinationKey>(() => cache.Items, _comparer, _equalityComparer);
@@ -37,28 +39,38 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
                 .Transform((obj, key) => new ChangeSetCache<ParentChildEntry, TDestinationKey>(_changeSetSelector(obj, key).Synchronize(locker)))
                 .Synchronize(locker)
                 .Do(cache.Clone)
+                .Do(_ => parentUpdate = true)
                 .Publish();
 
             // Merge the child changeset changes together and apply to the tracker
             var subMergeMany = shared
                 .MergeMany(changeSetCache => changeSetCache.Source)
-                .Subscribe(
-                    changes => changeTracker.ProcessChangeSet(changes, observer),
+                .SubscribeSafe(
+                    changes => changeTracker.ProcessChangeSet(changes, !parentUpdate ? observer : null),
                     observer.OnError,
                     observer.OnCompleted);
 
             // When a source item is removed, all of its sub-items need to be removed
-            var subRemove = shared
-                .OnItemRemoved(cacheChangeSet => changeTracker.RemoveItems(cacheChangeSet.Cache.KeyValues, observer), invokeOnUnsubscribe: false)
-                .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
+            var parentObservable = shared
+                .OnItemRemoved(cacheChangeSet => changeTracker.RemoveItems(cacheChangeSet.Cache.KeyValues), invokeOnUnsubscribe: false)
+                .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues));
+
+            // If requested, handle refresh events as well
+            if (reevalOnRefresh)
+            {
+                parentObservable = parentObservable.OnItemRefreshed(cacheChangeSet => changeTracker.RefreshItems(cacheChangeSet.Cache.Keys));
+            }
+
+            // Subscribe to handle all the requested changes and emit them downstream
+            var subParent = parentObservable
+                .Do(_ =>
+                {
+                    changeTracker.EmitChanges(observer);
+                    parentUpdate = false;
+                })
                 .Subscribe();
 
-            // Optionally attach a handler for Refresh events
-            var subRefresh = reevalOnRefresh
-                ? shared.OnItemRefreshed(cacheChangeSet => changeTracker.RefreshItems(cacheChangeSet.Cache.Keys, observer)).Subscribe()
-                : Disposable.Empty;
-
-            return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove, subRefresh);
+            return new CompositeDisposable(shared.Connect(), subMergeMany, subParent);
         }).Select(changes => changes.Transform(entry => entry.Child));
 
     private sealed class ParentChildEntry(TObject parent, TDestination child)
