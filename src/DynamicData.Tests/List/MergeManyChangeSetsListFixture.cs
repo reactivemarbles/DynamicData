@@ -165,7 +165,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount + AddRangeSize);
-        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + AddRangeSize);
+        _animalResults.Messages.Count.Should().Be(2); // 1 for initial add, 1 for additional add
         addThese.SelectMany(added => added.Animals.Items).ForEach(added => _animalResults.Data.Items.Should().Contain(added));
         CheckResultContents();
     }

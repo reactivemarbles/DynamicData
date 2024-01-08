@@ -227,7 +227,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount); // Owner Count should not change
-        _animalResults.Messages.Count.Should().Be(2); // +2 = 1 Message removing animals from old value, +1 message adding from new value
+        _animalResults.Messages.Count.Should().Be(2); // 2 = Initial Add and one changeset with remove old items / add new items
         replaceThis.Animals.Items.ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
         withThis.Animals.Items.ForEach(added => _animalResults.Data.Items.Should().Contain(added));
         CheckResultContents();
@@ -262,7 +262,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(2);
+        _animalResults.Messages.Count.Should().Be(1 + InitialOwnerCount); // Initial + 1 for each Range Added
         totalAdded.ForEach(animal => _animalResults.Data.Items.Should().Contain(animal));
         _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount + totalAdded.Count);
         CheckResultContents();
