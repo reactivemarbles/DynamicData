@@ -13,7 +13,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
 {
     private readonly ChangeAwareCache<TObject, TKey> _resultCache = new();
 
-    public void RemoveItems(IEnumerable<KeyValuePair<TKey, TObject>> items, IObserver<IChangeSet<TObject, TKey>> observer)
+    public void RemoveItems(IEnumerable<KeyValuePair<TKey, TObject>> items, IObserver<IChangeSet<TObject, TKey>>? observer = null)
     {
         var sourceCaches = selectCaches().ToArray();
 
@@ -34,10 +34,13 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
             }
         }
 
-        EmitChanges(observer);
+        if (observer != null)
+        {
+            EmitChanges(observer);
+        }
     }
 
-    public void RefreshItems(IEnumerable<TKey> keys, IObserver<IChangeSet<TObject, TKey>> observer)
+    public void RefreshItems(IEnumerable<TKey> keys, IObserver<IChangeSet<TObject, TKey>>? observer = null)
     {
         var sourceCaches = selectCaches().ToArray();
 
@@ -58,10 +61,13 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
             }
         }
 
-        EmitChanges(observer);
+        if (observer != null)
+        {
+            EmitChanges(observer);
+        }
     }
 
-    public void ProcessChangeSet(IChangeSet<TObject, TKey> changes, IObserver<IChangeSet<TObject, TKey>> observer)
+    public void ProcessChangeSet(IChangeSet<TObject, TKey> changes, IObserver<IChangeSet<TObject, TKey>>? observer = null)
     {
         var sourceCaches = selectCaches().ToArray();
 
@@ -87,10 +93,13 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
             }
         }
 
-        EmitChanges(observer);
+        if (observer != null)
+        {
+            EmitChanges(observer);
+        }
     }
 
-    private void EmitChanges(IObserver<IChangeSet<TObject, TKey>> observer)
+    public void EmitChanges(IObserver<IChangeSet<TObject, TKey>> observer)
     {
         var changeSet = _resultCache.CaptureChanges();
         if (changeSet.Count != 0)

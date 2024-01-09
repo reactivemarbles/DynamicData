@@ -228,7 +228,7 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         _marketCacheResults.Data.Count.Should().Be(MarketCount);
         markets.Sum(m => m.PricesCache.Count).Should().Be(MarketCount * PricesPerMarket);
         results.Data.Count.Should().Be(MarketCount * PricesPerMarket);
-        results.Messages.Count.Should().Be(MarketCount);
+        results.Messages.Count.Should().Be(1);
         results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
         results.Summary.Overall.Removes.Should().Be(0);
         results.Summary.Overall.Updates.Should().Be(0);
@@ -263,8 +263,8 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
         using var results = ChangeSetByRating().AsAggregator();
-        _marketCache.AddOrUpdate(markets);
         markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.SetPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
+        _marketCache.AddOrUpdate(markets);
 
         // when
         markets.ForEach(m => m.RefreshAllPrices(GetRandomPrice));
@@ -272,7 +272,7 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         // then
         _marketCacheResults.Data.Count.Should().Be(MarketCount);
         results.Data.Count.Should().Be(MarketCount * PricesPerMarket);
-        results.Messages.Count.Should().Be(MarketCount * 2);
+        results.Messages.Count.Should().Be(MarketCount + 1);
         results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
         results.Summary.Overall.Removes.Should().Be(0);
         results.Summary.Overall.Updates.Should().Be(0);
