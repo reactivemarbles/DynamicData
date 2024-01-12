@@ -9,7 +9,7 @@ internal sealed class ChangeSetMergeTracker<TObject>
 {
     private readonly ChangeAwareList<TObject> _resultList = new();
 
-    public void ProcessChangeSet(IChangeSet<TObject> changes, IObserver<IChangeSet<TObject>> observer)
+    public void ProcessChangeSet(IChangeSet<TObject> changes, IObserver<IChangeSet<TObject>>? observer = null)
     {
         foreach (var change in changes)
         {
@@ -49,13 +49,29 @@ internal sealed class ChangeSetMergeTracker<TObject>
             }
         }
 
-        EmitChanges(observer);
+        if (observer != null)
+        {
+            EmitChanges(observer);
+        }
     }
 
-    public void RemoveItems(IEnumerable<TObject> removeItems, IObserver<IChangeSet<TObject>> observer)
+    public void RemoveItems(IEnumerable<TObject> removeItems, IObserver<IChangeSet<TObject>>? observer = null)
     {
         _resultList.Remove(removeItems);
-        EmitChanges(observer);
+
+        if (observer != null)
+        {
+            EmitChanges(observer);
+        }
+    }
+
+    public void EmitChanges(IObserver<IChangeSet<TObject>> observer)
+    {
+        var changeSet = _resultList.CaptureChanges();
+        if (changeSet.Count != 0)
+        {
+            observer.OnNext(changeSet);
+        }
     }
 
     private void OnClear(Change<TObject> change) => _resultList.ClearOrRemoveMany(change);
@@ -71,13 +87,4 @@ internal sealed class ChangeSetMergeTracker<TObject>
     private void OnRangeAdded(RangeChange<TObject> range) => _resultList.AddRange(range);
 
     private void OnRangeRemoved(RangeChange<TObject> range) => _resultList.Remove(range);
-
-    private void EmitChanges(IObserver<IChangeSet<TObject>> observer)
-    {
-        var changeSet = _resultList.CaptureChanges();
-        if (changeSet.Count != 0)
-        {
-            observer.OnNext(changeSet);
-        }
-    }
 }
