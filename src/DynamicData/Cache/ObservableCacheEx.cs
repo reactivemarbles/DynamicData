@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -4889,6 +4890,60 @@ public static class ObservableCacheEx
     /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
     /// <typeparam name="TSource">The type of the source.</typeparam>
     /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+    /// <typeparam name="TCollection">The type of an observable collection of <typeparamref name="TDestination"/>.</typeparam>
+    /// <returns>An observable with the transformed change set.</returns>
+    /// <param name="source">The source.</param>
+    /// <param name="manySelector">Async function to transform a <typeparamref name="TSource"/> and <typeparamref name="TSourceKey"/> into an <see cref="ObservableCollection{T}"/> of <typeparamref name="TDestination"/>.</param>
+    /// <param name="keySelector">The key selector which must be unique across all.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
+    /// <remarks>Because the transformations are asynchronous, unlike TransformMany, each sub-collection could be emitted via a separate changeset.</remarks>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, TSourceKey, Task<TCollection>> manySelector, Func<TDestination, TDestinationKey> keySelector, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
+        where TDestination : notnull
+        where TDestinationKey : notnull
+        where TSource : notnull
+        where TSourceKey : notnull
+        where TCollection : INotifyCollectionChanged, IEnumerable<TDestination>
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
+
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector, keySelector), equalityComparer, comparer).Run();
+    }
+
+    /// <summary>
+    /// Extension method similar to <see cref="TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, ObservableCollection{TDestination}}, Func{TDestination, TDestinationKey})"/> except that it allows the tranformation function to be an async method.  Also supports comparison and sorting to prioritize values the same destination key returned from multiple sources.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+    /// <typeparam name="TCollection">The type of an observable collection of <typeparamref name="TDestination"/>.</typeparam>
+    /// <returns>An observable with the transformed change set.</returns>
+    /// <param name="source">The source.</param>
+    /// <param name="manySelector">Async function to transform a <typeparamref name="TSource"/> into an <see cref="ObservableCollection{T}"/> of <typeparamref name="TDestination"/>.</param>
+    /// <param name="keySelector">The key selector which must be unique across all.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
+    /// <remarks>Because the transformations are asynchronous, unlike TransformMany, each sub-collection could be emitted via a separate changeset.</remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, Task<TCollection>> manySelector, Func<TDestination, TDestinationKey> keySelector, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
+        where TDestination : notnull
+        where TDestinationKey : notnull
+        where TSource : notnull
+        where TSourceKey : notnull
+        where TCollection : INotifyCollectionChanged, IEnumerable<TDestination> => source.TransformManyAsync((val, _) => manySelector(val), keySelector, equalityComparer, comparer);
+
+#if false
+    /// <summary>
+    /// Extension method similar to <see cref="TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, ObservableCollection{TDestination}}, Func{TDestination, TDestinationKey})"/> except that it allows the tranformation function to be an async method.  Also supports comparison and sorting to prioritize values the same destination key returned from multiple sources.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
     /// <returns>An observable with the transformed change set.</returns>
     /// <param name="source">The source.</param>
     /// <param name="manySelector">Async function to transform a <typeparamref name="TSource"/> and <typeparamref name="TSourceKey"/> into an <see cref="ObservableCollection{T}"/> of <typeparamref name="TDestination"/>.</param>
@@ -4979,6 +5034,7 @@ public static class ObservableCacheEx
         where TDestinationKey : notnull
         where TSource : notnull
         where TSourceKey : notnull => source.TransformManyAsync((val, _) => manySelector(val), keySelector, equalityComparer, comparer);
+#endif
 
     /// <summary>
     /// Extension method similar to <see cref="TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, IObservableCache{TDestination, TDestinationKey}}, Func{TDestination, TDestinationKey})"/> except that it allows the tranformation function to be an async method.  Also supports comparison and sorting to prioritize values the same destination key returned from multiple sources.
@@ -5079,6 +5135,63 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TSourceKey : notnull => source.TransformManySafeAsync((val, _) => manySelector(val), keySelector, errorHandler, equalityComparer, comparer);
 
+    /// <summary>
+    /// Extension method similar to <see cref="TransformManyAsync{TDestination, TDestinationKey, TSource, TSourceKey, TCollection}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, TSourceKey, Task{TCollection}}, Func{TDestination, TDestinationKey}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/> except it accepts an error handler so that failed transformations are not fatal errors.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+    /// <typeparam name="TCollection">The type of an observable collection of <typeparamref name="TDestination"/>.</typeparam>
+    /// <returns>An observable with the transformed change set.</returns>
+    /// <param name="source">The source.</param>
+    /// <param name="manySelector">Async function to transform a <typeparamref name="TSource"/> and <typeparamref name="TSourceKey"/> into an <see cref="ObservableCollection{T}"/> of <typeparamref name="TDestination"/>.</param>
+    /// <param name="keySelector">The key selector which must be unique across all.</param>
+    /// <param name="errorHandler">Callback function for handling an errors.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
+    /// <remarks>Because the transformations are asynchronous, unlike TransformMany, each sub-collection could be emitted via a separate changeset.</remarks>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformManySafeAsync<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, TSourceKey, Task<TCollection>> manySelector, Func<TDestination, TDestinationKey> keySelector, Action<Error<TSource, TSourceKey>> errorHandler, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
+        where TDestination : notnull
+        where TDestinationKey : notnull
+        where TSource : notnull
+        where TSourceKey : notnull
+        where TCollection : INotifyCollectionChanged, IEnumerable<TDestination>
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
+        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector, keySelector), equalityComparer, comparer, errorHandler).Run();
+    }
+
+    /// <summary>
+    /// Extension method similar to <see cref="TransformManyAsync{TDestination, TDestinationKey, TSource, TSourceKey, TCollection}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, Task{TCollection}}, Func{TDestination, TDestinationKey}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/> except it accepts an error handler so that failed transformations are not fatal errors.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+    /// <typeparam name="TCollection">The type of an observable collection of <typeparamref name="TDestination"/>.</typeparam>
+    /// <returns>An observable with the transformed change set.</returns>
+    /// <param name="source">The source.</param>
+    /// <param name="manySelector">Async function to transform a <typeparamref name="TSource"/> into an <see cref="ObservableCollection{T}"/> of <typeparamref name="TDestination"/>.</param>
+    /// <param name="keySelector">The key selector which must be unique across all.</param>
+    /// <param name="errorHandler">Callback function for handling an errors.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
+    /// <remarks>Because the transformations are asynchronous, unlike TransformMany, each sub-collection could be emitted via a separate changeset.</remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformManySafeAsync<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, Task<TCollection>> manySelector, Func<TDestination, TDestinationKey> keySelector, Action<Error<TSource, TSourceKey>> errorHandler, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
+        where TDestination : notnull
+        where TDestinationKey : notnull
+        where TSource : notnull
+        where TSourceKey : notnull
+        where TCollection : INotifyCollectionChanged, IEnumerable<TDestination> => source.TransformManySafeAsync((val, _) => manySelector(val), keySelector, errorHandler, equalityComparer, comparer);
+
+#if false
     /// <summary>
     /// Extension method similar to <see cref="TransformManyAsync{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, TSourceKey, Task{ObservableCollection{TDestination}}}, Func{TDestination, TDestinationKey}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/> except it accepts an error handler so that failed transformations are not fatal errors.
     /// </summary>
@@ -5182,6 +5295,7 @@ public static class ObservableCacheEx
         where TDestinationKey : notnull
         where TSource : notnull
         where TSourceKey : notnull => source.TransformManySafeAsync((val, _) => manySelector(val), keySelector, errorHandler, equalityComparer, comparer);
+#endif
 
     /// <summary>
     /// Extension method similar to <see cref="TransformManyAsync{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, TSourceKey, Task{IObservableCache{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/> except it accepts an error handler so that failed transformations are not fatal errors.
@@ -6160,17 +6274,26 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TSourceKey : notnull => async (val, key) => (await manySelector(val, key).ConfigureAwait(false)).AsObservableChangeSet(keySelector);
 
-    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTranformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<ObservableCollection<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector)
+    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTranformer<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(Func<TSource, TSourceKey, Task<TCollection>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
-        where TSourceKey : notnull => async (val, key) => (await manySelector(val, key).ConfigureAwait(false)).AsObservableChangeSet(keySelector);
+        where TSourceKey : notnull
+        where TCollection : INotifyCollectionChanged, IEnumerable<TDestination> => async (val, key) => (await manySelector(val, key).ConfigureAwait(false)).ToObservableChangeSet<TCollection, TDestination>().AddKey(keySelector);
 
-    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTranformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<ReadOnlyObservableCollection<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector)
+#if false
+     private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTranformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<ObservableCollection<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
-        where TSourceKey : notnull => async (val, key) => (await manySelector(val, key).ConfigureAwait(false)).AsObservableChangeSet(keySelector);
+        where TSourceKey : notnull => async (val, key) => (await manySelector(val, key).ConfigureAwait(false)).ToObservableChangeSet(keySelector);
+
+     private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTranformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<ReadOnlyObservableCollection<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector)
+        where TDestination : notnull
+        where TDestinationKey : notnull
+        where TSource : notnull
+        where TSourceKey : notnull => async (val, key) => (await manySelector(val, key).ConfigureAwait(false)).ToObservableChangeSet(keySelector);
+#endif
 
     private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTranformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<IObservableCache<TDestination, TDestinationKey>>> manySelector)
         where TDestination : notnull
