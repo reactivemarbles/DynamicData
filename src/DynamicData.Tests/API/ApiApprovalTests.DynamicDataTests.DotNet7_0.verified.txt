@@ -1855,6 +1855,70 @@ namespace DynamicData
             where TDestinationKey :  notnull
             where TSource :  notnull
             where TSourceKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TSourceKey>> source, System.Func<TSource, System.Threading.Tasks.Task<DynamicData.IObservableCache<TDestination, TDestinationKey>>> manySelector, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TDestination :  notnull
+            where TDestinationKey :  notnull
+            where TSource :  notnull
+            where TSourceKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TSourceKey>> source, System.Func<TSource, TSourceKey, System.Threading.Tasks.Task<DynamicData.IObservableCache<TDestination, TDestinationKey>>> manySelector, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TDestination :  notnull
+            where TDestinationKey :  notnull
+            where TSource :  notnull
+            where TSourceKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TSourceKey>> source, System.Func<TSource, System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<TDestination>>> manySelector, System.Func<TDestination, TDestinationKey> keySelector, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TDestination :  notnull
+            where TDestinationKey :  notnull
+            where TSource :  notnull
+            where TSourceKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TSourceKey>> source, System.Func<TSource, TSourceKey, System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<TDestination>>> manySelector, System.Func<TDestination, TDestinationKey> keySelector, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TDestination :  notnull
+            where TDestinationKey :  notnull
+            where TSource :  notnull
+            where TSourceKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(this System.IObservable<DynamicData.IChangeSet<TSource, TSourceKey>> source, System.Func<TSource, System.Threading.Tasks.Task<TCollection>> manySelector, System.Func<TDestination, TDestinationKey> keySelector, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TDestination :  notnull
+            where TDestinationKey :  notnull
+            where TSource :  notnull
+            where TSourceKey :  notnull
+            where TCollection : System.Collections.Specialized.INotifyCollectionChanged, System.Collections.Generic.IEnumerable<TDestination> { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(this System.IObservable<DynamicData.IChangeSet<TSource, TSourceKey>> source, System.Func<TSource, TSourceKey, System.Threading.Tasks.Task<TCollection>> manySelector, System.Func<TDestination, TDestinationKey> keySelector, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TDestination :  notnull
+            where TDestinationKey :  notnull
+            where TSource :  notnull
+            where TSourceKey :  notnull
+            where TCollection : System.Collections.Specialized.INotifyCollectionChanged, System.Collections.Generic.IEnumerable<TDestination> { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> TransformManySafeAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TSourceKey>> source, System.Func<TSource, System.Threading.Tasks.Task<DynamicData.IObservableCache<TDestination, TDestinationKey>>> manySelector, System.Action<DynamicData.Kernel.Error<TSource, TSourceKey>> errorHandler, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TDestination :  notnull
+            where TDestinationKey :  notnull
+            where TSource :  notnull
+            where TSourceKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> TransformManySafeAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TSourceKey>> source, System.Func<TSource, TSourceKey, System.Threading.Tasks.Task<DynamicData.IObservableCache<TDestination, TDestinationKey>>> manySelector, System.Action<DynamicData.Kernel.Error<TSource, TSourceKey>> errorHandler, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TDestination :  notnull
+            where TDestinationKey :  notnull
+            where TSource :  notnull
+            where TSourceKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> TransformManySafeAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TSourceKey>> source, System.Func<TSource, System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<TDestination>>> manySelector, System.Func<TDestination, TDestinationKey> keySelector, System.Action<DynamicData.Kernel.Error<TSource, TSourceKey>> errorHandler, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TDestination :  notnull
+            where TDestinationKey :  notnull
+            where TSource :  notnull
+            where TSourceKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> TransformManySafeAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TSourceKey>> source, System.Func<TSource, TSourceKey, System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<TDestination>>> manySelector, System.Func<TDestination, TDestinationKey> keySelector, System.Action<DynamicData.Kernel.Error<TSource, TSourceKey>> errorHandler, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TDestination :  notnull
+            where TDestinationKey :  notnull
+            where TSource :  notnull
+            where TSourceKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> TransformManySafeAsync<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(this System.IObservable<DynamicData.IChangeSet<TSource, TSourceKey>> source, System.Func<TSource, System.Threading.Tasks.Task<TCollection>> manySelector, System.Func<TDestination, TDestinationKey> keySelector, System.Action<DynamicData.Kernel.Error<TSource, TSourceKey>> errorHandler, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TDestination :  notnull
+            where TDestinationKey :  notnull
+            where TSource :  notnull
+            where TSourceKey :  notnull
+            where TCollection : System.Collections.Specialized.INotifyCollectionChanged, System.Collections.Generic.IEnumerable<TDestination> { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> TransformManySafeAsync<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(this System.IObservable<DynamicData.IChangeSet<TSource, TSourceKey>> source, System.Func<TSource, TSourceKey, System.Threading.Tasks.Task<TCollection>> manySelector, System.Func<TDestination, TDestinationKey> keySelector, System.Action<DynamicData.Kernel.Error<TSource, TSourceKey>> errorHandler, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TDestination :  notnull
+            where TDestinationKey :  notnull
+            where TSource :  notnull
+            where TSourceKey :  notnull
+            where TCollection : System.Collections.Specialized.INotifyCollectionChanged, System.Collections.Generic.IEnumerable<TDestination> { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Reactive.Unit> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
