@@ -9,7 +9,6 @@ using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 
 using FluentAssertions;
-
 using Xunit;
 
 namespace DynamicData.Tests.Cache;
@@ -204,6 +203,84 @@ public class TransformAsyncFixture
         stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
         stub.Results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
         stub.Results.Messages[1].Updates.Should().Be(1, "Should be 1 update");
+    }
+
+
+    private record PersonWithAgeGroup(Person Person, string AgeGroup);
+
+
+
+    [Fact]
+    public void TransformWithoutRefresh()
+    {
+        using var source = new SourceCache<Person, string>(p => p.Name);
+        using var results = source.Connect()
+            .AutoRefresh()
+            .TransformAsync((p, key) => Task.FromResult(new PersonWithAgeGroup(p, p.Age < 18 ? "Child" : "Adult"))).AsAggregator();
+
+        var person = new Person("SomeOne", 16);
+        source.AddOrUpdate(person);
+
+        results.Data.Count.Should().Be(1);
+        results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be("Child");
+
+        person.Age = 21;
+
+
+        results.Data.Count.Should().Be(1);
+        results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be("Child");
+
+    }
+
+    [Fact]
+    public void TransformOnRefresh()
+    {
+        using var source = new SourceCache<Person, string>(p => p.Name);
+        using var results = source.Connect()
+            .AutoRefresh()
+            .TransformAsync((p, key) => Task.FromResult(new PersonWithAgeGroup(p, p.Age < 18  ? "Child" : "Adult")), TransformAsyncOptions.WithTransformOnRefresh).AsAggregator();
+
+        var person = new Person("SomeOne", 16);
+        source.AddOrUpdate(person);
+
+        results.Data.Count.Should().Be(1);
+        results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be("Child");
+        
+        person.Age = 21;
+
+
+        results.Data.Count.Should().Be(1);
+        results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be("Adult");
+
+    }
+
+    [Fact]
+    public async Task WithMaxConcurrency()
+    {
+        /* We need to test whether the max concurrency has any effect.
+
+             If  maxConcurrency == 100, this test takes a little more than 100 ms
+             If maxConcurrency = 10, this test takes a little more than 1s 
+
+            So it works, but how can it be tested in a scientific way ??
+        */
+
+        const int transformCount = 100;
+        const int maxConcurrency = 10;
+
+
+        using var source = new SourceCache<Person, string>(p => p.Name);
+        using var results = source.Connect()
+            .TransformAsync(async (p, key) =>
+            {
+                await Task.Delay(100);
+
+                return Task.FromResult(new PersonWithAgeGroup(p, p.Age < 18 ? "Child" : "Adult"));
+            }, TransformAsyncOptions.WithMaximumConcurrency(maxConcurrency)).AsAggregator();
+
+        source.AddOrUpdate(Enumerable.Range(1, transformCount).Select(l => new Person("Person" + l, l)));
+
+       await results.Data.CountChanged.Where(c=>c == transformCount).Take(1);
     }
 
     private class TransformStub : IDisposable

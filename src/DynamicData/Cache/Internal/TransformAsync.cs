@@ -13,7 +13,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
     Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory,
     Action<Error<TSource, TKey>>? exceptionCallback,
     IObservable<Func<TSource, TKey, bool>>? forceTransform = null,
-    int maximumConcurrency = 4,
+    int? maximumConcurrency = null,
     bool transformOnRefresh = false)
     where TDestination : notnull
     where TSource : notnull
@@ -38,14 +38,13 @@ internal class TransformAsync<TDestination, TSource, TKey>(
             return transformer.SubscribeSafe(observer);
         });
 
-    private IObservable<IChangeSet<TDestination, TKey>> DoTransform(
-        ChangeAwareCache<TransformedItemContainer, TKey> cache, Func<TSource, TKey, bool> shouldTransform)
+    private IObservable<IChangeSet<TDestination, TKey>> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey> cache, Func<TSource, TKey, bool> shouldTransform)
     {
         var toTransform = cache.KeyValues.Where(kvp => shouldTransform(kvp.Value.Source, kvp.Key)).Select(kvp =>
             new Change<TSource, TKey>(ChangeReason.Update, kvp.Key, kvp.Value.Source, kvp.Value.Source)).ToArray();
 
         return toTransform.Select(change => Observable.Defer(() => Transform(change).ToObservable()))
-            .Merge(maximumConcurrency < 1 ? int.MaxValue : maximumConcurrency)
+            .Merge(maximumConcurrency ?? int.MaxValue)
             .ToArray()
             .Select(transformed => ProcessUpdates(cache, transformed));
     }
@@ -54,7 +53,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         ChangeAwareCache<TransformedItemContainer, TKey> cache, IChangeSet<TSource, TKey> changes)
     {
         return changes.Select(change => Observable.Defer(() => Transform(change).ToObservable()))
-            .Merge(maximumConcurrency < 1 ? int.MaxValue : maximumConcurrency)
+            .Merge(maximumConcurrency ?? int.MaxValue)
             .ToArray()
             .Select(transformed => ProcessUpdates(cache, transformed));
     }
@@ -84,7 +83,15 @@ internal class TransformAsync<TDestination, TSource, TKey>(
                     break;
 
                 case ChangeReason.Refresh:
-                    cache.Refresh(key);
+                    if (transformOnRefresh)
+                    {
+                        cache.AddOrUpdate(result.Container.Value, key);
+                    }
+                    else
+                    {
+                        cache.Refresh(key);
+                    }
+
                     break;
             }
         }
