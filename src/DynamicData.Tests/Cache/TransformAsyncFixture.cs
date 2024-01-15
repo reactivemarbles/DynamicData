@@ -254,8 +254,10 @@ public class TransformAsyncFixture
 
     }
 
-    [Fact]
-    public async Task WithMaxConcurrency()
+    
+    [Theory, InlineData(10), InlineData(100)]
+
+    public async Task WithMaxConcurrency(int maxConcurrency)
     {
         /* We need to test whether the max concurrency has any effect.
 
@@ -266,8 +268,6 @@ public class TransformAsyncFixture
         */
 
         const int transformCount = 100;
-        const int maxConcurrency = 10;
-
 
         using var source = new SourceCache<Person, string>(p => p.Name);
         using var results = source.Connect()

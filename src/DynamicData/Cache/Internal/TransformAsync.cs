@@ -52,7 +52,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
     private IObservable<IChangeSet<TDestination, TKey>> DoTransform(
         ChangeAwareCache<TransformedItemContainer, TKey> cache, IChangeSet<TSource, TKey> changes)
     {
-        return changes.Select(change => Observable.Defer(() => Transform(change).ToObservable()))
+        return changes.Select(change => Observable.FromAsync(() => Transform(change)))
             .Merge(maximumConcurrency ?? int.MaxValue)
             .ToArray()
             .Select(transformed => ProcessUpdates(cache, transformed));
