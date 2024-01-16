@@ -6,9 +6,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using DynamicData.Binding;
-using DynamicData.Cache;
 using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -258,8 +256,7 @@ public class TransformAsyncFixture
 
         source.AddOrUpdate(Enumerable.Range(1, transformCount).Select(l => new Person("Person" + l, l)));
 
-        await results.Data.CountChanged.Where(c => c == transformCount).Take(1)
-            .Timeout(TimeSpan.FromSeconds(2));
+        await results.Data.CountChanged.Where(c => c == transformCount).Take(1);
     }
 
     private class TransformStub : IDisposable

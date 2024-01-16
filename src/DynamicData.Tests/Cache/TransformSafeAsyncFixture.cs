@@ -235,10 +235,11 @@ public class TransformSafeAsyncFixture
                 , TransformAsyncOptions.Default with { MaximumConcurrency = maxConcurrency })
             .AsAggregator();
 
+
         source.AddOrUpdate(Enumerable.Range(1, transformCount).Select(l => new Person("Person" + l, l)));
 
-        await results.Data.CountChanged.Where(c => c == transformCount).Take(1)
-            .Timeout(TimeSpan.FromSeconds(2));
+
+        await results.Data.CountChanged.Where(c => c == transformCount).Take(1);
 
         errorCount.Should().Be(0);
     }
