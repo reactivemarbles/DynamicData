@@ -4,7 +4,7 @@
     <NoWarn>$(NoWarn);CS0618;CA1801;CA1812;CA1816;CA1063;CS8767;CS8602;CS8618;IDE1006</NoWarn>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <XunitVersion>2.6.5</XunitVersion>
+    <XunitVersion>2.6.6</XunitVersion>
   </PropertyGroup>
 
   <ItemGroup>
