@@ -198,7 +198,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         _marketListResults.Data.Count.Should().Be(MarketCount);
         markets.Sum(m => m.PricesCache.Count).Should().Be(MarketCount * PricesPerMarket);
         results.Data.Count.Should().Be(MarketCount * PricesPerMarket);
-        results.Messages.Count.Should().Be(MarketCount);
+        results.Messages.Count.Should().Be(1);
         results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
         results.Summary.Overall.Removes.Should().Be(0);
         results.Summary.Overall.Updates.Should().Be(0);
@@ -823,8 +823,6 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         _marketListResults.Dispose();
         DisposeMarkets();
     }
-
-    private void AddUniquePrices(Market[] markets) => markets.ForEach(m => m.AddUniquePrices(PricesPerMarket, _ => GetRandomPrice()));
 
     private void CheckResultContents(ChangeSetAggregator<IMarket> marketResults, ChangeSetAggregator<MarketPrice, int> priceResults)
     {
