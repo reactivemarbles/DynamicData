@@ -6,8 +6,9 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using DynamicData.Binding;
+using DynamicData.Cache;
 using DynamicData.Tests.Domain;
-
+using DynamicData.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -206,39 +207,15 @@ public class TransformAsyncFixture
     }
 
 
-    private record PersonWithAgeGroup(Person Person, string AgeGroup);
+   
 
-
-
-    [Fact]
-    public void TransformWithoutRefresh()
+    [Theory, InlineData(true), InlineData(false)]
+    public void TransformOnRefresh(bool transformOnRefresh)
     {
         using var source = new SourceCache<Person, string>(p => p.Name);
         using var results = source.Connect()
             .AutoRefresh()
-            .TransformAsync((p, key) => Task.FromResult(new PersonWithAgeGroup(p, p.Age < 18 ? "Child" : "Adult"))).AsAggregator();
-
-        var person = new Person("SomeOne", 16);
-        source.AddOrUpdate(person);
-
-        results.Data.Count.Should().Be(1);
-        results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be("Child");
-
-        person.Age = 21;
-
-
-        results.Data.Count.Should().Be(1);
-        results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be("Child");
-
-    }
-
-    [Fact]
-    public void TransformOnRefresh()
-    {
-        using var source = new SourceCache<Person, string>(p => p.Name);
-        using var results = source.Connect()
-            .AutoRefresh()
-            .TransformAsync((p, key) => Task.FromResult(new PersonWithAgeGroup(p, p.Age < 18  ? "Child" : "Adult")), TransformAsyncOptions.WithTransformOnRefresh).AsAggregator();
+            .TransformAsync((p, key) => Task.FromResult(new PersonWithAgeGroup(p, p.Age < 18  ? "Child" : "Adult")), TransformAsyncOptions.Default with { TransformOnRefresh = transformOnRefresh }).AsAggregator();
 
         var person = new Person("SomeOne", 16);
         source.AddOrUpdate(person);
@@ -250,7 +227,7 @@ public class TransformAsyncFixture
 
 
         results.Data.Count.Should().Be(1);
-        results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be("Adult");
+        results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be(transformOnRefresh ? "Adult": "Child");
 
     }
 
@@ -267,6 +244,7 @@ public class TransformAsyncFixture
             So it works, but how can it be tested in a scientific way ??
         */
 
+
         const int transformCount = 100;
 
         using var source = new SourceCache<Person, string>(p => p.Name);
@@ -275,12 +253,15 @@ public class TransformAsyncFixture
             {
                 await Task.Delay(100);
 
-                return Task.FromResult(new PersonWithAgeGroup(p, p.Age < 18 ? "Child" : "Adult"));
-            }, TransformAsyncOptions.WithMaximumConcurrency(maxConcurrency)).AsAggregator();
+                return new PersonWithAgeGroup(p, p.Age < 18 ? "Child" : "Adult");
+            },  TransformAsyncOptions.Default with { MaximumConcurrency = maxConcurrency }).AsAggregator();
 
         source.AddOrUpdate(Enumerable.Range(1, transformCount).Select(l => new Person("Person" + l, l)));
 
-       await results.Data.CountChanged.Where(c=>c == transformCount).Take(1);
+       // var xxx = Observable.Timer(TimeSpan.FromSeconds(1)).Select(_=> Observable.Thr);
+
+       await results.Data.CountChanged.Where(c=>c == transformCount).Take(1)
+           .Timeout(TimeSpan.FromSeconds(2));
     }
 
     private class TransformStub : IDisposable
