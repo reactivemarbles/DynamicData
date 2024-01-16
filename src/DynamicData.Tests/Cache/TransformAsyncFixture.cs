@@ -258,10 +258,8 @@ public class TransformAsyncFixture
 
         source.AddOrUpdate(Enumerable.Range(1, transformCount).Select(l => new Person("Person" + l, l)));
 
-       // var xxx = Observable.Timer(TimeSpan.FromSeconds(1)).Select(_=> Observable.Thr);
-
-       await results.Data.CountChanged.Where(c=>c == transformCount).Take(1)
-           .Timeout(TimeSpan.FromSeconds(2));
+        await results.Data.CountChanged.Where(c => c == transformCount).Take(1)
+            .Timeout(TimeSpan.FromSeconds(2));
     }
 
     private class TransformStub : IDisposable
