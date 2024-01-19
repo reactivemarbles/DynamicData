@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Security.Cryptography;
 using DynamicData.Kernel;
 using Xunit;
 
