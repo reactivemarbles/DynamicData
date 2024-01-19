@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -201,7 +200,7 @@ internal static class ObservableSpy
             msg => baseLogger($"{timeStamper()}[{Environment.CurrentManagedThreadId:X2}] |{opName}| {msg}");
 
 #if DEBUG
-    private static void DebugLogger(string str) => Debug.WriteLine(str); 
+    private static void DebugLogger(string str) => System.Diagnostics.Debug.WriteLine(str); 
 #elif DEBUG_SPY_ALWAYS
     private static void DebugLogger(string str) => NativeMethods.OutputDebugString(str); 
 #endif

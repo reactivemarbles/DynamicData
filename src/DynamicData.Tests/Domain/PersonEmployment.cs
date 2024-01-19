@@ -1,5 +1,3 @@
-using System;
-
 namespace DynamicData.Tests.Domain;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1066:Implement IEquatable when overriding Object.Equals", Justification = "Acceptable in a test.")]

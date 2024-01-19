@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using PublicApiGenerator;
 using VerifyXunit;
-using Xunit;
 
 namespace DynamicData.APITests;
 
@@ -15,7 +12,6 @@ namespace DynamicData.APITests;
 /// A helper for doing API approvals.
 /// </summary>
 [ExcludeFromCodeCoverage]
-[UsesVerify]
 public static class ApiExtensions
 {
     /// <summary>

@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using VerifyXunit;
 using Xunit;
 
 namespace DynamicData.APITests
@@ -9,7 +8,6 @@ namespace DynamicData.APITests
     /// Tests for handling API approval.
     /// </summary>
     [ExcludeFromCodeCoverage]
-    [UsesVerify]
     public class ApiApprovalTests
     {
         /// <summary>
