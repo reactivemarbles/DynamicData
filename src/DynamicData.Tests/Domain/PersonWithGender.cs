@@ -1,6 +1,7 @@
 ﻿using System;
 
 namespace DynamicData.Tests.Domain;
+public record PersonWithAgeGroup(Person Person, string AgeGroup);
 
 public class PersonWithGender : IEquatable<PersonWithGender>
 {

@@ -4765,6 +4765,87 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Projects each update item to a new form using the specified transform function.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="options">The transform options.</param>
+    /// <returns>
+    /// A transformed update collection.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">source
+    /// or
+    /// transformFactory.</exception>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, TransformAsyncOptions options)
+        where TDestination : notnull
+        where TSource : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+
+        return source.TransformAsync((current, _, _) => transformFactory(current), options);
+    }
+
+    /// <summary>
+    /// Projects each update item to a new form using the specified transform function.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="options">The transform options.</param>
+    /// <returns>
+    /// A transformed update collection.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">source
+    /// or
+    /// transformFactory.</exception>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<TDestination>> transformFactory, TransformAsyncOptions options)
+        where TDestination : notnull
+        where TSource : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+
+        return source.TransformAsync((current, _, key) => transformFactory(current, key), options);
+    }
+
+    /// <summary>
+    /// Projects each update item to a new form using the specified transform function.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="options">The transform options.</param>
+    /// <returns>
+    /// A transformed update collection.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">source
+    /// or
+    /// transformFactory.</exception>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, TransformAsyncOptions options)
+        where TDestination : notnull
+        where TSource : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+
+        return new TransformAsync<TDestination, TSource, TKey>(source, transformFactory, null, null, options.MaximumConcurrency, options.TransformOnRefresh).Run();
+    }
+
+    /// <summary>
     /// Equivalent to a select many transform. To work, the key must individually identify each child.
     /// </summary>
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
@@ -5088,6 +5169,93 @@ public static class ObservableCacheEx
         errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
 
         return new TransformAsync<TDestination, TSource, TKey>(source, transformFactory, errorHandler, forceTransform).Run();
+    }
+
+    /// <summary>
+    /// Projects each update item to a new form using the specified transform function.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="errorHandler">The error handler.</param>
+    /// <param name="options">Additional transform options.</param>
+    /// <returns>
+    /// A transformed update collection.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">source
+    /// or
+    /// transformFactory.</exception>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, TransformAsyncOptions options)
+        where TDestination : notnull
+        where TSource : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+
+        return source.TransformSafeAsync((current, _, _) => transformFactory(current), errorHandler, options);
+    }
+
+    /// <summary>
+    /// Projects each update item to a new form using the specified transform function.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="errorHandler">The error handler.</param>
+    /// <param name="options">Additional transform options.</param>
+    /// <returns>
+    /// A transformed update collection.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">source
+    /// or
+    /// transformFactory.</exception>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, TransformAsyncOptions options)
+        where TDestination : notnull
+        where TSource : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+
+        return source.TransformSafeAsync((current, _, key) => transformFactory(current, key), errorHandler, options);
+    }
+
+    /// <summary>
+    /// Projects each update item to a new form using the specified transform function.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="errorHandler">The error handler.</param>
+    /// <param name="options">Additional transform options.</param>
+    /// <returns>
+    /// A transformed update collection.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">source
+    /// or
+    /// transformFactory.</exception>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, TransformAsyncOptions options)
+        where TDestination : notnull
+        where TSource : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+
+        return new TransformAsync<TDestination, TSource, TKey>(source, transformFactory, errorHandler, null, options.MaximumConcurrency, options.TransformOnRefresh).Run();
     }
 
     /// <summary>
