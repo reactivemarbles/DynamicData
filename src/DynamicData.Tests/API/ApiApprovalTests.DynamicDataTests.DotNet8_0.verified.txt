@@ -1823,11 +1823,23 @@ namespace DynamicData
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, System.Threading.Tasks.Task<TDestination>> transformFactory, DynamicData.TransformAsyncOptions options)
+            where TDestination :  notnull
+            where TSource :  notnull
+            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, System.Threading.Tasks.Task<TDestination>> transformFactory, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, DynamicData.TransformAsyncOptions options)
+            where TDestination :  notnull
+            where TSource :  notnull
+            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
+            where TDestination :  notnull
+            where TSource :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, DynamicData.TransformAsyncOptions options)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -1943,11 +1955,23 @@ namespace DynamicData
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, System.Threading.Tasks.Task<TDestination>> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, DynamicData.TransformAsyncOptions options)
+            where TDestination :  notnull
+            where TSource :  notnull
+            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, System.Threading.Tasks.Task<TDestination>> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, DynamicData.TransformAsyncOptions options)
+            where TDestination :  notnull
+            where TSource :  notnull
+            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
+            where TDestination :  notnull
+            where TSource :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, DynamicData.TransformAsyncOptions options)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -2483,6 +2507,13 @@ namespace DynamicData
         public void Dispose() { }
         public void Edit(System.Action<DynamicData.IExtendedList<T>> updateAction) { }
         public System.IObservable<DynamicData.IChangeSet<T>> Preview(System.Func<T, bool>? predicate = null) { }
+    }
+    public struct TransformAsyncOptions : System.IEquatable<DynamicData.TransformAsyncOptions>
+    {
+        public static readonly DynamicData.TransformAsyncOptions Default;
+        public TransformAsyncOptions(int? MaximumConcurrency, bool TransformOnRefresh) { }
+        public int? MaximumConcurrency { get; set; }
+        public bool TransformOnRefresh { get; set; }
     }
     [System.Serializable]
     public class UnspecifiedIndexException : System.Exception

@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Bogus;
+﻿using Bogus;
 using DynamicData.Tests.Utilities;
 
 namespace DynamicData.Tests.Domain;
