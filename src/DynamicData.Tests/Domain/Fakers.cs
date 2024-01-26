@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using DynamicData.Tests.Utilities;
 
 namespace DynamicData.Tests.Domain;
 
@@ -47,13 +48,19 @@ internal static class Fakers
     public static Faker<Market> Market { get; } = new Faker<Market>().CustomInstantiator(faker => new Market($"{faker.Commerce.ProductName()} Id#{faker.Random.AlphaNumeric(5)}"));
 
     public static Faker<AnimalOwner> WithInitialAnimals(this Faker<AnimalOwner> existing, Faker<Animal> animalFaker, int minCount, int maxCount) =>
-        existing.FinishWith((faker, owner) => owner.Animals.AddRange(animalFaker.GenerateLazy(faker.Random.Number(minCount, maxCount))));
+        existing.FinishWith((faker, owner) => owner.Animals.AddRange(animalFaker.GenerateBetween(minCount, maxCount)));
 
     public static Faker<AnimalOwner> WithInitialAnimals(this Faker<AnimalOwner> existing, Faker<Animal> animalFaker, int maxCount) =>
         WithInitialAnimals(existing, animalFaker, 0, maxCount);
 
     public static Faker<AnimalOwner> WithInitialAnimals(this Faker<AnimalOwner> existing, Faker<Animal> animalFaker) =>
         WithInitialAnimals(existing, animalFaker, MinAnimals, MaxAnimals);
+
+    public static AnimalOwner AddAnimals(this AnimalOwner owner, Faker<Animal> animalFaker, int minCount, int maxCount) =>
+        owner.With(o => o.Animals.AddRange(animalFaker.GenerateBetween(minCount, maxCount)));
+
+    public static AnimalOwner AddAnimals(this AnimalOwner owner, Faker<Animal> animalFaker, int count) =>
+        owner.With(o => o.Animals.AddRange(animalFaker.Generate(count)));
 }
 
 internal static class FakerExtensions

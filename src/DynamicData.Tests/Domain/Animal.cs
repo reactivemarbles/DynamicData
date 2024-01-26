@@ -44,18 +44,45 @@ public sealed class Animal(string name, string type, AnimalFamily family, bool i
     public override string ToString() => $"{FormalName} ({Family}) [{Id:x4}]";
 
     public override int GetHashCode() => HashCode.Combine(Id, Name, Family, Type);
-}
 
-public sealed class AnimalEqualityComparer : IEqualityComparer<Animal>
-{
-    public static AnimalEqualityComparer Instance { get; } = new();
+    public static IComparer<Animal> NameComparer { get; } = new AnimalAlphabeticComparer();
 
-    public bool Equals(Animal? x, Animal? y) => (x, y) switch
+    public static IEqualityComparer<Animal> NameTypeCompare { get; } = new AnimalEqualityComparer();
+
+    public static IEqualityComparer<Animal> IdCompare { get; } = new AnimalIdComparer();
+
+    private sealed class AnimalAlphabeticComparer : IComparer<Animal>
     {
-        (null, null) => true,
-        (Animal a, Animal b) => (a.Type == b.Type) && (a.Family == b.Family) && (a.Name == b.Name),
-        _ => false,
-    };
+        public int Compare([DisallowNull] Animal x, [DisallowNull] Animal y) => (x, y) switch
+        {
+            (null, null) => 0,
+            (Animal a, Animal b) => string.Compare(a.FormalName, b.FormalName, StringComparison.OrdinalIgnoreCase),
+            (null, _) => 1,
+            _ => -1
+        };
+    }
 
-    public int GetHashCode([DisallowNull] Animal obj) => HashCode.Combine(obj?.Name ?? string.Empty, obj.Type, obj.Family);
+    private sealed class AnimalIdComparer : IEqualityComparer<Animal>
+    {
+        public bool Equals([DisallowNull] Animal x, [DisallowNull] Animal y) => (x, y) switch
+        {
+            (null, null) => true,
+            (Animal a, Animal b) => a.Id == b.Id,
+            _ => false,
+        };
+
+        public int GetHashCode([DisallowNull] Animal obj) => HashCode.Combine(obj?.Id ?? 0);
+    }
+
+    private sealed class AnimalEqualityComparer : IEqualityComparer<Animal>
+    {
+        public bool Equals(Animal? x, Animal? y) => (x, y) switch
+        {
+            (null, null) => true,
+            (Animal a, Animal b) => (a.Type == b.Type) && (a.Family == b.Family) && (a.Name == b.Name),
+            _ => false,
+        };
+
+        public int GetHashCode([DisallowNull] Animal obj) => HashCode.Combine(obj?.Name ?? string.Empty, obj.Type, obj.Family);
+    }
 }
