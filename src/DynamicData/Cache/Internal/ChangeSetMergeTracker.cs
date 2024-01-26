@@ -12,6 +12,9 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
     where TKey : notnull
 {
     private readonly ChangeAwareCache<TObject, TKey> _resultCache = new();
+    private bool _hasCompleted;
+
+    public void MarkComplete() => _hasCompleted = true;
 
     public void RemoveItems(IEnumerable<KeyValuePair<TKey, TObject>> items, IObserver<IChangeSet<TObject, TKey>>? observer = null)
     {
@@ -105,6 +108,11 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         if (changeSet.Count != 0)
         {
             observer.OnNext(changeSet);
+        }
+
+        if (_hasCompleted)
+        {
+            observer.OnCompleted();
         }
     }
 

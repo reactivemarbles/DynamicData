@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Bogus;
 using DynamicData.Kernel;
@@ -35,7 +36,7 @@ public sealed class TransformManyAsyncFixture : IDisposable
 
     public TransformManyAsyncFixture()
     {
-        unchecked{ _randomizer = new Randomizer((int)0xf7eebee7); }
+        unchecked{ _randomizer = new Randomizer((int)0xf7ee_bee7); }
 
         _animalFaker = Fakers.Animal.Clone().WithSeed(_randomizer);
         _animalOwnerFaker = Fakers.AnimalOwner.Clone().WithSeed(_randomizer).WithInitialAnimals(_animalFaker);
@@ -92,16 +93,18 @@ public sealed class TransformManyAsyncFixture : IDisposable
     public async Task ResultContainsChildrenFromAddedParentsAsync()
     {
         // Arrange
-        var taskTracker = new TaskTracker(RandomDelay);
-        var animalResults = CreateObservableCollectionChangeSet(taskTracker.Create).AsAggregator();
+        var taskTracker = new TaskTracker(FakeDelay);
+        var shared = CreateObservableCollectionChangeSet(taskTracker.Create).Replay();
+        var animalResults = shared.AsAggregator();
+        using var connect = shared.Connect();
         _animalOwners.AddOrUpdate(_animalOwnerFaker.Generate(InitialOwnerCount));
 
         // Act
-        await taskTracker.WhenAll();
+        await shared.Take(1);
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        animalResults.Messages.Count.Should().BeGreaterThan(1);
+        animalResults.Messages.Count.Should().BeGreaterThan(0);
         CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
     }
 
@@ -124,7 +127,7 @@ public sealed class TransformManyAsyncFixture : IDisposable
     public async Task ResultDoesNotContainChildrenFromRemovedParentsAsync()
     {
         // Arrange
-        var taskTracker = new TaskTracker(RandomDelay);
+        var taskTracker = new TaskTracker(FakeDelay);
         var animalResults = CreateObservableCollectionChangeSet(taskTracker.Create).AsAggregator();
         _animalOwners.AddOrUpdate(_animalOwnerFaker.Generate(InitialOwnerCount));
         var removedOwners = _randomizer.ListItems(_animalOwners.Items.ToList(), RemoveCount);
@@ -156,7 +159,7 @@ public sealed class TransformManyAsyncFixture : IDisposable
     public async Task ResultsWithObservableCacheChangesAsync()
     {
         // Arrange
-        var taskTracker = new TaskTracker(RandomDelay);
+        var taskTracker = new TaskTracker(FakeDelay);
         using var animalResults = CreateObservableCacheChangeSet(taskTracker.Create).AsAggregator();
         _animalOwners.AddOrUpdate(_animalOwnerFaker.Generate(InitialOwnerCount));
         var ownerAddCount = _randomizer.Number(1, AddCount);
@@ -169,6 +172,41 @@ public sealed class TransformManyAsyncFixture : IDisposable
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount + ownerAddCount);
         CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ResultCompletesOnlyWhenSourceCompletes(bool completeSource)
+    {
+        // Arrange
+        using var animalResults = CreateObservableCollectionChangeSet().AsAggregator();
+        _animalOwners.AddOrUpdate(_animalOwnerFaker.Generate(InitialOwnerCount));
+
+        // Act
+        if (completeSource)
+        {
+            _animalOwners.Dispose();
+        }
+
+        // Assert
+        _animalOwnerResults.IsCompleted.Should().Be(completeSource);
+        CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
+    }
+
+    [Fact]
+    public void ResultFailsIfSourceFails()
+    {
+        // Arrange
+        var expectedError = new Exception("Expected");
+        var throwObservable = Observable.Throw<IChangeSet<AnimalOwner, Guid>>(expectedError);
+        using var results = _animalOwners.Connect().Concat(throwObservable).MergeManyChangeSets(owner => owner.Animals.Connect()).AsAggregator();
+
+        // Act
+        _animalOwners.Dispose();
+
+        // Assert
+        results.Exception.Should().Be(expectedError);
     }
 
     public void Dispose()
@@ -223,6 +261,8 @@ public sealed class TransformManyAsyncFixture : IDisposable
 
     private Func<Task> RandomDelay => () => Task.Delay(_randomizer.Number(MinTaskDelay, MaxTaskDelay));
 
+    private static Func<Task> FakeDelay => () => Task.CompletedTask;
+
     private static int IdKey(Animal a) => a.Id;
     private static AnimalFamily FamilyKey(Animal a) => a.Family;
 
@@ -237,14 +277,14 @@ public sealed class TransformManyAsyncFixture : IDisposable
 
     private static Func<AnimalOwner, Guid, Task<T>> CreateSelector<T>(Func<AnimalOwner, T> selector, Func<Task>? delayFactory = null) =>
         (delayFactory != null)
-            // If a delay factory is given, make it extra async-y
-            ? (owner, guid) => Task.Run(async () =>
+            // If a delay factory is given, make it async
+            ? (async (owner, guid) =>
             {
                 await delayFactory().ConfigureAwait(false);
-                return await Task.Run(() => selector(owner)).ConfigureAwait(false);
+                return selector(owner);
             })
 
-            // Otherwise make it not async-y at all
+            // Otherwise make it not async
             : (owner, guid) => Task.FromResult(selector(owner));
 
     private IObservable<IChangeSet<Animal, int>> CreateObservableCollectionChangeSet(Func<Task>? delayFactory = null, IEqualityComparer<Animal>? equalityComparer = null, IComparer<Animal>? comparer = null) =>

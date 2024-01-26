@@ -10,4 +10,13 @@ internal static class ObservableEx
 {
     public static IDisposable SubscribeSafe<T>(this IObservable<T> observable, Action<T> onNext, Action<Exception> onError, Action onComplete) =>
         observable.SubscribeSafe(Observer.Create(onNext, onError, onComplete));
+
+    public static IDisposable SubscribeSafe<T>(this IObservable<T> observable, Action<T> onNext, Action<Exception> onError) =>
+        observable.SubscribeSafe(Observer.Create(onNext, onError));
+
+    public static IDisposable SubscribeSafe<T>(this IObservable<T> observable, Action<T> onNext, Action onComplete) =>
+        observable.SubscribeSafe(Observer.Create(onNext, onComplete));
+
+    public static IDisposable SubscribeSafe<T>(this IObservable<T> observable, Action<T> onNext) =>
+        observable.SubscribeSafe(Observer.Create(onNext));
 }

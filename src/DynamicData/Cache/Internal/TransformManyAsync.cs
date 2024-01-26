@@ -50,8 +50,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
                 .MergeMany(cacheChangeSet => cacheChangeSet.Source)
                 .SubscribeSafe(
                     changes => changeTracker.ProcessChangeSet(changes, Interlocked.Decrement(ref updateCounter) == 0 ? observer : null),
-                    observer.OnError,
-                    observer.OnCompleted);
+                    observer.OnError);
 
             // When a source item is removed, all of its sub-items need to be removed
             // Emit the changeset if there are no other pending changes
@@ -67,7 +66,17 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
                         }
                     },
                     observer.OnError,
-                    observer.OnCompleted);
+                    () =>
+                    {
+                        if (Volatile.Read(ref updateCounter) == 0)
+                        {
+                            observer.OnCompleted();
+                        }
+                        else
+                        {
+                            changeTracker.MarkComplete();
+                        }
+                    });
 
             return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove);
         });
