@@ -5223,6 +5223,53 @@ public static class ObservableCacheEx
         where TSourceKey : notnull => source.TransformManySafeAsync((val, _) => manySelector(val), errorHandler, equalityComparer, comparer);
 
     /// <summary>
+    /// Transforms each item in the ChangeSet into an Observable that provides the value for the Resulting ChangeSet.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the source changeset.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination changeset.</typeparam>
+    /// <param name="source">The source changeset observable.</param>
+    /// <param name="transformFactory">Factory function to create the Observable that will provide the values in the result changeset from the given object in the source changeset.</param>
+    /// <returns>
+    /// A changeset whose value for a given key is the latest value emitted from the transformed Observable and will update to future values from that observable.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">source
+    /// or
+    /// transformFactory.</exception>
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformOnObservable<TSource, TKey, TDestination>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, IObservable<TDestination>> transformFactory)
+        where TSource : notnull
+        where TKey : notnull
+        where TDestination : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+
+        return new TransformOnObservable<TSource, TKey, TDestination>(source, transformFactory).Run();
+    }
+
+    /// <summary>
+    /// Transforms each item in the ChangeSet into an Observable that provides the value for the Resulting ChangeSet.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the source changeset.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination changeset.</typeparam>
+    /// <param name="source">The source changeset observable.</param>
+    /// <param name="transformFactory">Factory function to create the Observable that will provide the values in the result changeset from the given object in the source changeset.</param>
+    /// <returns>
+    /// A changeset whose value for a given key is the latest value emitted from the transformed Observable and will update to future values from that observable.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">source or transformFactory.</exception>
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformOnObservable<TSource, TKey, TDestination>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, IObservable<TDestination>> transformFactory)
+        where TSource : notnull
+        where TKey : notnull
+        where TDestination : notnull
+    {
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+
+        return source.TransformOnObservable((obj, _) => transformFactory(obj));
+    }
+
+    /// <summary>
     /// Projects each update item to a new form using the specified transform function,
     /// providing an error handling action to safely handle transform errors without killing the stream.
     /// </summary>
