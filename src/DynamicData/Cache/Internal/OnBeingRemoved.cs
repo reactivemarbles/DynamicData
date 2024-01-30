@@ -9,11 +9,11 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction, bool invokeOnUnsubscribe)
+internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TKey> removeAction)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly Action<TObject> _removeAction = removeAction ?? throw new ArgumentNullException(nameof(removeAction));
+    private readonly Action<TObject, TKey> _removeAction = removeAction ?? throw new ArgumentNullException(nameof(removeAction));
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
@@ -30,11 +30,7 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
 
                         lock (locker)
                         {
-                            if (invokeOnUnsubscribe)
-                            {
-                                cache.Items.ForEach(t => _removeAction(t));
-                            }
-
+                            cache.KeyValues.ForEach(kvp => _removeAction(kvp.Value, kvp.Key));
                             cache.Clear();
                         }
                     });
@@ -49,7 +45,7 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
                 {
                     case ChangeReason.Remove:
                         // ReSharper disable once InconsistentlySynchronizedField
-                        _removeAction(change.Current);
+                        _removeAction(change.Current, change.Key);
                         break;
                 }
             });
