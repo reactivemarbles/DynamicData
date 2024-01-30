@@ -1919,14 +1919,6 @@ namespace DynamicData
             where TSource :  notnull
             where TSourceKey :  notnull
             where TCollection : System.Collections.Specialized.INotifyCollectionChanged, System.Collections.Generic.IEnumerable<TDestination> { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformOnObservable<TSource, TKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, System.IObservable<TDestination>> transformFactory)
-            where TSource :  notnull
-            where TKey :  notnull
-            where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformOnObservable<TSource, TKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, System.IObservable<TDestination>> transformFactory)
-            where TSource :  notnull
-            where TKey :  notnull
-            where TDestination :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Reactive.Unit> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
