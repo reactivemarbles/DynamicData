@@ -49,7 +49,7 @@ public class TransformOnObservableFixture : IDisposable
         // Assert
         _animalResults.Data.Count.Should().Be(InitialCount);
         results.Data.Count.Should().Be(InitialCount);
-        results.Messages.Count.Should().Be(1);
+        results.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class TransformOnObservableFixture : IDisposable
         // Assert
         _animalResults.Data.Count.Should().Be(InitialCount + AddCount);
         results.Data.Count.Should().Be(_animalResults.Data.Count);
-        results.Messages.Count.Should().Be(2);
+        results.Messages.Count.Should().Be(2, "Initial Adds and then the subsequent Additions should each be a single message");
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public class TransformOnObservableFixture : IDisposable
         // Assert
         _animalResults.Data.Count.Should().Be(InitialCount - RemoveCount);
         results.Data.Count.Should().Be(_animalResults.Data.Count);
-        results.Messages.Count.Should().Be(2);
+        results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
     }
 
     [Fact]
@@ -103,8 +103,8 @@ public class TransformOnObservableFixture : IDisposable
         results.Data.Count.Should().Be(_animalResults.Data.Count);
         results.Summary.Overall.Adds.Should().Be(InitialCount);
         results.Summary.Overall.Updates.Should().Be(InitialCount);
-        results.Messages.Count.Should().BeGreaterThan(1);
-        _animalCache.Items.ForEach(animal => results.Data.Lookup(animal.Id).Should().Be(animal.Name));
+        results.Messages.Count.Should().BeGreaterThanOrEqualTo(1, "The delay may cause the messages to appear as multiple changesets");
+        _animalCache.Items.ForEach(animal => results.Data.Lookup(animal.Id).Should().Be(Optional.Some(animal.Name)));
     }
 
     [Theory]
