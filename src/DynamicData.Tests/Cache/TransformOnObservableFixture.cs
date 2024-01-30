@@ -17,14 +17,17 @@ namespace DynamicData.Tests.Cache;
 public class TransformOnObservableFixture : IDisposable
 {
 #if DEBUG
-    const int InitialCount = 7;
-    const int AddCount = 5;
-    const int RemoveCount = 3;
+    private const int InitialCount = 7;
+    private const int AddCount = 5;
+    private const int RemoveCount = 3;
+    private const int UpdateCount = 2;
 #else
-    const int InitialCount = 103;
-    const int AddCount = 53;
-    const int RemoveCount = 37;
+    private const int InitialCount = 103;
+    private const int AddCount = 53;
+    private const int RemoveCount = 37;
+    private const int UpdateCount = 31;
 #endif
+    private static readonly TimeSpan UpdateTime = TimeSpan.FromMilliseconds(50);
 
     private readonly ISourceCache<Animal, int> _animalCache = new SourceCache<Animal, int>(a => a.Id);
     private readonly ChangeSetAggregator<Animal, int> _animalResults;
@@ -85,8 +88,13 @@ public class TransformOnObservableFixture : IDisposable
     [Fact]
     public async Task ResultUpdatesOnFutureValues()
     {
+        // Create an observable that fires a wrong value on an interval a fixed number of times
+        // then fires the expected value before completing
         IObservable<string> CreateChildObs(Animal a, int id) =>
-            Observable.Return(string.Empty).Concat(Observable.Timer(TimeSpan.FromMilliseconds(100)).Select(_ => a.Name));
+            Observable.Interval(UpdateTime)
+                .Select(n => $"{a.Name}-{id}-{n}")
+                .Take(UpdateCount)
+                .Concat(Observable.Return(a.Name));
 
         // Arrange
         var shared = _animalCache.Connect().TransformOnObservable(CreateChildObs).Publish();
@@ -102,7 +110,7 @@ public class TransformOnObservableFixture : IDisposable
         _animalResults.Data.Count.Should().Be(InitialCount);
         results.Data.Count.Should().Be(_animalResults.Data.Count);
         results.Summary.Overall.Adds.Should().Be(InitialCount);
-        results.Summary.Overall.Updates.Should().Be(InitialCount);
+        results.Summary.Overall.Updates.Should().Be(InitialCount * UpdateCount, $"Each item should update {UpdateCount} times");
         results.Messages.Count.Should().BeGreaterThanOrEqualTo(1, "The delay may cause the messages to appear as multiple changesets");
         _animalCache.Items.ForEach(animal => results.Data.Lookup(animal.Id).Should().Be(Optional.Some(animal.Name)));
     }
