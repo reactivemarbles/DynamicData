@@ -3189,16 +3189,48 @@ public static class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <param name="addAction">The add action.</param>
+    /// <param name="addAction">The add action that takes the new value and the associated key.</param>
     /// <returns>An observable which emits a change set with items being added.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> OnItemAdded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> addAction)
+    public static IObservable<IChangeSet<TObject, TKey>> OnItemAdded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TKey> addAction)
         where TObject : notnull
         where TKey : notnull
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
 
-        return source.Do(changes => changes.Where(c => c.Reason == ChangeReason.Add).ForEach(c => addAction(c.Current)));
+        return source.OnChangeAction(ChangeReason.Add, addAction);
+    }
+
+    /// <summary>
+    /// Callback for each item as and when it is being added to the stream.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="addAction">The add action that takes the new value.</param>
+    /// <returns>An observable which emits a change set with items being added.</returns>
+    /// <remarks>Overload for <see cref="OnItemAdded{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject, TKey})"/> with a callback that doesn't use a key.</remarks>
+    public static IObservable<IChangeSet<TObject, TKey>> OnItemAdded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> addAction)
+        where TObject : notnull
+        where TKey : notnull
+        => source.OnItemAdded((obj, _) => addAction(obj));
+
+    /// <summary>
+    /// Callback for each item as and when it is being refreshed in the stream.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="refreshAction">The refresh action that takes the refreshed value and the key.</param>
+    /// <returns>An observable which emits a change set with items being added.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> OnItemRefreshed<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TKey> refreshAction)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        refreshAction.ThrowArgumentNullExceptionIfNull(nameof(refreshAction));
+
+        return source.OnChangeAction(ChangeReason.Refresh, refreshAction);
     }
 
     /// <summary>
@@ -3207,28 +3239,41 @@ public static class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <param name="refreshAction">The refresh action.</param>
+    /// <param name="refreshAction">The refresh action that takes the refreshed value.</param>
     /// <returns>An observable which emits a change set with items being added.</returns>
+    /// <remarks>Overload for <see cref="OnItemRefreshed{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject, TKey})"/> with a callback that doesn't use a key.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> OnItemRefreshed<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> refreshAction)
         where TObject : notnull
         where TKey : notnull
+        => source.OnItemRefreshed((obj, _) => refreshAction(obj));
+
+    /// <summary>
+    /// Callback for each item/key as and when it is being removed from the stream.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="removeAction">The remove action that takes the removed value and the key.</param>
+    /// <param name="invokeOnUnsubscribe"> Should the remove action be invoked when the subscription is disposed.</param>
+    /// <returns>An observable which emits a change set with items being removed.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// source
+    /// or
+    /// removeAction.
+    /// </exception>
+    public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TKey> removeAction, bool invokeOnUnsubscribe = true)
+        where TObject : notnull
+        where TKey : notnull
     {
-        var refreshAction2 = refreshAction;
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        refreshAction2.ThrowArgumentNullExceptionIfNull(nameof(refreshAction));
+        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
 
-        return source.Do(changes =>
+        if (invokeOnUnsubscribe)
         {
-            foreach (var change in changes.ToConcreteType())
-            {
-                if (change.Reason != ChangeReason.Refresh)
-                {
-                    continue;
-                }
+            return new OnBeingRemoved<TObject, TKey>(source, removeAction).Run();
+        }
 
-                refreshAction2(change.Current);
-            }
-        });
+        return source.OnChangeAction(ChangeReason.Remove, removeAction);
     }
 
     /// <summary>
@@ -3237,7 +3282,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <param name="removeAction">The remove action.</param>
+    /// <param name="removeAction">The remove action that takes the removed value.</param>
     /// <param name="invokeOnUnsubscribe"> Should the remove action be invoked when the subscription is disposed.</param>
     /// <returns>An observable which emits a change set with items being removed.</returns>
     /// <exception cref="ArgumentNullException">
@@ -3245,14 +3290,28 @@ public static class ObservableCacheEx
     /// or
     /// removeAction.
     /// </exception>
+    /// <remarks>Overload for <see cref="OnItemRemoved{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject, TKey}, bool)"/> with a callback that doesn't use the key.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction, bool invokeOnUnsubscribe = true)
+        where TObject : notnull
+        where TKey : notnull
+        => source.OnItemRemoved((obj, _) => removeAction(obj), invokeOnUnsubscribe);
+
+    /// <summary>
+    /// Callback when an item has been updated eg. (current, previous)=>{}.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="updateAction">The update action that takes current value, previous value, and the key.</param>
+    /// <returns>An observable which emits a change set with items being updated.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> OnItemUpdated<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TObject, TKey> updateAction)
         where TObject : notnull
         where TKey : notnull
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
+        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
 
-        return new OnBeingRemoved<TObject, TKey>(source, removeAction, invokeOnUnsubscribe).Run();
+        return source.OnChangeAction(static change => change.Reason == ChangeReason.Update, change => updateAction(change.Current, change.Previous.Value, change.Key));
     }
 
     /// <summary>
@@ -3261,17 +3320,13 @@ public static class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <param name="updateAction">The update action.</param>
+    /// <param name="updateAction">The update action that takes the current value and previous value.</param>
     /// <returns>An observable which emits a change set with items being updated.</returns>
+    /// <remarks>Overload for <see cref="OnItemUpdated{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject, TObject, TKey})"/> with a callback that doesn't use the key.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> OnItemUpdated<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TObject> updateAction)
         where TObject : notnull
         where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
-
-        return source.Do(changes => changes.Where(c => c.Reason == ChangeReason.Update).ForEach(c => updateAction(c.Current, c.Previous.Value)));
-    }
+        => source.OnItemUpdated((cur, prev, _) => updateAction(cur, prev));
 
     /// <summary>
     /// Apply a logical Or operator between the collections i.e items which are in any of the sources are included.
@@ -6271,6 +6326,29 @@ public static class ObservableCacheEx
                 bool Transformer(TSource item, TKey key) => condition(item);
                 return (Func<TSource, TKey, bool>)Transformer;
             });
+
+    private static IObservable<IChangeSet<TObject, TKey>> OnChangeAction<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Predicate<Change<TObject, TKey>> predicate, Action<Change<TObject, TKey>> changeAction)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        return source.Do(changes =>
+        {
+            foreach (var change in changes.ToConcreteType())
+            {
+                if (!predicate(change))
+                {
+                    continue;
+                }
+
+                changeAction(change);
+            }
+        });
+    }
+
+    private static IObservable<IChangeSet<TObject, TKey>> OnChangeAction<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ChangeReason reason, Action<TObject, TKey> action)
+        where TObject : notnull
+        where TKey : notnull
+        => source.OnChangeAction(change => change.Reason == reason, change => action(change.Current, change.Key));
 
     private static IObservable<bool> TrueFor<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<IEnumerable<ObservableWithValue<TObject, TValue>>, bool> collectionMatcher)
         where TObject : notnull
