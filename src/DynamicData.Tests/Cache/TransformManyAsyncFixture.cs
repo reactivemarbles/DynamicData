@@ -17,8 +17,8 @@ public sealed class TransformManyAsyncFixture : IDisposable
 {
 #if DEBUG
     const int InitialOwnerCount = 7;
-    const int AddRangeSize = 5;
-    const int RemoveRangeSize = 3;
+    const int AddCount = 5;
+    const int RemoveCount = 3;
 #else
     const int InitialOwnerCount = 103;
     const int AddCount = 53;
