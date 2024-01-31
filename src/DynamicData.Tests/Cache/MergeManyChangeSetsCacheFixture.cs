@@ -62,7 +62,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         var MaxAddTime = TimeSpan.FromSeconds(0.250);
         var MaxRemoveTime = TimeSpan.FromSeconds(0.100);
 
-        TimeSpan? GetRemoveTime() => _randomizer.Bool() ? _randomizer.TimeSpan(MaxRemoveTime) : null;
+        TimeSpan? GetRemoveTime() => _randomizer.TimeSpan(MaxRemoveTime);
 
         IObservable<Unit> AddRemoveStress(int marketCount, int priceCount, int parallel, IScheduler scheduler) =>
             Observable.Create<Unit>(observer => new CompositeDisposable

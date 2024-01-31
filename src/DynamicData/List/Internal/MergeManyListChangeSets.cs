@@ -19,35 +19,45 @@ internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable
         observer =>
         {
             var locker = new object();
-            var parentUpdate = false;
+            var pendingUpdates = 0;
+
+            // Always increment the counter OUTSIDE of the lock to signal any thread currently holding the lock
+            // to not emit the changeset because more changes are incoming.
+            IObservable<IChangeSet<TDestination>> CreateChildObservable(TObject obj) =>
+                selector(obj)
+                    .Do(_ => Interlocked.Increment(ref pendingUpdates))
+                    .Synchronize(locker!);
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<TDestination>();
 
             // Transform to a list changeset of child lists, synchronize, and publish.
             var shared = source
-                .Transform(obj => new ClonedListChangeSet<TDestination>(selector(obj).Synchronize(locker), equalityComparer))
+                .Transform(obj => new ClonedListChangeSet<TDestination>(CreateChildObservable(obj), equalityComparer))
+                .Do(_ => Interlocked.Increment(ref pendingUpdates))
                 .Synchronize(locker)
-                .Do(_ => parentUpdate = true)
                 .Publish();
 
             // Merge the child changeset changes together and apply to the tracker
             var subMergeMany = shared
                 .MergeMany(clonedList => clonedList.Source.RemoveIndex())
                 .SubscribeSafe(
-                    changes => changeTracker.ProcessChangeSet(changes, !parentUpdate ? observer : null),
+                    changes => changeTracker.ProcessChangeSet(changes, Interlocked.Decrement(ref pendingUpdates) == 0 ? observer : null),
                     observer.OnError,
                     observer.OnCompleted);
 
             // When a source item is removed, all of its sub-items need to be removed
             var subRemove = shared
                 .OnItemRemoved(clonedList => changeTracker.RemoveItems(clonedList.List), invokeOnUnsubscribe: false)
-                .Do(_ =>
-                {
-                    changeTracker.EmitChanges(observer);
-                    parentUpdate = false;
-                })
-                .Subscribe();
+                .SubscribeSafe(
+                    _ =>
+                    {
+                        if (Interlocked.Decrement(ref pendingUpdates) == 0)
+                        {
+                            changeTracker.EmitChanges(observer);
+                        }
+                    },
+                    observer.OnError);
 
             return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove);
         });

@@ -21,23 +21,30 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
         observer =>
         {
             var locker = new object();
-            var parentUpdate = false;
+            var pendingUpdates = 0;
+
+            // Always increment the counter OUTSIDE of the lock to signal any thread currently holding the lock
+            // to not emit the changeset because more changes are incoming.
+            IObservable<IChangeSet<TDestination>> CreateChildObservable(TObject obj, TKey key) =>
+                selector(obj, key)
+                    .Do(_ => Interlocked.Increment(ref pendingUpdates))
+                    .Synchronize(locker!);
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<TDestination>();
 
             // Transform to a cache changeset of child lists, synchronize, and publish.
             var shared = source
-                .Transform((obj, key) => new ClonedListChangeSet<TDestination>(selector(obj, key).Synchronize(locker), equalityComparer))
+                .Transform((obj, key) => new ClonedListChangeSet<TDestination>(CreateChildObservable(obj, key), equalityComparer))
+                .Do(_ => Interlocked.Increment(ref pendingUpdates))
                 .Synchronize(locker)
-                .Do(_ => parentUpdate = true)
                 .Publish();
 
             // Merge the child changeset changes together and apply to the tracker
             var subMergeMany = shared
                 .MergeMany(clonedList => clonedList.Source.RemoveIndex())
                 .SubscribeSafe(
-                    changes => changeTracker.ProcessChangeSet(changes, !parentUpdate ? observer : null),
+                    changes => changeTracker.ProcessChangeSet(changes, Interlocked.Decrement(ref pendingUpdates) == 0 ? observer : null),
                     observer.OnError,
                     observer.OnCompleted);
 
@@ -45,12 +52,15 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
             var subRemove = shared
                 .OnItemRemoved(clonedList => changeTracker.RemoveItems(clonedList.List), invokeOnUnsubscribe: false)
                 .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.List))
-                .Do(_ =>
-                {
-                    changeTracker.EmitChanges(observer);
-                    parentUpdate = false;
-                })
-                .Subscribe();
+                .SubscribeSafe(
+                    _ =>
+                    {
+                        if (Interlocked.Decrement(ref pendingUpdates) == 0)
+                        {
+                            changeTracker.EmitChanges(observer);
+                        }
+                    },
+                    observer.OnError);
 
             return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove);
         });

@@ -19,27 +19,27 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
     public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => Observable.Create<IChangeSet<TDestination, TDestinationKey>>(
         observer =>
         {
-            var locker = new object();
             var cache = new Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey>();
-            var updateCounter = 0;
+            var locker = new object();
+            var pendingUpdates = 0;
 
             // Transformation Function:
             // Create the Child Observable by invoking the async selector, appending the counter and the synchronize
             // Pass the result to a new ChangeSetCache instance.
             ChangeSetCache<TDestination, TDestinationKey> Transform_(TSource obj, TKey key) => new(
                 Observable.Defer(() => selector(obj, key))
-                        .Do(_ => Interlocked.Increment(ref updateCounter))
+                        .Do(_ => Interlocked.Increment(ref pendingUpdates))
                         .Synchronize(locker!));
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => cache.Items, comparer, equalityComparer);
 
             // Transform to a cache changeset of child caches, synchronize, clone changes to the local copy, and publish.
-            // Increment updateCounter BEFORE the lock so that incoming changesets will cause the downstream changeset to be delayed
-            // until all pending changesets have been handled.
+            // Always increment the counter OUTSIDE of the lock to signal any thread currently holding the lock
+            // to not emit the changeset because more changes are incoming.
             var shared =
                 (errorHandler is null ? source.Transform(Transform_) : source.TransformSafe(Transform_, errorHandler))
-                    .Do(_ => Interlocked.Increment(ref updateCounter))
+                    .Do(_ => Interlocked.Increment(ref pendingUpdates))
                     .Synchronize(locker)
                     .Do(cache.Clone)
                     .Publish();
@@ -49,7 +49,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
             var subMergeMany = shared
                 .MergeMany(cacheChangeSet => cacheChangeSet.Source)
                 .SubscribeSafe(
-                    changes => changeTracker.ProcessChangeSet(changes, Interlocked.Decrement(ref updateCounter) == 0 ? observer : null),
+                    changes => changeTracker.ProcessChangeSet(changes, Interlocked.Decrement(ref pendingUpdates) == 0 ? observer : null),
                     observer.OnError);
 
             // When a source item is removed, all of its sub-items need to be removed
@@ -60,7 +60,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
                 .SubscribeSafe(
                     _ =>
                     {
-                        if (Interlocked.Decrement(ref updateCounter) == 0)
+                        if (Interlocked.Decrement(ref pendingUpdates) == 0)
                         {
                             changeTracker.EmitChanges(observer);
                         }
@@ -68,7 +68,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
                     observer.OnError,
                     () =>
                     {
-                        if (Volatile.Read(ref updateCounter) == 0)
+                        if (Volatile.Read(ref pendingUpdates) == 0)
                         {
                             observer.OnCompleted();
                         }

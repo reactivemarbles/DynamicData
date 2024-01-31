@@ -27,26 +27,33 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
     public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => Observable.Create<IChangeSet<ParentChildEntry, TDestinationKey>>(
         observer =>
         {
-            var locker = new object();
             var cache = new Cache<ChangeSetCache<ParentChildEntry, TDestinationKey>, TKey>();
-            var parentUpdate = false;
+            var locker = new object();
+            var pendingUpdates = 0;
+
+            // Always increment the counter OUTSIDE of the lock to signal any thread currently holding the lock
+            // to not emit the changeset because more changes are incoming.
+            IObservable<IChangeSet<ParentChildEntry, TDestinationKey>> CreateChildObservable(TObject obj, TKey key) =>
+                _changeSetSelector(obj, key)
+                    .Do(_ => Interlocked.Increment(ref pendingUpdates))
+                    .Synchronize(locker!);
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<ParentChildEntry, TDestinationKey>(() => cache.Items, _comparer, _equalityComparer);
 
             // Transform to an cache changeset of child caches of ParentChildEntry, synchronize, update the local copy, and publish.
             var shared = source
-                .Transform((obj, key) => new ChangeSetCache<ParentChildEntry, TDestinationKey>(_changeSetSelector(obj, key).Synchronize(locker)))
+                .Transform((obj, key) => new ChangeSetCache<ParentChildEntry, TDestinationKey>(CreateChildObservable(obj, key)))
+                .Do(_ => Interlocked.Increment(ref pendingUpdates))
                 .Synchronize(locker)
                 .Do(cache.Clone)
-                .Do(_ => parentUpdate = true)
                 .Publish();
 
             // Merge the child changeset changes together and apply to the tracker
             var subMergeMany = shared
                 .MergeMany(changeSetCache => changeSetCache.Source)
                 .SubscribeSafe(
-                    changes => changeTracker.ProcessChangeSet(changes, !parentUpdate ? observer : null),
+                    changes => changeTracker.ProcessChangeSet(changes, Interlocked.Decrement(ref pendingUpdates) == 0 ? observer : null),
                     observer.OnError,
                     observer.OnCompleted);
 
@@ -63,12 +70,15 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
 
             // Subscribe to handle all the requested changes and emit them downstream
             var subParent = parentObservable
-                .Do(_ =>
-                {
-                    changeTracker.EmitChanges(observer);
-                    parentUpdate = false;
-                })
-                .Subscribe();
+                .SubscribeSafe(
+                    _ =>
+                    {
+                        if (Interlocked.Decrement(ref pendingUpdates) == 0)
+                        {
+                            changeTracker.EmitChanges(observer);
+                        }
+                    },
+                    observer.OnError);
 
             return new CompositeDisposable(shared.Connect(), subMergeMany, subParent);
         }).Select(changes => changes.Transform(entry => entry.Child));

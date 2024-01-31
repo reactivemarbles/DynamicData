@@ -39,9 +39,9 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
                                                 .SubscribeMany((t, key) =>
                                                 {
                                                     counter.Added();
-                                                    return _observableSelector(t, key).Synchronize(locker).Finally(() => counter.Finally()).Subscribe(observer.OnNext, _ => { }, () => { });
+                                                    return _observableSelector(t, key).Synchronize(locker).Finally(() => counter.Finally()).Subscribe(observer.OnNext, static _ => { }, static () => { });
                                                 })
-                                                .Subscribe(_ => { }, observer.OnError, observer.OnCompleted);
+                                                .Subscribe(static _ => { }, observer.OnError, observer.OnCompleted);
 
                 return new CompositeDisposable(disposable, counter);
             });
