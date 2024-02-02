@@ -21,62 +21,47 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
         observer =>
         {
             var cache = new Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey>();
+            var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => cache.Items, comparer, equalityComparer);
             var locker = new object();
-            var pendingUpdates = 0;
 
             // Always increment the counter OUTSIDE of the lock to signal any thread currently holding the lock
             // to not emit the changeset because more changes are incoming.
             IObservable<IChangeSet<TDestination, TDestinationKey>> CreateChildObservable(TObject obj, TKey key) =>
                 selector(obj, key)
-                    .Do(_ => Interlocked.Increment(ref pendingUpdates))
-                    .Synchronize(locker!);
-
-            // This is manages all of the changes
-            var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => cache.Items, comparer, equalityComparer);
+                    .Do(_ => changeTracker.TrackIncoming())
+                    .Synchronize(locker)
+                    ;
 
             // Transform to a cache changeset of child caches, synchronize, update the local copy, and publish.
             var shared = source
-                .Do(_ => Interlocked.Increment(ref pendingUpdates))
-                .Synchronize(locker)
+                .Do(_ => changeTracker.TrackIncoming())
                 .Transform((obj, key) => new ChangeSetCache<TDestination, TDestinationKey>(source: CreateChildObservable(obj, key)))
-                .Do(cache.Clone)
                 .Publish();
+
+            // Merge the child changeset changes together and apply to the tracker
+            var subUpdateCache = shared
+                .Synchronize(locker)
+                .Do(cache.Clone)
+                .Subscribe();
 
             // Merge the child changeset changes together and apply to the tracker
             var subMergeMany = shared
                 .MergeMany(cacheChangeSet => cacheChangeSet.Source)
+                .Synchronize(locker)
                 .SubscribeSafe(
-                    changes => changeTracker.ProcessChangeSet(changes, Interlocked.Decrement(ref pendingUpdates) == 0 ? observer : null),
+                    changes => changeTracker.ProcessChangeSet(changes, observer),
                     observer.OnError,
-                    () =>
-                    {
-                        lock (locker)
-                        {
-                            if (Volatile.Read(ref pendingUpdates) == 0)
-                            {
-                                observer.OnCompleted();
-                            }
-                            else
-                            {
-                                changeTracker.MarkComplete();
-                            }
-                        }
-                    });
+                    () => changeTracker.FinalComplete(observer));
 
             // When a source item is removed, all of its sub-items need to be removed
             var subRemove = shared
+                .Synchronize(locker)
                 .OnItemRemoved(changeSetCache => changeTracker.RemoveItems(changeSetCache.Cache.KeyValues), invokeOnUnsubscribe: false)
                 .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues))
                 .SubscribeSafe(
-                    _ =>
-                    {
-                        if (Interlocked.Decrement(ref pendingUpdates) == 0)
-                        {
-                            changeTracker.EmitChanges(observer);
-                        }
-                    },
+                    _ => changeTracker.EmitChanges(observer),
                     observer.OnError);
 
-            return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove);
+            return new CompositeDisposable(shared.Connect(), subUpdateCache, subMergeMany, subRemove);
         });
 }

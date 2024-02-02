@@ -54,6 +54,11 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <inheritdoc />
     public int Count => _data.Count;
 
+    /// <summary>
+    /// Gets the Number of pending changes.
+    /// </summary>
+    public int ChangeCount => _changes.Count;
+
     /// <inheritdoc />
     public IEnumerable<TObject> Items => _data.Values;
 

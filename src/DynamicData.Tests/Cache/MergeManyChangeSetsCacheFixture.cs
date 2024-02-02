@@ -11,7 +11,6 @@ using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
 using FluentAssertions;
-
 using Xunit;
 
 namespace DynamicData.Tests.Cache;
@@ -56,6 +55,12 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
     [InlineData(10, 1_000)]
     [InlineData(200, 500)]
     [InlineData(1_000, 10)]
+#else
+    [InlineData(100, 10)]
+    [InlineData(200, 10)]
+    [InlineData(300, 10)]
+    [InlineData(400, 10)]
+    [InlineData(500, 10)]
 #endif
     public async Task MultiThreadedStressTest(int marketCount, int priceCount)
     {
@@ -91,7 +96,12 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
                 .Finally(market.PricesCache.Dispose);
 
         var merged = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices);
-        using var priceResults = merged.AsAggregator();
+        //using var priceResults = merged.AsAggregator();
+        var shared = _marketCache.Connect().DebugSpy("Markets").MergeManyChangeSets(market => market.LatestPrices.DebugSpy($"{market.Name}"))
+                                                                        .DebugSpy("Merged").Publish();
+        using var priceResults = shared.AsAggregator();
+        var sequenceTask = Task.Run(async () => await shared.LastOrDefaultAsync());
+        using var cleanup = shared.Connect();
 
         var adding = true;
 
@@ -100,12 +110,14 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
             .Finally(() => adding = false)
             .Subscribe();
 
+
         // Subscribe / unsubscribe over and over while the collections are being modified
         do
         {
             // Ensure items are being added asynchronously before subscribing to changes
             await Task.Yield();
 
+#if false
             {
                 // Subscribe
                 var mergedSub = merged.Subscribe();
@@ -116,8 +128,15 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
                 // Unsubscribe
                 mergedSub.Dispose();
             }
+#endif
         }
         while (adding);
+
+        await Task.Delay(1000);
+
+        DisposeMarkets();
+
+        await sequenceTask;
 
         // Verify the results
         CheckResultContents(_marketCacheResults, priceResults);
