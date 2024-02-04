@@ -11,6 +11,7 @@ using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache;
@@ -55,19 +56,13 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
     [InlineData(10, 1_000)]
     [InlineData(200, 500)]
     [InlineData(1_000, 10)]
-#else
-    [InlineData(100, 10)]
-    [InlineData(200, 10)]
-    [InlineData(300, 10)]
-    [InlineData(400, 10)]
-    [InlineData(500, 10)]
 #endif
     public async Task MultiThreadedStressTest(int marketCount, int priceCount)
     {
         var MaxAddTime = TimeSpan.FromSeconds(0.250);
         var MaxRemoveTime = TimeSpan.FromSeconds(0.100);
 
-        TimeSpan? GetRemoveTime() => _randomizer.TimeSpan(MaxRemoveTime);
+        TimeSpan? GetRemoveTime() => _randomizer.Bool() ? _randomizer.TimeSpan(MaxRemoveTime) : null;
 
         IObservable<Unit> AddRemoveStress(int marketCount, int priceCount, int parallel, IScheduler scheduler) =>
             Observable.Create<Unit>(observer => new CompositeDisposable
@@ -96,9 +91,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
                 .Finally(market.PricesCache.Dispose);
 
         var merged = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices);
-        //using var priceResults = merged.AsAggregator();
-        var shared = _marketCache.Connect().DebugSpy("Markets").MergeManyChangeSets(market => market.LatestPrices.DebugSpy($"{market.Name}"))
-                                                                        .DebugSpy("Merged").Publish();
+        var shared = merged.Publish();
         using var priceResults = shared.AsAggregator();
         var sequenceTask = Task.Run(async () => await shared.LastOrDefaultAsync());
         using var cleanup = shared.Connect();
@@ -110,25 +103,19 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
             .Finally(() => adding = false)
             .Subscribe();
 
-
         // Subscribe / unsubscribe over and over while the collections are being modified
         do
         {
             // Ensure items are being added asynchronously before subscribing to changes
             await Task.Yield();
 
-#if false
             {
                 // Subscribe
-                var mergedSub = merged.Subscribe();
+                using var mergedSub = merged.Subscribe();
 
                 // Let other threads run
                 await Task.Yield();
-
-                // Unsubscribe
-                mergedSub.Dispose();
             }
-#endif
         }
         while (adding);
 
