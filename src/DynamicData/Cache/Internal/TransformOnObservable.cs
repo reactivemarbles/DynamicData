@@ -34,13 +34,26 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
             }
         }
 
-        // Create the sub-observable that takes the result of the transformation,
-        // filters out unchanged values, and then updates the cache
-        IObservable<TDestination> CreateSubObservable(TSource obj, TKey key) =>
-            transform(obj, key)
-                .DistinctUntilChanged()
-                .Synchronize(locker!)
-                .Do(val => cache!.AddOrUpdate(val, key));
+        IObservable<TDestination> CreateSubObservable(TSource obj, TKey key)
+        {
+            try
+            {
+                // Create the sub-observable that takes the result of the transformation,
+                // filters out unchanged values, and then updates the cache
+                return transform(obj, key)
+                    .DistinctUntilChanged()
+                    .Synchronize(locker!)
+                    .Do(val => cache!.AddOrUpdate(val, key));
+            }
+            catch (Exception e)
+            {
+                // Propagate the error
+                observer.OnError(e);
+
+                // Need to return something
+                return Observable.Empty<TDestination>();
+            }
+        }
 
         // Flag a parent update is happening once inside the lock
         var shared = source
