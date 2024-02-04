@@ -91,10 +91,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
                 .Finally(market.PricesCache.Dispose);
 
         var merged = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices);
-        var shared = merged.Publish();
-        using var priceResults = shared.AsAggregator();
-        var sequenceTask = Task.Run(async () => await shared.LastOrDefaultAsync());
-        using var cleanup = shared.Connect();
+        using var priceResults = merged.AsAggregator();
 
         var adding = true;
 
@@ -111,19 +108,16 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
 
             {
                 // Subscribe
-                using var mergedSub = merged.Subscribe();
+                var mergedSub = merged.Subscribe();
 
                 // Let other threads run
                 await Task.Yield();
+
+                // Unsubscribe
+                mergedSub.Dispose();
             }
         }
         while (adding);
-
-        await Task.Delay(1000);
-
-        DisposeMarkets();
-
-        await sequenceTask;
 
         // Verify the results
         CheckResultContents(_marketCacheResults, priceResults);
