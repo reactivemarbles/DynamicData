@@ -2,38 +2,21 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
 using System.Reactive.Linq;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCache<TObject, TKey>>> selectCaches, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
+internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCache<TObject, TKey>>> selectCaches, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
     where TObject : notnull
     where TKey : notnull
 {
     private readonly ChangeAwareCache<TObject, TKey> _resultCache = new();
     private bool _hasCompleted;
-    private int _pendingUpdates;
-
-    public void TrackIncoming() => Interlocked.Increment(ref _pendingUpdates);
 
     public void MarkComplete() => _hasCompleted = true;
 
-    public void FinalComplete(IObserver<IChangeSet<TObject, TKey>> observer)
-    {
-        var pending = Volatile.Read(ref _pendingUpdates);
-        Debug.WriteLine($"T:{Environment.CurrentManagedThreadId:X2} CheckComplete Changes: {pending}, Ready: {_resultCache.ChangeCount}");
-        var changeSet = _resultCache.CaptureChanges();
-        if (changeSet.Count > 0)
-        {
-            observer.OnNext(changeSet);
-        }
-
-        observer.OnCompleted();
-    }
-
-    public void RemoveItems(IEnumerable<KeyValuePair<TKey, TObject>> items)
+    public void RemoveItems(IEnumerable<KeyValuePair<TKey, TObject>> items, IObserver<IChangeSet<TObject, TKey>>? observer = null)
     {
         var sourceCaches = selectCaches().ToArray();
 
@@ -53,9 +36,14 @@ internal class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCa
                 OnItemRemoved(sourceCaches, item.Value, item.Key);
             }
         }
+
+        if (observer != null)
+        {
+            EmitChanges(observer);
+        }
     }
 
-    public void RefreshItems(IEnumerable<TKey> keys)
+    public void RefreshItems(IEnumerable<TKey> keys, IObserver<IChangeSet<TObject, TKey>>? observer = null)
     {
         var sourceCaches = selectCaches().ToArray();
 
@@ -75,13 +63,17 @@ internal class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCa
                 ForceEvaluate(sourceCaches, key);
             }
         }
+
+        if (observer != null)
+        {
+            EmitChanges(observer);
+        }
     }
 
     public void ProcessChangeSet(IChangeSet<TObject, TKey> changes, IObserver<IChangeSet<TObject, TKey>>? observer = null)
     {
         var sourceCaches = selectCaches().ToArray();
 
-        Debug.WriteLine($"T:{Environment.CurrentManagedThreadId:X2} ProcessChangeSet (Starting Changes: {_resultCache.ChangeCount})");
         foreach (var change in changes.ToConcreteType())
         {
             switch (change.Reason)
@@ -108,26 +100,19 @@ internal class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCa
         {
             EmitChanges(observer);
         }
-
-        Debug.WriteLine($"T:{Environment.CurrentManagedThreadId:X2} Complete ProcessChangeSet (Ending Changes: {_resultCache.ChangeCount})");
     }
 
     public void EmitChanges(IObserver<IChangeSet<TObject, TKey>> observer)
     {
-        var pending = Interlocked.Decrement(ref _pendingUpdates);
-        Debug.WriteLine($"T:{Environment.CurrentManagedThreadId:X2} Pending: {pending}, Ready: {_resultCache.ChangeCount}");
-        if (pending == 0)
+        var changeSet = _resultCache.CaptureChanges();
+        if (changeSet.Count != 0)
         {
-            var changeSet = _resultCache.CaptureChanges();
-            if (changeSet.Count > 0)
-            {
-                observer.OnNext(changeSet);
-            }
+            observer.OnNext(changeSet);
+        }
 
-            if (_hasCompleted)
-            {
-                observer.OnCompleted();
-            }
+        if (_hasCompleted)
+        {
+            observer.OnCompleted();
         }
     }
 

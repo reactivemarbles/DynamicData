@@ -23,33 +23,30 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
         observer =>
         {
-            var cache = new Cache<ChangeSetCache<TObject, TKey>, int>();
             var locker = new object();
-            var pendingUpdates = 0;
+            var cache = new Cache<ChangeSetCache<TObject, TKey>, int>();
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<TObject, TKey>(() => cache.Items, comparer, equalityComparer);
 
             // Create a ChangeSet of Caches, synchronize, update the local copy, and merge the sub-observables together.
-            return source
-                .Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index) }))
+            return CreateContainerObservable(source, locker)
                 .Synchronize(locker)
                 .Do(cache.Clone)
                 .MergeMany(mc => mc.Source.Do(static _ => { }, observer.OnError))
                 .SubscribeSafe(
-                    changes => changeTracker.ProcessChangeSet(changes, Interlocked.Decrement(ref pendingUpdates) == 0 ? observer : null),
+                    changes => changeTracker.ProcessChangeSet(changes, observer),
                     observer.OnError,
                     observer.OnCompleted);
-
-            // Always increment the counter OUTSIDE of the lock to signal any thread currently holding the lock
-            // to not emit the changeset because more changes are incoming.
-            IObservable<IChangeSet<TObject, TKey>> CreateChildObservable(IObservable<IChangeSet<TObject, TKey>> src) =>
-                src.Do(_ => Interlocked.Increment(ref pendingUpdates)).Synchronize(locker!);
-
-            // Can optimize for the Add case because that's the only one that applies
-            Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index) =>
-                new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(CreateChildObservable(source)));
         });
+
+    // Can optimize for the Add case because that's the only one that applies
+    private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, object locker) =>
+        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.Synchronize(locker)));
+
+    // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
+    private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, object locker) =>
+        source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index, locker) }));
 
     // Create a ChangeSet Observable with a single event that adds all the values in the enum (and then completes, maybe)
     private static IObservable<IObservable<IChangeSet<TObject, TKey>>> CreateObservable(IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, bool completable, IScheduler? scheduler = null)

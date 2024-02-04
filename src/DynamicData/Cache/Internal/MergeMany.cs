@@ -41,7 +41,7 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
                                                     counter.Added();
                                                     return _observableSelector(t, key).Synchronize(locker).Finally(() => counter.Finally()).Subscribe(observer.OnNext, static _ => { }, static () => { });
                                                 })
-                                                .Subscribe(static _ => { }, observer.OnError, observer.OnCompleted);
+                                                .SubscribeSafe(static _ => { }, observer.OnError, observer.OnCompleted);
 
                 return new CompositeDisposable(disposable, counter);
             });

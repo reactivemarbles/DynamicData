@@ -19,63 +19,53 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
     public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => Observable.Create<IChangeSet<TDestination, TDestinationKey>>(
         observer =>
         {
-            var cache = new Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey>();
             var locker = new object();
-            var pendingUpdates = 0;
-
-            // Transformation Function:
-            // Create the Child Observable by invoking the async selector, appending the counter and the synchronize
-            // Pass the result to a new ChangeSetCache instance.
-            ChangeSetCache<TDestination, TDestinationKey> Transform_(TSource obj, TKey key) => new(
-                Observable.Defer(() => selector(obj, key))
-                        .Do(_ => Interlocked.Increment(ref pendingUpdates))
-                        .Synchronize(locker!));
+            var cache = new Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey>();
+            var parentUpdate = false;
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => cache.Items, comparer, equalityComparer);
 
+            // Transformation Function:
+            // Create the Child Observable by invoking the async selector, appending the synchronize, and creating a new ChangeSetCache instance.
+            ChangeSetCache<TDestination, TDestinationKey> Transform_(TSource obj, TKey key) =>
+                new(Observable.Defer(() => selector(obj, key)).Synchronize(locker!));
+
             // Transform to a cache changeset of child caches, synchronize, clone changes to the local copy, and publish.
-            // Always increment the counter OUTSIDE of the lock to signal any thread currently holding the lock
-            // to not emit the changeset because more changes are incoming.
             var shared =
                 (errorHandler is null ? source.Transform(Transform_) : source.TransformSafe(Transform_, errorHandler))
-                    .Do(_ => Interlocked.Increment(ref pendingUpdates))
                     .Synchronize(locker)
-                    .Do(cache.Clone)
+                    .Do(changes =>
+                    {
+                        cache.Clone(changes);
+                        parentUpdate = true;
+                    })
                     .Publish();
 
             // Merge the child changeset changes together and apply to the tracker
-            // Emit the changeset if there are no other pending changes
+            // Emit the changeset if not currently handling a parent stream update
             var subMergeMany = shared
                 .MergeMany(cacheChangeSet => cacheChangeSet.Source)
                 .SubscribeSafe(
-                    changes => changeTracker.ProcessChangeSet(changes, Interlocked.Decrement(ref pendingUpdates) == 0 ? observer : null),
+                    changes => changeTracker.ProcessChangeSet(changes, !parentUpdate ? observer : null),
                     observer.OnError);
 
             // When a source item is removed, all of its sub-items need to be removed
-            // Emit the changeset if there are no other pending changes
+            // Emit any pending changes
             var subRemove = shared
                 .OnItemRemoved(changeSetCache => changeTracker.RemoveItems(changeSetCache.Cache.KeyValues), invokeOnUnsubscribe: false)
                 .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues))
                 .SubscribeSafe(
                     _ =>
                     {
-                        if (Interlocked.Decrement(ref pendingUpdates) == 0)
-                        {
-                            changeTracker.EmitChanges(observer);
-                        }
+                        changeTracker.EmitChanges(observer);
+                        parentUpdate = false;
                     },
                     observer.OnError,
                     () =>
                     {
-                        if (Volatile.Read(ref pendingUpdates) == 0)
-                        {
-                            observer.OnCompleted();
-                        }
-                        else
-                        {
-                            changeTracker.MarkComplete();
-                        }
+                        changeTracker.EmitChanges(observer);
+                        observer.OnCompleted();
                     });
 
             return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove);
