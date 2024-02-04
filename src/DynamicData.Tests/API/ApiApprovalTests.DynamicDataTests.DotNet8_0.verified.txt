@@ -1307,6 +1307,9 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, bool>> predicateChanged, System.IObservable<System.Reactive.Unit> reapplyFilter, bool suppressEmptyChangeSets = true)
             where TObject :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> FilterImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, bool> predicate, bool suppressEmptyChangeSets = true)
+            where TObject :  notnull
+            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> FilterOnObservable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.IObservable<bool>> filterFactory, System.TimeSpan? buffer = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
@@ -1856,6 +1859,10 @@ namespace DynamicData
             where TSource :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
+            where TDestination :  notnull
+            where TSource :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformImmutable<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }

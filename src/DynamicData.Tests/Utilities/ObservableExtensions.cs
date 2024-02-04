@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
 
@@ -48,6 +49,15 @@ internal static class ObservableExtensions
     public static IObservable<T> Parallelize<T>(this IObservable<T> source, int count, int parallel) =>
         Observable.Merge(Distribute(count, parallel).Select(n => source.Take(n)));
 
+    public static IDisposable RecordNotifications<T>(
+        this IObservable<T> source,
+        out TestableObserver<T> observer,
+        IScheduler? scheduler = null)
+    {
+        observer = TestableObserver.Create<T>(scheduler);
+
+        return source.Subscribe(observer);
+    }
     public static IObservable<T> ValidateSynchronization<T>(this IObservable<T> source)
         // Using Raw observable and observer classes to bypass normal RX safeguards, which prevent out-of-sequence notifications.
         // This allows the operator to be combined with TestableObserver, for correctness-testing of operators.
