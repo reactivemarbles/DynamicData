@@ -29,23 +29,20 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
             // Transform Helper
             async Task<IObservable<IChangeSet<TDestination, TDestinationKey>>> InvokeSelector(TSource obj, TKey key)
             {
-                try
+                if (errorHandler != null)
                 {
-                    return await selector(obj, key).ConfigureAwait(false);
-                }
-                catch (Exception e)
-                {
-                    if (errorHandler != null)
+                    try
+                    {
+                        return await selector(obj, key).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
                     {
                         errorHandler.Invoke(new Error<TSource, TKey>(e, obj, key));
+                        return Observable.Empty<IChangeSet<TDestination, TDestinationKey>>();
                     }
-                    else
-                    {
-                        observer.OnError(e);
-                    }
-
-                    return Observable.Empty<IChangeSet<TDestination, TDestinationKey>>();
                 }
+
+                return await selector(obj, key).ConfigureAwait(false);
             }
 
             // Transformation Function:
@@ -55,8 +52,8 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
 
             // Transform to a cache changeset of child caches, synchronize, clone changes to the local copy, and publish.
             var shared = source
-                .Synchronize(locker)
                 .Transform(Transform_)
+                .Synchronize(locker)
                 .Do(
                     changes =>
                     {
