@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -13,7 +12,6 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
-using System.Transactions;
 using DynamicData.Binding;
 using DynamicData.Cache;
 using DynamicData.Cache.Internal;
@@ -1606,6 +1604,44 @@ public static class ObservableCacheEx
         reapplyFilter.ThrowArgumentNullExceptionIfNull(nameof(reapplyFilter));
 
         return new DynamicFilter<TObject, TKey>(source, predicateChanged, reapplyFilter, suppressEmptyChangeSets).Run();
+    }
+
+    /// <summary>
+    /// Creates a filtered stream, optimized for stateless/deterministic filtering of immutable items.
+    /// </summary>
+    /// <typeparam name="TObject">The type of collection items to be filtered.</typeparam>
+    /// <typeparam name="TKey">The type of the key values of each collection item.</typeparam>
+    /// <param name="source">The source stream of collection items to be filtered.</param>
+    /// <param name="predicate">The filtering predicate to be applied to each item.</param>
+    /// <param name="suppressEmptyChangeSets">A flag indicating whether the created stream should emit empty changesets. Empty changesets are suppressed by default, for performance. Set to ensure that a downstream changeset occurs for every upstream changeset.</param>
+    /// <returns>A stream of collection changesets where upstream collection items are filtered by the given predicate.</returns>
+    /// <remarks>
+    /// <para>The goal of this operator is to optimize a common use-case of reactive programming, where data values flowing through a stream are immutable, and state changes are distributed by publishing new immutable items as replacements, instead of mutating the items directly.</para>
+    /// <para>In addition to assuming that all collection items are immutable, this operator also assumes that the given filter predicate is deterministic, such that the result it returns will always be the same each time a specific input is passed to it. In other words, the predicate itself also contains no mutable state.</para>
+    /// <para>Under these assumptions, this operator can bypass the need to keep track of every collection item that passes through it, which the normal <see cref="Filter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, bool}, bool)"/> operator must do, in order to re-evaluate the filtering status of items, during a refresh operation.</para>
+    /// <para>Consider using this operator when the following are true:</para>
+    /// <list type="bullet">
+    /// <item><description>Your collection items are immutable, and changes are published by replacing entire items</description></item>
+    /// <item><description>Your filtering logic does not change over the lifetime of the stream, only the items do</description></item>
+    /// <item><description>Your filtering predicate runs quickly, and does not heavily allocate memory</description></item>
+    /// </list>
+    /// <para>Note that, because filtering is purely deterministic, Refresh operations are transparently ignored by this operator.</para>
+    /// </remarks>
+    public static IObservable<IChangeSet<TObject, TKey>> FilterImmutable<TObject, TKey>(
+            this IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject, bool> predicate,
+            bool suppressEmptyChangeSets = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+
+        return new FilterImmutable<TObject, TKey>(
+                predicate: predicate,
+                source: source,
+                suppressEmptyChangeSets: suppressEmptyChangeSets)
+            .Run();
     }
 
     /// <summary>
@@ -4900,6 +4936,43 @@ public static class ObservableCacheEx
         transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
 
         return new TransformAsync<TDestination, TSource, TKey>(source, transformFactory, null, null, options.MaximumConcurrency, options.TransformOnRefresh).Run();
+    }
+
+    /// <summary>
+    /// Projects each update item to a new form using the specified transform function, with optimizations for stateless/deterministic transformation of immutable items.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of collection items produced by the transformation.</typeparam>
+    /// <typeparam name="TSource">The type of collection items to be transformed.</typeparam>
+    /// <typeparam name="TKey">The type of the key values of each collection item.</typeparam>
+    /// <param name="source">The source stream of collection items to be transformed.</param>
+    /// <param name="transformFactory">The transformation to be applied to each item.</param>
+    /// <returns>A stream of collection changesets where upstream collection items are transformed by the given factory function.</returns>
+    /// <remarks>
+    /// <para>The goal of this operator is to optimize a common use-case of reactive programming, where data values flowing through a stream are immutable, and state changes are distributed by publishing new immutable items as replacements, instead of mutating the items directly.</para>
+    /// <para>In addition to assuming that all collection items are immutable, this operator also assumes that the given transformation function is deterministic, such that the result it returns will always be equivalent each time a specific input is passed to it. In other words, the transformation itself also contains no mutable state.</para>
+    /// <para>Under these assumptions, this operator can bypass the need to keep track of every collection item that passes through it, which the normal <see cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, bool)"/> operator must do, in order to re-evaluate transformations during a refresh operation.</para>
+    /// <para>Consider using this operator when the following are true:</para>
+    /// <list type="bullet">
+    /// <item><description>Your collection items are immutable, and changes are published by replacing entire items</description></item>
+    /// <item><description>Your transformation logic does not change over the lifetime of the stream, only the items do</description></item>
+    /// <item><description>Your transformation function runs quickly, and does not heavily allocate memory</description></item>
+    /// </list>
+    /// <para>Note that, because transformation is purely deterministic, Refresh operations are transparently ignored by this operator.</para>
+    /// </remarks>
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformImmutable<TDestination, TSource, TKey>(
+            this IObservable<IChangeSet<TSource, TKey>> source,
+            Func<TSource, TDestination> transformFactory)
+        where TDestination : notnull
+        where TSource : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+
+        return new TransformImmutable<TDestination, TSource, TKey>(
+                source: source,
+                transformFactory: transformFactory)
+            .Run();
     }
 
     /// <summary>
