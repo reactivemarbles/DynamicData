@@ -17,7 +17,7 @@ internal sealed class FilterOnObservable<TObject, TKey>(IObservable<IChangeSet<T
     public IObservable<IChangeSet<TObject, TKey>> Run() => _source.Transform((val, key) => new FilterProxy(val, _filterFactory(val, key)))
                       .AutoRefreshOnObservable(proxy => proxy.FilterObservable, buffer, scheduler)
                       .Filter(proxy => proxy.PassesFilter)
-                      .Select(changes => changes.Transform(proxy => proxy.Value));
+                      .Transform(proxy => proxy.Value);
 
     private sealed class FilterProxy
     {
