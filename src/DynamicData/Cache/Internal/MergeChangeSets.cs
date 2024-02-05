@@ -4,6 +4,7 @@
 
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -33,7 +34,7 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
                 .Synchronize(locker)
                 .Do(cache.Clone)
                 .MergeMany(mc => mc.Source.Do(static _ => { }, observer.OnError))
-                .Subscribe(
+                .SubscribeSafe(
                     changes => changeTracker.ProcessChangeSet(changes, observer),
                     observer.OnError,
                     observer.OnCompleted);

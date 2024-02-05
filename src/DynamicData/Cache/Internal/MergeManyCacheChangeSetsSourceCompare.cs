@@ -38,8 +38,11 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
             var shared = source
                 .Transform((obj, key) => new ChangeSetCache<ParentChildEntry, TDestinationKey>(_changeSetSelector(obj, key).Synchronize(locker)))
                 .Synchronize(locker)
-                .Do(cache.Clone)
-                .Do(_ => parentUpdate = true)
+                .Do(changes =>
+                {
+                    cache.Clone(changes);
+                    parentUpdate = true;
+                })
                 .Publish();
 
             // Merge the child changeset changes together and apply to the tracker
@@ -63,12 +66,13 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
 
             // Subscribe to handle all the requested changes and emit them downstream
             var subParent = parentObservable
-                .Do(_ =>
-                {
-                    changeTracker.EmitChanges(observer);
-                    parentUpdate = false;
-                })
-                .Subscribe();
+                .SubscribeSafe(
+                    _ =>
+                    {
+                        changeTracker.EmitChanges(observer);
+                        parentUpdate = false;
+                    },
+                    observer.OnError);
 
             return new CompositeDisposable(shared.Connect(), subMergeMany, subParent);
         }).TransformImmutable(entry => entry.Child);

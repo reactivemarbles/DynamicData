@@ -45,12 +45,13 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
             var subRemove = shared
                 .OnItemRemoved(clonedList => changeTracker.RemoveItems(clonedList.List), invokeOnUnsubscribe: false)
                 .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.List))
-                .Do(_ =>
-                {
-                    changeTracker.EmitChanges(observer);
-                    parentUpdate = false;
-                })
-                .Subscribe();
+                .SubscribeSafe(
+                    _ =>
+                    {
+                        changeTracker.EmitChanges(observer);
+                        parentUpdate = false;
+                    },
+                    observer.OnError);
 
             return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove);
         });
