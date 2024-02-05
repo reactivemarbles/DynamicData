@@ -75,7 +75,7 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
                     observer.OnError);
 
             return new CompositeDisposable(shared.Connect(), subMergeMany, subParent);
-        }).Select(changes => changes.Transform(entry => entry.Child));
+        }).TransformImmutable(entry => entry.Child);
 
     private sealed class ParentChildEntry(TObject parent, TDestination child)
     {
