@@ -21,18 +21,12 @@ internal sealed class FilterOnObservable<TObject, TKey>(IObservable<IChangeSet<T
             .Filter(proxy => proxy.PassesFilter)
             .TransformImmutable(proxy => proxy.Value);
 
-    private sealed class FilterProxy
+    private sealed class FilterProxy(TObject obj, IObservable<bool> observable)
     {
-        public FilterProxy(TObject obj, IObservable<bool> observable)
-        {
-            Value = obj;
-            FilterObservable = observable.DistinctUntilChanged().Do(filterValue => PassesFilter = filterValue);
-        }
-
-        public IObservable<bool> FilterObservable { get; }
-
-        public TObject Value { get; }
+        public TObject Value { get; } = obj;
 
         public bool PassesFilter { get; private set; }
+
+        public IObservable<bool> FilterObservable => observable.DistinctUntilChanged().Do(filterValue => PassesFilter = filterValue);
     }
 }
