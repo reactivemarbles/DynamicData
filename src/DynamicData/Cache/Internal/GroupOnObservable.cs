@@ -4,9 +4,7 @@
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using DynamicData.Internal;
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
@@ -17,83 +15,39 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
 {
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(observer =>
     {
-        var cache = new ChangeAwareCache<ManagedGroup<TObject, TKey, TGroupKey>, TGroupKey>();
+        var grouper = new DynamicGrouper<TObject, TKey, TGroupKey>();
         var locker = new object();
         var parentUpdate = false;
 
-        // Helper to emit any pending changes when appropriate
-        void EmitChanges(bool fromParent)
-        {
-            if (fromParent || !parentUpdate)
-            {
-                var changes = cache!.CaptureChanges();
-                if (changes.Count > 0)
-                {
-                    var groupChanges = new GroupChangeSet<TObject, TKey, TGroupKey>(changes.Transform(mg => mg as IGroup<TObject, TKey, TGroupKey>));
-
-                    observer.OnNext(groupChanges);
-                }
-
-                parentUpdate = false;
-            }
-        }
-
-        // Create the sub-observable that takes the result of the transformation,
-        // filters out unchanged values, and then updates the cache
-        IObservable<TDestination> CreateSubObservable(TObject obj, TKey key) =>
-            transform(obj, key)
-                .DistinctUntilChanged()
+        IObservable<TGroupKey> CreateGroupObservable(TObject item, TKey key) =>
+            selectGroup(item, key)
                 .Synchronize(locker!)
-                .Do(val => cache!.AddOrUpdate(val, key));
+                .Do(
+                    groupKey => grouper!.AddOrUpdate(item, key, groupKey, !parentUpdate ? observer : null),
+                    observer.OnError);
 
-        // Flag a parent update is happening once inside the lock
+        // Create a shared connection to the source
         var shared = source
-            .Synchronize(locker!)
+            .Synchronize(locker)
             .Do(_ => parentUpdate = true)
             .Publish();
 
-        // MergeMany automatically handles Add/Update/Remove and OnCompleted/OnError correctly
-        var subMerged = shared
-            .MergeMany(CreateSubObservable)
-            .SubscribeSafe(_ => EmitChanges(fromParent: false), observer.OnError, observer.OnCompleted);
+        // For each item, subscribe to the grouping observable and update that entry whenever it fires
+        var subMergeMany = shared
+            .MergeMany(CreateGroupObservable)
+            .SubscribeSafe(observer.OnError);
 
-        // Subscribe to the shared Observable to handle Remove events.  MergeMany will unsubscribe from the sub-observable,
-        // but the corresponding key value needs to be removed from the Cache so the remove is observed downstream.
-        var subRemove = shared
-            .OnItemRemoved((_, key) => cache!.Remove(key), invokeOnUnsubscribe: false)
-            .SubscribeSafe(_ => EmitChanges(fromParent: true), observer.OnError);
+        // Give the group a chance to handle/emit any other changes
+        var subChanges = shared
+            .SubscribeSafe(
+                changeSet =>
+                {
+                    grouper.ProcessChanges(changeSet, observer);
+                    parentUpdate = false;
+                },
+                observer.OnError,
+                observer.OnCompleted);
 
-        return new CompositeDisposable(shared.Connect(), subMerged, subRemove);
+        return new CompositeDisposable(shared.Connect(), subMergeMany, subChanges);
     });
-
-    private IObservable<(TGroupKey Current, Optional<TGroupKey> Last)> CreateGrouperSubscription(TObject obj, TKey key) =>
-        selectGroup(obj, key).Publish(shared =>
-            shared.Zip(
-                shared.Select(val => Optional.Some(val)).StartWith(Optional.None<TGroupKey>()),
-                (curr, last) => (curr, last)));
-
-    private class GroupedProxy : IDisposable
-    {
-        private readonly IDisposable _disposable;
-
-        public GroupedProxy(TObject obj, TKey key, IObservable<TGroupKey> groupObservable)
-        {
-            var sharedGroupObservable = groupObservable.Do(val => GroupKey = Optional.Some(val)).Publish();
-
-            Object = obj;
-            Key = key;
-            GroupObservable = sharedGroupObservable;
-            _disposable = sharedGroupObservable.Connect();
-        }
-
-        public TObject Object { get; }
-
-        public TKey Key { get; }
-
-        public Optional<TGroupKey> GroupKey { get; private set; }
-
-        public IObservable<TGroupKey> GroupObservable { get; }
-
-        public void Dispose() => _disposable.Dispose();
-    }
 }
