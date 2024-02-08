@@ -1,4 +1,6 @@
-﻿using Bogus;
+﻿using System;
+using System.Linq;
+using Bogus;
 using DynamicData.Tests.Utilities;
 
 namespace DynamicData.Tests.Domain;
@@ -30,6 +32,8 @@ internal static class Fakers
         ["Parakeet", "Cockatoo", "Parrot", "Finch", "Conure", "Lovebird", "Cockatiel"],
     ];
 
+    private static readonly string[] PersonGenders = ["F", "M", "O"];
+
     public static Faker<Animal> Animal { get; } =
         new Faker<Animal>()
             .CustomInstantiator(faker =>
@@ -47,6 +51,12 @@ internal static class Fakers
 
     public static Faker<Market> Market { get; } = new Faker<Market>().CustomInstantiator(faker => new Market($"{faker.Commerce.ProductName()} Id#{faker.Random.AlphaNumeric(5)}"));
 
+    public static Faker<Person> Person { get; } = new Faker<Person>().CustomInstantiator(faker =>
+        new Person(faker.Person.FullName, faker.Random.Int(1, 100), faker.PickRandom(PersonGenders))
+        {
+            FavoriteColor = faker.Random.RandomColor()
+        });
+
     public static Faker<AnimalOwner> WithInitialAnimals(this Faker<AnimalOwner> existing, Faker<Animal> animalFaker, int minCount, int maxCount) =>
         existing.FinishWith((faker, owner) => owner.Animals.AddRange(animalFaker.GenerateBetween(minCount, maxCount)));
 
@@ -61,6 +71,12 @@ internal static class Fakers
 
     public static AnimalOwner AddAnimals(this AnimalOwner owner, Faker<Animal> animalFaker, int count) =>
         owner.With(o => o.Animals.AddRange(animalFaker.Generate(count)));
+
+    public static Color RandomColor(this Randomizer rand) =>
+        rand.EnumValues(1, Color.NotSpecified)[0];
+
+    public static Color RandomColor(this Randomizer rand, Color current) =>
+        rand.EnumValues(1, Color.NotSpecified, current)[0];
 }
 
 internal static class FakerExtensions

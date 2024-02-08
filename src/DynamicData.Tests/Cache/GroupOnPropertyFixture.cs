@@ -3,7 +3,6 @@ using System.Linq;
 
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-
 using FluentAssertions;
 
 using Xunit;
@@ -12,7 +11,7 @@ namespace DynamicData.Tests.Cache;
 
 public class GroupOnPropertyFixture : IDisposable
 {
-    private readonly ChangeSetAggregator<IGroup<Person, string, int>, int> _results;
+    private readonly GroupChangeSetAggregator<Person, string, int> _results;
 
     private readonly SourceCache<Person, string> _source;
 

@@ -5,10 +5,23 @@ using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain;
 
+public enum Color
+{
+    NotSpecified,
+    Red,
+    Orange,
+    Yellow,
+    Green,
+    Blue,
+    Indigo,
+    Violet,
+}
+
 public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
 {
     private int _age;
     private int? _ageNullable;
+    private Color _favoriteColor;
 
     public Person()
         : this("unknown", 0, "none")
@@ -52,9 +65,15 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
         set => SetAndRaise(ref _ageNullable, value);
     }
 
+    public Color FavoriteColor
+    {
+        get => _favoriteColor;
+        set => SetAndRaise(ref _favoriteColor, value);
+    }
+
     public string Gender { get; }
 
-    public string Key => Name;
+    public string Key { get; } = Guid.NewGuid().ToString("B");
 
     public string Name { get; }
 
