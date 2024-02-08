@@ -21,6 +21,7 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
 
         IObservable<TGroupKey> CreateGroupObservable(TObject item, TKey key) =>
             selectGroup(item, key)
+                .DistinctUntilChanged()
                 .Synchronize(locker!)
                 .Do(
                     onNext: groupKey => grouper!.AddOrUpdate(key, groupKey, item, !parentUpdate ? observer : null),

@@ -49,6 +49,15 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
         ParentName = parentName ?? string.Empty;
     }
 
+    private Person(string name, int? age, string gender, Person personCopyKey)
+    {
+        Name = name;
+        _ageNullable = age;
+        Gender = gender;
+        ParentName = string.Empty;
+        Key = personCopyKey?.Key ?? throw new ArgumentNullException(nameof(personCopyKey));
+    }
+
     public static IEqualityComparer<Person> AgeComparer { get; } = new AgeEqualityComparer();
 
     public static IEqualityComparer<Person> NameAgeGenderComparer { get; } = new NameAgeGenderEqualityComparer();
@@ -82,6 +91,12 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
     public static bool operator ==(Person left, Person right) => Equals(left, right);
 
     public static bool operator !=(Person left, Person right) => !Equals(left, right);
+
+    public static Person CloneId(Person sourceData, Person sourceId) =>
+        new((sourceData ?? throw new ArgumentNullException(nameof(sourceData))).Name, sourceData.Age, sourceData.Gender, sourceId)
+        {
+            FavoriteColor = sourceData.FavoriteColor
+        };
 
     public bool Equals(Person? other)
     {

@@ -9,6 +9,7 @@ using Xunit;
 
 using Person = DynamicData.Tests.Domain.Person;
 using System.Threading.Tasks;
+using DynamicData.Kernel;
 
 namespace DynamicData.Tests.Cache;
 
@@ -27,7 +28,7 @@ public class GroupOnObservableFixture : IDisposable
 #endif
     private readonly SourceCache<Person, string> _personCache = new (p => p.Key);
     private readonly ChangeSetAggregator<Person, string> _personResults;
-    private readonly GroupChangeSetAggregator<Person, string, Color> _personByColorResults;
+    private readonly GroupChangeSetAggregator<Person, string, Color> _favoriteColorResults;
     private readonly Faker<Person> _personFaker;
     private readonly Randomizer _randomizer = new(0x3141_5926);
 
@@ -36,7 +37,7 @@ public class GroupOnObservableFixture : IDisposable
         _personFaker = Fakers.Person.Clone().WithSeed(_randomizer);
         _personCache.AddOrUpdate(_personFaker.Generate(InitialCount));
         _personResults = _personCache.Connect().AsAggregator();
-        _personByColorResults = _personCache.Connect().GroupOnObservable(CreateColorGroupObservable).AsAggregator();
+        _favoriteColorResults = _personCache.Connect().GroupOnObservable(CreateFavoriteColorObservable).AsAggregator();
     }
 
     [Fact]
@@ -80,23 +81,40 @@ public class GroupOnObservableFixture : IDisposable
         VerifyGroupingResults();
     }
 
-
     [Fact]
-    public async Task ResultUpdatesOnFutureValues()
+    public void ResultContainsUpdatedValues()
     {
         // Arrange
-        void updateColor()
-        {
-            var person = _randomizer.ListItem(_personCache.Items.ToList());
-            // Pick a new favorite color
-            person.FavoriteColor = _randomizer.RandomColor(person.FavoriteColor);
-        }
+        var replacements = _randomizer.ListItems(_personCache.Items.ToList(), UpdateCount)
+            .Select(replacePerson => Person.CloneId(_personFaker.Generate(), replacePerson));
 
-        var tasks = Enumerable.Range(0, UpdateCount).Select(_ => Task.Run(updateColor));
+        // Act
+        _personCache.AddOrUpdate(replacements);
+
+        // Assert
+        _personResults.Data.Count.Should().Be(InitialCount, "Only replacements were made");
+        _personResults.Messages.Count.Should().Be(2, "1 for Adds and 1 for Updates");
+        VerifyGroupingResults();
+    }
+
+    [Fact]
+    public void ResultsContainsCorrectRegroupedValues()
+    {
+        // Act
+        Enumerable.Range(0, UpdateCount).ForEach(_ => RandomFavoriteColorChange());
+
+        // Assert
+        VerifyGroupingResults();
+    }
+
+    [Fact]
+    public async Task ResultsContainsCorrectRegroupedValuesAsync()
+    {
+        // Arrange
+        var tasks = Enumerable.Range(0, UpdateCount).Select(_ => Task.Run(RandomFavoriteColorChange));
 
         // Act
         await Task.WhenAll(tasks.ToArray());
-        await Task.Delay(1000);
 
         // Assert
         VerifyGroupingResults();
@@ -125,7 +143,7 @@ public class GroupOnObservableFixture : IDisposable
         // Arrange
         var expectedError = new Exception("Expected");
         var throwObservable = Observable.Throw<IChangeSet<Person, string>>(expectedError);
-        using var results = _personCache.Connect().Concat(throwObservable).GroupOnObservable(CreateColorGroupObservable).AsAggregator();
+        using var results = _personCache.Connect().Concat(throwObservable).GroupOnObservable(CreateFavoriteColorObservable).AsAggregator();
 
         // Act
         _personCache.Dispose();
@@ -142,7 +160,7 @@ public class GroupOnObservableFixture : IDisposable
         var throwObservable = Observable.Throw<Color>(expectedError);
 
         // Act
-        using var results = _personCache.Connect().GroupOnObservable((person, key) => CreateColorGroupObservable(person, key).Take(1).Concat(throwObservable)).AsAggregator();
+        using var results = _personCache.Connect().GroupOnObservable((person, key) => CreateFavoriteColorObservable(person, key).Take(1).Concat(throwObservable)).AsAggregator();
 
         // Assert
         results.Error.Should().Be(expectedError);
@@ -163,15 +181,22 @@ public class GroupOnObservableFixture : IDisposable
 
     public void Dispose()
     {
-        _personByColorResults.Dispose();
+        _favoriteColorResults.Dispose();
         _personResults.Dispose();
         _personCache.Dispose();
     }
 
-    private void VerifyGroupingResults() =>
-        VerifyGroupingResults(_personCache, _personResults, _personByColorResults);
+    private void RandomFavoriteColorChange()
+    {
+        var person = _randomizer.ListItem(_personCache.Items.ToList());
+        // Pick a new favorite color
+        person.FavoriteColor = _randomizer.RandomColor(person.FavoriteColor);
+    }
 
-    private static void VerifyGroupingResults(ISourceCache<Person, string> personCache, ChangeSetAggregator<Person, string> personResults, GroupChangeSetAggregator<Person, string, Color> personByColorResults)
+    private void VerifyGroupingResults() =>
+        VerifyGroupingResults(_personCache, _personResults, _favoriteColorResults);
+
+    private static void VerifyGroupingResults(ISourceCache<Person, string> personCache, ChangeSetAggregator<Person, string> personResults, GroupChangeSetAggregator<Person, string, Color> favoriteColorResults)
     {
         var expectedPersons = personCache.Items.ToList();
         var expectedGroupings = personCache.Items.GroupBy(p => p.FavoriteColor).ToList();
@@ -179,15 +204,15 @@ public class GroupOnObservableFixture : IDisposable
         // These should be subsets of each other
         expectedPersons.Should().BeSubsetOf(personResults.Data.Items);
         personResults.Data.Items.Count().Should().Be(expectedPersons.Count);
-        personByColorResults.Groups.Count.Should().Be(personByColorResults.Data.Count);
-        personByColorResults.Data.Count.Should().Be(expectedGroupings.Count);
+        favoriteColorResults.Groups.Count.Should().Be(favoriteColorResults.Data.Count);
+        favoriteColorResults.Data.Count.Should().Be(expectedGroupings.Count);
 
         // Check each group
         foreach (var grouping in expectedGroupings)
         {
             var color = grouping.Key;
             var expectedGroup = grouping.ToList();
-            var optionalGroup = personByColorResults.Groups.Lookup(color);
+            var optionalGroup = favoriteColorResults.Groups.Lookup(color);
 
             optionalGroup.HasValue.Should().BeTrue();
             var actualGroup = optionalGroup.Value.Data.Items.ToList();
@@ -197,6 +222,6 @@ public class GroupOnObservableFixture : IDisposable
         }
     }
 
-    private static IObservable<Color> CreateColorGroupObservable(Person person, string key) =>
+    private static IObservable<Color> CreateFavoriteColorObservable(Person person, string key) =>
          person.WhenPropertyChanged(p => p.FavoriteColor).Select(change => change.Value);
 }
