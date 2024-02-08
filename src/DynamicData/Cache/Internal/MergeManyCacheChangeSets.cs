@@ -31,8 +31,11 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
             var shared = source
                 .Transform((obj, key) => new ChangeSetCache<TDestination, TDestinationKey>(selector(obj, key).Synchronize(locker)))
                 .Synchronize(locker)
-                .Do(cache.Clone)
-                .Do(_ => parentUpdate = true)
+                .Do(changes =>
+                {
+                    cache.Clone(changes);
+                    parentUpdate = true;
+                })
                 .Publish();
 
             // Merge the child changeset changes together and apply to the tracker
@@ -47,12 +50,13 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
             var subRemove = shared
                 .OnItemRemoved(changeSetCache => changeTracker.RemoveItems(changeSetCache.Cache.KeyValues), invokeOnUnsubscribe: false)
                 .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues))
-                .Do(_ =>
-                {
-                    changeTracker.EmitChanges(observer);
-                    parentUpdate = false;
-                })
-                .Subscribe();
+                .SubscribeSafe(
+                    _ =>
+                    {
+                        changeTracker.EmitChanges(observer);
+                        parentUpdate = false;
+                    },
+                    observer.OnError);
 
             return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove);
         });
