@@ -1367,6 +1367,14 @@ namespace DynamicData
             where TObject :  notnull
             where TKey :  notnull
             where TGroupKey :  notnull { }
+        public static System.IObservable<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnObservable<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.IObservable<TGroupKey>> groupObservableSelector)
+            where TObject :  notnull
+            where TKey :  notnull
+            where TGroupKey :  notnull { }
+        public static System.IObservable<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnObservable<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, TKey, System.IObservable<TGroupKey>> groupObservableSelector)
+            where TObject :  notnull
+            where TKey :  notnull
+            where TGroupKey :  notnull { }
         public static System.IObservable<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnProperty<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Linq.Expressions.Expression<System.Func<TObject, TGroupKey>> propertySelector, System.TimeSpan? propertyChangedThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where TObject : System.ComponentModel.INotifyPropertyChanged
             where TKey :  notnull

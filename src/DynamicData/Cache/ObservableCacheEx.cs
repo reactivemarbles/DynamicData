@@ -1974,6 +1974,45 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Groups the source by the latest value from their observable created by the given factory.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="groupObservableSelector">The group selector key.</param>
+    /// <returns>An observable which will emit group change sets.</returns>
+    public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnObservable<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TGroupKey>> groupObservableSelector)
+        where TObject : notnull
+        where TKey : notnull
+        where TGroupKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        groupObservableSelector.ThrowArgumentNullExceptionIfNull(nameof(groupObservableSelector));
+
+        return new GroupOnObservable<TObject, TKey, TGroupKey>(source, groupObservableSelector).Run();
+    }
+
+    /// <summary>
+    /// Groups the source by the latest value from their observable created by the given factory.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="groupObservableSelector">The group selector key.</param>
+    /// <returns>An observable which will emit group change sets.</returns>
+    public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnObservable<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TGroupKey>> groupObservableSelector)
+        where TObject : notnull
+        where TKey : notnull
+        where TGroupKey : notnull
+    {
+        groupObservableSelector.ThrowArgumentNullExceptionIfNull(nameof(groupObservableSelector));
+
+        return source.GroupOnObservable((obj, _) => groupObservableSelector(obj));
+    }
+
+    /// <summary>
     /// <para>Groups the source using the property specified by the property selector. Groups are re-applied when the property value changed.</para>
     /// <para>When there are likely to be a large number of group property changes specify a throttle to improve performance.</para>
     /// </summary>

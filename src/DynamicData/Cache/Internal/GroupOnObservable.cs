@@ -23,8 +23,8 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
             selectGroup(item, key)
                 .Synchronize(locker!)
                 .Do(
-                    groupKey => grouper!.AddOrUpdate(item, key, groupKey, !parentUpdate ? observer : null),
-                    observer.OnError);
+                    onNext: groupKey => grouper!.AddOrUpdate(key, groupKey, item, !parentUpdate ? observer : null),
+                    onError: observer.OnError);
 
         // Create a shared connection to the source
         var shared = source
@@ -32,21 +32,27 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
             .Do(_ => parentUpdate = true)
             .Publish();
 
-        // For each item, subscribe to the grouping observable and update that entry whenever it fires
-        var subMergeMany = shared
-            .MergeMany(CreateGroupObservable)
-            .SubscribeSafe(observer.OnError);
-
-        // Give the group a chance to handle/emit any other changes
+        // First process the changesets
         var subChanges = shared
             .SubscribeSafe(
-                changeSet =>
+                onNext: changeSet => grouper.ProcessChangeSet(changeSet),
+                onError: observer.OnError);
+
+        // Next process the Grouping observables created for each item
+        var subMergeMany = shared
+            .MergeMany(CreateGroupObservable)
+            .SubscribeSafe(onError: observer.OnError);
+
+        // Finally, emit the results
+        var subResults = shared
+            .SubscribeSafe(
+                onNext: _ =>
                 {
-                    grouper.ProcessChanges(changeSet, observer);
+                    grouper.EmitChanges(observer);
                     parentUpdate = false;
                 },
-                observer.OnError,
-                observer.OnCompleted);
+                onError: observer.OnError,
+                onComplete: observer.OnCompleted);
 
         return new CompositeDisposable(shared.Connect(), subMergeMany, subChanges);
     });
