@@ -73,7 +73,7 @@ public class GroupOnObservableFixture : IDisposable
         // Arrange
 
         // Act
-        _personCache.RemoveKeys(_randomizer.ListItems(_personCache.Items.ToList(), RemoveCount).Select(p => p.Key));
+        _personCache.RemoveKeys(_randomizer.ListItems(_personCache.Items.ToList(), RemoveCount).Select(p => p.UniqueKey));
 
         // Assert
         _personResults.Data.Count.Should().Be(InitialCount - RemoveCount);
