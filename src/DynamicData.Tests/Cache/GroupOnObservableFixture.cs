@@ -105,8 +105,9 @@ public class GroupOnObservableFixture : IDisposable
     {
         // Arrange
         _personCache.AddOrUpdate(_personFaker.Generate(InitialCount));
-        var removeColor = _randomizer.Enum<Color>();
-        var colorCount = _personCache.Items.Select(p => p.FavoriteColor).Distinct().Count();
+        var usedColorList = _personCache.Items.Select(p => p.FavoriteColor).Distinct().ToList();
+        var removeColor = _randomizer.ListItem(usedColorList);
+        var colorCount = usedColorList.Count;
 
         // Act
         _personCache.Edit(updater => updater.Remove(updater.Items.Where(p => p.FavoriteColor == removeColor).Select(p => p.UniqueKey)));
@@ -114,8 +115,76 @@ public class GroupOnObservableFixture : IDisposable
         // Assert
         _personCache.Items.Select(p => p.FavoriteColor).Distinct().Count().Should().Be(colorCount - 1);
         _personResults.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
+        _favoriteColorResults.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
         _favoriteColorResults.Summary.Overall.Adds.Should().Be(colorCount);
         _favoriteColorResults.Summary.Overall.Removes.Should().Be(1);
+        VerifyGroupingResults();
+    }
+
+    [Fact]
+    public void GroupNotRemovedIfAddedBackImmediately()
+    {
+        // Arrange
+        _personCache.AddOrUpdate(_personFaker.Generate(InitialCount));
+        var usedColorList = _personCache.Items.Select(p => p.FavoriteColor).Distinct().ToList();
+        var removeColor = _randomizer.ListItem(usedColorList);
+        var colorCount = usedColorList.Count;
+
+        // Act
+        _personCache.Edit(updater =>
+        {
+            updater.Remove(updater.Items.Where(p => p.FavoriteColor == removeColor).Select(p => p.UniqueKey));
+            var newPerson = _personFaker.Generate();
+            newPerson.FavoriteColor = removeColor;
+            updater.AddOrUpdate(newPerson);
+        });
+
+        // Assert
+        _personCache.Items.Select(p => p.FavoriteColor).Distinct().Count().Should().Be(colorCount);
+        _personResults.Messages.Count.Should().Be(2, "1 for Adds and 1 for Other Added Value");
+        _favoriteColorResults.Messages.Count.Should().Be(1, "Shouldn't be removed/re-added");
+        _favoriteColorResults.Summary.Overall.Adds.Should().Be(colorCount);
+        _favoriteColorResults.Summary.Overall.Removes.Should().Be(0);
+        VerifyGroupingResults();
+    }
+
+    [Fact]
+    public void GroupingSequenceCompletesWhenEmpty()
+    {
+        // Arrange
+        _personCache.AddOrUpdate(_personFaker.Generate(InitialCount));
+        var usedColorList = _personCache.Items.Select(p => p.FavoriteColor).Distinct().ToList();
+        var removeColor = _randomizer.ListItem(usedColorList);
+
+        var results = _personCache.Connect().GroupOnObservable(CreateFavoriteColorObservable)
+            .Filter(grp => grp.Key == removeColor)
+            .Take(1)
+            .MergeMany(grp => grp.Cache.Connect())
+            .AsAggregator();
+
+        // Act
+        _personCache.Edit(updater => updater.Remove(updater.Items.Where(p => p.FavoriteColor == removeColor).Select(p => p.UniqueKey)));
+
+        // Assert
+        results.IsCompleted.Should().BeTrue();
+        VerifyGroupingResults();
+    }
+
+    [Fact]
+    public void AllSequencesCompleteWhenSourceIsDisposed()
+    {
+        // Arrange
+        _personCache.AddOrUpdate(_personFaker.Generate(InitialCount));
+
+        var results = _personCache.Connect().GroupOnObservable(CreateFavoriteColorObservable)
+            .MergeMany(grp => grp.Cache.Connect())
+            .AsAggregator();
+
+        // Act
+        _personCache.Dispose();
+
+        // Assert
+        results.IsCompleted.Should().BeTrue();
         VerifyGroupingResults();
     }
 
@@ -124,7 +193,8 @@ public class GroupOnObservableFixture : IDisposable
     {
         // Arrange
         _personCache.AddOrUpdate(_personFaker.Generate(InitialCount));
-        var colorCount = _personCache.Items.Select(p => p.FavoriteColor).Distinct().Count();
+        var usedColorList = _personCache.Items.Select(p => p.FavoriteColor).Distinct().ToList();
+        var colorCount = usedColorList.Count;
 
         // Act
         _personCache.Clear();

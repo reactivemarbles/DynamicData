@@ -2,11 +2,12 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKey, TGroupKey>? groupSelector = null)
+internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKey, TGroupKey>? groupSelector = null) : IDisposable
     where TObject : notnull
     where TKey : notnull
     where TGroupKey : notnull
@@ -18,7 +19,7 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
 
     public void AddOrUpdate(TKey key, TGroupKey groupKey, TObject item, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null)
     {
-        PerformUpdate(key, groupKey, item);
+        PerformAddOrUpdate(key, groupKey, item);
 
         if (observer != null)
         {
@@ -41,20 +42,17 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
                     break;
 
                 case ChangeReason.Update when _groupSelector is not null:
-                    PerformUpdate(change.Key, _groupSelector(change.Current, change.Key), change.Current);
+                    PerformAddOrUpdate(change.Key, _groupSelector(change.Current, change.Key), change.Current);
                     break;
 
-                // Without the selector, all we can do is remove the old value
                 case ChangeReason.Update:
-                    PerformRemove(change.Key);
+                    PerformUpdate(change.Key);
                     break;
 
-                // With the selector, re-evalutate the GroupKey and move the group if it changed
                 case ChangeReason.Refresh when _groupSelector is not null:
                     PerformRefresh(change.Key, _groupSelector(change.Current, change.Key), change.Current);
                     break;
 
-                // Without the selector, just forward the refresh downstream
                 case ChangeReason.Refresh:
                     PerformRefresh(change.Key);
                     break;
@@ -69,11 +67,21 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
 
     public void EmitChanges(IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>> observer)
     {
-        // Remove any empty groups
+        // Verify logic doesn't capture any non-empty groups
+        Debug.Assert(_emptyGroups.All(static group => group.Cache.Count == 0), "Non empty Group in Empty Group HashSet");
+
+        // Dispose/Remove any empty groups
         _emptyGroups
-            .Where(grp => grp.Count == 0)
-            .ForEach(group => _groupCache.Remove(group.Key));
+            .Where(static grp => grp.Count == 0)
+            .ForEach(group =>
+            {
+                _groupCache.Remove(group.Key);
+                group.Dispose();
+            });
         _emptyGroups.Clear();
+
+        // Make sure no empty ones were missed
+        Debug.Assert(!_groupCache.Items.Any(static group => group.Cache.Count == 0), "Not all empty Groups were removed");
 
         // Emit any pending changes
         var changeSet = _groupCache.CaptureChanges();
@@ -83,105 +91,7 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
-    private void PerformAddOrUpdate(TKey key, TGroupKey groupKey, TObject item)
-    {
-        var group = GetOrAddGroup(groupKey);
-        group.Update(updater => updater.AddOrUpdate(item, key));
-        _groupKeys[key] = groupKey;
-
-        // Can't be empty since a value was just added
-        _emptyGroups.Remove(group);
-    }
-
-    private void PerformUpdate(TKey key, TGroupKey newGroupKey, TObject current)
-    {
-        var groupKey = _groupKeys.Lookup(key);
-        if (groupKey.HasValue)
-        {
-            var oldGroupKey = groupKey.Value;
-
-            // See if the key has changed
-            if (EqualityComparer<TGroupKey>.Default.Equals(newGroupKey, oldGroupKey))
-            {
-                // GroupKey did not change, so just update the value in the group
-                var group = LookupGroup(oldGroupKey);
-                if (group.HasValue)
-                {
-                    group.Value.Update(updater => updater.AddOrUpdate(current, key));
-                }
-                else
-                {
-                    PerformAddOrUpdate(key, newGroupKey, current);
-                }
-            }
-            else
-            {
-                // GroupKey changed, so remove from old and add to new
-                PerformRemove(key, oldGroupKey);
-                PerformAddOrUpdate(key, newGroupKey, current);
-            }
-        }
-        else
-        {
-            PerformAddOrUpdate(key, newGroupKey, current);
-        }
-    }
-
-    private void PerformRemove(TKey key)
-    {
-        if (_groupKeys.TryGetValue(key, out var groupKey))
-        {
-            PerformRemove(key, groupKey);
-            _groupKeys.Remove(key);
-        }
-    }
-
-    private void PerformRemove(TKey key, TGroupKey groupKey)
-    {
-        var optionalGroup = LookupGroup(groupKey);
-        if (optionalGroup.HasValue)
-        {
-            var currentGroup = optionalGroup.Value;
-            currentGroup.Update(updater => updater.Remove(key));
-
-            if (currentGroup.Count == 0)
-            {
-                _emptyGroups.Add(currentGroup);
-            }
-        }
-    }
-
-    private void PerformRefresh(TKey key, TGroupKey newGroupKey, TObject current)
-    {
-        if (_groupKeys.TryGetValue(key, out var groupKey))
-        {
-            // See if the key has changed
-            if (EqualityComparer<TGroupKey>.Default.Equals(newGroupKey, groupKey))
-            {
-                // GroupKey did not change, so just refresh the value in the group
-                PerformRefresh(key);
-            }
-            else
-            {
-                // GroupKey changed, so remove from old and add to new
-                PerformRemove(key, groupKey);
-                PerformAddOrUpdate(key, newGroupKey, current);
-            }
-        }
-        else
-        {
-            PerformAddOrUpdate(key, newGroupKey, current);
-        }
-    }
-
-    private void PerformRefresh(TKey key)
-    {
-        var optionalGroup = LookupGroup(key);
-        if (optionalGroup.HasValue)
-        {
-            optionalGroup.Value.Update(updater => updater.Refresh(key));
-        }
-    }
+    public void Dispose() => _groupCache.Items.ForEach(group => (group as ManagedGroup<TObject, TKey, TGroupKey>)?.Dispose());
 
     private Optional<ManagedGroup<TObject, TKey, TGroupKey>> LookupGroup(TKey key) =>
         _groupKeys.Lookup(key).Convert(LookupGroup);
@@ -196,4 +106,118 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
             _groupCache.Add(newGroup, groupKey);
             return newGroup;
         });
+
+    private void PerformAddOrUpdate(TKey key, TGroupKey groupKey, TObject item)
+    {
+        // See if this item already has been grouped
+        if (_groupKeys.TryGetValue(key, out var currentGroupKey))
+        {
+            // See if the key has changed
+            if (EqualityComparer<TGroupKey>.Default.Equals(groupKey, currentGroupKey))
+            {
+                // GroupKey did not change, so just update the value in the group
+                var optionalGroup = LookupGroup(currentGroupKey);
+                if (optionalGroup.HasValue)
+                {
+                    optionalGroup.Value.Update(updater => updater.AddOrUpdate(item, key));
+                    return;
+                }
+
+                Debug.Fail("If there is a GroupKey associated with a Key, the Group for that GroupKey should exist.");
+            }
+            else
+            {
+                // GroupKey changed, so remove from old and allow to be added below
+                PerformRemove(key, currentGroupKey);
+            }
+        }
+
+        // Find the right group and add the item
+        PerformGroupAddOrUpdate(key, groupKey, item);
+    }
+
+    private void PerformGroupAddOrUpdate(TKey key, TGroupKey groupKey, TObject item)
+    {
+        var group = GetOrAddGroup(groupKey);
+        group.Update(updater => updater.AddOrUpdate(item, key));
+        _groupKeys[key] = groupKey;
+
+        // Can't be empty since a value was just added
+        _emptyGroups.Remove(group);
+    }
+
+    private void PerformRefresh(TKey key)
+    {
+        var optionalGroup = LookupGroup(key);
+        if (optionalGroup.HasValue)
+        {
+            optionalGroup.Value.Update(updater => updater.Refresh(key));
+        }
+        else
+        {
+            Debug.Fail("Should not receive a refresh for an unknown Group Key");
+        }
+    }
+
+    // When the GroupKey is available, check then and move the group if it changed
+    private void PerformRefresh(TKey key, TGroupKey newGroupKey, TObject item)
+    {
+        if (_groupKeys.TryGetValue(key, out var groupKey))
+        {
+            // See if the key has changed
+            if (EqualityComparer<TGroupKey>.Default.Equals(newGroupKey, groupKey))
+            {
+                // GroupKey did not change, so just refresh the value in the group
+                PerformRefresh(key);
+            }
+            else
+            {
+                // GroupKey changed, so remove from old and add to new
+                PerformRemove(key, groupKey);
+                PerformGroupAddOrUpdate(key, newGroupKey, item);
+            }
+        }
+        else
+        {
+            Debug.Fail("Should not receive a refresh for an unknown key");
+        }
+    }
+
+    private void PerformRemove(TKey key)
+    {
+        if (_groupKeys.TryGetValue(key, out var groupKey))
+        {
+            PerformRemove(key, groupKey);
+            _groupKeys.Remove(key);
+        }
+        else
+        {
+            Debug.Fail("Should not receive a Remove Event for an unknown key");
+        }
+    }
+
+    private void PerformRemove(TKey key, TGroupKey groupKey)
+    {
+        var optionalGroup = LookupGroup(groupKey);
+        if (optionalGroup.HasValue)
+        {
+            var currentGroup = optionalGroup.Value;
+            currentGroup.Update(updater =>
+            {
+                updater.Remove(key);
+                if (updater.Count == 0)
+                {
+                    _emptyGroups.Add(currentGroup);
+                }
+            });
+        }
+        else
+        {
+            Debug.Fail("Should not receive a Remove Event for an unknown Group Key");
+        }
+    }
+
+    // Without the new group key, all that can be done is remove the old value
+    // Consumer of the Grouper is resonsible for Adding the New Value.
+    private void PerformUpdate(TKey key) => PerformRemove(key);
 }
