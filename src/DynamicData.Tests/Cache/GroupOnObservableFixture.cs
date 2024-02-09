@@ -10,8 +10,6 @@ using Xunit;
 using Person = DynamicData.Tests.Domain.Person;
 using System.Threading.Tasks;
 using DynamicData.Kernel;
-using DynamicData.Tests.Utilities;
-using System.Diagnostics;
 
 namespace DynamicData.Tests.Cache;
 
@@ -28,12 +26,11 @@ public class GroupOnObservableFixture : IDisposable
     private const int RemoveCount = 37;
     private const int UpdateCount = 101;
 #endif
-    private readonly SourceCache<Person, string> _personCache = new (p => p.Key);
+    private readonly SourceCache<Person, string> _personCache = new (p => p.UniqueKey);
     private readonly ChangeSetAggregator<Person, string> _personResults;
     private readonly GroupChangeSetAggregator<Person, string, Color> _favoriteColorResults;
     private readonly Faker<Person> _personFaker;
     private readonly Randomizer _randomizer = new(0x3141_5926);
-    private readonly IDisposable _disposable;
 
     public GroupOnObservableFixture()
     {
@@ -41,8 +38,6 @@ public class GroupOnObservableFixture : IDisposable
         _personCache.AddOrUpdate(_personFaker.Generate(InitialCount));
         _personResults = _personCache.Connect().AsAggregator();
         _favoriteColorResults = _personCache.Connect().GroupOnObservable(CreateFavoriteColorObservable).AsAggregator();
-
-        _disposable = _favoriteColorResults.Data.Connect().SubscribeMany(group => group.Cache.Connect().Spy($"{group.Key}", m => Trace.WriteLine(m)).Subscribe()).Subscribe();
     }
 
     [Fact]
@@ -189,24 +184,13 @@ public class GroupOnObservableFixture : IDisposable
         _favoriteColorResults.Dispose();
         _personResults.Dispose();
         _personCache.Dispose();
-        _disposable.Dispose();
     }
 
     private void RandomFavoriteColorChange()
     {
         var person = _randomizer.ListItem(_personCache.Items.ToList());
-        //lock (person)
-        {
-            // Select a different favorite color
-            //person.FavoriteColor = _randomizer.RandomColor(person.FavoriteColor);
-            person.FavoriteColor = _randomizer.RandomColor();
-
-            //var current = person.FavoriteColor;
-            //var newChoice = _randomizer.RandomColor(current);
-            //Trace.WriteLine($"T#{Environment.CurrentManagedThreadId:X2} Changing Fav Color from {current} to {newChoice} for {person.Name}");
-            //person.FavoriteColor = newChoice;
-            //Trace.WriteLine($"T#{Environment.CurrentManagedThreadId:X2} {person.Name} Fav Color Changed to {person.FavoriteColor}");
-        }
+        // Pick a new favorite color
+        person.FavoriteColor = _randomizer.RandomColor(person.FavoriteColor);
     }
 
     private void VerifyGroupingResults() =>
@@ -233,24 +217,11 @@ public class GroupOnObservableFixture : IDisposable
             optionalGroup.HasValue.Should().BeTrue();
             var actualGroup = optionalGroup.Value.Data.Items.ToList();
 
-            var missing = expectedGroup.Except(actualGroup).ToList();
-            var unexpected = actualGroup.Except(expectedGroup).ToList();
-            if (missing.Count > 0)
-            {
-                Trace.WriteLine($"Missing from {color} ({missing.Count}):\r\n\t{string.Join("\r\n\t", missing)}");
-            }
-            if (unexpected.Count > 0)
-            {
-                Trace.WriteLine($"Unexpected in {color} ({unexpected.Count}):\r\n\t{string.Join("\r\n\t", unexpected)}");
-            }
-
             expectedGroup.Should().BeSubsetOf(actualGroup);
             actualGroup.Count.Should().Be(expectedGroup.Count);
         }
     }
 
     private static IObservable<Color> CreateFavoriteColorObservable(Person person, string key) =>
-         person.WhenPropertyChanged(p => p.FavoriteColor)
-            .Select(change => change.Value)
-            .Spy($"{person.Name} Fav Color", m => Trace.WriteLine(m), showSubs: false);
+         person.WhenPropertyChanged(p => p.FavoriteColor).Select(change => change.Value);
 }
