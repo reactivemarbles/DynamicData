@@ -71,13 +71,15 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         Debug.Assert(_emptyGroups.All(static group => group.Cache.Count == 0), "Non empty Group in Empty Group HashSet");
 
         // Dispose/Remove any empty groups
-        _emptyGroups
-            .Where(static grp => grp.Count == 0)
-            .ForEach(group =>
+        foreach (var group in _emptyGroups)
+        {
+            if (group.Count == 0)
             {
                 _groupCache.Remove(group.Key);
                 group.Dispose();
-            });
+            }
+        }
+
         _emptyGroups.Clear();
 
         // Make sure no empty ones were missed
@@ -92,6 +94,18 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
     }
 
     public void Dispose() => _groupCache.Items.ForEach(group => (group as ManagedGroup<TObject, TKey, TGroupKey>)?.Dispose());
+
+    private static void PerformGroupRefresh(TKey key, in Optional<ManagedGroup<TObject, TKey, TGroupKey>> optionalGroup)
+    {
+        if (optionalGroup.HasValue)
+        {
+            optionalGroup.Value.Update(updater => updater.Refresh(key));
+        }
+        else
+        {
+            Debug.Fail("Should not receive a refresh for an unknown Group Key");
+        }
+    }
 
     private Optional<ManagedGroup<TObject, TKey, TGroupKey>> LookupGroup(TKey key) =>
         _groupKeys.Lookup(key).Convert(LookupGroup);
@@ -146,18 +160,7 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         _emptyGroups.Remove(group);
     }
 
-    private void PerformRefresh(TKey key)
-    {
-        var optionalGroup = LookupGroup(key);
-        if (optionalGroup.HasValue)
-        {
-            optionalGroup.Value.Update(updater => updater.Refresh(key));
-        }
-        else
-        {
-            Debug.Fail("Should not receive a refresh for an unknown Group Key");
-        }
-    }
+    private void PerformRefresh(TKey key) => PerformGroupRefresh(key, LookupGroup(key));
 
     // When the GroupKey is available, check then and move the group if it changed
     private void PerformRefresh(TKey key, TGroupKey newGroupKey, TObject item)
@@ -168,7 +171,7 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
             if (EqualityComparer<TGroupKey>.Default.Equals(newGroupKey, groupKey))
             {
                 // GroupKey did not change, so just refresh the value in the group
-                PerformRefresh(key);
+                PerformGroupRefresh(key, LookupGroup(groupKey));
             }
             else
             {
