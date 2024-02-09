@@ -54,8 +54,8 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
         Name = name;
         _ageNullable = age;
         Gender = gender;
-        ParentName = string.Empty;
-        Key = personCopyKey?.Key ?? throw new ArgumentNullException(nameof(personCopyKey));
+        ParentName = personCopyKey?.ParentName ?? throw new ArgumentNullException(nameof(personCopyKey));
+        UniqueKey = personCopyKey.UniqueKey;
     }
 
     public static IEqualityComparer<Person> AgeComparer { get; } = new AgeEqualityComparer();
@@ -82,7 +82,9 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
 
     public string Gender { get; }
 
-    public string Key { get; } = Guid.NewGuid().ToString("B");
+    public string Key => Name;
+
+    public string UniqueKey { get; } = Guid.NewGuid().ToString("B");
 
     public string Name { get; }
 
@@ -92,7 +94,7 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
 
     public static bool operator !=(Person left, Person right) => !Equals(left, right);
 
-    public static Person CloneId(Person sourceData, Person sourceId) =>
+    public static Person CloneUniqueId(Person sourceData, Person sourceId) =>
         new((sourceData ?? throw new ArgumentNullException(nameof(sourceData))).Name, sourceData.Age, sourceData.Gender, sourceId)
         {
             FavoriteColor = sourceData.FavoriteColor
