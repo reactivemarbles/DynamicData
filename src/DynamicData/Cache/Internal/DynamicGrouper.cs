@@ -14,7 +14,7 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
     private readonly ChangeAwareCache<IGroup<TObject, TKey, TGroupKey>, TGroupKey> _groupCache = new();
     private readonly Dictionary<TKey, TGroupKey> _groupKeys = [];
     private readonly HashSet<ManagedGroup<TObject, TKey, TGroupKey>> _emptyGroups = [];
-    private Func<TObject, TKey, TGroupKey>? _groupSelector = groupSelector;
+    private readonly Func<TObject, TKey, TGroupKey>? _groupSelector = groupSelector;
 
     public void AddOrUpdate(TKey key, TGroupKey groupKey, TObject item, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null)
     {
@@ -93,16 +93,26 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         _emptyGroups.Remove(group);
     }
 
-    private void PerformUpdate(TKey key, TGroupKey newGroupKey, TObject current) =>
-        _groupKeys.Lookup(key).IfHasValue(oldGroupKey =>
+    private void PerformUpdate(TKey key, TGroupKey newGroupKey, TObject current)
+    {
+        var groupKey = _groupKeys.Lookup(key);
+        if (groupKey.HasValue)
         {
+            var oldGroupKey = groupKey.Value;
+
             // See if the key has changed
             if (EqualityComparer<TGroupKey>.Default.Equals(newGroupKey, oldGroupKey))
             {
                 // GroupKey did not change, so just update the value in the group
-                LookupGroup(oldGroupKey)
-                    .IfHasValue(group => group.Update(updater => updater.AddOrUpdate(current, key)))
-                    .Else(() => PerformAddOrUpdate(key, newGroupKey, current));
+                var group = LookupGroup(oldGroupKey);
+                if (group.HasValue)
+                {
+                    group.Value.Update(updater => updater.AddOrUpdate(current, key));
+                }
+                else
+                {
+                    PerformAddOrUpdate(key, newGroupKey, current);
+                }
             }
             else
             {
@@ -110,8 +120,12 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
                 PerformRemove(key, oldGroupKey);
                 PerformAddOrUpdate(key, newGroupKey, current);
             }
-        })
-        .Else(() => PerformAddOrUpdate(key, newGroupKey, current));
+        }
+        else
+        {
+            PerformAddOrUpdate(key, newGroupKey, current);
+        }
+    }
 
     private void PerformRemove(TKey key)
     {
@@ -122,20 +136,24 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
-    private void PerformRemove(TKey key, TGroupKey groupKey) =>
-        LookupGroup(groupKey).IfHasValue(currentGroup =>
+    private void PerformRemove(TKey key, TGroupKey groupKey)
+    {
+        var optionalGroup = LookupGroup(groupKey);
+        if (optionalGroup.HasValue)
         {
+            var currentGroup = optionalGroup.Value;
             currentGroup.Update(updater => updater.Remove(key));
 
             if (currentGroup.Count == 0)
             {
                 _emptyGroups.Add(currentGroup);
             }
-        });
+        }
+    }
 
     private void PerformRefresh(TKey key, TGroupKey newGroupKey, TObject current)
     {
-        _groupKeys.Lookup(key).IfHasValue(groupKey =>
+        if (_groupKeys.TryGetValue(key, out var groupKey))
         {
             // See if the key has changed
             if (EqualityComparer<TGroupKey>.Default.Equals(newGroupKey, groupKey))
@@ -149,19 +167,27 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
                 PerformRemove(key, groupKey);
                 PerformAddOrUpdate(key, newGroupKey, current);
             }
-        })
-        .Else(() => PerformAddOrUpdate(key, newGroupKey, current));
+        }
+        else
+        {
+            PerformAddOrUpdate(key, newGroupKey, current);
+        }
     }
 
-    private void PerformRefresh(TKey key) =>
-        LookupGroup(key).IfHasValue(group =>
-            group.Update(updater => updater.Refresh(key)));
+    private void PerformRefresh(TKey key)
+    {
+        var optionalGroup = LookupGroup(key);
+        if (optionalGroup.HasValue)
+        {
+            optionalGroup.Value.Update(updater => updater.Refresh(key));
+        }
+    }
 
     private Optional<ManagedGroup<TObject, TKey, TGroupKey>> LookupGroup(TKey key) =>
         _groupKeys.Lookup(key).Convert(LookupGroup);
 
     private Optional<ManagedGroup<TObject, TKey, TGroupKey>> LookupGroup(TGroupKey groupKey) =>
-        _groupCache.Lookup(groupKey).Convert(grp => (grp as ManagedGroup<TObject, TKey, TGroupKey>)!);
+        _groupCache.Lookup(groupKey).Convert(static grp => (grp as ManagedGroup<TObject, TKey, TGroupKey>)!);
 
     private ManagedGroup<TObject, TKey, TGroupKey> GetOrAddGroup(TGroupKey groupKey) =>
         LookupGroup(groupKey).ValueOr(() =>
