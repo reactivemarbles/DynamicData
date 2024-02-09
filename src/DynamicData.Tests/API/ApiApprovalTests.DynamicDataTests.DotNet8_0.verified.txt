@@ -2877,6 +2877,21 @@ namespace DynamicData.Tests
         public void Dispose() { }
         protected virtual void Dispose(bool isDisposing) { }
     }
+    public class GroupChangeSetAggregator<TObject, TKey, TGroupKey> : System.IDisposable
+        where TObject :  notnull
+        where TKey :  notnull
+        where TGroupKey :  notnull
+    {
+        public GroupChangeSetAggregator(System.IObservable<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> source) { }
+        public DynamicData.IObservableCache<DynamicData.IGroup<TObject, TKey, TGroupKey>, TGroupKey> Data { get; }
+        public System.Exception? Error { get; }
+        public DynamicData.IObservableCache<DynamicData.Tests.ChangeSetAggregator<TObject, TKey>, TGroupKey> Groups { get; }
+        public bool IsCompleted { get; }
+        public System.Collections.Generic.IReadOnlyList<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> Messages { get; }
+        public DynamicData.Diagnostics.ChangeSummary Summary { get; }
+        public void Dispose() { }
+        protected virtual void Dispose(bool disposing) { }
+    }
     public static class ListTextEx
     {
         public static DynamicData.Tests.ChangeSetAggregator<T> AsAggregator<T>(this System.IObservable<DynamicData.IChangeSet<T>> source)
@@ -2922,6 +2937,10 @@ namespace DynamicData.Tests
         public static DynamicData.Tests.VirtualChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this System.IObservable<DynamicData.IVirtualChangeSet<TObject, TKey>> source)
             where TObject :  notnull
             where TKey :  notnull { }
+        public static DynamicData.Tests.GroupChangeSetAggregator<TValue, TKey, TGroupKey> AsAggregator<TValue, TKey, TGroupKey>(this System.IObservable<DynamicData.IGroupChangeSet<TValue, TKey, TGroupKey>> source)
+            where TValue :  notnull
+            where TKey :  notnull
+            where TGroupKey :  notnull { }
     }
     public class VirtualChangeSetAggregator<TObject, TKey> : System.IDisposable
         where TObject :  notnull
