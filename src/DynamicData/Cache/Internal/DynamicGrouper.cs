@@ -15,7 +15,7 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
     private readonly ChangeAwareCache<IGroup<TObject, TKey, TGroupKey>, TGroupKey> _groupCache = new();
     private readonly Dictionary<TKey, TGroupKey> _groupKeys = [];
     private readonly HashSet<ManagedGroup<TObject, TKey, TGroupKey>> _emptyGroups = [];
-    private readonly Func<TObject, TKey, TGroupKey>? _groupSelector = groupSelector;
+    private Func<TObject, TKey, TGroupKey>? _groupSelector = groupSelector;
 
     public void AddOrUpdate(TKey key, TGroupKey groupKey, TObject item, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null)
     {
@@ -63,6 +63,33 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         {
             EmitChanges(observer);
         }
+    }
+
+    public void RegroupAll(IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer)
+    {
+        if (_groupSelector == null)
+        {
+            Debug.Fail("RegroupAll called without a GroupSelector. No changes will be made.");
+            return;
+        }
+
+        // Create an array of tuples with data for items whose GroupKeys have changed
+        var collapsedItems = _groupCache.Items
+            .Select(group => group as ManagedGroup<TObject, TKey, TGroupKey> !)
+            .SelectMany(group => group!.Cache.KeyValues.Select(kvp =>
+                (kvp.Value, kvp.Key, OldGroup: group, NewGroupKey: _groupSelector(kvp.Value, kvp.Key))))
+            .Where(static x => !EqualityComparer<TGroupKey>.Default.Equals(x.OldGroup.Key, x.NewGroupKey))
+            .ToArray();
+        if (observer != null)
+        {
+            EmitChanges(observer);
+        }
+    }
+
+    public void SetGroupSelector(Func<TObject, TKey, TGroupKey> groupSelector, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null)
+    {
+        _groupSelector = groupSelector;
+        RegroupAll(observer);
     }
 
     public void EmitChanges(IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>> observer)
