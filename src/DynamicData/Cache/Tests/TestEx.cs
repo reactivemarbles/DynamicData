@@ -37,6 +37,25 @@ public static class TestEx
     }
 
     /// <summary>
+    /// Aggregates all events and statistics for a group change set to help assertions when testing.
+    /// </summary>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TGroupKey">The type of the grouping key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <returns>The distinct change set aggregator.</returns>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static GroupChangeSetAggregator<TValue, TKey, TGroupKey> AsAggregator<TValue, TKey, TGroupKey>(this IObservable<IGroupChangeSet<TValue, TKey, TGroupKey>> source)
+        where TValue : notnull
+        where TKey : notnull
+        where TGroupKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+
+        return new GroupChangeSetAggregator<TValue, TKey, TGroupKey>(source);
+    }
+
+    /// <summary>
     /// Aggregates all events and statistics for a sorted change set to help assertions when testing.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
