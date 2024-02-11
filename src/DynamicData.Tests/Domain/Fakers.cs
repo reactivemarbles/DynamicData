@@ -52,9 +52,10 @@ internal static class Fakers
     public static Faker<Market> Market { get; } = new Faker<Market>().CustomInstantiator(faker => new Market($"{faker.Commerce.ProductName()} Id#{faker.Random.AlphaNumeric(5)}"));
 
     public static Faker<Person> Person { get; } = new Faker<Person>().CustomInstantiator(faker =>
-        new Person(faker.Person.FullName, faker.Random.Int(1, 100), faker.PickRandom(PersonGenders))
+        new Person(faker.Person.FullName, faker.Random.Int(1, 100), faker.PickRandom(PersonGenders), faker.Person.FirstName)
         {
-            FavoriteColor = faker.Random.RandomColor()
+            FavoriteColor = faker.Random.RandomColor(),
+            PetType = faker.PickRandom<AnimalFamily>(),
         });
 
     public static Faker<AnimalOwner> WithInitialAnimals(this Faker<AnimalOwner> existing, Faker<Animal> animalFaker, int minCount, int maxCount) =>
