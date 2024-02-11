@@ -65,7 +65,9 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
-    public void RegroupAll(IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer)
+    // Re-evaluate the GroupSelector for each item and apply the changes so that each group only emits a single changset
+    // Perform all the adds/removes for each group in a single step
+    public void RegroupAll(IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>> observer)
     {
         if (_groupSelector == null)
         {
@@ -74,22 +76,91 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
 
         // Create an array of tuples with data for items whose GroupKeys have changed
-        var collapsedItems = _groupCache.Items
-            .Select(group => group as ManagedGroup<TObject, TKey, TGroupKey> !)
-            .SelectMany(group => group!.Cache.KeyValues.Select(kvp =>
-                (kvp.Value, kvp.Key, OldGroup: group, NewGroupKey: _groupSelector(kvp.Value, kvp.Key))))
+        var groupChanges = _groupCache.Items
+            .Select(static group => group as ManagedGroup<TObject, TKey, TGroupKey>)
+            .SelectMany(group => group!.Cache.KeyValues.Select(
+                kvp => (KeyValuePair: kvp, OldGroup: group, NewGroupKey: _groupSelector(kvp.Value, kvp.Key))))
             .Where(static x => !EqualityComparer<TGroupKey>.Default.Equals(x.OldGroup.Key, x.NewGroupKey))
             .ToArray();
-        if (observer != null)
+
+        // Build a list of the removals that need to happen (grouped by the old key)
+        var pendingRemoves = groupChanges
+            .GroupBy(
+                static x => x.OldGroup.Key,
+                static x => (x.KeyValuePair.Key, x.OldGroup))
+            .ToDictionary(g => g.Key, g => g.AsEnumerable());
+
+        // Build a list of the adds that need to happen (grouped by the new key)
+        var pendingAddList = groupChanges
+            .GroupBy(
+                static x => x.NewGroupKey,
+                static x => x.KeyValuePair)
+            .ToList();
+
+        // Iterate the list of groups that need something added (also maybe removed)
+        foreach (var add in pendingAddList)
         {
-            EmitChanges(observer);
+            // Get a list of keys to be removed from this group (if any)
+            var removeKeyList =
+                pendingRemoves.TryGetValue(add.Key, out var removes)
+                    ? removes.Select(static r => r.Key)
+                    : Enumerable.Empty<TKey>();
+
+            // Obtained the ManagedGroup instance and perform all of the pending updates at once
+            var newGroup = GetOrAddGroup(add.Key);
+            newGroup.Update(updater =>
+            {
+                updater.RemoveKeys(removeKeyList);
+                updater.AddOrUpdate(add);
+            });
+
+            // Update the key cache
+            foreach (var kvp in add)
+            {
+                _groupKeys[kvp.Key] = add.Key;
+            }
+
+            // Remove from the pendingRemove dictionary because these removes have been handled
+            pendingRemoves.Remove(add.Key);
         }
+
+        // Everything left in the Dictionary represents a group that had items removed but no items added
+        foreach (var removeList in pendingRemoves.Values)
+        {
+            var group = removeList.First().OldGroup;
+            group.Update(updater => updater.RemoveKeys(removeList.Select(static kvp => kvp.Key)));
+
+            // If it is now empty, flag it for cleanup
+            if (group.Count == 0)
+            {
+                _emptyGroups.Add(group);
+            }
+        }
+
+        EmitChanges(observer);
     }
 
-    public void SetGroupSelector(Func<TObject, TKey, TGroupKey> groupSelector, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null)
+    public void SetGroupSelector(Func<TObject, TKey, TGroupKey> groupSelector, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>> observer)
     {
         _groupSelector = groupSelector;
         RegroupAll(observer);
+    }
+
+    public void Initialize(IEnumerable<KeyValuePair<TKey, TObject>> initialValues, Func<TObject, TKey, TGroupKey> groupSelector, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>> observer)
+    {
+        if (_groupSelector != null)
+        {
+            Debug.Fail("Initialize called when a GroupSelector is already present. No changes will be made.");
+            return;
+        }
+
+        _groupSelector = groupSelector;
+        foreach (var kvp in initialValues)
+        {
+            PerformAddOrUpdate(kvp.Key, _groupSelector(kvp.Value, kvp.Key), kvp.Value);
+        }
+
+        EmitChanges(observer);
     }
 
     public void EmitChanges(IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>> observer)

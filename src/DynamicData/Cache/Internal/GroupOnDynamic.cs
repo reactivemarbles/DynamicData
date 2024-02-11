@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Internal;
+using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
@@ -17,50 +18,73 @@ internal sealed class GroupOnDynamic<TObject, TKey, TGroupKey>(IObservable<IChan
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(observer =>
     {
         var dynamicGrouper = new DynamicGrouper<TObject, TKey, TGroupKey>();
+        var notGrouped = new Cache<TObject, TKey>();
         var locker = new object();
-        var parentUpdate = false;
+        var hasSelector = false;
 
-        // Create a shared connection to the source
-        var shared = source
-            .Synchronize(locker)
-            .Do(_ => parentUpdate = true)
-            .Publish();
+        // Create shared observables for the 3 inputs
+        var sharedSource = source.Synchronize(locker).Publish();
+        var sharedGroupSelector = selectGroupObservable.DistinctUntilChanged().Synchronize(locker).Publish();
+        var sharedRegrouper = (regrouper ?? Observable.Empty<Unit>()).Synchronize(locker).Publish();
 
-        var subGroupSelector = selectGroupObservable
-            .Synchronize(locker)
+        // The first value from the Group Selector should update the Grouper with all the values seen so far
+        // Then indicate a selector has been found.  Subsequent values should just update the group selector.
+        var subGroupSelector = sharedGroupSelector
             .SubscribeSafe(
-                onNext: groupSelector => dynamicGrouper.SetGroupSelector(groupSelector, observer),
+                onNext: groupSelector =>
+                {
+                    if (hasSelector)
+                    {
+                        dynamicGrouper.SetGroupSelector(groupSelector, observer);
+                    }
+                    else
+                    {
+                        dynamicGrouper.Initialize(notGrouped.KeyValues, groupSelector, observer);
+                        hasSelector = true;
+                    }
+                },
                 onError: observer.OnError);
 
-        var subRegrouper = (regrouper == null)
-            ? Disposable.Empty
-            : regrouper
-                .Synchronize(locker)
-                .SubscribeSafe(
-                    onNext: _ => dynamicGrouper.RegroupAll(observer),
-                    onError: observer.OnError);
-
-        var subChanges = shared
-            .SubscribeSafe(
-                onNext: changeSet => dynamicGrouper.ProcessChangeSet(changeSet),
-                onError: observer.OnError);
-
-        // Next process the Grouping observables created for each item
-        var subMergeMany = shared
-            .MergeMany(CreateGroupObservable)
-            .SubscribeSafe(onError: observer.OnError);
-
-        // Finally, emit the results
-        var subResults = shared
+        // Ignore values until a selector has been provided
+        // Then re-evaluate all the groupings each time it fires
+        var subRegrouper = sharedRegrouper
             .SubscribeSafe(
                 onNext: _ =>
                 {
-                    dynamicGrouper.EmitChanges(observer);
-                    parentUpdate = false;
+                    if (hasSelector)
+                    {
+                        dynamicGrouper.RegroupAll(observer);
+                    }
                 },
-                onError: observer.OnError,
-                onComplete: observer.OnCompleted);
+                onError: observer.OnError);
 
-        return new CompositeDisposable(shared.Connect(), subMergeMany, subChanges, subGroupSelector, subRegrouper, dynamicGrouper);
+        var subChanges = sharedSource
+            .SubscribeSafe(
+                onNext: changeSet =>
+                {
+                    if (hasSelector)
+                    {
+                        dynamicGrouper.ProcessChangeSet(changeSet, observer);
+                    }
+                    else
+                    {
+                        notGrouped.Clone(changeSet);
+                    }
+                },
+                onError: observer.OnError);
+
+        // Create an observable that completes when all 3 inputs complete so the downstream can be completed as well
+        var subOnComplete = Observable.Merge(sharedSource.ToUnit(), sharedGroupSelector.ToUnit(), sharedRegrouper)
+            .SubscribeSafe(observer.OnError, observer.OnCompleted);
+
+        return new CompositeDisposable(
+            sharedGroupSelector.Connect(),
+            sharedSource.Connect(),
+            sharedRegrouper.Connect(),
+            dynamicGrouper,
+            subChanges,
+            subGroupSelector,
+            subRegrouper,
+            subOnComplete);
     });
 }
