@@ -74,6 +74,7 @@ public class GroupOnDynamicFixture : IDisposable
         // Assert
         _personResults.Data.Count.Should().Be(InitialCount);
         _personResults.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
+        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().Be(1));
         VerifyGroupingResults();
     }
 
@@ -146,8 +147,8 @@ public class GroupOnDynamicFixture : IDisposable
     public void ResultIsCorrectWhenGroupSelectorChanges()
     {
         // Arrange
-        GroupByFavColor();
         _personCache.AddOrUpdate(_personFaker.Generate(InitialCount));
+        GroupByFavColor();
         var usedColorList = _personCache.Items.Select(p => p.FavoriteColor).Distinct().Select(x => x.ToString()).ToList();
         var usedPetTypeList = _personCache.Items.Select(p => p.PetType).Distinct().Select(x => x.ToString()).ToList();
 
@@ -159,6 +160,7 @@ public class GroupOnDynamicFixture : IDisposable
         _personResults.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
         _groupResults.Summary.Overall.Adds.Should().Be(usedColorList.Count + usedPetTypeList.Count);
         _groupResults.Summary.Overall.Removes.Should().Be(usedColorList.Count);
+        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
         VerifyGroupingResults();
     }
 
@@ -166,8 +168,8 @@ public class GroupOnDynamicFixture : IDisposable
     public void ResultIsCorrectAfterForcedRegroup()
     {
         // Arrange
-        GroupByFavColor();
         _personCache.AddOrUpdate(_personFaker.Generate(InitialCount));
+        GroupByFavColor();
         _personCache.Items.ForEach(person => person.FavoriteColor = _randomizer.RandomColor(person.FavoriteColor));
 
         // Act
@@ -176,6 +178,7 @@ public class GroupOnDynamicFixture : IDisposable
         // Assert
         _personResults.Data.Count.Should().Be(InitialCount);
         _personResults.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
+        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
         VerifyGroupingResults();
     }
 
