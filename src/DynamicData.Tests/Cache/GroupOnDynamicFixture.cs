@@ -45,7 +45,7 @@ public class GroupOnDynamicFixture : IDisposable
         _faker = Fakers.Person.Clone().WithSeed(_randomizer);
         _results = _cache.Connect().AsAggregator();
         _groupResults = _cache.Connect().Group(_keySelectionSubject, _regroupSubject).AsAggregator();
-        _cleanup = _keySelectionSubject.Do(func => _groupKeySelector = func).Subscribe();
+        _cleanup = _keySelectionSubject.Subscribe(func => _groupKeySelector = func, static _ => { });
     }
 
     [Fact]

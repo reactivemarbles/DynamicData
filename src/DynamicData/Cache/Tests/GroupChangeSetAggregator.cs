@@ -99,7 +99,6 @@ public class GroupChangeSetAggregator<TObject, TKey, TGroupKey> : IDisposable
             _ = disposing;
             _compositeDisposable.Dispose();
             _disposedValue = true;
-            using var cleanup = Groups.Connect().DisposeMany().Subscribe();
         }
     }
 }
