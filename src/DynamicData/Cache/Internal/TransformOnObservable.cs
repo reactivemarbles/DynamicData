@@ -5,7 +5,6 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Internal;
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
@@ -18,18 +17,20 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
     {
         var cache = new ChangeAwareCache<TDestination, TKey>();
         var locker = new object();
-        var pendingUpdates = 0;
+        var parentUpdate = false;
 
-        // Helper to emit any pending changes when all the updates have been handled
-        void EmitChanges()
+        // Helper to emit any pending changes when appropriate
+        void EmitChanges(bool fromParent)
         {
-            if (Interlocked.Decrement(ref pendingUpdates) == 0)
+            if (fromParent || !parentUpdate)
             {
                 var changes = cache!.CaptureChanges();
                 if (changes.Count > 0)
                 {
                     observer.OnNext(changes);
                 }
+
+                parentUpdate = false;
             }
         }
 
@@ -38,27 +39,25 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
         IObservable<TDestination> CreateSubObservable(TSource obj, TKey key) =>
             transform(obj, key)
                 .DistinctUntilChanged()
-                .Do(_ => Interlocked.Increment(ref pendingUpdates))
                 .Synchronize(locker!)
                 .Do(val => cache!.AddOrUpdate(val, key));
 
-        // Always increment the counter OUTSIDE of the lock to signal any thread currently holding the lock
-        // to not emit the changeset because more changes are incoming.
+        // Flag a parent update is happening once inside the lock
         var shared = source
-            .Do(_ => Interlocked.Increment(ref pendingUpdates))
             .Synchronize(locker!)
+            .Do(_ => parentUpdate = true)
             .Publish();
 
-        // Use MergeMany because it automatically handles Add/Update/Remove and OnCompleted/OnError correctly
+        // MergeMany automatically handles Add/Update/Remove and OnCompleted/OnError correctly
         var subMerged = shared
             .MergeMany(CreateSubObservable)
-            .SubscribeSafe(_ => EmitChanges(), observer.OnError, observer.OnCompleted);
+            .SubscribeSafe(_ => EmitChanges(fromParent: false), observer.OnError, observer.OnCompleted);
 
         // Subscribe to the shared Observable to handle Remove events.  MergeMany will unsubscribe from the sub-observable,
         // but the corresponding key value needs to be removed from the Cache so the remove is observed downstream.
         var subRemove = shared
             .OnItemRemoved((_, key) => cache!.Remove(key), invokeOnUnsubscribe: false)
-            .SubscribeSafe(_ => EmitChanges());
+            .SubscribeSafe(_ => EmitChanges(fromParent: true), observer.OnError);
 
         return new CompositeDisposable(shared.Connect(), subMerged, subRemove);
     });

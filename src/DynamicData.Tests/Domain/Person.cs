@@ -5,10 +5,23 @@ using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain;
 
+public enum Color
+{
+    NotSpecified,
+    Red,
+    Orange,
+    Yellow,
+    Green,
+    Blue,
+    Indigo,
+    Violet,
+}
+
 public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
 {
     private int _age;
     private int? _ageNullable;
+    private Color _favoriteColor;
 
     public Person()
         : this("unknown", 0, "none")
@@ -36,6 +49,15 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
         ParentName = parentName ?? string.Empty;
     }
 
+    private Person(string name, int? age, string gender, Person personCopyKey)
+    {
+        Name = name;
+        _ageNullable = age;
+        Gender = gender;
+        ParentName = personCopyKey?.ParentName ?? throw new ArgumentNullException(nameof(personCopyKey));
+        UniqueKey = personCopyKey.UniqueKey;
+    }
+
     public static IEqualityComparer<Person> AgeComparer { get; } = new AgeEqualityComparer();
 
     public static IEqualityComparer<Person> NameAgeGenderComparer { get; } = new NameAgeGenderEqualityComparer();
@@ -52,9 +74,17 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
         set => SetAndRaise(ref _ageNullable, value);
     }
 
+    public Color FavoriteColor
+    {
+        get => _favoriteColor;
+        set => SetAndRaise(ref _favoriteColor, value);
+    }
+
     public string Gender { get; }
 
     public string Key => Name;
+
+    public string UniqueKey { get; } = Guid.NewGuid().ToString("B");
 
     public string Name { get; }
 
@@ -63,6 +93,12 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
     public static bool operator ==(Person left, Person right) => Equals(left, right);
 
     public static bool operator !=(Person left, Person right) => !Equals(left, right);
+
+    public static Person CloneUniqueId(Person sourceData, Person sourceId) =>
+        new((sourceData ?? throw new ArgumentNullException(nameof(sourceData))).Name, sourceData.Age, sourceData.Gender, sourceId)
+        {
+            FavoriteColor = sourceData.FavoriteColor
+        };
 
     public bool Equals(Person? other)
     {
