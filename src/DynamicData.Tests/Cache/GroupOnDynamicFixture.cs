@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 using Bogus;
-using DynamicData.Tests.Domain;
-using DynamicData.Binding;
 using DynamicData.Kernel;
+using DynamicData.Tests.Domain;
+using DynamicData.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
 using Person = DynamicData.Tests.Domain.Person;
-using System.Reactive.Subjects;
-using System.Reactive;
 
 namespace DynamicData.Tests.Cache;
 
@@ -36,7 +36,6 @@ public class GroupOnDynamicFixture : IDisposable
     private readonly Randomizer _randomizer;
     private readonly Subject<Func<Person, string, string>> _keySelectionSubject = new ();
     private readonly Subject<Unit> _regroupSubject = new ();
-    private readonly IDisposable _cleanup;
     private Func<Person, string, string>? _groupKeySelector;
 
     public GroupOnDynamicFixture()
@@ -44,8 +43,69 @@ public class GroupOnDynamicFixture : IDisposable
         unchecked { _randomizer = new((int)0xc001_d00d); }
         _faker = Fakers.Person.Clone().WithSeed(_randomizer);
         _results = _cache.Connect().AsAggregator();
-        _groupResults = _cache.Connect().Group(_keySelectionSubject, _regroupSubject).AsAggregator();
-        _cleanup = _keySelectionSubject.Subscribe(func => _groupKeySelector = func, static _ => { });
+        _groupResults = _cache.Connect().Group(_keySelectionSubject.Do(func => _groupKeySelector = func), _regroupSubject).AsAggregator();
+    }
+
+    [Theory]
+    [InlineData(5)]
+    [InlineData(10)]
+#if !DEBUG
+    [InlineData(200)]
+    [InlineData(500)]
+#endif
+    public async Task MultiThreadedStressTest(int changeCount)
+    {
+        var MaxIntervalTime = TimeSpan.FromMilliseconds(10);
+
+        var taskCacheChanges = Task.Run(async () =>
+            await _randomizer.Interval(MaxIntervalTime)
+                .Take(changeCount)
+                .Do(x =>
+                    _cache.Edit(updater =>
+                    {
+                        if ((x % 2 == 0) || updater.Count == 0)
+                        {
+                            updater.AddOrUpdate(_faker.Generate(AddCount));
+                        }
+                        else
+                        {
+                            updater.RemoveKeys(_randomizer.ListItems(updater.Items.ToList(), Math.Min(RemoveCount, updater.Count - 1)).Select(p => p.UniqueKey));
+                        }
+                    })));
+
+        var taskGrouperChanges = Task.Run(async () =>
+            await _randomizer.Interval(MaxIntervalTime)
+                .Take(changeCount)
+                .Select<long, Action>(x => (x % 3) switch
+                {
+                    0L => GroupByFavColor,
+                    1L => GroupByParentName,
+                    2L => GroupByPetType,
+                    _ => throw new NotImplementedException()
+                })
+                .Do(action => action.Invoke()));
+
+        var taskRegrouperChanges = Task.Run(async () =>
+            await _randomizer.Interval(MaxIntervalTime)
+                .Take(changeCount)
+                .Do(x =>
+                {
+                    _cache.Edit(updater =>
+                    {
+                        if (updater.Count > 0)
+                        {
+                            var changeList = _randomizer.ListItems(updater.Items.ToList(), Math.Min(UpdateCount, updater.Count - 1));
+                            changeList.ForEach(person => person.PetType = _randomizer.Enum<AnimalFamily>());
+                            changeList.ForEach(person => person.FavoriteColor = _randomizer.Enum<Color>());
+                        }
+                    });
+                    ForceRegroup();
+                }));
+
+        await Task.WhenAll(taskCacheChanges, taskGrouperChanges, taskRegrouperChanges);
+
+        // Verify the results
+        VerifyGroupingResults();
     }
 
     [Fact]
@@ -137,6 +197,24 @@ public class GroupOnDynamicFixture : IDisposable
 
         // Act
         _cache.AddOrUpdate(replacements);
+
+        // Assert
+        _results.Data.Count.Should().Be(InitialCount, "Only replacements were made");
+        _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Updates");
+        VerifyGroupingResults();
+    }
+
+    [Fact]
+    public void ResultContainsRefreshedValues()
+    {
+        // Arrange
+        GroupByPetType();
+        InitialPopulate();
+        var refreshList = _randomizer.ListItems(_cache.Items.ToList(), UpdateCount);
+        refreshList.ForEach(person => person.PetType = _randomizer.Enum<AnimalFamily>());
+
+        // Act
+        _cache.Refresh(refreshList);
 
         // Assert
         _results.Data.Count.Should().Be(InitialCount, "Only replacements were made");
@@ -267,7 +345,6 @@ public class GroupOnDynamicFixture : IDisposable
         _groupResults.Dispose();
         _results.Dispose();
         _cache.Dispose();
-        _cleanup.Dispose();
         _keySelectionSubject.Dispose();
         _regroupSubject.Dispose();
     }
@@ -295,6 +372,9 @@ public class GroupOnDynamicFixture : IDisposable
 
         // Check each group
         expectedGroupings.ForEach(grouping => grouping.Should().BeEquivalentTo(groupResults.Groups.Lookup(grouping.Key).Value.Data.Items));
+
+        // No groups should be empty
+        groupResults.Groups.Items.ForEach(group => group.Data.Count.Should().BeGreaterThan(0));
     }
 
     private void ForceRegroup() => _regroupSubject.OnNext(Unit.Default);
