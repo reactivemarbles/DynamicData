@@ -2310,8 +2310,6 @@ namespace DynamicData
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> Except<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, params System.IObservable<DynamicData.IChangeSet<T>>[] others)
             where T :  notnull { }
-        public static System.IObservable<System.Collections.Generic.IEnumerable<T>> ExpireAfter<T>(this DynamicData.ISourceList<T> source, System.Func<T, System.TimeSpan?> timeSelector, System.Reactive.Concurrency.IScheduler? scheduler = null)
-            where T :  notnull { }
         public static System.IObservable<System.Collections.Generic.IEnumerable<T>> ExpireAfter<T>(this DynamicData.ISourceList<T> source, System.Func<T, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> Filter<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, bool> predicate)
