@@ -1301,19 +1301,13 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.Reactive.Concurrency.IScheduler? scheduler = null)
-            where TObject :  notnull
-            where TKey :  notnull { }
-        public static System.IObservable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? interval = default)
-            where TObject :  notnull
-            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.Reactive.Concurrency.IScheduler scheduler)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval, System.Reactive.Concurrency.IScheduler? scheduler)
+        public static System.IObservable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval, System.Reactive.Concurrency.IScheduler scheduler)
