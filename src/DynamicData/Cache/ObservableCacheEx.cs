@@ -6513,6 +6513,7 @@ public static class ObservableCacheEx
         });
     }
 
+    // TODO: Apply the Adapter to more places
     private static Func<TObject, TKey, TResult> AdaptSelector<TObject, TKey, TResult>(Func<TObject, TResult> other)
         where TObject : notnull
         where TKey : notnull
