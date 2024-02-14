@@ -53,7 +53,7 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
                     parentUpdate = false;
                 },
                 onError: observer.OnError,
-                onComplete: observer.OnCompleted);
+                onCompleted: observer.OnCompleted);
 
         return new CompositeDisposable(shared.Connect(), subMergeMany, subChanges, grouper);
     });

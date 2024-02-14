@@ -1974,6 +1974,62 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Groups the source on the value returned by the latest value from the group selector factory observable.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="groupSelectorKeyObservable">The group selector key observable.</param>
+    /// <param name="regrouper">Fires when the current Grouping Selector needs to re-evaluate all the items in the cache.</param>
+    /// <returns>An observable which will emit group change sets.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// source
+    /// or
+    /// groupSelectorKey
+    /// or
+    /// groupController.
+    /// </exception>
+    public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, TKey, TGroupKey>> groupSelectorKeyObservable, IObservable<Unit>? regrouper = null)
+        where TObject : notnull
+        where TKey : notnull
+        where TGroupKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        groupSelectorKeyObservable.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKeyObservable));
+        regrouper.ThrowArgumentNullExceptionIfNull(nameof(regrouper));
+
+        return new GroupOnDynamic<TObject, TKey, TGroupKey>(source, groupSelectorKeyObservable, regrouper).Run();
+    }
+
+    /// <summary>
+    /// Groups the source on the value returned by the latest value from the group selector factory observable.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="groupSelectorKeyObservable">The group selector key observable.</param>
+    /// <param name="regrouper">Fires when the current Grouping Selector needs to re-evaluate all the items in the cache.</param>
+    /// <returns>An observable which will emit group change sets.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// source
+    /// or
+    /// groupSelectorKey
+    /// or
+    /// groupController.
+    /// </exception>
+    public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, TGroupKey>> groupSelectorKeyObservable, IObservable<Unit>? regrouper = null)
+        where TObject : notnull
+        where TKey : notnull
+        where TGroupKey : notnull
+    {
+        groupSelectorKeyObservable.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKeyObservable));
+
+        return source.Group(groupSelectorKeyObservable.Select(AdaptSelector<TObject, TKey, TGroupKey>), regrouper);
+    }
+
+    /// <summary>
     /// Groups the source by the latest value from their observable created by the given factory.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -2009,7 +2065,7 @@ public static class ObservableCacheEx
     {
         groupObservableSelector.ThrowArgumentNullExceptionIfNull(nameof(groupObservableSelector));
 
-        return source.GroupOnObservable((obj, _) => groupObservableSelector(obj));
+        return source.GroupOnObservable(AdaptSelector<TObject, TKey, IObservable<TGroupKey>>(groupObservableSelector));
     }
 
     /// <summary>
@@ -6456,6 +6512,12 @@ public static class ObservableCacheEx
             }
         });
     }
+
+    // TODO: Apply the Adapter to more places
+    private static Func<TObject, TKey, TResult> AdaptSelector<TObject, TKey, TResult>(Func<TObject, TResult> other)
+        where TObject : notnull
+        where TKey : notnull
+        where TResult : notnull => (obj, _) => other(obj);
 
     private static IObservable<IChangeSet<TObject, TKey>> OnChangeAction<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ChangeReason reason, Action<TObject, TKey> action)
         where TObject : notnull

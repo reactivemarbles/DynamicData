@@ -22,6 +22,7 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
     private int _age;
     private int? _ageNullable;
     private Color _favoriteColor;
+    private AnimalFamily _petType;
 
     public Person()
         : this("unknown", 0, "none")
@@ -80,6 +81,12 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
         set => SetAndRaise(ref _favoriteColor, value);
     }
 
+    public AnimalFamily PetType
+    {
+        get => _petType;
+        set => SetAndRaise(ref _petType, value);
+    }
+
     public string Gender { get; }
 
     public string Key => Name;
@@ -97,7 +104,8 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
     public static Person CloneUniqueId(Person sourceData, Person sourceId) =>
         new((sourceData ?? throw new ArgumentNullException(nameof(sourceData))).Name, sourceData.Age, sourceData.Gender, sourceId)
         {
-            FavoriteColor = sourceData.FavoriteColor
+            FavoriteColor = sourceData.FavoriteColor,
+            PetType = sourceData.PetType,
         };
 
     public bool Equals(Person? other)

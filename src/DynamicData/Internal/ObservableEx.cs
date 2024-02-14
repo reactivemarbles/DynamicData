@@ -8,14 +8,14 @@ namespace DynamicData.Internal;
 
 internal static class ObservableEx
 {
-    public static IDisposable SubscribeSafe<T>(this IObservable<T> observable, Action<T> onNext, Action<Exception> onError, Action onComplete) =>
-        observable.SubscribeSafe(Observer.Create(onNext, onError, onComplete));
+    public static IDisposable SubscribeSafe<T>(this IObservable<T> observable, Action<T> onNext, Action<Exception> onError, Action onCompleted) =>
+        observable.SubscribeSafe(Observer.Create(onNext, onError, onCompleted));
 
     public static IDisposable SubscribeSafe<T>(this IObservable<T> observable, Action<T> onNext, Action<Exception> onError) =>
         observable.SubscribeSafe(Observer.Create(onNext, onError));
 
-    public static IDisposable SubscribeSafe<T>(this IObservable<T> observable, Action<Exception> onError, Action onComplete) =>
-        observable.SubscribeSafe(Observer.Create(Stub<T>.Ignore, onError, onComplete));
+    public static IDisposable SubscribeSafe<T>(this IObservable<T> observable, Action<Exception> onError, Action onCompleted) =>
+        observable.SubscribeSafe(Observer.Create(Stub<T>.Ignore, onError, onCompleted));
 
     public static IDisposable SubscribeSafe<T>(this IObservable<T> observable, Action<Exception> onError) =>
         observable.SubscribeSafe(Observer.Create(Stub<T>.Ignore, onError));
