@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using DynamicData.Kernel;
@@ -17,6 +18,7 @@ internal class DeferredUpdateCache<TObject, TKey> : IObservableCache<TObject, TK
 {
     private readonly ChangeAwareCache<TObject, TKey> _changeAwareCache = new();
     private readonly Subject<IChangeSet<TObject, TKey>> _changeSetSubject = new();
+    private readonly Lazy<ISubject<int>> _countChanged = new(() => new Subject<int>());
     private bool _isDisposed;
 
     public int Count => _changeAwareCache.Count;
@@ -27,7 +29,7 @@ internal class DeferredUpdateCache<TObject, TKey> : IObservableCache<TObject, TK
 
     public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _changeAwareCache.KeyValues;
 
-    public IObservable<int> CountChanged => throw new NotImplementedException();
+    public IObservable<int> CountChanged => Observable.Defer(() => _countChanged.Value.StartWith(Count).DistinctUntilChanged());
 
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => throw new NotImplementedException();
 
@@ -51,7 +53,7 @@ internal class DeferredUpdateCache<TObject, TKey> : IObservableCache<TObject, TK
 
     private void EmitChanges()
     {
-
+        throw new NotImplementedException();
     }
 
     private class DeferredCacheUpdater(ChangeAwareCache<TObject, TKey> cache, IDisposable disposable) : IDeferredCacheUpdater<TObject, TKey>
