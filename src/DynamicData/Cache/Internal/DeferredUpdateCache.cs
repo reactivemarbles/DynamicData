@@ -92,11 +92,19 @@ internal class DeferredUpdateCache<TObject, TKey> : IObservableCache<TObject, TK
 
         public void Clone(IChangeSet<TObject, TKey> changes) => cache.Clone(changes);
 
-        public void Evaluate() => throw new NotImplementedException();
+        [Obsolete(Constants.EvaluateIsDead)]
+        public void Evaluate(IEnumerable<TKey> keys) => Refresh(keys);
 
-        public void Evaluate(IEnumerable<TKey> keys) => throw new NotImplementedException();
+        // [Obsolete(Constants.EvaluateIsDead)]
+        // public void Evaluate(IEnumerable<TObject> items) => Refresh(items);
 
-        public void Evaluate(TKey key) => throw new NotImplementedException();
+        // [Obsolete(Constants.EvaluateIsDead)]
+        // public void Evaluate(TObject item) => Refresh(item);
+        [Obsolete(Constants.EvaluateIsDead)]
+        public void Evaluate() => Refresh();
+
+        [Obsolete(Constants.EvaluateIsDead)]
+        public void Evaluate(TKey key) => Refresh(key);
 
         public TKey GetKey(TObject item) => throw new NotImplementedException();
 
