@@ -1188,6 +1188,22 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Ensures there are no duplicated keys in the observable changeset.
+    /// </summary>
+    /// <param name="source"> The source change set.</param>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <returns>A changeset which guarantees a key is only present at most once in the changeset.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> EnsureUniqueKeys<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+
+        return new UniquenessEnforcer<TObject, TKey>(source).Run();
+    }
+
+    /// <summary>
     /// Signal observers to re-evaluate the specified item.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -1437,58 +1453,6 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The cache.</param>
     /// <param name="timeSelector">The time selector.  Return null if the item should never be removed.</param>
-    /// <param name="scheduler">The scheduler to perform the work on.</param>
-    /// <returns>An observable of enumerable of the key values which has been removed.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// timeSelector.</exception>
-    public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source, Func<TObject, TimeSpan?> timeSelector, IScheduler? scheduler = null)
-        where TObject : notnull
-        where TKey : notnull => source.ExpireAfter(timeSelector, null, scheduler);
-
-    /// <summary>
-    /// Automatically removes items from the cache after the time specified by
-    /// the time selector elapses.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The cache.</param>
-    /// <param name="timeSelector">The time selector.  Return null if the item should never be removed.</param>
-    /// <param name="interval">A polling interval.  Since multiple timer subscriptions can be expensive,
-    /// it may be worth setting the interval .
-    /// </param>
-    /// <returns>An observable of enumerable of the key values which has been removed.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// timeSelector.</exception>
-    public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? interval = null)
-        where TObject : notnull
-        where TKey : notnull => ExpireAfter(source, timeSelector, interval, Scheduler.Default);
-
-    /// <summary>
-    /// Ensures there are no duplicated keys in the observable changeset.
-    /// </summary>
-    /// <param name="source"> The source change set.</param>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <returns>A changeset which guarantees a key is only present at most once in the changeset.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> EnsureUniqueKeys<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        return new UniquenessEnforcer<TObject, TKey>(source).Run();
-    }
-
-    /// <summary>
-    /// Automatically removes items from the cache after the time specified by
-    /// the time selector elapses.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The cache.</param>
-    /// <param name="timeSelector">The time selector.  Return null if the item should never be removed.</param>
     /// <param name="pollingInterval">A polling interval.  Since multiple timer subscriptions can be expensive,
     /// it may be worth setting the interval.
     /// </param>
@@ -1497,7 +1461,11 @@ public static class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// timeSelector.</exception>
-    public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval, IScheduler? scheduler)
+    public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(
+            this ISourceCache<TObject, TKey> source,
+            Func<TObject, TimeSpan?> timeSelector,
+            TimeSpan? pollingInterval = null,
+            IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull
     {

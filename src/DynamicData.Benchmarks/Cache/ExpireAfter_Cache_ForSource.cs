@@ -41,7 +41,7 @@ public class ExpireAfter_Cache_ForSource
         using var subscription = source
             .ExpireAfter(
                 timeSelector: static _ => TimeSpan.FromMinutes(60),
-                interval: null)
+                pollingInterval: null)
             .Subscribe();
 
         for (var i = 0; i < addCount; ++i)

@@ -547,7 +547,7 @@ public static partial class ExpireAfterFixture
             => FluentActions.Invoking(() => ObservableCacheEx.ExpireAfter(
                     source: (null as ISourceCache<Item, int>)!,
                     timeSelector: static _ => default,
-                    interval: null))
+                    pollingInterval: null))
                 .Should().Throw<ArgumentNullException>();
 
         [Fact(Skip = "Existing defect, operator does not properly handle items with a null timeout, when using a real scheduler, it passes a TimeSpan to the scheduler that is outside of the supported range")]
@@ -615,7 +615,7 @@ public static partial class ExpireAfterFixture
         public void TimeSelectorIsNull_ThrowsException()
             => FluentActions.Invoking(() => CreateTestSource().ExpireAfter(
                     timeSelector: null!,
-                    interval: null))
+                    pollingInterval: null))
                 .Should().Throw<ArgumentNullException>();
 
         [Fact(Skip = "Exsiting defect, errors are re-thrown instead of propagated, user code is not protected")]
