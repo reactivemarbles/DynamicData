@@ -2,10 +2,12 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System;
 using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Binding;
 using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
@@ -14,7 +16,7 @@ using DynamicData.Kernel;
 namespace DynamicData;
 
 [DebuggerDisplay("ObservableCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
-internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
+internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>, INotifyCollectionChangedSuspender
     where TObject : notnull
     where TKey : notnull
 {
@@ -24,6 +26,9 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly Subject<ChangeSet<TObject, TKey>> _changesPreview = new();
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly BehaviorSubject<int> _suspendNotificationCount = new(0);
+
     private readonly IDisposable _cleanUp;
 
     private readonly Lazy<ISubject<int>> _countChanged = new(() => new Subject<int>());
@@ -32,7 +37,11 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private readonly ReaderWriter<TObject, TKey> _readerWriter;
 
+    private IEnumerable<Change<TObject, TKey>>? _suspendedChanges;
+
     private int _editLevel; // The level of recursion in editing.
+
+    private int _suspendCountCounter;
 
     public ObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
@@ -56,12 +65,16 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                 _changes.OnError(ex);
             });
 
+        var suspendChange = CreateSuspendStatusChangeObservable().Subscribe();
+
         _cleanUp = Disposable.Create(
             () =>
             {
+                suspendChange.Dispose();
                 loader.Dispose();
                 _changes.OnCompleted();
                 _changesPreview.OnCompleted();
+                _suspendNotificationCount.OnCompleted();
                 if (_countChanged.IsValueCreated)
                 {
                     _countChanged.Value.OnCompleted();
@@ -73,11 +86,15 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     {
         _readerWriter = new ReaderWriter<TObject, TKey>(keySelector);
 
+        var suspendChange = CreateSuspendStatusChangeObservable().Subscribe();
+
         _cleanUp = Disposable.Create(
             () =>
             {
+                suspendChange.Dispose();
                 _changes.OnCompleted();
                 _changesPreview.OnCompleted();
+                _suspendNotificationCount.OnCompleted();
                 if (_countChanged.IsValueCreated)
                 {
                     _countChanged.Value.OnCompleted();
@@ -105,26 +122,14 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _readerWriter.KeyValues;
 
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) =>
-        Observable.Create<IChangeSet<TObject, TKey>>(
-            observer =>
+        Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+        {
+            lock (_locker)
             {
-                lock (_locker)
-                {
-                    var initial = InternalEx.Return(() => (IChangeSet<TObject, TKey>)GetInitialUpdates(predicate));
-                    var changes = initial.Concat(_changes);
-
-                    if (predicate != null)
-                    {
-                        changes = changes.Filter(predicate, suppressEmptyChangeSets);
-                    }
-                    else if (suppressEmptyChangeSets)
-                    {
-                        changes = changes.NotEmpty();
-                    }
-
-                    return changes.SubscribeSafe(observer);
-                }
-            });
+                // Defer until notifications are no longer suspended
+                return _suspendNotificationCount.SkipWhile(n => n > 0).Take(1).Select(_ => CreateConnectObservable(predicate, suppressEmptyChangeSets)).Switch().SubscribeSafe(observer);
+            }
+        });
 
     public void Dispose() => _cleanUp.Dispose();
 
@@ -138,26 +143,28 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             {
                 lock (_locker)
                 {
-                    var initial = _readerWriter.Lookup(key);
-                    if (initial.HasValue)
-                    {
-                        observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
-                    }
-
-                    return _changes.Finally(observer.OnCompleted).Subscribe(
-                        changes =>
-                        {
-                            foreach (var change in changes.ToConcreteType())
-                            {
-                                var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
-                                if (match)
-                                {
-                                    observer.OnNext(change);
-                                }
-                            }
-                        });
+                    // Defer until notifications are no longer suspended
+                    return _suspendNotificationCount.SkipWhile(n => n > 0).Take(1).Select(_ => CreateWatchObservable(key)).Switch().SubscribeSafe(observer);
                 }
             });
+
+    public IDisposable SuspendCount()
+    {
+        lock (_locker)
+        {
+            ++_suspendCountCounter;
+            return new SuspendCountDisposable(this);
+        }
+    }
+
+    public IDisposable SuspendNotifications()
+    {
+        lock (_locker)
+        {
+            _suspendNotificationCount.OnNext(_suspendNotificationCount.Value + 1);
+            return new SuspendNotificationsDisposable(this);
+        }
+    }
 
     internal ChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool>? filter = null) => _readerWriter.GetInitialUpdates(filter);
 
@@ -217,16 +224,91 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         }
     }
 
+    private IObservable<bool> CreateSuspendStatusChangeObservable() =>
+        _suspendNotificationCount
+            .Skip(1)
+            .Select(n => n > 0)
+            .DistinctUntilChanged()
+            .Do(isSuspended =>
+            {
+                if (isSuspended)
+                {
+                    _suspendedChanges ??= Enumerable.Empty<Change<TObject, TKey>>();
+                }
+                else if (_suspendedChanges?.Any() ?? false)
+                {
+                    var changeSet = new ChangeSet<TObject, TKey>(_suspendedChanges);
+                    _suspendedChanges = null;
+                    InvokeNext(changeSet);
+                }
+            });
+
+    private IObservable<IChangeSet<TObject, TKey>> CreateConnectObservable(Func<TObject, bool>? predicate, bool suppressEmptyChangeSets) =>
+        Observable.Create<IChangeSet<TObject, TKey>>(
+            observer =>
+            {
+                lock (_locker)
+                {
+                    var initial = InternalEx.Return(() => (IChangeSet<TObject, TKey>)GetInitialUpdates(predicate));
+                    var changes = initial.Concat(_changes);
+
+                    if (predicate != null)
+                    {
+                        changes = changes.Filter(predicate, suppressEmptyChangeSets);
+                    }
+                    else if (suppressEmptyChangeSets)
+                    {
+                        changes = changes.NotEmpty();
+                    }
+
+                    return changes.SubscribeSafe(observer);
+                }
+            });
+
+    private IObservable<Change<TObject, TKey>> CreateWatchObservable(TKey key) =>
+        Observable.Create<Change<TObject, TKey>>(
+            observer =>
+            {
+                lock (_locker)
+                {
+                    var initial = _readerWriter.Lookup(key);
+                    if (initial.HasValue)
+                    {
+                        observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
+                    }
+
+                    return _changes.Finally(observer.OnCompleted).Subscribe(
+                        changes =>
+                        {
+                            foreach (var change in changes.ToConcreteType())
+                            {
+                                var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
+                                if (match)
+                                {
+                                    observer.OnNext(change);
+                                }
+                            }
+                        });
+                }
+            });
+
     private void InvokeNext(ChangeSet<TObject, TKey> changes)
     {
         lock (_locker)
         {
-            _changes.OnNext(changes);
-
-            if (_countChanged.IsValueCreated)
+            // Will be null when changes are not suspended
+            if (_suspendedChanges is null)
             {
-                _countChanged.Value.OnNext(_readerWriter.Count);
+                // Emit the changes
+                _changes.OnNext(changes);
             }
+            else
+            {
+                // Don't emit the changes, but add them to the list
+                _suspendedChanges = _suspendedChanges.Concat(changes);
+            }
+
+            InvokeCountNext();
         }
     }
 
@@ -238,6 +320,60 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             {
                 _changesPreview.OnNext(changes);
             }
+        }
+    }
+
+    private void InvokeCountNext()
+    {
+        lock (_locker)
+        {
+            if (_countChanged.IsValueCreated && _suspendCountCounter == 0)
+            {
+                _countChanged.Value.OnNext(_readerWriter.Count);
+            }
+        }
+    }
+
+    private void DisposeSuspendCounter()
+    {
+        lock (_locker)
+        {
+            if (--_suspendCountCounter == 0)
+            {
+                InvokeCountNext();
+            }
+        }
+    }
+
+    private void DisposeSuspendNotifications()
+    {
+        lock (_locker)
+        {
+            _suspendNotificationCount.OnNext(_suspendNotificationCount.Value - 1);
+        }
+    }
+
+    private class SuspendCountDisposable(ObservableCache<TObject, TKey> observableCache) : IDisposable
+    {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Doesn't own the Cache")]
+        private ObservableCache<TObject, TKey>? _observableCache = observableCache;
+
+        public void Dispose()
+        {
+            var cache = Interlocked.Exchange(ref _observableCache, null);
+            cache?.DisposeSuspendCounter();
+        }
+    }
+
+    private class SuspendNotificationsDisposable(ObservableCache<TObject, TKey> observableCache) : IDisposable
+    {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Doesn't own the Cache")]
+        private ObservableCache<TObject, TKey>? _observableCache = observableCache;
+
+        public void Dispose()
+        {
+            var cache = Interlocked.Exchange(ref _observableCache, null);
+            cache?.DisposeSuspendNotifications();
         }
     }
 }
