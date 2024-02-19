@@ -120,6 +120,7 @@ public class GroupOnObservableFixture : IDisposable
         // Assert
         _cache.Items.Select(p => p.FavoriteColor).Distinct().Count().Should().Be(colorCount - 1);
         _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
+        _groupResults.Data.Count.Should().Be(colorCount - 1, "{0} colors were used and then all of the {1} were removed", colorCount, removeColor);
         _groupResults.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
         _groupResults.Summary.Overall.Adds.Should().Be(colorCount);
         _groupResults.Summary.Overall.Removes.Should().Be(1);
@@ -147,9 +148,11 @@ public class GroupOnObservableFixture : IDisposable
         // Assert
         _cache.Items.Select(p => p.FavoriteColor).Distinct().Count().Should().Be(colorCount);
         _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Other Added Value");
+        _groupResults.Data.Count.Should().Be(colorCount);
         _groupResults.Messages.Count.Should().Be(1, "Shouldn't be removed/re-added");
         _groupResults.Summary.Overall.Adds.Should().Be(colorCount);
         _groupResults.Summary.Overall.Removes.Should().Be(0);
+        _groupResults.Groups.Lookup(removeColor).Value.Data.Count.Should().Be(1, "All the {0} were removed and then 1 was added back", removeColor);
         VerifyGroupingResults();
     }
 

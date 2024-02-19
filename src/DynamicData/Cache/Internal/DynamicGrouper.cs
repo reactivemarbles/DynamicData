@@ -16,12 +16,12 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
     private readonly ChangeAwareCache<IGroup<TObject, TKey, TGroupKey>, TGroupKey> _groupCache = new();
     private readonly Dictionary<TKey, TGroupKey> _groupKeys = [];
     private readonly HashSet<ManagedGroup<TObject, TKey, TGroupKey>> _emptyGroups = [];
+    private readonly SuspendTracker _suspendTracker = new();
     private Func<TObject, TKey, TGroupKey>? _groupSelector = groupSelector;
 
-    public void AddOrUpdate(TKey key, TGroupKey groupKey, TObject item, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null)
+    public void AddOrUpdate(TKey key, TGroupKey groupKey, TObject item, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null, bool suspendUpdates = true)
     {
-        // No need for Suspend Tracker.  Operation could produce at most one change per group.
-        PerformAddOrUpdate(key, groupKey, item);
+        PerformAddOrUpdate(key, groupKey, item, suspendUpdates ? _suspendTracker : null);
 
         if (observer != null)
         {
@@ -29,39 +29,38 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
-    public void ProcessChangeSet(IChangeSet<TObject, TKey> changeSet, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null)
+    public void ProcessChangeSet(IChangeSet<TObject, TKey> changeSet, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null, bool? suspendUpdates = null)
     {
+        // If caller didn't specify whether to suspendUpdates, use the size of the ChangeSet to decide
+        // If there is only one change in the changeset, then it isn't worth suspending the updates
+        var suspendTracker = (suspendUpdates ?? changeSet.Count > 1) ? _suspendTracker : null;
+        foreach (var change in changeSet.ToConcreteType())
         {
-            // If there could be multiple changes per group, use a suspend tracker so that only a single changeset is emitted per group
-            using var suspendTracker = changeSet.Count > 1 ? new SuspendTracker() : null;
-            foreach (var change in changeSet.ToConcreteType())
+            switch (change.Reason)
             {
-                switch (change.Reason)
-                {
-                    case ChangeReason.Add when _groupSelector is not null:
-                        PerformAddOrUpdate(change.Key, _groupSelector(change.Current, change.Key), change.Current, suspendTracker);
-                        break;
+                case ChangeReason.Add when _groupSelector is not null:
+                    PerformAddOrUpdate(change.Key, _groupSelector(change.Current, change.Key), change.Current, suspendTracker);
+                    break;
 
-                    case ChangeReason.Remove:
-                        PerformRemove(change.Key, suspendTracker);
-                        break;
+                case ChangeReason.Remove:
+                    PerformRemove(change.Key, suspendTracker);
+                    break;
 
-                    case ChangeReason.Update when _groupSelector is not null:
-                        PerformAddOrUpdate(change.Key, _groupSelector(change.Current, change.Key), change.Current, suspendTracker);
-                        break;
+                case ChangeReason.Update when _groupSelector is not null:
+                    PerformAddOrUpdate(change.Key, _groupSelector(change.Current, change.Key), change.Current, suspendTracker);
+                    break;
 
-                    case ChangeReason.Update:
-                        PerformUpdate(change.Key, suspendTracker);
-                        break;
+                case ChangeReason.Update:
+                    PerformUpdate(change.Key, suspendTracker);
+                    break;
 
-                    case ChangeReason.Refresh when _groupSelector is not null:
-                        PerformRefresh(change.Key, _groupSelector(change.Current, change.Key), change.Current, suspendTracker);
-                        break;
+                case ChangeReason.Refresh when _groupSelector is not null:
+                    PerformRefresh(change.Key, _groupSelector(change.Current, change.Key), change.Current, suspendTracker);
+                    break;
 
-                    case ChangeReason.Refresh:
-                        PerformRefresh(change.Key, suspendTracker);
-                        break;
-                }
+                case ChangeReason.Refresh:
+                    PerformRefresh(change.Key, suspendTracker);
+                    break;
             }
         }
 
@@ -88,23 +87,18 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
             .Where(static x => !EqualityComparer<TGroupKey>.Default.Equals(x.OldGroup.Key, x.NewGroupKey))
             .ToArray();
 
-        // Make all of the group changes with a SuspendTracker so only one changeset is emitted for each group
+        foreach (var change in groupChanges)
         {
-            using var suspendTracker = new SuspendTracker();
-
-            foreach (var change in groupChanges)
+            PerformGroupAddOrUpdate(change.KeyValuePair.Key, change.NewGroupKey, change.KeyValuePair.Value, _suspendTracker);
+            _suspendTracker.Add(change.OldGroup);
+            change.OldGroup.Update(updater =>
             {
-                PerformGroupAddOrUpdate(change.KeyValuePair.Key, change.NewGroupKey, change.KeyValuePair.Value, suspendTracker);
-                suspendTracker.Add(change.OldGroup);
-                change.OldGroup.Update(updater =>
+                updater.Remove(change.KeyValuePair.Key);
+                if (updater.Count == 0)
                 {
-                    updater.Remove(change.KeyValuePair.Key);
-                    if (updater.Count == 0)
-                    {
-                        _emptyGroups.Add(change.OldGroup);
-                    }
-                });
-            }
+                    _emptyGroups.Add(change.OldGroup);
+                }
+            });
         }
 
         EmitChanges(observer);
@@ -154,6 +148,8 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         // Make sure no empty ones were missed
         Debug.Assert(!_groupCache.Items.Any(static group => group.Cache.Count == 0), "Not all empty Groups were removed");
 
+        _suspendTracker.Reset();
+
         // Emit any pending changes
         var changeSet = _groupCache.CaptureChanges();
         if (changeSet.Count != 0)
@@ -162,7 +158,11 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
-    public void Dispose() => _groupCache.Items.ForEach(group => (group as ManagedGroup<TObject, TKey, TGroupKey>)?.Dispose());
+    public void Dispose()
+    {
+        _suspendTracker.Dispose();
+        _groupCache.Items.ForEach(group => (group as ManagedGroup<TObject, TKey, TGroupKey>)?.Dispose());
+    }
 
     private static void PerformGroupRefresh(TKey key, in Optional<ManagedGroup<TObject, TKey, TGroupKey>> optionalGroup, SuspendTracker? suspendTracker = null)
     {
@@ -300,13 +300,25 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
     private sealed class SuspendTracker : IDisposable
     {
         private readonly HashSet<TGroupKey> _trackedKeys = [];
-        private readonly CompositeDisposable _disposables = [];
+        private CompositeDisposable _disposables = [];
+
+        public bool HasItems => _disposables.Count > 0;
 
         public void Add(ManagedGroup<TObject, TKey, TGroupKey> managedGroup)
         {
             if (_trackedKeys.Add(managedGroup.Key))
             {
                 _disposables.Add(managedGroup.SuspendNotifications());
+            }
+        }
+
+        public void Reset()
+        {
+            if (_disposables.Count > 0)
+            {
+                _disposables.Dispose();
+                _disposables = [];
+                _trackedKeys.Clear();
             }
         }
 
