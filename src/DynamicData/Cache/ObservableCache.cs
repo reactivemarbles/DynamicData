@@ -168,7 +168,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         lock (_locker)
         {
             _suspensionTracker.Value.SuspendCount();
-            return new SuspendCountDisposable(this);
+            return Disposable.Create(this, static cache => cache.ResumeCount());
         }
     }
 
@@ -177,7 +177,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         lock (_locker)
         {
             _suspensionTracker.Value.SuspendNotifications();
-            return new SuspendNotificationsDisposable(this);
+            return Disposable.Create(this, static cache => cache.ResumeNotifications());
         }
     }
 
@@ -419,30 +419,6 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         {
             _notifySuspendSubject.OnCompleted();
             _notifySuspendSubject.Dispose();
-        }
-    }
-
-    private class SuspendCountDisposable(ObservableCache<TObject, TKey> observableCache) : IDisposable
-    {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Doesn't own the Cache")]
-        private ObservableCache<TObject, TKey>? _observableCache = observableCache;
-
-        public void Dispose()
-        {
-            var cache = Interlocked.Exchange(ref _observableCache, null);
-            cache?.ResumeCount();
-        }
-    }
-
-    private class SuspendNotificationsDisposable(ObservableCache<TObject, TKey> observableCache) : IDisposable
-    {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Doesn't own the Cache")]
-        private ObservableCache<TObject, TKey>? _observableCache = observableCache;
-
-        public void Dispose()
-        {
-            var cache = Interlocked.Exchange(ref _observableCache, null);
-            cache?.ResumeNotifications();
         }
     }
 }
