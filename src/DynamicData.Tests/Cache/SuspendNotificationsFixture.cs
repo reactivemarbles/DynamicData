@@ -38,6 +38,7 @@ public sealed class SuspendNotificationsFixture : IDisposable
         // Assert
         _results.Messages.Count.Should().Be(0, "Should have no item updates");
         _results.Data.Count.Should().Be(0, "Should not receive data after suspend");
+        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
     }
 
     [Fact]
@@ -54,6 +55,7 @@ public sealed class SuspendNotificationsFixture : IDisposable
         // Assert
         _results.Messages.Count.Should().Be(37, "Should receive updates after resume");
         _results.Data.Count.Should().Be(37, "Should receive data after resume");
+        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
     }
 
     [Fact]
@@ -69,6 +71,7 @@ public sealed class SuspendNotificationsFixture : IDisposable
         // Assert
         results.Messages.Count.Should().Be(0, "Should have no item updates");
         results.Data.Count.Should().Be(0, "Should not receive data after suspend");
+        results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
     }
 
     [Fact]
@@ -85,6 +88,7 @@ public sealed class SuspendNotificationsFixture : IDisposable
         // Assert
         results.Messages.Count.Should().Be(1, "Should receive updates after resume");
         results.Data.Count.Should().Be(37, "Should receive data after resume");
+        results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
     }
 
     [Fact]
@@ -102,6 +106,7 @@ public sealed class SuspendNotificationsFixture : IDisposable
         // Assert
         results.Messages.Count.Should().Be(1, "Should receive single changeset on resume");
         results.Data.Count.Should().Be(37 * 2, "Should receive data after resume");
+        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
     }
 
     [Fact]
@@ -120,6 +125,7 @@ public sealed class SuspendNotificationsFixture : IDisposable
         _results.Messages.Count.Should().Be(1, "Should receive single changeset on resume");
         _results.Messages[0].Adds.Should().Be(37, "Should have 37 adds");
         _results.Messages[0].Removes.Should().Be(1, "Should show the remove");
+        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
     }
 
     [Fact]
@@ -136,6 +142,7 @@ public sealed class SuspendNotificationsFixture : IDisposable
         // Assert
         _results.Messages.Count.Should().Be(0, "Should have no item updates");
         _results.Data.Count.Should().Be(0, "Should not receive data after suspend");
+        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
     }
 
     [Fact]
@@ -153,6 +160,24 @@ public sealed class SuspendNotificationsFixture : IDisposable
         // Assert
         _results.Messages.Count.Should().Be(1, "Should receive updates after resume");
         _results.Data.Count.Should().Be(1, "Should receive data after resume");
+        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+    }
+
+    [Fact]
+    public void OnCompletedFiresIfCacheDisposedWhileSuspended()
+    {
+        // Arrange
+        using var suspend = _source.SuspendNotifications();
+        using var results = _source.Connect().AsAggregator();
+        Enumerable.Range(101, 37).ForEach(_source.AddOrUpdate);
+
+        // Act
+        _source.Dispose();
+
+        // Assert
+        results.IsCompleted.Should().BeTrue("IsCompleted should fire even if Notifications are suspended");
+        results.Messages.Count.Should().Be(0, "Shouldn't receive any Changesets");
+        results.Data.Count.Should().Be(0, "Shouldn't receive any Data");
     }
 
     [Fact]
