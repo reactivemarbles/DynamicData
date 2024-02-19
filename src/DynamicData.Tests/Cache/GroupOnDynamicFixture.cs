@@ -34,7 +34,7 @@ public class GroupOnDynamicFixture : IDisposable
     private readonly GroupChangeSetAggregator<Person, string, string> _groupResults;
     private readonly Faker<Person> _faker;
     private readonly Randomizer _randomizer;
-    private readonly BehaviorSubject<Func<Person, string, string>> _keySelectionSubject = new (ParentName);
+    private readonly BehaviorSubject<Func<Person, string, string>?> _keySelectionSubject = new (null);
     private readonly Subject<Unit> _regroupSubject = new ();
 
     public GroupOnDynamicFixture()
@@ -42,7 +42,7 @@ public class GroupOnDynamicFixture : IDisposable
         unchecked { _randomizer = new((int)0xc001_d00d); }
         _faker = Fakers.Person.Clone().WithSeed(_randomizer);
         _results = _cache.Connect().AsAggregator();
-        _groupResults = _cache.Connect().Group(_keySelectionSubject, _regroupSubject).AsAggregator();
+        _groupResults = _cache.Connect().Group(KeySelectionObservable, _regroupSubject).AsAggregator();
     }
 
     [Theory]
@@ -306,7 +306,7 @@ public class GroupOnDynamicFixture : IDisposable
         InitialPopulate();
         var expectedError = new Exception("Expected");
         var throwObservable = Observable.Throw<IChangeSet<Person, string>>(expectedError);
-        using var results = _cache.Connect().Concat(throwObservable).Group(_keySelectionSubject, _regroupSubject).AsAggregator();
+        using var results = _cache.Connect().Concat(throwObservable).Group(KeySelectionObservable, _regroupSubject).AsAggregator();
 
         // Act
         _cache.Dispose();
@@ -351,6 +351,8 @@ public class GroupOnDynamicFixture : IDisposable
         _keySelectionSubject.Dispose();
         _regroupSubject.Dispose();
     }
+
+    private IObservable<Func<Person, string, string>> KeySelectionObservable => _keySelectionSubject.Where(v => v is not null).Select(v => v!);
 
     private void InitialPopulate() => _cache.AddOrUpdate(_faker.Generate(InitialCount));
 
