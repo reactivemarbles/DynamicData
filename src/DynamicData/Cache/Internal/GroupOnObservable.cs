@@ -23,8 +23,8 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
             selectGroup(item, key)
                 .DistinctUntilChanged()
                 .Synchronize(locker!)
-                .Do(// Only suspend updates if inside of a parentUpdate.  Otherwise, it will only generate at most one change per group, so there's no value in suspending.
-                    onNext: groupKey => grouper!.AddOrUpdate(key, groupKey, item, !parentUpdate ? observer : null, suspendUpdates: parentUpdate),
+                .Do(
+                    onNext: groupKey => grouper!.AddOrUpdate(key, groupKey, item, !parentUpdate ? observer : null),
                     onError: observer.OnError);
 
         // Create a shared connection to the source

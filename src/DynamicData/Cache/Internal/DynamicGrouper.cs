@@ -19,9 +19,11 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
     private readonly SuspendTracker _suspendTracker = new();
     private Func<TObject, TKey, TGroupKey>? _groupSelector = groupSelector;
 
-    public void AddOrUpdate(TKey key, TGroupKey groupKey, TObject item, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null, bool suspendUpdates = true)
+    public void AddOrUpdate(TKey key, TGroupKey groupKey, TObject item, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null)
     {
-        PerformAddOrUpdate(key, groupKey, item, suspendUpdates ? _suspendTracker : null);
+        // If not emitting the changes, then suspend the notifications
+        // If changes will be emitted, then there is no need because it will generate at most one change per group
+        PerformAddOrUpdate(key, groupKey, item, observer == null ? _suspendTracker : null);
 
         if (observer != null)
         {
@@ -29,11 +31,18 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
-    public void ProcessChangeSet(IChangeSet<TObject, TKey> changeSet, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null, bool? suspendUpdates = null)
+    public void ProcessChangeSet(IChangeSet<TObject, TKey> changeSet, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null)
     {
-        // If caller didn't specify whether to suspendUpdates, use the size of the ChangeSet to decide
-        // If there is only one change in the changeset, then it isn't worth suspending the updates
-        var suspendTracker = (suspendUpdates ?? changeSet.Count > 1) ? _suspendTracker : null;
+        var suspendTracker = (observer, changeSet.Count) switch
+        {
+            // If emitting the changeset and there is only one change, then there will be at most one change per group downstream
+            // So there's no value in suspending the notifications
+            (not null, 1) => null,
+
+            // Otherwise, use the tracker so they get suspended
+            _ => _suspendTracker,
+        };
+
         foreach (var change in changeSet.ToConcreteType())
         {
             switch (change.Reason)
