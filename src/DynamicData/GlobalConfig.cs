@@ -4,9 +4,9 @@
 
 using System.Reactive.Concurrency;
 
-namespace DynamicData.Internal;
+namespace DynamicData;
 
-internal static class Defaults
+internal static class GlobalConfig
 {
-    public static IScheduler Scheduler { get; } = TaskPoolScheduler.Default;
+    public static IScheduler DefaultScheduler { get; } = TaskPoolScheduler.Default;
 }

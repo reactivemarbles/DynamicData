@@ -6,7 +6,6 @@ using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using DynamicData.Internal;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
@@ -28,7 +27,7 @@ internal sealed class GroupOnProperty<TObject, TKey, TGroup>(IObservable<IChange
                 // add a throttle if specified
                 if (throttle is not null)
                 {
-                    regrouper = regrouper.Throttle(throttle.Value, scheduler ?? Defaults.Scheduler);
+                    regrouper = regrouper.Throttle(throttle.Value, scheduler ?? GlobalConfig.DefaultScheduler);
                 }
 
                 // Use property changes as a trigger to re-evaluate Grouping

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Concurrency;
-using DynamicData.Internal;
 
 namespace DynamicData.Experimental;
 
@@ -27,6 +26,6 @@ public static class ExperimentalEx
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        return new Watcher<TObject, TKey>(source, scheduler ?? Defaults.Scheduler);
+        return new Watcher<TObject, TKey>(source, scheduler ?? GlobalConfig.DefaultScheduler);
     }
 }

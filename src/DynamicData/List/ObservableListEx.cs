@@ -10,9 +10,9 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData;
 using DynamicData.Binding;
 using DynamicData.Cache.Internal;
-using DynamicData.Internal;
 using DynamicData.Kernel;
 using DynamicData.List.Internal;
 using DynamicData.List.Linq;
@@ -185,7 +185,7 @@ public static class ObservableListEx
                     return t.WhenAnyPropertyChanged();
                 }
 
-                return t.WhenAnyPropertyChanged().Throttle(propertyChangeThrottle.Value, scheduler ?? Defaults.Scheduler);
+                return t.WhenAnyPropertyChanged().Throttle(propertyChangeThrottle.Value, scheduler ?? GlobalConfig.DefaultScheduler);
             },
             changeSetBuffer,
             scheduler);
@@ -216,7 +216,7 @@ public static class ObservableListEx
                     return t.WhenPropertyChanged(propertyAccessor, false);
                 }
 
-                return t.WhenPropertyChanged(propertyAccessor, false).Throttle(propertyChangeThrottle.Value, scheduler ?? Defaults.Scheduler);
+                return t.WhenPropertyChanged(propertyAccessor, false).Throttle(propertyChangeThrottle.Value, scheduler ?? GlobalConfig.DefaultScheduler);
             },
             changeSetBuffer,
             scheduler);
@@ -443,7 +443,7 @@ public static class ObservableListEx
         where TObject : notnull => source.DeferUntilLoaded().Publish(
             shared =>
             {
-                var initial = shared.Buffer(initialBuffer, scheduler ?? Defaults.Scheduler).FlattenBufferResult().Take(1);
+                var initial = shared.Buffer(initialBuffer, scheduler ?? GlobalConfig.DefaultScheduler).FlattenBufferResult().Take(1);
 
                 return initial.Concat(shared);
             });
@@ -680,7 +680,7 @@ public static class ObservableListEx
         timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
 
         var locker = new object();
-        var limiter = new ExpireAfter<T>(source, timeSelector, pollingInterval, scheduler ?? Defaults.Scheduler, locker);
+        var limiter = new ExpireAfter<T>(source, timeSelector, pollingInterval, scheduler ?? GlobalConfig.DefaultScheduler, locker);
 
         return limiter.Run().Synchronize(locker).Do(source.RemoveMany);
     }
@@ -931,7 +931,7 @@ public static class ObservableListEx
         }
 
         var locker = new object();
-        var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? Defaults.Scheduler, locker);
+        var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? GlobalConfig.DefaultScheduler, locker);
 
         return limiter.Run().Synchronize(locker).Do(source.RemoveMany);
     }
