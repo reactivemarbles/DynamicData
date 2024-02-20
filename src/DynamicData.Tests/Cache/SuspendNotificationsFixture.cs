@@ -42,6 +42,41 @@ public sealed class SuspendNotificationsFixture : IDisposable
     }
 
     [Fact]
+    public void SuspendingNotificationsDoesNotImpactPreview()
+    {
+        // Arrange
+        using var previewResults = _source.Preview().AsAggregator();
+        using var suspend = _source.SuspendNotifications();
+
+        // Act
+        _source.AddOrUpdate(1);
+
+        // Assert
+        previewResults.Messages.Count.Should().Be(1, "should have received a message in Preview");
+        _results.Messages.Count.Should().Be(0, "should not have gotten any updates");
+        _results.Data.Count.Should().Be(0, "should not receive data after suspend");
+        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+    }
+
+    [Fact]
+    public void SuspendingNotificationsPreventsWatch()
+    {
+        // Arrange
+        var gotData = false;
+        using var suspend = _source.SuspendNotifications();
+        using var sub = _source.Watch(1).Do(_ => gotData = true).Subscribe();
+
+        // Act
+        _source.AddOrUpdate(1);
+
+        // Assert
+        gotData.Should().BeFalse("Should not have received data after suspend");
+        _results.Messages.Count.Should().Be(0, "Should have no item updates");
+        _results.Data.Count.Should().Be(0, "Should not receive data after suspend");
+        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+    }
+
+    [Fact]
     public void NotificationsCanBeResumed()
     {
         // Arrange
@@ -72,6 +107,22 @@ public sealed class SuspendNotificationsFixture : IDisposable
         results.Messages.Count.Should().Be(0, "Should have no item updates");
         results.Data.Count.Should().Be(0, "Should not receive data after suspend");
         results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+    }
+
+    [Fact]
+    public void ExistingDataNotEmittedViaWatchUntilResumed()
+    {
+        // Arrange
+        var gotData = false;
+        var suspend = _source.SuspendNotifications();
+        Enumerable.Range(1, 37).ForEach(_source.AddOrUpdate);
+        using var sub = _source.Watch(1).Do(_ => gotData = true).Subscribe();
+
+        // Act
+        suspend.Dispose();
+
+        // Assert
+        gotData.Should().BeTrue("should have received a notice after the suspend was released");
     }
 
     [Fact]
