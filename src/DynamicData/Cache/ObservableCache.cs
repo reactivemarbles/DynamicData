@@ -126,13 +126,13 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         {
             lock (_locker)
             {
-                var observable = (!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.NotificationsSuspended)
+                var observable = (!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.AreNotificationsSuspended)
 
                     // Create the Connection Observable
                     ? CreateConnectObservable(predicate, suppressEmptyChangeSets)
 
                     // Defer until notifications are no longer suspended
-                    : _suspensionTracker.Value.NotificationsSuspendedStatus.Do(static _ => { }, observer.OnCompleted)
+                    : _suspensionTracker.Value.NotificationsSuspendedObservable.Do(static _ => { }, observer.OnCompleted)
                         .Where(static b => !b).Take(1).Select(_ => CreateConnectObservable(predicate, suppressEmptyChangeSets)).Switch();
 
                 return observable.SubscribeSafe(observer);
@@ -150,13 +150,13 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         {
             lock (_locker)
             {
-                var observable = (!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.NotificationsSuspended)
+                var observable = (!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.AreNotificationsSuspended)
 
                     // Create the Watch Observable
                     ? CreateWatchObservable(key)
 
                     // Defer until notifications are no longer suspended
-                    : _suspensionTracker.Value.NotificationsSuspendedStatus.Do(static _ => { }, observer.OnCompleted)
+                    : _suspensionTracker.Value.NotificationsSuspendedObservable.Do(static _ => { }, observer.OnCompleted)
                         .Where(static b => !b).Take(1).Select(_ => CreateWatchObservable(key)).Switch();
 
                 return observable.SubscribeSafe(observer);
@@ -293,7 +293,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         lock (_locker)
         {
             // If Notifications are not suspended
-            if (!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.NotificationsSuspended)
+            if (!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.AreNotificationsSuspended)
             {
                 // Emit the changes
                 _changes.OnNext(changes);
@@ -301,11 +301,11 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             else
             {
                 // Don't emit the changes, but add them to the list
-                _suspensionTracker.Value.AddPending(changes);
+                _suspensionTracker.Value.EnqueueChanges(changes);
             }
 
             // If CountChanges are not suspended
-            if (!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.CountSuspended)
+            if (!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.IsCountSuspended)
             {
                 InvokeCountNext();
             }
@@ -352,40 +352,40 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         }
     }
 
-    private class SuspensionTracker(Action<ChangeSet<TObject, TKey>> onResumeNotifications, Action onResumeCount) : IDisposable
+    private sealed class SuspensionTracker(Action<ChangeSet<TObject, TKey>> onResumeNotifications, Action onResumeCount) : IDisposable
     {
-        private readonly BehaviorSubject<bool> _notifySuspendSubject = new(false);
+        private readonly BehaviorSubject<bool> _areNotificationsSuspended = new(false);
 
         private readonly Action<ChangeSet<TObject, TKey>> _onResumeNotifications = onResumeNotifications;
 
         private readonly Action _onResumeCount = onResumeCount;
 
-        private IEnumerable<Change<TObject, TKey>> _pending = Enumerable.Empty<Change<TObject, TKey>>();
+        private List<Change<TObject, TKey>> _pendingChanges = [];
 
         private int _countSuspendCount;
 
         private int _notifySuspendCount;
 
-        public bool CountSuspended => _countSuspendCount > 0;
+        public bool IsCountSuspended => _countSuspendCount > 0;
 
-        public bool NotificationsSuspended => _notifySuspendCount > 0;
+        public bool AreNotificationsSuspended => _notifySuspendCount > 0;
 
-        public IObservable<bool> NotificationsSuspendedStatus => _notifySuspendSubject;
+        public IObservable<bool> NotificationsSuspendedObservable => _areNotificationsSuspended;
 
-        public void AddPending(IEnumerable<Change<TObject, TKey>> changes)
+        public void EnqueueChanges(IEnumerable<Change<TObject, TKey>> changes)
         {
             Debug.Assert(changes is not null, "Don't pass in a null Enumerable");
-            Debug.Assert(NotificationsSuspended, "Shouldn't be adding pending values if notifications aren't suspended");
-            _pending = _pending.Concat(changes);
+            Debug.Assert(AreNotificationsSuspended, "Shouldn't be adding pending values if notifications aren't suspended");
+            _pendingChanges.AddRange(changes);
         }
 
         public void SuspendNotifications()
         {
             if (++_notifySuspendCount == 1)
             {
-                Debug.Assert(!_pending.Any(), "Shouldn't be any pending values if suspend was just started");
-                Debug.Assert(!_notifySuspendSubject.Value, "SuspendSubject should be false for the first suspend call");
-                _notifySuspendSubject.OnNext(true);
+                Debug.Assert(_pendingChanges.Count == 0, "Shouldn't be any pending values if suspend was just started");
+                Debug.Assert(!_areNotificationsSuspended.Value, "SuspendSubject should be false for the first suspend call");
+                _areNotificationsSuspended.OnNext(true);
             }
         }
 
@@ -393,17 +393,17 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         public void ResumeNotifications()
         {
-            if (--_notifySuspendCount == 0 && !_notifySuspendSubject.IsDisposed)
+            if (--_notifySuspendCount == 0 && !_areNotificationsSuspended.IsDisposed)
             {
                 // Fire pending changes to existing subscribers
-                if (_pending.Any())
+                if (_pendingChanges.Count > 0)
                 {
-                    _onResumeNotifications(new ChangeSet<TObject, TKey>(_pending));
-                    _pending = Enumerable.Empty<Change<TObject, TKey>>();
+                    _onResumeNotifications(new ChangeSet<TObject, TKey>(_pendingChanges));
+                    _pendingChanges.Clear();
                 }
 
                 // Tell deferred subscribers they can continue
-                _notifySuspendSubject.OnNext(false);
+                _areNotificationsSuspended.OnNext(false);
             }
         }
 
@@ -417,8 +417,8 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         public void Dispose()
         {
-            _notifySuspendSubject.OnCompleted();
-            _notifySuspendSubject.Dispose();
+            _areNotificationsSuspended.OnCompleted();
+            _areNotificationsSuspended.Dispose();
         }
     }
 }
