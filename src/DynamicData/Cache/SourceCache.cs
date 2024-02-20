@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using DynamicData.Binding;
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
@@ -20,7 +21,7 @@ namespace DynamicData;
 /// <param name="keySelector">The key selector.</param>
 /// <exception cref="ArgumentNullException">keySelector.</exception>
 [DebuggerDisplay("SourceCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
-public sealed class SourceCache<TObject, TKey>(Func<TObject, TKey> keySelector) : ISourceCache<TObject, TKey>
+public sealed class SourceCache<TObject, TKey>(Func<TObject, TKey> keySelector) : ISourceCache<TObject, TKey>, INotifyCollectionChangedSuspender
     where TObject : notnull
     where TKey : notnull
 {
@@ -61,4 +62,10 @@ public sealed class SourceCache<TObject, TKey>(Func<TObject, TKey> keySelector) 
 
     /// <inheritdoc />
     public IObservable<Change<TObject, TKey>> Watch(TKey key) => _innerCache.Watch(key);
+
+    /// <inheritdoc />
+    public IDisposable SuspendCount() => _innerCache.SuspendCount();
+
+    /// <inheritdoc />
+    public IDisposable SuspendNotifications() => _innerCache.SuspendNotifications();
 }

@@ -33,9 +33,7 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
         {
             lock (_locker)
             {
-                var result = new TObject[_data.Count];
-                _data.Values.CopyTo(result, 0);
-                return result;
+                return [.. _data.Values];
             }
         }
     }
@@ -46,9 +44,7 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
         {
             lock (_locker)
             {
-                var result = new TKey[_data.Count];
-                _data.Keys.CopyTo(result, 0);
-                return result;
+                return [.. _data.Keys];
             }
         }
     }
@@ -59,15 +55,7 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
         {
             lock (_locker)
             {
-                var result = new KeyValuePair<TKey, TObject>[_data.Count];
-                var i = 0;
-                foreach (var kvp in _data)
-                {
-                    result[i] = kvp;
-                    i++;
-                }
-
-                return result;
+                return [.. _data];
             }
         }
     }

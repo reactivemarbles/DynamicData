@@ -973,7 +973,7 @@ namespace DynamicData
         public override string ToString() { }
     }
     [System.Diagnostics.DebuggerDisplay("IntermediateCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
-    public sealed class IntermediateCache<TObject, TKey> : DynamicData.IConnectableCache<TObject, TKey>, DynamicData.IIntermediateCache<TObject, TKey>, DynamicData.IObservableCache<TObject, TKey>, System.IDisposable
+    public sealed class IntermediateCache<TObject, TKey> : DynamicData.Binding.INotifyCollectionChangedSuspender, DynamicData.IConnectableCache<TObject, TKey>, DynamicData.IIntermediateCache<TObject, TKey>, DynamicData.IObservableCache<TObject, TKey>, System.IDisposable
         where TObject :  notnull
         where TKey :  notnull
     {
@@ -989,6 +989,8 @@ namespace DynamicData
         public void Edit(System.Action<DynamicData.ICacheUpdater<TObject, TKey>> updateAction) { }
         public DynamicData.Kernel.Optional<TObject> Lookup(TKey key) { }
         public System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Preview(System.Func<TObject, bool>? predicate = null) { }
+        public System.IDisposable SuspendCount() { }
+        public System.IDisposable SuspendNotifications() { }
         public System.IObservable<DynamicData.Change<TObject, TKey>> Watch(TKey key) { }
     }
     public readonly struct ItemChange<T> : System.IEquatable<DynamicData.ItemChange<T>>
@@ -2485,7 +2487,7 @@ namespace DynamicData
             where TDestination :  notnull { }
     }
     [System.Diagnostics.DebuggerDisplay("SourceCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
-    public sealed class SourceCache<TObject, TKey> : DynamicData.IConnectableCache<TObject, TKey>, DynamicData.IObservableCache<TObject, TKey>, DynamicData.ISourceCache<TObject, TKey>, System.IDisposable
+    public sealed class SourceCache<TObject, TKey> : DynamicData.Binding.INotifyCollectionChangedSuspender, DynamicData.IConnectableCache<TObject, TKey>, DynamicData.IObservableCache<TObject, TKey>, DynamicData.ISourceCache<TObject, TKey>, System.IDisposable
         where TObject :  notnull
         where TKey :  notnull
     {
@@ -2501,6 +2503,8 @@ namespace DynamicData
         public void Edit(System.Action<DynamicData.ISourceUpdater<TObject, TKey>> updateAction) { }
         public DynamicData.Kernel.Optional<TObject> Lookup(TKey key) { }
         public System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Preview(System.Func<TObject, bool>? predicate = null) { }
+        public System.IDisposable SuspendCount() { }
+        public System.IDisposable SuspendNotifications() { }
         public System.IObservable<DynamicData.Change<TObject, TKey>> Watch(TKey key) { }
     }
     public static class SourceListEditConvenienceEx
