@@ -34,15 +34,3 @@ public record struct BindingOptions(int ResetThreshold, bool UseReplaceForUpdate
     /// <returns> The binding options.</returns>
     public static BindingOptions NeverFireReset(bool useReplaceForUpdates = DefaultResetOnFirstTimeLoad) => new(int.MaxValue, useReplaceForUpdates, false);
 }
-
-/// <summary>
-/// System wide default values for binding operators.
-/// </summary>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Related Files.")]
-public static class DynamicDataOptions
-{
-    /// <summary>
-    /// Gets or sets the default values for all binding operations.
-    /// </summary>
-    public static BindingOptions Binding { get; set; } = new(BindingOptions.DefaultResetThreshold);
-}
