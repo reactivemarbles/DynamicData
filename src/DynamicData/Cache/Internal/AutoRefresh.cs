@@ -5,6 +5,7 @@
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -14,7 +15,7 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(IObservable<IChangeSet<TO
 {
     private readonly Func<TObject, TKey, IObservable<TAny>> _reEvaluator = reEvaluator ?? throw new ArgumentNullException(nameof(reEvaluator));
 
-    private readonly IScheduler _scheduler = scheduler ?? Scheduler.Default;
+    private readonly IScheduler _scheduler = scheduler ?? Defaults.Scheduler;
 
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 

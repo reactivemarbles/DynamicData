@@ -6,6 +6,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Internal;
 
 namespace DynamicData.List.Internal;
 
@@ -14,7 +15,7 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
 {
     private readonly IObservable<bool> _pauseIfTrueSelector = pauseIfTrueSelector ?? throw new ArgumentNullException(nameof(pauseIfTrueSelector));
 
-    private readonly IScheduler _scheduler = scheduler ?? Scheduler.Default;
+    private readonly IScheduler _scheduler = scheduler ?? Defaults.Scheduler;
 
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 

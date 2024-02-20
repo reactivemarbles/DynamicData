@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Internal;
 
 namespace DynamicData.List.Internal;
 
@@ -25,7 +26,7 @@ internal sealed class ToObservableChangeSet<TObject>
     {
         _expireAfter = expireAfter;
         _limitSizeTo = limitSizeTo;
-        _scheduler = scheduler ?? Scheduler.Default;
+        _scheduler = scheduler ?? Defaults.Scheduler;
 
         _source = Observable.Create<IEnumerable<TObject>>(observer =>
         {
@@ -51,7 +52,7 @@ internal sealed class ToObservableChangeSet<TObject>
     {
         _expireAfter = expireAfter;
         _limitSizeTo = limitSizeTo;
-        _scheduler = scheduler ?? Scheduler.Default;
+        _scheduler = scheduler ?? Defaults.Scheduler;
         _source = source;
     }
 

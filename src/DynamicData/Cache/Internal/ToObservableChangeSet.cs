@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -29,7 +30,7 @@ internal sealed class ToObservableChangeSet<TObject, TKey>
         _expireAfter = expireAfter;
         _keySelector = keySelector;
         _limitSizeTo = limitSizeTo;
-        _scheduler = scheduler ?? Scheduler.Default;
+        _scheduler = scheduler ?? Defaults.Scheduler;
 
         _source = Observable.Create<IEnumerable<TObject>>(observer =>
         {
@@ -57,7 +58,7 @@ internal sealed class ToObservableChangeSet<TObject, TKey>
         _expireAfter = expireAfter;
         _keySelector = keySelector;
         _limitSizeTo = limitSizeTo;
-        _scheduler = scheduler ?? Scheduler.Default;
+        _scheduler = scheduler ?? Defaults.Scheduler;
         _source = source;
     }
 

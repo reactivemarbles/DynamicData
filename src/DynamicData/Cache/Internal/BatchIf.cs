@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -15,7 +16,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
 {
     private readonly IObservable<bool> _pauseIfTrueSelector = pauseIfTrueSelector ?? throw new ArgumentNullException(nameof(pauseIfTrueSelector));
 
-    private readonly IScheduler _scheduler = scheduler ?? Scheduler.Default;
+    private readonly IScheduler _scheduler = scheduler ?? Defaults.Scheduler;
 
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
