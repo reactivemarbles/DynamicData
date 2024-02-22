@@ -29,7 +29,7 @@ internal sealed class ToObservableChangeSet<TObject, TKey>
         _expireAfter = expireAfter;
         _keySelector = keySelector;
         _limitSizeTo = limitSizeTo;
-        _scheduler = scheduler ?? Scheduler.Default;
+        _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
 
         _source = Observable.Create<IEnumerable<TObject>>(observer =>
         {
@@ -57,7 +57,7 @@ internal sealed class ToObservableChangeSet<TObject, TKey>
         _expireAfter = expireAfter;
         _keySelector = keySelector;
         _limitSizeTo = limitSizeTo;
-        _scheduler = scheduler ?? Scheduler.Default;
+        _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
         _source = source;
     }
 

@@ -15,7 +15,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
 {
     private readonly IObservable<bool> _pauseIfTrueSelector = pauseIfTrueSelector ?? throw new ArgumentNullException(nameof(pauseIfTrueSelector));
 
-    private readonly IScheduler _scheduler = scheduler ?? Scheduler.Default;
+    private readonly IScheduler _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
 
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 

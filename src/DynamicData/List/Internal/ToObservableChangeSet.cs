@@ -25,7 +25,7 @@ internal sealed class ToObservableChangeSet<TObject>
     {
         _expireAfter = expireAfter;
         _limitSizeTo = limitSizeTo;
-        _scheduler = scheduler ?? Scheduler.Default;
+        _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
 
         _source = Observable.Create<IEnumerable<TObject>>(observer =>
         {
@@ -51,7 +51,7 @@ internal sealed class ToObservableChangeSet<TObject>
     {
         _expireAfter = expireAfter;
         _limitSizeTo = limitSizeTo;
-        _scheduler = scheduler ?? Scheduler.Default;
+        _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
         _source = source;
     }
 

@@ -12,9 +12,11 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
+using DynamicData;
 using DynamicData.Binding;
 using DynamicData.Cache;
 using DynamicData.Cache.Internal;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
@@ -324,7 +326,7 @@ public static class ObservableCacheEx
                     return t.WhenAnyPropertyChanged();
                 }
 
-                return t.WhenAnyPropertyChanged().Throttle(propertyChangeThrottle.Value, scheduler ?? Scheduler.Default);
+                return t.WhenAnyPropertyChanged().Throttle(propertyChangeThrottle.Value, scheduler ?? GlobalConfig.DefaultScheduler);
             },
             changeSetBuffer,
             scheduler);
@@ -356,7 +358,7 @@ public static class ObservableCacheEx
                     return t.WhenPropertyChanged(propertyAccessor, false);
                 }
 
-                return t.WhenPropertyChanged(propertyAccessor, false).Throttle(propertyChangeThrottle.Value, scheduler ?? Scheduler.Default);
+                return t.WhenPropertyChanged(propertyAccessor, false).Throttle(propertyChangeThrottle.Value, scheduler ?? GlobalConfig.DefaultScheduler);
             },
             changeSetBuffer,
             scheduler);
@@ -416,7 +418,7 @@ public static class ObservableCacheEx
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        return source.Buffer(timeSpan, scheduler ?? Scheduler.Default).FlattenBufferResult();
+        return source.Buffer(timeSpan, scheduler ?? GlobalConfig.DefaultScheduler).FlattenBufferResult();
     }
 
     /// <summary>
@@ -832,7 +834,7 @@ public static class ObservableCacheEx
         where TKey : notnull => source.DeferUntilLoaded().Publish(
             shared =>
             {
-                var initial = shared.Buffer(initialBuffer, scheduler ?? Scheduler.Default).FlattenBufferResult().Take(1);
+                var initial = shared.Buffer(initialBuffer, scheduler ?? GlobalConfig.DefaultScheduler).FlattenBufferResult().Take(1);
 
                 return initial.Concat(shared);
             });
@@ -1357,7 +1359,7 @@ public static class ObservableCacheEx
     /// </exception>
     public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector)
         where TObject : notnull
-        where TKey : notnull => ExpireAfter(source, timeSelector, Scheduler.Default);
+        where TKey : notnull => ExpireAfter(source, timeSelector, GlobalConfig.DefaultScheduler);
 
     /// <summary>
     /// Automatically removes items from the stream after the time specified by
@@ -1401,7 +1403,7 @@ public static class ObservableCacheEx
     /// timeSelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval)
         where TObject : notnull
-        where TKey : notnull => ExpireAfter(source, timeSelector, pollingInterval, Scheduler.Default);
+        where TKey : notnull => ExpireAfter(source, timeSelector, pollingInterval, GlobalConfig.DefaultScheduler);
 
     /// <summary>
     /// Automatically removes items from the stream on the next poll after the time specified by
@@ -1463,7 +1465,7 @@ public static class ObservableCacheEx
     /// timeSelector.</exception>
     public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? interval = null)
         where TObject : notnull
-        where TKey : notnull => ExpireAfter(source, timeSelector, interval, Scheduler.Default);
+        where TKey : notnull => ExpireAfter(source, timeSelector, interval, GlobalConfig.DefaultScheduler);
 
     /// <summary>
     /// Ensures there are no duplicated keys in the observable changeset.
@@ -1504,7 +1506,7 @@ public static class ObservableCacheEx
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
 
-        scheduler ??= Scheduler.Default;
+        scheduler ??= GlobalConfig.DefaultScheduler;
 
         return Observable.Create<IEnumerable<KeyValuePair<TKey, TObject>>>(
             observer => source.Connect().ForExpiry(timeSelector, pollingInterval, scheduler).Finally(observer.OnCompleted).Subscribe(
@@ -2499,7 +2501,7 @@ public static class ObservableCacheEx
                 long orderItemWasAdded = -1;
                 var sizeLimiter = new SizeLimiter<TObject, TKey>(sizeLimit);
 
-                return source.Connect().Finally(observer.OnCompleted).ObserveOn(scheduler ?? Scheduler.Default).Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded))).Select(sizeLimiter.CloneAndReturnExpiredOnly).Where(expired => expired.Length != 0).Subscribe(
+                return source.Connect().Finally(observer.OnCompleted).ObserveOn(scheduler ?? GlobalConfig.DefaultScheduler).Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded))).Select(sizeLimiter.CloneAndReturnExpiredOnly).Where(expired => expired.Length != 0).Subscribe(
                     toRemove =>
                     {
                         try

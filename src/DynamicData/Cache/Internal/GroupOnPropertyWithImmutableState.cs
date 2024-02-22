@@ -6,7 +6,6 @@ using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
@@ -17,7 +16,7 @@ internal sealed class GroupOnPropertyWithImmutableState<TObject, TKey, TGroup>(I
     where TGroup : notnull
 {
     private readonly Func<TObject, TGroup> _groupSelector = groupSelectorKey.Compile();
-    private readonly IScheduler _scheduler = scheduler ?? Scheduler.Default;
+    private readonly IScheduler _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
 
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
