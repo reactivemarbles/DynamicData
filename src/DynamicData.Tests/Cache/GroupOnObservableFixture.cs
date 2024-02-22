@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Linq;
-using Bogus;
-using DynamicData.Tests.Domain;
-using DynamicData.Binding;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
+
+using Bogus;
+using DynamicData.Binding;
+using DynamicData.Kernel;
+using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
 
 using Person = DynamicData.Tests.Domain.Person;
-using System.Threading.Tasks;
-using DynamicData.Kernel;
 
 namespace DynamicData.Tests.Cache;
 
@@ -50,6 +51,7 @@ public class GroupOnObservableFixture : IDisposable
         // Assert
         _results.Data.Count.Should().Be(InitialCount);
         _results.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
+        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().Be(1));
         VerifyGroupingResults();
     }
 
@@ -65,6 +67,7 @@ public class GroupOnObservableFixture : IDisposable
         // Assert
         _results.Data.Count.Should().Be(InitialCount + AddCount);
         _results.Messages.Count.Should().Be(2, "Initial Adds and then the subsequent Additions should each be a single message");
+        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
         VerifyGroupingResults();
     }
 
@@ -80,6 +83,7 @@ public class GroupOnObservableFixture : IDisposable
         // Assert
         _results.Data.Count.Should().Be(InitialCount - RemoveCount);
         _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
+        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
         VerifyGroupingResults();
     }
 
@@ -97,6 +101,7 @@ public class GroupOnObservableFixture : IDisposable
         // Assert
         _results.Data.Count.Should().Be(InitialCount, "Only replacements were made");
         _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Updates");
+        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
         VerifyGroupingResults();
     }
 
@@ -115,6 +120,7 @@ public class GroupOnObservableFixture : IDisposable
         // Assert
         _cache.Items.Select(p => p.FavoriteColor).Distinct().Count().Should().Be(colorCount - 1);
         _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
+        _groupResults.Data.Count.Should().Be(colorCount - 1, "{0} colors were used and then all of the {1} were removed", colorCount, removeColor);
         _groupResults.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
         _groupResults.Summary.Overall.Adds.Should().Be(colorCount);
         _groupResults.Summary.Overall.Removes.Should().Be(1);
@@ -142,9 +148,11 @@ public class GroupOnObservableFixture : IDisposable
         // Assert
         _cache.Items.Select(p => p.FavoriteColor).Distinct().Count().Should().Be(colorCount);
         _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Other Added Value");
+        _groupResults.Data.Count.Should().Be(colorCount);
         _groupResults.Messages.Count.Should().Be(1, "Shouldn't be removed/re-added");
         _groupResults.Summary.Overall.Adds.Should().Be(colorCount);
         _groupResults.Summary.Overall.Removes.Should().Be(0);
+        _groupResults.Groups.Lookup(removeColor).Value.Data.Count.Should().Be(1, "All the {0} were removed and then 1 was added back", removeColor);
         VerifyGroupingResults();
     }
 
@@ -329,6 +337,9 @@ public class GroupOnObservableFixture : IDisposable
 
         // Check each group
         expectedGroupings.ForEach(grouping => grouping.Should().BeEquivalentTo(groupResults.Groups.Lookup(grouping.Key).Value.Data.Items));
+
+        // No groups should be empty
+        groupResults.Groups.Items.ForEach(group => group.Data.Count.Should().BeGreaterThan(0, "Empty groups should be removed"));
     }
 
     private static IObservable<Color> CreateFavoriteColorObservable(Person person, string key) =>
