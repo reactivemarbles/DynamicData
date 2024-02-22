@@ -3317,6 +3317,26 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Converts the changesets so that it only contains items of the given type.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TDestination">The type of the objects for the result changeset.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="suppressEmptyChangeSets">Indicates whether or not to suppress changesets that end up being empty after the conversion.</param>
+    /// <returns>An observable of changesets that has every item in the source that is of type <typeparamref name="TDestination"/>.</returns>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<TDestination, TKey>> OfType<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, bool suppressEmptyChangeSets = true)
+        where TObject : notnull
+        where TKey : notnull
+        where TDestination : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+
+        return new OfType<TObject, TKey, TDestination>(source, suppressEmptyChangeSets).Run();
+    }
+
+    /// <summary>
     /// Callback for each item as and when it is being added to the stream.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>

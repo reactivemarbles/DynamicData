@@ -4,6 +4,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Xunit.Abstractions;
 
 namespace DynamicData.Tests.Utilities;
 
@@ -125,6 +126,28 @@ internal static class ObservableSpy
     private static Func<IChangeSet<T>, string> CreateListChangeSetFormatter<T>(Func<T, string> formatter) where T : notnull =>
         cs => "[List Change Set]" + ChangeSetEntrySpacing + string.Join(ChangeSetEntrySpacing, cs.Select((change, n) => $"#{n} {FormatChange(formatter, change)}"));
 
+    public static IObservable<T> TestSpy<T>(this IObservable<T> source,
+                                                                ITestOutputHelper testOutputHelper, string? opName = null,
+                                                                Func<T, string>? formatter = null, bool showSubs = true,
+                                                                bool showTimestamps = true) =>
+        source.Spy(opName, TestLogger(testOutputHelper), formatter, showSubs, showTimestamps);
+
+    public static IObservable<IChangeSet<T, TKey>> TestSpy<T, TKey>(this IObservable<IChangeSet<T, TKey>> source,
+                                                                    ITestOutputHelper testOutputHelper, string? opName = null,
+                                                                    Func<T, string>? formatter = null, bool showSubs = true,
+                                                                      bool showTimestamps = true)
+        where T : notnull
+        where TKey : notnull =>
+        source.Spy(opName, TestLogger(testOutputHelper), formatter, showSubs, showTimestamps);
+
+    public static IObservable<IChangeSet<T>> TestSpy<T>(this IObservable<IChangeSet<T>> source,
+                                                                    ITestOutputHelper testOutputHelper, string? opName = null,
+                                                                    Func<T, string>? formatter = null, bool showSubs = true,
+                                                                      bool showTimestamps = true)
+                                                                      where T : notnull =>
+        source.Spy(opName, TestLogger(testOutputHelper), formatter, showSubs, showTimestamps);
+
+
     public static IObservable<T> DebugSpy<T>(this IObservable<T> source, string? opName = null,
                                                                   Func<T, string>? formatter = null, bool showSubs = true,
                                                                   bool showTimestamps = true) =>
@@ -198,6 +221,8 @@ internal static class ObservableSpy
 
     private static Action<string> CreateLogger(Action<string> baseLogger, Func<string> timeStamper, string opName) =>
             msg => baseLogger($"{timeStamper()}[{Environment.CurrentManagedThreadId:X2}] |{opName}| {msg}");
+
+    private static Action<string> TestLogger(ITestOutputHelper testOutputHelper) => testOutputHelper.WriteLine;
 
 #if DEBUG
     private static void DebugLogger(string str) => System.Diagnostics.Debug.WriteLine(str); 
