@@ -18,6 +18,8 @@ internal sealed class ManagedGroup<TObject, TKey, TGroupKey>(TGroupKey groupKey)
 
     public void Dispose() => _cache.Dispose();
 
+    public IDisposable SuspendNotifications() => _cache.SuspendNotifications();
+
     /// <summary>
     /// Determines whether the specified <see cref="object"/> is equal to the current <see cref="object"/>.
     /// </summary>
