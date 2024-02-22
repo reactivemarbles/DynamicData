@@ -80,6 +80,8 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
             // Group all items
             var grouped = changes.Select(u => new ChangeWithGroup(u, groupSelectorKey)).GroupBy(c => c.GroupKey);
 
+            using var suspendTracker = new SuspendTracker();
+
             // 1. iterate and maintain child caches (_groupCache)
             // 2. maintain which group each item belongs to (_itemCache)
             grouped.ForEach(group =>
@@ -89,6 +91,11 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
                     if (groupItem.wasCreated)
                     {
                         result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Add, group.Key, groupCache));
+                    }
+                    else
+                    {
+                        // It wasn't created, so there could be subscribers, so suspend updates until the end
+                        suspendTracker.Add(groupCache);
                     }
 
                     groupCache.Update(
@@ -111,6 +118,7 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
                                                 _groupCache.Lookup(previous.Value.GroupKey).IfHasValue(
                                                     g =>
                                                     {
+                                                        suspendTracker.Add(g);
                                                         g.Update(u => u.Remove(current.Key));
                                                         if (g.Count != 0)
                                                         {
@@ -141,6 +149,7 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
                                                 _groupCache.Lookup(previousGroupKey).IfHasValue(
                                                     g =>
                                                     {
+                                                        suspendTracker.Add(g);
                                                         g.Update(u => u.Remove(current.Key));
                                                         if (g.Count != 0)
                                                         {
@@ -180,6 +189,7 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
                                                     _groupCache.Lookup(p.GroupKey).IfHasValue(
                                                         g =>
                                                         {
+                                                            suspendTracker.Add(g);
                                                             g.Update(u => u.Remove(current.Key));
                                                             if (g.Count != 0)
                                                             {
@@ -235,6 +245,22 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
             public override int GetHashCode() => Key.GetHashCode();
 
             public override string ToString() => $"Key: {Key}, GroupKey: {GroupKey}, Item: {Item}";
+        }
+
+        private sealed class SuspendTracker : IDisposable
+        {
+            private readonly HashSet<TGroupKey> _trackedKeys = [];
+            private readonly CompositeDisposable _disposables = [];
+
+            public void Add(ManagedGroup<TObject, TKey, TGroupKey> managedGroup)
+            {
+                if (_trackedKeys.Add(managedGroup.Key))
+                {
+                    _disposables.Add(managedGroup.SuspendNotifications());
+                }
+            }
+
+            public void Dispose() => _disposables.Dispose();
         }
     }
 }

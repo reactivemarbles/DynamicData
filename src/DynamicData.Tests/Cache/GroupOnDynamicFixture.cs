@@ -34,16 +34,15 @@ public class GroupOnDynamicFixture : IDisposable
     private readonly GroupChangeSetAggregator<Person, string, string> _groupResults;
     private readonly Faker<Person> _faker;
     private readonly Randomizer _randomizer;
-    private readonly Subject<Func<Person, string, string>> _keySelectionSubject = new ();
+    private readonly BehaviorSubject<Func<Person, string, string>?> _keySelectionSubject = new (null);
     private readonly Subject<Unit> _regroupSubject = new ();
-    private Func<Person, string, string>? _groupKeySelector;
 
     public GroupOnDynamicFixture()
     {
         unchecked { _randomizer = new((int)0xc001_d00d); }
         _faker = Fakers.Person.Clone().WithSeed(_randomizer);
         _results = _cache.Connect().AsAggregator();
-        _groupResults = _cache.Connect().Group(_keySelectionSubject.Do(func => _groupKeySelector = func), _regroupSubject).AsAggregator();
+        _groupResults = _cache.Connect().Group(KeySelectionObservable, _regroupSubject).AsAggregator();
     }
 
     [Theory]
@@ -151,6 +150,7 @@ public class GroupOnDynamicFixture : IDisposable
         // Assert
         _results.Data.Count.Should().Be(InitialCount);
         _results.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
+        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().Be(1));
         VerifyGroupingResults();
     }
 
@@ -167,6 +167,7 @@ public class GroupOnDynamicFixture : IDisposable
         // Assert
         _results.Data.Count.Should().Be(InitialCount + AddCount);
         _results.Messages.Count.Should().Be(2, "Initial Adds and then the subsequent Additions should each be a single message");
+        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
         VerifyGroupingResults();
     }
 
@@ -183,6 +184,7 @@ public class GroupOnDynamicFixture : IDisposable
         // Assert
         _results.Data.Count.Should().Be(InitialCount - RemoveCount);
         _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
+        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
         VerifyGroupingResults();
     }
 
@@ -201,6 +203,7 @@ public class GroupOnDynamicFixture : IDisposable
         // Assert
         _results.Data.Count.Should().Be(InitialCount, "Only replacements were made");
         _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Updates");
+        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
         VerifyGroupingResults();
     }
 
@@ -303,7 +306,7 @@ public class GroupOnDynamicFixture : IDisposable
         InitialPopulate();
         var expectedError = new Exception("Expected");
         var throwObservable = Observable.Throw<IChangeSet<Person, string>>(expectedError);
-        using var results = _cache.Connect().Concat(throwObservable).Group(_keySelectionSubject, _regroupSubject).AsAggregator();
+        using var results = _cache.Connect().Concat(throwObservable).Group(KeySelectionObservable, _regroupSubject).AsAggregator();
 
         // Act
         _cache.Dispose();
@@ -349,10 +352,12 @@ public class GroupOnDynamicFixture : IDisposable
         _regroupSubject.Dispose();
     }
 
+    private IObservable<Func<Person, string, string>> KeySelectionObservable => _keySelectionSubject.Where(v => v is not null).Select(v => v!);
+
     private void InitialPopulate() => _cache.AddOrUpdate(_faker.Generate(InitialCount));
 
     private void VerifyGroupingResults() =>
-        VerifyGroupingResults(_cache, _results, _groupResults, _groupKeySelector);
+        VerifyGroupingResults(_cache, _results, _groupResults, _keySelectionSubject.Value);
 
     private static void VerifyGroupingResults(ISourceCache<Person, string> cache, ChangeSetAggregator<Person, string> cacheResults, GroupChangeSetAggregator<Person, string, string> groupResults, Func<Person, string, string>? groupKeySelector)
     {
@@ -374,7 +379,7 @@ public class GroupOnDynamicFixture : IDisposable
         expectedGroupings.ForEach(grouping => grouping.Should().BeEquivalentTo(groupResults.Groups.Lookup(grouping.Key).Value.Data.Items));
 
         // No groups should be empty
-        groupResults.Groups.Items.ForEach(group => group.Data.Count.Should().BeGreaterThan(0));
+        groupResults.Groups.Items.ForEach(group => group.Data.Count.Should().BeGreaterThan(0, "Empty groups should be removed"));
     }
 
     private void ForceRegroup() => _regroupSubject.OnNext(Unit.Default);
