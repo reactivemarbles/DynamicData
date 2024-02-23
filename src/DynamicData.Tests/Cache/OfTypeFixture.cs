@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Bogus;
-using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
 using FluentAssertions;
@@ -46,6 +46,7 @@ public class OfTypeFixture : IDisposable
     [Fact]
     public void AddedItemsAreInResults()
     {
+        // Arrange
         var people = _personFaker.Generate(AddCount);
         var catPeople = _catPersonFaker.Generate(AddCount);
 
@@ -90,14 +91,12 @@ public class OfTypeFixture : IDisposable
         _sourceCache.AddOrUpdate(catPeople);
 
         var updates = _randomizer.ListItems(people.Concat(catPeople).ToList(), UpdateCount);
-        var preUpdateNonCatPeople = updates.Where(p => p is not CatPerson).ToList();
         var preUpdateCatPeople = updates.Where(p => p is CatPerson).ToList();
         var updated = updates.Select(p => GenerateUpdateRandom(p.Id)).ToList();
-        var postUpdateNonPeople = updated.Where(p => p is not CatPerson).ToList();
         var postUpdateCatPeople = updated.Where(p => p is CatPerson).ToList();
-        var catToNonCount = preUpdateCatPeople.Count(p => postUpdateNonPeople.Any(pu => pu.Id == p.Id));
         var catToCatCount = preUpdateCatPeople.Count(p => postUpdateCatPeople.Any(pu => pu.Id == p.Id));
-        var nonToCatCount = preUpdateNonCatPeople.Count(p => postUpdateCatPeople.Any(pu => pu.Id == p.Id));
+        var catToNonCount = preUpdateCatPeople.Count - catToCatCount;
+        var nonToCatCount = postUpdateCatPeople.Count(p => !preUpdateCatPeople.Any(pu => pu.Id == p.Id));
 
         // Act
         _sourceCache.AddOrUpdate(updated);
@@ -119,6 +118,8 @@ public class OfTypeFixture : IDisposable
         _personResults.Dispose();
         _catPersonResults.Dispose();
     }
+
+    private IEnumerable<Person> GeneratePeople(int count = AddCount) => Enumerable.Range(0, count).Select(_ => _randomizer.Bool() ? _personFaker.Generate() : _catPersonFaker.Generate());
 
     private Person GenerateUpdateRandom(string id) => _randomizer.Bool() ? GenerateUpdatePerson(id) : GenerateUpdateCatPerson(id);
 
