@@ -1603,6 +1603,10 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> NotEmpty<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source)
             where TObject :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> OfType<TObject, TKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, bool suppressEmptyChangeSets = true)
+            where TObject :  notnull
+            where TKey :  notnull
+            where TDestination :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> OnItemAdded<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Action<TObject> addAction)
             where TObject :  notnull
             where TKey :  notnull { }
