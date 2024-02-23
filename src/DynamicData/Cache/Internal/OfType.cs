@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using DynamicData.Internal;
+using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
@@ -36,28 +37,22 @@ internal sealed class OfType<TObject, TKey, TDestination>(IObservable<IChangeSet
                             if (change.Reason is ChangeReason.Moved)
                                 continue;
 
-                            ChangeReason? downstreamReason = change.Reason switch
+                            Change<TDestination, TKey>? downstreamChange = change.Reason switch
                             {
                                 ChangeReason.Update => (TypeCheck(change.Previous.Value), TypeCheck(change.Current)) switch
                                 {
-                                    (true, true) => change.Reason,
-                                    (false, true) => ChangeReason.Add,
-                                    (true, false) => ChangeReason.Remove,
-                                    _ => null
+                                    (true, true) => new(change.Reason, change.Key, Convert(change.Current), change.Previous.Convert(Convert)),
+                                    (false, true) => new(ChangeReason.Add, change.Key, Convert(change.Current)),
+                                    (true, false) => new(ChangeReason.Remove, change.Key, Convert(change.Previous.Value)),
+                                    _ => null,
                                 },
-                                _ => TypeCheck(change.Current) ? change.Reason : null
+                                _ => TypeCheck(change.Current) ? new(change.Reason, change.Key, Convert(change.Current), change.Previous.Convert(Convert)) : null
                             };
 
-                            if (downstreamReason is ChangeReason reason)
+                            if (downstreamChange is Change<TDestination, TKey> dsc)
                             {
                                 // Do not propagate indexes, we can't guarantee them to be correct, because we aren't caching items.
-                                downstreamChanges.Add(new(
-                                    reason: reason,
-                                    key: change.Key,
-                                    current: Convert(change.Current),
-                                    previous: (reason is ChangeReason.Update)
-                                        ? Convert(change.Previous.Value)
-                                        : default));
+                                downstreamChanges.Add(dsc);
                             }
                         }
 

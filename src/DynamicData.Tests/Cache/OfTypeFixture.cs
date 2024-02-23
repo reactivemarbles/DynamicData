@@ -38,13 +38,9 @@ public class OfTypeFixture : IDisposable
     {
         _randomizer = new(0x3737_ddcc);
         _personFaker = new Faker<Person>().CustomInstantiator(faker => new Person(faker.Person.FullName)).WithSeed(_randomizer);
-        _catPersonFaker = new Faker<CatPerson>().CustomInstantiator(faker => new CatPerson(faker.Person.FullName, faker.Person.UserName)).WithSeed(_randomizer);
-        //_personResults = _sourceCache.Connect().AsAggregator();
-        //_catPersonResults = _sourceCache.Connect().OfType<Person, string, CatPerson>().AsAggregator();
-        //_personResults = _sourceCache.Connect().TestSpy(testOutputHelper, "Cache").AsAggregator();
-        //_catPersonResults = _sourceCache.Connect().OfType<Person, string, CatPerson>().TestSpy(testOutputHelper, "OfType").AsAggregator();
-        _personResults = _sourceCache.Connect().DebugSpy("Cache").AsAggregator();
-        _catPersonResults = _sourceCache.Connect().OfType<Person, string, CatPerson>().DebugSpy("OfType").AsAggregator();
+        _catPersonFaker = new Faker<CatPerson>().CustomInstantiator(faker => new CatPerson(faker.Person.FullName, $"{faker.Hacker.Adjective()} the {faker.Hacker.Noun()}")).WithSeed(_randomizer);
+        _personResults = _sourceCache.Connect().TestSpy(testOutputHelper, "Cache").AsAggregator();
+        _catPersonResults = _sourceCache.Connect().OfType<Person, string, CatPerson>().TestSpy(testOutputHelper, "OfType").AsAggregator();
     }
 
     [Fact]
@@ -104,7 +100,7 @@ public class OfTypeFixture : IDisposable
         var nonToCatCount = preUpdateNonCatPeople.Count(p => postUpdateCatPeople.Any(pu => pu.Id == p.Id));
 
         // Act
-        _sourceCache.AddOrUpdate(updates);
+        _sourceCache.AddOrUpdate(updated);
 
         // Assert
         _personResults.Summary.Overall.Adds.Should().Be(AddCount * 2);
@@ -141,24 +137,20 @@ public class OfTypeFixture : IDisposable
 
         _personResults.Data.Items.Should().BeEquivalentTo(expectedPeople);
         _catPersonResults.Data.Items.Should().BeEquivalentTo(expectedCatPeople);
-        //expectedCatPeople.ForEach(catPerson => _catPersonResults.Data.Lookup(catPerson.Id).Value.Person.Should().Be(catPerson));
     }
 
     private interface ICatPerson
     {
-        //Person Person { get; }
         string CatName { get; }
     }
 
     private record Person(string Name, string Id)
     {
-        public Person(string Name) : this(Name, Guid.NewGuid().ToString("B")) { }
+        public Person(string Name) : this(Name, Guid.NewGuid().ToString("N")) { }
     }
 
     private record CatPerson(string Name, string CatName, string Id) : Person(Name, Id), ICatPerson
     {
-        public CatPerson(string Name, string CatName) : this(Name, CatName, Guid.NewGuid().ToString("B")) { }
-
-        //public Person Person => this;
+        public CatPerson(string Name, string CatName) : this(Name, CatName, Guid.NewGuid().ToString("N")) { }
     }
 }

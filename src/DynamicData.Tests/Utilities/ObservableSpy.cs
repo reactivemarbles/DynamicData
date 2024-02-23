@@ -222,7 +222,13 @@ internal static class ObservableSpy
     private static Action<string> CreateLogger(Action<string> baseLogger, Func<string> timeStamper, string opName) =>
             msg => baseLogger($"{timeStamper()}[{Environment.CurrentManagedThreadId:X2}] |{opName}| {msg}");
 
-    private static Action<string> TestLogger(ITestOutputHelper testOutputHelper) => testOutputHelper.WriteLine;
+    private static Action<string> TestLogger(ITestOutputHelper testOutputHelper) => str =>
+    {
+        testOutputHelper.WriteLine(str);
+#if DEBUG
+        DebugLogger(str);
+#endif
+    };
 
 #if DEBUG
     private static void DebugLogger(string str) => System.Diagnostics.Debug.WriteLine(str); 
