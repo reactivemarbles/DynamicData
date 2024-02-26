@@ -58,9 +58,9 @@ public sealed class TestSourceCache<TObject, TKey>
 
     public void Dispose()
     {
+        _source.Dispose();
         _error.Dispose();
         _hasCompleted.Dispose();
-        _source.Dispose();
     }
 
     public void Edit(Action<ISourceUpdater<TObject, TKey>> updateAction)
