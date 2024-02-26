@@ -32,13 +32,10 @@ internal static class ObservableSpy
     /// <param name="showTimestamps">Indicates whether or not timestamps should be prepended to messages.</param>
     /// <returns>An IObservable{T} with the Spy events included.</returns>
     /// <remarks>Adapted from https://stackoverflow.com/q/20220755/.</remarks>
-    public static IObservable<T> Spy<T>(this IObservable<T> source, string? infoText = null, Action<string>? logger = null,
-                                                                    Func<T, string>? formatter = null, bool showSubs = true,
-                                                                    bool showTimestamps = true)
+    public static IObservable<T> Spy<T>(this IObservable<T> source, string? infoText = null, Action<string>? logger = null, Func<T, string>? formatter = null, bool showSubs = true, bool showTimestamps = true)
     {
         static string NoTimestamp() => string.Empty;
         static string HighResTimestamp() => DateTimeOffset.UtcNow.ToString("HH:mm:ss.fffffff") + " ";
-        static void NullLogger(string _) { }
 
         var activeSubscriptionCounter = 0;
         var subscriptionCounter = 0;
@@ -46,16 +43,16 @@ internal static class ObservableSpy
         formatter ??= (t => t?.ToString() ?? "{Null}");
         logger = CreateLogger(logger ?? Console.WriteLine, showTimestamps ? HighResTimestamp : NoTimestamp, infoText ?? $"IObservable<{typeof(T).Name}>");
 
-        var subLogger = showSubs ? logger : NullLogger;
+        var subLogger = showSubs ? logger : null;
 
         logger("Creating Observable");
-        return Observable.Create<T>(obs =>
+        return Observable.Create<T>(observer =>
         {
             var subId = Interlocked.Increment(ref subscriptionCounter);
             var valueCounter = 0;
             bool? completedSuccessfully = null;
 
-            subLogger($"Creating Subscription #{subId}");
+            subLogger?.Invoke($"Creating Subscription #{subId}");
             try
             {
                 var subscription = source
@@ -66,43 +63,40 @@ internal static class ObservableSpy
                     {
                         try
                         {
-                            obs.OnNext(t);
+                            observer.OnNext(t);
                         }
                         catch (Exception ex)
                         {
                             logger($"Downstream Exception [SubId:{subId}] ({ex})");
                             throw;
                         }
-                    }, obs.OnError, obs.OnCompleted);
+                    }, observer.OnError, observer.OnCompleted);
 
                 return Disposable.Create(() =>
                 {
-                    if (showSubs)
+                    if (subLogger != null)
                     {
                         switch (completedSuccessfully)
                         {
-                            case true: subLogger($"Disposing SubId #{subId} due to OnComplete"); break;
-                            case false: subLogger($"Disposing SubId #{subId} due to OnError"); break;
-                            case null: subLogger($"Disposing SubId #{subId} due to Unsubscribe"); break;
+                            case true: subLogger.Invoke($"Disposing SubId #{subId} due to OnComplete"); break;
+                            case false: subLogger.Invoke($"Disposing SubId #{subId} due to OnError"); break;
+                            case null: subLogger.Invoke($"Disposing SubId #{subId} due to Unsubscribe"); break;
                         }
                     }
                     subscription?.Dispose();
                     var count = Interlocked.Decrement(ref activeSubscriptionCounter);
-                    subLogger($"Dispose Completed! ({count} Active Subscriptions)");
+                    subLogger?.Invoke($"Dispose Completed! ({count} Active Subscriptions)");
                 });
             }
             finally
             {
                 var count = Interlocked.Increment(ref activeSubscriptionCounter);
-                subLogger($"Subscription Id #{subId} Created!  ({count} Active Subscriptions)");
+                subLogger?.Invoke($"Subscription Id #{subId} Created!  ({count} Active Subscriptions)");
             }
         });
     }
 
-    public static IObservable<IChangeSet<T, TKey>> Spy<T, TKey>(this IObservable<IChangeSet<T, TKey>> source,
-                                                                    string? opName = null, Action<string>? logger = null,
-                                                                    Func<T, string>? formatter = null, bool showSubs = true,
-                                                                      bool showTimestamps = true)
+    public static IObservable<IChangeSet<T, TKey>> Spy<T, TKey>(this IObservable<IChangeSet<T, TKey>> source, string? opName = null, Action<string>? logger = null, Func<T, string>? formatter = null, bool showSubs = true, bool showTimestamps = true)
         where T : notnull
         where TKey : notnull
     {
@@ -110,57 +104,42 @@ internal static class ObservableSpy
         return Spy(source, opName, logger, CreateCacheChangeSetFormatter<T, TKey>(formatter!), showSubs, showTimestamps);
     }
 
-    public static IObservable<IChangeSet<T>> Spy<T>(this IObservable<IChangeSet<T>> source,
-                                                                    string? opName = null, Action<string>? logger = null,
-                                                                    Func<T, string>? formatter = null, bool showSubs = true,
-                                                                      bool showTimestamps = true)
-                                                                      where T : notnull
+    public static IObservable<IChangeSet<T>> Spy<T>(this IObservable<IChangeSet<T>> source, string? opName = null, Action<string>? logger = null, Func<T, string>? formatter = null, bool showSubs = true, bool showTimestamps = true)
+        where T : notnull
     {
         formatter ??= (t => t?.ToString() ?? "{Null}");
         return Spy(source, opName, logger, CreateListChangeSetFormatter(formatter!), showSubs, showTimestamps);
     }
 
-    private static Func<IChangeSet<T, TKey>, string> CreateCacheChangeSetFormatter<T, TKey>(Func<T, string> formatter) where T : notnull where TKey : notnull =>
+    private static Func<IChangeSet<T, TKey>, string> CreateCacheChangeSetFormatter<T, TKey>(Func<T, string> formatter)
+        where T : notnull
+        where TKey : notnull =>
         cs => "[Cache Change Set]" + ChangeSetEntrySpacing + string.Join(ChangeSetEntrySpacing, cs.Select((change, n) => $"#{n} {FormatChange(formatter, change)}"));
 
-    private static Func<IChangeSet<T>, string> CreateListChangeSetFormatter<T>(Func<T, string> formatter) where T : notnull =>
+    private static Func<IChangeSet<T>, string> CreateListChangeSetFormatter<T>(Func<T, string> formatter)
+        where T : notnull =>
         cs => "[List Change Set]" + ChangeSetEntrySpacing + string.Join(ChangeSetEntrySpacing, cs.Select((change, n) => $"#{n} {FormatChange(formatter, change)}"));
 
-    public static IObservable<T> TestSpy<T>(this IObservable<T> source,
-                                                                ITestOutputHelper testOutputHelper, string? opName = null,
-                                                                Func<T, string>? formatter = null, bool showSubs = true,
-                                                                bool showTimestamps = true) =>
+    public static IObservable<T> TestSpy<T>(this IObservable<T> source, ITestOutputHelper testOutputHelper, string? opName = null, Func<T, string>? formatter = null, bool showSubs = true, bool showTimestamps = true) =>
         source.Spy(opName, TestLogger(testOutputHelper), formatter, showSubs, showTimestamps);
 
-    public static IObservable<IChangeSet<T, TKey>> TestSpy<T, TKey>(this IObservable<IChangeSet<T, TKey>> source,
-                                                                    ITestOutputHelper testOutputHelper, string? opName = null,
-                                                                    Func<T, string>? formatter = null, bool showSubs = true,
-                                                                      bool showTimestamps = true)
+    public static IObservable<IChangeSet<T, TKey>> TestSpy<T, TKey>(this IObservable<IChangeSet<T, TKey>> source, ITestOutputHelper testOutputHelper, string? opName = null, Func<T, string>? formatter = null, bool showSubs = true, bool showTimestamps = true)
         where T : notnull
         where TKey : notnull =>
         source.Spy(opName, TestLogger(testOutputHelper), formatter, showSubs, showTimestamps);
 
-    public static IObservable<IChangeSet<T>> TestSpy<T>(this IObservable<IChangeSet<T>> source,
-                                                                    ITestOutputHelper testOutputHelper, string? opName = null,
-                                                                    Func<T, string>? formatter = null, bool showSubs = true,
-                                                                      bool showTimestamps = true)
-                                                                      where T : notnull =>
+    public static IObservable<IChangeSet<T>> TestSpy<T>(this IObservable<IChangeSet<T>> source, ITestOutputHelper testOutputHelper, string? opName = null, Func<T, string>? formatter = null, bool showSubs = true, bool showTimestamps = true)
+        where T : notnull =>
         source.Spy(opName, TestLogger(testOutputHelper), formatter, showSubs, showTimestamps);
 
-
-    public static IObservable<T> DebugSpy<T>(this IObservable<T> source, string? opName = null,
-                                                                  Func<T, string>? formatter = null, bool showSubs = true,
-                                                                  bool showTimestamps = true) =>
-#if DEBUG || DEBUG_SPY_ALWAYS
+    public static IObservable<T> DebugSpy<T>(this IObservable<T> source, string? opName = null, Func<T, string>? formatter = null, bool showSubs = true, bool showTimestamps = true) =>
+ #if DEBUG || DEBUG_SPY_ALWAYS
         source.Spy(opName, DebugLogger, formatter, showSubs, showTimestamps);
 #else
         source;
 #endif
 
-    public static IObservable<IChangeSet<T, TKey>> DebugSpy<T, TKey>(this IObservable<IChangeSet<T, TKey>> source,
-                                                                    string? opName = null,
-                                                                    Func<T, string>? formatter = null, bool showSubs = true,
-                                                                      bool showTimestamps = true)
+    public static IObservable<IChangeSet<T, TKey>> DebugSpy<T, TKey>(this IObservable<IChangeSet<T, TKey>> source, string? opName = null, Func<T, string>? formatter = null, bool showSubs = true, bool showTimestamps = true)
         where T : notnull
         where TKey : notnull =>
 #if DEBUG || DEBUG_SPY_ALWAYS
@@ -169,11 +148,8 @@ internal static class ObservableSpy
         source;
 #endif
 
-    public static IObservable<IChangeSet<T>> DebugSpy<T>(this IObservable<IChangeSet<T>> source,
-                                                                    string? opName = null,
-                                                                    Func<T, string>? formatter = null, bool showSubs = true,
-                                                                      bool showTimestamps = true)
-                                                                      where T : notnull =>
+    public static IObservable<IChangeSet<T>> DebugSpy<T>(this IObservable<IChangeSet<T>> source, string? opName = null, Func<T, string>? formatter = null, bool showSubs = true, bool showTimestamps = true)
+        where T : notnull =>
 #if DEBUG || DEBUG_SPY_ALWAYS
         source.Spy(opName, DebugLogger, formatter, showSubs, showTimestamps);
 #else
@@ -222,13 +198,15 @@ internal static class ObservableSpy
     private static Action<string> CreateLogger(Action<string> baseLogger, Func<string> timeStamper, string opName) =>
             msg => baseLogger($"{timeStamper()}[{Environment.CurrentManagedThreadId:X2}] |{opName}| {msg}");
 
+#if DEBUG || DEBUG_SPY_ALWAYS
     private static Action<string> TestLogger(ITestOutputHelper testOutputHelper) => str =>
     {
         testOutputHelper.WriteLine(str);
-#if DEBUG
         DebugLogger(str);
-#endif
     };
+#else
+    private static Action<string> TestLogger(ITestOutputHelper testOutputHelper) => testOutputHelper.WriteLine;
+#endif
 
 #if DEBUG
     private static void DebugLogger(string str) => System.Diagnostics.Debug.WriteLine(str); 
