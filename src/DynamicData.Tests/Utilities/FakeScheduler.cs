@@ -71,11 +71,9 @@ internal sealed class FakeScheduler
                 ScheduledActions[0].Invoke();
                 ScheduledActions.RemoveAt(0);
             }
-            // If the next action is in the future, advance time by 1ms.
-            else
-            {
-                Now += TimeSpan.FromMilliseconds(1);
-            }
+
+            // Advance time by at least one tick after every action, to eliminate infinite-looping
+            Now += TimeSpan.FromTicks(1);
         }
     }
 

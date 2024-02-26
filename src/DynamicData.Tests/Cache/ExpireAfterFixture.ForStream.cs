@@ -13,6 +13,7 @@ using Xunit;
 
 using DynamicData.Tests.Utilities;
 using Xunit.Abstractions;
+using System.Diagnostics;
 
 namespace DynamicData.Tests.Cache;
 
@@ -356,7 +357,7 @@ public static partial class ExpireAfterFixture
             results.IsCompleted.Should().BeFalse();
         }
 
-        [Fact(Skip = "Existing defect, very minor defect, items defined to never expire actually do, at DateTimeOffset.MaxValue")]
+        [Fact]
         public void PollingIntervalIsNotGiven_RemovalsAreScheduledImmediately()
         {
             using var source = new Subject<IChangeSet<TestItem, int>>();
@@ -499,7 +500,7 @@ public static partial class ExpireAfterFixture
             results.IsCompleted.Should().BeFalse();
         }
 
-        [Fact(Skip = "Existing defect, completion does not wait")]
+        [Fact]
         public void RemovalsArePending_CompletionWaitsForRemovals()
         {
             using var source = new Subject<IChangeSet<TestItem, int>>();
@@ -550,7 +551,7 @@ public static partial class ExpireAfterFixture
         }
 
         // Covers https://github.com/reactivemarbles/DynamicData/issues/716
-        [Fact(Skip = "Existing defect, removals are skipped when scheduler invokes early")]
+        [Fact]
         public void SchedulerIsInaccurate_RemovalsAreNotSkipped()
         {
             using var source = new Subject<IChangeSet<TestItem, int>>();
@@ -742,7 +743,7 @@ public static partial class ExpireAfterFixture
                 timeSelector: static _ => default))
             .Should().Throw<ArgumentNullException>();
 
-        [Fact(Skip = "Existing defect, operator does not properly handle items with a null timeout, when using a real scheduler, it passes a TimeSpan to the scheduler that is outside of the supported range")]
+        [Fact]
         public async Task ThreadPoolSchedulerIsUsedWithoutPolling_ExpirationIsThreadSafe()
         {
             using var source = new Subject<IChangeSet<StressItem, int>>();
@@ -763,7 +764,7 @@ public static partial class ExpireAfterFixture
                 maxItemLifetime: TimeSpan.FromMilliseconds(10),
                 maxChangeCount: 20);
 
-            await Observable.Timer(TimeSpan.FromMilliseconds(100), scheduler);
+            await WaitForCompletionAsync(results, timeout: TimeSpan.FromMinutes(1));
 
             results.Error.Should().BeNull();
             results.Data.Items.Should().AllSatisfy(item => item.Lifetime.Should().BeNull("all items with an expiration should have expired"));
@@ -793,7 +794,7 @@ public static partial class ExpireAfterFixture
                 maxItemLifetime: TimeSpan.FromMilliseconds(10),
                 maxChangeCount: 20);
 
-            await Observable.Timer(TimeSpan.FromMilliseconds(100), scheduler);
+            await WaitForCompletionAsync(results, timeout: TimeSpan.FromMinutes(1));
 
             var now = scheduler.Now;
 
@@ -809,7 +810,7 @@ public static partial class ExpireAfterFixture
                 timeSelector: null!))
             .Should().Throw<ArgumentNullException>();
 
-        [Fact(Skip = "Exsiting defect, errors are re-thrown instead of propagated, user code is not protected")]
+        [Fact]
         public void TimeSelectorThrows_ErrorIsPropagated()
         {
             using var source = new Subject<IChangeSet<TestItem, int>>();
@@ -934,6 +935,29 @@ public static partial class ExpireAfterFixture
 
             foreach(var changeSet in changeSets)
                 source.OnNext(changeSet);
+        }
+    
+        private static async Task WaitForCompletionAsync(
+            ChangeSetAggregator<StressItem, int> results,
+            TimeSpan timeout)
+        {
+            // Wait up to full minute for the operator to finish processing expirations
+            // (this is mainly a problem for GitHub PR builds, where test runs take a lot longer, due to more limited resources).
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var pollingInterval = TimeSpan.FromMilliseconds(100);
+            while (stopwatch.Elapsed < timeout)
+            {
+                await Task.Delay(pollingInterval);
+
+                // Identify "completion" as either an error, a completion signal, or all expiring items being removed.
+                if ((results.Error is not null) 
+                    || results.IsCompleted
+                    || results.Data.Items.All(static item => item.Lifetime is null))
+                {
+                    break;
+                }
+            }
         }
     }
 }

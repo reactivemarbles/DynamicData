@@ -44,9 +44,9 @@ public sealed class TestSourceList<T>
 
     public void Dispose()
     {
+        _source.Dispose();
         _error.Dispose();
         _hasCompleted.Dispose();
-        _source.Dispose();
     }
     
     public void Edit(Action<IExtendedList<T>> updateAction)

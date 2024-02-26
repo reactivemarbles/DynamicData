@@ -11,6 +11,7 @@ using Xunit;
 using Xunit.Abstractions;
 
 using DynamicData.Tests.Utilities;
+using System.Diagnostics;
 
 namespace DynamicData.Tests.Cache;
 
@@ -270,7 +271,7 @@ public static partial class ExpireAfterFixture
             results.TryGetRecordedCompletion().Should().BeFalse();
         }
 
-        [Fact(Skip = "Existing defect, very minor defect, items defined to never expire actually do, at DateTimeOffset.MaxValue")]
+        [Fact]
         public void PollingIntervalIsNotGiven_RemovalsAreScheduledImmediately()
         {
             using var source = CreateTestSource();
@@ -390,7 +391,7 @@ public static partial class ExpireAfterFixture
         }
 
         // Covers https://github.com/reactivemarbles/DynamicData/issues/716
-        [Fact(Skip = "Existing defect, removals are skipped when scheduler invokes early")]
+        [Fact]
         public void SchedulerIsInaccurate_RemovalsAreNotSkipped()
         {
             using var source = CreateTestSource();
@@ -425,7 +426,7 @@ public static partial class ExpireAfterFixture
             results.TryGetRecordedCompletion().Should().BeFalse();
         }
 
-        [Fact(Skip = "Existing defect, completion is not propagated from the source")]
+        [Fact]
         public void SourceCompletes_CompletionIsPropagated()
         {
             using var source = CreateTestSource();
@@ -454,7 +455,7 @@ public static partial class ExpireAfterFixture
             results.EnumerateInvalidNotifications().Should().BeEmpty();
         }
 
-        [Fact(Skip = "Existing defect, completion is not propagated from the source")]
+        [Fact]
         public void SourceCompletesImmediately_CompletionIsPropagated()
         {
             using var source = CreateTestSource();
@@ -482,7 +483,7 @@ public static partial class ExpireAfterFixture
             results.EnumerateInvalidNotifications().Should().BeEmpty();
         }
 
-        [Fact(Skip = "Exsiting defect, errors are re-thrown instead of propagated, operator does not use safe subscriptions")]
+        [Fact]
         public void SourceErrors_ErrorIsPropagated()
         {
             using var source = CreateTestSource();
@@ -512,7 +513,7 @@ public static partial class ExpireAfterFixture
             results.EnumerateInvalidNotifications().Should().BeEmpty();
         }
 
-        [Fact(Skip = "Existing defect, immediately-occuring error is not propagated")]
+        [Fact]
         public void SourceErrorsImmediately_ErrorIsPropagated()
         {
             using var source = CreateTestSource();
@@ -552,7 +553,7 @@ public static partial class ExpireAfterFixture
                     interval: null))
                 .Should().Throw<ArgumentNullException>();
 
-        [Fact(Skip = "Existing defect, operator does not properly handle items with a null timeout, when using a real scheduler, it passes a TimeSpan to the scheduler that is outside of the supported range")]
+        [Fact]
         public async Task ThreadPoolSchedulerIsUsedWithoutPolling_ExpirationIsThreadSafe()
         {
             using var source = new TestSourceCache<StressItem, int>(static item => item.Id);
@@ -573,8 +574,7 @@ public static partial class ExpireAfterFixture
                 maxItemLifetime: TimeSpan.FromMilliseconds(10),
                 maxChangeCount: 10);
 
-            // Give the thread pool an extra 100ms to finish all the expirations
-            await Observable.Timer(TimeSpan.FromMilliseconds(100), scheduler);
+            await WaitForCompletionAsync(source, results, timeout: TimeSpan.FromMinutes(1));
 
             results.TryGetRecordedError().Should().BeNull();
             results.EnumerateRecordedValues().SelectMany(static removals => removals).Should().AllSatisfy(static pair => pair.Value.Lifetime.Should().NotBeNull("only items with an expiration should have expired"));
@@ -606,8 +606,7 @@ public static partial class ExpireAfterFixture
                 maxItemLifetime: TimeSpan.FromMilliseconds(10),
                 maxChangeCount: 10);
 
-            // Give the thread pool an extra 100ms to finish all the expirations
-            await Observable.Timer(TimeSpan.FromMilliseconds(100), scheduler);
+            await WaitForCompletionAsync(source, results, timeout: TimeSpan.FromMinutes(1));
 
             results.TryGetRecordedError().Should().BeNull();
             results.EnumerateRecordedValues().SelectMany(static removals => removals).Should().AllSatisfy(pair => pair.Value.Lifetime.Should().NotBeNull("only items with an expiration should have expired"));
@@ -624,7 +623,7 @@ public static partial class ExpireAfterFixture
                     interval: null))
                 .Should().Throw<ArgumentNullException>();
 
-        [Fact(Skip = "Exsiting defect, errors are re-thrown instead of propagated, user code is not protected")]
+        [Fact]
         public void TimeSelectorThrows_ErrorIsPropagated()
         {
             using var source = CreateTestSource();
@@ -741,6 +740,30 @@ public static partial class ExpireAfterFixture
                         }
                     }
                 });
+            }
+        }
+
+        private static async Task WaitForCompletionAsync(
+            ISourceCache<StressItem, int> source,
+            TestableObserver<IEnumerable<KeyValuePair<int, StressItem>>> results,
+            TimeSpan timeout)
+        {
+            // Wait up to full minute for the operator to finish processing expirations
+            // (this is mainly a problem for GitHub PR builds, where test runs take a lot longer, due to more limited resources).
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var pollingInterval = TimeSpan.FromMilliseconds(100);
+            while (stopwatch.Elapsed < timeout)
+            {
+                await Task.Delay(pollingInterval);
+
+                // Identify "completion" as either an error, a completion signal, or all expiring items being removed.
+                if ((results.TryGetRecordedError() is not null) 
+                    || results.TryGetRecordedCompletion()
+                    || source.Items.All(static item => item.Lifetime is null))
+                {
+                    break;
+                }
             }
         }
     }
