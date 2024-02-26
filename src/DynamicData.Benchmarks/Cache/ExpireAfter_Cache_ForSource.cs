@@ -1,8 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 using BenchmarkDotNet.Attributes;
+
+using Bogus;
 
 namespace DynamicData.Benchmarks.Cache;
 
@@ -11,52 +13,122 @@ namespace DynamicData.Benchmarks.Cache;
 public class ExpireAfter_Cache_ForSource
 {
     public ExpireAfter_Cache_ForSource()
-        => _items = Enumerable
-            .Range(1, 1_000)
+    {
+        // Not exercising Moved, since SourceCache<> doesn't support it.
+        _changeReasons =
+        [
+            ChangeReason.Add,
+            ChangeReason.Refresh,
+            ChangeReason.Remove,
+            ChangeReason.Update
+        ];
+
+        // Weights are chosen to make the cache size likely to grow over time,
+        // exerting more pressure on the system the longer the benchmark runs.
+        // Also, to prevent bogus operations (E.G. you can't remove an item from an empty cache).
+        _changeReasonWeightsWhenCountIs0 =
+        [
+            1f, // Add
+            0f, // Refresh
+            0f, // Remove
+            0f  // Update
+        ];
+
+        _changeReasonWeightsOtherwise =
+        [
+            0.30f, // Add
+            0.25f, // Refresh
+            0.20f, // Remove
+            0.25f  // Update
+        ];
+
+        _editCount = 5_000;
+        _maxChangeCount = 20;
+
+        var randomizer = new Randomizer(1234567);
+
+        var minItemLifetime = TimeSpan.FromMilliseconds(1);
+        var maxItemLifetime = TimeSpan.FromMilliseconds(10);
+        _items = Enumerable.Range(1, _editCount * _maxChangeCount)
             .Select(id => new Item()
             {
-                Id = id
+                Id          = id,
+                Lifetime    = randomizer.Bool()
+                    ? TimeSpan.FromTicks(randomizer.Long(minItemLifetime.Ticks, maxItemLifetime.Ticks))
+                    : null
             })
-            .ToArray();
+            .ToImmutableArray();
+    }
 
     [Benchmark]
-    [Arguments(1, 0)]
-    [Arguments(1, 1)]
-    [Arguments(10, 0)]
-    [Arguments(10, 1)]
-    [Arguments(10, 10)]
-    [Arguments(100, 0)]
-    [Arguments(100, 1)]
-    [Arguments(100, 10)]
-    [Arguments(100, 100)]
-    [Arguments(1_000, 0)]
-    [Arguments(1_000, 1)]
-    [Arguments(1_000, 10)]
-    [Arguments(1_000, 100)]
-    [Arguments(1_000, 1_000)]
-    public void AddsRemovesAndFinalization(int addCount, int removeCount)
+    public void RandomizedEditsAndExpirations()
     {
         using var source = new SourceCache<Item, int>(static item => item.Id);
 
         using var subscription = source
             .ExpireAfter(
-                timeSelector: static _ => TimeSpan.FromMinutes(60),
-                interval: null)
+                timeSelector:   static item => item.Lifetime,
+                interval:       null)
             .Subscribe();
 
-        for (var i = 0; i < addCount; ++i)
-            source.AddOrUpdate(_items[i]);
-
-        for (var i = 0; i < removeCount; ++i)
-            source.RemoveKey(_items[i].Id);
+        PerformRandomizedEdits(source);
 
         subscription.Dispose();
     }
 
-    private readonly IReadOnlyList<Item> _items;
-
-    private sealed class Item
+    private void PerformRandomizedEdits(SourceCache<Item, int> source)
     {
-        public int Id { get; init; }
+        var randomizer = new Randomizer(1234567);
+        
+        var nextItemIndex = 0;
+
+        for (var i = 0; i < _editCount; ++i)
+        {
+            source.Edit(updater =>
+            {
+                var changeCount = randomizer.Int(1, _maxChangeCount);
+                for (var i = 0; i < changeCount; ++i)
+                {
+                    var changeReason = randomizer.WeightedRandom(_changeReasons, updater.Count switch
+                    {
+                        0   => _changeReasonWeightsWhenCountIs0,
+                        _   => _changeReasonWeightsOtherwise
+                    });
+
+                    switch (changeReason)
+                    {
+                        case ChangeReason.Add:
+                            updater.AddOrUpdate(_items[nextItemIndex++]);
+                            break;
+
+                        case ChangeReason.Refresh:
+                            updater.Refresh(updater.Keys.ElementAt(randomizer.Int(0, updater.Count - 1)));
+                            break;
+
+                        case ChangeReason.Remove:
+                            updater.RemoveKey(updater.Keys.ElementAt(randomizer.Int(0, updater.Count - 1)));
+                            break;
+
+                        case ChangeReason.Update:
+                            updater.AddOrUpdate(updater.Items.ElementAt(randomizer.Int(0, updater.Count - 1)));
+                            break;
+                    }
+                }
+            });
+        }
+    }
+
+    private readonly ChangeReason[]         _changeReasons;
+    private readonly float[]                _changeReasonWeightsOtherwise;
+    private readonly float[]                _changeReasonWeightsWhenCountIs0;
+    private readonly int                    _editCount;
+    private readonly ImmutableArray<Item>   _items;
+    private readonly int                    _maxChangeCount;
+
+    private sealed record Item
+    {
+        public required int Id { get; init; }
+
+        public required TimeSpan? Lifetime { get; init; }
     }
 }

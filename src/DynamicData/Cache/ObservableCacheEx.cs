@@ -1357,9 +1357,14 @@ public static class ObservableCacheEx
     /// or
     /// timeSelector.
     /// </exception>
-    public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector)
-        where TObject : notnull
-        where TKey : notnull => ExpireAfter(source, timeSelector, GlobalConfig.DefaultScheduler);
+    public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(
+                this IObservable<IChangeSet<TObject, TKey>> source,
+                Func<TObject, TimeSpan?> timeSelector)
+            where TObject : notnull
+            where TKey : notnull
+        => Cache.Internal.ExpireAfter.ForStream<TObject, TKey>.Create(
+            source: source,
+            timeSelector: timeSelector);
 
     /// <summary>
     /// Automatically removes items from the stream after the time specified by
@@ -1376,15 +1381,16 @@ public static class ObservableCacheEx
     /// or
     /// timeSelector.
     /// </exception>
-    public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector, IScheduler scheduler)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
-
-        return source.ExpireAfter(timeSelector, null, scheduler);
-    }
+    public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(
+                this IObservable<IChangeSet<TObject, TKey>> source,
+                Func<TObject, TimeSpan?> timeSelector,
+                IScheduler scheduler)
+            where TObject : notnull
+            where TKey : notnull
+        => Cache.Internal.ExpireAfter.ForStream<TObject, TKey>.Create(
+            source: source,
+            timeSelector: timeSelector,
+            scheduler: scheduler);
 
     /// <summary>
     /// Automatically removes items from the stream on the next poll after the time specified by
@@ -1401,9 +1407,16 @@ public static class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// timeSelector.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval)
-        where TObject : notnull
-        where TKey : notnull => ExpireAfter(source, timeSelector, pollingInterval, GlobalConfig.DefaultScheduler);
+    public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(
+                this IObservable<IChangeSet<TObject, TKey>> source,
+                Func<TObject, TimeSpan?> timeSelector,
+                TimeSpan? pollingInterval)
+            where TObject : notnull
+            where TKey : notnull
+        => Cache.Internal.ExpireAfter.ForStream<TObject, TKey>.Create(
+            source: source,
+            timeSelector: timeSelector,
+            pollingInterval: pollingInterval);
 
     /// <summary>
     /// Automatically removes items from the stream on the next poll after the time specified by
@@ -1421,15 +1434,18 @@ public static class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// timeSelector.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval, IScheduler scheduler)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
-
-        return new TimeExpirer<TObject, TKey>(source, timeSelector, pollingInterval, scheduler).ExpireAfter();
-    }
+    public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(
+                this IObservable<IChangeSet<TObject, TKey>> source,
+                Func<TObject, TimeSpan?> timeSelector,
+                TimeSpan? pollingInterval,
+                IScheduler scheduler)
+            where TObject : notnull
+            where TKey : notnull
+        => Cache.Internal.ExpireAfter.ForStream<TObject, TKey>.Create(
+            source: source,
+            timeSelector: timeSelector,
+            pollingInterval: pollingInterval,
+            scheduler: scheduler);
 
     /// <summary>
     /// Automatically removes items from the cache after the time specified by
@@ -1444,9 +1460,16 @@ public static class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// timeSelector.</exception>
-    public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source, Func<TObject, TimeSpan?> timeSelector, IScheduler? scheduler = null)
-        where TObject : notnull
-        where TKey : notnull => source.ExpireAfter(timeSelector, null, scheduler);
+    public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(
+                this ISourceCache<TObject, TKey> source,
+                Func<TObject, TimeSpan?> timeSelector,
+                IScheduler? scheduler = null)
+            where TObject : notnull
+            where TKey : notnull
+        => Cache.Internal.ExpireAfter.ForSource<TObject, TKey>.Create(
+            source: source,
+            timeSelector: timeSelector,
+            scheduler: scheduler);
 
     /// <summary>
     /// Automatically removes items from the cache after the time specified by
@@ -1463,9 +1486,16 @@ public static class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// timeSelector.</exception>
-    public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? interval = null)
-        where TObject : notnull
-        where TKey : notnull => ExpireAfter(source, timeSelector, interval, GlobalConfig.DefaultScheduler);
+    public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(
+                this ISourceCache<TObject, TKey> source,
+                Func<TObject, TimeSpan?> timeSelector,
+                TimeSpan? interval = null)
+            where TObject : notnull
+            where TKey : notnull
+        => Cache.Internal.ExpireAfter.ForSource<TObject, TKey>.Create(
+            source: source,
+            timeSelector: timeSelector,
+            pollingInterval: interval);
 
     /// <summary>
     /// Ensures there are no duplicated keys in the observable changeset.
@@ -1499,37 +1529,18 @@ public static class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// timeSelector.</exception>
-    public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval, IScheduler? scheduler)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
-
-        scheduler ??= GlobalConfig.DefaultScheduler;
-
-        return Observable.Create<IEnumerable<KeyValuePair<TKey, TObject>>>(
-            observer => source.Connect().ForExpiry(timeSelector, pollingInterval, scheduler).Finally(observer.OnCompleted).Subscribe(
-                    toRemove =>
-                    {
-                        try
-                        {
-                            // remove from cache and notify which items have been auto removed
-                            var keyValuePairs = toRemove as KeyValuePair<TKey, TObject>[] ?? toRemove.AsArray();
-                            if (keyValuePairs.Length == 0)
-                            {
-                                return;
-                            }
-
-                            source.Remove(keyValuePairs.Select(kv => kv.Key));
-                            observer.OnNext(keyValuePairs);
-                        }
-                        catch (Exception ex)
-                        {
-                            observer.OnError(ex);
-                        }
-                    }));
-    }
+    public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(
+                this ISourceCache<TObject, TKey> source,
+                Func<TObject, TimeSpan?> timeSelector,
+                TimeSpan? pollingInterval,
+                IScheduler? scheduler)
+            where TObject : notnull
+            where TKey : notnull
+        => Cache.Internal.ExpireAfter.ForSource<TObject, TKey>.Create(
+            source: source,
+            timeSelector: timeSelector,
+            pollingInterval: pollingInterval,
+            scheduler: scheduler);
 
     /// <summary>
     /// Filters the specified source.
@@ -6364,26 +6375,6 @@ public static class ObservableCacheEx
 
         return sources.Combine(CombineOperator.Xor);
     }
-
-    /// <summary>
-    /// Automatically removes items from the cache after the time specified by
-    /// the time selector elapses.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The cache.</param>
-    /// <param name="timeSelector">The time selector.  Return null if the item should never be removed.</param>
-    /// <param name="interval">A polling interval.  Since multiple timer subscriptions can be expensive,
-    /// it may be worth setting the interval.
-    /// </param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <returns>An observable of enumerable of the key values which has been removed.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// timeSelector.</exception>
-    internal static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ForExpiry<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? interval, IScheduler scheduler)
-        where TObject : notnull
-        where TKey : notnull => new TimeExpirer<TObject, TKey>(source, timeSelector, interval, scheduler).ForExpiry();
 
     private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> source, CombineOperator type)
         where TObject : notnull

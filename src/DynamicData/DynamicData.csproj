@@ -19,4 +19,8 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
     </Description>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Polyfills/ListEnsureCapacity.cs" Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0' Or '$(TargetFramework)' == 'net8.0'" />
+  </ItemGroup>
+
 </Project>
