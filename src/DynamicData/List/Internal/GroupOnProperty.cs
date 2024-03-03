@@ -27,7 +27,7 @@ internal sealed class GroupOnProperty<TObject, TGroup>(IObservable<IChangeSet<TO
                 // add a throttle if specified
                 if (throttle is not null)
                 {
-                    regrouper = regrouper.Throttle(throttle.Value, scheduler ?? Scheduler.Default);
+                    regrouper = regrouper.Throttle(throttle.Value, scheduler ?? GlobalConfig.DefaultScheduler);
                 }
 
                 // Use property changes as a trigger to re-evaluate Grouping

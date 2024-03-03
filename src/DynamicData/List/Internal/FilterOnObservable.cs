@@ -31,7 +31,7 @@ internal sealed class FilterOnObservable<TObject>(IObservable<IChangeSet<TObject
                 // create a change set, either buffered or one item at the time
                 var itemsChanged = buffer is null ?
                     itemHasChanged.Select(t => new[] { t }) :
-                    itemHasChanged.Buffer(buffer.Value, scheduler ?? Scheduler.Default).Where(list => list.Count > 0);
+                    itemHasChanged.Buffer(buffer.Value, scheduler ?? GlobalConfig.DefaultScheduler).Where(list => list.Count > 0);
 
                 var requiresRefresh = itemsChanged.Synchronize(locker).Select(
                     items => // catch all the indices of items which have been refreshed

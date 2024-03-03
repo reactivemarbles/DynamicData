@@ -26,6 +26,6 @@ public static class ExperimentalEx
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        return new Watcher<TObject, TKey>(source, scheduler ?? Scheduler.Default);
+        return new Watcher<TObject, TKey>(source, scheduler ?? GlobalConfig.DefaultScheduler);
     }
 }

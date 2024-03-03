@@ -14,7 +14,7 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
 {
     private readonly IObservable<bool> _pauseIfTrueSelector = pauseIfTrueSelector ?? throw new ArgumentNullException(nameof(pauseIfTrueSelector));
 
-    private readonly IScheduler _scheduler = scheduler ?? Scheduler.Default;
+    private readonly IScheduler _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
 
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
