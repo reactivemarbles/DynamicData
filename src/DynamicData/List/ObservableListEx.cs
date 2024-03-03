@@ -660,8 +660,16 @@ public static class ObservableListEx
     /// <param name="timeSelector">Selector returning when to expire the item. Return null for non-expiring item.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits the enumerable of items.</returns>
-    public static IObservable<IEnumerable<T>> ExpireAfter<T>(this ISourceList<T> source, Func<T, TimeSpan?> timeSelector, IScheduler? scheduler = null)
-        where T : notnull => source.ExpireAfter(timeSelector, null, scheduler);
+    public static IObservable<IEnumerable<T>> ExpireAfter<T>(
+                this ISourceList<T> source,
+                Func<T, TimeSpan?> timeSelector,
+                IScheduler? scheduler = null)
+            where T : notnull
+        => List.Internal.ExpireAfter<T>.Create(
+            source: source,
+            timeSelector: timeSelector,
+            pollingInterval: null,
+            scheduler: scheduler);
 
     /// <summary>
     /// Removes items from the cache according to the value specified by the time selector function.
@@ -672,18 +680,17 @@ public static class ObservableListEx
     /// <param name="pollingInterval">Enter the polling interval to optimise expiry timers, if omitted 1 timer is created for each unique expiry time.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits the enumerable of items.</returns>
-    public static IObservable<IEnumerable<T>> ExpireAfter<T>(this ISourceList<T> source, Func<T, TimeSpan?> timeSelector, TimeSpan? pollingInterval = null, IScheduler? scheduler = null)
-        where T : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
-
-        var locker = new object();
-        var limiter = new ExpireAfter<T>(source, timeSelector, pollingInterval, scheduler ?? GlobalConfig.DefaultScheduler, locker);
-
-        return limiter.Run().Synchronize(locker).Do(source.RemoveMany);
-    }
+    public static IObservable<IEnumerable<T>> ExpireAfter<T>(
+                this ISourceList<T> source,
+                Func<T, TimeSpan?> timeSelector,
+                TimeSpan? pollingInterval = null,
+                IScheduler? scheduler = null)
+            where T : notnull
+        => List.Internal.ExpireAfter<T>.Create(
+            source: source,
+            timeSelector: timeSelector,
+            pollingInterval: pollingInterval,
+            scheduler: scheduler);
 
     /// <summary>
     /// Filters the source using the specified valueSelector.

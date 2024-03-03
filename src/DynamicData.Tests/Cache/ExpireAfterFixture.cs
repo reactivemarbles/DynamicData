@@ -15,13 +15,20 @@ public static partial class ExpireAfterFixture
         return scheduler;
     }
 
-    private static Func<Item, TimeSpan?> CreateTimeSelector(IScheduler scheduler)
+    private static Func<TestItem, TimeSpan?> CreateTimeSelector(IScheduler scheduler)
         => item => item.Expiration - scheduler.Now;
 
-    private class Item
+    private sealed class TestItem
     {
         public required int Id { get; init; }
 
         public DateTimeOffset? Expiration { get; set; }
+    }
+
+    private sealed record StressItem
+    {
+        public required int Id { get; init; }
+
+        public required TimeSpan? Lifetime { get; init; }
     }
 }
