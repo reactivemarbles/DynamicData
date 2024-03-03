@@ -348,10 +348,6 @@ namespace DynamicData.Binding
         public bool UseReplaceForUpdates { get; set; }
         public static DynamicData.Binding.BindingOptions NeverFireReset(bool useReplaceForUpdates = true) { }
     }
-    public static class DynamicDataOptions
-    {
-        public static DynamicData.Binding.BindingOptions Binding { get; set; }
-    }
     public interface IEvaluateAware
     {
         void Evaluate();
@@ -700,6 +696,10 @@ namespace DynamicData
         public override string ToString() { }
         public static bool operator !=(in DynamicData.Change<TObject, TKey> left, in DynamicData.Change<TObject, TKey> right) { }
         public static bool operator ==(in DynamicData.Change<TObject, TKey> left, in DynamicData.Change<TObject, TKey> right) { }
+    }
+    public static class DynamicDataOptions
+    {
+        public static DynamicData.Binding.BindingOptions Binding { get; set; }
     }
     public static class EnumerableEx
     {
