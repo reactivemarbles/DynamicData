@@ -10,7 +10,7 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
-public interface IKeyValueCollection<TObject, TKey> : IEnumerable<KeyValuePair<TKey, TObject>>
+public interface IKeyValueCollection<TObject, TKey> : IReadOnlyList<KeyValuePair<TKey, TObject>>
 {
     /// <summary>
     /// Gets the comparer used to perform the sort.
@@ -26,7 +26,7 @@ public interface IKeyValueCollection<TObject, TKey> : IEnumerable<KeyValuePair<T
     /// <value>
     /// The count.
     /// </value>
-    int Count { get; }
+    new int Count { get; }
 
     /// <summary>
     /// Gets the optimisations used to produce the sort.
@@ -53,5 +53,5 @@ public interface IKeyValueCollection<TObject, TKey> : IEnumerable<KeyValuePair<T
     /// </returns>
     /// <param name="index">The zero-based index of the element to get. </param>
     /// <returns>The key value pair.</returns>
-    KeyValuePair<TKey, TObject> this[int index] { get; }
+    new KeyValuePair<TKey, TObject> this[int index] { get; }
 }
