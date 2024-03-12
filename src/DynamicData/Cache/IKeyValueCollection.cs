@@ -21,14 +21,6 @@ public interface IKeyValueCollection<TObject, TKey> : IReadOnlyList<KeyValuePair
     IComparer<KeyValuePair<TKey, TObject>> Comparer { get; }
 
     /// <summary>
-    /// Gets the count of items.
-    /// </summary>
-    /// <value>
-    /// The count.
-    /// </value>
-    new int Count { get; }
-
-    /// <summary>
     /// Gets the optimisations used to produce the sort.
     /// </summary>
     /// <value>
@@ -43,15 +35,4 @@ public interface IKeyValueCollection<TObject, TKey> : IReadOnlyList<KeyValuePair
     /// The sort reason.
     /// </value>
     SortReason SortReason { get; }
-
-    /// <summary>
-    /// Gets the element at the specified index in the read-only list.
-    /// </summary>
-    ///
-    /// <returns>
-    /// The element at the specified index in the read-only list.
-    /// </returns>
-    /// <param name="index">The zero-based index of the element to get. </param>
-    /// <returns>The key value pair.</returns>
-    new KeyValuePair<TKey, TObject> this[int index] { get; }
 }
