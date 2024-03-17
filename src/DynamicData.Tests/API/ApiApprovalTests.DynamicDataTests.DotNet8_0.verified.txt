@@ -2039,6 +2039,14 @@ namespace DynamicData
             where TDestination :  class
             where TSource :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, System.Action<TDestination, TSource> updateAction, bool transformOnRefresh)
+            where TDestination :  class
+            where TSource :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, System.Action<TDestination, TSource> updateAction, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, bool transformOnRefresh)
+            where TDestination :  class
+            where TSource :  notnull
+            where TKey :  notnull { }
         public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> TreatMovesAsRemoveAdd<TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source)
             where TObject :  notnull
             where TKey :  notnull { }
