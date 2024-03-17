@@ -35,7 +35,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                         return;
                     }
 
-                    var resultingBatch = new ChangeSet<TObject, TKey>(batchedChanges.Select(cs => cs.Count).Sum());
+                    var resultingBatch = new ChangeSet<TObject, TKey>(batchedChanges.Sum(cs => cs.Count));
                     foreach (var cs in batchedChanges)
                     {
                         resultingBatch.AddRange(cs);
