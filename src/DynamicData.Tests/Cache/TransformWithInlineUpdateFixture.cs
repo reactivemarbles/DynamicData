@@ -76,9 +76,34 @@ public class TransformWithInlineUpdateFixture
         stub.Results.Data.Count.Should().Be(0, "Should be nothing cached");
     }
 
+
+    [Fact]
+    public void TransformOnRefresh()
+    {
+        using var stub = new TransformWithInlineUpdateFixtureStub(true);
+        var person = new Person("Adult1", 50);
+        stub.Source.AddOrUpdate(person);
+
+        var transformedPerson = stub.Results.Data.Items.First();
+
+        person.Age = 51;
+        stub.Source.Refresh(person);
+
+        var updatedTransform = stub.Results.Data.Items.First();
+
+        updatedTransform.Age.Should().Be(51, "Age should be updated from 50 to 51.");
+        stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
+        stub.Results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+        transformedPerson.Should().Be(stub.Results.Data.Items.First(), "Should be same transformed person instance.");
+    }
+
     private class TransformWithInlineUpdateFixtureStub : IDisposable
     {
-        public TransformWithInlineUpdateFixtureStub() => Results = new ChangeSetAggregator<Person, string>(Source.Connect().TransformWithInlineUpdate(TransformFactory, UpdateAction));
+        public TransformWithInlineUpdateFixtureStub(bool transformOnRefresh = false)
+        {
+            Results = new ChangeSetAggregator<Person, string>(Source.Connect()
+                .TransformWithInlineUpdate(TransformFactory, UpdateAction, transformOnRefresh));
+        }
 
         public ChangeSetAggregator<Person, string> Results { get; }
 

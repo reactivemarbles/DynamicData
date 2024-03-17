@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>net8.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CS0618;CA1801;CA1812;CA1816;CA1063;CS8767;CS8602;CS8618;IDE1006</NoWarn>
-    <XunitVersion>2.6.6</XunitVersion>
+    <XunitVersion>2.7.0</XunitVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,16 +10,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bogus" Version="35.4.1" />
+    <PackageReference Include="Bogus" Version="35.5.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageReference Include="xunit" Version="$(XunitVersion)" />
     <PackageReference Include="xunit.runner.console" Version="$(XunitVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7" />
-    <PackageReference Include="Verify.Xunit" Version="23.1.0" />
+    <PackageReference Include="Verify.Xunit" Version="23.5.0" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Microsoft.Reactive.Testing" Version="6.0.0" />
     <PackageReference Include="PublicApiGenerator" Version="11.1.0" />
-    <PackageReference Include="coverlet.collector" Version="6.0.1">
+    <PackageReference Include="coverlet.collector" Version="6.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
