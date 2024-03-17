@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using System.Reactive.Disposables;
+using System.Reactive.Subjects;
 using DynamicData.Binding;
 
 namespace DynamicData.Benchmarks.Cache;
@@ -17,42 +18,45 @@ public class BindAndSortInitial: IDisposable
     private readonly SortExpressionComparer<Item> _comparer = SortExpressionComparer<Item>.Ascending(i => i.Ranking).ThenByAscending(i => i.Name);
 
 
-    private ISourceCache<Item, int> _sourceOld = null!;
-    private ISourceCache<Item, int> _sourceNew = null!;
+    Subject<IChangeSet<Item, int>> _oldSubject = new();
+    Subject<IChangeSet<Item, int>> _newSubject = new();
 
     private IDisposable? _cleanUp;
+    private ChangeSet<Item, int>? _changeSet;
 
-    private Item[] _items = null!;
 
-
-    [Params(100, 1_000, 10_000, 50_000)]
+    [Params(10, 100, 1_000, 10_000, 50_000)]
     public int Count { get; set; }
 
 
     [GlobalSetup]
     public void SetUp()
     {
-        _sourceOld = new SourceCache<Item, int>(i => i.Id);
-        _sourceNew = new SourceCache<Item, int>(i => i.Id);
+        _oldSubject = new Subject<IChangeSet<Item, int>>();
+        _newSubject = new Subject<IChangeSet<Item, int>>();
 
+       var changeSet = new ChangeSet<Item, int>(Count);
+        foreach (var i in Enumerable.Range(1, Count))
+        {
+            var item = new Item($"Item{i}", i, _random.Next(1, 1000));
+            changeSet.Add(new Change<Item, int>(ChangeReason.Add, i, item));
+        }
 
-        _items = Enumerable.Range(1, Count)
-            .Select(i => new Item($"Item{i}", i, _random.Next(1, 1000)))
-            .ToArray();
+        _changeSet = changeSet;
 
         _cleanUp = new CompositeDisposable
         (
-            _sourceNew.Connect().BindAndSort(out var list1, _comparer).Subscribe(),
-            _sourceOld.Connect().Sort(_comparer).Bind(out var list2).Subscribe()
+            _newSubject.BindAndSort(out var list1, _comparer).Subscribe(),
+            _oldSubject.Sort(_comparer).Bind(out var list2).Subscribe()
         );
     }
 
 
     [Benchmark(Baseline = true)]
-    public void Old() => _sourceOld.AddOrUpdate(_items);
+    public void Old() => _oldSubject.OnNext(_changeSet!);
 
     [Benchmark]
-    public void New() => _sourceNew.AddOrUpdate(_items);
+    public void New() => _newSubject.OnNext(_changeSet!);
 
     public void Dispose() => _cleanUp?.Dispose();
 }

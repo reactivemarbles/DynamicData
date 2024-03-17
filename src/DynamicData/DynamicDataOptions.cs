@@ -16,5 +16,3 @@ public static class DynamicDataOptions
     /// </summary>
     public static BindingOptions Binding { get; set; } = new(BindingOptions.DefaultResetThreshold);
 }
-
-

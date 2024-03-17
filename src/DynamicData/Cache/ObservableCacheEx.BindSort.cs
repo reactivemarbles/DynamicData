@@ -1,19 +1,25 @@
+// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Collections.ObjectModel;
 using DynamicData.Binding;
 
 namespace DynamicData;
 
+/// <summary>
+/// ObservableCache extensions for BindAndSort.
+/// </summary>
 public static partial class ObservableCacheEx
 {
-
     /// <summary>
-    ///  Bind sorted data to the specified readonly observable collection.
+    /// Bind sorted data to the specified readonly observable collection.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
+    /// <param name="targetList">The list to bind to.</param>
     /// <param name="comparer">The comparer to order the resulting dataset.</param>
-    /// <param name="targetList">The list to bind to</param>
     /// <returns>An observable which will emit change sets.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> BindAndSort<TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
@@ -29,9 +35,9 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
+    /// <param name="targetList">The list to bind to.</param>
     /// <param name="comparer">The comparer to order the resulting dataset.</param>
     /// <param name="options">Bind and sort default options.</param>
-    /// <param name="targetList">The list to bind to</param>
     /// <returns>An observable which will emit change sets.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> BindAndSort<TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
@@ -42,25 +48,22 @@ public static partial class ObservableCacheEx
         where TKey : notnull =>
         new BindAndSort<TObject, TKey>(source, comparer, options, targetList).Run();
 
-
     /// <summary>
     ///  Bind sorted data to the specified readonly observable collection.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <param name="comparer">The comparer to order the resulting dataset.</param>
     /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <param name="comparer">The comparer to order the resulting dataset.</param>
     /// <returns>An observable which will emit change sets.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> BindAndSort<TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
-        IComparer<TObject> comparer
-    )
+        IComparer<TObject> comparer)
         where TObject : notnull
         where TKey : notnull =>
         source.BindAndSort(out readOnlyObservableCollection, comparer, BindAndSortOptions.Default);
-
 
     /// <summary>
     ///  Bind sorted data to the specified readonly observable collection.
@@ -68,16 +71,15 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
+    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
     /// <param name="comparer">The comparer to order the resulting dataset.</param>
     /// <param name="options">Bind and sort default options.</param>
-    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
     /// <returns>An observable which will emit change sets.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> BindAndSort<TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
         IComparer<TObject> comparer,
-        BindAndSortOptions options
-    )
+        BindAndSortOptions options)
         where TObject : notnull
         where TKey : notnull
     {
@@ -90,6 +92,4 @@ public static partial class ObservableCacheEx
 
         return new BindAndSort<TObject, TKey>(source, comparer, options, observableCollection).Run();
     }
-
-
 }
