@@ -1,4 +1,8 @@
-﻿using System.Reactive.Linq;
+﻿// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System.Reactive.Linq;
 using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 
@@ -19,9 +23,8 @@ internal sealed class BindAndSort<TObject, TKey>(
     where TObject : notnull
     where TKey : notnull
 {
-
     private readonly Cache<TObject, TKey> _cache = new();
-    private readonly object _locker = new object();
+    private readonly object _locker = new();
 
     public IObservable<IChangeSet<TObject, TKey>> Run() =>
         source
@@ -31,7 +34,6 @@ internal sealed class BindAndSort<TObject, TKey>(
             {
                 // clone to local cache
                 _cache.Clone(changes);
-
 
                 // apply sorted changes to the target collection
                 if (target.Count == 0 || (options.ResetThreshold != 0 && options.ResetThreshold < changes.Count))
@@ -63,7 +65,6 @@ internal sealed class BindAndSort<TObject, TKey>(
         }
     }
 
-
     private void ApplyChanges(IChangeSet<TObject, TKey> changes)
     {
         // iterate through collection, find sorted position and apply changes
@@ -74,7 +75,6 @@ internal sealed class BindAndSort<TObject, TKey>(
 
             switch (change.Reason)
             {
-
                 case ChangeReason.Add:
                     {
                         var index = GetInsertPosition(item);
@@ -83,7 +83,7 @@ internal sealed class BindAndSort<TObject, TKey>(
                     break;
                 case ChangeReason.Update:
                     {
-                        var currentIndex = GetCurrentPosition( change.Previous.Value);
+                        var currentIndex = GetCurrentPosition(change.Previous.Value);
                         target.RemoveAt(currentIndex);
 
                         var index = GetInsertPosition(item);
@@ -107,10 +107,7 @@ internal sealed class BindAndSort<TObject, TKey>(
                             target.RemoveAt(currentIndex);
                             target.Insert(index, item);
                         }
-
                     }
-
-
                     break;
                 case ChangeReason.Moved:
                     break;
@@ -118,12 +115,11 @@ internal sealed class BindAndSort<TObject, TKey>(
                     throw new ArgumentOutOfRangeException();
             }
         }
-
     }
 
     private int GetCurrentPosition(TObject item)
     {
-        var index = options.UseBinarySearch  ? target.BinarySearch(item, comparer) : target.IndexOf(item);
+        var index = options.UseBinarySearch ? target.BinarySearch(item, comparer) : target.IndexOf(item);
 
         if (index < 0)
         {
@@ -133,9 +129,9 @@ internal sealed class BindAndSort<TObject, TKey>(
         return index;
     }
 
-    private int GetInsertPosition(TObject item) => options.UseBinarySearch  ? GetInsertPositionBinary(item) : GetInsertPositionLinear(item);
+    private int GetInsertPosition(TObject item) => options.UseBinarySearch ? GetInsertPositionBinary(item) : GetInsertPositionLinear(item);
 
-    private int GetInsertPositionBinary( TObject item)
+    private int GetInsertPositionBinary(TObject item)
     {
         var index = target.BinarySearch(item, comparer);
         var insertIndex = ~index;
@@ -161,5 +157,4 @@ internal sealed class BindAndSort<TObject, TKey>(
 
         return target.Count;
     }
-
 }
