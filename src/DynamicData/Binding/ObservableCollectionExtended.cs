@@ -35,6 +35,8 @@ public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObserva
     {
     }
 
+
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ObservableCollectionExtended{T}"/> class that contains elements copied from the specified collection.
     /// </summary>
