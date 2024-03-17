@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
+using System.Reactive.Subjects;
 using BenchmarkDotNet.Attributes;
 using DynamicData.Binding;
 
@@ -13,45 +15,81 @@ public class BindAndSortChange: IDisposable
     private readonly Random _random = new();
     private record Item(string Name, int Id, int Ranking);
 
-    private readonly SortExpressionComparer<Item> _comparer = SortExpressionComparer<Item>.Ascending(i => i.Ranking).ThenByAscending(i => i.Name);
+    private readonly SortExpressionComparer<Item> _comparer = SortExpressionComparer<Item>
+        .Ascending(i => i.Ranking)
+        .ThenByAscending(i => i.Name);
 
-
-    private ISourceCache<Item, int> _sourceOld = null!;
-    private ISourceCache<Item, int> _sourceNew = null!;
+    Subject<IChangeSet<Item, int>> _oldSubject = new();
+    Subject<IChangeSet<Item, int>> _newSubject = new();
 
     private IDisposable? _cleanUp;
 
+    private ReadOnlyObservableCollection<Item>? _newList;
+    private ReadOnlyObservableCollection<Item>? _oldList;
 
-    [Params(100, 1_000, 10_000, 50_000)]
+
+    [Params(10, 100, 1_000, 10_000, 50_000)]
     public int Count { get; set; }
 
 
     [GlobalSetup]
     public void SetUp()
     {
-        _sourceOld = new SourceCache<Item, int>(i => i.Id);
-        _sourceNew = new SourceCache<Item, int>(i => i.Id);
+        _oldSubject = new Subject<IChangeSet<Item, int>>();
+        _newSubject = new Subject<IChangeSet<Item, int>>();
 
-
-        var items = Enumerable.Range(1, Count)
-            .Select(i => new Item($"Item{i}", i, _random.Next(1, 1000)))
-            .ToArray();
-
-        _sourceNew.AddOrUpdate(items);
-        _sourceOld.AddOrUpdate(items);
+        var options = BindAndSortOptions.Default with
+        {
+            InitialCapacity = Count,
+            UseBinarySearch = true
+        };
 
         _cleanUp = new CompositeDisposable
         (
-            _sourceNew.Connect().BindAndSort(out var list1, _comparer).Subscribe(),
-            _sourceOld.Connect().Sort(_comparer).Bind(out var list2).Subscribe()
+            _newSubject.BindAndSort(out var list1, _comparer).Subscribe(),
+            _oldSubject.Sort(_comparer).Bind(out var list2).Subscribe()
         );
+
+        _newList = list1;
+        _oldList = list2;
+
+
+
+        var changeSet = new ChangeSet<Item, int>(Count);
+        foreach (var i in Enumerable.Range(1, Count))
+        {
+            var item = new Item($"Item{i}", i, _random.Next(1, 1000));
+            changeSet.Add(new Change<Item, int>(ChangeReason.Add, i, item));
+        }
+
+        _newSubject.OnNext(changeSet);
+        _oldSubject.OnNext(changeSet);
+
     }
 
     [Benchmark(Baseline = true)]
-    public void Old() => _sourceOld.AddOrUpdate(new Item("A new item", 50, 500));
+    public void Old()
+    {
+        var original = _oldList![Count / 2];
+        var updated = original with { Ranking = _random.Next(1, 1000) };
+
+        _oldSubject.OnNext(new ChangeSet<Item, int>
+        {
+            new(ChangeReason.Update, original.Id, updated, original)
+        });
+    }
 
     [Benchmark]
-    public void New() => _sourceNew.AddOrUpdate(new Item("A new item", 50, 500));
+    public void New()
+    {
+        var original = _newList![Count / 2];
+        var updated = original with { Ranking = _random.Next(1, 1000) };
+
+        _newSubject.OnNext(new ChangeSet<Item, int>
+        {
+            new(ChangeReason.Update, original.Id, updated, original)
+        });
+    }
 
     public void Dispose() => _cleanUp?.Dispose();
 }

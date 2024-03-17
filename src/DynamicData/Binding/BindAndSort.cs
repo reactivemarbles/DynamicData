@@ -32,7 +32,7 @@ internal sealed class BindAndSort<TObject, TKey>(
             // apply sorting as a side effect of the observable stream.
             .Do(changes =>
             {
-                // clone to local cache
+                // clone to local cache so that we can sort entire set when threshold is over a certain size.
                 _cache.Clone(changes);
 
                 // apply sorted changes to the target collection
@@ -123,7 +123,7 @@ internal sealed class BindAndSort<TObject, TKey>(
 
         if (index < 0)
         {
-            throw new SortException($"Cannot find item: {typeof(TObject).Name} -> {item}");
+            throw new SortException($"Cannot find item: {typeof(TObject).Name} -> {item} from {target.Count} items");
         }
 
         return index;

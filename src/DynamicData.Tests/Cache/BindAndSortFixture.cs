@@ -364,13 +364,9 @@ public abstract class BindAndSortFixture : IDisposable
 
     }
 
-
-
-
     public void Dispose()
     {
         _source.Dispose();
         _results.Dispose();
     }
-
 }
