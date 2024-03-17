@@ -11,7 +11,8 @@ namespace DynamicData.Cache.Internal;
 internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>(IObservable<IChangeSet<TSource, TKey>> source,
                                  Func<TSource, TDestination> transformFactory,
                                  Action<TDestination, TSource> updateAction,
-                                 Action<Error<TSource, TKey>>? exceptionCallback = null)
+                                 Action<Error<TSource, TKey>>? exceptionCallback = null,
+                                 bool transformOnRefresh = false)
     where TDestination : class
     where TSource : notnull
     where TKey : notnull
@@ -41,7 +42,15 @@ internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>(IOb
                                 break;
 
                             case ChangeReason.Refresh:
-                                cache.Refresh(change.Key);
+                                if (transformOnRefresh)
+                                {
+                                    InlineUpdate(cache, change);
+                                }
+                                else
+                                {
+                                    cache.Refresh(change.Key);
+                                }
+
                                 break;
 
                             case ChangeReason.Moved:
