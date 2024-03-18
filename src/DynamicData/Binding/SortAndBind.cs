@@ -15,10 +15,10 @@ namespace DynamicData.Binding;
  * collection upon every change in order that the sorted list could be transmitted to the bind operator.
  *
  */
-internal sealed class BindAndSort<TObject, TKey>(
+internal sealed class SortAndBind<TObject, TKey>(
     IObservable<IChangeSet<TObject, TKey>> source,
     IComparer<TObject> comparer,
-    BindAndSortOptions options,
+    SortAndBindOptions options,
     IList<TObject> target)
     where TObject : notnull
     where TKey : notnull

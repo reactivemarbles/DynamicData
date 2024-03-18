@@ -7,9 +7,26 @@ using System.Runtime.CompilerServices;
 
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
+using DynamicData.Benchmarks.Cache;
 
 namespace DynamicData.Benchmarks
 {
+
+    /*public static class Program
+    {
+        public static void Main(string[] args)
+        {
+
+            var change = new SortAndBindChange();
+            change.Count = 50_000;
+            change.SetUp();
+
+            change.Old();
+            change.New();
+
+        }
+    }*/
+
     public static class Program
     {
         public static void Main(string[] args)

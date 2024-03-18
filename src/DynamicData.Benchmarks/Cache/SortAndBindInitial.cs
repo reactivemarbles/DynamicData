@@ -9,7 +9,7 @@ namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
-public class BindAndSortInitial: IDisposable
+public class SortAndBindInitial: IDisposable
 {
     private readonly Random _random = new();
 
@@ -18,8 +18,10 @@ public class BindAndSortInitial: IDisposable
     private readonly SortExpressionComparer<Item> _comparer = SortExpressionComparer<Item>.Ascending(i => i.Ranking).ThenByAscending(i => i.Name);
 
 
-    Subject<IChangeSet<Item, int>> _oldSubject = new();
     Subject<IChangeSet<Item, int>> _newSubject = new();
+    Subject<IChangeSet<Item, int>> _newSubjectOptimised = new();
+    Subject<IChangeSet<Item, int>> _oldSubject = new();
+    Subject<IChangeSet<Item, int>> _oldSubjectOptimised = new();
 
     private IDisposable? _cleanUp;
     private ChangeSet<Item, int>? _changeSet;
@@ -33,9 +35,11 @@ public class BindAndSortInitial: IDisposable
     public void SetUp()
     {
         _oldSubject = new Subject<IChangeSet<Item, int>>();
+        _oldSubjectOptimised = new Subject<IChangeSet<Item, int>>();
         _newSubject = new Subject<IChangeSet<Item, int>>();
+        _newSubjectOptimised = new Subject<IChangeSet<Item, int>>();
 
-       var changeSet = new ChangeSet<Item, int>(Count);
+        var changeSet = new ChangeSet<Item, int>(Count);
         foreach (var i in Enumerable.Range(1, Count))
         {
             var item = new Item($"Item{i}", i, _random.Next(1, 1000));
@@ -46,8 +50,16 @@ public class BindAndSortInitial: IDisposable
 
         _cleanUp = new CompositeDisposable
         (
-            _newSubject.BindAndSort(out var list1, _comparer).Subscribe(),
-            _oldSubject.Sort(_comparer).Bind(out var list2).Subscribe()
+            _newSubject.SortAndBind(out var newList, _comparer).Subscribe(),
+            _newSubjectOptimised.SortAndBind(out var optimisedList, _comparer, new SortAndBindOptions
+            {
+                InitialCapacity = Count,
+                UseBinarySearch = true
+            }).Subscribe(),
+
+            _oldSubject.Sort(_comparer).Bind(out var oldList).Subscribe(),
+            _oldSubjectOptimised.Sort(_comparer, SortOptimisations.ComparesImmutableValuesOnly).Bind(out var oldOptimisedList).Subscribe()
+
         );
     }
 
@@ -56,7 +68,14 @@ public class BindAndSortInitial: IDisposable
     public void Old() => _oldSubject.OnNext(_changeSet!);
 
     [Benchmark]
+    public void OldOptimized() => _oldSubjectOptimised.OnNext(_changeSet!);
+
+    [Benchmark]
     public void New() => _newSubject.OnNext(_changeSet!);
+
+    [Benchmark]
+    public void NewOptimized() => _newSubjectOptimised.OnNext(_changeSet!);
+
 
     public void Dispose() => _cleanUp?.Dispose();
 }

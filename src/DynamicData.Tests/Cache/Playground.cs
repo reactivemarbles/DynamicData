@@ -16,13 +16,13 @@ public class Playground: IDisposable
 
         ReadOnlyObservableCollection<Person> collection;
 
-        _source.Connect().BindAndSort(
+        _source.Connect().SortAndBind(
             out collection,
             comparer);
 
         var array = new List<Person>();
 
-        _source.Connect().BindAndSort(
+        _source.Connect().SortAndBind(
             out collection,
             comparer);
 

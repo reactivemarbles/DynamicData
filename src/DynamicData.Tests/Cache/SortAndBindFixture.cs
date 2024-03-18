@@ -11,37 +11,37 @@ namespace DynamicData.Tests.Cache;
 
 
 // Bind to a list
-public sealed class BindAndSortToList: BindAndSortFixture
+public sealed class SortAndBindToList: SortAndBindFixture
 
 {
     protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
     {
         var list  = new List<Person>(100);
-        var aggregator = _source.Connect().BindAndSort(list, _comparer).AsAggregator();
+        var aggregator = _source.Connect().SortAndBind(list, _comparer).AsAggregator();
 
         return (aggregator, list);
     }
 }
 
 // Bind to an observable collection
-public sealed class BindAndSortToObservableCollection : BindAndSortFixture
+public sealed class SortAndBindToObservableCollection : SortAndBindFixture
 
 {
     protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
     {
         var list = new ObservableCollection<Person>(new List<Person>(100));
-        var aggregator = _source.Connect().BindAndSort(list, _comparer).AsAggregator();
+        var aggregator = _source.Connect().SortAndBind(list, _comparer).AsAggregator();
 
         return (aggregator, list);
     }
 }
 
 // Bind to a readonly observable collection
-public sealed class BindAndSortToReadOnlyObservableCollection: BindAndSortFixture
+public sealed class SortAndBindToReadOnlyObservableCollection: SortAndBindFixture
 {
     protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
     {
-        var aggregator = _source.Connect().BindAndSort(out var list, _comparer).AsAggregator();
+        var aggregator = _source.Connect().SortAndBind(out var list, _comparer).AsAggregator();
 
         return (aggregator, list);
     }
@@ -49,7 +49,7 @@ public sealed class BindAndSortToReadOnlyObservableCollection: BindAndSortFixtur
 
 
 
-public abstract class BindAndSortFixture : IDisposable
+public abstract class SortAndBindFixture : IDisposable
 {
 
     private readonly RandomPersonGenerator _generator = new();
@@ -60,7 +60,7 @@ public abstract class BindAndSortFixture : IDisposable
     protected readonly ISourceCache<Person, string> _source;
 
 
-    public BindAndSortFixture()
+    public SortAndBindFixture()
     {
         _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
         _source = new SourceCache<Person, string>(p => p.Key);
@@ -84,27 +84,31 @@ public abstract class BindAndSortFixture : IDisposable
 
 
     [Fact]
-    public void AppendAtBeginning()
+    public void InsertAtBeginning()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
         // check initial data set is sorted
         _boundList.Count.Should().Be(100);
-        people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
+        _boundList.SequenceEqual(people.OrderBy(p => p, _comparer)).Should().BeTrue();
 
         //create age 0 to ensure it is inserted first
         var insert = new Person("_Aaron", 0);
         _source.AddOrUpdate(insert);
 
         _boundList.Count.Should().Be(101);
+
         var firstItem = _boundList[0];
 
-        firstItem.Should().Be(insert);
+        insert.Should().Be(firstItem);
+
+        _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
+
     }
 
     [Fact]
-    public void AppendAtEnd()
+    public void InsertAtEnd()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -118,10 +122,12 @@ public abstract class BindAndSortFixture : IDisposable
         var last = _boundList[^1];
         last.Should().Be(toInsert);
 
+        _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
+
     }
 
     [Fact]
-    public void AppendInMiddle()
+    public void InsertInMiddle()
     {
         _source.AddOrUpdate(Enumerable.Range(0,100).Select(i=> new Person($"P{i}",i)));
 
@@ -135,6 +141,8 @@ public abstract class BindAndSortFixture : IDisposable
         var index = _boundList.IndexOf(insert);
 
         index.Should().Be(50);
+
+        _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
     }
 
     [Fact]
@@ -198,7 +206,7 @@ public abstract class BindAndSortFixture : IDisposable
 
 
         _boundList.Count.Should().Be(200);
-
+        _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
     }
 
 
@@ -340,6 +348,8 @@ public abstract class BindAndSortFixture : IDisposable
         int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
 
         people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
+
+
 
     }
 
