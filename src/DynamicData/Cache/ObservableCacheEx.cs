@@ -5914,7 +5914,35 @@ public static partial class ObservableCacheEx
         transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
         updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
 
-        return new TransformWithInlineUpdate<TDestination, TSource, TKey>(source, transformFactory, updateAction).Run();
+        return source.TransformWithInlineUpdate(transformFactory, updateAction, false);
+    }
+
+    /// <summary>
+    /// Projects each update item to a new form using the specified transform function and when an update is received, allows the preservation of the previous instance.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="updateAction">Apply changes to the original. Example (previousTransformedItem, newOriginalItem) => previousTransformedItem.Value = newOriginalItem.</param>
+    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
+    /// <returns>
+    /// A transformed update collection.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">source
+    /// or
+    /// transformFactory.</exception>
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<TDestination, TSource> updateAction, bool transformOnRefresh)
+        where TDestination : class
+        where TSource : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+
+        return new TransformWithInlineUpdate<TDestination, TSource, TKey>(source, transformFactory, updateAction, transformOnRefresh: transformOnRefresh).Run();
     }
 
     /// <summary>
@@ -5943,7 +5971,37 @@ public static partial class ObservableCacheEx
         updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
         errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
 
-        return new TransformWithInlineUpdate<TDestination, TSource, TKey>(source, transformFactory, updateAction, errorHandler).Run();
+        return source.TransformWithInlineUpdate(transformFactory, updateAction, errorHandler, false);
+    }
+
+    /// <summary>
+    /// Projects each update item to a new form using the specified transform function and when an update is received, allows the preservation of the previous instance.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="updateAction">Apply changes to the original. Example (previousTransformedItem, newOriginalItem) => previousTransformedItem.Value = newOriginalItem.</param>
+    /// <param name="errorHandler">The error handler.</param>
+    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
+    /// <returns>
+    /// A transformed update collection.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">source
+    /// or
+    /// transformFactory.</exception>
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<TDestination, TSource> updateAction, Action<Error<TSource, TKey>> errorHandler, bool transformOnRefresh)
+        where TDestination : class
+        where TSource : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+
+        return new TransformWithInlineUpdate<TDestination, TSource, TKey>(source, transformFactory, updateAction, errorHandler, transformOnRefresh).Run();
     }
 
     /// <summary>
