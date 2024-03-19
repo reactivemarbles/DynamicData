@@ -52,6 +52,18 @@ public sealed class SortAndBindToReadOnlyObservableCollection: SortAndBindFixtur
     }
 }
 
+// Bind to a readonly observable collection using binary search
+public sealed class SortAndBindWithBinarySearch : SortAndBindFixture
+{
+    protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
+    {
+        var options = new SortAndBindOptions { UseBinarySearch = true };
+        var aggregator = _source.Connect().SortAndBind(out var list, _comparer, options).AsAggregator();
+
+        return (aggregator, list);
+    }
+}
+
 public sealed class SortAndBindWithResetOptions: IDisposable
 {
 
@@ -123,7 +135,6 @@ public sealed class SortAndBindWithResetOptions: IDisposable
 
     public void Dispose() => _source.Dispose();
 }
-
 
 
 public abstract class SortAndBindFixture : IDisposable
@@ -218,6 +229,72 @@ public abstract class SortAndBindFixture : IDisposable
 
         _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
     }
+
+
+    [Fact]
+    public void InsertSameLocation()
+    {
+        _source.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new Person($"P{i}", i * 10)));
+
+        // each of these changes should result in index 1
+        UpdateAndAssetPosition(new Person("P2", 15), 1);
+        UpdateAndAssetPosition(new Person("P2", 20), 1);
+        UpdateAndAssetPosition(new Person("P2", 25), 1);
+
+        void UpdateAndAssetPosition(Person person, int expectedIndex)
+        {
+            _source.AddOrUpdate(person);
+
+            // check the item has been replaced
+            _boundList.Count(p => p.Key == person.Key).Should().Be(1);
+
+            _boundList[expectedIndex].Should().Be(person);
+
+        }
+
+        _boundList.Count.Should().Be(10);
+
+  
+        _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
+    }
+
+
+    [Fact]
+    public void Refresh()
+    {
+        _source.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new Person($"P{i}", i * 10)));
+
+        // each of these changes should result in index 1
+
+        var toRefresh = _boundList[1];
+
+        // there will all result in the same position
+        RefreshAtAndAssetPosition(toRefresh, p=>p.Age =15, 1);
+        RefreshAtAndAssetPosition(toRefresh, p => p.Age = 20, 1);
+        RefreshAtAndAssetPosition(toRefresh, p => p.Age = 25, 1);
+
+
+        // move after
+        RefreshAtAndAssetPosition(toRefresh, p => p.Age = 45, 3);
+
+        void RefreshAtAndAssetPosition(Person person, Action<Person> action,int expectedIndex)
+        {
+            action(person);
+            _source.Edit(innerCache=> innerCache.Refresh(person.Key));
+
+            // check the item has been replaced
+            _boundList.Count(p => p.Key == person.Key).Should().Be(1);
+
+            _boundList[expectedIndex].Should().Be(person);
+
+        }
+
+        _boundList.Count.Should().Be(10);
+
+
+        _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
+    }
+
 
     [Fact]
     public void BatchOfVariousChanges()

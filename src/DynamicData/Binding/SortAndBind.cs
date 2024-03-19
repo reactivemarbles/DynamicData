@@ -2,7 +2,9 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System;
 using System.Reactive.Linq;
+using System.Reflection;
 using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 
@@ -90,18 +92,20 @@ internal sealed class SortAndBind<TObject, TKey>(
                 case ChangeReason.Update:
                     {
                         var currentIndex = GetCurrentPosition(change.Previous.Value);
-                        var index = GetInsertPosition(item);
+                        var updatedIndex = GetInsertPosition(item);
+
+                        // We need to recalibrate as GetCurrentPosition includes the current item
+                        updatedIndex = currentIndex < updatedIndex ? updatedIndex - 1 : updatedIndex;
 
                         // Some control suites and platforms do not support replace, whiles others do, so we opt in.
-                        // Also, we should probably exclude the previous item for .GetInsertPosition(...).  Similar for Refresh.
-                        if (options.UseReplaceForUpdates && currentIndex != index)
+                        if (options.UseReplaceForUpdates && currentIndex == updatedIndex)
                         {
-                            target.RemoveAt(currentIndex);
-                            target.Insert(index, item);
+                            target[currentIndex] = item;
                         }
                         else
                         {
-                            target[currentIndex] = item;
+                            target.RemoveAt(currentIndex);
+                            target.Insert(updatedIndex, item);
                         }
                     }
                     break;
@@ -113,14 +117,24 @@ internal sealed class SortAndBind<TObject, TKey>(
                     break;
                 case ChangeReason.Refresh:
                     {
+                        /*  look up current location, and new location
+                         *
+                         *  Use the linear methods as binary search does not work if we do not have an already sorted list.
+                         *  Otherwise, SortAndBindWithBinarySearch.Refresh() unit test will break.
+                         *
+                         * If consumers are using BinarySearch and a refresh event is sent here, they probably should exclude refresh
+                         * events with .WhereReasonsAreNot(ChangeReason.Refresh), but it may be problematic to exclude refresh automatically
+                         * as that would effectively be swallowing an error.
+                         */
                         var currentIndex = target.IndexOf(item);
-                        var index = GetInsertPosition(item);
+                        var updatedIndex = GetInsertPositionLinear(item);
 
-                        // this assumption may be dodgy as we may need to remove the original item first
-                        if (index != currentIndex)
+                        // We need to recalibrate as GetInsertPosition includes the current item
+                        updatedIndex = currentIndex < updatedIndex ? updatedIndex - 1 : updatedIndex;
+                        if (updatedIndex != currentIndex)
                         {
                             target.RemoveAt(currentIndex);
-                            target.Insert(index, item);
+                            target.Insert(updatedIndex, item);
                         }
                     }
                     break;
