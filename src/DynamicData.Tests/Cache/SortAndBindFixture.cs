@@ -1,10 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Disposables;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
+using Mono.Cecil;
 using Xunit;
 
 namespace DynamicData.Tests.Cache;
@@ -47,6 +52,78 @@ public sealed class SortAndBindToReadOnlyObservableCollection: SortAndBindFixtur
     }
 }
 
+public sealed class SortAndBindWithResetOptions: IDisposable
+{
+
+    private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
+    private readonly ISourceCache<Person, string> _source = new SourceCache<Person, string>(p => p.Key);
+
+    private readonly List<NotifyCollectionChangedEventArgs> _collectionChangedEventArgs = new();
+
+    [Fact]
+    [Description("Check reset is fired  when below threshold only.  Historically first time load always fired reset for first time load.")]
+    public void FiresResetWhenThresholdIsMet()
+    {
+        var options = new SortAndBindOptions { ResetThreshold = 10 };
+        
+        using var sorted = _source.Connect().SortAndBind(out var list, _comparer, options).Subscribe();
+        using var collectionChangedEvents = list.ObserveCollectionChanges().Select(e => e.EventArgs).Subscribe(_collectionChangedEventArgs.Add);
+
+        // fire 5 changes, should always reset because it's below the threshold
+        _source.AddOrUpdate(Enumerable.Range(0, 5).Select(i => new Person($"P{i}", i)));
+        _collectionChangedEventArgs.Count.Should().Be(5);
+        _collectionChangedEventArgs.All(a=>a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
+
+        
+        _collectionChangedEventArgs.Clear();
+
+        // fire 15 changes, we should get a refresh event
+        _source.AddOrUpdate(Enumerable.Range(10, 15).Select(i => new Person($"P{i}", i)));
+        _collectionChangedEventArgs.Count.Should().Be(1);
+        _collectionChangedEventArgs[0].Action.Should().Be(NotifyCollectionChangedAction.Reset);
+
+        _collectionChangedEventArgs.Clear();
+
+        // fires further 5 changes, should result individual notifications
+        _source.AddOrUpdate(Enumerable.Range(-10, 5).Select(i => new Person($"P{i}", i)));
+        _collectionChangedEventArgs.Count.Should().Be(5);
+        _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
+
+        list.Count.Should().Be(25);
+
+    }
+
+
+    [Fact]
+    [Description("Check reset is not fired")]
+    public void NeverFireReset()
+    {
+        var options = new SortAndBindOptions { ResetThreshold = int.MaxValue };
+
+        using var sorted = _source.Connect().SortAndBind(out var list, _comparer, options).Subscribe();
+        using var collectionChangedEvents = list.ObserveCollectionChanges().Select(e => e.EventArgs).Subscribe(_collectionChangedEventArgs.Add);
+
+        // fire 5 changes, should always reset because it's below the threshold
+        _source.AddOrUpdate(Enumerable.Range(0, 5).Select(i => new Person($"P{i}", i)));
+        _collectionChangedEventArgs.Count.Should().Be(5);
+        _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
+
+
+        _collectionChangedEventArgs.Clear();
+
+        // fire 15 changes, we should get a refresh event
+        _source.AddOrUpdate(Enumerable.Range(10, 15).Select(i => new Person($"P{i}", i)));
+        _collectionChangedEventArgs.Count.Should().Be(15);
+        _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
+        
+        list.Count.Should().Be(20);
+
+    }
+
+
+    public void Dispose() => _source.Dispose();
+}
+
 
 
 public abstract class SortAndBindFixture : IDisposable
@@ -56,15 +133,12 @@ public abstract class SortAndBindFixture : IDisposable
     private readonly ChangeSetAggregator<Person, string> _results;
     private readonly IList<Person> _boundList;
 
-    protected readonly IComparer<Person> _comparer;
-    protected readonly ISourceCache<Person, string> _source;
+    protected readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
+    protected readonly ISourceCache<Person, string> _source = new SourceCache<Person, string>(p => p.Key);
 
 
     public SortAndBindFixture()
     {
-        _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
-        _source = new SourceCache<Person, string>(p => p.Key);
-
         // It's ok in this case to call VirtualMemberCallInConstructor
 
 #pragma warning disable CA2214

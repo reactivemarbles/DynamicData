@@ -20,12 +20,6 @@ public record struct SortAndBindOptions()
     public bool UseReplaceForUpdates { get; init; } = BindingOptions.DefaultUseReplaceForUpdates;
 
     /// <summary>
-    /// Should a reset be fired for a first time load
-    /// This option is due to historic reasons where a reset would be fired for the first time load regardless of the number of changes.
-    /// </summary>
-    public bool ResetOnFirstTimeLoad { get; init; } = BindingOptions.DefaultResetOnFirstTimeLoad;
-
-    /// <summary>
     /// Use binary search when the result of the comparer is a pure function.
     /// </summary>
     public bool UseBinarySearch { get; init; }

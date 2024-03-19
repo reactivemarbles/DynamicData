@@ -24,21 +24,27 @@ internal sealed class SortAndBind<TObject, TKey>(
     where TKey : notnull
 {
     private readonly Cache<TObject, TKey> _cache = new();
-    private readonly object _locker = new();
 
     public IObservable<IChangeSet<TObject, TKey>> Run() =>
         source
-            .Synchronize(_locker)
             // apply sorting as a side effect of the observable stream.
             .Do(changes =>
             {
-                // clone to local cache so that we can sort entire set when threshold is over a certain size.
+                // clone to local cache so that we can sort the entire set when threshold is over a certain size.
                 _cache.Clone(changes);
 
                 // apply sorted changes to the target collection
-                if (target.Count == 0 || (options.ResetThreshold != 0 && options.ResetThreshold < changes.Count))
+                if (options.ResetThreshold > 0 && options.ResetThreshold < changes.Count)
                 {
-                    Reset(_cache.Items.OrderBy(kv => kv, comparer));
+                    Reset(_cache.Items.OrderBy(t => t, comparer));
+                }
+                else if (target is ObservableCollectionExtended<TObject> observableCollectionExtended)
+                {
+                    // suspend count as it can result in a flood of binding updates.
+                    using (observableCollectionExtended.SuspendCount())
+                    {
+                        ApplyChanges(changes);
+                    }
                 }
                 else
                 {
@@ -84,10 +90,19 @@ internal sealed class SortAndBind<TObject, TKey>(
                 case ChangeReason.Update:
                     {
                         var currentIndex = GetCurrentPosition(change.Previous.Value);
-                        target.RemoveAt(currentIndex);
-
                         var index = GetInsertPosition(item);
-                        target.Insert(index, item);
+
+                        // Some control suites and platforms do not support replace, whiles others do, so we opt in.
+                        // Also, we should probably exclude the previous item for .GetInsertPosition(...).  Similar for Refresh.
+                        if (options.UseReplaceForUpdates && currentIndex != index)
+                        {
+                            target.RemoveAt(currentIndex);
+                            target.Insert(index, item);
+                        }
+                        else
+                        {
+                            target[currentIndex] = item;
+                        }
                     }
                     break;
                 case ChangeReason.Remove:
