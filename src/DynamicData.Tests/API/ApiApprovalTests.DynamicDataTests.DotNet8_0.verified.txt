@@ -1760,8 +1760,20 @@ namespace DynamicData
         public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerObservable, System.IObservable<System.Reactive.Unit> resorter, DynamicData.SortOptimisations sortOptimisations = 0, int resetThreshold = 100)
             where TObject :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList)
+            where TObject :  notnull, System.IComparable<TObject>
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
+            where TObject :  notnull, System.IComparable<TObject>
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, DynamicData.Binding.SortAndBindOptions options)
+            where TObject :  notnull, System.IComparable<TObject>
+            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, System.Collections.Generic.IComparer<TObject> comparer)
             where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, DynamicData.Binding.SortAndBindOptions options)
+            where TObject :  notnull, System.IComparable<TObject>
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, System.Collections.Generic.IComparer<TObject> comparer)
             where TObject :  notnull

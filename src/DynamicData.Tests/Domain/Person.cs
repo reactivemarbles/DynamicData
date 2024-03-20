@@ -17,7 +17,7 @@ public enum Color
     Violet,
 }
 
-public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
+public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>, IComparable<Person>
 {
     private int _age;
     private int? _ageNullable;
@@ -215,4 +215,11 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
             }
         }
     }
+
+    // Implemented for SortAndBindFixture.
+    public static IComparer<Person> DefaultComparer { get; } = SortExpressionComparer<Person>
+        .Ascending(p => p.Age)
+        .ThenByAscending(p => p.Name);
+
+    public int CompareTo(Person? other) => DefaultComparer.Compare(this, other);
 }
