@@ -9,7 +9,6 @@ using System.Reactive.Disposables;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using Mono.Cecil;
 using Xunit;
 
 namespace DynamicData.Tests.Cache;
@@ -28,6 +27,19 @@ public sealed class SortAndBindToList: SortAndBindFixture
     }
 }
 
+// Bind to a list using default comparer
+public sealed class SortAndBindToListDefaultComparer : SortAndBindFixture
+
+{
+    protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
+    {
+        var list = new List<Person>(100);
+        var aggregator = _source.Connect().SortAndBind(list).AsAggregator();
+
+        return (aggregator, list);
+    }
+}
+
 // Bind to an observable collection
 public sealed class SortAndBindToObservableCollection : SortAndBindFixture
 
@@ -36,10 +48,10 @@ public sealed class SortAndBindToObservableCollection : SortAndBindFixture
     {
         var list = new ObservableCollection<Person>(new List<Person>(100));
         var aggregator = _source.Connect().SortAndBind(list, _comparer).AsAggregator();
-
         return (aggregator, list);
     }
 }
+
 
 // Bind to a readonly observable collection
 public sealed class SortAndBindToReadOnlyObservableCollection: SortAndBindFixture
@@ -59,6 +71,17 @@ public sealed class SortAndBindWithBinarySearch : SortAndBindFixture
     {
         var options = new SortAndBindOptions { UseBinarySearch = true };
         var aggregator = _source.Connect().SortAndBind(out var list, _comparer, options).AsAggregator();
+
+        return (aggregator, list);
+    }
+}
+
+// Bind to a readonly observable collection - using default comparer
+public sealed class SortAndBindToReadOnlyObservableCollectionDefaultComparer : SortAndBindFixture
+{
+    protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
+    {
+        var aggregator = _source.Connect().SortAndBind(out var list).AsAggregator();
 
         return (aggregator, list);
     }
@@ -144,7 +167,7 @@ public abstract class SortAndBindFixture : IDisposable
     private readonly ChangeSetAggregator<Person, string> _results;
     private readonly IList<Person> _boundList;
 
-    protected readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
+    protected readonly IComparer<Person> _comparer = Person.DefaultComparer;
     protected readonly ISourceCache<Person, string> _source = new SourceCache<Person, string>(p => p.Key);
 
 
@@ -531,3 +554,4 @@ public abstract class SortAndBindFixture : IDisposable
         _results.Dispose();
     }
 }
+
