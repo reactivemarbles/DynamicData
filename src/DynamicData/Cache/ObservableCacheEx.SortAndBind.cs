@@ -13,7 +13,7 @@ namespace DynamicData;
 public static partial class ObservableCacheEx
 {
     /// <summary>
-    /// Bind sorted data to the specified collection IList  for an object which implements IComparable<typeparamref name="TObject"></typeparamref>>.
+    /// Bind sorted data to the specified collection, for an object which implements IComparable<typeparamref name="TObject"></typeparamref>>.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -28,7 +28,7 @@ public static partial class ObservableCacheEx
         source.SortAndBind(targetList, DynamicDataOptions.SortAndBind);
 
     /// <summary>
-    /// Bind sorted data to the specified collection IList  for an object which implements IComparable<typeparamref name="TObject"></typeparamref>>.
+    /// Bind sorted data to the specified collection, for an object which implements IComparable<typeparamref name="TObject"></typeparamref>>.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -45,7 +45,7 @@ public static partial class ObservableCacheEx
         source.SortAndBind(targetList, Comparer<TObject>.Default, options);
 
     /// <summary>
-    /// Bind sorted data to the specified collection IList.
+    /// Bind sorted data to the specified collection.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -62,7 +62,7 @@ public static partial class ObservableCacheEx
         source.SortAndBind(targetList, comparer, DynamicDataOptions.SortAndBind);
 
     /// <summary>
-    /// Bind sorted data to the specified collection IList.
+    /// Bind sorted data to the specified collection.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
