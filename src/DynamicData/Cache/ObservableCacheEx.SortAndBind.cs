@@ -23,7 +23,7 @@ public static partial class ObservableCacheEx
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         IList<TObject> targetList)
-        where TObject : notnull
+        where TObject : notnull, IComparable<TObject>
         where TKey : notnull =>
         source.SortAndBind(targetList, DynamicDataOptions.SortAndBind);
 
@@ -40,7 +40,7 @@ public static partial class ObservableCacheEx
         this IObservable<IChangeSet<TObject, TKey>> source,
         IList<TObject> targetList,
         SortAndBindOptions options)
-        where TObject : notnull
+        where TObject : notnull, IComparable<TObject>
         where TKey : notnull =>
         source.SortAndBind(targetList, Comparer<TObject>.Default, options);
 
