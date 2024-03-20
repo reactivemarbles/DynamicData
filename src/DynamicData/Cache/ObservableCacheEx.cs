@@ -25,7 +25,7 @@ namespace DynamicData;
 /// <summary>
 /// Extensions for dynamic data.
 /// </summary>
-public static class ObservableCacheEx
+public static partial class ObservableCacheEx
 {
     private const int DefaultSortResetThreshold = 100;
     private const bool DefaultResortOnSourceRefresh = true;

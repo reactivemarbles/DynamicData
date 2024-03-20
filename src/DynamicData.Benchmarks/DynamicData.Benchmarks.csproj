@@ -22,4 +22,7 @@
   <ItemGroup>
     <None Include="BenchmarkDotNet.Artifacts\**\*" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="BenchmarkDotNet.Artifacts\" />
+  </ItemGroup>
 </Project>

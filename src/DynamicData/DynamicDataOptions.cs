@@ -7,12 +7,17 @@ using DynamicData.Binding;
 namespace DynamicData;
 
 /// <summary>
-/// System wide options container.
+/// System-wide options container.
 /// </summary>
 public static class DynamicDataOptions
 {
     /// <summary>
-    /// Gets or sets the default values for all binding operations.
+    /// Gets or sets the system-wide default values for all Bind operations.
     /// </summary>
     public static BindingOptions Binding { get; set; } = new(BindingOptions.DefaultResetThreshold);
+
+    /// <summary>
+    /// Gets or sets the system-wide default values for all SortAndBind operations.
+    /// </summary>
+    public static SortAndBindOptions SortAndBind { get; set; } = new();
 }
