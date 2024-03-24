@@ -81,6 +81,42 @@ public static partial class ObservableCacheEx
         new SortAndBind<TObject, TKey>(source, comparer, options, targetList).Run();
 
     /// <summary>
+    /// Bind sorted data to the specified collection, using an observable of comparers to switch sort order.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="targetList">The list to bind to.</param>
+    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey>> source,
+        IList<TObject> targetList,
+        IObservable<IComparer<TObject>> comparerChanged)
+        where TObject : notnull
+        where TKey : notnull =>
+        source.SortAndBind(targetList, comparerChanged, DynamicDataOptions.SortAndBind);
+
+    /// <summary>
+    /// Bind sorted data to the specified collection, using an observable of comparers to switch sort order.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="targetList">The list to bind to.</param>
+    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>>
+    /// <param name="options">Bind and sort default options.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey>> source,
+        IList<TObject> targetList,
+        IObservable<IComparer<TObject>> comparerChanged,
+        SortAndBindOptions options)
+        where TObject : notnull
+        where TKey : notnull =>
+        new SortAndBind<TObject, TKey>(source, comparerChanged, options, targetList).Run();
+
+    /// <summary>
     ///  Bind sorted data to the specified readonly observable collection for an object which implements IComparable<typeparamref name="TObject"></typeparamref>>.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -155,5 +191,50 @@ public static partial class ObservableCacheEx
         readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(observableCollection);
 
         return new SortAndBind<TObject, TKey>(source, comparer, options, observableCollection).Run();
+    }
+
+    /// <summary>
+    ///  Bind sorted data to the specified readonly observable collection, using an observable of comparers to switch sort order.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey>> source,
+        out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
+        IObservable<IComparer<TObject>> comparerChanged)
+        where TObject : notnull
+        where TKey : notnull =>
+        source.SortAndBind(out readOnlyObservableCollection, comparerChanged, DynamicDataOptions.SortAndBind);
+
+    /// <summary>
+    ///  Bind sorted data to the specified readonly observable collection, using an observable of comparers to switch sort order.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>>
+    /// <param name="options">Bind and sort default options.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey>> source,
+        out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
+        IObservable<IComparer<TObject>> comparerChanged,
+        SortAndBindOptions options)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        // allow options to set initial capacity for efficiency
+        var observableCollection = options.InitialCapacity > 0
+            ? new ObservableCollectionExtended<TObject>(new List<TObject>(options.InitialCapacity))
+            : new ObservableCollectionExtended<TObject>();
+
+        readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(observableCollection);
+
+        return new SortAndBind<TObject, TKey>(source, comparerChanged, options, observableCollection).Run();
     }
 }
