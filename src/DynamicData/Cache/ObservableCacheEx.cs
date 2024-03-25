@@ -3593,24 +3593,6 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Returns the page as specified by the pageRequests observable.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="pageRequests">The page requests.</param>
-    /// <returns>An observable which emits change sets.</returns>
-    public static IObservable<IPagedChangeSet<TObject, TKey>> Page<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pageRequests.ThrowArgumentNullExceptionIfNull(nameof(pageRequests));
-
-        return new Page<TObject, TKey>(source, pageRequests).Run();
-    }
-
-    /// <summary>
     /// Populate a cache from an observable stream.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>

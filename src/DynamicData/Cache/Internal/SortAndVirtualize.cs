@@ -3,30 +3,39 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Linq;
+using DynamicData.Binding;
 
 namespace DynamicData.Cache.Internal;
 
 internal sealed class SortAndVirtualize<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source,
     IComparer<TObject> comparer,
-    IObservable<IVirtualRequest> virtualRequests)
+    IObservable<IVirtualRequest> virtualRequests,
+    SortAndVirtualizeOptions options)
     where TObject : notnull
     where TKey : notnull
 {
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
     private readonly IObservable<IVirtualRequest> _virtualRequests = virtualRequests ?? throw new ArgumentNullException(nameof(virtualRequests));
 
-    public IObservable<IChangeSet<TObject, TKey>> Run() =>
-        Observable.Create<IChangeSet<TObject, TKey>>(
+    public IObservable<IVirtualChangeSet<TObject, TKey>> Run() =>
+        Observable.Create<IVirtualChangeSet<TObject, TKey>>(
             observer =>
             {
                 var locker = new object();
 
                 IVirtualRequest virtualParams = new VirtualRequest();
 
-                var sortedList = new List<KeyValuePair<TKey, TObject>>();
+                var sortedList = new List<KeyValuePair<TKey, TObject>>(options.InitialCapacity);
                 var virtualItems = new List<KeyValuePair<TKey, TObject>>(50);
                 var keyValueComparer = new KeyValueComparer<TObject, TKey>(comparer);
-                var applicator = new SortedKeyValueApplicator<TObject, TKey>(sortedList, keyValueComparer, DynamicDataOptions.SortAndBind);
+
+                var sortOptions = new SortAndBindOptions
+                {
+                    UseBinarySearch = options.UseBinarySearch,
+                    ResetThreshold = options.ResetThreshold
+                };
+
+                var applicator = new SortedKeyValueApplicator<TObject, TKey>(sortedList, keyValueComparer, sortOptions);
 
                 var paramsChanged = _virtualRequests.Synchronize(locker)
                     .DistinctUntilChanged()
@@ -52,7 +61,7 @@ internal sealed class SortAndVirtualize<TObject, TKey>(IObservable<IChangeSet<TO
 
                 return paramsChanged.Merge(dataChange).SubscribeSafe(observer);
 
-                ChangeSet<TObject, TKey> ApplyVirtualChanges(IChangeSet<TObject, TKey>? changeSet = null)
+                VirtualChangeSet<TObject, TKey> ApplyVirtualChanges(IChangeSet<TObject, TKey>? changeSet = null)
                 {
                     // re-calculate virtual changes
                     var currentVirtualItems = new List<KeyValuePair<TKey, TObject>>(virtualParams.Size);
@@ -64,8 +73,14 @@ internal sealed class SortAndVirtualize<TObject, TKey>(IObservable<IChangeSet<TO
                     // set current result
                     virtualItems = currentVirtualItems;
 
-                    // return changes
-                    return notifications;
+                    // adapt old defaults with current
+                    var optimisations = options.UseBinarySearch
+                        ? SortOptimisations.ComparesImmutableValuesOnly
+                        : SortOptimisations.None;
+
+                    var readonlyItems = new KeyValueCollection<TObject, TKey>(virtualItems, keyValueComparer, SortReason.DataChanged, optimisations);
+                    var response = new VirtualResponse(virtualParams.Size, virtualParams.StartIndex, sortedList.Count);
+                    return new VirtualChangeSet<TObject, TKey>(notifications, readonlyItems, response);
                 }
             });
 
@@ -88,7 +103,7 @@ internal sealed class SortAndVirtualize<TObject, TKey>(IObservable<IChangeSet<TO
         {
             if (!inBothKeys.Contains(change.Key)) continue;
 
-            if (change.Reason == ChangeReason.Update)
+            if (change.Reason is ChangeReason.Update or ChangeReason.Refresh)
             {
                 result.Add(change);
             }
