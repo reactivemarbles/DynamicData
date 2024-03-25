@@ -4,7 +4,7 @@
 
 using DynamicData.Binding;
 
-namespace DynamicData.Cache;
+namespace DynamicData;
 
 /// <summary>
 /// Options for the sort and virtualize operator.
@@ -22,7 +22,7 @@ public record struct SortAndVirtualizeOptions()
     public bool UseBinarySearch { get; init; }
 
     /// <summary>
-    /// Set the initial capacity of internal sorted list
+    /// Set the initial capacity of internal sorted list.
     /// </summary>
-    public int InitialCapacity { get; init; } = 0;
+    public int InitialCapacity { get; init; }
 }

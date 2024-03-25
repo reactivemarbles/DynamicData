@@ -17,16 +17,16 @@ internal sealed class SortAndVirtualize<TObject, TKey>(IObservable<IChangeSet<TO
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
     private readonly IObservable<IVirtualRequest> _virtualRequests = virtualRequests ?? throw new ArgumentNullException(nameof(virtualRequests));
 
-    public IObservable<IVirtualChangeSet<TObject, TKey>> Run() =>
-        Observable.Create<IVirtualChangeSet<TObject, TKey>>(
+    public IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> Run() =>
+        Observable.Create<IChangeSet<TObject, TKey, VirtualContext<TObject>>>(
             observer =>
             {
                 var locker = new object();
 
-                IVirtualRequest virtualParams = new VirtualRequest();
+                IVirtualRequest virtualParams = VirtualRequest.Default;
 
                 var sortedList = new List<KeyValuePair<TKey, TObject>>(options.InitialCapacity);
-                var virtualItems = new List<KeyValuePair<TKey, TObject>>(50);
+                var virtualItems = new List<KeyValuePair<TKey, TObject>>(virtualParams.Size);
                 var keyValueComparer = new KeyValueComparer<TObject, TKey>(comparer);
 
                 var sortOptions = new SortAndBindOptions
@@ -40,7 +40,7 @@ internal sealed class SortAndVirtualize<TObject, TKey>(IObservable<IChangeSet<TO
                 var paramsChanged = _virtualRequests.Synchronize(locker)
                     .DistinctUntilChanged()
                     // exclude dodgy params
-                    .Where(parameters => parameters is { StartIndex: > 0, Size: > 0 })
+                    .Where(parameters => parameters is { StartIndex: >= 0, Size: > 0 })
                     .Select(request =>
                     {
                         virtualParams = request;
@@ -61,33 +61,27 @@ internal sealed class SortAndVirtualize<TObject, TKey>(IObservable<IChangeSet<TO
 
                 return paramsChanged.Merge(dataChange).SubscribeSafe(observer);
 
-                VirtualChangeSet<TObject, TKey> ApplyVirtualChanges(IChangeSet<TObject, TKey>? changeSet = null)
+                ChangeSet<TObject, TKey, VirtualContext<TObject>> ApplyVirtualChanges(IChangeSet<TObject, TKey>? changeSet = null)
                 {
                     // re-calculate virtual changes
                     var currentVirtualItems = new List<KeyValuePair<TKey, TObject>>(virtualParams.Size);
                     currentVirtualItems.AddRange(sortedList.Skip(virtualParams.StartIndex).Take(virtualParams.Size));
 
+                    var responseParams = new VirtualResponse(virtualParams.Size, virtualParams.StartIndex, sortedList.Count);
+                    var context = new VirtualContext<TObject>(responseParams, comparer, options);
+
                     // calculate notifications
-                    var notifications = CalculateVirtualChanges(currentVirtualItems, virtualItems, changeSet);
-
-                    // set current result
-                    virtualItems = currentVirtualItems;
-
-                    // adapt old defaults with current
-                    var optimisations = options.UseBinarySearch
-                        ? SortOptimisations.ComparesImmutableValuesOnly
-                        : SortOptimisations.None;
-
-                    var readonlyItems = new KeyValueCollection<TObject, TKey>(virtualItems, keyValueComparer, SortReason.DataChanged, optimisations);
-                    var response = new VirtualResponse(virtualParams.Size, virtualParams.StartIndex, sortedList.Count);
-                    return new VirtualChangeSet<TObject, TKey>(notifications, readonlyItems, response);
+                    return CalculateVirtualChanges(context, currentVirtualItems, virtualItems, changeSet);
                 }
             });
 
-    public static ChangeSet<TObject, TKey> CalculateVirtualChanges(List<KeyValuePair<TKey, TObject>> currentItems, List<KeyValuePair<TKey, TObject>> previousItems, IChangeSet<TObject, TKey>? changes = null)
+    public static ChangeSet<TObject, TKey, VirtualContext<TObject>> CalculateVirtualChanges(VirtualContext<TObject> context,
+        List<KeyValuePair<TKey, TObject>> currentItems,
+        List<KeyValuePair<TKey, TObject>> previousItems,
+        IChangeSet<TObject, TKey>? changes = null)
     {
         var keyComparer = new KeyComparer<TObject, TKey>();
-        var result = new ChangeSet<TObject, TKey>(currentItems.Count * 2);
+        var result = new ChangeSet<TObject, TKey, VirtualContext<TObject>>(currentItems.Count * 2, context);
 
         var removes = previousItems.Except(currentItems, keyComparer).Select(kvp => new Change<TObject, TKey>(ChangeReason.Remove, kvp.Key, kvp.Value));
         var adds = currentItems.Except(previousItems, keyComparer).Select(kvp => new Change<TObject, TKey>(ChangeReason.Remove, kvp.Key, kvp.Value));

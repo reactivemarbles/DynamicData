@@ -5,7 +5,7 @@
 namespace DynamicData.Binding;
 
 /// <summary>
-/// Options for bind the bind and sort operators.
+/// Options for the sort and bind operator.
 /// </summary>
 public record struct SortAndBindOptions()
 {

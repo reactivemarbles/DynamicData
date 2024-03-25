@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
 using System.Reactive.Linq;
 using DynamicData.Cache;
 using DynamicData.Cache.Internal;
@@ -42,14 +43,12 @@ public static partial class ObservableCacheEx
     /// <param name="virtualRequests">The virtualizing requests.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> SortAndVirtualize<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+    public static IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> SortAndVirtualize<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
         IComparer<TObject> comparer,
         IObservable<IVirtualRequest> virtualRequests)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.SortAndVirtualize(comparer, virtualRequests, new SortAndVirtualizeOptions());
-    }
+        where TKey : notnull =>
+        source.SortAndVirtualize(comparer, virtualRequests, new SortAndVirtualizeOptions());
 
     /// <summary>
     /// Sort and virtualize the underlying data from the specified source.
@@ -62,7 +61,7 @@ public static partial class ObservableCacheEx
     /// <param name="options"> Addition optimization options for virtualization.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> SortAndVirtualize<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+    public static IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> SortAndVirtualize<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
         IComparer<TObject> comparer,
         IObservable<IVirtualRequest> virtualRequests,
         SortAndVirtualizeOptions options)
