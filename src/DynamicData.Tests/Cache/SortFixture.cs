@@ -302,7 +302,7 @@ public class SortFixtureWithReorder : IDisposable
         _source.AddOrUpdate(people);
 
         //create age 0 to ensure it is inserted first
-        var remove = _results.Messages[0].SortedItems.First();
+        var remove = _results.Messages[0].SortedItems[0];
 
         _source.Remove(remove.Key);
 
@@ -323,7 +323,7 @@ public class SortFixtureWithReorder : IDisposable
         _source.AddOrUpdate(people);
 
         //create age 0 to ensure it is inserted first
-        var remove = _results.Messages[0].SortedItems.Last();
+        var remove = _results.Messages[0].SortedItems[^1];
 
         _source.Remove(remove.Key);
 
@@ -421,7 +421,7 @@ public class SortFixtureWithReorder : IDisposable
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
-        var toupdate = _results.Messages[0].SortedItems.First().Value;
+        var toupdate = _results.Messages[0].SortedItems[0].Value;
         var update = new Person(toupdate.Name, toupdate.Age + 5);
 
         _source.AddOrUpdate(update);
@@ -444,7 +444,7 @@ public class SortFixtureWithReorder : IDisposable
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
-        var toupdate = _results.Messages[0].SortedItems.Last().Value;
+        var toupdate = _results.Messages[0].SortedItems[^1].Value;
         var update = new Person(toupdate.Name, toupdate.Age + 5);
 
         _source.AddOrUpdate(update);
@@ -828,7 +828,7 @@ public class SortFixture : IDisposable
         _source.AddOrUpdate(people);
 
         //create age 0 to ensure it is inserted first
-        var remove = _results.Messages[0].SortedItems.First();
+        var remove = _results.Messages[0].SortedItems[0];
 
         _source.Remove(remove.Key);
 
@@ -849,7 +849,7 @@ public class SortFixture : IDisposable
         _source.AddOrUpdate(people);
 
         //create age 0 to ensure it is inserted first
-        var remove = _results.Messages[0].SortedItems.Last();
+        var remove = _results.Messages[0].SortedItems[^1];
 
         _source.Remove(remove.Key);
 
@@ -947,7 +947,7 @@ public class SortFixture : IDisposable
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
-        var toupdate = _results.Messages[0].SortedItems.First().Value;
+        var toupdate = _results.Messages[0].SortedItems[0].Value;
         var update = new Person(toupdate.Name, toupdate.Age + 5);
 
         _source.AddOrUpdate(update);
@@ -970,7 +970,7 @@ public class SortFixture : IDisposable
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
-        var toupdate = _results.Messages[0].SortedItems.Last().Value;
+        var toupdate = _results.Messages[0].SortedItems[^1].Value;
         var update = new Person(toupdate.Name, toupdate.Age + 5);
 
         _source.AddOrUpdate(update);
