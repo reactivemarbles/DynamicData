@@ -2,9 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.ComponentModel;
 using System.Reactive.Linq;
-using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 
 namespace DynamicData;
@@ -56,12 +54,36 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
+    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>>
+    /// <param name="virtualRequests">The virtualizing requests.</param>
+    /// <returns>An observable which will emit virtual change sets.</returns>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> SortAndVirtualize<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey>> source,
+        IObservable<IComparer<TObject>> comparerChanged,
+        IObservable<IVirtualRequest> virtualRequests)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
+
+        return source.SortAndVirtualize(comparerChanged, virtualRequests, new SortAndVirtualizeOptions());
+    }
+
+    /// <summary>
+    /// Sort and virtualize the underlying data from the specified source.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
     /// <param name="comparer">The comparer to order the resulting dataset.</param>
     /// <param name="virtualRequests">The virtualizing requests.</param>
     /// <param name="options"> Addition optimization options for virtualization.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> SortAndVirtualize<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+    public static IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> SortAndVirtualize<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey>> source,
         IComparer<TObject> comparer,
         IObservable<IVirtualRequest> virtualRequests,
         SortAndVirtualizeOptions options)
@@ -72,6 +94,31 @@ public static partial class ObservableCacheEx
         virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
 
         return new SortAndVirtualize<TObject, TKey>(source, comparer, virtualRequests, options).Run();
+    }
+
+    /// <summary>
+    /// Sort and virtualize the underlying data from the specified source.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>>
+    /// <param name="virtualRequests">The virtualizing requests.</param>
+    /// <param name="options"> Addition optimization options for virtualization.</param>
+    /// <returns>An observable which will emit virtual change sets.</returns>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> SortAndVirtualize<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey>> source,
+        IObservable<IComparer<TObject>> comparerChanged,
+        IObservable<IVirtualRequest> virtualRequests,
+        SortAndVirtualizeOptions options)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
+
+        return new SortAndVirtualize<TObject, TKey>(source, comparerChanged, virtualRequests, options).Run();
     }
 
     /// <summary>

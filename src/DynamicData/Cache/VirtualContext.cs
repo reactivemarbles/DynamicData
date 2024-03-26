@@ -11,4 +11,15 @@ namespace DynamicData;
 /// <param name="Response"> Response parameters.</param>
 /// <param name="Comparer"> The comparer used to order the items.</param>
 /// <param name="Options"> The options used to perform virtualization.</param>
-public record VirtualContext<TObject>(IVirtualResponse Response, IComparer<TObject> Comparer, SortAndVirtualizeOptions Options);
+public record VirtualContext<TObject>(
+    IVirtualResponse Response,
+    IComparer<TObject> Comparer,
+    SortAndVirtualizeOptions Options)
+{
+    internal static readonly VirtualContext<TObject> Empty = new
+    (
+        new VirtualResponse(0, 0, 0),
+        Comparer<TObject>.Default,
+        new SortAndVirtualizeOptions()
+    );
+}

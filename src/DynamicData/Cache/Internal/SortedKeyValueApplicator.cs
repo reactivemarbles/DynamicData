@@ -11,26 +11,37 @@ namespace DynamicData.Cache.Internal;
  *
  * Used by virtualise and page.
  */
-internal sealed class SortedKeyValueApplicator<TObject, TKey>(List<KeyValuePair<TKey, TObject>> target,
-    KeyValueComparer<TObject, TKey> comparer,
-    SortAndBindOptions options)
+internal sealed class SortedKeyValueApplicator<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
     private readonly Cache<TObject, TKey> _cache = new();
+    private readonly List<KeyValuePair<TKey, TObject>> _target;
+    private readonly SortAndBindOptions _options;
 
-    public void Reset()
+    private KeyValueComparer<TObject, TKey> _comparer;
+
+    public SortedKeyValueApplicator(List<KeyValuePair<TKey, TObject>> target,
+        KeyValueComparer<TObject, TKey> comparer,
+        SortAndBindOptions options)
     {
-        var sorted = _cache.KeyValues.OrderBy(t => t, comparer);
-        target.Clear();
-        target.AddRange(sorted);
+        _target = target;
+        _options = options;
+        _comparer = comparer;
+    }
+
+    public void ChangeComparer(KeyValueComparer<TObject, TKey> comparer)
+    {
+        _comparer = comparer;
+
+        _target.Sort(comparer);
     }
 
     public void ProcessChanges(IChangeSet<TObject, TKey> changes)
     {
         _cache.Clone(changes);
 
-        var fireReset = options.ResetThreshold > 0 && options.ResetThreshold < changes.Count;
+        var fireReset = _options.ResetThreshold > 0 && _options.ResetThreshold < changes.Count;
 
         if (fireReset)
         {
@@ -40,6 +51,13 @@ internal sealed class SortedKeyValueApplicator<TObject, TKey>(List<KeyValuePair<
         {
             ApplyChanges(changes);
         }
+    }
+
+    public void Reset()
+    {
+        var sorted = _cache.KeyValues.OrderBy(t => t, _comparer);
+        _target.Clear();
+        _target.AddRange(sorted);
     }
 
     private void ApplyChanges(IChangeSet<TObject, TKey> changes)
@@ -54,7 +72,7 @@ internal sealed class SortedKeyValueApplicator<TObject, TKey>(List<KeyValuePair<
                 case ChangeReason.Add:
                     {
                         var index = GetInsertPosition(item);
-                        target.Insert(index, item);
+                        _target.Insert(index, item);
                     }
                     break;
                 case ChangeReason.Update:
@@ -67,21 +85,21 @@ internal sealed class SortedKeyValueApplicator<TObject, TKey>(List<KeyValuePair<
                         updatedIndex = currentIndex < updatedIndex ? updatedIndex - 1 : updatedIndex;
 
                         // Some control suites and platforms do not support replace, whiles others do, so we opt in.
-                        if (options.UseReplaceForUpdates && currentIndex == updatedIndex)
+                        if (_options.UseReplaceForUpdates && currentIndex == updatedIndex)
                         {
-                            target[currentIndex] = item;
+                            _target[currentIndex] = item;
                         }
                         else
                         {
-                            target.RemoveAt(currentIndex);
-                            target.Insert(updatedIndex, item);
+                            _target.RemoveAt(currentIndex);
+                            _target.Insert(updatedIndex, item);
                         }
                     }
                     break;
                 case ChangeReason.Remove:
                     {
                         var currentIndex = GetCurrentPosition(item);
-                        target.RemoveAt(currentIndex);
+                        _target.RemoveAt(currentIndex);
                     }
                     break;
                 case ChangeReason.Refresh:
@@ -95,15 +113,15 @@ internal sealed class SortedKeyValueApplicator<TObject, TKey>(List<KeyValuePair<
                          * events with .WhereReasonsAreNot(ChangeReason.Refresh), but it may be problematic to exclude refresh automatically
                          * as that would effectively be swallowing an error.
                          */
-                        var currentIndex = target.IndexOf(item);
-                        var updatedIndex = target.GetInsertPositionLinear(item, comparer);
+                        var currentIndex = _target.IndexOf(item);
+                        var updatedIndex = _target.GetInsertPositionLinear(item, _comparer);
 
                         // We need to recalibrate as GetInsertPosition includes the current item
                         updatedIndex = currentIndex < updatedIndex ? updatedIndex - 1 : updatedIndex;
                         if (updatedIndex != currentIndex)
                         {
-                            target.RemoveAt(currentIndex);
-                            target.Insert(updatedIndex, item);
+                            _target.RemoveAt(currentIndex);
+                            _target.Insert(updatedIndex, item);
                         }
                     }
                     break;
@@ -115,7 +133,7 @@ internal sealed class SortedKeyValueApplicator<TObject, TKey>(List<KeyValuePair<
         }
     }
 
-    private int GetCurrentPosition(KeyValuePair<TKey, TObject> item) => target.GetCurrentPosition(item, comparer, options.UseBinarySearch);
+    private int GetCurrentPosition(KeyValuePair<TKey, TObject> item) => _target.GetCurrentPosition(item, _comparer, _options.UseBinarySearch);
 
-    private int GetInsertPosition(KeyValuePair<TKey, TObject> item) => target.GetInsertPosition(item, comparer, options.UseBinarySearch);
+    private int GetInsertPosition(KeyValuePair<TKey, TObject> item) => _target.GetInsertPosition(item, _comparer, _options.UseBinarySearch);
 }
