@@ -16,6 +16,7 @@ internal sealed class SortAndVirtualize<TObject, TKey>(IObservable<IChangeSet<TO
 {
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
     private readonly IObservable<IVirtualRequest> _virtualRequests = virtualRequests ?? throw new ArgumentNullException(nameof(virtualRequests));
+    private static readonly KeyComparer<TObject, TKey> KeyComparer = new();
 
     public IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> Run() =>
         Observable.Create<IChangeSet<TObject, TKey, VirtualContext<TObject>>>(
@@ -50,6 +51,9 @@ internal sealed class SortAndVirtualize<TObject, TKey>(IObservable<IChangeSet<TO
                     });
 
                 var dataChange = _source.Synchronize(locker)
+                    // we need to ensure each change batch has unique keys only.
+                    // Otherwise, calculation of virtualized changes is super complex
+                    .EnsureUniqueKeys()
                     .Select(changes =>
                     {
                         // apply changes to the sorted list
@@ -59,7 +63,10 @@ internal sealed class SortAndVirtualize<TObject, TKey>(IObservable<IChangeSet<TO
                         return ApplyVirtualChanges(changes);
                     });
 
-                return paramsChanged.Merge(dataChange).SubscribeSafe(observer);
+                return paramsChanged
+                    .Merge(dataChange)
+                    .Where(changes => changes.Count is not 0)
+                    .SubscribeSafe(observer);
 
                 ChangeSet<TObject, TKey, VirtualContext<TObject>> ApplyVirtualChanges(IChangeSet<TObject, TKey>? changeSet = null)
                 {
@@ -71,31 +78,37 @@ internal sealed class SortAndVirtualize<TObject, TKey>(IObservable<IChangeSet<TO
                     var context = new VirtualContext<TObject>(responseParams, comparer, options);
 
                     // calculate notifications
-                    return CalculateVirtualChanges(context, currentVirtualItems, virtualItems, changeSet);
+                    var virtualChanges = CalculateVirtualChanges(context, currentVirtualItems, virtualItems, changeSet);
+
+                    virtualItems = currentVirtualItems;
+
+                    return virtualChanges;
                 }
             });
 
-    public static ChangeSet<TObject, TKey, VirtualContext<TObject>> CalculateVirtualChanges(VirtualContext<TObject> context,
+    // Calculates any changes within the virtualized range.
+    private static ChangeSet<TObject, TKey, VirtualContext<TObject>> CalculateVirtualChanges(VirtualContext<TObject> context,
         List<KeyValuePair<TKey, TObject>> currentItems,
         List<KeyValuePair<TKey, TObject>> previousItems,
         IChangeSet<TObject, TKey>? changes = null)
     {
-        var keyComparer = new KeyComparer<TObject, TKey>();
         var result = new ChangeSet<TObject, TKey, VirtualContext<TObject>>(currentItems.Count * 2, context);
 
-        var removes = previousItems.Except(currentItems, keyComparer).Select(kvp => new Change<TObject, TKey>(ChangeReason.Remove, kvp.Key, kvp.Value));
-        var adds = currentItems.Except(previousItems, keyComparer).Select(kvp => new Change<TObject, TKey>(ChangeReason.Remove, kvp.Key, kvp.Value));
+        var removes = previousItems.Except(currentItems, KeyComparer).Select(kvp => new Change<TObject, TKey>(ChangeReason.Remove, kvp.Key, kvp.Value));
+        var adds = currentItems.Except(previousItems, KeyComparer).Select(kvp => new Change<TObject, TKey>(ChangeReason.Add, kvp.Key, kvp.Value));
 
         result.AddRange(removes);
         result.AddRange(adds);
 
         if (changes is null) return result;
 
-        var inBothKeys = new HashSet<TKey>(previousItems.Intersect(currentItems, keyComparer).Select(x => x.Key));
+        var keyInPreviousAndCurrent = new HashSet<TKey>(previousItems.Intersect(currentItems, KeyComparer).Select(x => x.Key));
 
         foreach (var change in changes)
         {
-            if (!inBothKeys.Contains(change.Key)) continue;
+            // An update (or refresh) can only occur if it was in the previous or current result set.
+            // If it was in only one or the other, it would be an add or remove accordingly.
+            if (!keyInPreviousAndCurrent.Contains(change.Key)) continue;
 
             if (change.Reason is ChangeReason.Update or ChangeReason.Refresh)
             {

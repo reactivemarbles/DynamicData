@@ -11,20 +11,45 @@ internal sealed class UniquenessEnforcer<TObject, TKey>(IObservable<IChangeSet<T
     where TKey : notnull
 {
     public IObservable<IChangeSet<TObject, TKey>> Run() =>
-        /*
-* If we handle refreshes, we cannot use .Last() as the last in the groupd may be a refresh,
-* and a previous in the group may add or update. Suddenly this scenario becomes very complicated
-* so for this phase we'll ignore these.
-*
+/*
+    For refresh,  we need to check whether there was a previous add or update in the batch. If not use refresh,
+    otherwise use the previous update.
 */
 
         source
-            .WhereReasonsAreNot(ChangeReason.Refresh, ChangeReason.Moved)
+            .WhereReasonsAreNot(ChangeReason.Moved)
             .Scan(
-                new ChangeAwareCache<TObject, TKey>(),
+                (ChangeAwareCache<TObject, TKey>?)null,
                 (cache, changes) =>
                 {
-                    var grouped = changes.GroupBy(c => c.Key).Select(c => c.Last());
+                    cache ??= new ChangeAwareCache<TObject, TKey>(changes.Count);
+
+                    var grouped = changes.GroupBy(c => c.Key).Select(c =>
+                    {
+                        var last = c.Last();
+
+                        // If the last is a refresh we need to check whether, there was a previous add or update.
+                        // If so , use the previous.
+                        if (last.Reason != ChangeReason.Refresh)
+                            return last;
+
+                        var all = c.ToArray();
+                        if (all.Length == 1)
+                            return last;
+
+                        /* Extreme edge case where compound has mixture of changes ending in refresh */
+
+                        // find the previous non-refresh and return if found
+                        for (var i = all.Length - 1; i >= 0; i--)
+                        {
+                            var candidate = all[i];
+                            if (candidate.Reason != ChangeReason.Refresh)
+                                return candidate;
+                        }
+
+                        // the entire batch are all  refresh events
+                        return all[0];
+                    });
 
                     foreach (var change in grouped)
                     {
@@ -37,10 +62,13 @@ internal sealed class UniquenessEnforcer<TObject, TKey>(IObservable<IChangeSet<T
                             case ChangeReason.Remove:
                                 cache.Remove(change.Key);
                                 break;
+                            case ChangeReason.Refresh:
+                                cache.Refresh(change.Key);
+                                break;
                         }
                     }
 
                     return cache;
                 })
-            .Select(state => state.CaptureChanges());
+            .Select(state => state!.CaptureChanges());
 }
