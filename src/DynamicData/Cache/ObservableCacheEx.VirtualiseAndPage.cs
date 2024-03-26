@@ -12,24 +12,6 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
-    /// <summary>
-    /// Virtualises the underlying data from the specified source.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="virtualRequests">The virtualising requests.</param>
-    /// <returns>An observable which will emit virtual change sets.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
-    public static IObservable<IVirtualChangeSet<TObject, TKey>> Virtualise<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IVirtualRequest> virtualRequests)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
-
-        return new Virtualise<TObject, TKey>(source, virtualRequests).Run();
-    }
 
     /// <summary>
     /// Sort and virtualize the underlying data from the specified source.
@@ -119,6 +101,25 @@ public static partial class ObservableCacheEx
         virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
 
         return new SortAndVirtualize<TObject, TKey>(source, comparerChanged, virtualRequests, options).Run();
+    }
+
+    /// <summary>
+    /// Virtualises the underlying data from the specified source.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="virtualRequests">The virtualising requests.</param>
+    /// <returns>An observable which will emit virtual change sets.</returns>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IVirtualChangeSet<TObject, TKey>> Virtualise<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IVirtualRequest> virtualRequests)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
+
+        return new Virtualise<TObject, TKey>(source, virtualRequests).Run();
     }
 
     /// <summary>
