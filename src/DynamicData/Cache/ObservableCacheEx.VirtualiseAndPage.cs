@@ -12,7 +12,6 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
-
     /// <summary>
     /// Sort and virtualize the underlying data from the specified source.
     /// </summary>

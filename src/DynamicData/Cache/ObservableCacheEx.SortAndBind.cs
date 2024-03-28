@@ -13,6 +13,38 @@ namespace DynamicData;
 public static partial class ObservableCacheEx
 {
     /// <summary>
+    /// Bind virtualized data to the specified collection.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="targetList">The list to bind to.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
+        IList<TObject> targetList)
+        where TObject : notnull
+        where TKey : notnull =>
+        new SortAndBindVirtualized<TObject, TKey>(source, targetList, null).Run();
+
+    /// <summary>
+    /// Bind virtualized data to the specified collection.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="targetList">The list to bind to.</param>
+    /// <param name="options">Bind and sort default options.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
+        IList<TObject> targetList,
+        SortAndBindOptions options)
+        where TObject : notnull
+        where TKey : notnull =>
+        new SortAndBindVirtualized<TObject, TKey>(source, targetList, options).Run();
+
+    /// <summary>
     /// Bind sorted data to the specified collection, for an object which implements IComparable<typeparamref name="TObject"></typeparamref>>.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
