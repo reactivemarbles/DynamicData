@@ -39,7 +39,6 @@ internal sealed class SortAndVirtualize<TObject, TKey>
 
     private static readonly ChangeSet<TObject, TKey, VirtualContext<TObject>> Empty = new(0, VirtualContext<TObject>.Empty);
 
-
     public IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> Run() =>
         Observable.Create<IChangeSet<TObject, TKey, VirtualContext<TObject>>>(
             observer =>
@@ -54,12 +53,11 @@ internal sealed class SortAndVirtualize<TObject, TKey>
 
                 IVirtualRequest virtualParams = VirtualRequest.Default;
 
-                // a sorted list of key value pairs, maintained by 
+                // a sorted list of key value pairs, maintained by
                 var sortedList = new List<KeyValuePair<TKey, TObject>>(_options.InitialCapacity);
                 var virtualItems = new List<KeyValuePair<TKey, TObject>>(virtualParams.Size);
 
-
-                IComparer<TObject>? comparer = null; 
+                IComparer<TObject>? comparer = null;
                 KeyValueComparer<TObject, TKey>? keyValueComparer = null;
                 SortedKeyValueApplicator<TObject, TKey>? applicator = null;
 
@@ -78,7 +76,6 @@ internal sealed class SortAndVirtualize<TObject, TKey>
                         {
                             applicator.ChangeComparer(keyValueComparer);
                         }
-      
                         return ApplyVirtualChanges();
                     });
 
@@ -129,7 +126,7 @@ internal sealed class SortAndVirtualize<TObject, TKey>
                     currentVirtualItems.AddRange(sortedList.Skip(virtualParams.StartIndex).Take(virtualParams.Size));
 
                     var responseParams = new VirtualResponse(virtualParams.Size, virtualParams.StartIndex, sortedList.Count);
-                    var context = new VirtualContext<TObject>(responseParams, comparer, _options);
+                    var context = new VirtualContext<TObject>(responseParams, comparer!, _options);
 
                     // calculate notifications
                     var virtualChanges = CalculateVirtualChanges(context, currentVirtualItems, previousVirtualList, changeSet);
@@ -139,8 +136,6 @@ internal sealed class SortAndVirtualize<TObject, TKey>
                     return virtualChanges;
                 }
             });
-
-
 
     // Calculates any changes within the virtualized range.
     private static ChangeSet<TObject, TKey, VirtualContext<TObject>> CalculateVirtualChanges(VirtualContext<TObject> context,
