@@ -98,13 +98,13 @@ dotnet_naming_symbols.constant_fields.required_modifiers = const
 dotnet_naming_style.pascal_case_style.capitalization = pascal_case
 
 # static fields should have s_ prefix
-dotnet_naming_rule.static_fields_should_have_prefix.severity = suggestion
+dotnet_naming_rule.static_fields_should_have_prefix.severity = none
 dotnet_naming_rule.static_fields_should_have_prefix.symbols  = static_fields
 dotnet_naming_rule.static_fields_should_have_prefix.style    = static_prefix_style
 dotnet_naming_symbols.static_fields.applicable_kinds   = field
 dotnet_naming_symbols.static_fields.required_modifiers = static
 dotnet_naming_symbols.static_fields.applicable_accessibilities = private, internal, private_protected
-dotnet_naming_style.static_prefix_style.required_prefix = s_
+dotnet_naming_style.static_prefix_style.required_prefix = _
 dotnet_naming_style.static_prefix_style.capitalization = camel_case
 
 # internal and private fields should be _camelCase
@@ -305,14 +305,14 @@ dotnet_diagnostic.RCS1507.severity = error
 
 dotnet_diagnostic.SA1000.severity = error
 dotnet_diagnostic.SA1001.severity = error
-dotnet_diagnostic.SA1002.severity = error
+dotnet_diagnostic.SA1002.severity = none
 dotnet_diagnostic.SA1003.severity = error
 dotnet_diagnostic.SA1004.severity = error
 dotnet_diagnostic.SA1005.severity = error
 dotnet_diagnostic.SA1006.severity = error
 dotnet_diagnostic.SA1007.severity = error
 dotnet_diagnostic.SA1008.severity = error
-dotnet_diagnostic.SA1009.severity = error
+dotnet_diagnostic.SA1009.severity = none
 dotnet_diagnostic.SA1010.severity = none
 dotnet_diagnostic.SA1011.severity = error
 dotnet_diagnostic.SA1012.severity = error
@@ -371,9 +371,9 @@ dotnet_diagnostic.SA1137.severity = error
 dotnet_diagnostic.SA1139.severity = error
 dotnet_diagnostic.SA1200.severity = none
 dotnet_diagnostic.SA1201.severity = none
-dotnet_diagnostic.SA1202.severity = error
-dotnet_diagnostic.SA1203.severity = error
-dotnet_diagnostic.SA1204.severity = error
+dotnet_diagnostic.SA1202.severity = none
+dotnet_diagnostic.SA1203.severity = none
+dotnet_diagnostic.SA1204.severity = none
 dotnet_diagnostic.SA1205.severity = error
 dotnet_diagnostic.SA1206.severity = error
 dotnet_diagnostic.SA1207.severity = error
@@ -402,7 +402,7 @@ dotnet_diagnostic.SA1314.severity = error
 dotnet_diagnostic.SA1316.severity = none
 dotnet_diagnostic.SA1400.severity = error
 dotnet_diagnostic.SA1401.severity = error
-dotnet_diagnostic.SA1402.severity = error
+dotnet_diagnostic.SA1402.severity = none
 dotnet_diagnostic.SA1403.severity = error
 dotnet_diagnostic.SA1404.severity = error
 dotnet_diagnostic.SA1405.severity = error

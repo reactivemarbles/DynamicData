@@ -22,7 +22,7 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
   <ItemGroup>
 
     <!-- Group nested ObservableCacheEx.x.cs classes with ObservableCacheEx.cs -->
-    <Compile Remove="**\ObservableCacheEx.*.cs"/>
+    <Compile Remove="**\ObservableCacheEx.*.cs" />
   
     <Compile Include="**\ObservableCacheEx.*.cs">
       <DependentUpon>ObservableCacheEx.cs</DependentUpon>
