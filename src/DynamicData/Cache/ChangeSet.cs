@@ -6,7 +6,7 @@
 namespace DynamicData;
 
 /// <summary>
-/// <para>A collection of changes with some arbitrary additional context.</para>
+/// A collection of changes with some arbitrary additional context
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>

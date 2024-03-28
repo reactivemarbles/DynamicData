@@ -7,8 +7,6 @@ using DynamicData.Binding;
 
 namespace DynamicData.Cache.Internal;
 
-#pragma warning disable
-
 internal sealed class SortAndVirtualize<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
