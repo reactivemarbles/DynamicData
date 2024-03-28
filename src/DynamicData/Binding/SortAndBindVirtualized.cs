@@ -37,20 +37,20 @@ internal sealed class SortAndBindVirtualized<TObject, TKey>(
         {
             var shared = source.Publish();
 
-            // the comparer may or may not change
-            var comparedChanged = shared
-                .Select(changesWithContext => changesWithContext.Context.Comparer)
-                .DistinctUntilChanged();
-
             var subscriber = new SingleAssignmentDisposable();
-            var subject = new Subject<IChangeSet<TObject, TKey>>();
+
+            // I tried to make this work without subjects but had issues
+            // making the comparedChanged observable to fire. Probably a deadlock
+            var changesSubject = new Subject<IChangeSet<TObject, TKey>>();
+            var comparerSubject = new ReplaySubject<IComparer<TObject>>(1);
 
             // once we have the initial values, publish as normal.
             var subsequent = shared
                 .Skip(1)
                 .Subscribe(changesWithContext =>
                 {
-                    subject.OnNext(changesWithContext);
+                    comparerSubject.OnNext(changesWithContext.Context.Comparer);
+                    changesSubject.OnNext(changesWithContext);
                 });
 
             // extract binding options from the virtual context
@@ -65,12 +65,14 @@ internal sealed class SortAndBindVirtualized<TObject, TKey>(
                         ResetThreshold = virtualOptions.ResetThreshold
                     };
 
-                    subscriber.Disposable = subject
-                            .SortAndBind(targetList, comparedChanged, extractedOptions)
+                    subscriber.Disposable = changesSubject
+                            .SortAndBind(targetList, comparerSubject.DistinctUntilChanged(), extractedOptions)
                             .SubscribeSafe(observer);
 
-                    subject.OnNext(changesWithContext);
+                    comparerSubject.OnNext(changesWithContext.Context.Comparer);
+                    changesSubject.OnNext(changesWithContext);
                 });
+
             return new CompositeDisposable(initial, subscriber, subsequent, shared.Connect());
         });
 }

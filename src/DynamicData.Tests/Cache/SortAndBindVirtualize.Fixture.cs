@@ -9,36 +9,6 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
-
-public sealed class SortAndBindVirtualizeWithImplicitOptionsFixtureReadOnlyCollection : SortAndBindVirtualizeFixtureBase
-{
-    protected override (ChangeSetAggregator<Person, string> aggregator, IList<Person> list) SetUpTests()
-    {
-
-        var aggregator = Source.Connect()
-            .SortAndVirtualize(Comparer, VirtualRequests)
-            // no sort and bind options. These are extracted from the SortAndVirtualize context
-            .SortAndBind(out var list)
-            .AsAggregator();
-
-        return (aggregator, list);
-    }
-}
-
-public sealed class SortAndBindVirtualizeFixtureReadOnlyCollection : SortAndBindVirtualizeFixtureBase
-{
-    protected override (ChangeSetAggregator<Person, string> aggregator, IList<Person> list) SetUpTests()
-    {
-
-        var aggregator = Source.Connect()
-            .SortAndVirtualize(Comparer, VirtualRequests)
-            .SortAndBind(out var list, new SortAndBindOptions())
-            .AsAggregator();
-
-        return (aggregator, list);
-    }
-}
-
 public sealed class SortAndBindVirtualizeWithImplicitOptionsFixture : SortAndBindVirtualizeFixtureBase
 {
     protected override (ChangeSetAggregator<Person, string> aggregator, IList<Person> list) SetUpTests()

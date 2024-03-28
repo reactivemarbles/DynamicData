@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using DynamicData.Binding;
 
 namespace DynamicData;
@@ -12,6 +13,48 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
+    /// <summary>
+    /// Bind virtualized and sorted data to the specified readonly observable collection.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
+        out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        var targetList = new ObservableCollectionExtended<TObject>();
+        readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(targetList);
+
+        return source.SortAndBind(targetList);
+    }
+
+    /// <summary>
+    /// Bind virtualized data to the specified collection.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <param name="options">Bind and sort default options.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
+        out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
+        SortAndBindOptions options)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        var targetList = new ObservableCollectionExtended<TObject>();
+        readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(targetList);
+
+        return source.SortAndBind(targetList, options);
+    }
+
     /// <summary>
     /// Bind virtualized data to the specified collection.
     /// </summary>
