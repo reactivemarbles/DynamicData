@@ -75,7 +75,8 @@ internal sealed class SortAndBind<TObject, TKey>
 
     public IObservable<IChangeSet<TObject, TKey>> Run() => _sorted;
 
-    internal sealed class SortApplicator(Cache<TObject, TKey> cache,
+    internal sealed class SortApplicator(
+        Cache<TObject, TKey> cache,
         IList<TObject> target,
         IComparer<TObject> comparer,
         SortAndBindOptions options)
@@ -185,7 +186,7 @@ internal sealed class SortAndBind<TObject, TKey>
                              * as that would effectively be swallowing an error.
                              */
                             var currentIndex = target.IndexOf(item);
-                            var updatedIndex = GetInsertPositionLinear(item);
+                            var updatedIndex = target.GetInsertPositionLinear(item, comparer);
 
                             // We need to recalibrate as GetInsertPosition includes the current item
                             updatedIndex = currentIndex < updatedIndex ? updatedIndex - 1 : updatedIndex;
@@ -204,45 +205,10 @@ internal sealed class SortAndBind<TObject, TKey>
             }
         }
 
-        private int GetCurrentPosition(TObject item)
-        {
-            var index = options.UseBinarySearch ? target.BinarySearch(item, comparer) : target.IndexOf(item);
+        private int GetCurrentPosition(TObject item) =>
+            target.GetCurrentPosition(item, comparer, options.UseBinarySearch);
 
-            if (index < 0)
-            {
-                throw new SortException($"Cannot find item: {typeof(TObject).Name} -> {item} from {target.Count} items");
-            }
-
-            return index;
-        }
-
-        private int GetInsertPosition(TObject item) => options.UseBinarySearch ? GetInsertPositionBinary(item) : GetInsertPositionLinear(item);
-
-        private int GetInsertPositionBinary(TObject item)
-        {
-            var index = target.BinarySearch(item, comparer);
-            var insertIndex = ~index;
-
-            // sort is not returning uniqueness
-            if (insertIndex < 0)
-            {
-                throw new SortException("Binary search has been specified, yet the sort does not yield uniqueness");
-            }
-
-            return insertIndex;
-        }
-
-        private int GetInsertPositionLinear(TObject item)
-        {
-            for (var i = 0; i < target.Count; i++)
-            {
-                if (comparer.Compare(item, target[i]) < 0)
-                {
-                    return i;
-                }
-            }
-
-            return target.Count;
-        }
+        private int GetInsertPosition(TObject item) =>
+            target.GetInsertPosition(item, comparer, options.UseBinarySearch);
     }
 }
