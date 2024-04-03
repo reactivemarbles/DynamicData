@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
     <TargetFrameworks>net8.0</TargetFrameworks>
-    <NoWarn>$(NoWarn);CS0618;CA1801;CA1812;CA1816;CA1063;CS8767;CS8602;CS8618;IDE1006</NoWarn>
+    <NoWarn>$(NoWarn);CS0618;CA1801;CA1812;CA1816;CA1062;CA1063;CS8767;CS8602;CS8618;IDE1006</NoWarn>
     <XunitVersion>2.7.0</XunitVersion>
   </PropertyGroup>
 
