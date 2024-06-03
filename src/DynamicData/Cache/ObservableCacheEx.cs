@@ -25,7 +25,7 @@ namespace DynamicData;
 /// <summary>
 /// Extensions for dynamic data.
 /// </summary>
-public static class ObservableCacheEx
+public static partial class ObservableCacheEx
 {
     private const int DefaultSortResetThreshold = 100;
     private const bool DefaultResortOnSourceRefresh = true;
@@ -3593,24 +3593,6 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Returns the page as specified by the pageRequests observable.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="pageRequests">The page requests.</param>
-    /// <returns>An observable which emits change sets.</returns>
-    public static IObservable<IPagedChangeSet<TObject, TKey>> Page<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pageRequests.ThrowArgumentNullExceptionIfNull(nameof(pageRequests));
-
-        return new Page<TObject, TKey>(source, pageRequests).Run();
-    }
-
-    /// <summary>
     /// Populate a cache from an observable stream.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -4586,56 +4568,6 @@ public static class ObservableCacheEx
         }
 
         return source.ToObservableOptional(key, equalityComparer);
-    }
-
-    /// <summary>
-    /// Limits the size of the result set to the specified number.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="size">The size.</param>
-    /// <returns>An observable which will emit virtual change sets.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
-    public static IObservable<IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, int size)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        if (size <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(size), "Size should be greater than zero");
-        }
-
-        return new Virtualise<TObject, TKey>(source, Observable.Return(new VirtualRequest(0, size))).Run();
-    }
-
-    /// <summary>
-    /// Limits the size of the result set to the specified number, ordering by the comparer.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparer">The comparer.</param>
-    /// <param name="size">The size.</param>
-    /// <returns>An observable which will emit virtual change sets.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
-    public static IObservable<IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, int size)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
-
-        if (size <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(size), "Size should be greater than zero");
-        }
-
-        return source.Sort(comparer).Top(size);
     }
 
     /// <summary>
@@ -6150,25 +6082,6 @@ public static class ObservableCacheEx
     public static IObservable<ISortedChangeSet<TObject, TKey>> UpdateIndex<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
         where TObject : IIndexAware
         where TKey : notnull => source.Do(changes => changes.SortedItems.Select((update, index) => new { update, index }).ForEach(u => u.update.Value.Index = u.index));
-
-    /// <summary>
-    /// Virtualises the underlying data from the specified source.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="virtualRequests">The virirtualising requests.</param>
-    /// <returns>An observable which will emit virtual change sets.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
-    public static IObservable<IVirtualChangeSet<TObject, TKey>> Virtualise<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IVirtualRequest> virtualRequests)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
-
-        return new Virtualise<TObject, TKey>(source, virtualRequests).Run();
-    }
 
     /// <summary>
     /// Returns an observable of any updates which match the specified key,  proceeded with the initial cache state.

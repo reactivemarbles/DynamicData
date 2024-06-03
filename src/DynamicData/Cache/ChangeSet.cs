@@ -6,6 +6,44 @@
 namespace DynamicData;
 
 /// <summary>
+/// A collection of changes with some arbitrary additional context.
+/// </summary>
+/// <typeparam name="TObject">The type of the object.</typeparam>
+/// <typeparam name="TKey">The type of the key.</typeparam>
+/// <typeparam name="TContext">The additional context.</typeparam>
+public sealed class ChangeSet<TObject, TKey, TContext> : ChangeSet<TObject, TKey>, IChangeSet<TObject, TKey, TContext>
+    where TObject : notnull
+    where TKey : notnull
+{
+    /// <inheritdoc />
+    public TContext Context { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey, TContext}"/> class.
+    /// </summary>
+    /// <param name="context">The additional context.</param>
+    public ChangeSet(TContext context) => Context = context;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey, TContext}"/> class.
+    /// </summary>
+    /// <param name="collection">The collection of items to start the change set with.</param>
+    /// <param name="context">The additional context.</param>
+    public ChangeSet(IEnumerable<Change<TObject, TKey>> collection, TContext context)
+        : base(collection) =>
+        Context = context;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey, TContext}"/> class.
+    /// </summary>
+    /// <param name="capacity">The initial capacity of the change set.</param>
+    /// <param name="context">The additional context.</param>
+    public ChangeSet(int capacity, TContext context)
+        : base(capacity) =>
+        Context = context;
+}
+
+/// <summary>
 /// A collection of changes.
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>

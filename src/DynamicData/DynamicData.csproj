@@ -20,6 +20,16 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
   </PropertyGroup>
 
   <ItemGroup>
+
+    <!-- Group nested ObservableCacheEx.x.cs classes with ObservableCacheEx.cs -->
+    <Compile Remove="**\ObservableCacheEx.*.cs" />
+  
+    <Compile Include="**\ObservableCacheEx.*.cs">
+      <DependentUpon>ObservableCacheEx.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="Polyfills/ListEnsureCapacity.cs" Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0' Or '$(TargetFramework)' == 'net8.0'" />
   </ItemGroup>
 

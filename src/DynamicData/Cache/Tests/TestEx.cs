@@ -22,6 +22,18 @@ public static class TestEx
         where TKey : notnull => new(source);
 
     /// <summary>
+    /// Aggregates all events and statistics for a paged change set to help assertions when testing.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TContext">The type of context.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <returns>The change set aggregator.</returns>
+    public static ChangeSetAggregator<TObject, TKey, TContext> AsAggregator<TObject, TKey, TContext>(this IObservable<IChangeSet<TObject, TKey, TContext>> source)
+        where TObject : notnull
+        where TKey : notnull => new(source);
+
+    /// <summary>
     /// Aggregates all events and statistics for a distinct change set to help assertions when testing.
     /// </summary>
     /// <typeparam name="TValue">The type of the value.</typeparam>
