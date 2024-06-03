@@ -26,28 +26,20 @@ internal sealed class UniquenessEnforcer<TObject, TKey>(IObservable<IChangeSet<T
 
                     var grouped = changes.GroupBy(c => c.Key).Select(c =>
                     {
-                        var last = c.Last();
-
-                        // If the last is a refresh we need to check whether, there was a previous add or update.
-                        // If so , use the previous.
-                        if (last.Reason != ChangeReason.Refresh)
-                            return last;
-
                         var all = c.ToArray();
-                        if (all.Length == 1)
-                            return last;
 
-                        /* Extreme edge case where compound has mixture of changes ending in refresh */
-
-                        // find the previous non-refresh and return if found
-                        for (var i = all.Length - 1; i >= 0; i--)
+                        if (all.Length > 1)
                         {
-                            var candidate = all[i];
-                            if (candidate.Reason != ChangeReason.Refresh)
-                                return candidate;
+                            /* Extreme edge case where compound has mixture of changes ending in refresh */
+                            // find the previous non-refresh and return if found
+                            for (var i = all.Length - 1; i >= 0; i--)
+                            {
+                                var candidate = all[i];
+                                if (candidate.Reason != ChangeReason.Refresh)
+                                    return candidate;
+                            }
                         }
-
-                        // the entire batch are all  refresh events
+                        // the entire batch are all refresh events
                         return all[0];
                     });
 
