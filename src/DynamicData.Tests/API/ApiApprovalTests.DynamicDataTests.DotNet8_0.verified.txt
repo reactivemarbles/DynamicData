@@ -861,11 +861,9 @@ namespace DynamicData
     {
         void Edit(System.Action<DynamicData.ICacheUpdater<TObject, TKey>> updateAction);
     }
-    public interface IKeyValueCollection<TObject, TKey> : System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>, System.Collections.IEnumerable
+    public interface IKeyValueCollection<TObject, TKey> : System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>, System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<TKey, TObject>>, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<TKey, TObject>>, System.Collections.IEnumerable
     {
         System.Collections.Generic.IComparer<System.Collections.Generic.KeyValuePair<TKey, TObject>> Comparer { get; }
-        int Count { get; }
-        System.Collections.Generic.KeyValuePair<TKey, TObject> this[int index] { get; }
         DynamicData.SortOptimisations Optimisations { get; }
         DynamicData.SortReason SortReason { get; }
     }
