@@ -29,7 +29,7 @@ public sealed class TestSourceList<T>
     public IObservable<int> CountChanged
         => _countChanged;
 
-    public IEnumerable<T> Items
+    public IReadOnlyList<T> Items
         => _source.Items;
 
     public IObservable<IChangeSet<T>> Connect(Func<T, bool>? predicate = null)
