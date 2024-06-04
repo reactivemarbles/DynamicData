@@ -96,7 +96,7 @@ public sealed class DisposeManyFixture : IDisposable
         _itemsSource.AddRange(items[7..10]);
         _changeSetsSource.OnNext(new ChangeSet<DisposableObject>() // Refresh
         {
-            new(ListChangeReason.Refresh, current: _itemsSource.Items.First(), index: 0)
+            new(ListChangeReason.Refresh, current: _itemsSource.Items[0], index: 0)
         });
 
         _results.Exception.Should().BeNull();

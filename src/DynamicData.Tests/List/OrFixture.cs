@@ -39,7 +39,7 @@ public class OrRefreshFixture
         results.Data.Count.Should().Be(2);
         results.Messages.Count.Should().Be(3);
         results.Messages[2].Refreshes.Should().Be(1);
-        results.Messages[2].First().Item.Current.Should().Be(source1.Items.First());
+        results.Messages[2].First().Item.Current.Should().Be(source1.Items[0]);
     }
 }
 
@@ -115,7 +115,7 @@ public abstract class OrFixtureBase : IDisposable
         _source1.Add(1);
 
         _results.Data.Count.Should().Be(1);
-        _results.Data.Items.First().Should().Be(1);
+        _results.Data.Items[0].Should().Be(1);
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public abstract class OrFixtureBase : IDisposable
         _source1.Add(1);
         _source2.Add(1);
         _results.Data.Count.Should().Be(1);
-        _results.Data.Items.First().Should().Be(1);
+        _results.Data.Items[0].Should().Be(1);
     }
 
     [Fact]

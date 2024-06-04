@@ -45,7 +45,7 @@ public class IObservableListBindCacheSortedFixture : IDisposable
         _source.AddOrUpdate(person);
 
         _list.Count.Should().Be(1, "Should be 1 item in the collection");
-        _list.Items.First().Should().Be(person, "Should be same person");
+        _list.Items[0].Should().Be(person, "Should be same person");
     }
 
     [Fact]
