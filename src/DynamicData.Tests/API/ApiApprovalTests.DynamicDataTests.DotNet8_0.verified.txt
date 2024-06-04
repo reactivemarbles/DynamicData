@@ -890,7 +890,7 @@ namespace DynamicData
     {
         int Count { get; }
         System.IObservable<int> CountChanged { get; }
-        System.Collections.Generic.IEnumerable<T> Items { get; }
+        System.Collections.Generic.IReadOnlyList<T> Items { get; }
         System.IObservable<DynamicData.IChangeSet<T>> Connect(System.Func<T, bool>? predicate = null);
         System.IObservable<DynamicData.IChangeSet<T>> Preview(System.Func<T, bool>? predicate = null);
     }
@@ -2650,7 +2650,7 @@ namespace DynamicData
         public SourceList(System.IObservable<DynamicData.IChangeSet<T>>? source = null) { }
         public int Count { get; }
         public System.IObservable<int> CountChanged { get; }
-        public System.Collections.Generic.IEnumerable<T> Items { get; }
+        public System.Collections.Generic.IReadOnlyList<T> Items { get; }
         public System.IObservable<DynamicData.IChangeSet<T>> Connect(System.Func<T, bool>? predicate = null) { }
         public void Dispose() { }
         public void Edit(System.Action<DynamicData.IExtendedList<T>> updateAction) { }
