@@ -25,7 +25,7 @@ internal static partial class ExpireAfter
             source.ThrowArgumentNullExceptionIfNull(nameof(source));
             timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
 
-            return Observable.Create<IEnumerable<KeyValuePair<TKey, TObject>>>(observer => (pollingInterval is TimeSpan pollingIntervalValue)
+            return Observable.Create<IEnumerable<KeyValuePair<TKey, TObject>>>(observer => (pollingInterval is { } pollingIntervalValue)
                 ? new PollingSubscription(
                     observer: observer,
                     pollingInterval: pollingIntervalValue,
@@ -137,7 +137,7 @@ internal static partial class ExpireAfter
                 lock (SynchronizationGate)
                 {
                     // The scheduler only promises "best effort" to cancel scheduled operations, so we need to make sure.
-                    if (_nextScheduledManagement is not ScheduledManagement thisScheduledManagement)
+                    if (_nextScheduledManagement is not { } thisScheduledManagement)
                         return;
 
                     _nextScheduledManagement = null;
@@ -194,11 +194,11 @@ internal static partial class ExpireAfter
                     _proposedExpirationsQueue.RemoveRange(0, removeToIndex);
 
                 // Check if we need to re-schedule the next management operation
-                if (GetNextManagementDueTime() is DateTimeOffset nextManagementDueTime)
+                if (GetNextManagementDueTime() is { } nextManagementDueTime)
                 {
                     if (_nextScheduledManagement?.DueTime != nextManagementDueTime)
                     {
-                        if (_nextScheduledManagement is ScheduledManagement nextScheduledManagement)
+                        if (_nextScheduledManagement is { } nextScheduledManagement)
                             nextScheduledManagement.Cancellation.Dispose();
 
                         _nextScheduledManagement = new()
@@ -251,7 +251,7 @@ internal static partial class ExpireAfter
                         {
                             case ChangeReason.Add:
                                 {
-                                    if (_timeSelector.Invoke(change.Current) is TimeSpan expireAfter)
+                                    if (_timeSelector.Invoke(change.Current) is { } expireAfter)
                                     {
                                         haveExpirationsChanged |= TrySetExpiration(
                                             key: change.Key,
@@ -267,7 +267,7 @@ internal static partial class ExpireAfter
 
                             case ChangeReason.Update:
                                 {
-                                    if (_timeSelector.Invoke(change.Current) is TimeSpan expireAfter)
+                                    if (_timeSelector.Invoke(change.Current) is { } expireAfter)
                                     {
                                         haveExpirationsChanged = TrySetExpiration(
                                             key: change.Key,

@@ -136,7 +136,7 @@ internal sealed class ToObservableChangeSet<TObject>
                                 _ => 0
                             };
 
-                            var changeSet = new ChangeSet<TObject>(capacity: (_evictionState is EvictionState evictionState)
+                            var changeSet = new ChangeSet<TObject>(capacity: (_evictionState is { } evictionState)
                                 ? Math.Max(itemCount + evictionState.Queue.Count - evictionState.LimitSizeTo, 0)
                                 : itemCount);
 
@@ -207,7 +207,7 @@ internal sealed class ToObservableChangeSet<TObject>
             ref bool hasExpirationQueueChanged)
         {
             // Perform processing for eviction behavior, if applicable
-            if (_evictionState is EvictionState evictionState)
+            if (_evictionState is { } evictionState)
             {
                 // Backwards compatibility
                 if (evictionState.LimitSizeTo is 0)
@@ -252,10 +252,10 @@ internal sealed class ToObservableChangeSet<TObject>
             }
 
             // Perform processing for expiration behavior, if applicable
-            if (_expirationState is ExpirationState expirationState)
+            if (_expirationState is { } expirationState)
             {
                 var expireAfter = expirationState.ExpireAfter.Invoke(item);
-                if (expireAfter is TimeSpan resolvedExpireAfter)
+                if (expireAfter is { } resolvedExpireAfter)
                 {
                     // Truncate to milliseconds to promote batching expirations together.
                     var expireAtTicks = now.UtcTicks + resolvedExpireAfter.Ticks;
@@ -371,7 +371,7 @@ internal sealed class ToObservableChangeSet<TObject>
             {
                 // If there's already a scheduled operation, and it doesn't match the current next-item-to-expire time, wipe it out and re-schedule it.
                 var nextExpireAt = expirationState.Queue[0].ExpireAt;
-                if (_scheduledExpiration is ScheduledExpiration scheduledExpiration)
+                if (_scheduledExpiration is { } scheduledExpiration)
                 {
                     if (scheduledExpiration.DueTime != nextExpireAt)
                     {
