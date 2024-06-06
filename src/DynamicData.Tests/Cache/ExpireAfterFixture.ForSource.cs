@@ -550,7 +550,7 @@ public static partial class ExpireAfterFixture
             => FluentActions.Invoking(() => ObservableCacheEx.ExpireAfter(
                     source: (null as ISourceCache<TestItem, int>)!,
                     timeSelector: static _ => default,
-                    interval: null))
+                    pollingInterval: null))
                 .Should().Throw<ArgumentNullException>();
 
         [Fact]
@@ -620,7 +620,7 @@ public static partial class ExpireAfterFixture
         public void TimeSelectorIsNull_ThrowsException()
             => FluentActions.Invoking(() => CreateTestSource().ExpireAfter(
                     timeSelector: null!,
-                    interval: null))
+                    pollingInterval: null))
                 .Should().Throw<ArgumentNullException>();
 
         [Fact]
