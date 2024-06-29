@@ -176,9 +176,9 @@ public class AutoRefreshFixture
         //change the value and move to a grouping which does not yet exist
         items[1].Age = -1;
         results.Data.Count.Should().Be(11);
-        results.Data.Items.Last().GroupKey.Should().Be(-1);
-        results.Data.Items.Last().List.Count.Should().Be(1);
-        results.Data.Items.First().List.Count.Should().Be(9);
+        results.Data.Items[^1].GroupKey.Should().Be(-1);
+        results.Data.Items[^1].List.Count.Should().Be(1);
+        results.Data.Items[0].List.Count.Should().Be(9);
         CheckContent();
 
         //put the value back where it was and check the group was removed
@@ -230,9 +230,9 @@ public class AutoRefreshFixture
         //change the value and move to a grouping which does not yet exist
         items[1].Age = -1;
         results.Data.Count.Should().Be(11);
-        results.Data.Items.Last().Key.Should().Be(-1);
-        results.Data.Items.Last().Count.Should().Be(1);
-        results.Data.Items.First().Count.Should().Be(9);
+        results.Data.Items[^1].Key.Should().Be(-1);
+        results.Data.Items[^1].Count.Should().Be(1);
+        results.Data.Items[0].Count.Should().Be(9);
         CheckContent();
 
         //put the value back where it was and check the group was removed
@@ -354,7 +354,7 @@ public class AutoRefreshFixture
         var obj = new Example { Value = 0 };
         list.Add(obj);
         obj.Value = 1;
-        valueList.Items.First().Should().Be(1);
+        valueList.Items[0].Should().Be(1);
     }
 
     private class Example : AbstractNotifyPropertyChanged

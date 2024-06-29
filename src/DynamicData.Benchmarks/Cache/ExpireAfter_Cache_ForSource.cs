@@ -67,8 +67,8 @@ public class ExpireAfter_Cache_ForSource
 
         using var subscription = source
             .ExpireAfter(
-                timeSelector:   static item => item.Lifetime,
-                interval:       null)
+                timeSelector:       static item => item.Lifetime,
+                pollingInterval:    null)
             .Subscribe();
 
         PerformRandomizedEdits(source);
