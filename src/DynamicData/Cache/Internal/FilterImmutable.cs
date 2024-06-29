@@ -71,7 +71,7 @@ internal sealed class FilterImmutable<TObject, TKey>
                                     : null
                             };
 
-                            if (downstreamReason is ChangeReason reason)
+                            if (downstreamReason is { } reason)
                             {
                                 // Do not propagate indexes, we can't guarantee them to be correct, because we aren't caching items.
                                 downstreamChanges.Add(new(
