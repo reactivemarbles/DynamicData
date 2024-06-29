@@ -22,7 +22,7 @@ internal sealed class ExpireAfter<T>
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
 
-        return Observable.Create<IEnumerable<T>>(observer => (pollingInterval is TimeSpan pollingIntervalValue)
+        return Observable.Create<IEnumerable<T>>(observer => (pollingInterval is { } pollingIntervalValue)
             ? new PollingSubscription(
                 observer: observer,
                 pollingInterval: pollingIntervalValue,
@@ -104,7 +104,7 @@ internal sealed class ExpireAfter<T>
 
             foreach (var dueTime in _expirationDueTimes)
             {
-                if ((dueTime is DateTimeOffset value) && ((result is null) || (value < result)))
+                if ((dueTime is { } value) && ((result is null) || (value < result)))
                     result = value;
             }
 
@@ -134,7 +134,7 @@ internal sealed class ExpireAfter<T>
             lock (SynchronizationGate)
             {
                 // The scheduler only promises "best effort" to cancel scheduled operations, so we need to make sure.
-                if (_nextScheduledManagement is not ScheduledManagement thisScheduledManagement)
+                if (_nextScheduledManagement is not { } thisScheduledManagement)
                     return;
 
                 _nextScheduledManagement = null;
@@ -148,7 +148,7 @@ internal sealed class ExpireAfter<T>
                 // Buffer removals, so we can eliminate the need for index adjustments as we update the source
                 for (var i = 0; i < _expirationDueTimes.Count; ++i)
                 {
-                    if ((_expirationDueTimes[i] is DateTimeOffset dueTime) && (dueTime <= now))
+                    if ((_expirationDueTimes[i] is { } dueTime) && (dueTime <= now))
                     {
                         _expiringIndexesBuffer.Add(i);
 
@@ -187,11 +187,11 @@ internal sealed class ExpireAfter<T>
         private void OnExpirationDueTimesChanged()
         {
             // Check if we need to re-schedule the next management operation
-            if (GetNextManagementDueTime() is DateTimeOffset nextManagementDueTime)
+            if (GetNextManagementDueTime() is { } nextManagementDueTime)
             {
                 if (_nextScheduledManagement?.DueTime != nextManagementDueTime)
                 {
-                    if (_nextScheduledManagement is ScheduledManagement nextScheduledManagement)
+                    if (_nextScheduledManagement is { } nextScheduledManagement)
                         nextScheduledManagement.Cancellation.Dispose();
 
                     _nextScheduledManagement = new()

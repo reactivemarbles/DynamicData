@@ -48,7 +48,7 @@ public class TransformAsyncFixture : IDisposable
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
 
         var transformed = await _transformFactory(person);
-        _results.Data.Items.First().Should().Be(transformed, "Should be same person");
+        _results.Data.Items[0].Should().Be(transformed, "Should be same person");
     }
 
     [Fact]

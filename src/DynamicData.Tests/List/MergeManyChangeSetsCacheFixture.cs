@@ -831,7 +831,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
 
         // These should be subsets of each other
         expectedMarkets.Should().BeSubsetOf(marketResults.Data.Items);
-        marketResults.Data.Items.Count().Should().Be(expectedMarkets.Count);
+        marketResults.Data.Items.Count.Should().Be(expectedMarkets.Count);
 
         // These should be subsets of each other
         expectedPrices.Should().BeSubsetOf(priceResults.Data.Items);

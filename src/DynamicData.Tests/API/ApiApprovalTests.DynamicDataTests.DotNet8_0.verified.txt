@@ -890,7 +890,7 @@ namespace DynamicData
     {
         int Count { get; }
         System.IObservable<int> CountChanged { get; }
-        System.Collections.Generic.IEnumerable<T> Items { get; }
+        System.Collections.Generic.IReadOnlyList<T> Items { get; }
         System.IObservable<DynamicData.IChangeSet<T>> Connect(System.Func<T, bool>? predicate = null);
         System.IObservable<DynamicData.IChangeSet<T>> Preview(System.Func<T, bool>? predicate = null);
     }
@@ -1301,19 +1301,13 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.Reactive.Concurrency.IScheduler? scheduler = null)
-            where TObject :  notnull
-            where TKey :  notnull { }
-        public static System.IObservable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? interval = default)
-            where TObject :  notnull
-            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.Reactive.Concurrency.IScheduler scheduler)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval, System.Reactive.Concurrency.IScheduler? scheduler)
+        public static System.IObservable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval, System.Reactive.Concurrency.IScheduler scheduler)
@@ -2316,8 +2310,6 @@ namespace DynamicData
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> Except<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, params System.IObservable<DynamicData.IChangeSet<T>>[] others)
             where T :  notnull { }
-        public static System.IObservable<System.Collections.Generic.IEnumerable<T>> ExpireAfter<T>(this DynamicData.ISourceList<T> source, System.Func<T, System.TimeSpan?> timeSelector, System.Reactive.Concurrency.IScheduler? scheduler = null)
-            where T :  notnull { }
         public static System.IObservable<System.Collections.Generic.IEnumerable<T>> ExpireAfter<T>(this DynamicData.ISourceList<T> source, System.Func<T, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> Filter<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, bool> predicate)
@@ -2650,7 +2642,7 @@ namespace DynamicData
         public SourceList(System.IObservable<DynamicData.IChangeSet<T>>? source = null) { }
         public int Count { get; }
         public System.IObservable<int> CountChanged { get; }
-        public System.Collections.Generic.IEnumerable<T> Items { get; }
+        public System.Collections.Generic.IReadOnlyList<T> Items { get; }
         public System.IObservable<DynamicData.IChangeSet<T>> Connect(System.Func<T, bool>? predicate = null) { }
         public void Dispose() { }
         public void Edit(System.Action<DynamicData.IExtendedList<T>> updateAction) { }

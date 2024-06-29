@@ -58,7 +58,7 @@ public class DistinctValuesFixture : IDisposable
 
         _results.Messages.Count.Should().Be(1, "Should be 1 update message");
         _results.Data.Count.Should().Be(1, "Should be 1 items in the cache");
-        _results.Data.Items.First().Should().Be(20, "Should 20");
+        _results.Data.Items[0].Should().Be(20, "Should 20");
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class DistinctValuesFixture : IDisposable
 
         _results.Messages.Count.Should().Be(1, "Should be 1 updates");
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items.First().Should().Be(20, "Should 20");
+        _results.Data.Items[0].Should().Be(20, "Should 20");
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class DistinctValuesFixture : IDisposable
         _results.Data.Count.Should().Be(3, "Should be 3 items in the cache");
 
         _results.Data.Items.Should().BeEquivalentTo(new[] { 20, 21, 22 });
-        _results.Data.Items.First().Should().Be(20, "Should 20");
+        _results.Data.Items[0].Should().Be(20, "Should 20");
     }
 
     [Fact]

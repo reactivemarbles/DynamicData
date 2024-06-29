@@ -273,7 +273,7 @@ public sealed class TransformManyAsyncFixture : IDisposable
         CreateSelector(static owner => owner.ObservableCache, delayFactory);
 
     private static Func<AnimalOwner, Guid, Task<IEnumerable<Animal>>> SelectEnumerable(Func<Task>? delayFactory = null) =>
-        CreateSelector(static owner => owner.Animals.Items, delayFactory);
+        CreateSelector(static owner => owner.Animals.Items.AsEnumerable(), delayFactory);
 
     private static Func<AnimalOwner, Guid, Task<T>> CreateSelector<T>(Func<AnimalOwner, T> selector, Func<Task>? delayFactory = null) =>
         (delayFactory != null)
