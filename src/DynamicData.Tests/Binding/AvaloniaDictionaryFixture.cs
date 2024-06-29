@@ -35,7 +35,7 @@ public class AvaloniaDictionaryFixture
 
         _results.Messages.Count.Should().Be(1);
         _results.Data.Count.Should().Be(1);
-        _results.Data.Items.First().Should().Be(person);
+        _results.Data.Items[0].Should().Be(person);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class AvaloniaDictionaryFixture
         _collection["Someone"] = person2;
 
         _results.Data.Count.Should().Be(1);
-        _results.Data.Items.First().Should().Be(person2);
+        _results.Data.Items[0].Should().Be(person2);
     }
 
 

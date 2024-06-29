@@ -26,7 +26,7 @@ public interface IObservableList<T> : IDisposable
     /// <summary>
     /// Gets items enumerable.
     /// </summary>
-    IEnumerable<T> Items { get; }
+    IReadOnlyList<T> Items { get; }
 
     /// <summary>
     /// Connect to the observable list and observe any changes

@@ -33,7 +33,7 @@ public class SubscribeManyFixture : IDisposable
 
         _results.Messages.Count.Should().Be(1, "Should be 1 updates");
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items.First().IsSubscribed.Should().Be(true, "Should be subscribed");
+        _results.Data.Items[0].IsSubscribed.Should().Be(true, "Should be subscribed");
     }
 
     public void Dispose()

@@ -33,7 +33,7 @@ internal sealed class AnonymousObservableList<T> : IObservableList<T>
 
     public IObservable<int> CountChanged => _sourceList.CountChanged;
 
-    public IEnumerable<T> Items => _sourceList.Items;
+    public IReadOnlyList<T> Items => _sourceList.Items;
 
     public IObservable<IChangeSet<T>> Connect(Func<T, bool>? predicate = null) => _sourceList.Connect(predicate);
 

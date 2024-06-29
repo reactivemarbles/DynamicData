@@ -72,7 +72,8 @@ public class SortMutableFixture : IDisposable
 
         _results.Data.Count.Should().Be(101);
 
-        _results.Data.Items.Last().Should().Be(shouldbeLast);
+        _results.Data.Items[
+        ^1].Should().Be(shouldbeLast);
     }
 
     [Fact]
@@ -155,7 +156,8 @@ public class SortMutableFixture : IDisposable
 
         _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
-        _results.Data.Items.Last().Should().Be(shouldbeLast);
+        _results.Data.Items[
+        ^1].Should().Be(shouldbeLast);
     }
 
     [Fact]

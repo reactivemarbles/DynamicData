@@ -30,7 +30,7 @@ public class GroupOnFixture : IDisposable
         _results.Messages.Count.Should().Be(1, "Should be 1 updates");
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
 
-        var firstGroup = _results.Data.Items.First().List.Items.ToArray();
+        var firstGroup = _results.Data.Items[0].List.Items.ToArray();
         firstGroup[0].Should().Be(person, "Should be same person");
     }
 
@@ -71,7 +71,7 @@ public class GroupOnFixture : IDisposable
         _results.Messages.Count.Should().Be(2, "Should be 2 updates");
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
 
-        var firstGroup = _results.Data.Items.First().List.Items.ToArray();
+        var firstGroup = _results.Data.Items[0].List.Items.ToArray();
         firstGroup[0].Should().Be(amended, "Should be same person");
     }
 }

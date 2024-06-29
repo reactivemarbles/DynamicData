@@ -83,7 +83,7 @@ public class SortFixture : IDisposable
 
         _results.Data.Count.Should().Be(101, "Should be 100 people in the cache");
 
-        _results.Data.Items.First().Should().Be(shouldbefirst);
+        _results.Data.Items[0].Should().Be(shouldbefirst);
     }
 
     [Fact]
@@ -166,7 +166,7 @@ public class SortFixture : IDisposable
 
         _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
-        _results.Data.Items.First().Should().Be(shouldbefirst);
+        _results.Data.Items[0].Should().Be(shouldbefirst);
     }
 
     [Fact]
