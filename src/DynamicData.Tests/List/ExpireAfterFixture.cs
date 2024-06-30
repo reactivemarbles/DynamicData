@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -12,8 +14,6 @@ using Xunit;
 using Xunit.Abstractions;
 
 using DynamicData.Tests.Utilities;
-using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace DynamicData.Tests.List;
 
@@ -36,7 +36,7 @@ public sealed class ExpireAfterFixture
                 timeSelector: CreateTimeSelector(scheduler),
                 scheduler: scheduler)
             .ValidateSynchronization()
-            .RecordNotifications(out var results, scheduler);
+            .RecordValues(out var results, scheduler);
 
         var item1 = new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(10) };
         var item2 = new TestItem() { Id = 2, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(10) };
@@ -58,18 +58,18 @@ public sealed class ExpireAfterFixture
         source.RemoveRange(index: 2, count: 2);
         scheduler.AdvanceBy(1);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Should().BeEmpty("no items should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().BeEmpty("no items should have expired");
         source.Items.Should().BeEquivalentTo(new[] { item1, item3, item6, item7 }, "7 items were added, and 3 were removed");
 
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().ElementAt(0).Should().BeEquivalentTo(new[] { item1, item3, item6 }, "items #1, #3, and #6 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Count.Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.ElementAt(0).Should().BeEquivalentTo(new[] { item1, item3, item6 }, "items #1, #3, and #6 should have expired");
         source.Items.Should().BeEquivalentTo(new[] { item7 }, "items #1 and #3 should have been removed");
 
-        results.TryGetRecordedCompletion().Should().BeFalse();
+        results.HasCompleted.Should().BeFalse();
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public sealed class ExpireAfterFixture
                 timeSelector: CreateTimeSelector(scheduler),
                 scheduler: scheduler)
             .ValidateSynchronization()
-            .RecordNotifications(out var results, scheduler);
+            .RecordValues(out var results, scheduler);
 
         var item1 = new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(10) };
         source.Add(item1);
@@ -95,14 +95,14 @@ public sealed class ExpireAfterFixture
         source.Replace(item1, item2);
         scheduler.AdvanceBy(1);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item2 }, "item #1 was added, and then replaced");
 
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item2 }, "no changes should have occurred");
 
         // Shorten the expiration to an earlier time
@@ -110,8 +110,8 @@ public sealed class ExpireAfterFixture
         source.Replace(item2, item3);
         scheduler.AdvanceBy(1);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item3 }, "item #2 was replaced");
 
         // One more update with no changes to the expiration
@@ -119,24 +119,24 @@ public sealed class ExpireAfterFixture
         source.Replace(item3, item4);
         scheduler.AdvanceBy(1);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item4 }, "item #3 was replaced");
 
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(15).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().ElementAt(0).Should().BeEquivalentTo(new[] { item4 }, "item #4 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Count.Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.ElementAt(0).Should().BeEquivalentTo(new[] { item4 }, "item #4 should have expired");
         source.Items.Should().BeEmpty("item #4 should have expired");
 
         scheduler.AdvanceTo(DateTimeOffset.MaxValue.Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(1).Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(1).Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEmpty("no changes should have occurred");
 
-        results.TryGetRecordedCompletion().Should().BeFalse();
+        results.HasCompleted.Should().BeFalse();
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public sealed class ExpireAfterFixture
                 pollingInterval: TimeSpan.FromMilliseconds(20),
                 scheduler: scheduler)
             .ValidateSynchronization()
-            .RecordNotifications(out var results, scheduler);
+            .RecordValues(out var results, scheduler);
 
         var item1 = new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(10) };
         var item2 = new TestItem() { Id = 2, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(20) };
@@ -197,85 +197,85 @@ public sealed class ExpireAfterFixture
 
 
         // Verify initial state, after all emissions
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item1, item2, item10, item3, item11, item6, item7, item8, item9 }, options => options.WithStrictOrdering(), "9 items were added, 2 were replaced, and 1 was refreshed");
 
         // Item scheduled to expire at 10ms, but won't be picked up yet
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item1, item2, item10, item3, item11, item6, item7, item8, item9 }, options => options.WithStrictOrdering(), "no changes should have occurred");
 
         // Item scheduled to expire at 15ms, but won't be picked up yet
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(15).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item1, item2, item10, item3, item11, item6, item7, item8, item9 }, options => options.WithStrictOrdering(), "no changes should have occurred");
 
         // Expired items should be polled
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(20).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().ElementAt(0).Should().BeEquivalentTo(new[] { item1, item2, item6, item7, item8 }, "items #1, #2, #6, #7, and #8 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Count.Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.ElementAt(0).Should().BeEquivalentTo(new[] { item1, item2, item6, item7, item8 }, "items #1, #2, #6, #7, and #8 should have expired");
         source.Items.Should().BeEquivalentTo(new[] { item10, item3, item11, item9 }, options => options.WithStrictOrdering(), "items #1, #2, #6, #7, and #8 should have been removed");
 
         // Item scheduled to expire at 30ms, but won't be picked up yet
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(30).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(1).Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(1).Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item10, item3, item11, item9 }, options => options.WithStrictOrdering(), "no changes should have occurred");
 
         // Expired items should be polled, but should exclude the one that was changed from 40ms to 45ms.
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(40).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(1).Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().Skip(1).ElementAt(0).Should().BeEquivalentTo(new[] { item3 }, "item #3 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(1).Count().Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.Skip(1).ElementAt(0).Should().BeEquivalentTo(new[] { item3 }, "item #3 should have expired");
         source.Items.Should().BeEquivalentTo(new[] { item10, item11, item9 }, options => options.WithStrictOrdering(), "item #3 should have been removed");
 
         // Item scheduled to expire at 45ms, but won't be picked up yet
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(45).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(2).Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(2).Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item10, item11, item9 }, options => options.WithStrictOrdering(), "no changes should have occurred");
 
         // Expired items should be polled
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(60).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(2).Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().Skip(2).ElementAt(0).Should().BeEquivalentTo(new[] { item10 }, "item #10 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(2).Count().Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.Skip(2).ElementAt(0).Should().BeEquivalentTo(new[] { item10 }, "item #10 should have expired");
         source.Items.Should().BeEquivalentTo(new[] { item11, item9 }, "item #10 should have been removed");
 
         // Expired items should be polled, but none should be found
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(80).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(3).Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(3).Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item11, item9 }, options => options.WithStrictOrdering(), "no changes should have occurred");
 
         // Expired items should be polled
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(100).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(3).Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().Skip(3).ElementAt(0).Should().BeEquivalentTo(new[] { item11 }, "item #11 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(3).Count().Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.Skip(3).ElementAt(0).Should().BeEquivalentTo(new[] { item11 }, "item #11 should have expired");
         source.Items.Should().BeEquivalentTo(new[] { item9 }, options => options.WithStrictOrdering(), "item #11 should have been removed");
 
         // Next poll should not find anything to expire.
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(120).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(4).Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(4).Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item9 }, options => options.WithStrictOrdering(), "no changes should have occurred");
 
-        results.TryGetRecordedCompletion().Should().BeFalse();
+        results.HasCompleted.Should().BeFalse();
     }
 
     [Fact]
@@ -290,7 +290,7 @@ public sealed class ExpireAfterFixture
                 timeSelector: CreateTimeSelector(scheduler),
                 scheduler: scheduler)
             .ValidateSynchronization()
-            .RecordNotifications(out var results, scheduler);
+            .RecordValues(out var results, scheduler);
 
         var item1 = new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(10) };
         var item2 = new TestItem() { Id = 2, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(20) };
@@ -333,65 +333,65 @@ public sealed class ExpireAfterFixture
 
 
         // Verify initial state, after all emissions
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item1, item2, item10, item3, item11, item6, item7, item8, item9 }, options => options.WithStrictOrdering(), "9 items were added, 2 were replaced, and 1 was moved");
 
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().ElementAt(0).Should().BeEquivalentTo(new[] { item1 }, "item #1 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Count.Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.ElementAt(0).Should().BeEquivalentTo(new[] { item1 }, "item #1 should have expired");
         source.Items.Should().BeEquivalentTo(new[] { item2, item10, item3, item11, item6, item7, item8, item9 }, options => options.WithStrictOrdering(), "item #1 should have been removed");
 
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(15).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(1).Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().Skip(1).ElementAt(0).Should().BeEquivalentTo(new[] { item8 }, "item #8 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(1).Count().Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.Skip(1).ElementAt(0).Should().BeEquivalentTo(new[] { item8 }, "item #8 should have expired");
         source.Items.Should().BeEquivalentTo(new[] { item2, item10, item3, item11, item6, item7, item9 }, options => options.WithStrictOrdering(), "item #8 should have expired");
 
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(20).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(2).Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().Skip(2).ElementAt(0).Should().BeEquivalentTo(new[] { item2, item6, item7 }, "items #2, #6, and #7 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(2).Count().Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.Skip(2).ElementAt(0).Should().BeEquivalentTo(new[] { item2, item6, item7 }, "items #2, #6, and #7 should have expired");
         source.Items.Should().BeEquivalentTo(new[] { item10, item3, item11, item9 }, options => options.WithStrictOrdering(), "items #2, #6, and #7 should have been removed");
 
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(30).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(3).Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().Skip(3).ElementAt(0).Should().BeEquivalentTo(new[] { item3 }, "item #3 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(3).Count().Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.Skip(3).ElementAt(0).Should().BeEquivalentTo(new[] { item3 }, "item #3 should have expired");
         source.Items.Should().BeEquivalentTo(new[] { item10, item11, item9 }, options => options.WithStrictOrdering(), "item #3 should have been removed");
 
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(40).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(4).Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(4).Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item10, item11, item9 }, options => options.WithStrictOrdering(), "no changes should have occurred");
 
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(45).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(4).Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().Skip(4).ElementAt(0).Should().BeEquivalentTo(new[] { item10 }, "item #10 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(4).Count().Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.Skip(4).ElementAt(0).Should().BeEquivalentTo(new[] { item10 }, "item #10 should have expired");
         source.Items.Should().BeEquivalentTo(new[] { item11, item9 }, options => options.WithStrictOrdering(), "item #10 should have expired");
 
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(50).Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(5).Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().Skip(5).ElementAt(0).Should().BeEquivalentTo(new[] { item11 }, "item #11 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(5).Count().Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.Skip(5).ElementAt(0).Should().BeEquivalentTo(new[] { item11 }, "item #11 should have expired");
         source.Items.Should().BeEquivalentTo(new[] { item9 }, options => options.WithStrictOrdering(), "item #11 should have expired");
 
         scheduler.AdvanceTo(DateTimeOffset.MaxValue.Ticks);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Skip(6).Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Skip(6).Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item9 }, options => options.WithStrictOrdering(), "no changes should have occurred");
 
-        results.TryGetRecordedCompletion().Should().BeFalse();
+        results.HasCompleted.Should().BeFalse();
     }
 
     // Covers https://github.com/reactivemarbles/DynamicData/issues/716
@@ -410,24 +410,24 @@ public sealed class ExpireAfterFixture
                 timeSelector: CreateTimeSelector(scheduler),
                 scheduler: scheduler)
             .ValidateSynchronization()
-            .RecordNotifications(out var results, scheduler);
+            .RecordValues(out var results, scheduler);
 
         var item1 = new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(10) };
         source.Add(item1);
 
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
         source.Items.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
 
         scheduler.SimulateUntilIdle(inaccuracyOffset: TimeSpan.FromMilliseconds(-1));
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Count().Should().Be(1, "1 expiration should have occurred");
-        results.EnumerateRecordedValues().ElementAt(0).Should().BeEquivalentTo(new[] { item1 }, "item #1 should have expired");
+        results.Error.Should().BeNull();
+        results.RecordedValues.Count.Should().Be(1, "1 expiration should have occurred");
+        results.RecordedValues.ElementAt(0).Should().BeEquivalentTo(new[] { item1 }, "item #1 should have expired");
         source.Items.Should().BeEmpty("item #1 should have been removed");
 
-        results.TryGetRecordedCompletion().Should().BeFalse();
+        results.HasCompleted.Should().BeFalse();
     }
 
     [Fact]
@@ -442,21 +442,19 @@ public sealed class ExpireAfterFixture
                 timeSelector: CreateTimeSelector(scheduler),
                 scheduler: scheduler)
             .ValidateSynchronization()
-            .RecordNotifications(out var results, scheduler);
+            .RecordValues(out var results, scheduler);
 
         source.Add(new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(10) });
         scheduler.AdvanceBy(1);
 
         source.Complete();
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
-        results.TryGetRecordedCompletion().Should().BeTrue();
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
+        results.HasCompleted.Should().BeTrue();
 
         // Ensure that the operator does not attept to continue removing items.
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
-
-        results.EnumerateInvalidNotifications().Should().BeEmpty();
     }
 
     [Fact]
@@ -477,14 +475,12 @@ public sealed class ExpireAfterFixture
                 timeSelector: CreateTimeSelector(scheduler),
                 scheduler: scheduler)
             .ValidateSynchronization()
-            .RecordNotifications(out var results, scheduler);
+            .RecordValues(out var results, scheduler);
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
-        results.TryGetRecordedCompletion().Should().BeTrue();
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
+        results.HasCompleted.Should().BeTrue();
         source.Items.Should().BeEquivalentTo(new[] { item1 }, "no changes should have occurred");
-
-        results.EnumerateInvalidNotifications().Should().BeEmpty();
     }
 
     [Fact]
@@ -499,7 +495,7 @@ public sealed class ExpireAfterFixture
                 timeSelector: CreateTimeSelector(scheduler),
                 scheduler: scheduler)
             .ValidateSynchronization()
-            .RecordNotifications(out var results, scheduler);
+            .RecordValues(out var results, scheduler);
 
         source.Add(new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(10) });
         scheduler.AdvanceBy(1);
@@ -507,14 +503,12 @@ public sealed class ExpireAfterFixture
         var error = new Exception("This is a test");
         source.SetError(error);
 
-        results.TryGetRecordedError().Should().Be(error, "an error was published");
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
-        results.TryGetRecordedCompletion().Should().BeFalse();
+        results.Error.Should().Be(error, "an error was published");
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
+        results.HasCompleted.Should().BeFalse();
 
         // Ensure that the operator does not attept to continue removing items.
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
-
-        results.EnumerateInvalidNotifications().Should().BeEmpty();
     }
 
     [Fact]
@@ -536,17 +530,15 @@ public sealed class ExpireAfterFixture
                 timeSelector: CreateTimeSelector(scheduler),
                 scheduler: scheduler)
             .ValidateSynchronization()
-            .RecordNotifications(out var results, scheduler);
+            .RecordValues(out var results, scheduler);
 
-        results.TryGetRecordedError().Should().Be(error, "an error was published");
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
-        results.TryGetRecordedCompletion().Should().BeFalse();
+        results.Error.Should().Be(error, "an error was published");
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
+        results.HasCompleted.Should().BeFalse();
         source.Items.Should().BeEquivalentTo(new[] { item1 }, "no changes should have occurred");
 
         // Ensure that the operator does not attept to continue removing items.
         scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
-
-        results.EnumerateInvalidNotifications().Should().BeEmpty();
     }
 
     [Fact]
@@ -569,7 +561,7 @@ public sealed class ExpireAfterFixture
                 timeSelector: static item => item.Lifetime,
                 scheduler: scheduler)
             .ValidateSynchronization()
-            .RecordNotifications(out var results, scheduler);
+            .RecordValues(out var results, scheduler);
 
         PerformStressEdits(
             source: source,
@@ -581,12 +573,12 @@ public sealed class ExpireAfterFixture
 
         await WaitForCompletionAsync(source, results, TimeSpan.FromMinutes(1));
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().SelectMany(static removals => removals).Should().AllSatisfy(static item => item.Lifetime.Should().NotBeNull("only items with an expiration should have expired"));
-        results.TryGetRecordedCompletion().Should().BeFalse();
+        results.Error.Should().BeNull();
+        results.RecordedValues.SelectMany(static removals => removals).Should().AllSatisfy(static item => item.Lifetime.Should().NotBeNull("only items with an expiration should have expired"));
+        results.HasCompleted.Should().BeFalse();
         source.Items.Should().AllSatisfy(item => item.Lifetime.Should().BeNull("all items with an expiration should have expired"));
 
-        _output.WriteLine($"{results.EnumerateRecordedValues().Count()} Expirations occurred, for {results.EnumerateRecordedValues().SelectMany(static item => item).Count()} items");
+        _output.WriteLine($"{results.RecordedValues.Count} Expirations occurred, for {results.RecordedValues.SelectMany(static item => item).Count()} items");
     }
 
     [Fact]
@@ -602,7 +594,7 @@ public sealed class ExpireAfterFixture
                 pollingInterval: TimeSpan.FromMilliseconds(10),
                 scheduler: scheduler)
             .ValidateSynchronization()
-            .RecordNotifications(out var results, scheduler);
+            .RecordValues(out var results, scheduler);
 
         PerformStressEdits(
             source: source,
@@ -614,12 +606,12 @@ public sealed class ExpireAfterFixture
 
         await WaitForCompletionAsync(source, results, TimeSpan.FromMinutes(1));
 
-        results.TryGetRecordedError().Should().BeNull();
-        results.EnumerateRecordedValues().SelectMany(static removals => removals).Should().AllSatisfy(item => item.Lifetime.Should().NotBeNull("only items with an expiration should have expired"));
-        results.TryGetRecordedCompletion().Should().BeFalse();
+        results.Error.Should().BeNull();
+        results.RecordedValues.SelectMany(static removals => removals).Should().AllSatisfy(item => item.Lifetime.Should().NotBeNull("only items with an expiration should have expired"));
+        results.HasCompleted.Should().BeFalse();
         source.Items.Should().AllSatisfy(item => item.Lifetime.Should().BeNull("all items with an expiration should have expired"));
 
-        _output.WriteLine($"{results.EnumerateRecordedValues().Count()} Expirations occurred, for {results.EnumerateRecordedValues().SelectMany(static item => item).Count()} items");
+        _output.WriteLine($"{results.RecordedValues.Count} Expirations occurred, for {results.RecordedValues.SelectMany(static item => item).Count()} items");
     }
 
     [Fact]
@@ -643,16 +635,14 @@ public sealed class ExpireAfterFixture
                 timeSelector: _ => throw error,
                 scheduler: scheduler)
             .ValidateSynchronization()
-            .RecordNotifications(out var results, scheduler);
+            .RecordValues(out var results, scheduler);
 
         source.Add(new TestItem() { Id = 1 });
         scheduler.AdvanceBy(1);
 
-        results.TryGetRecordedError().Should().Be(error);
-        results.EnumerateRecordedValues().Should().BeEmpty("no expirations should have occurred");
-        results.TryGetRecordedCompletion().Should().BeFalse();
-
-        results.EnumerateInvalidNotifications().Should().BeEmpty();
+        results.Error.Should().Be(error);
+        results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
+        results.HasCompleted.Should().BeFalse();
     }
 
     private static TestScheduler CreateTestScheduler()
@@ -804,7 +794,7 @@ public sealed class ExpireAfterFixture
 
     private static async Task WaitForCompletionAsync(
         ISourceList<StressItem> source,
-        TestableObserver<IEnumerable<StressItem>> results,
+        ValueRecordingObserver<IEnumerable<StressItem>> results,
         TimeSpan timeout)
     {
         // Wait up to full minute for the operator to finish processing expirations
@@ -816,13 +806,9 @@ public sealed class ExpireAfterFixture
         {
             await Task.Delay(pollingInterval);
 
-            // Identify "completion" as either an error, a completion signal, or all expiring items being removed.
-            if ((results.TryGetRecordedError() is not null) 
-                || results.TryGetRecordedCompletion()
-                || source.Items.All(static item => item.Lifetime is null))
-            {
+            // Identify "completion" as either the stream finalizing, or there being no remaining items that need to expire
+            if (results.HasFinalized || source.Items.All(static item => item.Lifetime is null))
                 break;
-            }
         }
     }
 
