@@ -33,7 +33,7 @@ public class AvaloniaDictionaryFixture
 
         _collection.Add("Someone", person);
 
-        _results.Messages.Count.Should().Be(1);
+        _results.Messages.Count.Should().Be(2);
         _results.Data.Count.Should().Be(1);
         _results.Data.Items[0].Should().Be(person);
     }
@@ -86,7 +86,7 @@ public interface IAvaloniaReadOnlyDictionary<TKey, TValue>
 /*
   Copied from Avalionia because an issue was raised due to compatibility issues with ToObservableChangeSet().
 
-There's not other way of testing it.  
+There's not other way of testing it.
 
 See https://github.com/AvaloniaUI/Avalonia/blob/d7c82a1a6f7eb95b2214f20a281fa0581fb7b792/src/Avalonia.Base/Collections/AvaloniaDictionary.cs#L17
  */

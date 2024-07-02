@@ -30,7 +30,7 @@ public class ObservableCollectionExtendedToChangeSetFixture : IDisposable
     {
         _collection.Add(1);
 
-        _results.Messages.Count.Should().Be(1);
+        _results.Messages.Count.Should().Be(2);
         _results.Data.Count.Should().Be(1);
         _results.Data.Items[0].Should().Be(1);
     }

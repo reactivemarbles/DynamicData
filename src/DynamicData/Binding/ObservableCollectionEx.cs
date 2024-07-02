@@ -119,10 +119,7 @@ public static class ObservableCollectionEx
             {
                 var data = new ChangeAwareList<T>(source);
 
-                if (data.Count > 0)
-                {
-                    observer.OnNext(data.CaptureChanges());
-                }
+                observer.OnNext(data.CaptureChanges());
 
                 return source.ObserveCollectionChanges().Scan(
                     data,
