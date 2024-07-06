@@ -4091,6 +4091,7 @@ public static partial class ObservableCacheEx
     /// or
     /// comparer.
     /// </exception>
+    [Obsolete(Constants.SortIsObsolete)]
     public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
         where TObject : notnull
         where TKey : notnull
@@ -4111,6 +4112,7 @@ public static partial class ObservableCacheEx
     /// <param name="sortOptimisations">The sort optimisations.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits change sets.</returns>
+    [Obsolete(Constants.SortIsObsolete)]
     public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IComparer<TObject>> comparerObservable, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
         where TObject : notnull
         where TKey : notnull
@@ -4132,6 +4134,7 @@ public static partial class ObservableCacheEx
     /// <param name="sortOptimisations">The sort optimisations.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits change sets.</returns>
+    [Obsolete(Constants.SortIsObsolete)]
     public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IComparer<TObject>> comparerObservable, IObservable<Unit> resorter, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
         where TObject : notnull
         where TKey : notnull
@@ -4153,6 +4156,7 @@ public static partial class ObservableCacheEx
     /// <param name="sortOptimisations">The sort optimisations.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits change sets.</returns>
+    [Obsolete(Constants.SortIsObsolete)]
     public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, IObservable<Unit> resorter, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
         where TObject : notnull
         where TKey : notnull

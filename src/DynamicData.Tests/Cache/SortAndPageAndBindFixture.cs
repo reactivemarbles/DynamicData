@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
@@ -10,59 +11,59 @@ using Xunit;
 namespace DynamicData.Tests.Cache;
 
 
-public sealed class SortAndBindVirtualizeWithImplicitOptionsFixtureReadOnlyCollection : SortAndBindVirtualizeFixtureBase
+public sealed class SortAndPageAndBindWithImplicitOptionsFixtureReadOnlyCollection : SortAndPageAndBindFixtureBase
 {
     protected override (ChangeSetAggregator<Person, string> aggregator, IList<Person> list) SetUpTests()
     {
 
         var aggregator = Source.Connect()
-            .SortAndVirtualize(Comparer, VirtualRequests)
-            // no sort and bind options. These are extracted from the SortAndVirtualize context
-            .SortAndBind(out var list)
+            .SortAndPage(Comparer, PageRequests)
+            // no sort and bind options. These are extracted from the SortAndPage context
+            .Bind(out var list)
             .AsAggregator();
 
         return (aggregator, list);
     }
 }
 
-public sealed class SortAndBindVirtualizeFixtureReadOnlyCollection : SortAndBindVirtualizeFixtureBase
+public sealed class SortAndPageAndBindFixtureReadOnlyCollection : SortAndPageAndBindFixtureBase
 {
     protected override (ChangeSetAggregator<Person, string> aggregator, IList<Person> list) SetUpTests()
     {
 
         var aggregator = Source.Connect()
-            .SortAndVirtualize(Comparer, VirtualRequests)
-            .SortAndBind(out var list, new SortAndBindOptions())
+            .SortAndPage(Comparer, PageRequests)
+            .Bind(out var list, new SortAndBindOptions())
             .AsAggregator();
 
         return (aggregator, list);
     }
 }
 
-public sealed class SortAndBindVirtualizeWithImplicitOptionsFixture : SortAndBindVirtualizeFixtureBase
+public sealed class SortAndPageAndBindWithImplicitOptionsFixture : SortAndPageAndBindFixtureBase
 {
     protected override (ChangeSetAggregator<Person, string> aggregator, IList<Person> list) SetUpTests()
     {
         var list = new List<Person>();
 
         var aggregator = Source.Connect()
-            .SortAndVirtualize(Comparer, VirtualRequests)
-            // no sort and bind options. These are extracted from the SortAndVirtualize context
-            .SortAndBind(list)
+            .SortAndPage(Comparer, PageRequests)
+            // no sort and bind options. These are extracted from the SortAndPage context
+            .Bind(list)
             .AsAggregator();
 
         return (aggregator, list);
     }
 }
 
-public sealed class SortAndBindVirtualizeFixture : SortAndBindVirtualizeFixtureBase
+public sealed class SortAndPageAndBindFixture : SortAndPageAndBindFixtureBase
 {
     protected override (ChangeSetAggregator<Person, string> aggregator, IList<Person> list) SetUpTests()
     {
         var list = new List<Person>();
 
         var aggregator = Source.Connect()
-            .SortAndVirtualize(Comparer, VirtualRequests)
+            .SortAndPage(Comparer, PageRequests)
             .SortAndBind(list, new SortAndBindOptions())
             .AsAggregator();
 
@@ -70,17 +71,17 @@ public sealed class SortAndBindVirtualizeFixture : SortAndBindVirtualizeFixtureB
     }
 }
 
-public abstract class SortAndBindVirtualizeFixtureBase : IDisposable
+public abstract class SortAndPageAndBindFixtureBase : IDisposable
 {
 
     protected readonly SourceCache<Person, string> Source = new(p => p.Name);
     protected readonly IComparer<Person> Comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
-    protected readonly ISubject<IVirtualRequest> VirtualRequests = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 25));
+    protected readonly ISubject<IPageRequest> PageRequests = new BehaviorSubject<IPageRequest>(new PageRequest(0, 25));
 
     protected readonly ChangeSetAggregator<Person, string> Aggregator;
     protected readonly IList<Person> List;
 
-    protected SortAndBindVirtualizeFixtureBase()
+    protected SortAndPageAndBindFixtureBase()
     {
         // It's ok in this case to call VirtualMemberCallInConstructor
 
@@ -98,29 +99,18 @@ public abstract class SortAndBindVirtualizeFixtureBase : IDisposable
 
 
     [Fact]
-    public void InitialBatches()
+    public void PageGreaterThanNumberOfPagesAvailable()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid());
         Source.AddOrUpdate(people);
 
-        // for first batch, it should use the results of the _virtualRequests subject (if a behaviour subject is used).
-        var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
-        List.Should().BeEquivalentTo(expectedResult);
+        // should select the last page
+        PageRequests.OnNext(new PageRequest(10, 25));
 
+        var expectedResult = people.OrderBy(p => p, Comparer).Skip(75).Take(25).ToList();
 
-        VirtualRequests.OnNext(new VirtualRequest(25, 50));
-        expectedResult = people.OrderBy(p => p, Comparer).Skip(25).Take(50).ToList();
-        List.Should().BeEquivalentTo(expectedResult);
-
-
-        VirtualRequests.OnNext(new VirtualRequest(40, 50));
-        expectedResult = people.OrderBy(p => p, Comparer).Skip(40).Take(50).ToList();
         List.Should().BeEquivalentTo(expectedResult);
     }
-
-
-
-
 
 
     [Fact]
@@ -129,10 +119,10 @@ public abstract class SortAndBindVirtualizeFixtureBase : IDisposable
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid());
         Source.AddOrUpdate(people);
 
-        VirtualRequests.OnNext(new VirtualRequest(10, 30));
+        PageRequests.OnNext(new PageRequest(3, 10));
 
-        // for first batch, it should use the results of the _virtualRequests subject (if a behaviour subject is used).
-        var expectedResult = people.OrderBy(p => p, Comparer).Skip(10).Take(30).ToList();
+        // for first batch, it should use the results of the _PageRequests subject (if a behaviour subject is used).
+        var expectedResult = people.OrderBy(p => p, Comparer).Skip(20).Take(10).ToList();
         List.Should().BeEquivalentTo(expectedResult);
     }
 
@@ -172,7 +162,6 @@ public abstract class SortAndBindVirtualizeFixtureBase : IDisposable
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid()).ToList();
         Source.AddOrUpdate(people);
-
 
         // insert right at end
         var person = new Person("X_Last", 100);
@@ -262,6 +251,7 @@ public abstract class SortAndBindVirtualizeFixtureBase : IDisposable
         Aggregator.Messages.Count.Should().Be(1);
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
+
         List.SequenceEqual(expectedResult).Should().Be(true);
     }
 
@@ -293,6 +283,7 @@ public abstract class SortAndBindVirtualizeFixtureBase : IDisposable
         people.Remove(person);
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
+
         List.SequenceEqual(expectedResult).Should().Be(true);
     }
 
@@ -310,6 +301,7 @@ public abstract class SortAndBindVirtualizeFixtureBase : IDisposable
         Aggregator.Messages.Count.Should().Be(1);
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
+
         List.SequenceEqual(expectedResult).Should().Be(true);
     }
 
@@ -353,6 +345,7 @@ public abstract class SortAndBindVirtualizeFixtureBase : IDisposable
         firstChange.Reason.Should().Be(ChangeReason.Refresh);
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
+
         List.SequenceEqual(expectedResult).Should().Be(true);
     }
 
@@ -383,13 +376,15 @@ public abstract class SortAndBindVirtualizeFixtureBase : IDisposable
 
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
+
         List.SequenceEqual(expectedResult).Should().Be(true);
     }
+
 
     public void Dispose()
     {
         Source.Dispose();
         Aggregator.Dispose();
-        VirtualRequests.OnCompleted();
+        PageRequests.OnCompleted();
     }
 }
