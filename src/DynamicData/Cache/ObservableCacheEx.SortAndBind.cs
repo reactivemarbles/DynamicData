@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using DynamicData.Binding;
 
 namespace DynamicData;
@@ -14,6 +13,80 @@ namespace DynamicData;
 public static partial class ObservableCacheEx
 {
     /// <summary>
+    /// Bind paged data to the specified readonly observable collection.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
+        out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        var targetList = new ObservableCollectionExtended<TObject>();
+        readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(targetList);
+
+        return source.Bind(targetList);
+    }
+
+    /// <summary>
+    /// Bind paged data to the specified collection.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <param name="options">Bind and sort default options.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
+        out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
+        SortAndBindOptions options)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        var targetList = new ObservableCollectionExtended<TObject>();
+        readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(targetList);
+
+        return source.Bind(targetList, options);
+    }
+
+    /// <summary>
+    /// Bind paged data to the specified collection.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="targetList">The list to bind to.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
+        IList<TObject> targetList)
+        where TObject : notnull
+        where TKey : notnull =>
+        new BindPaged<TObject, TKey>(source, targetList, null).Run();
+
+    /// <summary>
+    /// Bind paged data to the specified collection.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="targetList">The list to bind to.</param>
+    /// <param name="options">Bind and sort default options.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
+        IList<TObject> targetList,
+        SortAndBindOptions options)
+        where TObject : notnull
+        where TKey : notnull =>
+        new BindPaged<TObject, TKey>(source, targetList, options).Run();
+
+    /// <summary>
     /// Bind virtualized and sorted data to the specified readonly observable collection.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -21,7 +94,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
         where TObject : notnull
@@ -30,7 +103,7 @@ public static partial class ObservableCacheEx
         var targetList = new ObservableCollectionExtended<TObject>();
         readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(targetList);
 
-        return source.SortAndBind(targetList);
+        return source.Bind(targetList);
     }
 
     /// <summary>
@@ -42,7 +115,7 @@ public static partial class ObservableCacheEx
     /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
     /// <param name="options">Bind and sort default options.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
         SortAndBindOptions options)
@@ -52,7 +125,7 @@ public static partial class ObservableCacheEx
         var targetList = new ObservableCollectionExtended<TObject>();
         readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(targetList);
 
-        return source.SortAndBind(targetList, options);
+        return source.Bind(targetList, options);
     }
 
     /// <summary>
@@ -63,12 +136,12 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="targetList">The list to bind to.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
         IList<TObject> targetList)
         where TObject : notnull
         where TKey : notnull =>
-        new SortAndBindVirtualized<TObject, TKey>(source, targetList, null).Run();
+        new BindVirtualized<TObject, TKey>(source, targetList, null).Run();
 
     /// <summary>
     /// Bind virtualized data to the specified collection.
@@ -79,13 +152,13 @@ public static partial class ObservableCacheEx
     /// <param name="targetList">The list to bind to.</param>
     /// <param name="options">Bind and sort default options.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
         IList<TObject> targetList,
         SortAndBindOptions options)
         where TObject : notnull
         where TKey : notnull =>
-        new SortAndBindVirtualized<TObject, TKey>(source, targetList, options).Run();
+        new BindVirtualized<TObject, TKey>(source, targetList, options).Run();
 
     /// <summary>
     /// Bind sorted data to the specified collection, for an object which implements IComparable<typeparamref name="TObject"></typeparamref>>.

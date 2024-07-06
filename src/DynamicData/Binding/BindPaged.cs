@@ -9,17 +9,19 @@ using System.Reactive.Subjects;
 namespace DynamicData.Binding;
 
 /*
- * Binding for the result of the SortAndVirtualize operator
+ * Binding for the result of the SortAndPage operator
+ *
+ * (Direct lift from BindVirtualized).
  */
-internal sealed class SortAndBindVirtualized<TObject, TKey>(
-    IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
+internal sealed class BindPaged<TObject, TKey>(
+    IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
     IList<TObject> targetList,
     SortAndBindOptions? options)
     where TObject : notnull
     where TKey : notnull
 {
     public IObservable<IChangeSet<TObject, TKey>> Run() => options is null
-        ? UseVirtualSortOptions()
+        ? UseContextSortOptions()
         : UseProvidedOptions(options.Value);
 
     private IObservable<IChangeSet<TObject, TKey>> UseProvidedOptions(SortAndBindOptions sortAndBindOptions) =>
@@ -32,7 +34,7 @@ internal sealed class SortAndBindVirtualized<TObject, TKey>(
             return changes.SortAndBind(targetList, comparedChanged, sortAndBindOptions);
         });
 
-    private IObservable<IChangeSet<TObject, TKey>> UseVirtualSortOptions() =>
+    private IObservable<IChangeSet<TObject, TKey>> UseContextSortOptions() =>
         Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
             var shared = source.Publish();
@@ -53,7 +55,7 @@ internal sealed class SortAndBindVirtualized<TObject, TKey>(
                     changesSubject.OnNext(changesWithContext);
                 });
 
-            // extract binding options from the virtual context
+            // extract binding options from the page context
             var initial = shared
                 .Take(1)
                 .Subscribe(changesWithContext =>
