@@ -1175,6 +1175,18 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, System.TimeSpan? timeOut = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
+            where TObject :  notnull
+            where TKey :  notnull { }
         public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source, DynamicData.Binding.IObservableCollection<TObject> destination)
             where TObject :  notnull
             where TKey :  notnull { }
@@ -1191,6 +1203,18 @@ namespace DynamicData
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.ComponentModel.BindingList<TObject> bindingList, int resetThreshold = 25)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList, DynamicData.Binding.SortAndBindOptions options)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, DynamicData.Binding.SortAndBindOptions options)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList, DynamicData.Binding.SortAndBindOptions options)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source, DynamicData.Binding.IObservableCollection<TObject> destination, DynamicData.Binding.BindingOptions options)
@@ -1662,6 +1686,7 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Or<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, params System.IObservable<DynamicData.IChangeSet<TObject, TKey>>[] others)
             where TObject :  notnull
             where TKey :  notnull { }
+        [System.Obsolete("Use SortAndPage as it\'s more efficient")]
         public static System.IObservable<DynamicData.IPagedChangeSet<TObject, TKey>> Page<TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source, System.IObservable<DynamicData.IPageRequest> pageRequests)
             where TObject :  notnull
             where TKey :  notnull { }
@@ -1755,15 +1780,19 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SkipInitial<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source)
             where TObject :  notnull
             where TKey :  notnull { }
+        [System.Obsolete("Use SortAndBind as it\'s more efficient")]
         public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IComparer<TObject> comparer, DynamicData.SortOptimisations sortOptimisations = 0, int resetThreshold = 100)
             where TObject :  notnull
             where TKey :  notnull { }
+        [System.Obsolete("Use SortAndBind as it\'s more efficient")]
         public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerObservable, DynamicData.SortOptimisations sortOptimisations = 0, int resetThreshold = 100)
             where TObject :  notnull
             where TKey :  notnull { }
+        [System.Obsolete("Use SortAndBind as it\'s more efficient")]
         public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IComparer<TObject> comparer, System.IObservable<System.Reactive.Unit> resorter, DynamicData.SortOptimisations sortOptimisations = 0, int resetThreshold = 100)
             where TObject :  notnull
             where TKey :  notnull { }
+        [System.Obsolete("Use SortAndBind as it\'s more efficient")]
         public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerObservable, System.IObservable<System.Reactive.Unit> resorter, DynamicData.SortOptimisations sortOptimisations = 0, int resetThreshold = 100)
             where TObject :  notnull
             where TKey :  notnull { }
@@ -1772,12 +1801,6 @@ namespace DynamicData
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
             where TObject :  notnull, System.IComparable<TObject>
-            where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList)
-            where TObject :  notnull
-            where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
-            where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull, System.IComparable<TObject>
@@ -1797,12 +1820,6 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerChanged)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList, DynamicData.Binding.SortAndBindOptions options)
-            where TObject :  notnull
-            where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, DynamicData.Binding.SortAndBindOptions options)
-            where TObject :  notnull
-            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, System.Collections.Generic.IComparer<TObject> comparer, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
@@ -1813,6 +1830,18 @@ namespace DynamicData
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerChanged, DynamicData.Binding.SortAndBindOptions options)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> SortAndPage<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IComparer<TObject> comparer, System.IObservable<DynamicData.IPageRequest> pageRequests)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> SortAndPage<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerChanged, System.IObservable<DynamicData.IPageRequest> pageRequests)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> SortAndPage<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IComparer<TObject> comparer, System.IObservable<DynamicData.IPageRequest> pageRequests, DynamicData.SortAndPageOptions options)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> SortAndPage<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerChanged, System.IObservable<DynamicData.IPageRequest> pageRequests, DynamicData.SortAndPageOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> SortAndVirtualize<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IComparer<TObject> comparer, System.IObservable<DynamicData.IVirtualRequest> virtualRequests)
@@ -1894,10 +1923,11 @@ namespace DynamicData
             where TObject :  notnull
             where TKey :  notnull
             where TSortKey :  notnull { }
+        [System.Obsolete("Use Overload with comparer as it\'s more efficient")]
         public static System.IObservable<DynamicData.IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source, int size)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IComparer<TObject> comparer, int size)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> Top<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IComparer<TObject> comparer, int size)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, bool transformOnRefresh)
@@ -2145,6 +2175,7 @@ namespace DynamicData
         public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> UpdateIndex<TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source)
             where TObject : DynamicData.Binding.IIndexAware
             where TKey :  notnull { }
+        [System.Obsolete("Use SortAndVirtualize as it\'s more efficient")]
         public static System.IObservable<DynamicData.IVirtualChangeSet<TObject, TKey>> Virtualise<TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source, System.IObservable<DynamicData.IVirtualRequest> virtualRequests)
             where TObject :  notnull
             where TKey :  notnull { }
@@ -2510,15 +2541,22 @@ namespace DynamicData
             where T :  notnull { }
     }
     public static class ObsoleteEx { }
+    public class PageContext<TObject> : System.IEquatable<DynamicData.PageContext<TObject>>
+    {
+        public PageContext(DynamicData.Operators.IPageResponse Response, System.Collections.Generic.IComparer<TObject> Comparer, DynamicData.SortAndPageOptions Options) { }
+        public System.Collections.Generic.IComparer<TObject> Comparer { get; init; }
+        public DynamicData.SortAndPageOptions Options { get; init; }
+        public DynamicData.Operators.IPageResponse Response { get; init; }
+    }
     public sealed class PageRequest : DynamicData.IPageRequest, System.IEquatable<DynamicData.IPageRequest>
     {
         public static readonly DynamicData.IPageRequest Default;
         public static readonly DynamicData.IPageRequest Empty;
         public PageRequest() { }
         public PageRequest(int page, int size) { }
-        public System.Collections.Generic.IEqualityComparer<DynamicData.IPageRequest?> DefaultComparer { get; }
         public int Page { get; }
         public int Size { get; }
+        public static System.Collections.Generic.IEqualityComparer<DynamicData.IPageRequest?> DefaultComparer { get; }
         public bool Equals(DynamicData.IPageRequest? other) { }
         public override bool Equals(object? obj) { }
         public override int GetHashCode() { }
@@ -2535,6 +2573,13 @@ namespace DynamicData
         public void Insert(int index, T item) { }
         public void SetStartingIndex(int index) { }
         public override string ToString() { }
+    }
+    public struct SortAndPageOptions : System.IEquatable<DynamicData.SortAndPageOptions>
+    {
+        public SortAndPageOptions() { }
+        public int InitialCapacity { get; init; }
+        public int ResetThreshold { get; init; }
+        public bool UseBinarySearch { get; init; }
     }
     public struct SortAndVirtualizeOptions : System.IEquatable<DynamicData.SortAndVirtualizeOptions>
     {

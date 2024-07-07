@@ -111,6 +111,7 @@ public static partial class ObservableCacheEx
     /// <param name="virtualRequests">The virtualising requests.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
+    [Obsolete(Constants.VirtualizeIsObsolete)]
     public static IObservable<IVirtualChangeSet<TObject, TKey>> Virtualise<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IVirtualRequest> virtualRequests)
         where TObject : notnull
         where TKey : notnull
@@ -119,6 +120,32 @@ public static partial class ObservableCacheEx
         virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
 
         return new Virtualise<TObject, TKey>(source, virtualRequests).Run();
+    }
+
+    /// <summary>
+    /// Limits the size of the result set to the specified number, ordering by the comparer.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="comparer">The comparer.</param>
+    /// <param name="size">The size.</param>
+    /// <returns>An observable which will emit virtual change sets.</returns>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
+    public static IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> Top<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, int size)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+
+        if (size <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(size), "Size should be greater than zero");
+        }
+
+        return source.SortAndVirtualize(comparer, Observable.Return(new VirtualRequest(0, size)));
     }
 
     /// <summary>
@@ -131,6 +158,7 @@ public static partial class ObservableCacheEx
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     /// <exception cref="ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
+    [Obsolete(Constants.TopIsObsolete)]
     public static IObservable<IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, int size)
         where TObject : notnull
         where TKey : notnull
@@ -146,29 +174,93 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Limits the size of the result set to the specified number, ordering by the comparer.
+    /// Sort and page the underlying data from the specified source.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <param name="comparer">The comparer.</param>
-    /// <param name="size">The size.</param>
+    /// <param name="comparer">The comparer to order the resulting dataset.</param>
+    /// <param name="pageRequests">The virtualizing requests.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
-    public static IObservable<IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, int size)
+    public static IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> SortAndPage<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+        IComparer<TObject> comparer,
+        IObservable<IPageRequest> pageRequests)
+        where TObject : notnull
+        where TKey : notnull =>
+        source.SortAndPage(comparer, pageRequests, new SortAndPageOptions());
+
+    /// <summary>
+    /// Sort and page the underlying data from the specified source.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>>
+    /// <param name="pageRequests">The virtualizing requests.</param>
+    /// <returns>An observable which will emit virtual change sets.</returns>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> SortAndPage<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey>> source,
+        IObservable<IComparer<TObject>> comparerChanged,
+        IObservable<IPageRequest> pageRequests)
         where TObject : notnull
         where TKey : notnull
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        pageRequests.ThrowArgumentNullExceptionIfNull(nameof(pageRequests));
 
-        if (size <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(size), "Size should be greater than zero");
-        }
+        return source.SortAndPage(comparerChanged, pageRequests, new SortAndPageOptions());
+    }
 
-        return source.Sort(comparer).Top(size);
+    /// <summary>
+    /// Sort and page the underlying data from the specified source.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="comparer">The comparer to order the resulting dataset.</param>
+    /// <param name="pageRequests">The virtualizing requests.</param>
+    /// <param name="options"> Addition optimization options for virtualization.</param>
+    /// <returns>An observable which will emit virtual change sets.</returns>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> SortAndPage<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey>> source,
+        IComparer<TObject> comparer,
+        IObservable<IPageRequest> pageRequests,
+        SortAndPageOptions options)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        pageRequests.ThrowArgumentNullExceptionIfNull(nameof(pageRequests));
+
+        return new SortAndPage<TObject, TKey>(source, comparer, pageRequests, options).Run();
+    }
+
+    /// <summary>
+    /// Sort and page the underlying data from the specified source.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>>
+    /// <param name="pageRequests">The virtualizing requests.</param>
+    /// <param name="options"> Addition optimization options for virtualization.</param>
+    /// <returns>An observable which will emit virtual change sets.</returns>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> SortAndPage<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey>> source,
+        IObservable<IComparer<TObject>> comparerChanged,
+        IObservable<IPageRequest> pageRequests,
+        SortAndPageOptions options)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        pageRequests.ThrowArgumentNullExceptionIfNull(nameof(pageRequests));
+
+        return new SortAndPage<TObject, TKey>(source, comparerChanged, pageRequests, options).Run();
     }
 
     /// <summary>
@@ -179,6 +271,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="pageRequests">The page requests.</param>
     /// <returns>An observable which emits change sets.</returns>
+    [Obsolete(Constants.PageIsObsolete)]
     public static IObservable<IPagedChangeSet<TObject, TKey>> Page<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
         where TObject : notnull
         where TKey : notnull

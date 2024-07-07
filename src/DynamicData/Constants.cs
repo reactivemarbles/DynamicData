@@ -7,4 +7,8 @@ namespace DynamicData;
 internal static class Constants
 {
     public const string EvaluateIsDead = "Use Refresh: Same thing but better semantics";
+    public const string VirtualizeIsObsolete = "Use SortAndVirtualize as it's more efficient";
+    public const string PageIsObsolete = "Use SortAndPage as it's more efficient";
+    public const string TopIsObsolete = "Use Overload with comparer as it's more efficient";
+    public const string SortIsObsolete = "Use SortAndBind as it's more efficient";
 }
