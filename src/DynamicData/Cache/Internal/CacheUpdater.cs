@@ -174,21 +174,6 @@ internal sealed class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey
 
     public void Clone(IChangeSet<TObject, TKey> changes) => _cache.Clone(changes);
 
-    [Obsolete(Constants.EvaluateIsDead)]
-    public void Evaluate(IEnumerable<TKey> keys) => Refresh(keys);
-
-    [Obsolete(Constants.EvaluateIsDead)]
-    public void Evaluate(IEnumerable<TObject> items) => Refresh(items);
-
-    [Obsolete(Constants.EvaluateIsDead)]
-    public void Evaluate(TObject item) => Refresh(item);
-
-    [Obsolete(Constants.EvaluateIsDead)]
-    public void Evaluate() => Refresh();
-
-    [Obsolete(Constants.EvaluateIsDead)]
-    public void Evaluate(TKey key) => Refresh(key);
-
     public TKey GetKey(TObject item)
     {
         if (_keySelector is null)
