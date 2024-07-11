@@ -57,7 +57,7 @@ public class TransformSafeParallelFixture : IDisposable
 
         _results.Messages.Count.Should().Be(1, "Should be 1 updates");
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items.First().Should().Be(_transformFactory(person), "Should be same person");
+        _results.Data.Items[0].Should().Be(_transformFactory(person), "Should be same person");
     }
 
     public void Dispose()
@@ -86,7 +86,7 @@ public class TransformSafeParallelFixture : IDisposable
         _results.Messages.Count.Should().Be(1, "Should be 1 messages");
 
         _results.Data.Count.Should().Be(1, "Should 1 item in the cache");
-        _results.Data.Items.First().Should().Be(_transformFactory(update2), "Change 2 shoud be the only item cached");
+        _results.Data.Items[0].Should().Be(_transformFactory(update2), "Change 2 shoud be the only item cached");
     }
 
     [Fact]
@@ -121,6 +121,6 @@ public class TransformSafeParallelFixture : IDisposable
         _results.Messages.Count.Should().Be(3, "Should be 3 messages");
 
         _results.Data.Count.Should().Be(1, "Should 1 item in the cache");
-        _results.Data.Items.First().Should().Be(_transformFactory(update2), "Change 2 shoud be the only item cached");
+        _results.Data.Items[0].Should().Be(_transformFactory(update2), "Change 2 shoud be the only item cached");
     }
 }

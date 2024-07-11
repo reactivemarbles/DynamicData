@@ -231,7 +231,7 @@ public sealed class TransformManyAsyncFixture : IDisposable
 
         // These should be subsets of each other
         expectedOwners.Should().BeSubsetOf(ownerResults.Data.Items);
-        ownerResults.Data.Items.Count().Should().Be(expectedOwners.Count);
+        ownerResults.Data.Items.Count.Should().Be(expectedOwners.Count);
 
         var allAnimals = expectedOwners.SelectMany(owner => owner.Animals.Items).ToList();
         var expectedAnimals = allAnimals.GroupBy(keySelector).Select(group => group.OrderBy(a => a, comparer).First()).ToList();
@@ -247,7 +247,7 @@ public sealed class TransformManyAsyncFixture : IDisposable
 
         // These should be subsets of each other
         expectedOwners.Should().BeSubsetOf(ownerResults.Data.Items);
-        ownerResults.Data.Items.Count().Should().Be(expectedOwners.Count);
+        ownerResults.Data.Items.Count.Should().Be(expectedOwners.Count);
 
         // All owner animals should be in the results
         foreach (var owner in owners)

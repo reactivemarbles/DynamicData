@@ -78,7 +78,7 @@ public abstract class AndFixtureBase : IDisposable
         _source2.AddOrUpdate(person);
         _results.Messages.Count.Should().Be(1, "Should have no updates");
         _results.Data.Count.Should().Be(1, "Cache should have no items");
-        _results.Data.Items.First().Should().Be(person, "Should be same person");
+        _results.Data.Items[0].Should().Be(person, "Should be same person");
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public abstract class AndFixtureBase : IDisposable
         _source2.AddOrUpdate(personUpdated);
         _results.Messages.Count.Should().Be(2, "Should be 2 updates");
         _results.Data.Count.Should().Be(1, "Cache should have no items");
-        _results.Data.Items.First().Should().Be(personUpdated, "Should be updated person");
+        _results.Data.Items[0].Should().Be(personUpdated, "Should be updated person");
     }
 
     [Fact]

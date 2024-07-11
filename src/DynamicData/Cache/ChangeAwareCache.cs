@@ -63,6 +63,8 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <inheritdoc />
     public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
 
+    internal Dictionary<TKey, TObject> GetDictionary() => _data;
+
     /// <summary>
     /// Adds the item to the cache without checking whether there is an existing value in the cache.
     /// </summary>
