@@ -14,20 +14,6 @@ using Xunit;
 namespace DynamicData.Tests.Cache;
 
 // Bind to a list
-public sealed class SortByAndBindToList : SortAndBindFixture
-
-{
-    protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
-    {
-        var list = new List<Person>(100);
-        var aggregator = _source.Connect().SortAndBind(list, _comparer).AsAggregator();
-
-        return (aggregator, list);
-    }
-}
-
-
-// Bind to a list
 public sealed class SortAndBindToList: SortAndBindFixture
 
 {
