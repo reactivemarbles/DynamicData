@@ -540,9 +540,9 @@ namespace DynamicData.Cache.Internal
         public LockFreeObservableCache(System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source) { }
         public int Count { get; }
         public System.IObservable<int> CountChanged { get; }
-        public System.Collections.Generic.IEnumerable<TObject> Items { get; }
-        public System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>> KeyValues { get; }
-        public System.Collections.Generic.IEnumerable<TKey> Keys { get; }
+        public System.Collections.Generic.IReadOnlyList<TObject> Items { get; }
+        public System.Collections.Generic.IReadOnlyDictionary<TKey, TObject> KeyValues { get; }
+        public System.Collections.Generic.IReadOnlyList<TKey> Keys { get; }
         public System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Connect(System.Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) { }
         public void Dispose() { }
         public void Edit(System.Action<DynamicData.ICacheUpdater<TObject, TKey>> editAction) { }
@@ -874,9 +874,9 @@ namespace DynamicData
         where TKey :  notnull
     {
         int Count { get; }
-        System.Collections.Generic.IEnumerable<TObject> Items { get; }
-        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>> KeyValues { get; }
-        System.Collections.Generic.IEnumerable<TKey> Keys { get; }
+        System.Collections.Generic.IReadOnlyList<TObject> Items { get; }
+        System.Collections.Generic.IReadOnlyDictionary<TKey, TObject> KeyValues { get; }
+        System.Collections.Generic.IReadOnlyList<TKey> Keys { get; }
         DynamicData.Kernel.Optional<TObject> Lookup(TKey key);
     }
     public interface IObservableList<T> : System.IDisposable
@@ -993,9 +993,9 @@ namespace DynamicData
         public IntermediateCache(System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source) { }
         public int Count { get; }
         public System.IObservable<int> CountChanged { get; }
-        public System.Collections.Generic.IEnumerable<TObject> Items { get; }
-        public System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>> KeyValues { get; }
-        public System.Collections.Generic.IEnumerable<TKey> Keys { get; }
+        public System.Collections.Generic.IReadOnlyList<TObject> Items { get; }
+        public System.Collections.Generic.IReadOnlyDictionary<TKey, TObject> KeyValues { get; }
+        public System.Collections.Generic.IReadOnlyList<TKey> Keys { get; }
         public System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Connect(System.Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) { }
         public void Dispose() { }
         public void Edit(System.Action<DynamicData.ICacheUpdater<TObject, TKey>> updateAction) { }
@@ -2610,10 +2610,10 @@ namespace DynamicData
         public SourceCache(System.Func<TObject, TKey> keySelector) { }
         public int Count { get; }
         public System.IObservable<int> CountChanged { get; }
-        public System.Collections.Generic.IEnumerable<TObject> Items { get; }
+        public System.Collections.Generic.IReadOnlyList<TObject> Items { get; }
         public System.Func<TObject, TKey> KeySelector { get; }
-        public System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>> KeyValues { get; }
-        public System.Collections.Generic.IEnumerable<TKey> Keys { get; }
+        public System.Collections.Generic.IReadOnlyDictionary<TKey, TObject> KeyValues { get; }
+        public System.Collections.Generic.IReadOnlyList<TKey> Keys { get; }
         public System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Connect(System.Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) { }
         public void Dispose() { }
         public void Edit(System.Action<DynamicData.ISourceUpdater<TObject, TKey>> updateAction) { }
