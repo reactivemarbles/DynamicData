@@ -102,7 +102,7 @@ public class GroupImmutableFixture : IDisposable
 
         _results.Messages.Count.Should().Be(1);
         _results.Messages.First().Adds.Should().Be(1);
-        _results.Data.Items.First().Count.Should().Be(4);
+        _results.Data.Items[0].Count.Should().Be(4);
     }
 
     [Fact]
@@ -158,7 +158,7 @@ public class GroupImmutableFixture : IDisposable
         _results.Messages.First().Adds.Should().Be(1);
         _results.Messages.Skip(1).First().Adds.Should().Be(1);
         _results.Messages.Skip(1).First().Removes.Should().Be(1);
-        var group = _results.Data.Items.First();
+        var group = _results.Data.Items[0];
         group.Count.Should().Be(1);
 
         group.Key.Should().Be(21);
@@ -174,7 +174,7 @@ public class GroupImmutableFixture : IDisposable
         _results.Messages.First().Adds.Should().Be(1);
         _results.Messages.Skip(1).First().Updates.Should().Be(1);
 
-        var group = _results.Data.Items.First();
+        var group = _results.Data.Items[0];
         group.Count.Should().Be(2);
     }
 }

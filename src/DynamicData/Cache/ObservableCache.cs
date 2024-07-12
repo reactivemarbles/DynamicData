@@ -115,11 +115,11 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                 }
             });
 
-    public IEnumerable<TObject> Items => _readerWriter.Items;
+    public IReadOnlyList<TObject> Items => _readerWriter.Items;
 
-    public IEnumerable<TKey> Keys => _readerWriter.Keys;
+    public IReadOnlyList<TKey> Keys => _readerWriter.Keys;
 
-    public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _readerWriter.KeyValues;
+    public IReadOnlyDictionary<TKey, TObject> KeyValues => _readerWriter.KeyValues;
 
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) =>
         Observable.Create<IChangeSet<TObject, TKey>>(observer =>

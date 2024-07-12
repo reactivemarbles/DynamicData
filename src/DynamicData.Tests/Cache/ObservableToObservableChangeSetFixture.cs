@@ -123,7 +123,7 @@ public class ObservableToObservableChangeSetFixture
 
         results.Messages.Count.Should().Be(1, "Should be 1 updates");
         results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        results.Data.Items.First().Should().Be(person, "Should be same person");
+        results.Data.Items[0].Should().Be(person, "Should be same person");
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public class ObservableToObservableChangeSetFixture
         results.Messages.Count.Should().Be(2, "Should be 2 message");
         results.Messages[1].Updates.Should().Be(1, "Should be 1 updates");
         results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        results.Data.Items.First().Should().Be(personamend, "Should be same person");
+        results.Data.Items[0].Should().Be(personamend, "Should be same person");
     }
 
     [Fact]
@@ -155,6 +155,6 @@ public class ObservableToObservableChangeSetFixture
 
         results.Messages.Count.Should().Be(1, "Should be 1 updates");
         results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        results.Data.Items.First().Should().Be(person, "Should be same person");
+        results.Data.Items[0].Should().Be(person, "Should be same person");
     }
 }

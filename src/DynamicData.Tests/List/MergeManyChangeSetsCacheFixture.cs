@@ -835,7 +835,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
 
         // These should be subsets of each other
         expectedPrices.Should().BeSubsetOf(priceResults.Data.Items);
-        priceResults.Data.Items.Count().Should().Be(expectedPrices.Count);
+        priceResults.Data.Items.Count.Should().Be(expectedPrices.Count);
     }
 
     private void DisposeMarkets()

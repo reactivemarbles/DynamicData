@@ -32,17 +32,17 @@ public sealed class TestSourceCache<TObject, TKey>
     public IObservable<int> CountChanged
         => _countChanged;
 
-    public IEnumerable<TObject> Items
+    public IReadOnlyList<TObject> Items
         => _source.Items;
     
-    public IEnumerable<TKey> Keys
+    public IReadOnlyList<TKey> Keys
         => _source.Keys;
 
     public Func<TObject, TKey> KeySelector
         => _source.KeySelector;
 
-    public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues
-        => KeyValues;
+    public IReadOnlyDictionary<TKey, TObject> KeyValues
+        => _source.KeyValues;
 
     public void Complete()
     {

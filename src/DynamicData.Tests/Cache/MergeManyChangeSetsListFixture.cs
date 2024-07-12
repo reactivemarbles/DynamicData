@@ -459,7 +459,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // These should be subsets of each other
         expectedOwners.Should().BeSubsetOf(ownerResults.Data.Items);
-        ownerResults.Data.Items.Count().Should().Be(expectedOwners.Count);
+        ownerResults.Data.Items.Count.Should().Be(expectedOwners.Count);
 
         // All owner animals should be in the results
         foreach (var owner in owners)

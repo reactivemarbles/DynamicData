@@ -208,7 +208,7 @@ public class GroupOnObservableFixture : IDisposable
         _cache.Clear();
 
         // Assert
-        _cache.Items.Count().Should().Be(0);
+        _cache.Items.Count.Should().Be(0);
         _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
         _groupResults.Summary.Overall.Adds.Should().Be(colorCount);
         _groupResults.Summary.Overall.Removes.Should().Be(colorCount);

@@ -49,13 +49,13 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
         }
     }
 
-    public KeyValuePair<TKey, TObject>[] KeyValues
+    public IReadOnlyDictionary<TKey, TObject> KeyValues
     {
         get
         {
             lock (_locker)
             {
-                return [.. _data];
+                return new Dictionary<TKey, TObject>(_data);
             }
         }
     }

@@ -51,7 +51,7 @@ public class RightJoinManyFixture : IDisposable
         _people.AddOrUpdate(people);
 
         _result.Data.Count.Should().Be(1);
-        _result.Data.Items.First().Parent.Should().BeNull();
+        _result.Data.Items[0].Parent.Should().BeNull();
     }
 
     [Fact]

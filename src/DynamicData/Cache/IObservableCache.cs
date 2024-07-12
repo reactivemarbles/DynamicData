@@ -24,17 +24,17 @@ public interface IObservableCache<TObject, TKey> : IConnectableCache<TObject, TK
     /// <summary>
     /// Gets the Items.
     /// </summary>
-    IEnumerable<TObject> Items { get; }
+    IReadOnlyList<TObject> Items { get; }
 
     /// <summary>
     /// Gets the keys.
     /// </summary>
-    IEnumerable<TKey> Keys { get; }
+    IReadOnlyList<TKey> Keys { get; }
 
     /// <summary>
     /// Gets the key value pairs.
     /// </summary>
-    IEnumerable<KeyValuePair<TKey, TObject>> KeyValues { get; }
+    IReadOnlyDictionary<TKey, TObject> KeyValues { get; }
 
     /// <summary>
     /// Lookup a single item using the specified key.
