@@ -4,7 +4,10 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
+
+using FluentAssertions;
 
 namespace DynamicData.Tests.Utilities;
 
@@ -49,18 +52,343 @@ internal static class ObservableExtensions
     public static IObservable<T> Parallelize<T>(this IObservable<T> source, int count, int parallel) =>
         Observable.Merge(Distribute(count, parallel).Select(n => source.Take(n)));
 
-    public static IDisposable RecordNotifications<T>(
-        this IObservable<T> source,
-        out TestableObserver<T> observer,
-        IScheduler? scheduler = null)
+    public static IDisposable RecordCacheItems<TObject, TKey>(
+            this IObservable<IChangeSet<TObject, TKey>> source,
+            out CacheItemRecordingObserver<TObject, TKey> observer,
+            IScheduler? scheduler = null)
+        where TObject : notnull
+        where TKey : notnull
     {
-        observer = TestableObserver.Create<T>(scheduler);
+        observer = new CacheItemRecordingObserver<TObject, TKey>(scheduler ?? GlobalConfig.DefaultScheduler);
 
         return source.Subscribe(observer);
     }
+
+    public static IDisposable RecordValues<T>(
+        this IObservable<T> source,
+        out ValueRecordingObserver<T> observer,
+        IScheduler? scheduler = null)
+    {
+        observer = new ValueRecordingObserver<T>(scheduler ?? GlobalConfig.DefaultScheduler);
+
+        return source.Subscribe(observer);
+    }
+
+    public static IObservable<IChangeSet<T>> ValidateChangeSets<T>(this IObservable<IChangeSet<T>> source)
+            where T : notnull
+        // Using Raw observable and observer classes to bypass normal RX safeguards
+        // This allows the operator to be combined with other operators that might be testing for things that the safeguards normally prevent.
+        => RawAnonymousObservable.Create<IChangeSet<T>>(observer =>
+        {
+            var sortedItems = new List<T>();
+
+            var reasons = Enum.GetValues<ListChangeReason>();
+
+            return source.SubscribeSafe(RawAnonymousObserver.Create<IChangeSet<T>>(
+                onNext: changes =>
+                {
+                    try
+                    {
+                        foreach (var change in changes)
+                        {
+                            change.Range.Should().NotBeNull();
+
+                            change.Reason.Should().BeOneOf(reasons);
+
+                            switch (change.Reason.GetChangeType())
+                            {
+                                case ChangeType.Item:
+                                    change.Item.Reason.Should().Be(change.Reason);
+
+                                    change.Range.Should().BeEmpty("single-item changes should not specify range info");
+                                    break;
+
+                                case ChangeType.Range:
+                                    change.Item.Reason.Should().Be(default, "range changes should not specify single-item info");
+                                    change.Item.PreviousIndex.Should().Be(-1, "range changes should not specify single-item info");
+                                    change.Item.Previous.HasValue.Should().BeFalse("range changes should not specify single-item info");
+                                    change.Item.CurrentIndex.Should().Be(-1, "range changes should not specify single-item info");
+                                    change.Item.Current.Should().Be(default, "range changes should not specify single-item info");
+                                    break;
+                            }
+
+                            switch (change.Reason)
+                            {
+                                case ListChangeReason.Add:
+                                    change.Item.PreviousIndex.Should().Be(-1, "only Moved changes should specify a previous index");
+                                    change.Item.Previous.HasValue.Should().BeFalse("only Update changes should specify a previous item");
+
+                                    change.Item.CurrentIndex.Should().BeInRange(-1, sortedItems.Count, "the insertion index should be omitted, a valid index of the collection, or the next available index of the collection");
+                                    if (change.Item.CurrentIndex is -1)
+                                        sortedItems.Add(change.Item.Current);
+                                    else
+                                        sortedItems.Insert(
+                                            index:  change.Item.CurrentIndex,
+                                            item:   change.Item.Current);
+
+                                    break;
+
+                                case ListChangeReason.AddRange:
+                                    change.Range.Index.Should().BeInRange(-1, sortedItems.Count - 1, "the insertion index should be omitted, a valid index of the collection, or the next available index of the collection");
+                                    if (change.Range.Index is -1)
+                                        sortedItems.AddRange(change.Range);
+                                    else
+                                        sortedItems.InsertRange(
+                                            index:      change.Range.Index,
+                                            collection: change.Range);
+
+                                    break;
+
+                                case ListChangeReason.Clear:
+                                    change.Range.Index.Should().Be(-1, "a Clear change has no target index");
+                                    change.Range.Should().BeEquivalentTo(
+                                        sortedItems,
+                                        config => config.WithStrictOrdering(),
+                                        "items in the range should match the corresponding items in the collection");
+
+                                    sortedItems.Clear();
+
+                                    break;
+
+                                case ListChangeReason.Moved:
+                                    sortedItems.Should().NotBeEmpty("an item cannot be moved within an empty collection");
+
+                                    change.Item.PreviousIndex.Should().BeInRange(0, sortedItems.Count - 1, "the source index should be a valid index of the collection");
+                                    change.Item.Previous.HasValue.Should().BeFalse("only Update changes should specify a previous item");
+                                    change.Item.CurrentIndex.Should().BeInRange(0, sortedItems.Count - 1, "the target index should be a valid index of the collection");
+                                    change.Item.Current.Should().Be(sortedItems[change.Item.PreviousIndex], "the item to be moved should match the corresponding item in the collection");
+
+                                    sortedItems.RemoveAt(change.Item.PreviousIndex);
+                                    sortedItems.Insert(
+                                        index:  change.Item.CurrentIndex,
+                                        item:   change.Item.Current);
+
+                                    break;
+
+                                case ListChangeReason.Refresh:
+                                    sortedItems.Should().NotBeEmpty("an item cannot be refreshed within an empty collection");
+
+                                    change.Item.PreviousIndex.Should().Be(-1, "only Moved changes should specify a previous index");
+                                    change.Item.Previous.HasValue.Should().BeFalse("only Update changes should specify a previous item");
+                                    change.Item.CurrentIndex.Should().BeInRange(0, sortedItems.Count - 1, "the target index should be a valid index of the collection");
+                                    change.Item.Current.Should().Be(sortedItems[change.Item.CurrentIndex], "the item to be refreshed should match the corresponding item in the collection");
+
+                                    break;
+
+                                case ListChangeReason.Remove:
+                                    sortedItems.Should().NotBeEmpty("an item cannot be removed from an empty collection");
+
+                                    change.Item.PreviousIndex.Should().Be(-1, "only Moved changes should specify a previous index");
+                                    change.Item.Previous.HasValue.Should().BeFalse("only Update changes should specify a previous item");
+                                    change.Item.CurrentIndex.Should().BeInRange(0, sortedItems.Count - 1, "the index to be removed should be a valid index of the collection");
+                                    change.Item.Current.Should().Be(sortedItems[change.Item.CurrentIndex], "the item to be removed should match the corresponding item in the collection");
+
+                                    sortedItems.RemoveAt(change.Item.CurrentIndex);
+
+                                    break;
+
+                                case ListChangeReason.RemoveRange:
+                                    change.Range.Index.Should().BeInRange(-1, sortedItems.Count - 1, "the removal index should be omitted, or a valid index of the collection");
+
+                                    if (change.Range.Index is -1)
+                                        change.Range.Should().BeEmpty("the removal index was omitted");
+                                    else
+                                    {
+                                        change.Range.Count.Should().BeInRange(1, sortedItems.Count - change.Range.Index, "the range to be removed should contain more items than exist in the collection, at the given removal index");
+                                        change.Range.Should().BeEquivalentTo(
+                                            sortedItems
+                                                .Skip(change.Range.Index)
+                                                .Take(change.Range.Count),
+                                            config => config.WithStrictOrdering(), "items to be removed should match the corresponding items in the collection");
+
+                                        sortedItems.RemoveRange(
+                                            index:  change.Range.Index,
+                                            count:  change.Range.Count);
+                                    }
+
+                                    break;
+
+                                case ListChangeReason.Replace:
+                                    sortedItems.Should().NotBeEmpty("an item cannot be replaced within an empty collection");
+
+                                    change.Item.PreviousIndex.Should().Be(-1, "only Moved changes should specify a previous index");
+                                    change.Item.CurrentIndex.Should().BeInRange(0, sortedItems.Count - 1, "the index to be replaced should be a valid index of the collection");
+                                    change.Item.Previous.HasValue.Should().BeTrue("a Replace change should specify a previous item");
+                                    change.Item.Previous.Should().Be(sortedItems[change.Item.CurrentIndex], "the replaced item should match the corresponding item in the collection");
+
+                                    sortedItems[change.Item.CurrentIndex] = change.Item.Current;
+
+                                    break;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        observer.OnError(ex);
+                    }
+                },
+                onError: observer.OnError,
+                onCompleted: observer.OnCompleted));
+        });
+
+    public static IObservable<IChangeSet<TObject, TKey>> ValidateChangeSets<TObject, TKey>(
+                this IObservable<IChangeSet<TObject, TKey>> source,
+                Func<TObject, TKey> keySelector)
+            where TObject : notnull
+            where TKey : notnull
+        // Using Raw observable and observer classes to bypass normal RX safeguards
+        // This allows the operator to be combined with other operators that might be testing for things that the safeguards normally prevent.
+        => RawAnonymousObservable.Create<IChangeSet<TObject, TKey>>(observer =>
+        {
+            var itemsByKey = new Dictionary<TKey, TObject>();
+            var sortedKeys = new List<TKey>();
+            var isSorted = null as bool?;
+            
+            var reasons = Enum.GetValues<ChangeReason>();
+
+            return source.SubscribeSafe(RawAnonymousObserver.Create<IChangeSet<TObject, TKey>>(
+                onNext: changes =>
+                {
+                    try
+                    {
+                        foreach (var change in changes)
+                        {
+                            change.Reason.Should().BeOneOf(reasons);
+
+                            change.Key.Should().Be(keySelector.Invoke(change.Current), "the specified key should match the specified item's key");
+
+                            switch (isSorted)
+                            {
+                                // First change determines whether or not all future changesets need to have indexes
+                                case null:
+                                    isSorted = change.CurrentIndex is not -1;
+                                    break;
+
+                                case true:
+                                    change.CurrentIndex.Should().BeGreaterThan(-1, "indexes should be specified for a stream that specified them initially");
+                                    break;
+
+                                case false:
+                                    change.CurrentIndex.Should().Be(-1, "indexes should be omitted for a stream that omitted them initially");
+                                    break;
+                            }
+
+                            switch (change.Reason)
+                            {
+                                case ChangeReason.Add:
+                                    itemsByKey.Keys.Should().NotContain(change.Key, "the key to be added should not already exist in the collection");
+
+                                    change.Previous.HasValue.Should().BeFalse("only Update changes should specify a previous item");
+                                    change.PreviousIndex.Should().Be(-1, "only Moved or Update changes should specify a previous index");
+
+                                    if (change.CurrentIndex is not -1)
+                                    {
+                                        change.CurrentIndex.Should().BeInRange(0, sortedKeys.Count, "the index to be added should be a valid index of the collection, or the next available index of the collection");
+
+                                        sortedKeys.Insert(
+                                            index:  change.CurrentIndex,
+                                            item:   change.Key);
+                                    }
+
+                                    itemsByKey.Add(change.Key, change.Current);
+
+                                    break;
+
+                                case ChangeReason.Moved:
+                                    itemsByKey.Keys.Should().Contain(change.Key, "the key to be moved should exist in the collection");
+
+                                    change.Previous.HasValue.Should().BeFalse("only Update changes should specify a previous item");
+                                    change.PreviousIndex.Should().BeInRange(0, sortedKeys.Count - 1, "the source index should be a valid index of the collection");
+                                    
+                                    change.Current.Should().Be(itemsByKey[change.Key], "the item to be moved should match the corresponding item in the collection");
+                                    change.CurrentIndex.Should().BeInRange(0, sortedKeys.Count - 1, "the target index should be a valid index of the collection");
+
+                                    sortedKeys.RemoveAt(change.PreviousIndex);
+                                    sortedKeys.Insert(
+                                        index:  change.CurrentIndex,
+                                        item:   change.Key);
+
+                                    break;
+
+                                case ChangeReason.Refresh:
+                                    itemsByKey.Keys.Should().Contain(change.Key, "the key to be refreshed should exist in the collection");
+
+                                    change.Previous.HasValue.Should().BeFalse("only Update changes should specify a previous item");
+                                    change.PreviousIndex.Should().Be(-1, "only Moved or Update changes should specify a previous index");
+
+                                    change.Current.Should().Be(itemsByKey[change.Key], "the item to be refreshed should match the corresponding item in the collection");
+
+                                    if (change.CurrentIndex is not -1)
+                                    {
+                                        change.CurrentIndex.Should().BeInRange(0, sortedKeys.Count - 1, "the index to be refreshed should be a valid index of the collection");
+                                        change.Key.Should().Be(sortedKeys[change.CurrentIndex], "the key to be refreshed should match the corresponding key in the collection");
+                                    }
+
+                                    break;
+
+                                case ChangeReason.Remove:
+                                    itemsByKey.Keys.Should().Contain(change.Key, "the key to be removed should exist in the collection");
+
+                                    change.Previous.HasValue.Should().BeFalse("only Update changes should specify a previous item");
+                                    change.PreviousIndex.Should().Be(-1, "only Moved or Update changes should specify a previous index");
+
+                                    change.Current.Should().Be(itemsByKey[change.Key], "the item to be removed should match the corresponding item in the collection");
+
+                                    if (change.CurrentIndex is not -1)
+                                    {
+                                        change.CurrentIndex.Should().BeInRange(0, sortedKeys.Count - 1, "the index to be removed should be a valid index of the collection");
+                                        change.Key.Should().Be(sortedKeys[change.CurrentIndex], "the key to be removed should match the corresponding key in the collection");
+
+                                        sortedKeys.RemoveAt(change.CurrentIndex);
+                                    }
+
+                                    itemsByKey.Remove(change.Key);
+
+                                    break;
+
+                                case ChangeReason.Update:
+                                    itemsByKey.Keys.Should().Contain(change.Key, "the key to be updated should exist in the collection");
+
+                                    change.Previous.HasValue.Should().BeTrue("an Update change should specify a previous item");
+                                    change.Previous.Value.Should().Be(itemsByKey[change.Key], "the item to be updated should match the corresponding item in the collection");
+
+                                    if (change.CurrentIndex is -1)
+                                    {
+                                        change.PreviousIndex.Should().Be(-1, "a previous index should only be specified if a current index is specified");
+                                    }
+                                    else
+                                    {
+                                        change.PreviousIndex.Should().BeInRange(0, sortedKeys.Count - 1, "the source index should be a valid index of the collection");
+                                        change.Key.Should().Be(sortedKeys[change.PreviousIndex], "the key to be updated should match the corresponding key in the collection");
+
+                                        change.CurrentIndex.Should().BeInRange(0, sortedKeys.Count - 1, "the target index should be a valid index of the collection");
+
+                                        sortedKeys.RemoveAt(change.PreviousIndex);
+                                        sortedKeys.Insert(
+                                            index:  change.CurrentIndex,
+                                            item:   change.Key);
+                                    }
+
+                                    itemsByKey[change.Key] = change.Current;
+
+                                    break;
+                            }
+                        }
+
+                        observer.OnNext(changes);
+                    }
+                    catch (Exception ex)
+                    {
+                        observer.OnError(ex);
+                    }
+                },
+                onError: observer.OnError,
+                onCompleted: observer.OnCompleted));
+        });
+
     public static IObservable<T> ValidateSynchronization<T>(this IObservable<T> source)
-        // Using Raw observable and observer classes to bypass normal RX safeguards, which prevent out-of-sequence notifications.
-        // This allows the operator to be combined with TestableObserver, for correctness-testing of operators.
+        // Using Raw observable and observer classes to bypass normal RX safeguards
+        // This allows the operator to be combined with other operators that might be testing for things that the safeguards normally prevent.
         => RawAnonymousObservable.Create<T>(observer =>
         {
             var inFlightNotification = null as Notification<T>;
