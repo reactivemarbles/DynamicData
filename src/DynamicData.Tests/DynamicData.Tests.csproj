@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bogus" Version="35.5.0" />
+    <PackageReference Include="Bogus" Version="35.6.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
     <PackageReference Include="xunit" Version="$(XunitVersion)" />
     <PackageReference Include="xunit.runner.console" Version="$(XunitVersion)" />
