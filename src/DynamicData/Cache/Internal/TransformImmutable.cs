@@ -5,6 +5,8 @@
 using System.Reactive;
 using System.Reactive.Linq;
 
+using DynamicData.Kernel;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class TransformImmutable<TDestination, TSource, TKey>
@@ -40,7 +42,7 @@ internal sealed class TransformImmutable<TDestination, TSource, TKey>
                                 current: _transformFactory.Invoke(change.Current),
                                 previous: change.Previous.HasValue
                                     ? _transformFactory.Invoke(change.Previous.Value)
-                                    : default,
+                                    : Optional.None<TDestination>(),
                                 currentIndex: change.CurrentIndex,
                                 previousIndex: change.PreviousIndex));
                         }

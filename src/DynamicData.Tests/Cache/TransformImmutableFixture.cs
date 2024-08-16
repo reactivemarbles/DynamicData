@@ -267,6 +267,26 @@ public sealed class TransformImmutableFixture
         results.IsCompleted.Should().BeFalse();
     }
 
+    // https://github.com/reactivemarbles/DynamicData/issues/925
+    [Fact]
+    public void TDestinationIsValueType_DoesNotThrowException()
+    {
+        using var source = new Subject<IChangeSet<string, string>>();
+
+        using var results = source
+            .TransformImmutable(transformFactory: static value => value.Length)
+            .AsAggregator();
+
+
+        source.OnNext(new ChangeSet<string, string>()
+        {
+            new(reason: ChangeReason.Add, key: "Item #1", current: "Item #1", index: 0)
+        });
+
+        results.Error.Should().BeNull();
+        results.Messages.Count.Should().Be(1, "1 source operation was performed");
+    }
+
     private class Item
     {
         public static readonly Func<Item, int> IdSelector
