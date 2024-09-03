@@ -68,7 +68,7 @@ public class SortedObservableCollectionAdaptor<TObject, TKey>(int refreshThresho
                 break;
 
             case SortReason.InitialLoad:
-                if (resetOnFirstTimeLoad && (changes.Count - changes.Refreshes > refreshThreshold))
+                if (resetOnFirstTimeLoad || (changes.Count - changes.Refreshes > refreshThreshold))
                 {
                     using (collection.SuspendNotifications())
                     {
