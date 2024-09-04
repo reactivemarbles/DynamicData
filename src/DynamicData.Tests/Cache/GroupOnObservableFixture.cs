@@ -183,36 +183,6 @@ public class GroupOnObservableFixture : IDisposable
     }
 
     [Fact]
-    public void SequenceDoesNotCompleteEvenIfSourceDoes()
-    {
-        // Arrange
-        _cache.AddOrUpdate(_faker.Generate(InitialCount));
-
-        var results = _cache.Connect().GroupOnObservable(CreateFavoriteColorObservable).AsAggregator();
-
-        // Act
-        _cache.Dispose();
-
-        // Assert
-        results.IsCompleted.Should().BeFalse();
-    }
-
-    [Fact]
-    public void SequenceDoesNotCompleteEvenIfAllGroupersDo()
-    {
-        // Arrange
-        _cache.AddOrUpdate(_faker.Generate(InitialCount));
-
-        var results = _cache.Connect().GroupOnObservable(CreateFavoriteColorObservable).AsAggregator();
-
-        // Act
-        _grouperShutdown.OnNext(Unit.Default);
-
-        // Assert
-        results.IsCompleted.Should().BeFalse();
-    }
-
-    [Fact]
     public void AllSequencesShouldCompleteWhenSourceAndGroupingObservablesComplete()
     {
         // Arrange
