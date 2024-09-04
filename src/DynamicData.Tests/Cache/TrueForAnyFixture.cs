@@ -2,6 +2,8 @@ using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
+using DynamicData.Tests.Utilities;
+
 using FluentAssertions;
 
 using Xunit;
@@ -75,6 +77,26 @@ public class TrueForAnyFixture : IDisposable
         item1.InvokeObservable(true);
         valueReturned.Value.Should().Be(true, "Value should be true");
         subscribed.Dispose();
+    }
+
+    // https://github.com/reactivemarbles/DynamicData/issues/922
+    [Fact]
+    public void ValuesPublishedOnSubscriptionDoNotTriggerPrematureOutput()
+    {
+        var item1 = new ObjectWithObservable(1);
+        var item2 = new ObjectWithObservable(2);
+
+        item2.InvokeObservable(true);
+
+        _source.AddOrUpdate(item1);
+        _source.AddOrUpdate(item2);
+
+        using var subscription = _observable
+            .ValidateSynchronization()
+            .RecordValues(out var results);
+
+        results.RecordedValues.Count.Should().Be(1, because: "No items were added to the source, and no value changes were made to the items");
+        results.RecordedValues[0].Should().Be(true, because: "One of the two items in the source has a true value");
     }
 
     private class ObjectWithObservable(int id)

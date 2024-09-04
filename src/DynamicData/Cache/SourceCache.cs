@@ -34,16 +34,16 @@ public sealed class SourceCache<TObject, TKey>(Func<TObject, TKey> keySelector) 
     public IObservable<int> CountChanged => _innerCache.CountChanged;
 
     /// <inheritdoc />
-    public IEnumerable<TObject> Items => _innerCache.Items;
+    public IReadOnlyList<TObject> Items => _innerCache.Items;
 
     /// <inheritdoc />
-    public IEnumerable<TKey> Keys => _innerCache.Keys;
+    public IReadOnlyList<TKey> Keys => _innerCache.Keys;
 
     /// <inheritdoc/>
     public Func<TObject, TKey> KeySelector { get; } = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
 
     /// <inheritdoc />
-    public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
+    public IReadOnlyDictionary<TKey, TObject> KeyValues => _innerCache.KeyValues;
 
     /// <inheritdoc />
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => _innerCache.Connect(predicate, suppressEmptyChangeSets);

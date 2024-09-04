@@ -46,7 +46,7 @@ internal sealed class OfType<TObject, TKey, TDestination>(IObservable<IChangeSet
                                 _ => default,
                             };
 
-                            if (transformedChange is Change<TDestination, TKey> c)
+                            if (transformedChange is { } c)
                             {
                                 // Do not propagate indexes, we can't guarantee them to be correct, because we aren't caching items.
                                 downstreamChanges.Add(c);

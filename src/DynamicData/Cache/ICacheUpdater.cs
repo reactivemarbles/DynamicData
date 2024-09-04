@@ -52,26 +52,6 @@ public interface ICacheUpdater<TObject, TKey> : IQuery<TObject, TKey>
     void Clone(IChangeSet<TObject, TKey> changes);
 
     /// <summary>
-    /// Sends a signal for operators to recalculate it's state.
-    /// </summary>
-    [Obsolete(Constants.EvaluateIsDead)]
-    void Evaluate();
-
-    /// <summary>
-    /// Refreshes the items matching the specified keys.
-    /// </summary>
-    /// <param name="keys">The keys.</param>
-    [Obsolete(Constants.EvaluateIsDead)]
-    void Evaluate(IEnumerable<TKey> keys);
-
-    /// <summary>
-    /// Refreshes the item matching the specified key.
-    /// </summary>
-    /// <param name="key">The key to evaluate.</param>
-    [Obsolete(Constants.EvaluateIsDead)]
-    void Evaluate(TKey key);
-
-    /// <summary>
     /// Gets the key associated with the object.
     /// </summary>
     /// <param name="item">The item.</param>

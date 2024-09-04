@@ -70,7 +70,7 @@ public sealed class SourceList<T> : ISourceList<T>
             });
 
     /// <inheritdoc />
-    public IEnumerable<T> Items => _readerWriter.Items;
+    public IReadOnlyList<T> Items => _readerWriter.Items;
 
     /// <inheritdoc />
     public IObservable<IChangeSet<T>> Connect(Func<T, bool>? predicate = null)

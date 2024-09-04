@@ -38,7 +38,7 @@ public class TransformFixtureParallel : IDisposable
 
         _results.Messages.Count.Should().Be(1, "Should be 1 updates");
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items.First().Should().Be(_transformFactory(person), "Should be same person");
+        _results.Data.Items[0].Should().Be(_transformFactory(person), "Should be same person");
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class TransformFixtureParallel : IDisposable
         _results.Data.Count.Should().Be(1, "Should result in 1 record");
 
         var lastTransformed = _transformFactory(people.Last());
-        var onlyItemInCache = _results.Data.Items.First();
+        var onlyItemInCache = _results.Data.Items[0];
 
         // TODO: This is not producing consitent results, the lastTransformed item should be equal to the onlyItemInCache
         onlyItemInCache.Should().Be(lastTransformed, "Incorrect transform result");

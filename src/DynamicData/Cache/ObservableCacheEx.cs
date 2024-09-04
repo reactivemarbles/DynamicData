@@ -25,7 +25,7 @@ namespace DynamicData;
 /// <summary>
 /// Extensions for dynamic data.
 /// </summary>
-public static class ObservableCacheEx
+public static partial class ObservableCacheEx
 {
     private const int DefaultSortResetThreshold = 100;
     private const bool DefaultResortOnSourceRefresh = true;
@@ -1190,56 +1190,19 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Signal observers to re-evaluate the specified item.
+    /// Ensures there are no duplicated keys in the observable changeset.
     /// </summary>
+    /// <param name="source"> The source change set.</param>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="item">The item.</param>
-    /// <exception cref="ArgumentNullException">source.</exception>
-    [Obsolete(Constants.EvaluateIsDead)]
-    public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
+    /// <returns>A changeset which guarantees a key is only present at most once in the changeset.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> EnsureUniqueKeys<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        source.Edit(updater => updater.Refresh(item));
-    }
-
-    /// <summary>
-    /// Signal observers to re-evaluate the specified items.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="items">The items.</param>
-    /// <exception cref="ArgumentNullException">source.</exception>
-    [Obsolete(Constants.EvaluateIsDead)]
-    public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        source.Edit(updater => updater.Refresh(items));
-    }
-
-    /// <summary>
-    /// Signal observers to re-evaluate the all items.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <exception cref="ArgumentNullException">source.</exception>
-    [Obsolete(Constants.EvaluateIsDead)]
-    public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        source.Edit(updater => updater.Refresh());
+        return new UniquenessEnforcer<TObject, TKey>(source).Run();
     }
 
     /// <summary>
@@ -1455,72 +1418,6 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The cache.</param>
     /// <param name="timeSelector">The time selector.  Return null if the item should never be removed.</param>
-    /// <param name="scheduler">The scheduler to perform the work on.</param>
-    /// <returns>An observable of enumerable of the key values which has been removed.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// timeSelector.</exception>
-    public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(
-                this ISourceCache<TObject, TKey> source,
-                Func<TObject, TimeSpan?> timeSelector,
-                IScheduler? scheduler = null)
-            where TObject : notnull
-            where TKey : notnull
-        => Cache.Internal.ExpireAfter.ForSource<TObject, TKey>.Create(
-            source: source,
-            timeSelector: timeSelector,
-            scheduler: scheduler);
-
-    /// <summary>
-    /// Automatically removes items from the cache after the time specified by
-    /// the time selector elapses.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The cache.</param>
-    /// <param name="timeSelector">The time selector.  Return null if the item should never be removed.</param>
-    /// <param name="interval">A polling interval.  Since multiple timer subscriptions can be expensive,
-    /// it may be worth setting the interval .
-    /// </param>
-    /// <returns>An observable of enumerable of the key values which has been removed.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// timeSelector.</exception>
-    public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(
-                this ISourceCache<TObject, TKey> source,
-                Func<TObject, TimeSpan?> timeSelector,
-                TimeSpan? interval = null)
-            where TObject : notnull
-            where TKey : notnull
-        => Cache.Internal.ExpireAfter.ForSource<TObject, TKey>.Create(
-            source: source,
-            timeSelector: timeSelector,
-            pollingInterval: interval);
-
-    /// <summary>
-    /// Ensures there are no duplicated keys in the observable changeset.
-    /// </summary>
-    /// <param name="source"> The source change set.</param>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <returns>A changeset which guarantees a key is only present at most once in the changeset.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> EnsureUniqueKeys<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        return new UniquenessEnforcer<TObject, TKey>(source).Run();
-    }
-
-    /// <summary>
-    /// Automatically removes items from the cache after the time specified by
-    /// the time selector elapses.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The cache.</param>
-    /// <param name="timeSelector">The time selector.  Return null if the item should never be removed.</param>
     /// <param name="pollingInterval">A polling interval.  Since multiple timer subscriptions can be expensive,
     /// it may be worth setting the interval.
     /// </param>
@@ -1532,8 +1429,8 @@ public static class ObservableCacheEx
     public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(
                 this ISourceCache<TObject, TKey> source,
                 Func<TObject, TimeSpan?> timeSelector,
-                TimeSpan? pollingInterval,
-                IScheduler? scheduler)
+                TimeSpan? pollingInterval = null,
+                IScheduler? scheduler = null)
             where TObject : notnull
             where TKey : notnull
         => Cache.Internal.ExpireAfter.ForSource<TObject, TKey>.Create(
@@ -3593,24 +3490,6 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Returns the page as specified by the pageRequests observable.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="pageRequests">The page requests.</param>
-    /// <returns>An observable which emits change sets.</returns>
-    public static IObservable<IPagedChangeSet<TObject, TKey>> Page<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pageRequests.ThrowArgumentNullExceptionIfNull(nameof(pageRequests));
-
-        return new Page<TObject, TKey>(source, pageRequests).Run();
-    }
-
-    /// <summary>
     /// Populate a cache from an observable stream.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -4159,6 +4038,7 @@ public static class ObservableCacheEx
     /// or
     /// comparer.
     /// </exception>
+    [Obsolete(Constants.SortIsObsolete)]
     public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
         where TObject : notnull
         where TKey : notnull
@@ -4179,6 +4059,7 @@ public static class ObservableCacheEx
     /// <param name="sortOptimisations">The sort optimisations.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits change sets.</returns>
+    [Obsolete(Constants.SortIsObsolete)]
     public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IComparer<TObject>> comparerObservable, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
         where TObject : notnull
         where TKey : notnull
@@ -4200,6 +4081,7 @@ public static class ObservableCacheEx
     /// <param name="sortOptimisations">The sort optimisations.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits change sets.</returns>
+    [Obsolete(Constants.SortIsObsolete)]
     public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IComparer<TObject>> comparerObservable, IObservable<Unit> resorter, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
         where TObject : notnull
         where TKey : notnull
@@ -4221,6 +4103,7 @@ public static class ObservableCacheEx
     /// <param name="sortOptimisations">The sort optimisations.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits change sets.</returns>
+    [Obsolete(Constants.SortIsObsolete)]
     public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, IObservable<Unit> resorter, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
         where TObject : notnull
         where TKey : notnull
@@ -4586,56 +4469,6 @@ public static class ObservableCacheEx
         }
 
         return source.ToObservableOptional(key, equalityComparer);
-    }
-
-    /// <summary>
-    /// Limits the size of the result set to the specified number.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="size">The size.</param>
-    /// <returns>An observable which will emit virtual change sets.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
-    public static IObservable<IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, int size)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        if (size <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(size), "Size should be greater than zero");
-        }
-
-        return new Virtualise<TObject, TKey>(source, Observable.Return(new VirtualRequest(0, size))).Run();
-    }
-
-    /// <summary>
-    /// Limits the size of the result set to the specified number, ordering by the comparer.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparer">The comparer.</param>
-    /// <param name="size">The size.</param>
-    /// <returns>An observable which will emit virtual change sets.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
-    public static IObservable<IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, int size)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
-
-        if (size <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(size), "Size should be greater than zero");
-        }
-
-        return source.Sort(comparer).Top(size);
     }
 
     /// <summary>
@@ -6150,25 +5983,6 @@ public static class ObservableCacheEx
     public static IObservable<ISortedChangeSet<TObject, TKey>> UpdateIndex<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
         where TObject : IIndexAware
         where TKey : notnull => source.Do(changes => changes.SortedItems.Select((update, index) => new { update, index }).ForEach(u => u.update.Value.Index = u.index));
-
-    /// <summary>
-    /// Virtualises the underlying data from the specified source.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="virtualRequests">The virirtualising requests.</param>
-    /// <returns>An observable which will emit virtual change sets.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
-    public static IObservable<IVirtualChangeSet<TObject, TKey>> Virtualise<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IVirtualRequest> virtualRequests)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
-
-        return new Virtualise<TObject, TKey>(source, virtualRequests).Run();
-    }
 
     /// <summary>
     /// Returns an observable of any updates which match the specified key,  proceeded with the initial cache state.

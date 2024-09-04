@@ -46,13 +46,13 @@ public sealed class IntermediateCache<TObject, TKey> : IIntermediateCache<TObjec
     public IObservable<int> CountChanged => _innerCache.CountChanged;
 
     /// <inheritdoc />
-    public IEnumerable<TObject> Items => _innerCache.Items;
+    public IReadOnlyList<TObject> Items => _innerCache.Items;
 
     /// <inheritdoc />
-    public IEnumerable<TKey> Keys => _innerCache.Keys;
+    public IReadOnlyList<TKey> Keys => _innerCache.Keys;
 
     /// <inheritdoc />
-    public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
+    public IReadOnlyDictionary<TKey, TObject> KeyValues => _innerCache.KeyValues;
 
     /// <inheritdoc />
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true)

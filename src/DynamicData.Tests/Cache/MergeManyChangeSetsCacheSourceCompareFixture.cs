@@ -1074,7 +1074,7 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
 
         // These should be subsets of each other
         expectedMarkets.Should().BeSubsetOf(marketResults.Data.Items);
-        marketResults.Data.Items.Count().Should().Be(expectedMarkets.Count);
+        marketResults.Data.Items.Count.Should().Be(expectedMarkets.Count);
 
         // Pair up all the Markets/Prices, Group them by ItemId, and sort each Group by the Market comparer
         // Then pull out the first value from each group, which should be the price from the best market for each ItemId
@@ -1085,7 +1085,7 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
 
         // These should be subsets of each other
         expectedPrices.Should().BeSubsetOf(priceResults.Data.Items);
-        priceResults.Data.Items.Count().Should().Be(expectedPrices.Count);
+        priceResults.Data.Items.Count.Should().Be(expectedPrices.Count);
     }
 
     private void DisposeMarkets()

@@ -34,7 +34,7 @@ public class TransformFixture : IDisposable
 
         _results.Messages.Count.Should().Be(1, "Should be 1 updates");
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items.First().Should().Be(_transformFactory(person), "Should be same person");
+        _results.Data.Items[0].Should().Be(_transformFactory(person), "Should be same person");
     }
 
     [Fact]
@@ -201,7 +201,7 @@ public class TransformFixture : IDisposable
         // Assert
         _results.Messages.Count.Should().Be(2, "Should be 2 messages");
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items.First().Should().Be(_transformFactory(person2), "Should be same person");
+        _results.Data.Items[0].Should().Be(_transformFactory(person2), "Should be same person");
     }
 
     [Fact]
@@ -219,6 +219,6 @@ public class TransformFixture : IDisposable
         // Assert
         results.Messages.Count.Should().Be(2, "Should be 2 messages");
         results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        results.Data.Items.First().Should().Be(_transformFactory(person2), "Should be same person");
+        results.Data.Items[0].Should().Be(_transformFactory(person2), "Should be same person");
     }
 }

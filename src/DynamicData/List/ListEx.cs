@@ -77,7 +77,7 @@ public static class ListEx
     }
 
     /// <summary>
-    /// Adds the range to the source ist.
+    /// Adds the range to the source list.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>

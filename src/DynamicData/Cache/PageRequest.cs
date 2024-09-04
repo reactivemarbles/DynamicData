@@ -22,8 +22,6 @@ public sealed class PageRequest : IPageRequest, IEquatable<IPageRequest>
     /// </summary>
     public static readonly IPageRequest Empty = new PageRequest(0, 0);
 
-    private static readonly IEqualityComparer<IPageRequest?> _pageSizeComparerInstance = new PageSizeEqualityComparer();
-
     /// <summary>
     /// Initializes a new instance of the <see cref="PageRequest"/> class.
     /// </summary>
@@ -58,8 +56,7 @@ public sealed class PageRequest : IPageRequest, IEquatable<IPageRequest>
     /// <value>
     /// The default comparer.
     /// </value>
-    [SuppressMessage("Design", "CA1822: Member can be static", Justification = "Backwards compatibilty")]
-    public IEqualityComparer<IPageRequest?> DefaultComparer => _pageSizeComparerInstance;
+    public static IEqualityComparer<IPageRequest?> DefaultComparer { get; } = new PageSizeEqualityComparer();
 
     /// <summary>
     /// Gets the page to move to.

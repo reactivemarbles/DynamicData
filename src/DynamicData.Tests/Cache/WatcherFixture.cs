@@ -57,7 +57,7 @@ public class WatcherFixture : IDisposable
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
 
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
-        var result = _results.Data.Items.First();
+        var result = _results.Data.Items[0];
         result.UpdateCount.Should().Be(1, "Person should have received 1 update");
         result.Completed.Should().Be(false, "Person should have received 1 update");
     }
