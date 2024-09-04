@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 using Bogus;
@@ -30,12 +32,14 @@ public class GroupOnObservableFixture : IDisposable
     private readonly SourceCache<Person, string> _cache = new (p => p.UniqueKey);
     private readonly ChangeSetAggregator<Person, string> _results;
     private readonly GroupChangeSetAggregator<Person, string, Color> _groupResults;
+    private readonly Subject<Unit> _grouperShutdown;
     private readonly Faker<Person> _faker;
     private readonly Randomizer _randomizer = new(0x3141_5926);
 
     public GroupOnObservableFixture()
     {
         _faker = Fakers.Person.Clone().WithSeed(_randomizer);
+        _grouperShutdown = new();
         _results = _cache.Connect().AsAggregator();
         _groupResults = _cache.Connect().GroupOnObservable(CreateFavoriteColorObservable).AsAggregator();
     }
@@ -179,7 +183,37 @@ public class GroupOnObservableFixture : IDisposable
     }
 
     [Fact]
-    public void AllSequencesCompleteWhenSourceIsDisposed()
+    public void SequenceDoesNotCompleteEvenIfSourceDoes()
+    {
+        // Arrange
+        _cache.AddOrUpdate(_faker.Generate(InitialCount));
+
+        var results = _cache.Connect().GroupOnObservable(CreateFavoriteColorObservable).AsAggregator();
+
+        // Act
+        _cache.Dispose();
+
+        // Assert
+        results.IsCompleted.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SequenceDoesNotCompleteEvenIfAllGroupersDo()
+    {
+        // Arrange
+        _cache.AddOrUpdate(_faker.Generate(InitialCount));
+
+        var results = _cache.Connect().GroupOnObservable(CreateFavoriteColorObservable).AsAggregator();
+
+        // Act
+        _grouperShutdown.OnNext(Unit.Default);
+
+        // Assert
+        results.IsCompleted.Should().BeFalse();
+    }
+
+    [Fact]
+    public void AllSequencesShouldCompleteWhenSourceAndGroupingObservablesComplete()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -190,6 +224,7 @@ public class GroupOnObservableFixture : IDisposable
 
         // Act
         _cache.Dispose();
+        _grouperShutdown.OnNext(Unit.Default);
 
         // Assert
         results.IsCompleted.Should().BeTrue();
@@ -243,9 +278,11 @@ public class GroupOnObservableFixture : IDisposable
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void ResultCompletesOnlyWhenSourceCompletes(bool completeSource)
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void ResultCompletesOnlyWhenSourceAndAllGroupingObservablesComplete(bool completeSource, bool completeGroups)
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -255,10 +292,14 @@ public class GroupOnObservableFixture : IDisposable
         {
             _cache.Dispose();
         }
+        if (completeGroups)
+        {
+            _grouperShutdown.OnNext(Unit.Default);
+        }
 
         // Assert
         _results.IsCompleted.Should().Be(completeSource);
-        _groupResults.IsCompleted.Should().Be(completeSource);
+        _groupResults.IsCompleted.Should().Be(completeGroups && completeSource);
     }
 
     [Fact]
@@ -311,6 +352,7 @@ public class GroupOnObservableFixture : IDisposable
         _groupResults.Dispose();
         _results.Dispose();
         _cache.Dispose();
+        _grouperShutdown.Dispose();
     }
 
     private void RandomFavoriteColorChange()
@@ -342,6 +384,6 @@ public class GroupOnObservableFixture : IDisposable
         groupResults.Groups.Items.ForEach(group => group.Data.Count.Should().BeGreaterThan(0, "Empty groups should be removed"));
     }
 
-    private static IObservable<Color> CreateFavoriteColorObservable(Person person, string key) =>
-         person.WhenPropertyChanged(p => p.FavoriteColor).Select(change => change.Value);
+    private IObservable<Color> CreateFavoriteColorObservable(Person person, string key) =>
+         person.WhenPropertyChanged(p => p.FavoriteColor).Select(change => change.Value).TakeUntil(_grouperShutdown);
 }

@@ -42,7 +42,9 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
         // Next process the Grouping observables created for each item
         var subMergeMany = shared
             .MergeMany(CreateGroupObservable)
-            .SubscribeSafe(onError: observer.OnError);
+            .SubscribeSafe(
+                onError: observer.OnError,
+                onCompleted: observer.OnCompleted);
 
         // Finally, emit the results
         var subResults = shared
@@ -52,8 +54,7 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
                     grouper.EmitChanges(observer);
                     parentUpdate = false;
                 },
-                onError: observer.OnError,
-                onCompleted: observer.OnCompleted);
+                onError: observer.OnError);
 
         return new CompositeDisposable(shared.Connect(), subMergeMany, subChanges, grouper);
     });
