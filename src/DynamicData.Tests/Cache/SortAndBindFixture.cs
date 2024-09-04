@@ -66,6 +66,19 @@ public sealed class SortAndBindToObservableCollection : SortAndBindFixture
 }
 
 
+// Bind to a binding list
+public sealed class SortAndBindToBindingList : SortAndBindFixture
+
+{
+    protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
+    {
+        var list = new ObservableCollection<Person>(new BindingList<Person>());
+        var aggregator = _source.Connect().SortAndBind(list, _comparer).AsAggregator();
+        return (aggregator, list);
+    }
+}
+
+
 // Bind to a readonly observable collection
 public sealed class SortAndBindToReadOnlyObservableCollection: SortAndBindFixture
 {
@@ -151,7 +164,7 @@ public sealed class SortAndBindWithResetOptions: IDisposable
         using var sorted = _source.Connect().SortAndBind(out var list, _comparer, options).Subscribe();
         using var collectionChangedEvents = list.ObserveCollectionChanges().Select(e => e.EventArgs).Subscribe(_collectionChangedEventArgs.Add);
 
-        // fire 5 changes, should always reset because it's below the threshold
+        // fire 5 changes, should not reset because it's below the threshold
         _source.AddOrUpdate(Enumerable.Range(0, 5).Select(i => new Person($"P{i}", i)));
         _collectionChangedEventArgs.Count.Should().Be(5);
         _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
@@ -167,6 +180,40 @@ public sealed class SortAndBindWithResetOptions: IDisposable
         list.Count.Should().Be(20);
 
     }
+
+    [Fact]
+    [Description("Check reset is fired  on first time load. This checks historic first time load opt-in.")]
+    public void FireResetOnFirstTimeLoad()
+    {
+        var options = new SortAndBindOptions { ResetThreshold = 10, ResetOnFirstTimeLoad  = true};
+
+        using var sorted = _source.Connect().SortAndBind(out var list, _comparer, options).Subscribe();
+        using var collectionChangedEvents = list.ObserveCollectionChanges().Select(e => e.EventArgs).Subscribe(_collectionChangedEventArgs.Add);
+
+        // fire 5 changes, should always reset even though it's below the threshold
+        _source.AddOrUpdate(Enumerable.Range(0, 5).Select(i => new Person($"P{i}", i)));
+        _collectionChangedEventArgs.Count.Should().Be(1);
+        _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Reset).Should().BeTrue();
+
+
+        _collectionChangedEventArgs.Clear();
+
+        // fire 15 changes, we should get a refresh event
+        _source.AddOrUpdate(Enumerable.Range(10, 15).Select(i => new Person($"P{i}", i)));
+        _collectionChangedEventArgs.Count.Should().Be(1);
+        _collectionChangedEventArgs[0].Action.Should().Be(NotifyCollectionChangedAction.Reset);
+
+        _collectionChangedEventArgs.Clear();
+
+        // fires further 5 changes, should result individual notifications
+        _source.AddOrUpdate(Enumerable.Range(-10, 5).Select(i => new Person($"P{i}", i)));
+        _collectionChangedEventArgs.Count.Should().Be(5);
+        _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
+
+        list.Count.Should().Be(25);
+
+    }
+
 
 
     public void Dispose() => _source.Dispose();

@@ -473,7 +473,9 @@ namespace DynamicData.Binding
     {
         public SortAndBindOptions() { }
         public int InitialCapacity { get; init; }
+        public bool ResetOnFirstTimeLoad { get; init; }
         public int ResetThreshold { get; init; }
+        public System.Reactive.Concurrency.IScheduler? Scheduler { get; init; }
         public bool UseBinarySearch { get; init; }
         public bool UseReplaceForUpdates { get; init; }
     }
