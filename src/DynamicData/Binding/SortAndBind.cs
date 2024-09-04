@@ -192,8 +192,7 @@ internal sealed class SortAndBind<TObject, TKey>
                             updatedIndex = currentIndex < updatedIndex ? updatedIndex - 1 : updatedIndex;
                             if (updatedIndex != currentIndex)
                             {
-                                target.RemoveAt(currentIndex);
-                                target.Insert(updatedIndex, item);
+                                target.Move(currentIndex, updatedIndex, item);
                             }
                         }
                         break;

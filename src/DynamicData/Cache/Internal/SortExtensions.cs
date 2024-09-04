@@ -2,6 +2,8 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections.ObjectModel;
+
 namespace DynamicData.Cache.Internal;
 
 internal static class SortExtensions
@@ -50,5 +52,23 @@ internal static class SortExtensions
         }
 
         return list.Count;
+    }
+
+    public static void Move<TItem>(this IList<TItem> list, int original, int destination, TItem item)
+    {
+        // If the list supports the Move method, use it instead of removing and inserting.
+        if (list is IExtendedList<TItem> extendedList)
+        {
+            extendedList.Move(original, destination);
+        }
+        else if (list is ObservableCollection<TItem> observableList)
+        {
+            observableList.Move(original, destination);
+        }
+        else
+        {
+            list.RemoveAt(original);
+            list.Insert(destination, item);
+        }
     }
 }
