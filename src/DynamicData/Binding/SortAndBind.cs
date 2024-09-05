@@ -34,8 +34,8 @@ internal sealed class SortAndBind<TObject, TKey>
         // static one time comparer
         var applicator = new SortApplicator(_cache, target, comparer, options);
 
-        if (options.Scheduler is not null)
-            source = source.ObserveOn(options.Scheduler);
+        if (DynamicDataOptions.MainThreadScheduler is not null)
+            source = source.ObserveOn(DynamicDataOptions.MainThreadScheduler);
 
         _sorted = source.Select((changes, index) =>
         {
@@ -54,8 +54,11 @@ internal sealed class SortAndBind<TObject, TKey>
         IList<TObject> target)
         => _sorted = Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
-            if (options.Scheduler is not null)
-                source = source.ObserveOn(options.Scheduler);
+            if (DynamicDataOptions.MainThreadScheduler is not null)
+            {
+                source = source.ObserveOn(DynamicDataOptions.MainThreadScheduler);
+                comparerChanged = comparerChanged.ObserveOn(DynamicDataOptions.MainThreadScheduler);
+            }
 
             var locker = new object();
             SortApplicator? sortApplicator = null;

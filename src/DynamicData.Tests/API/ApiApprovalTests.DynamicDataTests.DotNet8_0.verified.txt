@@ -475,7 +475,6 @@ namespace DynamicData.Binding
         public int InitialCapacity { get; init; }
         public bool ResetOnFirstTimeLoad { get; init; }
         public int ResetThreshold { get; init; }
-        public System.Reactive.Concurrency.IScheduler? Scheduler { get; init; }
         public bool UseBinarySearch { get; init; }
         public bool UseReplaceForUpdates { get; init; }
     }
@@ -719,6 +718,7 @@ namespace DynamicData
     public static class DynamicDataOptions
     {
         public static DynamicData.Binding.BindingOptions Binding { get; set; }
+        public static System.Reactive.Concurrency.IScheduler? MainThreadScheduler { get; set; }
         public static DynamicData.Binding.SortAndBindOptions SortAndBind { get; set; }
     }
     public static class EnumerableEx
