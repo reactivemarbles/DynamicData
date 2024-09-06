@@ -26,5 +26,5 @@ public static class DynamicDataOptions
     /// The default main thread scheduler.  If left null, it is the responsibility of the consumer
     /// to ensure binding takes place on the main thread.
     /// </summary>
-    public static IScheduler? MainThreadScheduler { get; set; }
+    public static IScheduler? BindingScheduler { get; set; }
 }

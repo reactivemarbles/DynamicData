@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -14,7 +15,8 @@ namespace DynamicData.Binding;
 internal sealed class BindVirtualized<TObject, TKey>(
     IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
     IList<TObject> targetList,
-    SortAndBindOptions? options)
+    SortAndBindOptions? options,
+    IScheduler? scheduler)
     where TObject : notnull
     where TKey : notnull
 {
@@ -29,7 +31,7 @@ internal sealed class BindVirtualized<TObject, TKey>(
                 .Select(changesWithContext => changesWithContext.Context.Comparer)
                 .DistinctUntilChanged();
 
-            return changes.SortAndBind(targetList, comparedChanged, sortAndBindOptions);
+            return changes.SortAndBind(targetList, comparedChanged, sortAndBindOptions, scheduler);
         });
 
     private IObservable<IChangeSet<TObject, TKey>> UseVirtualSortOptions() =>
@@ -66,7 +68,7 @@ internal sealed class BindVirtualized<TObject, TKey>(
                     };
 
                     subscriber.Disposable = changesSubject
-                            .SortAndBind(targetList, comparerSubject.DistinctUntilChanged(), extractedOptions)
+                            .SortAndBind(targetList, comparerSubject.DistinctUntilChanged(), extractedOptions, scheduler)
                             .SubscribeSafe(observer);
 
                     comparerSubject.OnNext(changesWithContext.Context.Comparer);

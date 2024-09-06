@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Cache;
@@ -29,13 +30,16 @@ internal sealed class SortAndBind<TObject, TKey>
     public SortAndBind(IObservable<IChangeSet<TObject, TKey>> source,
         IComparer<TObject> comparer,
         SortAndBindOptions options,
-        IList<TObject> target)
+        IList<TObject> target,
+        IScheduler? scheduler)
     {
+        scheduler ??= DynamicDataOptions.BindingScheduler;
+
         // static one time comparer
         var applicator = new SortApplicator(_cache, target, comparer, options);
 
-        if (DynamicDataOptions.MainThreadScheduler is not null)
-            source = source.ObserveOn(DynamicDataOptions.MainThreadScheduler);
+        if (scheduler is not null)
+            source = source.ObserveOn(scheduler);
 
         _sorted = source.Select((changes, index) =>
         {
@@ -51,13 +55,16 @@ internal sealed class SortAndBind<TObject, TKey>
     public SortAndBind(IObservable<IChangeSet<TObject, TKey>> source,
         IObservable<IComparer<TObject>> comparerChanged,
         SortAndBindOptions options,
-        IList<TObject> target)
+        IList<TObject> target,
+        IScheduler? scheduler)
         => _sorted = Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
-            if (DynamicDataOptions.MainThreadScheduler is not null)
+            scheduler ??= DynamicDataOptions.BindingScheduler;
+
+            if (scheduler is not null)
             {
-                source = source.ObserveOn(DynamicDataOptions.MainThreadScheduler);
-                comparerChanged = comparerChanged.ObserveOn(DynamicDataOptions.MainThreadScheduler);
+                source = source.ObserveOn(scheduler);
+                comparerChanged = comparerChanged.ObserveOn(scheduler);
             }
 
             var locker = new object();
