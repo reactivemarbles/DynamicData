@@ -26,7 +26,7 @@ public class TransformAsyncFixture
 
         var firstPerson = await stub.TransformFactory(person);
 
-        stub.Results.Data.Items.First().Should().Be(firstPerson, "Should be same person");
+        stub.Results.Data.Items[0].Should().Be(firstPerson, "Should be same person");
     }
 
     [Fact]
@@ -183,7 +183,7 @@ public class TransformAsyncFixture
         stub.Results.Data.Count.Should().Be(1, "Should result in 1 record");
 
         var lastTransformed = await stub.TransformFactory(people.Last());
-        var onlyItemInCache = stub.Results.Data.Items.First();
+        var onlyItemInCache = stub.Results.Data.Items[0];
 
         onlyItemInCache.Should().Be(lastTransformed, "Incorrect transform result");
     }

@@ -19,7 +19,7 @@ namespace DynamicData.Tests
             rng.NextBytes(data);
 
             var inputData = new byte[39];
-            var lastItem = data[data.Length - 1];
+            var lastItem = data[^1];
             var firstItem = data[0];
             Array.Copy(data, 1, inputData, 0, 38);
             var listOfRandomFloats = new List<byte>(inputData);

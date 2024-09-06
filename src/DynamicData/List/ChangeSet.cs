@@ -75,7 +75,7 @@ public class ChangeSet<T> : List<Change<T>>, IChangeSet<T>
     public int Moves => this.Count(c => c.Reason == ListChangeReason.Moved);
 
     /// <summary>
-    ///     Gets the number of removes.
+    ///     Gets the number of refreshes.
     /// </summary>
     public int Refreshes => this.Count(c => c.Reason == ListChangeReason.Refresh);
 
@@ -114,7 +114,7 @@ public class ChangeSet<T> : List<Change<T>>, IChangeSet<T>
     /// <summary>
     ///     Gets the total number if individual item changes.
     /// </summary>
-    public int TotalChanges => Adds + Removes + Replaced + Moves;
+    public int TotalChanges => Adds + Removes + Refreshes + Replaced + Moves;
 
     /// <summary>
     /// Returns a <see cref="string" /> that represents this instance.

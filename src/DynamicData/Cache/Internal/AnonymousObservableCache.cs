@@ -37,11 +37,11 @@ internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache
 
     public IObservable<int> CountChanged => _cache.CountChanged;
 
-    public IEnumerable<TObject> Items => _cache.Items;
+    public IReadOnlyList<TObject> Items => _cache.Items;
 
-    public IEnumerable<TKey> Keys => _cache.Keys;
+    public IReadOnlyList<TKey> Keys => _cache.Keys;
 
-    public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
+    public IReadOnlyDictionary<TKey, TObject> KeyValues => _cache.KeyValues;
 
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true)
         => _cache.Connect(predicate, suppressEmptyChangeSets);

@@ -84,13 +84,13 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     public IObservable<int> CountChanged => _countChanged.StartWith(_innerCache.Count).DistinctUntilChanged();
 
     /// <inheritdoc />
-    public IEnumerable<TObject> Items => _innerCache.Items;
+    public IReadOnlyList<TObject> Items => _innerCache.Items.ToArray();
 
     /// <inheritdoc />
-    public IEnumerable<TKey> Keys => _innerCache.Keys;
+    public IReadOnlyList<TKey> Keys => _innerCache.Keys.ToArray();
 
     /// <inheritdoc />
-    public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
+    public IReadOnlyDictionary<TKey, TObject> KeyValues => new Dictionary<TKey, TObject>(_innerCache.GetDictionary());
 
     /// <inheritdoc />
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => Observable.Defer(

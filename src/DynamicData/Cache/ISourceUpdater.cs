@@ -48,20 +48,6 @@ public interface ISourceUpdater<TObject, TKey> : ICacheUpdater<TObject, TKey>
     void AddOrUpdate(TObject item, IEqualityComparer<TObject> comparer);
 
     /// <summary>
-    /// Refreshes the specified items.
-    /// </summary>
-    /// <param name="items">The items.</param>
-    [Obsolete(Constants.EvaluateIsDead)]
-    void Evaluate(IEnumerable<TObject> items);
-
-    /// <summary>
-    /// Refreshes the specified item.
-    /// </summary>
-    /// <param name="item">The item.</param>
-    [Obsolete(Constants.EvaluateIsDead)]
-    void Evaluate(TObject item);
-
-    /// <summary>
     /// Clears existing values and loads the specified items.
     /// </summary>
     /// <param name="items">The items.</param>

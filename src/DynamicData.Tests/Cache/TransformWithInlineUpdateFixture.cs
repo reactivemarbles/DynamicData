@@ -17,17 +17,17 @@ public class TransformWithInlineUpdateFixture
         var person = new Person("Adult1", 50);
         stub.Source.AddOrUpdate(person);
 
-        var transformedPerson = stub.Results.Data.Items.First();
+        var transformedPerson = stub.Results.Data.Items[0];
 
         var personUpdate = new Person("Adult1", 51);
         stub.Source.AddOrUpdate(personUpdate);
 
-        var updatedTransform = stub.Results.Data.Items.First();
+        var updatedTransform = stub.Results.Data.Items[0];
 
         updatedTransform.Age.Should().Be(personUpdate.Age, "Age should be updated from 50 to 51.");
         stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
         stub.Results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        transformedPerson.Should().Be(stub.Results.Data.Items.First(), "Should be same transformed person instance.");
+        transformedPerson.Should().Be(stub.Results.Data.Items[0], "Should be same transformed person instance.");
     }
 
     [Fact]
@@ -84,17 +84,17 @@ public class TransformWithInlineUpdateFixture
         var person = new Person("Adult1", 50);
         stub.Source.AddOrUpdate(person);
 
-        var transformedPerson = stub.Results.Data.Items.First();
+        var transformedPerson = stub.Results.Data.Items[0];
 
         person.Age = 51;
         stub.Source.Refresh(person);
 
-        var updatedTransform = stub.Results.Data.Items.First();
+        var updatedTransform = stub.Results.Data.Items[0];
 
         updatedTransform.Age.Should().Be(51, "Age should be updated from 50 to 51.");
         stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
         stub.Results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        transformedPerson.Should().Be(stub.Results.Data.Items.First(), "Should be same transformed person instance.");
+        transformedPerson.Should().Be(stub.Results.Data.Items[0], "Should be same transformed person instance.");
     }
 
     private class TransformWithInlineUpdateFixtureStub : IDisposable

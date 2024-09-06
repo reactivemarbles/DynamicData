@@ -35,7 +35,7 @@ public class FilterControllerFixtureWithDiffSet : IDisposable
 
         _results.Messages.Count.Should().Be(1, "Should be 1 updates");
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items.First().Should().Be(person, "Should be same person");
+        _results.Data.Items[0].Should().Be(person, "Should be same person");
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class FilterControllerFixtureWithDiffSet : IDisposable
 
         _results.Messages.Count.Should().Be(1, "Should be 1 updates");
         _results.Messages[0].First().Range.First().Should().Be(matched, "Should be same person");
-        _results.Data.Items.First().Should().Be(matched, "Should be same person");
+        _results.Data.Items[0].Should().Be(matched, "Should be same person");
     }
 
     [Fact]

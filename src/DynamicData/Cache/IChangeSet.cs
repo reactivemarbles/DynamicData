@@ -6,6 +6,23 @@
 namespace DynamicData;
 
 /// <summary>
+/// <para>A collection of changes with some arbitrary additional context.</para>
+/// <para>Changes are always published in the order.</para>
+/// </summary>
+/// <typeparam name="TObject">The type of the object.</typeparam>
+/// <typeparam name="TKey">The type of the key.</typeparam>
+/// <typeparam name="TContext">The additional context.</typeparam>
+public interface IChangeSet<TObject, TKey, out TContext> : IChangeSet<TObject, TKey>
+    where TObject : notnull
+    where TKey : notnull
+{
+    /// <summary>
+    /// Additional context.
+    /// </summary>
+    TContext Context { get; }
+}
+
+/// <summary>
 /// <para>A collection of changes.</para>
 /// <para>Changes are always published in the order.</para>
 /// </summary>

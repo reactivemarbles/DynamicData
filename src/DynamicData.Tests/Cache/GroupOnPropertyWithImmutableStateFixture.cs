@@ -29,7 +29,7 @@ public class GroupOnPropertyWithImmutableStateFixture : IDisposable
 
         _results.Data.Count.Should().Be(1);
 
-        var firstGroup = _results.Data.Items.First();
+        var firstGroup = _results.Data.Items[0];
 
         firstGroup.Count.Should().Be(1);
         firstGroup.Key.Should().Be(10);
@@ -93,7 +93,7 @@ public class GroupOnPropertyWithImmutableStateFixture : IDisposable
         person.Age = 20;
 
         _results.Data.Count.Should().Be(1);
-        var firstGroup = _results.Data.Items.First();
+        var firstGroup = _results.Data.Items[0];
 
         firstGroup.Count.Should().Be(1);
         firstGroup.Key.Should().Be(20);

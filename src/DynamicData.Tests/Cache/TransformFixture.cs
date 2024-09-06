@@ -22,7 +22,7 @@ public class TransformFixture
 
         stub.Results.Messages.Count.Should().Be(1, "Should be 1 updates");
         stub.Results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        stub.Results.Data.Items.First().Should().Be(stub.TransformFactory(person), "Should be same person");
+        stub.Results.Data.Items[0].Should().Be(stub.TransformFactory(person), "Should be same person");
     }
 
     [Fact]
@@ -130,7 +130,7 @@ public class TransformFixture
         stub.Results.Data.Count.Should().Be(1, "Should result in 1 record");
 
         var lastTransformed = stub.TransformFactory(people.Last());
-        var onlyItemInCache = stub.Results.Data.Items.First();
+        var onlyItemInCache = stub.Results.Data.Items[0];
 
         onlyItemInCache.Should().Be(lastTransformed, "Incorrect transform result");
     }

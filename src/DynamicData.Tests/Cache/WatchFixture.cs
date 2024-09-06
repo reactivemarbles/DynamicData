@@ -26,7 +26,7 @@ public class WatchFixture : IDisposable
 
         _results.Messages.Count.Should().Be(1, "Should be 1 updates");
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items.First().IsDisposed.Should().Be(false, "Should not be disposed");
+        _results.Data.Items[0].IsDisposed.Should().Be(false, "Should not be disposed");
     }
 
     public void Dispose()

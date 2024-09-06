@@ -36,10 +36,10 @@ public class TransformTreeFixture : IDisposable
 
         _result.Count.Should().Be(1);
 
-        var firstNode = _result.Items.First();
+        var firstNode = _result.Items[0];
         firstNode.Item.Should().Be(boss);
 
-        var childNode = firstNode.Children.Items.First();
+        var childNode = firstNode.Children.Items[0];
         childNode.Item.Should().Be(minion);
     }
 
@@ -81,7 +81,7 @@ public class TransformTreeFixture : IDisposable
         _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
         _result.Count.Should().Be(2);
 
-        var firstNode = _result.Items.First();
+        var firstNode = _result.Items[0];
         firstNode.Children.Count.Should().Be(3);
 
         var secondNode = _result.Items.Skip(1).First();
@@ -157,7 +157,7 @@ public class TransformTreeFixture : IDisposable
         _sourceCache.AddOrUpdate(changed);
         _result.Count.Should().Be(2);
 
-        var firstNode = _result.Items.First();
+        var firstNode = _result.Items[0];
         firstNode.Children.Count.Should().Be(3);
         firstNode.Item.Name.Should().Be(changed.Name);
     }
@@ -176,7 +176,7 @@ public class TransformTreeFixture : IDisposable
         _sourceCache.AddOrUpdate(changed);
         _result.Count.Should().Be(2);
 
-        var changedNode = _result.Items.First().Children.Items.First();
+        var changedNode = _result.Items[0].Children.Items[0];
 
         changedNode.Parent.Value.Item.Id.Should().Be(1);
         changedNode.Children.Count.Should().Be(1);

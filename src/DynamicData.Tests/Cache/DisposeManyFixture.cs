@@ -99,14 +99,14 @@ public sealed class DisposeManyFixture : IDisposable
         {
             new Change<DisposableObject, int>(
                 reason: ChangeReason.Refresh,
-                key: _itemsSource.Items.First().Id,
-                current: _itemsSource.Items.First())
+                key: _itemsSource.Items[0].Id,
+                current: _itemsSource.Items[0])
         });
         _changeSetsSource.OnNext(new ChangeSet<DisposableObject, int>() // Move
         {
             new Change<DisposableObject, int>(
-                key: _itemsSource.Items.First().Id,
-                current: _itemsSource.Items.First(),
+                key: _itemsSource.Items[0].Id,
+                current: _itemsSource.Items[0],
                 currentIndex: 1,
                 previousIndex: 0)
         });

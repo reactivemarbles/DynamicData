@@ -18,16 +18,26 @@ internal sealed class TrueFor<TObject, TKey, TValue>(IObservable<IChangeSet<TObj
 
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public IObservable<bool> Run() => Observable.Create<bool>(
-            observer =>
-            {
-                var transformed = _source.Transform(t => new ObservableWithValue<TObject, TValue>(t, _observableSelector(t))).Publish();
-                var inlineChanges = transformed.MergeMany(t => t.Observable);
-                var queried = transformed.ToCollection();
+    public IObservable<bool> Run()
+        => Observable.Create<bool>(observer =>
+        {
+            var itemsWithValues = _source
+                .Transform(item => new ObservableWithValue<TObject, TValue>(
+                    item: item,
+                    source: _observableSelector.Invoke(item)))
+                .Publish();
 
-                // nb: we do not care about the inline change because we are only monitoring it to cause a re-evaluation of all items
-                var publisher = queried.CombineLatest(inlineChanges, (items, _) => _collectionMatcher(items)).DistinctUntilChanged().SubscribeSafe(observer);
+            var subscription = Observable.CombineLatest(
+                    // Make sure we subscribe to ALL of the items before we make the first evaluation of the collection, so any values published on-subscription don't trigger a re-evaluation of the matcher method.
+                    first: itemsWithValues.MergeMany(item => item.Observable),
+                    second: itemsWithValues.ToCollection(),
+                    // We don't need to actually look at the changed values, we just need them as a trigger to re-evaluate the matcher method.
+                    resultSelector: (_, itemsWithValues) => _collectionMatcher.Invoke(itemsWithValues))
+                .DistinctUntilChanged()
+                .SubscribeSafe(observer);
 
-                return new CompositeDisposable(publisher, transformed.Connect());
-            });
+            return new CompositeDisposable(
+                subscription,
+                itemsWithValues.Connect());
+        });
 }

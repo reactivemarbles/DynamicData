@@ -409,7 +409,7 @@ public sealed class MergeChangeSetsFixture : IDisposable
 
         // These should be subsets of each other, so check one subset and the size
         expectedAnimals.Should().BeSubsetOf(animalResults.Data.Items);
-        animalResults.Data.Items.Count().Should().Be(expectedAnimals.Count);
+        animalResults.Data.Items.Count.Should().Be(expectedAnimals.Count);
     }
 
     Task ForOwnersAsync(Action<AnimalOwner> action) => Task.WhenAll(_animalOwners.Select(owner => Task.Run(() => action(owner))));
