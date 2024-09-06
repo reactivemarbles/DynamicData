@@ -272,7 +272,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         _equalityComparer.Equals(left, right);
 
     private bool CheckReferenceEquality(TObject left, TObject right) =>
-        ReferenceEquals(left, right) || (typeof(TObject).IsValueType && CheckEquality(left, right));
+        !typeof(TObject).IsValueType ? ReferenceEquals(left, right) : _equalityComparer.Equals(left, right);
 
     // Return true if candidate should replace current as the observed downstream value
     private bool ShouldReplace(TObject candidate, TObject current) =>
