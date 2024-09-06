@@ -34,6 +34,28 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
+    /// Bind paged data to the specified readonly observable collection.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <param name="scheduler">The scheduler to perform binding on.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
+        out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
+        IScheduler? scheduler)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        var targetList = new ObservableCollectionExtended<TObject>();
+        readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(targetList);
+
+        return source.Bind(targetList, scheduler);
+    }
+
+    /// <summary>
     /// Bind paged data to the specified collection.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -52,7 +74,31 @@ public static partial class ObservableCacheEx
         var targetList = new ObservableCollectionExtended<TObject>();
         readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(targetList);
 
-        return source.Bind(targetList, options);
+        return source.Bind(targetList, options, null);
+    }
+
+    /// <summary>
+    /// Bind paged data to the specified collection.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <param name="options">Bind and sort default options.</param>
+    /// <param name="scheduler">The scheduler to perform binding on.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
+        out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
+        SortAndBindOptions options,
+        IScheduler? scheduler)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        var targetList = new ObservableCollectionExtended<TObject>();
+        readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(targetList);
+
+        return source.Bind(targetList, options, scheduler);
     }
 
     /// <summary>
@@ -68,7 +114,24 @@ public static partial class ObservableCacheEx
         IList<TObject> targetList)
         where TObject : notnull
         where TKey : notnull =>
-        new BindPaged<TObject, TKey>(source, targetList, null).Run();
+        source.Bind(targetList, null);
+
+    /// <summary>
+    /// Bind paged data to the specified collection.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="targetList">The list to bind to.</param>
+    /// <param name="scheduler">The scheduler to perform binding on.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
+        IList<TObject> targetList,
+        IScheduler? scheduler)
+        where TObject : notnull
+        where TKey : notnull =>
+        new BindPaged<TObject, TKey>(source, targetList, null, scheduler).Run();
 
     /// <summary>
     /// Bind paged data to the specified collection.
@@ -85,7 +148,26 @@ public static partial class ObservableCacheEx
         SortAndBindOptions options)
         where TObject : notnull
         where TKey : notnull =>
-        new BindPaged<TObject, TKey>(source, targetList, options).Run();
+        source.Bind(targetList, options, null);
+
+    /// <summary>
+    /// Bind paged data to the specified collection.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="targetList">The list to bind to.</param>
+    /// <param name="options">Bind and sort default options.</param>
+    /// <param name="scheduler">The scheduler to perform binding on.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(
+        this IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
+        IList<TObject> targetList,
+        SortAndBindOptions options,
+        IScheduler? scheduler)
+        where TObject : notnull
+        where TKey : notnull =>
+        new BindPaged<TObject, TKey>(source, targetList, options, scheduler).Run();
 
     /// <summary>
     /// Bind virtualized and sorted data to the specified readonly observable collection.
