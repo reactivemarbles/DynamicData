@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -12,12 +13,16 @@ public sealed class TestSourceList<T>
     private readonly IObservable<int> _countChanged;
     private readonly BehaviorSubject<Exception?> _error;
     private readonly BehaviorSubject<bool> _hasCompleted;
+    private readonly Subject<IChangeSet<T>> _refreshRequested;
+    private readonly Subject<IChangeSet<T>> _refreshRequestedPreview;
     private readonly SourceList<T> _source;
 
     public TestSourceList()
     {
         _error = new(null);
         _hasCompleted = new(false);
+        _refreshRequested = new();
+        _refreshRequestedPreview = new();
         _source = new();
 
         _countChanged = WrapStream(_source.CountChanged);
@@ -33,7 +38,9 @@ public sealed class TestSourceList<T>
         => _source.Items;
 
     public IObservable<IChangeSet<T>> Connect(Func<T, bool>? predicate = null)
-        => WrapStream(_source.Connect(predicate));
+        => WrapStream(Observable.Merge(
+            _source.Connect(predicate),
+            _refreshRequested));
 
     public void Complete()
     {
@@ -47,6 +54,8 @@ public sealed class TestSourceList<T>
         _source.Dispose();
         _error.Dispose();
         _hasCompleted.Dispose();
+        _refreshRequested.Dispose();
+        _refreshRequestedPreview.Dispose();
     }
     
     public void Edit(Action<IExtendedList<T>> updateAction)
@@ -57,7 +66,37 @@ public sealed class TestSourceList<T>
     }
     
     public IObservable<IChangeSet<T>> Preview(Func<T, bool>? predicate = null)
-        => WrapStream(_source.Preview(predicate));
+        => WrapStream(Observable.Merge(
+            _source.Preview(predicate),
+            _refreshRequestedPreview));
+
+    // TODO: Formally add this to ISourceList
+    public void Refresh(int index)
+    {
+        var changeSet = new ChangeSet<T>(capacity: 1)
+        {
+            new Change<T>(
+                reason:     ListChangeReason.Refresh,
+                current:    _source.Items.ElementAt(index),
+                index:      index)
+        };
+
+        _refreshRequestedPreview.OnNext(changeSet);
+        _refreshRequested.OnNext(changeSet);
+    }
+
+    // TODO: Formally add this to ISourceList
+    public void Refresh(IEnumerable<int> indexes)
+    {
+        var changeSet = new ChangeSet<T>(indexes
+            .Select(index => new Change<T>(
+                reason:     ListChangeReason.Refresh,
+                current:    _source.Items.ElementAt(index),
+                index:      index)));
+
+        _refreshRequestedPreview.OnNext(changeSet);
+        _refreshRequested.OnNext(changeSet);
+    }
 
     public void SetError(Exception error)
     {
