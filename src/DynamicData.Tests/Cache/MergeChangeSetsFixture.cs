@@ -651,11 +651,11 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         // then
         _marketList.Count.Should().Be(2);
         results1.Data.Count.Should().Be(PricesPerMarket);
-        results1.Messages.Count.Should().Be(2);
+        results1.Messages.Count.Should().Be(3);
         results1.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         results1.Summary.Overall.Removes.Should().Be(0);
         results1.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        results1.Summary.Overall.Refreshes.Should().Be(0);
+        results1.Summary.Overall.Refreshes.Should().Be(PricesPerMarket);
         results2.Messages.Count.Should().Be(4);
         results2.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         results2.Summary.Overall.Removes.Should().Be(0);
