@@ -202,7 +202,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         // In the sorting case, a refresh requires doing a full update because any change could alter what the best value is
         // If we don't care about sorting OR if we do care, but re-selecting the best value didn't change anything
         // AND the current value is the exact one being refreshed, then emit the refresh downstream
-        if (((comparer is null) || !UpdateToBestValue(sources, key, cached)) && CheckReferenceEquality(cached.Value, item))
+        if (((comparer is null) || !UpdateToBestValue(sources, key, cached)) && CheckEquality(cached.Value, item))
         {
             _resultCache.Refresh(key);
         }
@@ -270,9 +270,6 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
 
     private bool CheckEquality(TObject left, TObject right) =>
         _equalityComparer.Equals(left, right);
-
-    private bool CheckReferenceEquality(TObject left, TObject right) =>
-        !typeof(TObject).IsValueType ? ReferenceEquals(left, right) : _equalityComparer.Equals(left, right);
 
     // Return true if candidate should replace current as the observed downstream value
     private bool ShouldReplace(TObject candidate, TObject current) =>
