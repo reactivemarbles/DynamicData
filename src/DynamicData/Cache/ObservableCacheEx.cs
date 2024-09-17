@@ -1477,6 +1477,34 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
+    /// Creates a filtered stream which can be dynamically filtered, based on state values passed through to a static filtering predicate.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TState">The type of state value required by <paramref name="predicate"/>.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="predicateState">A stream of state values to be passed to <paramref name="predicate"/>.</param>
+    /// <param name="predicate">A static predicate to be used to determine which items should be included or excluded by the filter.</param>
+    /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status.</param>
+    /// <returns>An observable which emits change sets.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>, <paramref name="predicateState"/>, and <paramref name="predicate"/>.</exception>
+    /// <remarks>
+    /// Usually, <paramref name="predicateState"/> should emit an initial value, immediately upon subscription. This is because <paramref name="predicate"/> cannot be invoked until the first state value is received, and accordingly, the operator will treat all items as excluded until then. Each value emitted by <paramref name="predicateState"/> will trigger a full re-filtering of the entire collection.
+    /// </remarks>
+    public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey, TState>(
+                this IObservable<IChangeSet<TObject, TKey>> source,
+                IObservable<TState> predicateState,
+                Func<TState, TObject, bool> predicate,
+                bool suppressEmptyChangeSets = true)
+            where TObject : notnull
+            where TKey : notnull
+        => Cache.Internal.Filter.WithPredicateState<TObject, TKey, TState>.Create(
+            source: source,
+            predicateState: predicateState,
+            predicate: predicate,
+            suppressEmptyChangeSets: suppressEmptyChangeSets);
+
+    /// <summary>
     /// Creates a filtered stream which can be dynamically filtered.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>

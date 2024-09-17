@@ -9,7 +9,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List;
 
-public class FilterFixture : IDisposable
+public partial class FilterFixture : IDisposable
 {
     private readonly ChangeSetAggregator<Person> _results;
 
