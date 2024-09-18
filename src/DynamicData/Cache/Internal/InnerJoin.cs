@@ -37,47 +37,52 @@ internal sealed class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
                 // joined is the final cache
                 var joinedCache = new ChangeAwareCache<TDestination, (TLeftKey, TRightKey)>();
 
-                var leftLoader = leftCache.Connect().Select(changes =>
-                {
-                    foreach (var change in changes.ToConcreteType())
+                var hasInitialized = false;
+
+                var leftLoader = leftCache.Connect()
+                    .Select(changes =>
                     {
-                        var leftCurrent = change.Current;
-                        var rightLookup = rightGrouped.Lookup(change.Key);
-
-                        if (rightLookup.HasValue)
+                        foreach (var change in changes.ToConcreteType())
                         {
-                            switch (change.Reason)
+                            var leftCurrent = change.Current;
+                            var rightLookup = rightGrouped.Lookup(change.Key);
+
+                            if (rightLookup.HasValue)
                             {
-                                case ChangeReason.Add:
-                                case ChangeReason.Update:
-                                    foreach (var keyvalue in rightLookup.Value.KeyValues)
-                                    {
-                                        joinedCache.AddOrUpdate(_resultSelector((change.Key, keyvalue.Key), leftCurrent, keyvalue.Value), (change.Key, keyvalue.Key));
-                                    }
+                                switch (change.Reason)
+                                {
+                                    case ChangeReason.Add:
+                                    case ChangeReason.Update:
+                                        foreach (var keyvalue in rightLookup.Value.KeyValues)
+                                        {
+                                            joinedCache.AddOrUpdate(_resultSelector((change.Key, keyvalue.Key), leftCurrent, keyvalue.Value), (change.Key, keyvalue.Key));
+                                        }
 
-                                    break;
+                                        break;
 
-                                case ChangeReason.Remove:
-                                    foreach (var keyvalue in rightLookup.Value.KeyValues)
-                                    {
-                                        joinedCache.Remove((change.Key, keyvalue.Key));
-                                    }
+                                    case ChangeReason.Remove:
+                                        foreach (var keyvalue in rightLookup.Value.KeyValues)
+                                        {
+                                            joinedCache.Remove((change.Key, keyvalue.Key));
+                                        }
 
-                                    break;
+                                        break;
 
-                                case ChangeReason.Refresh:
-                                    foreach (var key in rightLookup.Value.Keys)
-                                    {
-                                        joinedCache.Refresh((change.Key, key));
-                                    }
+                                    case ChangeReason.Refresh:
+                                        foreach (var key in rightLookup.Value.Keys)
+                                        {
+                                            joinedCache.Refresh((change.Key, key));
+                                        }
 
-                                    break;
+                                        break;
+                                }
                             }
                         }
-                    }
 
-                    return joinedCache.CaptureChanges();
-                });
+                        return joinedCache.CaptureChanges();
+                    })
+                    // Don't forward initial changesets from the left side, only the right
+                    .Where(_ => hasInitialized);
 
                 var rightLoader = rightCache.Connect().Select(changes =>
                 {
@@ -119,7 +124,11 @@ internal sealed class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
 
                 lock (locker)
                 {
-                    return new CompositeDisposable(leftLoader.Merge(rightLoader).SubscribeSafe(observer), leftCache, rightCache, rightShare.Connect());
+                    var observerSubscription = leftLoader.Merge(rightLoader).SubscribeSafe(observer);
+
+                    hasInitialized = true;
+
+                    return new CompositeDisposable(observerSubscription, leftCache, rightCache, rightShare.Connect());
                 }
             });
 }

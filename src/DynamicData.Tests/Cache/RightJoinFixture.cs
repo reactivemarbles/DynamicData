@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 
 using DynamicData.Kernel;
+using DynamicData.Tests.Utilities;
 
 using FluentAssertions;
 
@@ -216,7 +217,29 @@ public class RightJoinFixture : IDisposable
         _result.Data.Items.Count(dwm => dwm.Device == Optional<Device>.None).Should().Be(1);
     }
 
+    [Fact]
+    public void InitializationWaitsForBothSources()
+    {
+        var left = new[] { 1, 2, 3 };
+        var right = new[] { 4, 6, 2 };
 
+        ObservableCacheEx
+            .RightJoin(
+                left:               left.AsObservableChangeSet(static left => 2 * left),
+                right:              right.AsObservableChangeSet(static right => right),
+                rightKeySelector:   static right => right,
+                resultSelector:     static (left, right) => (left: left.HasValue ? left.Value : default(int?), right))
+            .ValidateSynchronization()
+            .ValidateChangeSets(static pair => pair.right)
+            .RecordCacheItems(out var results);
+
+        results.Error.Should().BeNull();
+
+        results.RecordedChangeSets.Count.Should().Be(1, "Initialization should only emit one changeset.");
+        results.RecordedChangeSets[0].Should().OnlyContain(change => change.Reason == ChangeReason.Add, "Initialization should only emit Add changes.");
+
+        results.RecordedItemsByKey.Values.Should().OnlyContain(pair => (2 * pair.left) == pair.right, "Source items should have been joined correctly");
+    }
 
     public class Device(string name) : IEquatable<Device>
     {
