@@ -28,4 +28,12 @@ public record struct SortAndBindOptions()
     /// Set the initial capacity of the readonly observable collection.
     /// </summary>
     public int InitialCapacity { get; init; } = -1;
+
+    /// <summary>
+    /// Reset on first time load.
+    ///
+    /// This is opt-in only and is only required for consumers who need to maintain
+    /// backwards compatibility will the former  BindingOptions.ResetOnFirstTimeLoad.
+    /// </summary>
+    public bool ResetOnFirstTimeLoad { get; init; }
 }
