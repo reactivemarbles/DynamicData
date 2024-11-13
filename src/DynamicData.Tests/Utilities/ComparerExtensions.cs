@@ -11,7 +11,9 @@ internal sealed class NoOpComparer<T> : IComparer<T>
 
 internal sealed class NoOpEqualityComparer<T> : IEqualityComparer<T>
 {
+    [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations", Justification = "Expected")]
     public bool Equals(T x, T y) => throw new NotImplementedException();
+    [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations", Justification = "Expected")]
     public int GetHashCode([DisallowNull] T obj) => throw new NotImplementedException();
 }
 
