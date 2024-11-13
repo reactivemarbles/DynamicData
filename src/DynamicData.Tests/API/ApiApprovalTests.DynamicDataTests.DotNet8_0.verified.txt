@@ -469,7 +469,7 @@ namespace DynamicData.Binding
         public static bool operator !=(DynamicData.Binding.PropertyValue<TObject, TValue>? left, DynamicData.Binding.PropertyValue<TObject, TValue>? right) { }
         public static bool operator ==(DynamicData.Binding.PropertyValue<TObject, TValue>? left, DynamicData.Binding.PropertyValue<TObject, TValue>? right) { }
     }
-    public struct SortAndBindOptions : System.IEquatable<DynamicData.Binding.SortAndBindOptions>
+    public readonly struct SortAndBindOptions : System.IEquatable<DynamicData.Binding.SortAndBindOptions>
     {
         public SortAndBindOptions() { }
         public int InitialCapacity { get; init; }
