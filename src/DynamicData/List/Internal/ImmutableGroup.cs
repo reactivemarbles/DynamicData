@@ -8,7 +8,7 @@ namespace DynamicData.List.Internal;
 
 internal sealed class ImmutableGroup<TObject, TGroupKey> : IGrouping<TObject, TGroupKey>, IEquatable<ImmutableGroup<TObject, TGroupKey>>
 {
-    private readonly IReadOnlyCollection<TObject> _items;
+    private readonly ReadOnlyCollectionLight<TObject> _items;
 
     internal ImmutableGroup(TGroupKey key, IList<TObject> items)
     {

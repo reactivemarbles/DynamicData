@@ -16,9 +16,7 @@ internal sealed class QueryWhenChanged<TObject, TKey, TValue>(IObservable<IChang
     {
         if (itemChangedTrigger is null)
         {
-            return Observable.Defer(() =>
-                {
-                    return _source.Scan(
+            return Observable.Defer(() => _source.Scan(
                         (Cache<TObject, TKey>?)null,
                         (cache, changes) =>
                         {
@@ -26,8 +24,7 @@ internal sealed class QueryWhenChanged<TObject, TKey, TValue>(IObservable<IChang
 
                             cache.Clone(changes);
                             return cache;
-                        });
-                })
+                        }))
                 .Select(cache => new AnonymousQuery<TObject, TKey>(cache!));
         }
 

@@ -46,7 +46,6 @@ internal static partial class ExpireAfter
             private readonly ChangeAwareCache<TObject, TKey> _itemsCache;
             private readonly IObserver<IChangeSet<TObject, TKey>> _observer;
             private readonly List<ProposedExpiration> _proposedExpirationsQueue;
-            private readonly IScheduler _scheduler;
             private readonly IDisposable _sourceSubscription;
             private readonly Func<TObject, TimeSpan?> _timeSelector;
 
@@ -62,7 +61,7 @@ internal static partial class ExpireAfter
                 _observer = observer;
                 _timeSelector = timeSelector;
 
-                _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
+                Scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
 
                 _expirationDueTimesByKey = new();
                 _itemsCache = new();
@@ -86,8 +85,7 @@ internal static partial class ExpireAfter
                 }
             }
 
-            protected IScheduler Scheduler
-                => _scheduler;
+            protected IScheduler Scheduler { get; }
 
             // Instead of using a dedicated _synchronizationGate object, we can save an allocation by using any object that is never exposed to public consumers.
             protected object SynchronizationGate
@@ -181,7 +179,7 @@ internal static partial class ExpireAfter
 
                         _nextScheduledManagement = new()
                         {
-                            Cancellation = _scheduler.Schedule(
+                            Cancellation = Scheduler.Schedule(
                                 state: this,
                                 dueTime: nextManagementDueTime,
                                 action: (_, @this) =>
@@ -224,7 +222,7 @@ internal static partial class ExpireAfter
             {
                 try
                 {
-                    var now = _scheduler.Now;
+                    var now = Scheduler.Now;
 
                     var haveExpirationsChanged = false;
 
@@ -342,22 +340,17 @@ internal static partial class ExpireAfter
             }
         }
 
-        private sealed class OnDemandSubscription
-            : SubscriptionBase
+        private sealed class OnDemandSubscription(
+                IObserver<IChangeSet<TObject, TKey>> observer,
+                IScheduler? scheduler,
+                IObservable<IChangeSet<TObject, TKey>> source,
+                Func<TObject, TimeSpan?> timeSelector)
+                        : SubscriptionBase(
+                observer,
+                scheduler,
+                source,
+                timeSelector)
         {
-            public OnDemandSubscription(
-                    IObserver<IChangeSet<TObject, TKey>> observer,
-                    IScheduler? scheduler,
-                    IObservable<IChangeSet<TObject, TKey>> source,
-                    Func<TObject, TimeSpan?> timeSelector)
-                : base(
-                    observer,
-                    scheduler,
-                    source,
-                    timeSelector)
-            {
-            }
-
             protected override DateTimeOffset? GetNextManagementDueTime()
                 => GetNextProposedExpirationDueTime();
 

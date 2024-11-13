@@ -7,7 +7,7 @@ namespace DynamicData.Binding;
 /// <summary>
 /// Options for the sort and bind operator.
 /// </summary>
-public record struct SortAndBindOptions()
+public readonly record struct SortAndBindOptions()
 {
     /// <summary>
     /// The reset threshold ie the number of changes before a reset is fired.

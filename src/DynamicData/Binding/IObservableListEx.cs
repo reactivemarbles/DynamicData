@@ -39,7 +39,7 @@ public static class IObservableListEx
         observableList = sourceList;
 
         // Return a observable that will connect to the source so we can properly dispose when the pipeline ends.
-        return Observable.Create<IChangeSet<TObject>>(observer => { return source.Finally(() => sourceList.Dispose()).SubscribeSafe(observer); });
+        return Observable.Create<IChangeSet<TObject>>(observer => source.Finally(() => sourceList.Dispose()).SubscribeSafe(observer));
     }
 
     /// <summary>
@@ -71,7 +71,7 @@ public static class IObservableListEx
         observableList = sourceList;
 
         // Return a observable that will connect to the source so we can properly dispose when the pipeline ends.
-        return Observable.Create<IChangeSet<TObject, TKey>>(observer => { return source.Do(changes => sourceList.Edit(editor => editor.Clone(changes.RemoveKey(editor)))).Finally(() => sourceList.Dispose()).SubscribeSafe(observer); });
+        return Observable.Create<IChangeSet<TObject, TKey>>(observer => source.Do(changes => sourceList.Edit(editor => editor.Clone(changes.RemoveKey(editor)))).Finally(() => sourceList.Dispose()).SubscribeSafe(observer));
     }
 
     /// <summary>
@@ -104,9 +104,7 @@ public static class IObservableListEx
 
         // Return a observable that will connect to the source so we can properly dispose when the pipeline ends.
         return Observable.Create<ISortedChangeSet<TObject, TKey>>(
-            observer =>
-            {
-                return source.Do(
+            observer => source.Do(
                     changes =>
                     {
                         switch (changes.SortedItems.SortReason)
@@ -130,8 +128,7 @@ public static class IObservableListEx
                                     });
                                 break;
                         }
-                    }).Finally(() => sourceList.Dispose()).SubscribeSafe(observer);
-            });
+                    }).Finally(() => sourceList.Dispose()).SubscribeSafe(observer));
     }
 
     /// <summary>

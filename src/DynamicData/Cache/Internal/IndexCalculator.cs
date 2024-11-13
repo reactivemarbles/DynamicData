@@ -232,7 +232,7 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
         return ~index;
     }
 
-    private int GetInsertPositionLinear(IList<KeyValuePair<TKey, TObject>> list, KeyValuePair<TKey, TObject> item)
+    private int GetInsertPositionLinear(List<KeyValuePair<TKey, TObject>> list, KeyValuePair<TKey, TObject> item)
     {
         for (var i = 0; i < list.Count; i++)
         {

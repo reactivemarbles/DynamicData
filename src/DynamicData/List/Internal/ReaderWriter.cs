@@ -11,7 +11,7 @@ internal sealed class ReaderWriter<T>
 {
     private readonly object _locker = new();
 
-    private ChangeAwareList<T> _data = new();
+    private ChangeAwareList<T> _data = [];
 
     private bool _updateInProgress;
 

@@ -8,6 +8,4 @@ namespace DynamicData.Aggregation;
 /// A change set which has been shaped for rapid online aggregations.
 /// </summary>
 /// <typeparam name="T">The type of the item.</typeparam>
-public interface IAggregateChangeSet<T> : IEnumerable<AggregateItem<T>>
-{
-}
+public interface IAggregateChangeSet<T> : IEnumerable<AggregateItem<T>>;

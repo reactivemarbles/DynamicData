@@ -6,7 +6,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Reactive;
 using System.Reactive.Linq;
-using DynamicData.Kernel;
 
 namespace DynamicData.Binding;
 

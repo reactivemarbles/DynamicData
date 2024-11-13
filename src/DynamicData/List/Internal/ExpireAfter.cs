@@ -43,7 +43,6 @@ internal sealed class ExpireAfter<T>
         private readonly List<int> _expiringIndexesBuffer;
         private readonly IObserver<IEnumerable<T>> _observer;
         private readonly Action<IExtendedList<T>> _onEditingSource;
-        private readonly IScheduler _scheduler;
         private readonly ISourceList<T> _source;
         private readonly IDisposable _sourceSubscription;
         private readonly Func<T, TimeSpan?> _timeSelector;
@@ -61,12 +60,12 @@ internal sealed class ExpireAfter<T>
             _source = source;
             _timeSelector = timeSelector;
 
-            _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
+            Scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
 
             _onEditingSource = OnEditingSource;
 
-            _expirationDueTimes = new();
-            _expiringIndexesBuffer = new();
+            _expirationDueTimes = [];
+            _expiringIndexesBuffer = [];
 
             _sourceSubscription = source
                 .Connect()
@@ -89,8 +88,7 @@ internal sealed class ExpireAfter<T>
             }
         }
 
-        protected IScheduler Scheduler
-            => _scheduler;
+        protected IScheduler Scheduler { get; }
 
         // Instead of using a dedicated _synchronizationGate object, we can save an allocation by using any object that is never exposed to public consumers.
         protected object SynchronizationGate
@@ -196,7 +194,7 @@ internal sealed class ExpireAfter<T>
 
                     _nextScheduledManagement = new()
                     {
-                        Cancellation = _scheduler.Schedule(
+                        Cancellation = Scheduler.Schedule(
                             state: this,
                             dueTime: nextManagementDueTime,
                             action: (_, @this) =>
@@ -234,7 +232,7 @@ internal sealed class ExpireAfter<T>
         {
             try
             {
-                var now = _scheduler.Now;
+                var now = Scheduler.Now;
 
                 var haveExpirationDueTimesChanged = false;
 
@@ -367,22 +365,17 @@ internal sealed class ExpireAfter<T>
         }
     }
 
-    private sealed class OnDemandSubscription
-        : SubscriptionBase
+    private sealed class OnDemandSubscription(
+            IObserver<IEnumerable<T>> observer,
+            IScheduler? scheduler,
+            ISourceList<T> source,
+            Func<T, TimeSpan?> timeSelector)
+                : SubscriptionBase(
+            observer,
+            scheduler,
+            source,
+            timeSelector)
     {
-        public OnDemandSubscription(
-                IObserver<IEnumerable<T>> observer,
-                IScheduler? scheduler,
-                ISourceList<T> source,
-                Func<T, TimeSpan?> timeSelector)
-            : base(
-                observer,
-                scheduler,
-                source,
-                timeSelector)
-        {
-        }
-
         protected override DateTimeOffset? GetNextManagementDueTime()
             => GetNextProposedExpirationDueTime();
 

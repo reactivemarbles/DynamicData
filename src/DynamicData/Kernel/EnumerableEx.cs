@@ -81,7 +81,7 @@ public static class EnumerableEx
         return itemsToFind.Join(indexed, left => left, right => right.Element, (_, right) => right).Select(x => resultSelector(x.Element, x.Index));
     }
 
-    internal static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source) => source ?? Enumerable.Empty<T>();
+    internal static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source) => source ?? [];
 
     internal static IEnumerable<T> EnumerateOne<T>(this T source)
     {

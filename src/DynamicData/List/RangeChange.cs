@@ -33,7 +33,7 @@ public sealed class RangeChange<T> : IEnumerable<T>
     /// </summary>
     private RangeChange()
     {
-        _items = new List<T>();
+        _items = [];
         Index = -1;
     }
 

@@ -28,7 +28,7 @@ internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, 
     {
         private IKeyValueCollection<TObject, TKey> _all = new KeyValueCollection<TObject, TKey>();
 
-        private IKeyValueCollection<TObject, TKey> _current = new KeyValueCollection<TObject, TKey>();
+        private KeyValueCollection<TObject, TKey> _current = new();
 
         private bool _isLoaded;
 
