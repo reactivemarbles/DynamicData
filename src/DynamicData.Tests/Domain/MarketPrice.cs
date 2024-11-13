@@ -56,7 +56,7 @@ internal sealed class MarketPrice
     private class CurrentPriceEqualityComparer : IEqualityComparer<MarketPrice>
     {
         public virtual bool Equals([DisallowNull] MarketPrice x, [DisallowNull] MarketPrice y) => x.MarketId.Equals(x.MarketId) && x.ItemId == y.ItemId && x.Price == y.Price;
-        public int GetHashCode([DisallowNull] MarketPrice obj) => throw new NotImplementedException();
+        public int GetHashCode([DisallowNull] MarketPrice obj) => obj.GetHashCode();
     }
 
     private sealed class TimeStampPriceEqualityComparer : CurrentPriceEqualityComparer, IEqualityComparer<MarketPrice>

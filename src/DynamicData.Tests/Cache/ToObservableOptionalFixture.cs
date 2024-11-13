@@ -291,7 +291,7 @@ public class ToObservableOptionalFixture : IDisposable
         private IEqualityComparer<string> _stringComparer = stringComparer;
 
         public bool Equals([DisallowNull] KeyValuePair x, [DisallowNull] KeyValuePair y) => _stringComparer.Equals(x.Value, y.Value);
-        public int GetHashCode([DisallowNull] KeyValuePair obj) => throw new NotImplementedException();
+        public int GetHashCode([DisallowNull] KeyValuePair obj) => obj.GetHashCode();
     }
 
     private static KeyValueCompare CaseInsensitiveComparer => new(StringComparer.OrdinalIgnoreCase);
