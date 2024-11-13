@@ -62,7 +62,7 @@ public class ChangeSetAggregator<TObject> : IDisposable
     /// <summary>
     /// Gets all message received.
     /// </summary>
-    public IList<IChangeSet<TObject>> Messages { get; } = new List<IChangeSet<TObject>>();
+    public IList<IChangeSet<TObject>> Messages { get; } = [];
 
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
