@@ -56,6 +56,7 @@ internal sealed class MarketPrice
     private class CurrentPriceEqualityComparer : IEqualityComparer<MarketPrice>
     {
         public virtual bool Equals([DisallowNull] MarketPrice x, [DisallowNull] MarketPrice y) => x.MarketId.Equals(x.MarketId) && x.ItemId == y.ItemId && x.Price == y.Price;
+        [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations", Justification = "Suppressed for Net 9.0")]
         public int GetHashCode([DisallowNull] MarketPrice obj) => throw new NotImplementedException();
     }
 
