@@ -30,11 +30,14 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                 var locker = new object();
 
                 // create local backing stores
-                var leftCache = _left.Synchronize(locker).AsObservableCache(false);
+                var leftShare = _left.Synchronize(locker).Publish();
+                var leftCache = leftShare.AsObservableCache(false);
                 var rightCache = _right.Synchronize(locker).ChangeKey(_rightKeySelector).AsObservableCache(false);
 
                 // joined is the final cache
                 var joined = new ChangeAwareCache<TDestination, TLeftKey>();
+
+                var hasInitialized = false;
 
                 var leftLoader = leftCache.Connect().Select(
                     changes =>
@@ -66,8 +69,8 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                         return joined.CaptureChanges();
                     });
 
-                var rightLoader = rightCache.Connect().Select(
-                    changes =>
+                var rightLoader = rightCache.Connect()
+                    .Select(changes =>
                     {
                         foreach (var change in changes.ToConcreteType())
                         {
@@ -117,11 +120,17 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                         }
 
                         return joined.CaptureChanges();
-                    });
+                    })
+                    // Don't forward initial changesets from the right side, only the left
+                    .Where(_ => hasInitialized);
 
                 lock (locker)
                 {
-                    return new CompositeDisposable(leftLoader.Merge(rightLoader).SubscribeSafe(observer), leftCache, rightCache);
+                    var observerSubscription = leftLoader.Merge(rightLoader).SubscribeSafe(observer);
+
+                    hasInitialized = true;
+
+                    return new CompositeDisposable(observerSubscription, leftCache, rightCache, leftShare.Connect());
                 }
             });
 }
