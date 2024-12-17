@@ -110,12 +110,11 @@ internal sealed class SortAndPage<TObject, TKey>
                         return ApplyPagedChanges(changes);
                     });
 
-                return
-                    comparerChanged
-                        .Merge(paramsChanged)
-                        .Merge(dataChange)
-                        .Where(changes => changes.Count is not 0)
-                        .SubscribeSafe(observer);
+                return Observable.Merge(
+                        comparerChanged.Skip(1),
+                        paramsChanged.Where(changes => changes.Count is not 0),
+                        dataChange.Where(changes => changes.Count is not 0))
+                    .SubscribeSafe(observer);
 
                 ChangeSet<TObject, TKey, PageContext<TObject>> ApplyPagedChanges(IChangeSet<TObject, TKey>? changeSet = null)
                 {
