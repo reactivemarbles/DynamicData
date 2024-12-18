@@ -921,11 +921,11 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         resultsLow.Summary.Overall.Removes.Should().Be(0);
         resultsLow.Summary.Overall.Updates.Should().Be(0);
         resultsLow.Summary.Overall.Refreshes.Should().Be(0);
-        resultsRecent.Messages.Count.Should().Be(3);
+        resultsRecent.Messages.Count.Should().Be(4);
         resultsRecent.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         resultsRecent.Summary.Overall.Removes.Should().Be(0);
         resultsRecent.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
-        resultsRecent.Summary.Overall.Refreshes.Should().Be(0);
+        resultsRecent.Summary.Overall.Refreshes.Should().Be(PricesPerMarket);
         resultsTimeStamp.Messages.Count.Should().Be(5);
         resultsTimeStamp.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         resultsTimeStamp.Summary.Overall.Removes.Should().Be(0);
