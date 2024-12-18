@@ -4,6 +4,7 @@
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace DynamicData.Cache.Internal;
 
@@ -20,16 +21,25 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
 
                 var destination = new LockFreeObservableCache<TObject, TKey>();
 
-                var populator = Observable.Switch(
-                    _sources.Do(
-                        _ =>
-                        {
-                            lock (locker)
-                            {
-                                destination.Clear();
-                            }
-                        })).Synchronize(locker).PopulateInto(destination);
+                var errors = new Subject<IChangeSet<TObject, TKey>>();
 
-                return new CompositeDisposable(destination, populator, destination.Connect().SubscribeSafe(observer));
+                var populator = Observable.Switch(
+                        _sources
+                            .Synchronize(locker)
+                            .Do(onNext: _ => destination.Clear(),
+                                onError: error => errors.OnError(error)))
+                    .Synchronize(locker)
+                    .Do(onNext: static _ => { },
+                        onError: error => errors.OnError(error))
+                    .PopulateInto(destination);
+
+                return new CompositeDisposable(
+                    destination,
+                    errors,
+                    populator,
+                    Observable.Merge(
+                            destination.Connect(),
+                            errors)
+                        .SubscribeSafe(observer));
             });
 }

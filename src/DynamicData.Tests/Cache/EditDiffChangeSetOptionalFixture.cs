@@ -190,6 +190,7 @@ public class EditDiffChangeSetOptionalFixture
     {
         public bool Equals([DisallowNull] Person x, [DisallowNull] Person y) =>
             EqualityComparer<string>.Default.Equals(x.Name, y.Name) && EqualityComparer<int>.Default.Equals(x.Id, y.Id);
+        [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations", Justification = "Suppressed for Net 9.0")]
         public int GetHashCode([DisallowNull] Person obj) => throw new NotImplementedException();
     }
 

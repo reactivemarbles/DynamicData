@@ -104,7 +104,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
 
         if (reason == ListChangeReason.Refresh && currentIndex < 0)
         {
-            throw new ArgumentException("For ChangeReason.Refresh, must supply ad index");
+            throw new ArgumentException("For ChangeReason.Refresh, must supply an index");
         }
 
         Reason = reason;
