@@ -1,5 +1,7 @@
 using System;
 
+using DynamicData.Tests.Utilities;
+
 using FluentAssertions;
 
 using Xunit;
@@ -204,6 +206,30 @@ public class InnerJoinFixture : IDisposable
 
         _result.Data.Lookup(("Device4",4)).HasValue.Should().BeFalse();
 
+    }
+
+    [Fact]
+    public void InitializationWaitsForBothSources()
+    {
+        var left = new[] { 1, 2, 3 };
+        var right = new[] { 4, 6, 2 };
+
+        ObservableCacheEx
+            .InnerJoin(
+                left:               left.AsObservableChangeSet(static left => 2 * left),
+                right:              right.AsObservableChangeSet(static right => right),
+                rightKeySelector:   static right => right,
+                resultSelector:     static (left, right) => (left, right))
+            .ValidateSynchronization()
+            .ValidateChangeSets(static pair => (2 * pair.left, pair.right))
+            .RecordCacheItems(out var results);
+
+        results.Error.Should().BeNull();
+
+        results.RecordedChangeSets.Count.Should().Be(1, "Initialization should only emit one changeset.");
+        results.RecordedChangeSets[0].Should().OnlyContain(change => change.Reason == ChangeReason.Add, "Initialization should only emit Add changes.");
+
+        results.RecordedItemsByKey.Values.Should().OnlyContain(pair => (2 * pair.left) == pair.right, "Source items should have been joined correctly");
     }
 
     public class Device(string name) : IEquatable<Device>
