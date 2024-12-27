@@ -713,6 +713,35 @@ public static class ObservableListEx
     }
 
     /// <summary>
+    /// Creates a filtered stream which can be dynamically filtered, based on state values passed through to a static filtering predicate.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <typeparam name="TState">The type of state value required by <paramref name="predicate"/>.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="predicateState">A stream of state values to be passed to <paramref name="predicate"/>.</param>
+    /// <param name="predicate">A static predicate to be used to determine which items should be included or excluded by the filter.</param>
+    /// <param name="filterPolicy">The policy that the operator should use when performing re-filtering operations.</param>
+    /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status.</param>
+    /// <returns>An observable which emits change sets.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>, <paramref name="predicateState"/>, and <paramref name="predicate"/>.</exception>
+    /// <remarks>
+    /// Usually, <paramref name="predicateState"/> should emit an initial value, immediately upon subscription. This is because <paramref name="predicate"/> cannot be invoked until the first state value is received, and accordingly, the operator will treat all items as excluded until then. Each value emitted by <paramref name="predicateState"/> will trigger a full re-filtering of the entire collection, according to <paramref name="filterPolicy"/>.
+    /// </remarks>
+    public static IObservable<IChangeSet<T>> Filter<T, TState>(
+                this IObservable<IChangeSet<T>> source,
+                IObservable<TState> predicateState,
+                Func<TState, T, bool> predicate,
+                ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff,
+                bool suppressEmptyChangeSets = true)
+            where T : notnull
+        => List.Internal.Filter.WithPredicateState<T, TState>.Create(
+            source: source,
+            predicateState: predicateState,
+            predicate: predicate,
+            filterPolicy: filterPolicy,
+            suppressEmptyChangeSets: suppressEmptyChangeSets);
+
+    /// <summary>
     /// <para>Filters source on the specified observable property using the specified predicate.</para>
     /// <para>The filter will automatically reapply when a property changes.</para>
     /// </summary>

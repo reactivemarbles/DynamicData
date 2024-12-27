@@ -1327,6 +1327,9 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, bool>> predicateChanged, System.IObservable<System.Reactive.Unit> reapplyFilter, bool suppressEmptyChangeSets = true)
             where TObject :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Filter<TObject, TKey, TState>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<TState> predicateState, System.Func<TState, TObject, bool> predicate, bool suppressEmptyChangeSets = true)
+            where TObject :  notnull
+            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> FilterImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, bool> predicate, bool suppressEmptyChangeSets = true)
             where TObject :  notnull
             where TKey :  notnull { }
@@ -2324,6 +2327,8 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<T>> Filter<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, bool> predicate)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> Filter<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<System.Func<T, bool>> predicate, DynamicData.ListFilterPolicy filterPolicy = 1)
+            where T :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<T>> Filter<T, TState>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<TState> predicateState, System.Func<TState, T, bool> predicate, DynamicData.ListFilterPolicy filterPolicy = 1, bool suppressEmptyChangeSets = true)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject>> FilterOnObservable<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, System.IObservable<bool>> objectFilterObservable, System.TimeSpan? propertyChangedThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where TObject :  notnull { }
