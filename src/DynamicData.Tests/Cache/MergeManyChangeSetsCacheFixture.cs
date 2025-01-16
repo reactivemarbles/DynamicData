@@ -791,6 +791,26 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         receivedError.Should().Be(expectedError);
     }
 
+    [Fact]
+    public void MergeManyChangeSetsWorksCorrectlyWithValueTypes()
+    {
+        // having
+        var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
+        _marketCache.AddOrUpdate(markets);
+        markets.ForEach(m => m.SetPrices(0, PricesPerMarket, GetRandomPrice));
+        using var results = _marketCache.Connect()
+                .MergeManyChangeSets(m => m.LatestPrices.Transform(p => p.Price))
+                .AsAggregator();
+
+        // when
+        markets.ForEach(m => m.RemoveAllPrices());
+
+        // then
+        results.Data.Count.Should().Be(0);
+        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        results.Summary.Overall.Removes.Should().Be(PricesPerMarket);
+    }
+
     public void Dispose()
     {
         _marketCacheResults.Dispose();

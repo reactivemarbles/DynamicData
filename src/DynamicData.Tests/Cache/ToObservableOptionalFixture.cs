@@ -291,6 +291,7 @@ public class ToObservableOptionalFixture : IDisposable
         private IEqualityComparer<string> _stringComparer = stringComparer;
 
         public bool Equals([DisallowNull] KeyValuePair x, [DisallowNull] KeyValuePair y) => _stringComparer.Equals(x.Value, y.Value);
+        [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations", Justification = "Suppressed for Net 9.0")]
         public int GetHashCode([DisallowNull] KeyValuePair obj) => throw new NotImplementedException();
     }
 

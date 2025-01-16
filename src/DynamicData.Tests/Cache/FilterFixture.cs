@@ -10,7 +10,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
-public class FilterFixture : IDisposable
+public partial class FilterFixture : IDisposable
 {
     private readonly ChangeSetAggregator<Person, string> _results;
 
