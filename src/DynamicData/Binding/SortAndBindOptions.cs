@@ -2,6 +2,8 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Concurrency;
+
 namespace DynamicData.Binding;
 
 /// <summary>
@@ -36,4 +38,10 @@ public record struct SortAndBindOptions()
     /// backwards compatibility will the former  BindingOptions.ResetOnFirstTimeLoad.
     /// </summary>
     public bool ResetOnFirstTimeLoad { get; init; }
+
+    /// <summary>
+    /// The default main thread scheduler.  If left null, it is the responsibility of the consumer
+    /// to ensure binding takes place on the main thread.
+    /// </summary>
+    public IScheduler? Scheduler { get; init; }
 }

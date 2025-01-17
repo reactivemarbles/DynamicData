@@ -15,8 +15,7 @@ namespace DynamicData.Binding;
 internal sealed class BindVirtualized<TObject, TKey>(
     IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
     IList<TObject> targetList,
-    SortAndBindOptions? options,
-    IScheduler? scheduler)
+    SortAndBindOptions? options)
     where TObject : notnull
     where TKey : notnull
 {
@@ -31,7 +30,7 @@ internal sealed class BindVirtualized<TObject, TKey>(
                 .Select(changesWithContext => changesWithContext.Context.Comparer)
                 .DistinctUntilChanged();
 
-            return changes.SortAndBind(targetList, comparedChanged, sortAndBindOptions, scheduler);
+            return changes.SortAndBind(targetList, comparedChanged, sortAndBindOptions);
         });
 
     private IObservable<IChangeSet<TObject, TKey>> UseVirtualSortOptions() =>
@@ -68,7 +67,7 @@ internal sealed class BindVirtualized<TObject, TKey>(
                     };
 
                     subscriber.Disposable = changesSubject
-                            .SortAndBind(targetList, comparerSubject.DistinctUntilChanged(), extractedOptions, scheduler)
+                            .SortAndBind(targetList, comparerSubject.DistinctUntilChanged(), extractedOptions)
                             .SubscribeSafe(observer);
 
                     comparerSubject.OnNext(changesWithContext.Context.Comparer);

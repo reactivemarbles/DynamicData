@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
-using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Cache;
@@ -30,10 +29,9 @@ internal sealed class SortAndBind<TObject, TKey>
     public SortAndBind(IObservable<IChangeSet<TObject, TKey>> source,
         IComparer<TObject> comparer,
         SortAndBindOptions options,
-        IList<TObject> target,
-        IScheduler? scheduler)
+        IList<TObject> target)
     {
-        scheduler ??= DynamicDataOptions.BindingScheduler;
+        var scheduler = options.Scheduler;
 
         // static one time comparer
         var applicator = new SortApplicator(_cache, target, comparer, options);
@@ -55,11 +53,10 @@ internal sealed class SortAndBind<TObject, TKey>
     public SortAndBind(IObservable<IChangeSet<TObject, TKey>> source,
         IObservable<IComparer<TObject>> comparerChanged,
         SortAndBindOptions options,
-        IList<TObject> target,
-        IScheduler? scheduler)
+        IList<TObject> target)
         => _sorted = Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
-            scheduler ??= DynamicDataOptions.BindingScheduler;
+            var scheduler = options.Scheduler;
 
             if (scheduler is not null)
             {
