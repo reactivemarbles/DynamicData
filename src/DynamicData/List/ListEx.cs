@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
-
+using System.ComponentModel;
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
@@ -101,7 +101,8 @@ public static class ListEx
                 extendedList.AddRange(items);
                 break;
             default:
-                items.ForEach(source.Add);
+                foreach (var t in items)
+                    source.Add(t);
                 break;
         }
     }

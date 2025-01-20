@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
+using System.Reactive.Concurrency;
 using DynamicData.Binding;
 
 namespace DynamicData;

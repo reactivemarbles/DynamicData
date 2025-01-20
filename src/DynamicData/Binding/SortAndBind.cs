@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Cache;
@@ -30,15 +31,22 @@ internal sealed class SortAndBind<TObject, TKey>
         SortAndBindOptions options,
         IList<TObject> target)
     {
+        var scheduler = options.Scheduler;
+
         // static one time comparer
         var applicator = new SortApplicator(_cache, target, comparer, options);
 
-        _sorted = source.Do(changes =>
+        if (scheduler is not null)
+            source = source.ObserveOn(scheduler);
+
+        _sorted = source.Select((changes, index) =>
         {
             // clone to local cache so that we can sort the entire set when threshold is over a certain size.
             _cache.Clone(changes);
 
-            applicator.ProcessChanges(changes);
+            applicator.ProcessChanges(changes, index == 0);
+
+            return changes;
         });
     }
 
@@ -48,6 +56,14 @@ internal sealed class SortAndBind<TObject, TKey>
         IList<TObject> target)
         => _sorted = Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
+            var scheduler = options.Scheduler;
+
+            if (scheduler is not null)
+            {
+                source = source.ObserveOn(scheduler);
+                comparerChanged = comparerChanged.ObserveOn(scheduler);
+            }
+
             var locker = new object();
             SortApplicator? sortApplicator = null;
 
@@ -61,14 +77,17 @@ internal sealed class SortAndBind<TObject, TKey>
 
             // Listen to changes and apply the sorting
             var subscriber = source.Synchronize(locker)
-                .Do(changes =>
+                .Select((changes, index) =>
                 {
                     _cache.Clone(changes);
 
                     // the sort applicator will be null until the comparer change observable fires.
                     if (sortApplicator is not null)
-                        sortApplicator.ProcessChanges(changes);
-                }).SubscribeSafe(observer);
+                        sortApplicator.ProcessChanges(changes, index == 0);
+
+                    return changes;
+                })
+                .SubscribeSafe(observer);
 
             return new CompositeDisposable(latestComparer, subscriber);
         });
@@ -92,10 +111,12 @@ internal sealed class SortAndBind<TObject, TKey>
         }
 
         // apply sorting as a side effect of the observable stream.
-        public void ProcessChanges(IChangeSet<TObject, TKey> changeSet)
+        public void ProcessChanges(IChangeSet<TObject, TKey> changeSet, bool isFirstTimeLoad)
         {
+            var forceReset = isFirstTimeLoad && options.ResetOnFirstTimeLoad;
+
             // apply sorted changes to the target collection
-            if (options.ResetThreshold > 0 && options.ResetThreshold < changeSet.Count)
+            if (forceReset || (options.ResetThreshold > 0 && options.ResetThreshold < changeSet.Count))
             {
                 Reset(cache.Items.OrderBy(t => t, comparer), true);
             }
@@ -120,6 +141,15 @@ internal sealed class SortAndBind<TObject, TKey>
                 using (observableCollectionExtended.SuspendNotifications())
                 {
                     observableCollectionExtended.Load(sorted);
+                }
+            }
+            else if (fireReset && target is BindingList<TObject> bindingList)
+            {
+                // suspend count as it can result in a flood of binding updates.
+                using (new BindingListEventsSuspender<TObject>(bindingList))
+                {
+                    target.Clear();
+                    target.AddRange(sorted);
                 }
             }
             else
