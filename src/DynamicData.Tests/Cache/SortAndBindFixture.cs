@@ -91,11 +91,22 @@ public sealed class SortAndBindToReadOnlyObservableCollection: SortAndBindFixtur
 }
 
 // Bind to a readonly observable collection using binary search
-public sealed class SortAndBindWithBinarySearch : SortAndBindFixture
+public sealed class SortAndBindWithBinarySearch1 : SortAndBindFixture
 {
     protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
     {
         var options = new SortAndBindOptions { UseBinarySearch = true, UseReplaceForUpdates = false};
+        var aggregator = _source.Connect().SortAndBind(out var list, _comparer, options).AsAggregator();
+
+        return (aggregator, list);
+    }
+}
+
+public sealed class SortAndBindWithBinarySearch2 : SortAndBindFixture
+{
+    protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
+    {
+        var options = new SortAndBindOptions { UseBinarySearch = true, UseReplaceForUpdates = true };
         var aggregator = _source.Connect().SortAndBind(out var list, _comparer, options).AsAggregator();
 
         return (aggregator, list);
@@ -609,32 +620,6 @@ public abstract class SortAndBindFixture : IDisposable
         int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
 
         people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
-    }
-
-    [Fact]
-    public void SmallDataSet_UpdateLast()
-    {
-        List<Person> people = 
-            [
-                new Person("A", 11),
-                new Person("B", 10),
-                new Person("C", 9),
-            ];
-        _source.AddOrUpdate(people);
-
-       // var toUpdate = _boundList[^1];
-
-        _source.AddOrUpdate(new Person("C", 4));
-        _source.AddOrUpdate(new Person("C", 3));
-        _source.AddOrUpdate(new Person("C", 2));
-
-        var xxx = _boundList;
-
-        //eople[IndexFromKey(toUpdate.Key)] = new Person(toUpdate.Name, toUpdate.Age + 5);
-
-        //int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
-
-        //people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
     }
 
 
