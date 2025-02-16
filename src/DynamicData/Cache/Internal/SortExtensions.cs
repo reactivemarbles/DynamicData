@@ -35,6 +35,17 @@ internal static class SortExtensions
         // sort is not returning uniqueness
         if (insertIndex < 0)
         {
+            /*
+             * Binary search should not strictly already contain the item (or an item with the same value) when
+             * attempting to find the insert position (it does for updates).  This can result in the insert position not being found.
+             * In this case revert to linear search.
+             */
+            index = list.GetInsertPositionLinear(t, c);
+            if (index >= 0)
+            {
+                return index;
+            }
+
             throw new SortException("Binary search has been specified, yet the sort does not yield uniqueness");
         }
 

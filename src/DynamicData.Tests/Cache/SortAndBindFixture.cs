@@ -95,12 +95,41 @@ public sealed class SortAndBindWithBinarySearch : SortAndBindFixture
 {
     protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
     {
-        var options = new SortAndBindOptions { UseBinarySearch = true };
+        var options = new SortAndBindOptions { UseBinarySearch = true, UseReplaceForUpdates = false};
         var aggregator = _source.Connect().SortAndBind(out var list, _comparer, options).AsAggregator();
 
         return (aggregator, list);
     }
 }
+
+public class SortAndBindBinarySearch_ForSameKeyAndObjectValues: IDisposable
+{
+    private readonly List<int> _target = new();
+    private readonly SourceCache<int, int> _strings = new(i=> i);
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void UpdateAnyWhereShouldNotBreak(bool useReplaceForUpdates)
+    {
+        var options = new SortAndBindOptions { UseBinarySearch = true, UseReplaceForUpdates = useReplaceForUpdates };
+
+        using var subscription = _strings.Connect().SortAndBind(_target, SortExpressionComparer<int>.Ascending(i=>i), options).Subscribe();
+
+        var items = Enumerable.Range(1, 10).ToList();
+
+        _strings.AddOrUpdate(items);
+        _strings.AddOrUpdate(1);
+        _strings.AddOrUpdate(5);
+        _strings.AddOrUpdate(10);
+
+        _target.SequenceEqual(items).Should().BeTrue();
+    }
+
+    public void Dispose() => _strings.Dispose();
+}
+
+
 
 // Bind to a readonly observable collection - using default comparer
 public sealed class SortAndBindToReadOnlyObservableCollectionDefaultComparer : SortAndBindFixture
@@ -291,8 +320,8 @@ public abstract class SortAndBindFixture : IDisposable
         last.Should().Be(toInsert);
 
         _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
-
     }
+
 
     [Fact]
     public void InsertInMiddle()
@@ -568,8 +597,6 @@ public abstract class SortAndBindFixture : IDisposable
     [Fact]
     public void UpdateLast()
     {
-        //TODO: fixed Text
-
         var people = _generator.Take(100).ToList();
         _source.AddOrUpdate(people);
 
@@ -582,9 +609,32 @@ public abstract class SortAndBindFixture : IDisposable
         int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
 
         people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
+    }
 
+    [Fact]
+    public void SmallDataSet_UpdateLast()
+    {
+        List<Person> people = 
+            [
+                new Person("A", 11),
+                new Person("B", 10),
+                new Person("C", 9),
+            ];
+        _source.AddOrUpdate(people);
 
+       // var toUpdate = _boundList[^1];
 
+        _source.AddOrUpdate(new Person("C", 4));
+        _source.AddOrUpdate(new Person("C", 3));
+        _source.AddOrUpdate(new Person("C", 2));
+
+        var xxx = _boundList;
+
+        //eople[IndexFromKey(toUpdate.Key)] = new Person(toUpdate.Name, toUpdate.Age + 5);
+
+        //int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
+
+        //people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
     }
 
 
