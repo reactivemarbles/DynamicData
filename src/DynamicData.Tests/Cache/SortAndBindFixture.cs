@@ -91,16 +91,56 @@ public sealed class SortAndBindToReadOnlyObservableCollection: SortAndBindFixtur
 }
 
 // Bind to a readonly observable collection using binary search
-public sealed class SortAndBindWithBinarySearch : SortAndBindFixture
+public sealed class SortAndBindWithBinarySearch1 : SortAndBindFixture
 {
     protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
     {
-        var options = new SortAndBindOptions { UseBinarySearch = true };
+        var options = new SortAndBindOptions { UseBinarySearch = true, UseReplaceForUpdates = false};
         var aggregator = _source.Connect().SortAndBind(out var list, _comparer, options).AsAggregator();
 
         return (aggregator, list);
     }
 }
+
+public sealed class SortAndBindWithBinarySearch2 : SortAndBindFixture
+{
+    protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
+    {
+        var options = new SortAndBindOptions { UseBinarySearch = true, UseReplaceForUpdates = true };
+        var aggregator = _source.Connect().SortAndBind(out var list, _comparer, options).AsAggregator();
+
+        return (aggregator, list);
+    }
+}
+
+public class SortAndBindBinarySearch_ForSameKeyAndObjectValues: IDisposable
+{
+    private readonly List<int> _target = new();
+    private readonly SourceCache<int, int> _strings = new(i=> i);
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void UpdateAnyWhereShouldNotBreak(bool useReplaceForUpdates)
+    {
+        var options = new SortAndBindOptions { UseBinarySearch = true, UseReplaceForUpdates = useReplaceForUpdates };
+
+        using var subscription = _strings.Connect().SortAndBind(_target, SortExpressionComparer<int>.Ascending(i=>i), options).Subscribe();
+
+        var items = Enumerable.Range(1, 10).ToList();
+
+        _strings.AddOrUpdate(items);
+        _strings.AddOrUpdate(1);
+        _strings.AddOrUpdate(5);
+        _strings.AddOrUpdate(10);
+
+        _target.SequenceEqual(items).Should().BeTrue();
+    }
+
+    public void Dispose() => _strings.Dispose();
+}
+
+
 
 // Bind to a readonly observable collection - using default comparer
 public sealed class SortAndBindToReadOnlyObservableCollectionDefaultComparer : SortAndBindFixture
@@ -291,8 +331,8 @@ public abstract class SortAndBindFixture : IDisposable
         last.Should().Be(toInsert);
 
         _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
-
     }
+
 
     [Fact]
     public void InsertInMiddle()
@@ -568,8 +608,6 @@ public abstract class SortAndBindFixture : IDisposable
     [Fact]
     public void UpdateLast()
     {
-        //TODO: fixed Text
-
         var people = _generator.Take(100).ToList();
         _source.AddOrUpdate(people);
 
@@ -582,9 +620,6 @@ public abstract class SortAndBindFixture : IDisposable
         int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
 
         people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
-
-
-
     }
 
 

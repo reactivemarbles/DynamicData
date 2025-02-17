@@ -180,21 +180,35 @@ internal sealed class SortAndBind<TObject, TKey>
                         break;
                     case ChangeReason.Update:
                         {
-                            var currentIndex = GetCurrentPosition(change.Previous.Value);
-                            var updatedIndex = GetInsertPosition(item);
-
-                            // We need to recalibrate as GetCurrentPosition includes the current item
-                            updatedIndex = currentIndex < updatedIndex ? updatedIndex - 1 : updatedIndex;
-
-                            // Some control suites and platforms do not support replace, whiles others do, so we opt in.
-                            if (options.UseReplaceForUpdates && currentIndex == updatedIndex)
+                            if (!options.UseReplaceForUpdates)
                             {
-                                target[currentIndex] = item;
+                                // If using binary search, it works best when we remove then add,
+                                // so let's optimise for that first.
+
+                                var currentIndex = GetCurrentPosition(change.Previous.Value);
+                                target.RemoveAt(currentIndex);
+
+                                var updatedIndex = GetInsertPosition(item);
+                                target.Insert(updatedIndex, item);
                             }
                             else
                             {
-                                target.RemoveAt(currentIndex);
-                                target.Insert(updatedIndex, item);
+                                var currentIndex = GetCurrentPosition(change.Previous.Value);
+                                var updatedIndex = GetInsertPosition(item);
+
+                                // We need to recalibrate as GetCurrentPosition includes the current item
+                                updatedIndex = currentIndex < updatedIndex ? updatedIndex - 1 : updatedIndex;
+
+                                // Some control suites and platforms do not support replace, whiles others do, so we opt in.
+                                if (currentIndex == updatedIndex)
+                                {
+                                    target[currentIndex] = item;
+                                }
+                                else
+                                {
+                                    target.RemoveAt(currentIndex);
+                                    target.Insert(updatedIndex, item);
+                                }
                             }
                         }
                         break;
