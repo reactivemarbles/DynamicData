@@ -784,7 +784,7 @@ public static partial class ObservableCacheEx
     /// or
     /// targetCollection.
     /// </exception>
-    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where TObject : notnull
         where TKey : notnull
     {
@@ -808,7 +808,7 @@ public static partial class ObservableCacheEx
     /// or
     /// targetCollection.
     /// </exception>
-    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where TObject : notnull
         where TKey : notnull
     {
