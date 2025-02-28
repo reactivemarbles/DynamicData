@@ -312,13 +312,13 @@ namespace DynamicData.Binding
         [System.Obsolete("This never worked properly in the first place")]
         public System.IDisposable SuspendNotifications(bool invokePropertyChangeEventWhenDisposed = true) { }
     }
-    public class BindingListAdaptor<T> : DynamicData.IChangeSetAdaptor<T>
+    public class BindingListAdaptor<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  T> : DynamicData.IChangeSetAdaptor<T>
         where T :  notnull
     {
         public BindingListAdaptor(System.ComponentModel.BindingList<T> list, int refreshThreshold = 25) { }
         public void Adapt(DynamicData.IChangeSet<T> changes) { }
     }
-    public class BindingListAdaptor<TObject, TKey> : DynamicData.IChangeSetAdaptor<TObject, TKey>
+    public class BindingListAdaptor<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey> : DynamicData.IChangeSetAdaptor<TObject, TKey>
         where TObject :  notnull
         where TKey :  notnull
     {
@@ -499,7 +499,7 @@ namespace DynamicData.Binding
         public DynamicData.Binding.SortDirection Direction { get; }
         public System.Func<T, System.IComparable> Expression { get; }
     }
-    public class SortedBindingListAdaptor<TObject, TKey> : DynamicData.ISortedChangeSetAdaptor<TObject, TKey>
+    public class SortedBindingListAdaptor<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey> : DynamicData.ISortedChangeSetAdaptor<TObject, TKey>
         where TObject :  notnull
         where TKey :  notnull
     {
@@ -1167,16 +1167,16 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, System.TimeSpan? timeOut = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source, DynamicData.Binding.IObservableCollection<TObject> destination)
@@ -1194,19 +1194,19 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, DynamicData.Binding.BindingOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.ComponentModel.BindingList<TObject> bindingList, int resetThreshold = 25)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.ComponentModel.BindingList<TObject> bindingList, int resetThreshold = 25)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList, DynamicData.Binding.SortAndBindOptions options)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, DynamicData.Binding.SortAndBindOptions options)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList, DynamicData.Binding.SortAndBindOptions options)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, DynamicData.Binding.SortAndBindOptions options)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source, DynamicData.Binding.IObservableCollection<TObject> destination, DynamicData.Binding.BindingOptions options)
@@ -1218,7 +1218,7 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, DynamicData.Binding.BindingOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source, System.ComponentModel.BindingList<TObject> bindingList, int resetThreshold = 25)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source, System.ComponentModel.BindingList<TObject> bindingList, int resetThreshold = 25)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25, bool useReplaceForUpdates = true, DynamicData.Binding.IObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
@@ -1779,40 +1779,40 @@ namespace DynamicData
         public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerObservable, System.IObservable<System.Reactive.Unit> resorter, DynamicData.SortOptimisations sortOptimisations = 0, int resetThreshold = 100)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList)
             where TObject :  notnull, System.IComparable<TObject>
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
             where TObject :  notnull, System.IComparable<TObject>
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, DynamicData.Binding.SortAndBindOptions options)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull, System.IComparable<TObject>
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, System.Collections.Generic.IComparer<TObject> comparer)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, System.Collections.Generic.IComparer<TObject> comparer)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerChanged)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerChanged)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, DynamicData.Binding.SortAndBindOptions options)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull, System.IComparable<TObject>
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, System.Collections.Generic.IComparer<TObject> comparer)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, System.Collections.Generic.IComparer<TObject> comparer)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerChanged)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerChanged)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, System.Collections.Generic.IComparer<TObject> comparer, DynamicData.Binding.SortAndBindOptions options)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, System.Collections.Generic.IComparer<TObject> comparer, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerChanged, DynamicData.Binding.SortAndBindOptions options)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerChanged, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, System.Collections.Generic.IComparer<TObject> comparer, DynamicData.Binding.SortAndBindOptions options)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, System.Collections.Generic.IComparer<TObject> comparer, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerChanged, DynamicData.Binding.SortAndBindOptions options)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerChanged, DynamicData.Binding.SortAndBindOptions options)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> SortAndPage<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IComparer<TObject> comparer, System.IObservable<DynamicData.IPageRequest> pageRequests)
@@ -2280,7 +2280,7 @@ namespace DynamicData
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> Bind<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<T> readOnlyObservableCollection, int resetThreshold = 25)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> Bind<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.ComponentModel.BindingList<T> bindingList, int resetThreshold = 25)
+        public static System.IObservable<DynamicData.IChangeSet<T>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.ComponentModel.BindingList<T> bindingList, int resetThreshold = 25)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> BufferIf<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<bool> pauseIfTrueSelector, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where T :  notnull { }
