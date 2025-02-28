@@ -1935,7 +1935,6 @@ public static partial class ObservableCacheEx
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         groupSelectorKeyObservable.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKeyObservable));
-        regrouper.ThrowArgumentNullExceptionIfNull(nameof(regrouper));
 
         return new GroupOnDynamic<TObject, TKey, TGroupKey>(source, groupSelectorKeyObservable, regrouper).Run();
     }
