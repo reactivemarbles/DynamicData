@@ -2499,7 +2499,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2516,7 +2516,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2535,7 +2535,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2554,7 +2554,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2575,7 +2575,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2596,7 +2596,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2619,7 +2619,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2642,7 +2642,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2667,7 +2667,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2688,7 +2688,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2711,7 +2711,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2734,7 +2734,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2759,7 +2759,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2778,7 +2778,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2799,7 +2799,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2820,7 +2820,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2843,7 +2843,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Operator similar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2866,7 +2866,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Operator similar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2891,7 +2891,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Operator similar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2916,7 +2916,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Operator similar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
