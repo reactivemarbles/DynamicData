@@ -5056,7 +5056,7 @@ public static partial class ObservableCacheEx
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
 
-        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector, keySelector), equalityComparer, comparer).Run();
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector, keySelector), equalityComparer, comparer).Run();
     }
 
     /// <summary>
@@ -5107,7 +5107,7 @@ public static partial class ObservableCacheEx
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
 
-        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector, keySelector), equalityComparer, comparer).Run();
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector, keySelector), equalityComparer, comparer).Run();
     }
 
     /// <summary>
@@ -5157,7 +5157,7 @@ public static partial class ObservableCacheEx
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
 
-        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector), equalityComparer, comparer).Run();
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector), equalityComparer, comparer).Run();
     }
 
     /// <summary>
@@ -5207,7 +5207,7 @@ public static partial class ObservableCacheEx
         manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
         errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
 
-        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector, keySelector), equalityComparer, comparer, errorHandler).Run();
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector, keySelector), equalityComparer, comparer, errorHandler).Run();
     }
 
     /// <summary>
@@ -5261,7 +5261,7 @@ public static partial class ObservableCacheEx
         manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
         errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
 
-        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector, keySelector), equalityComparer, comparer, errorHandler).Run();
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector, keySelector), equalityComparer, comparer, errorHandler).Run();
     }
 
     /// <summary>
@@ -5314,7 +5314,7 @@ public static partial class ObservableCacheEx
         manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
         errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
 
-        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector), equalityComparer, comparer, errorHandler).Run();
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector), equalityComparer, comparer, errorHandler).Run();
     }
 
     /// <summary>
@@ -6442,20 +6442,20 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TValue : notnull => new TrueFor<TObject, TKey, TValue>(source, observableSelector, collectionMatcher).Run();
 
-    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTranformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<IEnumerable<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector)
+    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTransformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<IEnumerable<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
         where TSourceKey : notnull => async (val, key) => (await manySelector(val, key).ConfigureAwait(false)).AsObservableChangeSet(keySelector);
 
-    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTranformer<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(Func<TSource, TSourceKey, Task<TCollection>> manySelector, Func<TDestination, TDestinationKey> keySelector)
+    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTransformer<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(Func<TSource, TSourceKey, Task<TCollection>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
         where TSourceKey : notnull
         where TCollection : INotifyCollectionChanged, IEnumerable<TDestination> => async (val, key) => (await manySelector(val, key).ConfigureAwait(false)).ToObservableChangeSet<TCollection, TDestination>().AddKey(keySelector);
 
-    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTranformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<IObservableCache<TDestination, TDestinationKey>>> manySelector)
+    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTransformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<IObservableCache<TDestination, TDestinationKey>>> manySelector)
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
