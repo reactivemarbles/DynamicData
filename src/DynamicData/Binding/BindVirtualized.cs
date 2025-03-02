@@ -2,7 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -12,7 +12,7 @@ namespace DynamicData.Binding;
 /*
  * Binding for the result of the SortAndVirtualize operator
  */
-internal sealed class BindVirtualized<TObject, TKey>(
+internal sealed class BindVirtualized<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
     IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
     IList<TObject> targetList,
     SortAndBindOptions? options)

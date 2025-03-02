@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Cache;
@@ -17,7 +18,7 @@ namespace DynamicData.Binding;
  * collection upon every change in order that the sorted list could be transmitted to the bind operator.
  *
  */
-internal sealed class SortAndBind<TObject, TKey>
+internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {

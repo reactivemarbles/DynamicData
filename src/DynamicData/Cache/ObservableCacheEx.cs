@@ -784,7 +784,7 @@ public static partial class ObservableCacheEx
     /// or
     /// targetCollection.
     /// </exception>
-    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where TObject : notnull
         where TKey : notnull
     {
@@ -808,7 +808,7 @@ public static partial class ObservableCacheEx
     /// or
     /// targetCollection.
     /// </exception>
-    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where TObject : notnull
         where TKey : notnull
     {
@@ -1935,7 +1935,6 @@ public static partial class ObservableCacheEx
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         groupSelectorKeyObservable.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKeyObservable));
-        regrouper.ThrowArgumentNullExceptionIfNull(nameof(regrouper));
 
         return new GroupOnDynamic<TObject, TKey, TGroupKey>(source, groupSelectorKeyObservable, regrouper).Run();
     }
@@ -2500,7 +2499,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2517,7 +2516,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2536,7 +2535,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2555,7 +2554,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2576,7 +2575,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2597,7 +2596,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2620,7 +2619,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2643,7 +2642,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2668,7 +2667,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2689,7 +2688,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2712,7 +2711,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2735,7 +2734,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2760,7 +2759,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2779,7 +2778,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2800,7 +2799,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2821,7 +2820,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// Operator similar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2844,7 +2843,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Operator similar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2867,7 +2866,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Operator similar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2892,7 +2891,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Operator similar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2917,7 +2916,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Operator similar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -5057,7 +5056,7 @@ public static partial class ObservableCacheEx
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
 
-        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector, keySelector), equalityComparer, comparer).Run();
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector, keySelector), equalityComparer, comparer).Run();
     }
 
     /// <summary>
@@ -5108,7 +5107,7 @@ public static partial class ObservableCacheEx
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
 
-        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector, keySelector), equalityComparer, comparer).Run();
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector, keySelector), equalityComparer, comparer).Run();
     }
 
     /// <summary>
@@ -5158,7 +5157,7 @@ public static partial class ObservableCacheEx
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
 
-        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector), equalityComparer, comparer).Run();
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector), equalityComparer, comparer).Run();
     }
 
     /// <summary>
@@ -5208,7 +5207,7 @@ public static partial class ObservableCacheEx
         manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
         errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
 
-        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector, keySelector), equalityComparer, comparer, errorHandler).Run();
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector, keySelector), equalityComparer, comparer, errorHandler).Run();
     }
 
     /// <summary>
@@ -5262,7 +5261,7 @@ public static partial class ObservableCacheEx
         manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
         errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
 
-        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector, keySelector), equalityComparer, comparer, errorHandler).Run();
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector, keySelector), equalityComparer, comparer, errorHandler).Run();
     }
 
     /// <summary>
@@ -5315,7 +5314,7 @@ public static partial class ObservableCacheEx
         manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
         errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
 
-        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTranformer(manySelector), equalityComparer, comparer, errorHandler).Run();
+        return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector), equalityComparer, comparer, errorHandler).Run();
     }
 
     /// <summary>
@@ -6443,20 +6442,20 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TValue : notnull => new TrueFor<TObject, TKey, TValue>(source, observableSelector, collectionMatcher).Run();
 
-    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTranformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<IEnumerable<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector)
+    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTransformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<IEnumerable<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
         where TSourceKey : notnull => async (val, key) => (await manySelector(val, key).ConfigureAwait(false)).AsObservableChangeSet(keySelector);
 
-    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTranformer<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(Func<TSource, TSourceKey, Task<TCollection>> manySelector, Func<TDestination, TDestinationKey> keySelector)
+    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTransformer<TDestination, TDestinationKey, TSource, TSourceKey, TCollection>(Func<TSource, TSourceKey, Task<TCollection>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
         where TSourceKey : notnull
         where TCollection : INotifyCollectionChanged, IEnumerable<TDestination> => async (val, key) => (await manySelector(val, key).ConfigureAwait(false)).ToObservableChangeSet<TCollection, TDestination>().AddKey(keySelector);
 
-    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTranformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<IObservableCache<TDestination, TDestinationKey>>> manySelector)
+    private static Func<TSource, TSourceKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> CreateChangeSetTransformer<TDestination, TDestinationKey, TSource, TSourceKey>(Func<TSource, TSourceKey, Task<IObservableCache<TDestination, TDestinationKey>>> manySelector)
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull

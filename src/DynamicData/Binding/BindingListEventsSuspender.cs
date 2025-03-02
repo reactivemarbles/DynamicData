@@ -3,11 +3,12 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 
 namespace DynamicData.Binding;
 
-internal sealed class BindingListEventsSuspender<T> : IDisposable
+internal sealed class BindingListEventsSuspender<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T> : IDisposable
 {
     private readonly IDisposable _cleanUp;
 

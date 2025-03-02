@@ -2,7 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -14,7 +14,7 @@ namespace DynamicData.Binding;
  *
  * (Direct lift from BindVirtualized).
  */
-internal sealed class BindPaged<TObject, TKey>(
+internal sealed class BindPaged<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
     IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
     IList<TObject> targetList,
     SortAndBindOptions? options)

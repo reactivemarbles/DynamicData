@@ -4,6 +4,7 @@
 
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -352,7 +353,7 @@ public static class ObservableListEx
     /// targetCollection.
     /// </exception>
     /// <returns>An observable which emits the change set.</returns>
-    public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, BindingList<T> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
+    public static IObservable<IChangeSet<T>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this IObservable<IChangeSet<T>> source, BindingList<T> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where T : notnull
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
