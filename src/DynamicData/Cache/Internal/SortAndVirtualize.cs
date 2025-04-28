@@ -151,19 +151,28 @@ internal sealed class SortAndVirtualize<TObject, TKey>
         result.AddRange(removes);
         result.AddRange(adds);
 
-        if (changes is null) return result;
-
-        var keyInPreviousAndCurrent = new HashSet<TKey>(previousItems.Intersect(currentItems, _keyComparer).Select(x => x.Key));
-
-        foreach (var change in changes)
+        if (changes is null)
         {
-            // An update (or refresh) can only occur if it was in the previous or current result set.
-            // If it was in only one or the other, it would be an add or remove accordingly.
-            if (!keyInPreviousAndCurrent.Contains(change.Key)) continue;
-
-            if (change.Reason is ChangeReason.Update or ChangeReason.Refresh)
+            // the comparer has changed, so we need to send a Refresh for item in the same page
+            foreach (var kvp in previousItems.Intersect(currentItems, _keyComparer))
             {
-                result.Add(change);
+                result.Add(new Change<TObject, TKey>(ChangeReason.Refresh, kvp.Key, kvp.Value));
+            }
+        }
+        else
+        {
+            var keyInPreviousAndCurrent = new HashSet<TKey>(previousItems.Intersect(currentItems, _keyComparer).Select(x => x.Key));
+
+            foreach (var change in changes)
+            {
+                // An update (or refresh) can only occur if it was in the previous or current result set.
+                // If it was in only one or the other, it would be an add or remove accordingly.
+                if (!keyInPreviousAndCurrent.Contains(change.Key)) continue;
+
+                if (change.Reason is ChangeReason.Update or ChangeReason.Refresh)
+                {
+                    result.Add(change);
+                }
             }
         }
 
