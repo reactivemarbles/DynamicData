@@ -79,21 +79,10 @@ internal sealed class SortedKeyValueApplicator<TObject, TKey>
                     {
                         var previous = new KeyValuePair<TKey, TObject>(change.Key, change.Previous.Value);
                         var currentIndex = GetCurrentPosition(previous);
+                        _target.RemoveAt(currentIndex);
+
                         var updatedIndex = GetInsertPosition(item);
-
-                        // We need to recalibrate as GetCurrentPosition includes the current item
-                        updatedIndex = currentIndex < updatedIndex ? updatedIndex - 1 : updatedIndex;
-
-                        // Some control suites and platforms do not support replace, whiles others do, so we opt in.
-                        if (_options.UseReplaceForUpdates && currentIndex == updatedIndex)
-                        {
-                            _target[currentIndex] = item;
-                        }
-                        else
-                        {
-                            _target.RemoveAt(currentIndex);
-                            _target.Insert(updatedIndex, item);
-                        }
+                        _target.Insert(updatedIndex, item);
                     }
                     break;
                 case ChangeReason.Remove:

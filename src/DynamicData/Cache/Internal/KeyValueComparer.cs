@@ -33,6 +33,11 @@ internal sealed class KeyValueComparer<TObject, TKey>(IComparer<TObject>? compar
             return -1;
         }
 
+        if (x.Key is IComparable<TKey> xComp)
+        {
+            return xComp.CompareTo(y.Key);
+        }
+
         return x.Key.GetHashCode().CompareTo(y.Key.GetHashCode());
     }
 }
