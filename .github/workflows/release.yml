@@ -10,7 +10,7 @@ env:
 
 jobs:
   release:
-    runs-on: windows-2022
+    runs-on: windows-2025
     environment:
       name: release
     outputs:
