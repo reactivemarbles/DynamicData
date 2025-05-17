@@ -34,4 +34,7 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net8'))">
     <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net9'))">
+    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+  </PropertyGroup>
 </Project>
