@@ -90,7 +90,6 @@ public class TransformAsyncFixture
     [Fact]
     public async Task RemoveFlowsToTheEnd()
     {
-        var transform = 0;
         var count = 100;
         ReadOnlyObservableCollection<Person> collection;
 
@@ -100,15 +99,8 @@ public class TransformAsyncFixture
         cache.Connect()
             .TransformAsync(async person =>
             {
-                try
-                {
-                    await Task.Delay(Random.Shared.Next(1, 12));
-                    return person;
-                }
-                finally
-                {
-                    transform++;
-                }
+                await Task.Delay(Random.Shared.Next(1, 12));
+                return person;
             })
             .Bind(out collection)
             .Subscribe();
@@ -119,8 +111,11 @@ public class TransformAsyncFixture
             cache.RemoveKey(p.Name);
         }
 
-        await collection.ToObservableChangeSet().Take(count * 2);
+        // Add one event as an initial empty change set is sent
+        // NOTE TO SELF: How did this test previously work !
+       var changes = await collection.ToObservableChangeSet().Take(count * 2 + 1).ToList();
 
+       changes.Count.Should().Be(201);
         collection.Count.Should().Be(0);
     }
 
