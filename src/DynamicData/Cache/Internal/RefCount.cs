@@ -11,7 +11,11 @@ internal sealed class RefCount<TObject, TKey>(IObservable<IChangeSet<TObject, TK
     where TObject : notnull
     where TKey : notnull
 {
+#if NET9_0_OR_GREATER
+    private readonly Lock _locker = new();
+#else
     private readonly object _locker = new();
+#endif
 
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 

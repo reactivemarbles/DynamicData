@@ -23,7 +23,7 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
         observer =>
         {
-            var locker = new object();
+            var locker = InternalEx.NewLock();
             var cache = new Cache<ChangeSetCache<TObject, TKey>, int>();
 
             // This is manages all of the changes

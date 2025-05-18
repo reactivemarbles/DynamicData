@@ -23,7 +23,7 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var paused = initialPauseState;
                 var buffer = new ChangeSet<T>();
                 var timeoutSubscriber = new SerialDisposable();

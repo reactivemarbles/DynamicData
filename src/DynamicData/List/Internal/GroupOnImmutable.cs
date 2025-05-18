@@ -6,8 +6,6 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelector, IObservable<Unit>? reGrouper)
@@ -32,7 +30,7 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
                 // capture the grouping up front which has the benefit that the group key is only selected once
                 var itemsWithGroup = _source.Transform<TObject, ItemWithGroupKey>((t, previous) => new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p => p.Group)), true);
 
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var shared = itemsWithGroup.Synchronize(locker).Publish();
 
                 var grouper = shared.Select(changes => Process(groupings, groupCache, changes));

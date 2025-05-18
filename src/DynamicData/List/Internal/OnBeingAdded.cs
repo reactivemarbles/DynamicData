@@ -4,8 +4,6 @@
 
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class OnBeingAdded<T>(IObservable<IChangeSet<T>> source, Action<T> callback)

@@ -12,12 +12,9 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
-using DynamicData;
 using DynamicData.Binding;
 using DynamicData.Cache;
 using DynamicData.Cache.Internal;
-using DynamicData.Internal;
-using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
@@ -575,7 +572,7 @@ public static partial class ObservableCacheEx
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 return source.Synchronize(locker).Select(
                     changes =>
                     {
@@ -703,7 +700,7 @@ public static partial class ObservableCacheEx
         return Observable.Create<ISortedChangeSet<TObject, TKey>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 return source.Synchronize(locker).Select(
                     changes =>
                     {
@@ -4487,7 +4484,7 @@ public static partial class ObservableCacheEx
         if (initialOptionalWhenMissing)
         {
             var seenValue = false;
-            var locker = new object();
+            var locker = InternalEx.NewLock();
 
             var optional = source.ToObservableOptional(key, equalityComparer).Synchronize(locker).Do(_ => seenValue = true);
             var missing = Observable.Return(Optional.None<TObject>()).Synchronize(locker).Where(_ => !seenValue);

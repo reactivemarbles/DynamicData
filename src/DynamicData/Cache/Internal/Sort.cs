@@ -42,7 +42,7 @@ internal sealed class Sort<TObject, TKey>
             observer =>
             {
                 var sorter = new Sorter(_sortOptimisations, _comparer, _resetThreshold);
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 // check for nulls so we can prevent a lock when not required
                 if (_comparerChangedObservable is null && _resorter is null)

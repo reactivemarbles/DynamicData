@@ -34,7 +34,7 @@ internal sealed class QueryWhenChanged<TObject, TKey, TValue>(IObservable<IChang
         return _source.Publish(
             shared =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var state = new Cache<TObject, TKey>();
 
                 var inlineChange = shared.MergeMany(itemChangedTrigger).Synchronize(locker).Select(_ => new AnonymousQuery<TObject, TKey>(state));

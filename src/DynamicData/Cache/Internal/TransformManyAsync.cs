@@ -6,7 +6,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 using DynamicData.Internal;
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
@@ -19,7 +18,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
     public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => Observable.Create<IChangeSet<TDestination, TDestinationKey>>(
         observer =>
         {
-            var locker = new object();
+            var locker = InternalEx.NewLock();
             var cache = new Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey>();
             var parentUpdate = false;
 

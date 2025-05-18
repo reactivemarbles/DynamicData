@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData;

@@ -10,7 +10,11 @@ namespace DynamicData.List.Internal;
 internal sealed class RefCount<T>(IObservable<IChangeSet<T>> source)
     where T : notnull
 {
+#if NET9_0_OR_GREATER
+    private readonly Lock _locker = new();
+#else
     private readonly object _locker = new();
+#endif
     private IObservableList<T>? _list;
 
     private int _refCount;

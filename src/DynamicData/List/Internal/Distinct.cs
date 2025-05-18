@@ -4,8 +4,6 @@
 
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class Distinct<T, TValue>(IObservable<IChangeSet<T>> source, Func<T, TValue> valueSelector)

@@ -2,10 +2,8 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
@@ -17,7 +15,7 @@ internal sealed class TransformWithForcedTransform<TDestination, TSource, TKey>(
     public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Create<IChangeSet<TDestination, TKey>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var shared = source.Synchronize(locker).Publish();
 
                 // capture all items so we can apply a forced transform

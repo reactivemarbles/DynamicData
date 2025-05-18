@@ -21,7 +21,7 @@ internal sealed class SpecifiedGrouper<TObject, TKey, TGroupKey>(IObservable<ICh
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 // create source group cache
                 var sourceGroups = _source.Synchronize(locker).Group(_groupSelector).DisposeMany().AsObservableCache();

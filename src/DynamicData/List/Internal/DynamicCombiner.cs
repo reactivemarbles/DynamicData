@@ -6,14 +6,17 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 using DynamicData.Cache.Internal;
-using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
 internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<T>>> source, CombineOperator type)
     where T : notnull
 {
+#if NET9_0_OR_GREATER
+    private readonly Lock _locker = new();
+#else
     private readonly object _locker = new();
+#endif
 
     private readonly IObservableList<IObservable<IChangeSet<T>>> _source = source ?? throw new ArgumentNullException(nameof(source));
 

@@ -35,7 +35,7 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
             observer =>
             {
                 var counter = new SubscriptionCounter();
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var disposable = _source.Concat(counter.DeferCleanup)
                                                 .SubscribeMany((t, key) =>
                                                 {

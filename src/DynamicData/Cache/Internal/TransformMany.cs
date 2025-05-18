@@ -8,7 +8,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 using DynamicData.Binding;
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
@@ -104,7 +103,7 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
                     (t, _) =>
                     {
                         // Only skip initial for first time Adds where there is initial data records
-                        var locker = new object();
+                        var locker = InternalEx.NewLock();
                         var changes = childChanges(t).Synchronize(locker).Skip(1);
                         return new ManyContainer(
                             () =>

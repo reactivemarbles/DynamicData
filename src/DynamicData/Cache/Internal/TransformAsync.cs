@@ -4,7 +4,6 @@
 
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
@@ -28,7 +27,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
 
             if (forceTransform is not null)
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var forced = forceTransform.Synchronize(locker)
                     .Select(shouldTransform => DoTransform(cache, shouldTransform)).Concat();
 

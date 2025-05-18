@@ -7,8 +7,6 @@ using System.Linq.Expressions;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class GroupOnProperty<TObject, TGroup>(IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TGroup>> groupSelectorKey, TimeSpan? throttle = null, IScheduler? scheduler = null)

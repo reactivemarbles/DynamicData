@@ -4,8 +4,6 @@
 
 using System.Collections;
 
-using DynamicData.Kernel;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 

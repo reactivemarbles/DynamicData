@@ -18,7 +18,7 @@ internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable
     public IObservable<IChangeSet<TDestination>> Run() => Observable.Create<IChangeSet<TDestination>>(
         observer =>
         {
-            var locker = new object();
+            var locker = InternalEx.NewLock();
             var parentUpdate = false;
 
             // This is manages all of the changes

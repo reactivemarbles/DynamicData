@@ -2,16 +2,13 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Diagnostics;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Cache;
 using DynamicData.Cache.Internal;
-using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
@@ -33,7 +30,11 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private readonly Lazy<SuspensionTracker> _suspensionTracker;
 
+#if NET9_0_OR_GREATER
+    private readonly Lock _locker = new();
+#else
     private readonly object _locker = new();
+#endif
 
     private readonly ReaderWriter<TObject, TKey> _readerWriter;
 

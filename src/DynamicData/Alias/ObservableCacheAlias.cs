@@ -4,8 +4,6 @@
 
 using System.Reactive;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.Alias;
 
 /// <summary>

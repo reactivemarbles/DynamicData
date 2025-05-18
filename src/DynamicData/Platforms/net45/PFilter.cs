@@ -6,7 +6,6 @@
 using System.Reactive.Linq;
 
 using DynamicData.Cache.Internal;
-using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq

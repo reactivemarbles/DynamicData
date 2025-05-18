@@ -4,8 +4,6 @@
 
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class Filter<T>
@@ -36,7 +34,7 @@ internal sealed class Filter<T>
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 Func<T, bool> predicate = _ => false;
                 var all = new List<ItemWithMatch>();

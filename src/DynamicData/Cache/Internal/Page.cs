@@ -13,7 +13,7 @@ internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, 
     public IObservable<IPagedChangeSet<TObject, TKey>> Run() => Observable.Create<IPagedChangeSet<TObject, TKey>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var paginator = new Paginator();
                 var request = pageRequests.Synchronize(locker).Select(paginator.Paginate);
                 var dataChange = source.Synchronize(locker).Select(paginator.Update);

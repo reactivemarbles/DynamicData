@@ -4,8 +4,6 @@
 
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>(IObservable<IChangeSet<TSource, TKey>> source,

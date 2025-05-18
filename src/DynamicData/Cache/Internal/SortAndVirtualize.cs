@@ -43,7 +43,7 @@ internal sealed class SortAndVirtualize<TObject, TKey>
         Observable.Create<IChangeSet<TObject, TKey, VirtualContext<TObject>>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 var sortOptions = new SortAndBindOptions
                 {

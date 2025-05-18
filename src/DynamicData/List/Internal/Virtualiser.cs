@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Linq;
-using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
@@ -17,7 +16,7 @@ internal sealed class Virtualiser<T>(IObservable<IChangeSet<T>> source, IObserva
     public IObservable<IVirtualChangeSet<T>> Run() => Observable.Create<IVirtualChangeSet<T>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var all = new List<T>();
                 var virtualised = new ChangeAwareList<T>();
 

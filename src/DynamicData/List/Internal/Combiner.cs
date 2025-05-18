@@ -12,7 +12,11 @@ namespace DynamicData.List.Internal;
 internal sealed class Combiner<T>(ICollection<IObservable<IChangeSet<T>>> source, CombineOperator type)
     where T : notnull
 {
+#if NET9_0_OR_GREATER
+    private readonly Lock _locker = new();
+#else
     private readonly object _locker = new();
+#endif
 
     private readonly ICollection<IObservable<IChangeSet<T>>> _source = source ?? throw new ArgumentNullException(nameof(source));
 

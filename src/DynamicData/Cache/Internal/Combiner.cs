@@ -4,8 +4,6 @@
 
 using System.Reactive.Disposables;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.Cache.Internal;
 
 /// <summary>
@@ -17,7 +15,11 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
 {
     private readonly ChangeAwareCache<TObject, TKey> _combinedCache = new();
 
+#if NET9_0_OR_GREATER
+    private readonly Lock _locker = new();
+#else
     private readonly object _locker = new();
+#endif
 
     private readonly IList<Cache<TObject, TKey>> _sourceCaches = new List<Cache<TObject, TKey>>();
 

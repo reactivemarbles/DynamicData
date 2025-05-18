@@ -17,7 +17,7 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 var destination = new LockFreeObservableCache<TObject, TKey>();
 

@@ -8,7 +8,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 using DynamicData.Binding;
-using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
@@ -117,7 +116,7 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
                 var transformed = _source.Transform(
                     t =>
                     {
-                        var locker = new object();
+                        var locker = InternalEx.NewLock();
                         var collection = manySelector(t);
                         var changes = childChanges(t).Synchronize(locker).Skip(1);
                         return new ManyContainer(collection, changes);

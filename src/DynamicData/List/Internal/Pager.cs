@@ -17,7 +17,7 @@ internal sealed class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IP
     public IObservable<IPageChangeSet<T>> Run() => Observable.Create<IPageChangeSet<T>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var all = new List<T>();
                 var paged = new ChangeAwareList<T>();
 
