@@ -49,10 +49,20 @@ internal sealed class MergeChangeSets<TObject>(IObservable<IObservable<IChangeSe
     }
 
     // Can optimize for the Add case because that's the only one that applies
+#if NET9_0_OR_GREATER
+    private Change<ClonedListChangeSet<TObject>> CreateChange(IObservable<IChangeSet<TObject>> source, Lock locker) =>
+        new(ListChangeReason.Add, new ClonedListChangeSet<TObject>(source.Synchronize(locker), equalityComparer));
+
+    // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
+    private IObservable<IChangeSet<ClonedListChangeSet<TObject>>> CreateClonedListObservable(IObservable<IObservable<IChangeSet<TObject>>> source, Lock locker) =>
+        source.Select(src => new ChangeSet<ClonedListChangeSet<TObject>>(new[] { CreateChange(src, locker) }));
+#else
     private Change<ClonedListChangeSet<TObject>> CreateChange(IObservable<IChangeSet<TObject>> source, object locker) =>
         new(ListChangeReason.Add, new ClonedListChangeSet<TObject>(source.Synchronize(locker), equalityComparer));
 
     // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
     private IObservable<IChangeSet<ClonedListChangeSet<TObject>>> CreateClonedListObservable(IObservable<IObservable<IChangeSet<TObject>>> source, object locker) =>
         source.Select(src => new ChangeSet<ClonedListChangeSet<TObject>>(new[] { CreateChange(src, locker) }));
+#endif
+
 }
