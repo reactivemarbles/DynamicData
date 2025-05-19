@@ -65,7 +65,7 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
                 comparerChanged = comparerChanged.ObserveOn(scheduler);
             }
 
-            var locker = new object();
+            var locker = InternalEx.NewLock();
             SortApplicator? sortApplicator = null;
 
             // Create a new sort applicator each time.

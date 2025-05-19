@@ -32,7 +32,7 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(IObservable<IChangeSet<TO
                     changes.Buffer(buffer.Value, _scheduler).Where(list => list.Count > 0).Select(items => new ChangeSet<TObject, TKey>(items));
 
                 // publish refreshes and underlying changes
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var publisher = shared.Synchronize(locker).Merge(refreshChanges.Synchronize(locker)).SubscribeSafe(observer);
 
                 return new CompositeDisposable(publisher, shared.Connect());

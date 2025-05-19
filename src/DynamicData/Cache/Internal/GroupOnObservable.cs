@@ -16,7 +16,7 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(observer =>
     {
         var grouper = new DynamicGrouper<TObject, TKey, TGroupKey>();
-        var locker = new object();
+        var locker = InternalEx.NewLock();
         var parentUpdate = false;
 
         IObservable<TGroupKey> CreateGroupObservable(TObject item, TKey key) =>

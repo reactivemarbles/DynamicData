@@ -5,8 +5,6 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, TLeft, Optional<TRight>, TDestination> resultSelector)
@@ -27,7 +25,7 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
     public IObservable<IChangeSet<TDestination, TLeftKey>> Run() => Observable.Create<IChangeSet<TDestination, TLeftKey>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 // create local backing stores
                 var leftShare = _left.Synchronize(locker).Publish();

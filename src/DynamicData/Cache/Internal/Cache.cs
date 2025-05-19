@@ -4,8 +4,6 @@
 
 using System.Diagnostics;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.Cache.Internal;
 
 [DebuggerDisplay("Cache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]

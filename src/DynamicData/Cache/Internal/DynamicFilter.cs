@@ -22,7 +22,7 @@ internal sealed class DynamicFilter<TObject, TKey>(IObservable<IChangeSet<TObjec
                 var filteredData = new ChangeAwareCache<TObject, TKey>();
                 Func<TObject, bool> predicate = _ => false;
 
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 var refresher = LatestPredicateObservable().Synchronize(locker).Select(
                     p =>

@@ -5,8 +5,6 @@
 using System.Reactive;
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class TransformImmutable<TDestination, TSource, TKey>

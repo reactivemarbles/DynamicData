@@ -15,7 +15,7 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 var destination = new SourceList<T>();
 

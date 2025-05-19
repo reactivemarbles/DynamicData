@@ -23,7 +23,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
             observer =>
             {
                 var batchedChanges = new List<IChangeSet<TObject, TKey>>();
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var paused = initialPauseState;
                 var timeoutDisposer = new SerialDisposable();
                 var intervalTimerDisposer = new SerialDisposable();

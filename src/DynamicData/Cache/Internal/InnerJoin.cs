@@ -25,7 +25,7 @@ internal sealed class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
     public IObservable<IChangeSet<TDestination, (TLeftKey leftKey, TRightKey rightKey)>> Run() => Observable.Create<IChangeSet<TDestination, (TLeftKey leftKey, TRightKey rightKey)>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 // create local backing stores
                 var leftCache = _left.Synchronize(locker).AsObservableCache(false);

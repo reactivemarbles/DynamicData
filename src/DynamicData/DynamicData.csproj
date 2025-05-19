@@ -10,6 +10,10 @@
     <PackageReference Include="System.Reactive" Version="6.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="DynamicData.Kernel"/>
+  </ItemGroup>
+
   <PropertyGroup>
     <Title>Dynamic Data</Title>
     <Description>

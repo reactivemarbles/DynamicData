@@ -4,8 +4,6 @@
 
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class DistinctCalculator<TObject, TKey, TValue>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)

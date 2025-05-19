@@ -19,7 +19,7 @@ internal sealed class MergeMany<T, TDestination>(IObservable<IChangeSet<T>> sour
             observer =>
             {
                 var counter = new SubscriptionCounter();
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var disposable = _source.Concat(counter.DeferCleanup)
                                                 .SubscribeMany(t =>
                                                 {

@@ -5,8 +5,6 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class OnBeingRemoved<T>(IObservable<IChangeSet<T>> source, Action<T> callback, bool invokeOnUnsubscribe)
@@ -18,7 +16,7 @@ internal sealed class OnBeingRemoved<T>(IObservable<IChangeSet<T>> source, Actio
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var items = new List<T>();
                 var subscriber = _source.Synchronize(locker).Do(changes => RegisterForRemoval(items, changes), observer.OnError).SubscribeSafe(observer);
 

@@ -7,7 +7,12 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
+#if NET9_0_OR_GREATER
+internal sealed class LimitSizeTo<T>(ISourceList<T> sourceList, int sizeLimit, IScheduler scheduler, Lock locker)
+#else
 internal sealed class LimitSizeTo<T>(ISourceList<T> sourceList, int sizeLimit, IScheduler scheduler, object locker)
+#endif
+
     where T : notnull
 {
     private readonly IScheduler _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));

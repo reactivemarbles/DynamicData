@@ -5,8 +5,6 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
@@ -18,7 +16,7 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 // this is the resulting cache which produces all notifications
                 var resultCache = new ChangeAwareCache<TObject, TKey>();

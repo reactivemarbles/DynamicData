@@ -4,7 +4,6 @@
 
 using System.Diagnostics;
 using System.Reactive.Disposables;
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 

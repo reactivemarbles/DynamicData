@@ -43,7 +43,7 @@ internal sealed class SortAndPage<TObject, TKey>
         Observable.Create<IChangeSet<TObject, TKey, PageContext<TObject>>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 var sortOptions = new SortAndBindOptions
                 {

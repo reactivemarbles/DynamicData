@@ -5,8 +5,6 @@
 #if P_LINQ
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
 {

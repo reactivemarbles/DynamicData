@@ -10,11 +10,8 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-
-using DynamicData;
 using DynamicData.Binding;
 using DynamicData.Cache.Internal;
-using DynamicData.Kernel;
 using DynamicData.List.Internal;
 using DynamicData.List.Linq;
 
@@ -47,7 +44,7 @@ public static class ObservableListEx
         return Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 return source.Synchronize(locker).Select(
                     changes =>
                     {
@@ -948,7 +945,7 @@ public static class ObservableListEx
             throw new ArgumentException("sizeLimit cannot be zero", nameof(sizeLimit));
         }
 
-        var locker = new object();
+        var locker = InternalEx.NewLock();
         var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? GlobalConfig.DefaultScheduler, locker);
 
         return limiter.Run().Synchronize(locker).Do(source.RemoveMany);

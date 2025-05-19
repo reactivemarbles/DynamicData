@@ -18,7 +18,7 @@ internal sealed class Virtualise<TObject, TKey>(IObservable<ISortedChangeSet<TOb
             observer =>
             {
                 var virtualiser = new Virtualiser();
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 var request = _virtualRequests.Synchronize(locker).Select(virtualiser.Virtualise).Where(x => x is not null).Select(x => x!);
                 var dataChange = _source.Synchronize(locker).Select(virtualiser.Update).Where(x => x is not null).Select(x => x!);

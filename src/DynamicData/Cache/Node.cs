@@ -4,8 +4,6 @@
 
 using System.Reactive.Disposables;
 
-using DynamicData.Kernel;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 

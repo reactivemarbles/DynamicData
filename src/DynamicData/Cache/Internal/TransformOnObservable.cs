@@ -16,7 +16,7 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
     public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
     {
         var cache = new ChangeAwareCache<TDestination, TKey>();
-        var locker = new object();
+        var locker = InternalEx.NewLock();
         var parentUpdate = false;
 
         // Helper to emit any pending changes when appropriate

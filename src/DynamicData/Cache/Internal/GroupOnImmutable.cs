@@ -5,8 +5,6 @@
 using System.Reactive;
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit>? regrouper)
@@ -23,7 +21,7 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
     public IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var grouper = new Grouper(_groupSelectorKey);
 
                 var groups = _source.Synchronize(locker).Select(grouper.Update).Where(changes => changes.Count != 0);

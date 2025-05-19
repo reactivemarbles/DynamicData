@@ -28,7 +28,11 @@ public sealed class SourceList<T> : ISourceList<T>
 
     private readonly Lazy<ISubject<int>> _countChanged = new(() => new Subject<int>());
 
+#if NET9_0_OR_GREATER
+    private readonly Lock _locker = new();
+#else
     private readonly object _locker = new();
+#endif
 
     private readonly ReaderWriter<T> _readerWriter = new();
 

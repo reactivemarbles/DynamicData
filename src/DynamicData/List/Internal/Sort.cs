@@ -5,8 +5,6 @@
 using System.Reactive;
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? comparer, SortOptions sortOptions, IObservable<Unit>? resort, IObservable<IComparer<T>>? comparerObservable, int resetThreshold)
@@ -21,7 +19,7 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
                 var original = new List<T>();
                 var target = new ChangeAwareList<T>();
 

@@ -6,8 +6,6 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class AutoRefresh<TObject, TAny>(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
@@ -19,7 +17,7 @@ internal sealed class AutoRefresh<TObject, TAny>(IObservable<IChangeSet<TObject>
     public IObservable<IChangeSet<TObject>> Run() => Observable.Create<IChangeSet<TObject>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 var allItems = new List<TObject>();
 

@@ -20,7 +20,7 @@ internal sealed class MergeManyCacheChangeSets<TObject, TDestination, TDestinati
     public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => Observable.Create<IChangeSet<TDestination, TDestinationKey>>(
         observer =>
         {
-            var locker = new object();
+            var locker = InternalEx.NewLock();
             var list = new List<ChangeSetCache<TDestination, TDestinationKey>>();
             var parentUpdate = false;
 

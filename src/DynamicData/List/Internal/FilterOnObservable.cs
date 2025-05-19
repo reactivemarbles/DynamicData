@@ -17,7 +17,7 @@ internal sealed class FilterOnObservable<TObject>(IObservable<IChangeSet<TObject
     public IObservable<IChangeSet<TObject>> Run() => Observable.Create<IChangeSet<TObject>>(
             observer =>
             {
-                var locker = new object();
+                var locker = InternalEx.NewLock();
 
                 var allItems = new List<ObjWithFilterValue>();
 
