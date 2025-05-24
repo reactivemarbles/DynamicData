@@ -156,6 +156,37 @@ public class TransformOnObservableFixture : IDisposable
         results.Error.Should().Be(expectedError);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void OrderOfChangesIsPreserved(bool removeFirst)
+    {
+        // Arrange
+        using var results = _animalCache.Connect().TransformOnObservable(Observable.Return).AsAggregator();
+        var firstReason = removeFirst ? ChangeReason.Remove : ChangeReason.Add;
+        var nextReason = !removeFirst ? ChangeReason.Remove : ChangeReason.Add;
+
+        // Act
+        _animalCache.Edit(updater =>
+        {
+            if (removeFirst)
+            {
+                updater.Clear();
+                updater.AddOrUpdate(_animalFaker.Generate(InitialCount));
+            }
+            else
+            {
+                updater.AddOrUpdate(_animalFaker.Generate(InitialCount));
+                updater.Clear();
+            }
+        });
+
+        // Assert
+        results.Messages.Count.Should().Be(2);
+        results.Messages[1].Take(InitialCount).All(change => change.Reason == firstReason).Should().BeTrue();
+        results.Messages[1].Skip(InitialCount).All(change => change.Reason == nextReason).Should().BeTrue();
+    }
+
     public void Dispose()
     {
         _animalCache.Dispose();

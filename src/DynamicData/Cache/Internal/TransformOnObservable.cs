@@ -4,7 +4,7 @@
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Internal;
+using System.Reactive.Subjects;
 
 namespace DynamicData.Cache.Internal;
 
@@ -15,50 +15,131 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
 {
     public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
     {
-        var cache = new ChangeAwareCache<TDestination, TKey>();
+        var shutdownSubject = new Subject<TKey>();
+        var changeEmitter = new ChangeEmiter(observer);
         var locker = InternalEx.NewLock();
-        var parentUpdate = false;
+        var compositeDisposable = new CompositeDisposable(shutdownSubject);
 
-        // Helper to emit any pending changes when appropriate
-        void EmitChanges(bool fromParent)
+        // Create the sub-observable that takes the result of the transformation,
+        // filters out unchanged values, and then updates the cache
+        void CreateChildSubscription(TSource obj, TKey key)
         {
-            if (fromParent || !parentUpdate)
+            IDisposable? disposable = null;
+            var completed = false;
+
+            // Add a new subscription
+            changeEmitter.AddSubscription();
+
+            // Create the subscription
+            disposable = transform(obj, key)
+                .DistinctUntilChanged()
+                .TakeUntil(shutdownSubject.Where(shutdownKey => EqualityComparer<TKey>.Default.Equals(key, shutdownKey)))
+                .Synchronize(locker!)
+                .Subscribe(
+                    val =>
+                    {
+                        changeEmitter.Cache.AddOrUpdate(val, key);
+                        changeEmitter.EmitChanges(fromSource: false);
+                    },
+                    () =>
+                    {
+                        if (disposable is not null)
+                        {
+                            compositeDisposable.Remove(disposable);
+                        }
+                        changeEmitter.OnCompleted();
+                        completed = true;
+                    });
+
+            // If not already completed, add it to the CompositeDisposable
+            if (!completed)
             {
-                var changes = cache!.CaptureChanges();
+                compositeDisposable.Add(disposable);
+            }
+        }
+
+        // Create a subscription to the source that processes the changes inside the lock
+        var subscription = source
+            .Synchronize(locker!)
+            .Subscribe(
+                changes =>
+                {
+                    // Flag a parent update is happening once inside the lock
+                    changeEmitter.MarkSourceUpdate();
+
+                    // Process all the changes at once to preserve the changeset order
+                    foreach (var change in changes.ToConcreteType())
+                    {
+                        switch (change.Reason)
+                        {
+                            // Create a subscription that will update the cache
+                            case ChangeReason.Add:
+                                CreateChildSubscription(change.Current, change.Key);
+                                break;
+
+                            // Shutdown the existing subscription and remove from the cache
+                            case ChangeReason.Remove:
+                                shutdownSubject.OnNext(change.Key);
+                                changeEmitter.Cache.Remove(change.Key);
+                                break;
+
+                            // Shutdown the existing subscription and create a new one
+                            case ChangeReason.Update:
+                                shutdownSubject.OnNext(change.Key);
+                                CreateChildSubscription(change.Current, change.Key);
+                                break;
+
+                            // Let the downstream decide what this means
+                            case ChangeReason.Refresh:
+                                changeEmitter.Cache.Refresh(change.Key);
+                                break;
+                        }
+                    }
+
+                    // Emit all of the changes
+                    changeEmitter.EmitChanges(fromSource: true);
+                },
+                observer.OnError,
+                changeEmitter.OnCompleted);
+
+        // Add the source subscription to the clean up list
+        compositeDisposable.Add(subscription);
+
+        // Return the single disposable that controls everything
+        return compositeDisposable;
+    });
+
+    private class ChangeEmiter(IObserver<IChangeSet<TDestination, TKey>> observer)
+    {
+        private bool _sourceUpdate;
+        private int _subscriptionCounter = 1;
+
+        public ChangeAwareCache<TDestination, TKey> Cache { get; } = new();
+
+        public void MarkSourceUpdate() => _sourceUpdate = true;
+
+        public void EmitChanges(bool fromSource)
+        {
+            if (fromSource || !_sourceUpdate)
+            {
+                var changes = Cache.CaptureChanges();
                 if (changes.Count > 0)
                 {
                     observer.OnNext(changes);
                 }
 
-                parentUpdate = false;
+                _sourceUpdate = false;
             }
         }
 
-        // Create the sub-observable that takes the result of the transformation,
-        // filters out unchanged values, and then updates the cache
-        IObservable<TDestination> CreateSubObservable(TSource obj, TKey key) =>
-            transform(obj, key)
-                .DistinctUntilChanged()
-                .Synchronize(locker!)
-                .Do(val => cache!.AddOrUpdate(val, key));
+        public void AddSubscription() => Interlocked.Increment(ref _subscriptionCounter);
 
-        // Flag a parent update is happening once inside the lock
-        var shared = source
-            .Synchronize(locker!)
-            .Do(_ => parentUpdate = true)
-            .Publish();
-
-        // MergeMany automatically handles Add/Update/Remove and OnCompleted/OnError correctly
-        var subMerged = shared
-            .MergeMany(CreateSubObservable)
-            .SubscribeSafe(_ => EmitChanges(fromParent: false), observer.OnError, observer.OnCompleted);
-
-        // Subscribe to the shared Observable to handle Remove events.  MergeMany will unsubscribe from the sub-observable,
-        // but the corresponding key value needs to be removed from the Cache so the remove is observed downstream.
-        var subRemove = shared
-            .OnItemRemoved((_, key) => cache!.Remove(key), invokeOnUnsubscribe: false)
-            .SubscribeSafe(_ => EmitChanges(fromParent: true), observer.OnError);
-
-        return new CompositeDisposable(shared.Connect(), subMerged, subRemove);
-    });
+        public void OnCompleted()
+        {
+            if (Interlocked.Decrement(ref _subscriptionCounter) == 0)
+            {
+                observer.OnCompleted();
+            }
+        }
+    }
 }
