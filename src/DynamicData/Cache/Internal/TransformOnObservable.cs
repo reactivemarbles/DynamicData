@@ -2,9 +2,9 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 namespace DynamicData.Cache.Internal;
 
@@ -13,133 +13,138 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
     where TKey : notnull
     where TDestination : notnull
 {
-    public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
+    public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Create<IChangeSet<TDestination, TKey>>(observer => new Subscription(source, transform, observer));
+
+    private sealed class Subscription : IDisposable
     {
-        var shutdownSubject = new Subject<TKey>();
-        var changeEmitter = new ChangeEmiter(observer);
-        var locker = InternalEx.NewLock();
-        var compositeDisposable = new CompositeDisposable(shutdownSubject);
+#if NET9_0_OR_GREATER
+        private readonly Lock _synchronize = new();
+#else
+        private readonly object _synchronize = new();
+#endif
+        private readonly ChangeAwareCache<TDestination, TKey> _cache = new();
+        private readonly CompositeDisposable _compositeDisposable = [];
+        private readonly Func<TSource, TKey, IObservable<TDestination>> _transform;
+        private readonly IDisposable _sourceSubscription;
+        private readonly IObserver<IChangeSet<TDestination, TKey>> _observer;
+        private readonly Dictionary<TKey, IDisposable> _keySubscriptions = new();
+        private int _subscriptionCounter = 1;
+        private bool _sourceUpdate;
 
-        // Create the sub-observable that takes the result of the transformation,
-        // filters out unchanged values, and then updates the cache
-        void CreateChildSubscription(TSource obj, TKey key)
+        public Subscription(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, IObservable<TDestination>> transform, IObserver<IChangeSet<TDestination, TKey>> observer)
         {
-            IDisposable? disposable = null;
-            var completed = false;
+            _observer = observer;
+            _transform = transform;
+            _sourceSubscription = source
+                .Synchronize(_synchronize)
+                .SubscribeSafe(Observer.Create<IChangeSet<TSource, TKey>>(ProcessChangeSet, observer.OnError, OnCompleted));
+        }
 
-            // Add a new subscription
-            changeEmitter.AddSubscription();
+        public void Dispose()
+        {
+            _sourceSubscription.Dispose();
+            _compositeDisposable.Dispose();
+            _keySubscriptions.Values.ForEach(sub => sub.Dispose());
+        }
 
-            // Create the subscription
-            disposable = transform(obj, key)
-                .DistinctUntilChanged()
-                .TakeUntil(shutdownSubject.Where(shutdownKey => EqualityComparer<TKey>.Default.Equals(key, shutdownKey)))
-                .Synchronize(locker!)
-                .Subscribe(
-                    val =>
-                    {
-                        changeEmitter.Cache.AddOrUpdate(val, key);
-                        changeEmitter.EmitChanges(fromSource: false);
-                    },
-                    () =>
-                    {
-                        if (disposable is not null)
-                        {
-                            compositeDisposable.Remove(disposable);
-                        }
-                        changeEmitter.OnCompleted();
-                        completed = true;
-                    });
-
-            // If not already completed, add it to the CompositeDisposable
-            if (!completed)
+        private void ProcessChangeSet(IChangeSet<TSource, TKey> changes)
+        {
+            if (changes.Count == 0)
             {
-                compositeDisposable.Add(disposable);
+                return;
+            }
+
+            // Flag a source update is happening
+            _sourceUpdate = true;
+
+            // Process all the changes at once to preserve the changeset order
+            foreach (var change in changes.ToConcreteType())
+            {
+                switch (change.Reason)
+                {
+                    // Create a subscription that will update the cache
+                    case ChangeReason.Add:
+                        CreateTransformSubscription(change.Current, change.Key);
+                        break;
+
+                    // Shutdown the existing subscription and remove from the cache
+                    case ChangeReason.Remove:
+                        RemoveKey(change.Key);
+                        _cache.Remove(change.Key);
+                        break;
+
+                    // Shutdown the existing subscription and create a new one
+                    case ChangeReason.Update:
+                        RemoveKey(change.Key);
+                        CreateTransformSubscription(change.Current, change.Key);
+                        break;
+
+                    // Let the downstream decide what this means
+                    case ChangeReason.Refresh:
+                        _cache.Refresh(change.Key);
+                        break;
+                }
+            }
+
+            // Emit all of the changes
+            EmitChanges(fromSource: true);
+        }
+
+        private void RemoveKey(TKey key)
+        {
+            if (_keySubscriptions.TryGetValue(key, out var disposable))
+            {
+                disposable.Dispose();
+                _keySubscriptions.Remove(key);
             }
         }
 
-        // Create a subscription to the source that processes the changes inside the lock
-        var subscription = source
-            .Synchronize(locker!)
-            .Subscribe(
-                changes =>
-                {
-                    // Flag a parent update is happening once inside the lock
-                    changeEmitter.MarkSourceUpdate();
-
-                    // Process all the changes at once to preserve the changeset order
-                    foreach (var change in changes.ToConcreteType())
-                    {
-                        switch (change.Reason)
-                        {
-                            // Create a subscription that will update the cache
-                            case ChangeReason.Add:
-                                CreateChildSubscription(change.Current, change.Key);
-                                break;
-
-                            // Shutdown the existing subscription and remove from the cache
-                            case ChangeReason.Remove:
-                                shutdownSubject.OnNext(change.Key);
-                                changeEmitter.Cache.Remove(change.Key);
-                                break;
-
-                            // Shutdown the existing subscription and create a new one
-                            case ChangeReason.Update:
-                                shutdownSubject.OnNext(change.Key);
-                                CreateChildSubscription(change.Current, change.Key);
-                                break;
-
-                            // Let the downstream decide what this means
-                            case ChangeReason.Refresh:
-                                changeEmitter.Cache.Refresh(change.Key);
-                                break;
-                        }
-                    }
-
-                    // Emit all of the changes
-                    changeEmitter.EmitChanges(fromSource: true);
-                },
-                observer.OnError,
-                changeEmitter.OnCompleted);
-
-        // Add the source subscription to the clean up list
-        compositeDisposable.Add(subscription);
-
-        // Return the single disposable that controls everything
-        return compositeDisposable;
-    });
-
-    private class ChangeEmiter(IObserver<IChangeSet<TDestination, TKey>> observer)
-    {
-        private bool _sourceUpdate;
-        private int _subscriptionCounter = 1;
-
-        public ChangeAwareCache<TDestination, TKey> Cache { get; } = new();
-
-        public void MarkSourceUpdate() => _sourceUpdate = true;
-
-        public void EmitChanges(bool fromSource)
+        private void EmitChanges(bool fromSource)
         {
             if (fromSource || !_sourceUpdate)
             {
-                var changes = Cache.CaptureChanges();
+                var changes = _cache.CaptureChanges();
                 if (changes.Count > 0)
                 {
-                    observer.OnNext(changes);
+                    _observer.OnNext(changes);
                 }
 
                 _sourceUpdate = false;
             }
         }
 
-        public void AddSubscription() => Interlocked.Increment(ref _subscriptionCounter);
-
-        public void OnCompleted()
+        private void OnCompleted()
         {
             if (Interlocked.Decrement(ref _subscriptionCounter) == 0)
             {
-                observer.OnCompleted();
+                _observer.OnCompleted();
             }
+        }
+
+        // Create the sub-observable that takes the result of the transformation,
+        // filters out unchanged values, and then updates the cache
+        private void CreateTransformSubscription(TSource obj, TKey key)
+        {
+            // Add a new subscription
+            Interlocked.Increment(ref _subscriptionCounter);
+
+            // Create the transformation observable for the source item
+            // Filter out unchanged values
+            // And update the cache with the latest value
+            var disposable = _transform(obj, key)
+                .DistinctUntilChanged()
+                .Synchronize(_synchronize)
+                .SubscribeSafe(Observer.Create<TDestination>(
+                    val =>
+                    {
+                        _cache.AddOrUpdate(val, key);
+                        EmitChanges(fromSource: false);
+                    },
+                    _observer.OnError,
+                    OnCompleted));
+
+            // Add it to the Dictionary
+            _keySubscriptions.Add(key, disposable);
         }
     }
 }
