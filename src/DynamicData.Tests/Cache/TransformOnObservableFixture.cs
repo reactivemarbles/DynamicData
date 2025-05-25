@@ -197,6 +197,7 @@ public class TransformOnObservableFixture : IDisposable
 
         // Assert
         results.Messages.Count.Should().Be(2);
+        results.Messages[1].Count.Should().Be(InitialCount * 2);
         results.Messages[1].Take(InitialCount).All(change => change.Reason == firstReason).Should().BeTrue();
         results.Messages[1].Skip(InitialCount).All(change => change.Reason == nextReason).Should().BeTrue();
     }
