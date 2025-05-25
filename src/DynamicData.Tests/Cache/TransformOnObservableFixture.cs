@@ -213,7 +213,7 @@ public class TransformOnObservableFixture : IDisposable
 
         IObservable<string> CreateChildObs(Animal a, int id) =>
             Observable.Return($"{a.Name}-{id}")
-                .Concat(subject.ObserveOn(DefaultScheduler.Instance).Select(_ => a.Name).Take(1));
+                .Concat(subject.ObserveOn(TaskPoolScheduler.Default).Select(_ => a.Name).Take(1));
 
         var shared = _animalCache.Connect().TransformOnObservable(CreateChildObs).Publish();
         using var results = shared.AsAggregator();
