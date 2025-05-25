@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Internal;
 
@@ -25,11 +24,10 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
         private readonly object _synchronize = new();
 #endif
         private readonly ChangeAwareCache<TDestination, TKey> _cache = new();
-        private readonly CompositeDisposable _compositeDisposable = [];
+        private readonly Dictionary<TKey, IDisposable> _transformSubscriptions = [];
         private readonly Func<TSource, TKey, IObservable<TDestination>> _transform;
         private readonly IDisposable _sourceSubscription;
         private readonly IObserver<IChangeSet<TDestination, TKey>> _observer;
-        private readonly Dictionary<TKey, IDisposable> _transformSubscriptions = [];
         private int _subscriptionCounter = 1;
         private bool _sourceUpdate;
 
@@ -39,20 +37,16 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
             _transform = transform;
             _sourceSubscription = source
                 .Synchronize(_synchronize)
-                .SubscribeSafe(
-                    ProcessChangeSet,
-                    observer.OnError,
-                    CheckCompleted);
+                .SubscribeSafe(ProcessSourceChangeSet, observer.OnError, CheckCompleted);
         }
 
         public void Dispose()
         {
             _sourceSubscription.Dispose();
-            _compositeDisposable.Dispose();
             _transformSubscriptions.Values.ForEach(sub => sub.Dispose());
         }
 
-        private void ProcessChangeSet(IChangeSet<TSource, TKey> changes)
+        private void ProcessSourceChangeSet(IChangeSet<TSource, TKey> changes)
         {
             if (changes.Count == 0)
             {
@@ -138,9 +132,7 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
                 .DistinctUntilChanged()
                 .Synchronize(_synchronize)
                 .Finally(CheckCompleted)
-                .SubscribeSafe(
-                    val => TransformOnNext(val, key),
-                    _observer.OnError);
+                .SubscribeSafe(val => TransformOnNext(val, key), _observer.OnError);
 
             // Add it to the Dictionary
             _transformSubscriptions.Add(key, disposable);

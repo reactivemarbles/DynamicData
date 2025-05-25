@@ -177,8 +177,9 @@ public class TransformOnObservableFixture : IDisposable
     {
         // Arrange
         using var results = _animalCache.Connect().TransformOnObservable(Observable.Return).AsAggregator();
-        var firstReason = removeFirst ? ChangeReason.Remove : ChangeReason.Add;
-        var nextReason = !removeFirst ? ChangeReason.Remove : ChangeReason.Add;
+        (var firstReason, var nextReason, var expectedChanges) = removeFirst 
+            ? (ChangeReason.Remove, ChangeReason.Add, InitialCount * 2)
+            : (ChangeReason.Add, ChangeReason.Remove, InitialCount * 3);
 
         // Act
         _animalCache.Edit(updater =>
@@ -197,7 +198,7 @@ public class TransformOnObservableFixture : IDisposable
 
         // Assert
         results.Messages.Count.Should().Be(2);
-        results.Messages[1].Count.Should().Be(InitialCount * 2);
+        results.Messages[1].Count.Should().Be(expectedChanges);
         results.Messages[1].Take(InitialCount).All(change => change.Reason == firstReason).Should().BeTrue();
         results.Messages[1].Skip(InitialCount).All(change => change.Reason == nextReason).Should().BeTrue();
     }
