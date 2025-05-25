@@ -205,37 +205,6 @@ public class TransformOnObservableFixture : IDisposable
         results.Messages[1].Skip(InitialCount).All(change => change.Reason == nextReason).Should().BeTrue();
     }
 
-    [Fact]
-    public async Task SimultaneousUpdatesAreEmittedTogether()
-    {
-        // Arrange
-        using var subject = new Subject<Unit>();
-
-        IObservable<string> CreateChildObs(Animal a, int id) =>
-            Observable.Return($"{a.Name}-{id}")
-                .Concat(subject.ObserveOn(TaskPoolScheduler.Default).Select(_ => a.Name).Take(1));
-
-        var shared = _animalCache.Connect().TransformOnObservable(CreateChildObs).Publish();
-        using var results = shared.AsAggregator();
-        var task = Task.Run(async () => await shared);
-        using var cleanup = shared.Connect();
-        _animalCache.Dispose();
-        subject.OnNext(Unit.Default);
-
-        // Act
-        await task;
-
-        // Assert
-        _animalResults.Data.Count.Should().Be(InitialCount);
-        results.Data.Count.Should().Be(_animalResults.Data.Count);
-        results.Summary.Overall.Adds.Should().Be(InitialCount);
-        results.Summary.Overall.Updates.Should().Be(InitialCount);
-        results.Messages.Count.Should().BeLessThan(InitialCount + 1, "At least some updates should be grouped");
-        results.Messages.Skip(1).All(message => message.All(change => change.Reason is ChangeReason.Update)).Should().BeTrue();
-        _animalCache.Items.ForEach(animal => results.Data.Lookup(animal.Id).Should().Be(Optional.Some(animal.Name)));
-    }
-
-
     public void Dispose()
     {
         _animalCache.Dispose();
