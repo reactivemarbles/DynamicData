@@ -13,52 +13,143 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
     where TKey : notnull
     where TDestination : notnull
 {
-    public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
-    {
-        var cache = new ChangeAwareCache<TDestination, TKey>();
-        var locker = InternalEx.NewLock();
-        var parentUpdate = false;
+    public IObservable<IChangeSet<TDestination, TKey>> Run() =>
+        Observable.Create<IChangeSet<TDestination, TKey>>(observer => new Subscription(source, transform, observer));
 
-        // Helper to emit any pending changes when appropriate
-        void EmitChanges(bool fromParent)
+    // Maintains state for a single subscription
+    private sealed class Subscription : IDisposable
+    {
+#if NET9_0_OR_GREATER
+        private readonly Lock _synchronize = new();
+#else
+        private readonly object _synchronize = new();
+#endif
+        private readonly ChangeAwareCache<TDestination, TKey> _cache = new();
+        private readonly CompositeDisposable _compositeDisposable = [];
+        private readonly Func<TSource, TKey, IObservable<TDestination>> _transform;
+        private readonly IDisposable _sourceSubscription;
+        private readonly IObserver<IChangeSet<TDestination, TKey>> _observer;
+        private readonly Dictionary<TKey, IDisposable> _transformSubscriptions = [];
+        private int _subscriptionCounter = 1;
+        private bool _sourceUpdate;
+
+        public Subscription(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, IObservable<TDestination>> transform, IObserver<IChangeSet<TDestination, TKey>> observer)
         {
-            if (fromParent || !parentUpdate)
+            _observer = observer;
+            _transform = transform;
+            _sourceSubscription = source
+                .Synchronize(_synchronize)
+                .SubscribeSafe(
+                    ProcessChangeSet,
+                    observer.OnError,
+                    CheckCompleted);
+        }
+
+        public void Dispose()
+        {
+            _sourceSubscription.Dispose();
+            _compositeDisposable.Dispose();
+            _transformSubscriptions.Values.ForEach(sub => sub.Dispose());
+        }
+
+        private void ProcessChangeSet(IChangeSet<TSource, TKey> changes)
+        {
+            if (changes.Count == 0)
             {
-                var changes = cache!.CaptureChanges();
+                return;
+            }
+
+            // Flag a source update is happening
+            _sourceUpdate = true;
+
+            // Process all the changes at once to preserve the changeset order
+            foreach (var change in changes.ToConcreteType())
+            {
+                switch (change.Reason)
+                {
+                    // Shutdown existing sub (if any) and create a new one that
+                    // Will update the cache and emit the changes
+                    case ChangeReason.Add or ChangeReason.Update:
+                        CreateTransformSubscription(change.Current, change.Key);
+                        break;
+
+                    // Shutdown the existing subscription and remove from the cache
+                    case ChangeReason.Remove:
+                        RemoveKey(change.Key);
+                        _cache.Remove(change.Key);
+                        break;
+
+                    // Let the downstream decide what this means
+                    case ChangeReason.Refresh:
+                        _cache.Refresh(change.Key);
+                        break;
+                }
+            }
+
+            // Emit any pending changes
+            EmitChanges(fromSource: true);
+        }
+
+        private void RemoveKey(TKey key)
+        {
+            if (_transformSubscriptions.TryGetValue(key, out var disposable))
+            {
+                disposable.Dispose();
+                _transformSubscriptions.Remove(key);
+            }
+        }
+
+        private void EmitChanges(bool fromSource)
+        {
+            if (fromSource || !_sourceUpdate)
+            {
+                var changes = _cache.CaptureChanges();
                 if (changes.Count > 0)
                 {
-                    observer.OnNext(changes);
+                    _observer.OnNext(changes);
                 }
 
-                parentUpdate = false;
+                _sourceUpdate = false;
+            }
+        }
+
+        private void CheckCompleted()
+        {
+            if (Interlocked.Decrement(ref _subscriptionCounter) == 0)
+            {
+                _observer.OnCompleted();
             }
         }
 
         // Create the sub-observable that takes the result of the transformation,
         // filters out unchanged values, and then updates the cache
-        IObservable<TDestination> CreateSubObservable(TSource obj, TKey key) =>
-            transform(obj, key)
+        private void CreateTransformSubscription(TSource obj, TKey key)
+        {
+            // Add a new subscription
+            Interlocked.Increment(ref _subscriptionCounter);
+
+            // Clean up any previous subscriptions
+            RemoveKey(key);
+
+            // Create the transformation observable for the source item
+            // Filter out unchanged values
+            // And update the cache with the latest value
+            var disposable = _transform(obj, key)
                 .DistinctUntilChanged()
-                .Synchronize(locker!)
-                .Do(val => cache!.AddOrUpdate(val, key));
+                .Synchronize(_synchronize)
+                .Finally(CheckCompleted)
+                .SubscribeSafe(
+                    val => TransformOnNext(val, key),
+                    _observer.OnError);
 
-        // Flag a parent update is happening once inside the lock
-        var shared = source
-            .Synchronize(locker!)
-            .Do(_ => parentUpdate = true)
-            .Publish();
+            // Add it to the Dictionary
+            _transformSubscriptions.Add(key, disposable);
+        }
 
-        // MergeMany automatically handles Add/Update/Remove and OnCompleted/OnError correctly
-        var subMerged = shared
-            .MergeMany(CreateSubObservable)
-            .SubscribeSafe(_ => EmitChanges(fromParent: false), observer.OnError, observer.OnCompleted);
-
-        // Subscribe to the shared Observable to handle Remove events.  MergeMany will unsubscribe from the sub-observable,
-        // but the corresponding key value needs to be removed from the Cache so the remove is observed downstream.
-        var subRemove = shared
-            .OnItemRemoved((_, key) => cache!.Remove(key), invokeOnUnsubscribe: false)
-            .SubscribeSafe(_ => EmitChanges(fromParent: true), observer.OnError);
-
-        return new CompositeDisposable(shared.Connect(), subMerged, subRemove);
-    });
+        private void TransformOnNext(TDestination latestValue, TKey key)
+        {
+            _cache.AddOrUpdate(latestValue, key);
+            EmitChanges(fromSource: false);
+        }
+    }
 }

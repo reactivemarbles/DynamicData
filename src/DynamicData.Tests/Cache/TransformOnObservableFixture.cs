@@ -142,18 +142,64 @@ public class TransformOnObservableFixture : IDisposable
     }
 
     [Fact]
+    public void ResultFailsIfChildFails()
+    {
+        // Arrange
+        var expectedError = new Exception("Expected");
+        var throwObservable = Observable.Throw<IChangeSet<Animal, int>>(expectedError);
+
+        // Act
+        using var results = _animalCache.Connect().TransformOnObservable(_ => throwObservable).AsAggregator();
+
+        // Assert
+        results.Error.Should().Be(expectedError);
+    }
+
+    [Fact]
     public void ResultFailsIfSourceFails()
     {
         // Arrange
         var expectedError = new Exception("Expected");
         var throwObservable = Observable.Throw<IChangeSet<Animal, int>>(expectedError);
-        using var results = _animalCache.Connect().Concat(throwObservable).TransformOnObservable(animal => Observable.Return(animal)).AsAggregator();
+        using var results = _animalCache.Connect().Concat(throwObservable).TransformOnObservable(Observable.Return).AsAggregator();
 
         // Act
         _animalCache.Dispose();
 
         // Assert
         results.Error.Should().Be(expectedError);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void OrderOfChangesIsPreserved(bool removeFirst)
+    {
+        // Arrange
+        using var results = _animalCache.Connect().TransformOnObservable(Observable.Return).AsAggregator();
+        var firstReason = removeFirst ? ChangeReason.Remove : ChangeReason.Add;
+        var nextReason = !removeFirst ? ChangeReason.Remove : ChangeReason.Add;
+
+        // Act
+        _animalCache.Edit(updater =>
+        {
+            if (removeFirst)
+            {
+                updater.Clear();
+                updater.AddOrUpdate(_animalFaker.Generate(InitialCount));
+            }
+            else
+            {
+                updater.AddOrUpdate(_animalFaker.Generate(InitialCount));
+                updater.Clear();
+            }
+        });
+
+        // Assert
+        results.Messages.Count.Should().Be(2);
+        results.Messages[1].Count.Should().Be(InitialCount * 2);
+        results.Messages[1].Take(InitialCount).All(change => change.Reason == firstReason).Should().BeTrue();
+        results.Messages[1].Skip(InitialCount).All(change => change.Reason == nextReason).Should().BeTrue();
     }
 
     public void Dispose()
