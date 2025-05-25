@@ -142,12 +142,26 @@ public class TransformOnObservableFixture : IDisposable
     }
 
     [Fact]
+    public void ResultFailsIfChildFails()
+    {
+        // Arrange
+        var expectedError = new Exception("Expected");
+        var throwObservable = Observable.Throw<IChangeSet<Animal, int>>(expectedError);
+
+        // Act
+        using var results = _animalCache.Connect().TransformOnObservable(_ => throwObservable).AsAggregator();
+
+        // Assert
+        results.Error.Should().Be(expectedError);
+    }
+
+    [Fact]
     public void ResultFailsIfSourceFails()
     {
         // Arrange
         var expectedError = new Exception("Expected");
         var throwObservable = Observable.Throw<IChangeSet<Animal, int>>(expectedError);
-        using var results = _animalCache.Connect().Concat(throwObservable).TransformOnObservable(animal => Observable.Return(animal)).AsAggregator();
+        using var results = _animalCache.Connect().Concat(throwObservable).TransformOnObservable(Observable.Return).AsAggregator();
 
         // Act
         _animalCache.Dispose();

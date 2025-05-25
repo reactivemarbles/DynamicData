@@ -2,9 +2,9 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -13,8 +13,10 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
     where TKey : notnull
     where TDestination : notnull
 {
-    public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Create<IChangeSet<TDestination, TKey>>(observer => new Subscription(source, transform, observer));
+    public IObservable<IChangeSet<TDestination, TKey>> Run() =>
+        Observable.Create<IChangeSet<TDestination, TKey>>(observer => new Subscription(source, transform, observer));
 
+    // Maintains state for a single subscription
     private sealed class Subscription : IDisposable
     {
 #if NET9_0_OR_GREATER
@@ -27,7 +29,7 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
         private readonly Func<TSource, TKey, IObservable<TDestination>> _transform;
         private readonly IDisposable _sourceSubscription;
         private readonly IObserver<IChangeSet<TDestination, TKey>> _observer;
-        private readonly Dictionary<TKey, IDisposable> _keySubscriptions = new();
+        private readonly Dictionary<TKey, IDisposable> _transformSubscriptions = [];
         private int _subscriptionCounter = 1;
         private bool _sourceUpdate;
 
@@ -37,14 +39,17 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
             _transform = transform;
             _sourceSubscription = source
                 .Synchronize(_synchronize)
-                .SubscribeSafe(Observer.Create<IChangeSet<TSource, TKey>>(ProcessChangeSet, observer.OnError, OnCompleted));
+                .SubscribeSafe(
+                    ProcessChangeSet,
+                    observer.OnError,
+                    CheckCompleted);
         }
 
         public void Dispose()
         {
             _sourceSubscription.Dispose();
             _compositeDisposable.Dispose();
-            _keySubscriptions.Values.ForEach(sub => sub.Dispose());
+            _transformSubscriptions.Values.ForEach(sub => sub.Dispose());
         }
 
         private void ProcessChangeSet(IChangeSet<TSource, TKey> changes)
@@ -62,8 +67,9 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
             {
                 switch (change.Reason)
                 {
-                    // Create a subscription that will update the cache
-                    case ChangeReason.Add:
+                    // Shutdown existing sub (if any) and create a new one that
+                    // Will update the cache and emit the changes
+                    case ChangeReason.Add or ChangeReason.Update:
                         CreateTransformSubscription(change.Current, change.Key);
                         break;
 
@@ -73,12 +79,6 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
                         _cache.Remove(change.Key);
                         break;
 
-                    // Shutdown the existing subscription and create a new one
-                    case ChangeReason.Update:
-                        RemoveKey(change.Key);
-                        CreateTransformSubscription(change.Current, change.Key);
-                        break;
-
                     // Let the downstream decide what this means
                     case ChangeReason.Refresh:
                         _cache.Refresh(change.Key);
@@ -86,16 +86,16 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
                 }
             }
 
-            // Emit all of the changes
+            // Emit any pending changes
             EmitChanges(fromSource: true);
         }
 
         private void RemoveKey(TKey key)
         {
-            if (_keySubscriptions.TryGetValue(key, out var disposable))
+            if (_transformSubscriptions.TryGetValue(key, out var disposable))
             {
                 disposable.Dispose();
-                _keySubscriptions.Remove(key);
+                _transformSubscriptions.Remove(key);
             }
         }
 
@@ -113,7 +113,7 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
             }
         }
 
-        private void OnCompleted()
+        private void CheckCompleted()
         {
             if (Interlocked.Decrement(ref _subscriptionCounter) == 0)
             {
@@ -128,23 +128,28 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
             // Add a new subscription
             Interlocked.Increment(ref _subscriptionCounter);
 
+            // Clean up any previous subscriptions
+            RemoveKey(key);
+
             // Create the transformation observable for the source item
             // Filter out unchanged values
             // And update the cache with the latest value
             var disposable = _transform(obj, key)
                 .DistinctUntilChanged()
                 .Synchronize(_synchronize)
-                .SubscribeSafe(Observer.Create<TDestination>(
-                    val =>
-                    {
-                        _cache.AddOrUpdate(val, key);
-                        EmitChanges(fromSource: false);
-                    },
-                    _observer.OnError,
-                    OnCompleted));
+                .Finally(CheckCompleted)
+                .SubscribeSafe(
+                    val => TransformOnNext(val, key),
+                    _observer.OnError);
 
             // Add it to the Dictionary
-            _keySubscriptions.Add(key, disposable);
+            _transformSubscriptions.Add(key, disposable);
+        }
+
+        private void TransformOnNext(TDestination latestValue, TKey key)
+        {
+            _cache.AddOrUpdate(latestValue, key);
+            EmitChanges(fromSource: false);
         }
     }
 }
