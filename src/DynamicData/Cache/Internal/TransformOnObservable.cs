@@ -2,63 +2,146 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, IObservable<TDestination>> transform)
+internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, IObservable<TDestination>> transform, bool transformOnRefresh = false)
     where TSource : notnull
     where TKey : notnull
     where TDestination : notnull
 {
-    public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
-    {
-        var cache = new ChangeAwareCache<TDestination, TKey>();
-        var locker = InternalEx.NewLock();
-        var parentUpdate = false;
+    public IObservable<IChangeSet<TDestination, TKey>> Run() =>
+        Observable.Create<IChangeSet<TDestination, TKey>>(observer => new Subscription(source, transform, observer, transformOnRefresh));
 
-        // Helper to emit any pending changes when appropriate
-        void EmitChanges(bool fromParent)
+    // Maintains state for a single subscription
+    private sealed class Subscription : IDisposable
+    {
+#if NET9_0_OR_GREATER
+        private readonly Lock _synchronize = new();
+#else
+        private readonly object _synchronize = new();
+#endif
+        private readonly ChangeAwareCache<TDestination, TKey> _cache = new();
+        private readonly KeyedDisposable<TKey> _transformSubscriptions = new();
+        private readonly Func<TSource, TKey, IObservable<TDestination>> _transform;
+        private readonly IDisposable _sourceSubscription;
+        private readonly IObserver<IChangeSet<TDestination, TKey>> _observer;
+        private readonly bool _transformOnRefresh;
+        private int _subscriptionCounter = 1;
+        private int _updateCounter;
+
+        public Subscription(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, IObservable<TDestination>> transform, IObserver<IChangeSet<TDestination, TKey>> observer, bool transformOnRefresh)
         {
-            if (fromParent || !parentUpdate)
+            _observer = observer;
+            _transform = transform;
+            _transformOnRefresh = transformOnRefresh;
+            _sourceSubscription = source
+                .Do(_ => IncrementUpdates())
+                .Synchronize(_synchronize)
+                .SubscribeSafe(ProcessSourceChangeSet, observer.OnError, CheckCompleted);
+        }
+
+        public void Dispose()
+        {
+            lock (_synchronize)
             {
-                var changes = cache!.CaptureChanges();
+                _sourceSubscription.Dispose();
+                _transformSubscriptions.Dispose();
+            }
+        }
+
+        private void ProcessSourceChangeSet(IChangeSet<TSource, TKey> changes)
+        {
+            // Process all the changes at once to preserve the changeset order
+            foreach (var change in changes.ToConcreteType())
+            {
+                switch (change.Reason)
+                {
+                    // Shutdown existing sub (if any) and create a new one that
+                    // Will update the cache and emit the changes
+                    case ChangeReason.Add or ChangeReason.Update:
+                        CreateTransformSubscription(change.Current, change.Key);
+                        break;
+
+                    // Shutdown the existing subscription and remove from the cache
+                    case ChangeReason.Remove:
+                        _transformSubscriptions.Remove(change.Key);
+                        _cache.Remove(change.Key);
+                        break;
+
+                    case ChangeReason.Refresh:
+                        if (_transformOnRefresh)
+                        {
+                            CreateTransformSubscription(change.Current, change.Key);
+                        }
+                        else
+                        {
+                            // Let the downstream decide what this means
+                            _cache.Refresh(change.Key);
+                        }
+                        break;
+                }
+            }
+
+            // Emit any pending changes
+            EmitChanges();
+        }
+
+        private void IncrementUpdates() => Interlocked.Increment(ref _updateCounter);
+
+        private void EmitChanges()
+        {
+            if (Interlocked.Decrement(ref _updateCounter) == 0)
+            {
+                var changes = _cache.CaptureChanges();
                 if (changes.Count > 0)
                 {
-                    observer.OnNext(changes);
+                    _observer.OnNext(changes);
                 }
-
-                parentUpdate = false;
             }
+
+            Debug.Assert(_updateCounter >= 0, "Should never be negative");
+        }
+
+        private void CheckCompleted()
+        {
+            if (Interlocked.Decrement(ref _subscriptionCounter) == 0)
+            {
+                _observer.OnCompleted();
+            }
+
+            Debug.Assert(_subscriptionCounter >= 0, "Should never be negative");
         }
 
         // Create the sub-observable that takes the result of the transformation,
         // filters out unchanged values, and then updates the cache
-        IObservable<TDestination> CreateSubObservable(TSource obj, TKey key) =>
-            transform(obj, key)
+        private void CreateTransformSubscription(TSource obj, TKey key)
+        {
+            // Add a new subscription.  Do first so cleanup of existing subs doesn't trigger OnCompleted.
+            Interlocked.Increment(ref _subscriptionCounter);
+
+            // Create a container for the Disposable and add to the KeyedDisposable
+            var disposableContainer = _transformSubscriptions.Add(key, new SingleAssignmentDisposable());
+
+            // Create the transformation observable for the source item, filter unchanged, and update the cache
+            // Will Dispose immediately if OnCompleted fires upon subscription because OnCompleted disposes the container
+            // Remove the TransformSubscription if it completes because its not needed anymore
+            disposableContainer.Disposable = _transform(obj, key)
                 .DistinctUntilChanged()
-                .Synchronize(locker!)
-                .Do(val => cache!.AddOrUpdate(val, key));
+                .Do(_ => IncrementUpdates())
+                .Synchronize(_synchronize)
+                .Finally(CheckCompleted)
+                .SubscribeSafe(val => TransformOnNext(val, key), _observer.OnError, () => _transformSubscriptions.Remove(key));
+        }
 
-        // Flag a parent update is happening once inside the lock
-        var shared = source
-            .Synchronize(locker!)
-            .Do(_ => parentUpdate = true)
-            .Publish();
-
-        // MergeMany automatically handles Add/Update/Remove and OnCompleted/OnError correctly
-        var subMerged = shared
-            .MergeMany(CreateSubObservable)
-            .SubscribeSafe(_ => EmitChanges(fromParent: false), observer.OnError, observer.OnCompleted);
-
-        // Subscribe to the shared Observable to handle Remove events.  MergeMany will unsubscribe from the sub-observable,
-        // but the corresponding key value needs to be removed from the Cache so the remove is observed downstream.
-        var subRemove = shared
-            .OnItemRemoved((_, key) => cache!.Remove(key), invokeOnUnsubscribe: false)
-            .SubscribeSafe(_ => EmitChanges(fromParent: true), observer.OnError);
-
-        return new CompositeDisposable(shared.Connect(), subMerged, subRemove);
-    });
+        private void TransformOnNext(TDestination latestValue, TKey key)
+        {
+            _cache.AddOrUpdate(latestValue, key);
+            EmitChanges();
+        }
+    }
 }
