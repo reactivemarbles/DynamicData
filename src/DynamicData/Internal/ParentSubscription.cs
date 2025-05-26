@@ -41,11 +41,11 @@ internal abstract class ParentSubscription<TParent, TKey, TChild, TObserver>(IOb
         GC.SuppressFinalize(this);
     }
 
-    protected abstract void EmitChanges(IObserver<TObserver> observer);
-
     protected abstract void ParentOnNext(IChangeSet<TParent, TKey> changes);
 
     protected abstract void ChildOnNext(TChild child, TKey parentKey);
+
+    protected abstract void EmitChanges(IObserver<TObserver> observer);
 
     protected void AddChildSubscription(IObservable<TChild> observable, TKey parentKey)
     {
