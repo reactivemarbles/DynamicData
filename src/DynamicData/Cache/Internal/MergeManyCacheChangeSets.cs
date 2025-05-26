@@ -24,7 +24,6 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
     {
         private readonly Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey> _cache = new();
         private readonly ChangeSetMergeTracker<TDestination, TDestinationKey> _changeSetMergeTracker;
-        private readonly Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> _transform;
 
         public Subscription(
             IObservable<IChangeSet<TObject, TKey>> source,
@@ -34,10 +33,9 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
             IComparer<TDestination>? comparer)
             : base(observer)
         {
-            _transform = transform;
             _changeSetMergeTracker = new(() => _cache.Items, comparer, equalityComparer);
 
-            CreateParentSubscription(source.Transform((obj, key) => new ChangeSetCache<TDestination, TDestinationKey>(_transform(obj, key))));
+            CreateParentSubscription(source.Transform((obj, key) => new ChangeSetCache<TDestination, TDestinationKey>(transform(obj, key))));
         }
 
         protected override void ParentOnNext(IChangeSet<ChangeSetCache<TDestination, TDestinationKey>, TKey> changes)
