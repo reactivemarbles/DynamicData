@@ -43,14 +43,14 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
     // Can optimize for the Add case because that's the only one that applies
 #if NET9_0_OR_GREATER
     private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, Lock locker) =>
-        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.Synchronize(locker)));
+        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.IgnoreSameReferenceUpdate().Synchronize(locker)));
 
     // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
     private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, Lock locker) =>
         source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index, locker) }));
 #else
     private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, object locker) =>
-        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.Synchronize(locker)));
+        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.IgnoreSameReferenceUpdate().Synchronize(locker)));
 
     // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
     private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, object locker) =>
