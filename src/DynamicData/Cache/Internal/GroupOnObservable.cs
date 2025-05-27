@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Internal;
 
@@ -39,12 +38,12 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
                 switch (change.Reason)
                 {
                     // Shutdown existing sub (if any) and create a new one that
-                    // Will update the cache and emit the changes
+                    // Will update the group key for the current item
                     case ChangeReason.Add or ChangeReason.Update:
                         AddGroupSubscription(change.Current, change.Key);
                         break;
 
-                    // Shutdown the existing subscription and remove from the cache
+                    // Shutdown the existing subscription
                     case ChangeReason.Remove:
                         RemoveChildSubscription(change.Key);
                         break;
@@ -67,52 +66,4 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
         private void AddGroupSubscription(TObject obj, TKey key) =>
             AddChildSubscription(MakeChildObservable(_selectGroup(obj, key).DistinctUntilChanged().Select(groupKey => (groupKey, obj))), key);
     }
-
-#if false
-    public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(observer =>
-    {
-        var grouper = new DynamicGrouper<TObject, TKey, TGroupKey>();
-        var locker = InternalEx.NewLock();
-        var parentUpdate = false;
-
-        IObservable<TGroupKey> CreateGroupObservable(TObject item, TKey key) =>
-            selectGroup(item, key)
-                .DistinctUntilChanged()
-                .Synchronize(locker!)
-                .Do(
-                    onNext: groupKey => grouper!.AddOrUpdate(key, groupKey, item, !parentUpdate ? observer : null),
-                    onError: observer.OnError);
-
-        // Create a shared connection to the source
-        var shared = source
-            .Synchronize(locker)
-            .Do(_ => parentUpdate = true)
-            .Publish();
-
-        // First process the changesets
-        var subChanges = shared
-            .SubscribeSafe(
-                onNext: changeSet => grouper.ProcessChangeSet(changeSet),
-                onError: observer.OnError);
-
-        // Next process the Grouping observables created for each item
-        var subMergeMany = shared
-            .MergeMany(CreateGroupObservable)
-            .SubscribeSafe(
-                onError: observer.OnError,
-                onCompleted: observer.OnCompleted);
-
-        // Finally, emit the results
-        var subResults = shared
-            .SubscribeSafe(
-                onNext: _ =>
-                {
-                    grouper.EmitChanges(observer);
-                    parentUpdate = false;
-                },
-                onError: observer.OnError);
-
-        return new CompositeDisposable(shared.Connect(), subMergeMany, subChanges, grouper);
-    });
-#endif
 }
