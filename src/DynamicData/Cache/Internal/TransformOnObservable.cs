@@ -16,7 +16,7 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
         Observable.Create<IChangeSet<TDestination, TKey>>(observer => new Subscription(source, transform, observer, transformOnRefresh));
 
     // Maintains state for a single subscription
-    private sealed class Subscription : ParentSubscription<TSource, TKey, TDestination, IChangeSet<TDestination, TKey>>
+    private sealed class Subscription : CacheParentSubscription<TSource, TKey, TDestination, IChangeSet<TDestination, TKey>>
     {
         private readonly ChangeAwareCache<TDestination, TKey> _cache = new();
         private readonly Func<TSource, TKey, IObservable<TDestination>> _transform;
@@ -77,6 +77,6 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
         }
 
         private void AddTransformSubscription(TSource obj, TKey key) =>
-            AddChildSubscription(_transform(obj, key).DistinctUntilChanged(), key);
+            AddChildSubscription(MakeChildObservable(_transform(obj, key).DistinctUntilChanged()), key);
     }
 }

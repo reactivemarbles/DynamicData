@@ -17,7 +17,7 @@ namespace DynamicData.Internal;
 /// <typeparam name="TChild">Type for the Child Subscriptions.</typeparam>
 /// <typeparam name="TObserver">Type for the Final Observable.</typeparam>
 /// <param name="observer">Observer to use for emitting events.</param>
-internal abstract class ParentSubscription<TParent, TKey, TChild, TObserver>(IObserver<TObserver> observer) : IDisposable
+internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver>(IObserver<TObserver> observer) : IDisposable
     where TParent : notnull
     where TKey : notnull
     where TChild : notnull
@@ -59,8 +59,6 @@ internal abstract class ParentSubscription<TParent, TKey, TChild, TObserver>(IOb
         // Will Dispose immediately if OnCompleted fires upon subscription because OnCompleted disposes the container
         // Remove the child subscription if it completes because its not needed anymore
         disposableContainer.Disposable = observable
-            .Synchronize(_synchronize)
-            .Do(_ => EnterUpdate())
             .Finally(CheckCompleted)
             .SubscribeSafe(
                 val =>
@@ -103,6 +101,14 @@ internal abstract class ParentSubscription<TParent, TKey, TChild, TObserver>(IOb
             _disposedValue = true;
         }
     }
+
+    // This must be called by the derived class on anything passed to AddChildSubscription
+    // Manual step so that the derived class has full control on where it is called
+    protected IObservable<T> MakeChildObservable<T>(IObservable<T> observable) =>
+        observable
+            .Synchronize(_synchronize)
+            .Do(_ => EnterUpdate())
+        ;
 
     private void EnterUpdate() => Interlocked.Increment(ref _updateCounter);
 

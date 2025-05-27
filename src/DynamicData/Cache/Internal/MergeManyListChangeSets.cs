@@ -20,7 +20,7 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
         observer => new Subscription(source, selector, observer, equalityComparer));
 
     // Maintains state for a single subscription
-    private sealed class Subscription : ParentSubscription<ClonedListChangeSet<TDestination>, TKey, IChangeSet<TDestination>, IChangeSet<TDestination>>
+    private sealed class Subscription : CacheParentSubscription<ClonedListChangeSet<TDestination>, TKey, IChangeSet<TDestination>, IChangeSet<TDestination>>
     {
         private readonly ChangeSetMergeTracker<TDestination> _changeSetMergeTracker = new();
 
@@ -31,7 +31,9 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
             IEqualityComparer<TDestination>? equalityComparer)
             : base(observer)
         {
-            CreateParentSubscription(source.Transform((obj, key) => new ClonedListChangeSet<TDestination>(selector(obj, key), equalityComparer)));
+            // RemoveIndex outside of the Lock, but add locking before going to ClonedChangeSet so the contents are protected
+            CreateParentSubscription(source.Transform((obj, key) =>
+                new ClonedListChangeSet<TDestination>(MakeChildObservable(selector(obj, key).RemoveIndex()), equalityComparer)));
         }
 
         protected override void ParentOnNext(IChangeSet<ClonedListChangeSet<TDestination>, TKey> changes)
@@ -41,10 +43,10 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
             {
                 switch (change.Reason)
                 {
-                    // Shutdown existing sub (if any) and create a new one that
-                    // Will update the cache and emit the changes
+                    // Shutdown existing sub (if any) and create a new one
+                    // Remove any items from the previous list
                     case ChangeReason.Add or ChangeReason.Update:
-                        AddChildSubscription(change.Current.Source.RemoveIndex(), change.Key);
+                        AddChildSubscription(change.Current.Source, change.Key);
                         if (change.Previous.HasValue)
                         {
                             _changeSetMergeTracker.RemoveItems(change.Previous.Value.List);

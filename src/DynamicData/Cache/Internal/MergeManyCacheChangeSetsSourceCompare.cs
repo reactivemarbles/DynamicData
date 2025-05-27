@@ -4,6 +4,7 @@
 
 using System.Reactive.Linq;
 using DynamicData.Internal;
+using DynamicData.PLinq;
 
 namespace DynamicData.Cache.Internal;
 
@@ -28,7 +29,7 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
             .TransformImmutable(entry => entry.Child);
 
     // Maintains state for a single subscription
-    private sealed class Subscription : ParentSubscription<ChangeSetCache<ParentChildEntry, TDestinationKey>, TKey, IChangeSet<ParentChildEntry, TDestinationKey>, IChangeSet<ParentChildEntry, TDestinationKey>>
+    private sealed class Subscription : CacheParentSubscription<ChangeSetCache<ParentChildEntry, TDestinationKey>, TKey, IChangeSet<ParentChildEntry, TDestinationKey>, IChangeSet<ParentChildEntry, TDestinationKey>>
     {
         private readonly Cache<ChangeSetCache<ParentChildEntry, TDestinationKey>, TKey> _cache = new();
         private readonly ChangeSetMergeTracker<ParentChildEntry, TDestinationKey> _changeSetMergeTracker;
@@ -46,7 +47,9 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
             _changeSetMergeTracker = new(() => _cache.Items, comparer, equalityComparer);
             _reevalOnRefresh = reevalOnRefresh;
 
-            CreateParentSubscription(source.Transform((obj, key) => new ChangeSetCache<ParentChildEntry, TDestinationKey>(changeSetSelector(obj, key))));
+            // Child Observable has to go into the ChangeSetCache so the locking protects it
+            CreateParentSubscription(source.Transform((obj, key) =>
+                new ChangeSetCache<ParentChildEntry, TDestinationKey>(MakeChildObservable(changeSetSelector(obj, key).IgnoreSameReferenceUpdate()))));
         }
 
         protected override void ParentOnNext(IChangeSet<ChangeSetCache<ParentChildEntry, TDestinationKey>, TKey> changes)
