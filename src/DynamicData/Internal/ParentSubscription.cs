@@ -59,8 +59,8 @@ internal abstract class ParentSubscription<TParent, TKey, TChild, TObserver>(IOb
         // Will Dispose immediately if OnCompleted fires upon subscription because OnCompleted disposes the container
         // Remove the child subscription if it completes because its not needed anymore
         disposableContainer.Disposable = observable
-            .Do(_ => EnterUpdate())
             .Synchronize(_synchronize)
+            .Do(_ => EnterUpdate())
             .Finally(CheckCompleted)
             .SubscribeSafe(
                 val =>
@@ -77,8 +77,8 @@ internal abstract class ParentSubscription<TParent, TKey, TChild, TObserver>(IOb
     protected void CreateParentSubscription(IObservable<IChangeSet<TParent, TKey>> source) =>
         _parentSubscription.Disposable =
             source
-                .Do(_ => EnterUpdate())
                 .Synchronize(_synchronize)
+                .Do(_ => EnterUpdate())
                 .SubscribeSafe(
                     changes =>
                     {
