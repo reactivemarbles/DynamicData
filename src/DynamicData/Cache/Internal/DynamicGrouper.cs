@@ -44,37 +44,44 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
 
         foreach (var change in changeSet.ToConcreteType())
         {
-            switch (change.Reason)
-            {
-                case ChangeReason.Add when _groupSelector is not null:
-                    PerformAddOrUpdate(change.Key, _groupSelector(change.Current, change.Key), change.Current, suspendTracker);
-                    break;
-
-                case ChangeReason.Remove:
-                    PerformRemove(change.Key, suspendTracker);
-                    break;
-
-                case ChangeReason.Update when _groupSelector is not null:
-                    PerformAddOrUpdate(change.Key, _groupSelector(change.Current, change.Key), change.Current, suspendTracker);
-                    break;
-
-                case ChangeReason.Update:
-                    PerformUpdate(change.Key, suspendTracker);
-                    break;
-
-                case ChangeReason.Refresh when _groupSelector is not null:
-                    PerformRefresh(change.Key, _groupSelector(change.Current, change.Key), change.Current, suspendTracker);
-                    break;
-
-                case ChangeReason.Refresh:
-                    PerformRefresh(change.Key, suspendTracker);
-                    break;
-            }
+            ProcessChange(change, suspendTracker);
         }
 
         if (observer != null)
         {
             EmitChanges(observer);
+        }
+    }
+
+    public void ProcessChange(Change<TObject, TKey> change) => ProcessChange(change, _suspendTracker);
+
+    private void ProcessChange(Change<TObject, TKey> change, SuspendTracker? suspendTracker)
+    {
+        switch (change.Reason)
+        {
+            case ChangeReason.Add when _groupSelector is not null:
+                PerformAddOrUpdate(change.Key, _groupSelector(change.Current, change.Key), change.Current, suspendTracker);
+                break;
+
+            case ChangeReason.Remove:
+                PerformRemove(change.Key, suspendTracker);
+                break;
+
+            case ChangeReason.Update when _groupSelector is not null:
+                PerformAddOrUpdate(change.Key, _groupSelector(change.Current, change.Key), change.Current, suspendTracker);
+                break;
+
+            case ChangeReason.Update:
+                PerformUpdate(change.Key, suspendTracker);
+                break;
+
+            case ChangeReason.Refresh when _groupSelector is not null:
+                PerformRefresh(change.Key, _groupSelector(change.Current, change.Key), change.Current, suspendTracker);
+                break;
+
+            case ChangeReason.Refresh:
+                PerformRefresh(change.Key, suspendTracker);
+                break;
         }
     }
 

@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Internal;
 using DynamicData.List.Internal;
@@ -18,41 +17,55 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
     where TDestination : notnull
 {
     public IObservable<IChangeSet<TDestination>> Run() => Observable.Create<IChangeSet<TDestination>>(
-        observer =>
+        observer => new Subscription(source, selector, observer, equalityComparer));
+
+    // Maintains state for a single subscription
+    private sealed class Subscription : CacheParentSubscription<ClonedListChangeSet<TDestination>, TKey, IChangeSet<TDestination>, IChangeSet<TDestination>>
+    {
+        private readonly ChangeSetMergeTracker<TDestination> _changeSetMergeTracker = new();
+
+        public Subscription(
+            IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject, TKey, IObservable<IChangeSet<TDestination>>> selector,
+            IObserver<IChangeSet<TDestination>> observer,
+            IEqualityComparer<TDestination>? equalityComparer)
+            : base(observer)
         {
-            var locker = InternalEx.NewLock();
-            var parentUpdate = false;
+            // RemoveIndex outside of the Lock, but add locking before going to ClonedChangeSet so the contents are protected
+            CreateParentSubscription(source.Transform((obj, key) =>
+                new ClonedListChangeSet<TDestination>(MakeChildObservable(selector(obj, key).RemoveIndex()), equalityComparer)));
+        }
 
-            // This is manages all of the changes
-            var changeTracker = new ChangeSetMergeTracker<TDestination>();
+        protected override void ParentOnNext(IChangeSet<ClonedListChangeSet<TDestination>, TKey> changes)
+        {
+            // Process all the changes at once to preserve the changeset order
+            foreach (var change in changes.ToConcreteType())
+            {
+                switch (change.Reason)
+                {
+                    // Shutdown existing sub (if any) and create a new one
+                    // Remove any items from the previous list
+                    case ChangeReason.Add or ChangeReason.Update:
+                        AddChildSubscription(change.Current.Source, change.Key);
+                        if (change.Previous.HasValue)
+                        {
+                            _changeSetMergeTracker.RemoveItems(change.Previous.Value.List);
+                        }
+                        break;
 
-            // Transform to a cache changeset of child lists, synchronize, and publish.
-            var shared = source
-                .Transform((obj, key) => new ClonedListChangeSet<TDestination>(selector(obj, key).Synchronize(locker), equalityComparer))
-                .Synchronize(locker)
-                .Do(_ => parentUpdate = true)
-                .Publish();
+                    // Shutdown the existing subscription and remove from the cache
+                    case ChangeReason.Remove:
+                        RemoveChildSubscription(change.Key);
+                        _changeSetMergeTracker.RemoveItems(change.Current.List);
+                        break;
+                }
+            }
+        }
 
-            // Merge the child changeset changes together and apply to the tracker
-            var subMergeMany = shared
-                .MergeMany(clonedList => clonedList.Source.RemoveIndex())
-                .SubscribeSafe(
-                    changes => changeTracker.ProcessChangeSet(changes, !parentUpdate ? observer : null),
-                    observer.OnError,
-                    observer.OnCompleted);
+        protected override void ChildOnNext(IChangeSet<TDestination> child, TKey parentKey) =>
+            _changeSetMergeTracker.ProcessChangeSet(child, null);
 
-            // When a source item is removed, all of its sub-items need to be removed
-            var subRemove = shared
-                .OnItemRemoved(clonedList => changeTracker.RemoveItems(clonedList.List), invokeOnUnsubscribe: false)
-                .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.List))
-                .SubscribeSafe(
-                    _ =>
-                    {
-                        changeTracker.EmitChanges(observer);
-                        parentUpdate = false;
-                    },
-                    observer.OnError);
-
-            return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove);
-        });
+        protected override void EmitChanges(IObserver<IChangeSet<TDestination>> observer) =>
+            _changeSetMergeTracker.EmitChanges(observer);
+    }
 }

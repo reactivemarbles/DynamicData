@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Internal;
 
@@ -11,53 +10,68 @@ namespace DynamicData.Cache.Internal;
 /// <summary>
 /// Operator that is similiar to MergeMany but intelligently handles Cache ChangeSets.
 /// </summary>
-internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDestinationKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> selector, IEqualityComparer<TDestination>? equalityComparer, IComparer<TDestination>? comparer)
+internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDestinationKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> changeSetSelector, IEqualityComparer<TDestination>? equalityComparer, IComparer<TDestination>? comparer)
     where TObject : notnull
     where TKey : notnull
     where TDestination : notnull
     where TDestinationKey : notnull
 {
     public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => Observable.Create<IChangeSet<TDestination, TDestinationKey>>(
-        observer =>
+        observer => new Subscription(source, changeSetSelector, observer, equalityComparer, comparer));
+
+    // Maintains state for a single subscription
+    private sealed class Subscription : CacheParentSubscription<ChangeSetCache<TDestination, TDestinationKey>, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
+    {
+        private readonly Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey> _cache = new();
+        private readonly ChangeSetMergeTracker<TDestination, TDestinationKey> _changeSetMergeTracker;
+
+        public Subscription(
+            IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> changeSetSelector,
+            IObserver<IChangeSet<TDestination, TDestinationKey>> observer,
+            IEqualityComparer<TDestination>? equalityComparer,
+            IComparer<TDestination>? comparer)
+            : base(observer)
         {
-            var locker = InternalEx.NewLock();
-            var cache = new Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey>();
-            var parentUpdate = false;
+            _changeSetMergeTracker = new(() => _cache.Items, comparer, equalityComparer);
 
-            // This is manages all of the changes
-            var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => cache.Items, comparer, equalityComparer);
+            // Child Observable has to go into the ChangeSetCache so the locking protects it
+            CreateParentSubscription(source.Transform((obj, key) =>
+                new ChangeSetCache<TDestination, TDestinationKey>(MakeChildObservable(changeSetSelector(obj, key).IgnoreSameReferenceUpdate()))));
+        }
 
-            // Transform to a cache changeset of child caches, synchronize, update the local copy, and publish.
-            var shared = source
-                .Transform((obj, key) => new ChangeSetCache<TDestination, TDestinationKey>(selector(obj, key).Synchronize(locker)))
-                .Synchronize(locker)
-                .Do(changes =>
+    protected override void ParentOnNext(IChangeSet<ChangeSetCache<TDestination, TDestinationKey>, TKey> changes)
+        {
+            // Process all the changes at once to preserve the changeset order
+            foreach (var change in changes.ToConcreteType())
+            {
+                switch (change.Reason)
                 {
-                    cache.Clone(changes);
-                    parentUpdate = true;
-                })
-                .Publish();
+                    // Shutdown existing sub (if any) and create a new one that
+                    // Will update the cache and emit the changes
+                    case ChangeReason.Add or ChangeReason.Update:
+                        _cache.AddOrUpdate(change.Current, change.Key);
+                        AddChildSubscription(change.Current.Source, change.Key);
+                        if (change.Previous.HasValue)
+                        {
+                            _changeSetMergeTracker.RemoveItems(change.Previous.Value.Cache.KeyValues);
+                        }
+                        break;
 
-            // Merge the child changeset changes together and apply to the tracker
-            var subMergeMany = shared
-                .MergeMany(cacheChangeSet => cacheChangeSet.Source)
-                .SubscribeSafe(
-                    changes => changeTracker.ProcessChangeSet(changes, !parentUpdate ? observer : null),
-                    observer.OnError,
-                    observer.OnCompleted);
+                    // Shutdown the existing subscription and remove from the cache
+                    case ChangeReason.Remove:
+                        _cache.Remove(change.Key);
+                        RemoveChildSubscription(change.Key);
+                        _changeSetMergeTracker.RemoveItems(change.Current.Cache.KeyValues);
+                        break;
+                }
+            }
+        }
 
-            // When a source item is removed, all of its sub-items need to be removed
-            var subRemove = shared
-                .OnItemRemoved(changeSetCache => changeTracker.RemoveItems(changeSetCache.Cache.KeyValues), invokeOnUnsubscribe: false)
-                .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues))
-                .SubscribeSafe(
-                    _ =>
-                    {
-                        changeTracker.EmitChanges(observer);
-                        parentUpdate = false;
-                    },
-                    observer.OnError);
+        protected override void ChildOnNext(IChangeSet<TDestination, TDestinationKey> changes, TKey parentKey) =>
+            _changeSetMergeTracker.ProcessChangeSet(changes, null);
 
-            return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove);
-        });
+        protected override void EmitChanges(IObserver<IChangeSet<TDestination, TDestinationKey>> observer) =>
+            _changeSetMergeTracker.EmitChanges(observer);
+    }
 }

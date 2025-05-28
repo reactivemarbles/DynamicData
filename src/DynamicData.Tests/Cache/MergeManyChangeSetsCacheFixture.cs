@@ -811,6 +811,47 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         results.Summary.Overall.Removes.Should().Be(PricesPerMarket);
     }
 
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void OrderOfChangesIsPreserved(bool removeFirst)
+    {
+        // Arrange
+        var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
+        AddUniquePrices(markets);
+        _marketCache.AddOrUpdate(markets);
+        var markets2 = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
+        AddUniquePrices(markets2);
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.EqualityComparer).AsAggregator();
+        (var firstReason, var nextReason, int expectedChanges) = removeFirst 
+            ? (ChangeReason.Remove, ChangeReason.Add, 2 * MarketCount * PricesPerMarket)
+            : (ChangeReason.Add, ChangeReason.Remove, 3 * MarketCount * PricesPerMarket);
+
+        // Act
+        _marketCache.Edit(updater =>
+        {
+            if (removeFirst)
+            {
+                updater.Clear();
+                updater.AddOrUpdate(markets2);
+            }
+            else
+            {
+
+                updater.AddOrUpdate(markets2);
+                updater.Clear();
+            }
+        });
+
+        // Assert
+        results.Messages.Count.Should().Be(2);
+        results.Messages[0].All(change => change.Reason is ChangeReason.Add).Should().BeTrue();
+        results.Messages[1].Count.Should().Be(expectedChanges);
+        results.Messages[1].Take(MarketCount * PricesPerMarket).All(change => change.Reason == firstReason).Should().BeTrue();
+        results.Messages[1].Skip(MarketCount * PricesPerMarket).All(change => change.Reason == nextReason).Should().BeTrue();
+    }
+
     public void Dispose()
     {
         _marketCacheResults.Dispose();
