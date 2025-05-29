@@ -279,9 +279,6 @@ namespace DynamicData.Alias
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Where<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, bool>> predicateChanged)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Where<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Reactive.Unit> reapplyFilter)
-            where TObject :  notnull
-            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Where<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, bool>> predicateChanged, System.IObservable<System.Reactive.Unit> reapplyFilter)
             where TObject :  notnull
             where TKey :  notnull { }
@@ -1321,9 +1318,6 @@ namespace DynamicData
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, bool>> predicateChanged, bool suppressEmptyChangeSets = true)
-            where TObject :  notnull
-            where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Reactive.Unit> reapplyFilter, bool suppressEmptyChangeSets = true)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, bool>> predicateChanged, System.IObservable<System.Reactive.Unit> reapplyFilter, bool suppressEmptyChangeSets = true)

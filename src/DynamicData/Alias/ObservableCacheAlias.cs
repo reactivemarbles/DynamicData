@@ -298,24 +298,6 @@ public static class ObservableCacheAlias
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <param name="reapplyFilter">Observable to re-evaluate whether the filter still matches items. Use when filtering on mutable values.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Unit> reapplyFilter)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        reapplyFilter.ThrowArgumentNullExceptionIfNull(nameof(reapplyFilter));
-
-        return source.Filter(reapplyFilter);
-    }
-
-    /// <summary>
-    /// Creates a filtered stream which can be dynamically filtered.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
     /// <param name="predicateChanged">Observable to change the underlying predicate.</param>
     /// <param name="reapplyFilter">Observable to re-evaluate whether the filter still matches items. Use when filtering on mutable values.</param>
     /// <returns>An observable which emits the change set.</returns>

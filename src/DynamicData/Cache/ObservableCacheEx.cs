@@ -1507,25 +1507,6 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <param name="reapplyFilter">Observable to re-evaluate whether the filter still matches items. Use when filtering on mutable values.</param>
-    /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status.</param>
-    /// <returns>An observable which emits change sets.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Unit> reapplyFilter, bool suppressEmptyChangeSets = true)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        reapplyFilter.ThrowArgumentNullExceptionIfNull(nameof(reapplyFilter));
-
-        return source.Filter(Observable.Empty<Func<TObject, bool>>(), reapplyFilter, suppressEmptyChangeSets);
-    }
-
-    /// <summary>
-    /// Creates a filtered stream which can be dynamically filtered.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
     /// <param name="predicateChanged">Observable to change the underlying predicate.</param>
     /// <param name="reapplyFilter">Observable to re-evaluate whether the filter still matches items. Use when filtering on mutable values.</param>
     /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status.</param>

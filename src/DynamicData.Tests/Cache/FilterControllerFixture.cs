@@ -162,7 +162,10 @@ public class FilterControllerFixture : IDisposable
         using var source = new SourceCache<Person, string>(p => p.Key);
         source.AddOrUpdate(Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToArray());
 
-        var ex = Record.Exception(() => source.Connect().Filter(Observable.Return(Unit.Default)).AsObservableCache());
+        var ex = Record.Exception(() => source.Connect().Filter(
+                predicateChanged: Observable.Return<Func<Person, bool>>(static _ => true),
+                reapplyFilter: Observable.Return(Unit.Default))
+            .AsObservableCache());
         Assert.Null(ex);
     }
 
