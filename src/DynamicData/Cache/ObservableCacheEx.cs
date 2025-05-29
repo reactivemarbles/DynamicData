@@ -299,6 +299,47 @@ public static partial class ObservableCacheEx
         return new LockFreeObservableCache<TObject, TKey>(source);
     }
 
+    #if SUPPORTS_ASYNC_DISPOSABLE
+    /// <summary>
+    /// <para>
+    /// Automatically disposes items within the source collection, upon removal of the collection or teardown of the operator.
+    /// </para>
+    /// <para>
+    /// Individual items are disposed after removal or replacement changes have been sent downstream.
+    /// All items previously-published on the stream are disposed after the stream finalizes.
+    /// This includes both upstream completion or failure, or downstream un-subscription.
+    /// </para>
+    /// <para>
+    /// Disposal is supported for both <see cref="IDisposable"/> and <see cref="IAsyncDisposable"/> items.
+    /// Items implementing neither of these interfaces are unaffected by this operator.
+    /// </para>
+    /// </summary>
+    /// <typeparam name="TObject">The type of items in the source collection.</typeparam>
+    /// <typeparam name="TKey">The type of key values used to uniquely identify items in the source collection.</typeparam>
+    /// <param name="source">A stream of changes from the source collection.</param>
+    /// <param name="disposalsCompletedAccessor">
+    /// <para>
+    /// An action to be invoked upon each subscription to this operator, allowing the consumer access to the "disposalsCompleted" stream for that subscription.
+    /// </para>
+    /// <para>
+    /// The "disposalsCompleted" stream allows the consumer to properly observe the asynchronous disposal of any <see cref="IAsyncDisposable"/> items that are disposed by the operator. This stream will emit a single value, and then complete, upon successfull completion of all <see cref="IAsyncDisposable.DisposeAsync()"/> invocations performed by the operator.
+    /// </para>
+    /// <para>
+    /// Providing these notifications within a downstream channel separate from the main collection change stream ensures that these notifications can be observed even in the event of a failure within the operator, or within <paramref name="source"/> stream.
+    /// </para>
+    /// </param>
+    /// <returns>A stream containing copies of all changes observed from <paramref name="source"/>.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="disposalsCompletedAccessor"/>.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> AsyncDisposeMany<TObject, TKey>(
+                this IObservable<IChangeSet<TObject, TKey>> source,
+                Action<IObservable<Unit>> disposalsCompletedAccessor)
+            where TObject : notnull
+            where TKey : notnull
+        => Cache.Internal.AsyncDisposeMany<TObject, TKey>.Create(
+            source: source,
+            disposalsCompletedAccessor: disposalsCompletedAccessor);
+    #endif
+
     /// <summary>
     /// Automatically refresh downstream operators when any properties change.
     /// </summary>

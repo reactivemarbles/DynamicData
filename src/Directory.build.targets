@@ -15,26 +15,35 @@
     <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="($(TargetFramework) == 'netstandard2.0') OR ($(TargetFramework) == 'netstandard2.1')">
+    <DefineConstants>$(DefineConstants);SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup Condition="$(TargetFramework.StartsWith('netcoreapp'))">
-    <DefineConstants>$(DefineConstants);NETCOREAPP;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+    <DefineConstants>$(DefineConstants);NETCOREAPP;P_LINQ;SUPPORTS_BINDINGLIST;SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="($(TargetFramework) == 'netcoreapp3.0') OR ($(TargetFramework) == 'netcoreapp3.1')">
+    <DefineConstants>$(DefineConstants);SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net5'))">
-    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST;SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net6'))">
-    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST;SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net7'))">
-    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST;SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net8'))">
-    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST;SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
   </PropertyGroup>
+
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net9'))">
-    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST;SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
   </PropertyGroup>
 </Project>
