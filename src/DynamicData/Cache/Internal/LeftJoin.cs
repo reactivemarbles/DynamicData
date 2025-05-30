@@ -30,7 +30,12 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                 // create local backing stores
                 var leftShare = _left.Synchronize(locker).Publish();
                 var leftCache = leftShare.AsObservableCache(false);
-                var rightCache = _right.Synchronize(locker).ChangeKey(_rightKeySelector).AsObservableCache(false);
+
+                var rightShare = _right.Synchronize(locker).Publish();
+                var rightCache = rightShare.AsObservableCache(false);
+                var rightForeignCache = rightShare.ChangeKey(_rightKeySelector).AsObservableCache(false);
+
+                var rightForeignKeysByKey = new Dictionary<TRightKey, TLeftKey>();
 
                 // joined is the final cache
                 var joined = new ChangeAwareCache<TDestination, TLeftKey>();
@@ -48,7 +53,7 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                                 case ChangeReason.Update:
                                     // Update with left (and right if it is presents)
                                     var leftCurrent = change.Current;
-                                    var rightLookup = rightCache.Lookup(change.Key);
+                                    var rightLookup = rightForeignCache.Lookup(change.Key);
                                     joined.AddOrUpdate(_resultSelector(change.Key, leftCurrent, rightLookup), change.Key);
                                     break;
 
@@ -73,46 +78,57 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                         foreach (var change in changes.ToConcreteType())
                         {
                             var right = change.Current;
-                            var left = leftCache.Lookup(change.Key);
+                            var foreignKey = _rightKeySelector.Invoke(change.Current);
+                            var left = leftCache.Lookup(foreignKey);
 
                             switch (change.Reason)
                             {
                                 case ChangeReason.Add:
                                 case ChangeReason.Update:
                                     {
+                                        if (rightForeignKeysByKey.TryGetValue(change.Key, out var priorForeignKey)
+                                            && !EqualityComparer<TLeftKey>.Default.Equals(foreignKey, priorForeignKey))
+                                        {
+                                            var priorLeft = leftCache.Lookup(priorForeignKey);
+                                            if (priorLeft.HasValue)
+                                                joined.AddOrUpdate(_resultSelector(priorForeignKey, priorLeft.Value, Optional<TRight>.None), priorForeignKey);
+                                        }
+
                                         if (left.HasValue)
-                                        {
-                                            // Update with left and right value
-                                            joined.AddOrUpdate(_resultSelector(change.Key, left.Value, right), change.Key);
-                                        }
-                                        else
-                                        {
-                                            // remove if it is already in the cache
-                                            joined.Remove(change.Key);
-                                        }
+                                            joined.AddOrUpdate(_resultSelector(foreignKey, left.Value, right), foreignKey);
+
+                                        rightForeignKeysByKey[change.Key] = foreignKey;
                                     }
 
                                     break;
 
                                 case ChangeReason.Remove:
-                                    {
-                                        if (left.HasValue)
-                                        {
-                                            // Update with no right value
-                                            joined.AddOrUpdate(_resultSelector(change.Key, left.Value, Optional<TRight>.None), change.Key);
-                                        }
-                                        else
-                                        {
-                                            // remove if it is already in the cache
-                                            joined.Remove(change.Key);
-                                        }
-                                    }
+                                    if (left.HasValue)
+                                        joined.AddOrUpdate(_resultSelector(foreignKey, left.Value, Optional<TRight>.None), foreignKey);
+
+                                    rightForeignKeysByKey.Remove(change.Key);
 
                                     break;
 
                                 case ChangeReason.Refresh:
-                                    // propagate upstream
-                                    joined.Refresh(change.Key);
+                                    {
+                                        if (rightForeignKeysByKey.TryGetValue(change.Key, out var priorForeignKey)
+                                            && !EqualityComparer<TLeftKey>.Default.Equals(foreignKey, priorForeignKey))
+                                        {
+                                            var priorLeft = leftCache.Lookup(priorForeignKey);
+                                            if (priorLeft.HasValue)
+                                                joined.AddOrUpdate(_resultSelector(priorForeignKey, priorLeft.Value, Optional<TRight>.None), priorForeignKey);
+
+                                            if (left.HasValue)
+                                                joined.AddOrUpdate(_resultSelector(foreignKey, left.Value, right), foreignKey);
+
+                                            rightForeignKeysByKey[change.Key] = foreignKey;
+                                        }
+                                        else
+                                        {
+                                            joined.Refresh(foreignKey);
+                                        }
+                                    }
                                     break;
                             }
                         }
@@ -126,9 +142,11 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                 {
                     var observerSubscription = leftLoader.Merge(rightLoader).SubscribeSafe(observer);
 
+                    var rightShareConnection = rightShare.Connect();
+
                     hasInitialized = true;
 
-                    return new CompositeDisposable(observerSubscription, leftCache, rightCache, leftShare.Connect());
+                    return new CompositeDisposable(observerSubscription, leftCache, rightCache, rightShareConnection, leftShare.Connect());
                 }
             });
 }

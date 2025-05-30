@@ -115,6 +115,63 @@ public class RightJoinFixture : IDisposable
     }
 
     [Fact]
+    public void RefreshRightKey()
+    {
+        _left.Edit(
+            innerCache =>
+            {
+                innerCache.AddOrUpdate(new Device("Device1"));
+                innerCache.AddOrUpdate(new Device("Device2"));
+                innerCache.AddOrUpdate(new Device("Device3"));
+            });
+
+        _right.Edit(
+            innerCache =>
+            {
+                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+            });
+
+        var refreshItem = _right.Lookup(2).Value;
+
+
+        // Change pairing
+        refreshItem.Name = "Device3";
+        _right.Refresh(refreshItem);
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain(("Device2", 2));
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device3", 2));
+
+
+        // Remove pairing
+        refreshItem.Name = "Device4";
+        _right.Refresh(refreshItem);
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain(("Device3", 2));
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain((null, 2));
+
+
+        // Restore pairing
+        refreshItem.Name = "Device2";
+        _right.Refresh(refreshItem);
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain((null, 2));
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device2", 2));
+
+
+        // No change
+        _right.Refresh(refreshItem);
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain((null, 2));
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device2", 2));
+    }
+
+    [Fact]
     public void RemoveVarious()
     {
         _left.Edit(
@@ -165,6 +222,58 @@ public class RightJoinFixture : IDisposable
         _result.Data.Count.Should().Be(3);
 
         _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
+    }
+
+    [Fact]
+    public void UpdateRightKey()
+    {
+        _left.Edit(
+            innerCache =>
+            {
+                innerCache.AddOrUpdate(new Device("Device1"));
+                innerCache.AddOrUpdate(new Device("Device2"));
+                innerCache.AddOrUpdate(new Device("Device3"));
+            });
+
+        _right.Edit(
+            innerCache =>
+            {
+                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+            });
+
+        
+        // Change pairing
+        _right.AddOrUpdate(new DeviceMetaData(2,"Device3"));
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain(("Device2", 2));
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device3", 2));
+
+
+        // Remove pairing
+        _right.AddOrUpdate(new DeviceMetaData(2,"Device4"));
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain(("Device3", 2));
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain((null, 2));
+
+
+        // Restore pairing
+        _right.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain((null, 2));
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device2", 2));
+
+
+        // No change
+        _right.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain((null, 2));
+        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device2", 2));
     }
 
     [Fact]
@@ -293,7 +402,7 @@ public class RightJoinFixture : IDisposable
     {
         public bool IsAutoConnect { get; } = isAutoConnect;
         public int Key { get; } = key;
-        public string Name { get; } = name;
+        public string Name { get; set; } = name;
 
         public override string ToString() => $"Key: {Key}. Metadata: {Name}. IsAutoConnect = {IsAutoConnect}";
 

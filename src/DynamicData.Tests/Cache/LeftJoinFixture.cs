@@ -16,12 +16,12 @@ public class LeftJoinFixture : IDisposable
 
     private readonly ChangeSetAggregator<DeviceWithMetadata, string> _result;
 
-    private readonly SourceCache<DeviceMetaData, string> _right;
+    private readonly SourceCache<DeviceMetaData, int> _right;
 
     public LeftJoinFixture()
     {
         _left = new SourceCache<Device, string>(device => device.Name);
-        _right = new SourceCache<DeviceMetaData, string>(device => device.Name);
+        _right = new SourceCache<DeviceMetaData, int>(device => device.Key);
 
         _result = _left.Connect().LeftJoin(_right.Connect(), meta => meta.Name, (key, device, meta) => new DeviceWithMetadata(device, meta)).AsAggregator();
     }
@@ -59,9 +59,9 @@ public class LeftJoinFixture : IDisposable
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
-                innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
             });
 
         _result.Data.Count.Should().Be(3);
@@ -75,9 +75,9 @@ public class LeftJoinFixture : IDisposable
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
-                innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
             });
 
         _result.Data.Count.Should().Be(0);
@@ -89,9 +89,9 @@ public class LeftJoinFixture : IDisposable
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
-                innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
             });
 
         _left.Edit(
@@ -115,6 +115,59 @@ public class LeftJoinFixture : IDisposable
     }
 
     [Fact]
+    public void RefreshRightKey()
+    {
+        _left.Edit(
+            innerCache =>
+            {
+                innerCache.AddOrUpdate(new Device("Device1"));
+                innerCache.AddOrUpdate(new Device("Device2"));
+                innerCache.AddOrUpdate(new Device("Device3"));
+            });
+
+        _right.Edit(
+            innerCache =>
+            {
+                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+            });
+
+        var refreshItem = _right.Lookup(2).Value;
+
+
+        // Change pairing
+        refreshItem.Name = "Device3";
+        _right.Refresh(refreshItem);
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().NotContain(("Device2", 2));
+        _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().Contain(("Device3", 2));
+
+
+        // Remove pairing
+        refreshItem.Name = "Device4";
+        _right.Refresh(refreshItem);
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().NotContain(pair => pair.Key == 2);
+
+
+        // Restore pairing
+        refreshItem.Name = "Device2";
+        _right.Refresh(refreshItem);
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().Contain(("Device2", 2));
+
+
+        // No change
+        _right.Refresh(refreshItem);
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().Contain(("Device2", 2));
+    }
+
+    [Fact]
     public void RemoveVarious()
     {
         _left.Edit(
@@ -128,12 +181,12 @@ public class LeftJoinFixture : IDisposable
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
-                innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
             });
 
-        _right.Remove("Device3");
+        _right.Remove(3);
 
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.Count(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().Be(2);
@@ -148,9 +201,9 @@ public class LeftJoinFixture : IDisposable
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
-                innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
             });
 
         _left.Edit(
@@ -164,6 +217,55 @@ public class LeftJoinFixture : IDisposable
         _result.Data.Count.Should().Be(3);
 
         _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
+    }
+
+    [Fact]
+    public void UpdateRightKey()
+    {
+        _left.Edit(
+            innerCache =>
+            {
+                innerCache.AddOrUpdate(new Device("Device1"));
+                innerCache.AddOrUpdate(new Device("Device2"));
+                innerCache.AddOrUpdate(new Device("Device3"));
+            });
+
+        _right.Edit(
+            innerCache =>
+            {
+                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+            });
+
+        
+        // Change pairing
+        _right.AddOrUpdate(new DeviceMetaData(2,"Device3"));
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().NotContain(("Device2", 2));
+        _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().Contain(("Device3", 2));
+
+
+        // Remove pairing
+        _right.AddOrUpdate(new DeviceMetaData(2,"Device4"));
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().NotContain(pair => pair.Key == 2);
+
+
+        // Restore pairing
+        _right.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().Contain(("Device2", 2));
+
+
+        // No change
+        _right.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().Contain(("Device2", 2));
     }
 
     [Fact]
@@ -240,60 +342,30 @@ public class LeftJoinFixture : IDisposable
         public override string ToString() => $"{Name}";
     }
 
-    public class DeviceMetaData(string name, bool isAutoConnect = false) : IEquatable<DeviceMetaData>
+    public class DeviceMetaData(int key, string name, bool isAutoConnect = false) : IEquatable<DeviceMetaData>
     {
         public bool IsAutoConnect { get; } = isAutoConnect;
+        public int Key { get; } = key;
+        public string Name { get; set; } = name;
 
-        public string Name { get; } = name;
-
-        public static bool operator ==(DeviceMetaData left, DeviceMetaData right) => Equals(left, right);
-
-        public static bool operator !=(DeviceMetaData left, DeviceMetaData right) => !Equals(left, right);
+        public override string ToString() => $"Key: {Key}. Metadata: {Name}. IsAutoConnect = {IsAutoConnect}";
 
         public bool Equals(DeviceMetaData? other)
         {
-            if (other is null)
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return string.Equals(Name, other.Name) && IsAutoConnect == other.IsAutoConnect;
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return IsAutoConnect == other.IsAutoConnect && Key == other.Key && Name == other.Name;
         }
 
         public override bool Equals(object? obj)
         {
-            if (obj is null)
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            if (obj.GetType() != GetType())
-            {
-                return false;
-            }
-
-            return Equals((DeviceMetaData)obj);
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((DeviceMetaData) obj);
         }
 
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (Name.GetHashCode() * 397) ^ IsAutoConnect.GetHashCode();
-            }
-        }
-
-        public override string ToString() => $"Metadata: {Name}. IsAutoConnect = {IsAutoConnect}";
+        public override int GetHashCode() => HashCode.Combine(IsAutoConnect, Key, Name);
     }
 
     public class DeviceWithMetadata(Device device, Optional<DeviceMetaData> metaData) : IEquatable<DeviceWithMetadata>
