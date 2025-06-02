@@ -33,7 +33,12 @@ internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
                 var rightShare = _right.Synchronize(locker).Publish();
 
                 var rightCache = rightShare.AsObservableCache(false);
-                var rightGrouped = rightShare.GroupWithImmutableState(_rightKeySelector).AsObservableCache(false);
+                var rightForeignCache = rightShare
+                    .Transform(static (item, key) => (item, key))
+                    .ChangeKey(pair => _rightKeySelector.Invoke(pair.item))
+                    .AsObservableCache(false);
+
+                var rightForeignKeysByKey = new Dictionary<TRightKey, TLeftKey>();
 
                 // joined is the final cache
                 var joinedCache = new ChangeAwareCache<TDestination, TRightKey>();
@@ -44,25 +49,38 @@ internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
                 {
                     foreach (var change in changes.ToConcreteType())
                     {
-                        var leftKey = _rightKeySelector(change.Current);
+                        var foreignKey = _rightKeySelector(change.Current);
                         switch (change.Reason)
                         {
                             case ChangeReason.Add:
                             case ChangeReason.Update:
                                 // Update with right (and right if it is presents)
                                 var rightCurrent = change.Current;
-                                var leftLookup = leftCache.Lookup(leftKey);
+                                var leftLookup = leftCache.Lookup(foreignKey);
                                 joinedCache.AddOrUpdate(_resultSelector(change.Key, leftLookup, rightCurrent), change.Key);
+
+                                rightForeignKeysByKey[change.Key] = foreignKey;
                                 break;
 
                             case ChangeReason.Remove:
                                 // remove from result because a right value is expected
                                 joinedCache.Remove(change.Key);
+                                rightForeignKeysByKey.Remove(change.Key);
                                 break;
 
                             case ChangeReason.Refresh:
-                                // propagate upstream
-                                joinedCache.Refresh(change.Key);
+                                if (rightForeignKeysByKey.TryGetValue(change.Key, out var priorForeignKey)
+                                    && !EqualityComparer<TLeftKey>.Default.Equals(foreignKey, priorForeignKey))
+                                {
+                                    joinedCache.AddOrUpdate(_resultSelector(change.Key, leftCache.Lookup(foreignKey), change.Current), change.Key);
+
+                                    rightForeignKeysByKey[change.Key] = foreignKey;
+                                }
+                                else
+                                {
+                                    // propagate downstream
+                                    joinedCache.Refresh(change.Key);
+                                }
                                 break;
                         }
                     }
@@ -76,7 +94,7 @@ internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
                         foreach (var change in changes.ToConcreteType())
                         {
                             var left = change.Current;
-                            var right = rightGrouped.Lookup(change.Key);
+                            var right = rightForeignCache.Lookup(change.Key);
 
                             if (right.HasValue)
                             {
@@ -84,25 +102,25 @@ internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
                                 {
                                     case ChangeReason.Add:
                                     case ChangeReason.Update:
-                                        foreach (var keyvalue in right.Value.KeyValues)
+                                        if (right.HasValue)
                                         {
-                                            joinedCache.AddOrUpdate(_resultSelector(keyvalue.Key, left, keyvalue.Value), keyvalue.Key);
+                                            joinedCache.AddOrUpdate(_resultSelector(right.Value.key!, left, right.Value.item), right.Value.key);
                                         }
 
                                         break;
 
                                     case ChangeReason.Remove:
-                                        foreach (var keyvalue in right.Value.KeyValues)
+                                        if (right.HasValue)
                                         {
-                                            joinedCache.AddOrUpdate(_resultSelector(keyvalue.Key, Optional<TLeft>.None, keyvalue.Value), keyvalue.Key);
+                                            joinedCache.AddOrUpdate(_resultSelector(right.Value.key, Optional<TLeft>.None, right.Value.item), right.Value.key);
                                         }
 
                                         break;
 
                                     case ChangeReason.Refresh:
-                                        foreach (var key in right.Value.Keys)
+                                        if (right.HasValue)
                                         {
-                                            joinedCache.Refresh(key);
+                                            joinedCache.Refresh(right.Value.key);
                                         }
 
                                         break;

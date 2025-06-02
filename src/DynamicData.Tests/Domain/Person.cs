@@ -22,6 +22,7 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>, ICompar
     private int _age;
     private int? _ageNullable;
     private Color _favoriteColor;
+    private string _parentName;
     private AnimalFamily _petType;
 
     public Person()
@@ -39,7 +40,7 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>, ICompar
         Name = name;
         _age = age;
         Gender = gender;
-        ParentName = parentName ?? string.Empty;
+        _parentName = parentName ?? string.Empty;
     }
 
     public Person(string name, int? age, string gender = "F", string? parentName = null)
@@ -47,7 +48,7 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>, ICompar
         Name = name;
         _ageNullable = age;
         Gender = gender;
-        ParentName = parentName ?? string.Empty;
+        _parentName = parentName ?? string.Empty;
     }
 
     private Person(string name, int? age, string gender, Person personCopyKey)
@@ -55,7 +56,7 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>, ICompar
         Name = name;
         _ageNullable = age;
         Gender = gender;
-        ParentName = personCopyKey?.ParentName ?? throw new ArgumentNullException(nameof(personCopyKey));
+        _parentName = personCopyKey?.ParentName ?? throw new ArgumentNullException(nameof(personCopyKey));
         UniqueKey = personCopyKey.UniqueKey;
     }
 
@@ -93,9 +94,13 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>, ICompar
 
     public string UniqueKey { get; } = Guid.NewGuid().ToString("B");
 
-    public string Name { get; }
+    public string Name { get; init; }
 
-    public string ParentName { get; }
+    public string ParentName
+    {
+        get => _parentName;
+        set => SetAndRaise(ref _parentName, value);
+    }
 
     public static bool operator ==(Person left, Person right) => Equals(left, right);
 
