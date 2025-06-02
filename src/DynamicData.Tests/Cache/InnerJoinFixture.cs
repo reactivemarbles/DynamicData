@@ -104,6 +104,59 @@ public class InnerJoinFixture : IDisposable
     }
 
     [Fact]
+    public void RefreshRightKey()
+    {
+        _left.Edit(
+            innerCache =>
+            {
+                innerCache.AddOrUpdate(new Device("Device1"));
+                innerCache.AddOrUpdate(new Device("Device2"));
+                innerCache.AddOrUpdate(new Device("Device3"));
+            });
+
+        _right.Edit(
+            innerCache =>
+            {
+                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+            });
+
+        var refreshItem = _right.Lookup(2).Value;
+
+
+        // Change pairing
+        refreshItem.Name = "Device3";
+        _right.Refresh(refreshItem);
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Keys.Should().Contain(("Device3", 2));
+
+
+        // Remove pairing
+        refreshItem.Name = "Device4";
+        _right.Refresh(refreshItem);
+
+        _result.Data.Count.Should().Be(2);
+        _result.Data.Keys.Should().NotContain(pair => pair.rightKey == 2);
+
+
+        // Restore pairing
+        refreshItem.Name = "Device2";
+        _right.Refresh(refreshItem);
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Keys.Should().Contain(("Device2", 2));
+
+
+        // No change
+        _right.Refresh(refreshItem);
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Keys.Should().Contain(("Device2", 2));
+    }
+
+    [Fact]
     public void RemoveVarious()
     {
         _left.Edit(
@@ -159,6 +212,53 @@ public class InnerJoinFixture : IDisposable
         _result.Data.Count.Should().Be(3);
     }
 
+    [Fact]
+    public void UpdateRightKey()
+    {
+        _left.Edit(
+            innerCache =>
+            {
+                innerCache.AddOrUpdate(new Device("Device1"));
+                innerCache.AddOrUpdate(new Device("Device2"));
+                innerCache.AddOrUpdate(new Device("Device3"));
+            });
+
+        _right.Edit(
+            innerCache =>
+            {
+                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+            });
+
+        
+        // Change pairing
+        _right.AddOrUpdate(new DeviceMetaData(2,"Device3"));
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Keys.Should().Contain(("Device3", 2));
+
+
+        // Remove pairing
+        _right.AddOrUpdate(new DeviceMetaData(2,"Device4"));
+
+        _result.Data.Count.Should().Be(2);
+        _result.Data.Keys.Should().NotContain(pair => pair.rightKey == 2);
+
+
+        // Restore pairing
+        _right.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Keys.Should().Contain(("Device2", 2));
+
+
+        // No change
+        _right.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+
+        _result.Data.Count.Should().Be(3);
+        _result.Data.Keys.Should().Contain(("Device2", 2));
+    }
 
     [Fact]
     public void MultipleRight()
@@ -284,7 +384,7 @@ public class InnerJoinFixture : IDisposable
     {
         public bool IsAutoConnect { get; } = isAutoConnect;
         public int Key { get; } = key;
-        public string Name { get; } = name;
+        public string Name { get; set; } = name;
 
         public override string ToString() => $"Key: {Key}. Metadata: {Name}. IsAutoConnect = {IsAutoConnect}";
 

@@ -34,6 +34,8 @@ internal sealed class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
                 var rightCache = rightShare.AsObservableCache(false);
                 var rightGrouped = rightShare.GroupWithImmutableState(_rightKeySelector).AsObservableCache(false);
 
+                var rightForeignKeysByKey = new Dictionary<TRightKey, TLeftKey>();
+
                 // joined is the final cache
                 var joinedCache = new ChangeAwareCache<TDestination, (TLeftKey, TRightKey)>();
 
@@ -93,28 +95,55 @@ internal sealed class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
                         {
                             case ChangeReason.Add:
                             case ChangeReason.Update:
-                                // Update with right (and right if it is presents)
-                                var right = change.Current;
-                                var left = leftCache.Lookup(leftKey);
-                                if (left.HasValue)
                                 {
-                                    joinedCache.AddOrUpdate(_resultSelector((leftKey, change.Key), left.Value, right), (leftKey, change.Key));
-                                }
-                                else
-                                {
-                                    joinedCache.Remove((leftKey, change.Key));
-                                }
+                                    // If this is an update and the foreign key has changed, we need to remove the old pairing before attempting to add a new one.
+                                    if (rightForeignKeysByKey.TryGetValue(change.Key, out var oldLeftKey)
+                                        && !EqualityComparer<TLeftKey>.Default.Equals(leftKey, oldLeftKey)
+                                        && leftCache.Lookup(oldLeftKey).HasValue)
+                                    {
+                                        joinedCache.Remove((oldLeftKey, change.Key));
+                                    }
 
+                                    // If the new item has a pairing, either add or update it
+                                    rightForeignKeysByKey[change.Key] = leftKey;
+                                    var right = change.Current;
+                                    var left = leftCache.Lookup(leftKey);
+                                    if (left.HasValue)
+                                    {
+                                        joinedCache.AddOrUpdate(_resultSelector((leftKey, change.Key), left.Value, right), (leftKey, change.Key));
+                                    }
+                                }
                                 break;
 
                             case ChangeReason.Remove:
                                 // remove from result because a right value is expected
+                                rightForeignKeysByKey.Remove(change.Key);
                                 joinedCache.Remove((leftKey, change.Key));
                                 break;
 
                             case ChangeReason.Refresh:
-                                // propagate upstream
-                                joinedCache.Refresh((leftKey, change.Key));
+                                {
+                                    // Check to see if the foreign key has changed, and re-pair the item, if so
+                                    var oldLeftKey = rightForeignKeysByKey[change.Key];
+                                    rightForeignKeysByKey[change.Key] = leftKey;
+                                    if (!EqualityComparer<TLeftKey>.Default.Equals(leftKey, oldLeftKey))
+                                    {
+                                        if (leftCache.Lookup(oldLeftKey).HasValue)
+                                        {
+                                            joinedCache.Remove((oldLeftKey, change.Key));
+                                        }
+
+                                        var left = leftCache.Lookup(leftKey);
+                                        if (left.HasValue)
+                                        {
+                                            joinedCache.AddOrUpdate(_resultSelector((leftKey, change.Key), left.Value, change.Current), (leftKey, change.Key));
+                                        }
+                                    }
+                                    else
+                                    {
+                                        joinedCache.Refresh((leftKey, change.Key));
+                                    }
+                                }
                                 break;
                         }
                     }

@@ -1134,6 +1134,9 @@ namespace DynamicData
         public static DynamicData.IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, bool applyLocking = true)
             where TObject :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> AsyncDisposeMany<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Action<System.IObservable<System.Reactive.Unit>> disposalsCompletedAccessor)
+            where TObject :  notnull
+            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.TimeSpan? changeSetBuffer = default, System.TimeSpan? propertyChangeThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where TObject : System.ComponentModel.INotifyPropertyChanged
             where TKey :  notnull { }
