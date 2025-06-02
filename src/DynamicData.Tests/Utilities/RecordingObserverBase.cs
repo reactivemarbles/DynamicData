@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Reactive.Concurrency;
 using System.Reactive;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.Reactive.Testing;
 
@@ -11,6 +13,7 @@ namespace DynamicData.Tests.Utilities;
 public abstract class RecordingObserverBase<T>
     : IObserver<T>
 {
+    private readonly TaskCompletionSource _finalizationSource;
     private readonly List<Recorded<Notification<T>>> _notifications;
     private readonly IScheduler _scheduler;
 
@@ -19,6 +22,7 @@ public abstract class RecordingObserverBase<T>
 
     protected RecordingObserverBase(IScheduler scheduler)
     {
+        _finalizationSource = new();
         _notifications = new();
         _scheduler = scheduler;
     }
@@ -35,6 +39,15 @@ public abstract class RecordingObserverBase<T>
     public IReadOnlyList<Recorded<Notification<T>>> Notifications
         => _notifications;
 
+    public async Task WaitForFinalizationAsync(TimeSpan timeout)
+    {
+        using var timeoutSource = new CancellationTokenSource(timeout);
+
+        await await Task.WhenAny(
+            _finalizationSource.Task,
+            Task.Delay(Timeout.Infinite, timeoutSource.Token));
+    }
+
     protected abstract void OnNext(T value);
 
     void IObserver<T>.OnCompleted()
@@ -44,6 +57,7 @@ public abstract class RecordingObserverBase<T>
             value: Notification.CreateOnCompleted<T>()));
 
         _hasCompleted = true;
+        _finalizationSource.SetResult();
     }
     
     void IObserver<T>.OnError(Exception error)
@@ -54,6 +68,7 @@ public abstract class RecordingObserverBase<T>
 
         if (!HasFinalized)
             _error = error;
+        _finalizationSource.SetResult();
     }
 
     void IObserver<T>.OnNext(T value)
