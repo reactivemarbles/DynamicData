@@ -1640,16 +1640,16 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// keySelector.</exception>
-    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, IScheduler? scheduler = null)
-        where T : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        return ToObservableChangeSet(source, null, -1, scheduler);
-    }
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
+                this IObservable<T> source,
+                IScheduler? scheduler = null)
+            where T : notnull
+        => List.Internal.ToObservableChangeSet<T>.Create(
+            source: source,
+            expireAfter: null,
+            limitSizeTo: -1,
+            scheduler: scheduler);
 
     /// <summary>
     /// Converts the observable to an observable change set, allowing time expiry to be specified.
@@ -1660,17 +1660,17 @@ public static class ObservableListEx
     /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// keySelector.</exception>
-    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, Func<T, TimeSpan?> expireAfter, IScheduler? scheduler = null)
-        where T : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        expireAfter.ThrowArgumentNullExceptionIfNull(nameof(expireAfter));
-
-        return ToObservableChangeSet(source, expireAfter, -1, scheduler);
-    }
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
+                this IObservable<T> source,
+                Func<T, TimeSpan?> expireAfter,
+                IScheduler? scheduler = null)
+            where T : notnull
+        => List.Internal.ToObservableChangeSet<T>.Create(
+            source: source,
+            expireAfter: expireAfter,
+            limitSizeTo: -1,
+            scheduler: scheduler);
 
     /// <summary>
     /// Converts the observable to an observable change set, with a specified limit of how large the list can be.
@@ -1681,16 +1681,17 @@ public static class ObservableListEx
     /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit. Supply -1 to disable size limiting.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// keySelector.</exception>
-    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, int limitSizeTo, IScheduler? scheduler = null)
-        where T : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        return ToObservableChangeSet(source, null, limitSizeTo, scheduler);
-    }
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
+                this IObservable<T> source,
+                int limitSizeTo,
+                IScheduler? scheduler = null)
+            where T : notnull
+        => List.Internal.ToObservableChangeSet<T>.Create(
+            source: source,
+            expireAfter: null,
+            limitSizeTo: limitSizeTo,
+            scheduler: scheduler);
 
     /// <summary>
     /// Converts the observable to an observable change set, allowing size and time limit to be specified.
@@ -1702,16 +1703,18 @@ public static class ObservableListEx
     /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit. Supply -1 to disable size limiting.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// keySelector.</exception>
-    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, Func<T, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null)
-        where T : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        return new ToObservableChangeSet<T>(source, expireAfter, limitSizeTo, scheduler).Run();
-    }
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
+                this IObservable<T> source,
+                Func<T, TimeSpan?>? expireAfter,
+                int limitSizeTo,
+                IScheduler? scheduler = null)
+            where T : notnull
+        => List.Internal.ToObservableChangeSet<T>.Create(
+            source: source,
+            expireAfter: expireAfter,
+            limitSizeTo: limitSizeTo,
+            scheduler: scheduler);
 
     /// <summary>
     /// Converts the observable to an observable change set.
@@ -1721,11 +1724,16 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// keySelector.</exception>
-    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, IScheduler? scheduler = null)
-        where T : notnull => ToObservableChangeSet<T>(source, null, -1, scheduler);
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
+                this IObservable<IEnumerable<T>> source,
+                IScheduler? scheduler = null)
+            where T : notnull
+        => List.Internal.ToObservableChangeSet<T>.Create(
+            source: source,
+            expireAfter: null,
+            limitSizeTo: -1,
+            scheduler: scheduler);
 
     /// <summary>
     /// Converts the observable to an observable change set, allowing size and time limit to be specified.
@@ -1736,11 +1744,17 @@ public static class ObservableListEx
     /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// keySelector.</exception>
-    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, int limitSizeTo, IScheduler? scheduler = null)
-        where T : notnull => ToObservableChangeSet<T>(source, null, limitSizeTo, scheduler);
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
+                this IObservable<IEnumerable<T>> source,
+                int limitSizeTo,
+                IScheduler? scheduler = null)
+            where T : notnull
+        => List.Internal.ToObservableChangeSet<T>.Create(
+            source: source,
+            expireAfter: null,
+            limitSizeTo: limitSizeTo,
+            scheduler: scheduler);
 
     /// <summary>
     /// Converts the observable to an observable change set, allowing size to be specified.
@@ -1751,11 +1765,17 @@ public static class ObservableListEx
     /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// keySelector.</exception>
-    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, Func<T, TimeSpan?> expireAfter, IScheduler? scheduler = null)
-        where T : notnull => ToObservableChangeSet(source, expireAfter, -1, scheduler);
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
+                this IObservable<IEnumerable<T>> source,
+                Func<T, TimeSpan?> expireAfter,
+                IScheduler? scheduler = null)
+            where T : notnull
+        => List.Internal.ToObservableChangeSet<T>.Create(
+            source: source,
+            expireAfter: expireAfter,
+            limitSizeTo: -1,
+            scheduler: scheduler);
 
     /// <summary>
     /// Converts the observable to an observable change set, allowing size and time limit to be specified.
@@ -1770,13 +1790,17 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
-    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, Func<T, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null)
-        where T : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        return new ToObservableChangeSet<T>(source, expireAfter, limitSizeTo, scheduler).Run();
-    }
+    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
+                this IObservable<IEnumerable<T>> source,
+                Func<T, TimeSpan?>? expireAfter,
+                int limitSizeTo,
+                IScheduler? scheduler = null)
+            where T : notnull
+        => List.Internal.ToObservableChangeSet<T>.Create(
+            source: source,
+            expireAfter: expireAfter,
+            limitSizeTo: limitSizeTo,
+            scheduler: scheduler);
 
     /// <summary>
     /// Limits the size of the result set to the specified number of items.
