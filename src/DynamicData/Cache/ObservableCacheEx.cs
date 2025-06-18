@@ -4453,14 +4453,24 @@ public static partial class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IObservable<TObject> source, Func<TObject, TKey> keySelector, Func<TObject, TimeSpan?>? expireAfter = null, int limitSizeTo = -1, IScheduler? scheduler = null)
+    public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(
+            this IObservable<TObject> source,
+            Func<TObject, TKey> keySelector,
+            Func<TObject, TimeSpan?>? expireAfter = null,
+            int limitSizeTo = -1,
+            IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
 
-        return new ToObservableChangeSet<TObject, TKey>(source, keySelector, expireAfter, limitSizeTo, scheduler).Run();
+        return Cache.Internal.ToObservableChangeSet<TObject, TKey>.Create(
+            source: source,
+            keySelector: keySelector,
+            expireAfter: expireAfter,
+            limitSizeTo: limitSizeTo,
+            scheduler: scheduler);
     }
 
     /// <summary>
@@ -4478,14 +4488,24 @@ public static partial class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, Func<TObject, TimeSpan?>? expireAfter = null, int limitSizeTo = -1, IScheduler? scheduler = null)
+    public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(
+            this IObservable<IEnumerable<TObject>> source,
+            Func<TObject, TKey> keySelector,
+            Func<TObject, TimeSpan?>? expireAfter = null,
+            int limitSizeTo = -1,
+            IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
 
-        return new ToObservableChangeSet<TObject, TKey>(source, keySelector, expireAfter, limitSizeTo, scheduler).Run();
+        return Cache.Internal.ToObservableChangeSet<TObject, TKey>.Create(
+            source: source,
+            keySelector: keySelector,
+            expireAfter: expireAfter,
+            limitSizeTo: limitSizeTo,
+            scheduler: scheduler);
     }
 
     /// <summary>
