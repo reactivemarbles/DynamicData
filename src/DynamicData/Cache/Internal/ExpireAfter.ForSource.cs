@@ -204,11 +204,15 @@ internal static partial class ExpireAfter
                         _nextScheduledManagement = new()
                         {
                             Cancellation = _scheduler.Schedule(
-                                state: this,
+                                state: new WeakReference<SubscriptionBase>(this),
                                 dueTime: nextManagementDueTime,
-                                action: static (_, @this) =>
+                                action: static (_, thisReference) =>
                                 {
-                                    @this.ManageExpirations();
+                                    // Most schedulers won't clear scheduled actions upon cancellation, they'll wait until they were supposed to occur.
+                                    // A WeakReference here prevents the whole subscription from memory leaking
+                                    // Refer to https://github.com/reactivemarbles/DynamicData/issues/1025
+                                    if (thisReference.TryGetTarget(out var @this))
+                                        @this.ManageExpirations();
 
                                     return Disposable.Empty;
                                 }),

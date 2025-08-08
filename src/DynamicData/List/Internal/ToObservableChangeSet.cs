@@ -110,9 +110,7 @@ internal static class ToObservableChangeSet<TObject>
             _scheduledExpiration?.Cancellation.Dispose();
         }
 
-        private IDisposable OnScheduledExpirationInvoked(
-            IScheduler scheduler,
-            Expiration intendedExpiration)
+        private IDisposable OnScheduledExpirationInvoked(Expiration intendedExpiration)
         {
             try
             {
@@ -290,9 +288,20 @@ internal static class ToObservableChangeSet<TObject>
                 ScheduledExpiration unfinishedExpiration,
                 IScheduler scheduler)
             => unfinishedExpiration.Cancellation.Disposable = scheduler.Schedule(
-                state: unfinishedExpiration.Expiration,
+                state: (
+                    thisReference: new WeakReference<Subscription>(this),
+                    expiration: unfinishedExpiration.Expiration),
                 dueTime: unfinishedExpiration.Expiration.ExpireAt,
-                action: OnScheduledExpirationInvoked);
+                action: static (_, state) =>
+                {
+                    // Most schedulers won't clear scheduled actions upon cancellation, they'll wait until they were supposed to occur.
+                    // A WeakReference here prevents the whole subscription from memory leaking
+                    // Refer to https://github.com/reactivemarbles/DynamicData/issues/1025
+                    if (state.thisReference.TryGetTarget(out var @this))
+                        @this.OnScheduledExpirationInvoked(state.expiration);
+
+                    return Disposable.Empty;
+                });
 
         private void TryPublishCompletion()
         {
