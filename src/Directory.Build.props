@@ -14,7 +14,7 @@
     <Owners>Roland Pheasant</Owners>
     <Copyright>Copyright (c) Roland Pheasant 2011-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>http://dynamic-data.org</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/reactiveui/DynamicData</PackageProjectUrl>
     <PackageTags>DynamicData;Dynamic;Data;Rx;Reactive;Observable;Cache;Binding;ObservableCache;ObservableList;ObservableCollection;Collection;Linq</PackageTags>
     <PackageReleaseNotes>https://github.com/reactiveui/DynamicData/releases</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/reactiveui/DynamicData</RepositoryUrl>
