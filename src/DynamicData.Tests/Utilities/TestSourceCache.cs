@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -96,14 +97,30 @@ public sealed class TestSourceCache<TObject, TKey>
     }
 
     private IObservable<T> WrapStream<T>(IObservable<T> sourceStream)
-        => Observable
-            .Merge(
-                _error
-                    .Select(static error => (error is not null)
-                        ? Observable.Throw<T>(error!)
-                        : Observable.Empty<T>())
-                    .Switch(),
-                sourceStream)
-            .TakeUntil(_hasCompleted
-                .Where(static hasCompleted => hasCompleted));
+        => Observable.Create<T>(downstreamObserver => 
+        {
+            var whenCompleted = _hasCompleted
+                .Where(static hasCompleted => hasCompleted)
+                .Publish();
+
+            var subscription = Observable
+                .Merge(
+                    _error
+                        .Select(static error => (error is not null)
+                            ? Observable.Throw<T>(error!)
+                            : Observable.Empty<T>())
+                        .Switch(),
+                    sourceStream)
+                .TakeUntil(whenCompleted)
+                .SubscribeSafe(downstreamObserver);
+
+            // Delayed connection of the completion event ensures that subscribers always receive an initial changeset, if one is emitted.
+            var connection = whenCompleted.Connect();
+
+            return Disposable.Create(() =>
+            {
+                subscription.Dispose();
+                connection.Dispose();
+            });
+        });
 }
