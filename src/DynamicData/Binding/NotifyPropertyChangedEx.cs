@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -25,7 +25,7 @@ public static class NotifyPropertyChangedEx
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        return Observable.FromEventPattern<PropertyChangedEventHandler?, PropertyChangedEventArgs>(handler => source.PropertyChanged += handler, handler => source.PropertyChanged -= handler).Where(x => propertiesToMonitor.Length == 0 || propertiesToMonitor.Contains(x.EventArgs.PropertyName)).Select(_ => source);
+        return Observable.FromEventPattern<PropertyChangedEventHandler?, PropertyChangedEventArgs>(handler => source.PropertyChanged += handler, handler => source.PropertyChanged -= handler).Where(x => propertiesToMonitor.Length == 0 || propertiesToMonitor.Contains(x.EventArgs.PropertyName!)).Select(_ => source);
     }
 
     /// <summary>

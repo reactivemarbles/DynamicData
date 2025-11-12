@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -39,7 +39,7 @@ public static class IObservableListEx
         observableList = sourceList;
 
         // Return a observable that will connect to the source so we can properly dispose when the pipeline ends.
-        return Observable.Create<IChangeSet<TObject>>(observer => { return source.Finally(() => sourceList.Dispose()).SubscribeSafe(observer); });
+        return Observable.Create<IChangeSet<TObject>>(observer => source.Finally(() => sourceList.Dispose()).SubscribeSafe(observer));
     }
 
     /// <summary>
@@ -71,7 +71,7 @@ public static class IObservableListEx
         observableList = sourceList;
 
         // Return a observable that will connect to the source so we can properly dispose when the pipeline ends.
-        return Observable.Create<IChangeSet<TObject, TKey>>(observer => { return source.Do(changes => sourceList.Edit(editor => editor.Clone(changes.RemoveKey(editor)))).Finally(() => sourceList.Dispose()).SubscribeSafe(observer); });
+        return Observable.Create<IChangeSet<TObject, TKey>>(observer => source.Do(changes => sourceList.Edit(editor => editor.Clone(changes.RemoveKey(editor)))).Finally(() => sourceList.Dispose()).SubscribeSafe(observer));
     }
 
     /// <summary>
@@ -143,7 +143,7 @@ public static class IObservableListEx
     /// <param name="changeSetWithKey">The source change set.</param>
     /// <param name="list">The list needed to support refresh.</param>
     /// <returns>The down casted <see cref="IChangeSet{TObject}"/>.</returns>
-    private static IChangeSet<TObject> RemoveKey<TObject, TKey>(this IChangeSet<TObject, TKey> changeSetWithKey, IExtendedList<TObject> list)
+    private static ChangeSet<TObject> RemoveKey<TObject, TKey>(this IChangeSet<TObject, TKey> changeSetWithKey, IExtendedList<TObject> list)
         where TObject : notnull
         where TKey : notnull
     {

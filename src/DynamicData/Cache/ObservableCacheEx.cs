@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -1660,32 +1660,6 @@ public static partial class ObservableCacheEx
         filterFactory.ThrowArgumentNullExceptionIfNull(nameof(filterFactory));
 
         return source.FilterOnObservable((obj, _) => filterFactory(obj), buffer, scheduler);
-    }
-
-    /// <summary>
-    /// Filters source on the specified property using the specified predicate.
-    /// The filter will automatically reapply when a property changes.
-    /// When there are likely to be a large number of property changes specify a throttle to improve performance.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <typeparam name="TProperty">The type of the property.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="propertySelector">The property selector. When the property changes a the filter specified will be re-evaluated.</param>
-    /// <param name="predicate">A predicate based on the object which contains the changed property.</param>
-    /// <param name="propertyChangedThrottle">The property changed throttle.</param>
-    /// <param name="scheduler">The scheduler used when throttling.</param>
-    /// <returns>An observable which emits change sets.</returns>
-    [Obsolete("Use AutoRefresh(), followed by Filter() instead")]
-    public static IObservable<IChangeSet<TObject, TKey>> FilterOnProperty<TObject, TKey, TProperty>(this IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TProperty>> propertySelector, Func<TObject, bool> predicate, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
-        where TObject : INotifyPropertyChanged
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        propertySelector.ThrowArgumentNullExceptionIfNull(nameof(propertySelector));
-        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
-
-        return new FilterOnProperty<TObject, TKey, TProperty>(source, propertySelector, predicate, propertyChangedThrottle, scheduler).Run();
     }
 
     /// <summary>

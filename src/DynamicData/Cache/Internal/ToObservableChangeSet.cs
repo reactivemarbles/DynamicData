@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -86,9 +86,9 @@ internal static class ToObservableChangeSet<TObject, TKey>
             _downstreamItems = new();
             _downstreamObserver = downstreamObserver;
             _evictionQueue = new();
-            _expirationQueue = new();
+            _expirationQueue = [];
             _expireAfter = expireAfter;
-            _expireAtsByKey = new();
+            _expireAtsByKey = [];
             _keySelector = keySelector;
             _limitSizeTo = limitSizeTo;
             _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;

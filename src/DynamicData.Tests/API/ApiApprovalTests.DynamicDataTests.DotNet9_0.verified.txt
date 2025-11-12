@@ -309,8 +309,6 @@ namespace DynamicData.Binding
         protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null) { }
         protected virtual void SetAndRaise<T>(ref T backingField, T newValue, [System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null) { }
         protected virtual void SetAndRaise<T>(ref T backingField, T newValue, System.Collections.Generic.IEqualityComparer<T>? comparer, [System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null) { }
-        [System.Obsolete("This never worked properly in the first place")]
-        public System.IDisposable SuspendNotifications(bool invokePropertyChangeEventWhenDisposed = true) { }
     }
     public class BindingListAdaptor<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  T> : DynamicData.IChangeSetAdaptor<T>
         where T :  notnull
@@ -469,7 +467,7 @@ namespace DynamicData.Binding
         public static bool operator !=(DynamicData.Binding.PropertyValue<TObject, TValue>? left, DynamicData.Binding.PropertyValue<TObject, TValue>? right) { }
         public static bool operator ==(DynamicData.Binding.PropertyValue<TObject, TValue>? left, DynamicData.Binding.PropertyValue<TObject, TValue>? right) { }
     }
-    public struct SortAndBindOptions : System.IEquatable<DynamicData.Binding.SortAndBindOptions>
+    public readonly struct SortAndBindOptions : System.IEquatable<DynamicData.Binding.SortAndBindOptions>
     {
         public SortAndBindOptions() { }
         public int InitialCapacity { get; init; }
@@ -1343,10 +1341,6 @@ namespace DynamicData
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> FilterOnObservable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, TKey, System.IObservable<bool>> filterFactory, System.TimeSpan? buffer = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
             where TObject :  notnull
-            where TKey :  notnull { }
-        [System.Obsolete("Use AutoRefresh(), followed by Filter() instead")]
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> FilterOnProperty<TObject, TKey, TProperty>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Linq.Expressions.Expression<System.Func<TObject, TProperty>> propertySelector, System.Func<TObject, bool> predicate, System.TimeSpan? propertyChangedThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
-            where TObject : System.ComponentModel.INotifyPropertyChanged
             where TKey :  notnull { }
         [System.Obsolete("This can cause unhandled exception issues so do not use")]
         public static System.IObservable<T> FinallySafe<T>(this System.IObservable<T> source, System.Action finallyAction) { }

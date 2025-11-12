@@ -3,7 +3,7 @@
 <Project>
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591;1701;1702;1705;VSX1000</NoWarn>
+    <NoWarn>$(NoWarn);1591;1701;1702;1705;VSX1000;CA1510</NoWarn>
     <Platform>AnyCPU</Platform>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
@@ -60,14 +60,14 @@
   </PropertyGroup>
 
   <ItemGroup>	
-    <PackageReference Include="Nerdbank.GitVersioning" Version="3.8.118" PrivateAssets="all" />	
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.9.50" PrivateAssets="all" />	
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.10" />
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
     <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
-    <PackageReference Include="Roslynator.Analyzers" Version="4.13.1" PrivateAssets="All" />
+    <PackageReference Include="Roslynator.Analyzers" Version="4.14.1" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />

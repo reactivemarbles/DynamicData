@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" Version="35.*" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.*" />
     <PackageReference Include="xunit" Version="$(XunitVersion)" />
     <PackageReference Include="xunit.runner.console" Version="$(XunitVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.*" />

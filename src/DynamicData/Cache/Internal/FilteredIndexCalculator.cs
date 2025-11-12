@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -16,7 +16,7 @@ internal static class FilteredIndexCalculator<TObject, TKey>
             var removed = previousItems.Select((item, index) => new Change<TObject, TKey>(ChangeReason.Remove, item.Key, item.Value, index));
             var newItems = currentItems.Select((item, index) => new Change<TObject, TKey>(ChangeReason.Add, item.Key, item.Value, index));
 
-            return new List<Change<TObject, TKey>>(removed.Union(newItems));
+            return [.. removed.Union(newItems)];
         }
 
         var previousList = previousItems.ToList();
@@ -130,7 +130,7 @@ internal static class FilteredIndexCalculator<TObject, TKey>
         return result;
     }
 
-    private static int GetInsertPositionLinear(IList<KeyValuePair<TKey, TObject>> list, KeyValuePair<TKey, TObject> item, IComparer<KeyValuePair<TKey, TObject>> comparer)
+    private static int GetInsertPositionLinear(List<KeyValuePair<TKey, TObject>> list, KeyValuePair<TKey, TObject> item, IComparer<KeyValuePair<TKey, TObject>> comparer)
     {
         for (var i = 0; i < list.Count; i++)
         {

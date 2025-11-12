@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -64,9 +64,9 @@ internal static partial class ExpireAfter
 
                 _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
 
-                _expirationDueTimesByKey = new();
+                _expirationDueTimesByKey = [];
                 _itemsCache = new();
-                _proposedExpirationsQueue = new();
+                _proposedExpirationsQueue = [];
 
                 _sourceSubscription = source
                     .Synchronize(SynchronizationGate)
@@ -346,22 +346,17 @@ internal static partial class ExpireAfter
             }
         }
 
-        private sealed class OnDemandSubscription
-            : SubscriptionBase
+        private sealed class OnDemandSubscription(
+                IObserver<IChangeSet<TObject, TKey>> observer,
+                IScheduler? scheduler,
+                IObservable<IChangeSet<TObject, TKey>> source,
+                Func<TObject, TimeSpan?> timeSelector)
+                        : SubscriptionBase(
+                observer,
+                scheduler,
+                source,
+                timeSelector)
         {
-            public OnDemandSubscription(
-                    IObserver<IChangeSet<TObject, TKey>> observer,
-                    IScheduler? scheduler,
-                    IObservable<IChangeSet<TObject, TKey>> source,
-                    Func<TObject, TimeSpan?> timeSelector)
-                : base(
-                    observer,
-                    scheduler,
-                    source,
-                    timeSelector)
-            {
-            }
-
             protected override DateTimeOffset? GetNextManagementDueTime()
                 => GetNextProposedExpirationDueTime();
 
