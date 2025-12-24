@@ -106,10 +106,7 @@ public static class EnumerableEx
         }
     }
 
-#if !WINDOWS_UWP
     internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => new(source);
-
-#endif
 
     /// <summary>
     /// Returns an object with it's current index.
