@@ -19,14 +19,6 @@
     <DefineConstants>$(DefineConstants);SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$(TargetFramework.StartsWith('netcoreapp'))">
-    <DefineConstants>$(DefineConstants);NETCOREAPP;P_LINQ;SUPPORTS_BINDINGLIST;SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="($(TargetFramework) == 'netcoreapp3.0') OR ($(TargetFramework) == 'netcoreapp3.1')">
-    <DefineConstants>$(DefineConstants);SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
-  </PropertyGroup>
-
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net5'))">
     <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST;SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
   </PropertyGroup>
@@ -44,6 +36,10 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net9'))">
+    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST;SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net10'))">
     <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST;SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
   </PropertyGroup>
 </Project>

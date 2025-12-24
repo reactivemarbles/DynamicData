@@ -35,11 +35,6 @@
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
-  
-  <!-- MonoAndroid doesn't seem to want to allow debugging for maintainers -->
-  <PropertyGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
-    <DebugType>Full</DebugType>
-  </PropertyGroup>
 
   <PropertyGroup Condition="$(IsTestProject) OR $(IsBenchmarkProject)">
     <IsPackable>false</IsPackable>
