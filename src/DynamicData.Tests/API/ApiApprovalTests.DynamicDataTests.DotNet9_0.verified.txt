@@ -2522,7 +2522,6 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<T>> Xor<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, params System.IObservable<DynamicData.IChangeSet<T>>[] others)
             where T :  notnull { }
     }
-    public static class ObsoleteEx { }
     public class PageContext<TObject> : System.IEquatable<DynamicData.PageContext<TObject>>
     {
         public PageContext(DynamicData.Operators.IPageResponse Response, System.Collections.Generic.IComparer<TObject> Comparer, DynamicData.SortAndPageOptions Options) { }
