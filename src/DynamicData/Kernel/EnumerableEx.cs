@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -106,10 +106,7 @@ public static class EnumerableEx
         }
     }
 
-#if !WINDOWS_UWP
     internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => new(source);
-
-#endif
 
     /// <summary>
     /// Returns an object with it's current index.

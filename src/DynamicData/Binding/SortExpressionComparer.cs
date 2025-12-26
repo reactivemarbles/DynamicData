@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -15,14 +15,14 @@ public class SortExpressionComparer<T> : List<SortExpression<T>>, IComparer<T>
     /// </summary>
     /// <param name="expression">The expression.</param>
     /// <returns>A comparer in ascending order.</returns>
-    public static SortExpressionComparer<T> Ascending(Func<T, IComparable> expression) => new() { new(expression) };
+    public static SortExpressionComparer<T> Ascending(Func<T, IComparable> expression) => [new(expression)];
 
     /// <summary>
     /// Create an descending sort expression.
     /// </summary>
     /// <param name="expression">The expression.</param>
     /// <returns>A comparer in descending order.</returns>
-    public static SortExpressionComparer<T> Descending(Func<T, IComparable> expression) => new() { new(expression, SortDirection.Descending) };
+    public static SortExpressionComparer<T> Descending(Func<T, IComparable> expression) => [new(expression, SortDirection.Descending)];
 
     /// <inheritdoc/>
     public int Compare(T? x, T? y)

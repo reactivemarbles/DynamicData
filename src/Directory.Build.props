@@ -3,7 +3,7 @@
 <Project>
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591;1701;1702;1705;VSX1000</NoWarn>
+    <NoWarn>$(NoWarn);1591;1701;1702;1705;VSX1000;CA1510</NoWarn>
     <Platform>AnyCPU</Platform>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
@@ -35,11 +35,6 @@
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
-  
-  <!-- MonoAndroid doesn't seem to want to allow debugging for maintainers -->
-  <PropertyGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
-    <DebugType>Full</DebugType>
-  </PropertyGroup>
 
   <PropertyGroup Condition="$(IsTestProject) OR $(IsBenchmarkProject)">
     <IsPackable>false</IsPackable>
@@ -63,7 +58,7 @@
     <PackageReference Include="Nerdbank.GitVersioning" Version="3.9.50" PrivateAssets="all" />	
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.10" />
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
     <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />

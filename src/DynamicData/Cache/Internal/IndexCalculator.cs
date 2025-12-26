@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -232,7 +232,7 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
         return ~index;
     }
 
-    private int GetInsertPositionLinear(IList<KeyValuePair<TKey, TObject>> list, KeyValuePair<TKey, TObject> item)
+    private int GetInsertPositionLinear(List<KeyValuePair<TKey, TObject>> list, KeyValuePair<TKey, TObject> item)
     {
         for (var i = 0; i < list.Count; i++)
         {

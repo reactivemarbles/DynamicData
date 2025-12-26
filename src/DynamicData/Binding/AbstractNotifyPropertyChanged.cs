@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -18,16 +18,6 @@ public abstract class AbstractNotifyPropertyChanged : INotifyPropertyChanged
     /// Occurs when a property value has changed.
     /// </summary>
     public event PropertyChangedEventHandler? PropertyChanged;
-
-    /// <summary>
-    /// Suspends notifications. When disposed, a reset notification is fired.
-    /// </summary>
-    /// <param name="invokePropertyChangeEventWhenDisposed">If the property changed event should be invoked when disposed.</param>
-    /// <returns>A disposable to indicate to stop suspending the notifications.</returns>
-    [Obsolete("This never worked properly in the first place")]
-    [SuppressMessage("Design", "CA1822: Make static", Justification = "Backwards compatibility")]
-    public IDisposable SuspendNotifications(bool invokePropertyChangeEventWhenDisposed = true) =>
-        Disposable.Empty; // Removed code because it adds weight to the object
 
     /// <summary>
     /// Invokes on property changed.

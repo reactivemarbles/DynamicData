@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -9,7 +9,7 @@ namespace DynamicData.Binding;
 /// <summary>
 /// Options for the sort and bind operator.
 /// </summary>
-public record struct SortAndBindOptions()
+public readonly record struct SortAndBindOptions()
 {
     /// <summary>
     /// The reset threshold ie the number of changes before a reset is fired.
@@ -32,10 +32,11 @@ public record struct SortAndBindOptions()
     public int InitialCapacity { get; init; } = -1;
 
     /// <summary>
-    /// Reset on first time load.
-    ///
+    /// <para>Reset on first time load.</para>
+    /// <para>
     /// This is opt-in only and is only required for consumers who need to maintain
     /// backwards compatibility will the former  BindingOptions.ResetOnFirstTimeLoad.
+    /// </para>
     /// </summary>
     public bool ResetOnFirstTimeLoad { get; init; }
 

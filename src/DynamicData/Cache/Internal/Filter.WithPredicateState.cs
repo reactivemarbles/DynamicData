@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -58,8 +58,8 @@ internal static partial class Filter
                 _predicate = predicate;
                 _suppressEmptyChangeSets = suppressEmptyChangeSets;
 
-                _downstreamChangesBuffer = new();
-                _itemStatesByKey = new();
+                _downstreamChangesBuffer = [];
+                _itemStatesByKey = [];
 
                 _latestPredicateState = default!;
 
@@ -90,7 +90,7 @@ internal static partial class Filter
             private object UpstreamSynchronizationGate
                 => _itemStatesByKey;
 
-            private IChangeSet<TObject, TKey> AssembleDownstreamChanges()
+            private ChangeSet<TObject, TKey> AssembleDownstreamChanges()
             {
                 if (_downstreamChangesBuffer.Count is 0)
                     return ChangeSet<TObject, TKey>.Empty;

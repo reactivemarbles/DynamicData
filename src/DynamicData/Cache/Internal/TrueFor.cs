@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -27,9 +27,7 @@ internal sealed class TrueFor<TObject, TKey, TValue>(IObservable<IChangeSet<TObj
                     source: _observableSelector.Invoke(item)))
                 .Publish();
 
-            var subscription = Observable.CombineLatest(
-                    // Make sure we subscribe to ALL of the items before we make the first evaluation of the collection, so any values published on-subscription don't trigger a re-evaluation of the matcher method.
-                    first: itemsWithValues.MergeMany(item => item.Observable),
+            var subscription = itemsWithValues.MergeMany(item => item.Observable).CombineLatest(
                     second: itemsWithValues.ToCollection(),
                     // We don't need to actually look at the changed values, we just need them as a trigger to re-evaluate the matcher method.
                     resultSelector: (_, itemsWithValues) => _collectionMatcher.Invoke(itemsWithValues))

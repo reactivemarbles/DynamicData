@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -21,7 +21,7 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
     private readonly object _locker = new();
 #endif
 
-    private readonly IList<Cache<TObject, TKey>> _sourceCaches = new List<Cache<TObject, TKey>>();
+    private readonly IList<Cache<TObject, TKey>> _sourceCaches = [];
 
     public IDisposable Subscribe(IObservable<IChangeSet<TObject, TKey>>[] source)
     {
@@ -75,7 +75,7 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
 
     private void Update(Cache<TObject, TKey> cache, IChangeSet<TObject, TKey> updates)
     {
-        IChangeSet<TObject, TKey> notifications;
+        ChangeSet<TObject, TKey> notifications;
 
         lock (_locker)
         {

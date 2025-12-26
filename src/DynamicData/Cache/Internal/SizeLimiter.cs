@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -32,6 +32,6 @@ internal sealed class SizeLimiter<TObject, TKey>(int size)
         _cache.Clone(updates);
         _cache.CaptureChanges(); // Clear any changes
 
-        return _cache.KeyValues.OrderByDescending(exp => exp.Value.Index).Skip(size).Select(kvp => new KeyValuePair<TKey, TObject>(kvp.Key, kvp.Value.Value)).ToArray();
+        return [.. _cache.KeyValues.OrderByDescending(exp => exp.Value.Index).Skip(size).Select(kvp => new KeyValuePair<TKey, TObject>(kvp.Key, kvp.Value.Value))];
     }
 }
