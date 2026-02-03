@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -28,7 +28,7 @@ internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, 
     {
         private IKeyValueCollection<TObject, TKey> _all = new KeyValueCollection<TObject, TKey>();
 
-        private IKeyValueCollection<TObject, TKey> _current = new KeyValueCollection<TObject, TKey>();
+        private KeyValueCollection<TObject, TKey> _current = new();
 
         private bool _isLoaded;
 

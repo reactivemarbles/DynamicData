@@ -10,7 +10,7 @@ env:
 
 jobs:
   build:
-    runs-on: windows-2022
+    runs-on: windows-latest
     outputs:
       nbgv: ${{ steps.nbgv.outputs.SemVer2 }}
     steps:        
@@ -21,14 +21,22 @@ jobs:
         fetch-depth: 0
         lfs: true
 
-    - name: Setup .NET 6/7/8/9
-      uses: actions/setup-dotnet@v5
+    - name: Setup .NET (With cache)
+      uses: actions/setup-dotnet@v5.0.1
       with:
         dotnet-version: |
             6.0.x
             7.0.x
             8.0.x
             9.0.x
+            10.0.x
+        cache: true
+        cache-dependency-path: |
+            **/Directory.Packages.props
+            **/*.sln
+            **/*.csproj
+            **/global.json
+            **/nuget.config
 
     - name: NBGV
       id: nbgv

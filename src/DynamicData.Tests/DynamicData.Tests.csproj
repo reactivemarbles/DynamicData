@@ -1,4 +1,4 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net9.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CS0618;CA1801;CA1812;CA1816;CA1062;CA1063;CS8767;CS8602;CS8618;IDE1006</NoWarn>
@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" Version="35.*" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.*" />
     <PackageReference Include="xunit" Version="$(XunitVersion)" />
     <PackageReference Include="xunit.runner.console" Version="$(XunitVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.*" />
