@@ -1,231 +1,152 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+using Bogus;
 
 namespace DynamicData.Tests.Cache;
 
-public partial class FilterFixture : IDisposable
+public static partial class FilterFixture
 {
-    private readonly ChangeSetAggregator<Person, string> _results;
-
-    private readonly ISourceCache<Person, string> _source;
-
-    public FilterFixture()
+    public enum CompletionStrategy
     {
-        _source = new SourceCache<Person, string>(p => p.Name);
-        _results = _source.Connect(p => p.Age > 20).AsAggregator();
+        Immediate,
+        Asynchronous
     }
 
-    [Fact]
-    public void AddMatched()
+    public enum EmptyChangesetPolicy
     {
-        var person = new Person("Adult1", 50);
-        _source.AddOrUpdate(person);
-
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].Should().Be(person, "Should be same person");
+        SuppressEmptyChangesets,
+        IncludeEmptyChangesets
     }
 
-    [Fact]
-    public void AddNotMatched()
+    public enum DynamicParameter
     {
-        var person = new Person("Adult1", 10);
-        _source.AddOrUpdate(person);
-
-        _results.Messages.Count.Should().Be(0, "Should have no item updates");
-        _results.Data.Count.Should().Be(0, "Cache should have no items");
+        Source,
+        PredicateChanged,
+        ReapplyFilter
     }
 
-    [Fact]
-    public void AddNotMatchedAndUpdateMatched()
+    public record Item
     {
-        const string key = "Adult1";
-        var notmatched = new Person(key, 19);
-        var matched = new Person(key, 21);
+        public static bool FilterByEvenId(Item item)
+            => (item.Id % 2) == 0;
 
-        _source.Edit(
-            updater =>
-            {
-                updater.AddOrUpdate(notmatched);
-                updater.AddOrUpdate(matched);
-            });
+        public static bool FilterByIsIncluded(Item item)
+            => item.IsIncluded;
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Messages[0].First().Current.Should().Be(matched, "Should be same person");
-        _results.Data.Items[0].Should().Be(matched, "Should be same person");
+        public static bool FilterByIdInclusionMask(
+                int     idInclusionMask,
+                Item    item)
+            => ((item.Id & idInclusionMask) == 0) && item.IsIncluded;
+
+        public static int SelectId(Item item)
+            => item.Id;
+            
+        public required int Id { get; init; }
+
+        public bool IsIncluded { get; set; }
     }
 
-    [Fact]
-    public void AttemptedRemovalOfANonExistentKeyWillBeIgnored()
+    private static (ICache<Item, int> items, IReadOnlyList<IChangeSet<Item, int>> changeSets) GenerateStressItemsAndChangeSets(
+        int         editCount,
+        int         maxChangeCount,
+        Randomizer  randomizer)
     {
-        const string key = "Adult1";
-        _source.Remove(key);
-        _results.Messages.Count.Should().Be(0, "Should be 0 updates");
-    }
-
-    [Fact]
-    public void BatchOfUniqueUpdates()
-    {
-        var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
-
-        _source.AddOrUpdate(people);
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Messages[0].Adds.Should().Be(80, "Should return 80 adds");
-
-        var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Age).ToArray();
-        var expected = _results.Data.Items.OrderBy(p => p.Age).ToArray();
-        expected.Should().BeEquivalentTo(filtered, "Incorrect Filter result");
-    }
-
-    [Fact]
-    public void BatchRemoves()
-    {
-        var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
-
-        _source.AddOrUpdate(people);
-        _source.Remove(people);
-
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(80, "Should be 80 addes");
-        _results.Messages[1].Removes.Should().Be(80, "Should be 80 removes");
-        _results.Data.Count.Should().Be(0, "Should be nothing cached");
-    }
-
-    [Fact]
-    public void BatchSuccessiveUpdates()
-    {
-        var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
-        foreach (var person in people)
+        // Not exercising Moved, since ChangeAwareCache<> doesn't support it, and I'm too lazy to implement it by hand.
+        var changeReasons = new[]
         {
-            var person1 = person;
-            _source.AddOrUpdate(person1);
+            ChangeReason.Add,
+            ChangeReason.Refresh,
+            ChangeReason.Remove,
+            ChangeReason.Update
+        };
+
+        // Weights are chosen to make the cache size likely to grow over time,
+        // exerting more pressure on the system the longer the benchmark runs.
+        // Also, to prevent bogus operations (E.G. you can't remove an item from an empty cache).
+        var changeReasonWeightsWhenCountIs0 = new[]
+        {
+            1f, // Add
+            0f, // Refresh
+            0f, // Remove
+            0f  // Update
+        };
+
+        var changeReasonWeightsOtherwise = new[]
+        {
+            0.30f, // Add
+            0.25f, // Refresh
+            0.20f, // Remove
+            0.25f  // Update
+        };
+
+        var nextItemId = 1;
+
+        var changeSets = new List<IChangeSet<Item, int>>(capacity: editCount);
+
+        var items = new ChangeAwareCache<Item, int>();
+
+        while (changeSets.Count < changeSets.Capacity)
+        {
+            var changeCount = randomizer.Int(1, maxChangeCount);
+            for (var i = 0; i < changeCount; ++i)
+            {
+                var changeReason = randomizer.WeightedRandom(changeReasons, items.Count switch
+                {
+                    0   => changeReasonWeightsWhenCountIs0,
+                    _   => changeReasonWeightsOtherwise
+                });
+
+                switch (changeReason)
+                {
+                    case ChangeReason.Add:
+                        items.AddOrUpdate(
+                            item:   new Item()
+                            {
+                                Id          = nextItemId,
+                                IsIncluded  = randomizer.Bool()
+                            },
+                            key:    nextItemId);
+                        ++nextItemId;
+                        break;
+
+                    case ChangeReason.Refresh:
+                        items.Refresh(items.Keys.ElementAt(randomizer.Int(0, items.Count - 1)));
+                        break;
+
+                    case ChangeReason.Remove:
+                        items.Remove(items.Keys.ElementAt(randomizer.Int(0, items.Count - 1)));
+                        break;
+
+                    case ChangeReason.Update:
+                        var id = items.Keys.ElementAt(randomizer.Int(0, items.Count - 1));
+                        items.AddOrUpdate(
+                            item:   new Item()
+                            {
+                                Id          = id,
+                                IsIncluded  = randomizer.Bool()
+                            },
+                            key:    id);
+                        break;
+                }
+            }
+
+            changeSets.Add(items.CaptureChanges());
         }
 
-        _results.Messages.Count.Should().Be(80, "Should be 100 updates");
-        _results.Data.Count.Should().Be(80, "Should be 100 in the cache");
-        var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Age).ToArray();
-        _results.Data.Items.OrderBy(p => p.Age).Should().BeEquivalentTo(filtered, "Incorrect Filter result");
+        return (items, changeSets);
     }
 
-    [Fact]
-    public void Clear()
+    private static IReadOnlyList<int> GenerateRandomIdInclusionMasks(
+        int         valueCount,
+        Randomizer  randomizer)
     {
-        var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
-        _source.AddOrUpdate(people);
-        _source.Clear();
+        var values = new List<int>(capacity: valueCount);
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(80, "Should be 80 addes");
-        _results.Messages[1].Removes.Should().Be(80, "Should be 80 removes");
-        _results.Data.Count.Should().Be(0, "Should be nothing cached");
-    }
+        while (values.Count < valueCount)
+            values.Add(randomizer.Int());
 
-
-    public void Dispose()
-    {
-        _source.Dispose();
-        _results.Dispose();
-    }
-
-    [Fact]
-    public void DuplicateKeyWithMerge()
-    {
-        const string key = "Adult1";
-        var newperson = new Person(key, 30);
-
-        using var results = _source.Connect().Merge(_source.Connect()).Filter(p => p.Age > 20).AsAggregator();
-        _source.AddOrUpdate(newperson); // previously this would throw an exception
-
-        results.Messages.Count.Should().Be(2, "Should be 2 messages");
-        results.Messages[0].Adds.Should().Be(1, "Should be 1 add");
-        results.Messages[1].Updates.Should().Be(1, "Should be 1 update");
-        results.Data.Count.Should().Be(1, "Should be cached");
-    }
-
-    [Fact]
-    public void Remove()
-    {
-        const string key = "Adult1";
-        var person = new Person(key, 50);
-
-        _source.AddOrUpdate(person);
-        _source.Remove(person);
-
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(1, "Should be 80 adds");
-        _results.Messages[1].Removes.Should().Be(1, "Should be 80 removes");
-        _results.Data.Count.Should().Be(0, "Should be nothing cached");
-    }
-
-    [Fact]
-    public void SameKeyChanges()
-    {
-        const string key = "Adult1";
-
-        _source.Edit(
-            updater =>
-            {
-                updater.AddOrUpdate(new Person(key, 50));
-                updater.AddOrUpdate(new Person(key, 52));
-                updater.AddOrUpdate(new Person(key, 53));
-                updater.Remove(key);
-            });
-
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
-        _results.Messages[0].Updates.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Removes.Should().Be(1, "Should be 1 remove");
-    }
-
-    [Fact]
-    public void UpdateMatched()
-
-    {
-        const string key = "Adult1";
-        var newperson = new Person(key, 50);
-        var updated = new Person(key, 51);
-        _source.AddOrUpdate(newperson);
-        _source.AddOrUpdate(updated);
-
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
-        _results.Messages[1].Updates.Should().Be(1, "Should be 1 update");
-    }
-
-    [Fact]
-    public void UpdateNotMatched()
-    {
-        const string key = "Adult1";
-        var newperson = new Person(key, 10);
-        var updated = new Person(key, 11);
-
-        _source.AddOrUpdate(newperson);
-        _source.AddOrUpdate(updated);
-
-        _results.Messages.Count.Should().Be(0, "Should be no updates");
-        _results.Data.Count.Should().Be(0, "Should nothing cached");
-    }
-
-    [Fact]
-    public void EmptyChanges()
-    {
-        IChangeSet<Person, string>? change = null;
-            
-        //need to also apply overload on connect as that will also need to provide and empty notification
-        // [alternatively _source.Connect(x=> x.Age == 20, suppressEmptyChangeSets: false)] instead 
-        using var subscription = _source.Connect(suppressEmptyChangeSets: false)
-            .Filter(x=> x.Age == 20, false)
-            .Subscribe(c => change = c);
-
-        change.Should().NotBeNull();
-        change!.Count.Should().Be(0);
+        return values;
     }
 }
