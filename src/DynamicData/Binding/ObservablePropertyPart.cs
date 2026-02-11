@@ -9,9 +9,9 @@ using System.Reactive;
 namespace DynamicData.Binding;
 
 [DebuggerDisplay("ObservablePropertyPart<{" + nameof(expression) + "}>")]
-internal sealed class ObservablePropertyPart(MemberExpression expression)
+internal sealed class ObservablePropertyPart(Expression expression)
 {
-    public Func<object, object> Accessor { get; } = expression.CreateValueAccessor();
+    public Func<object, object?> Invoker { get; } = expression.CreateInvoker();
 
     public Func<object, IObservable<Unit>> Factory { get; } = expression.CreatePropertyChangedFactory();
 }

@@ -22,49 +22,51 @@ internal static class ExpressionBuilder
         }
     }
 
-    internal static Func<object, IObservable<Unit>> CreatePropertyChangedFactory(this MemberExpression source)
+    internal static Func<object, IObservable<Unit>> CreatePropertyChangedFactory(this Expression source)
     {
-        var property = source.GetProperty();
-
-        if (property.DeclaringType is null)
+        if ((source is not MemberExpression { Member: PropertyInfo property })
+            || !typeof(INotifyPropertyChanged).IsAssignableFrom(property.DeclaringType))
         {
-            throw new ArgumentException("The property does not have a valid declaring type.", nameof(source));
+            return static _ => Observable.Never<Unit>();
         }
 
-        var notifyPropertyChanged = typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(property.DeclaringType.GetTypeInfo());
-
-        return t => ((t is null) || !notifyPropertyChanged)
-            ? Observable<Unit>.Never
-
-            : Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(handler => ((INotifyPropertyChanged)t).PropertyChanged += handler, handler => ((INotifyPropertyChanged)t).PropertyChanged -= handler).Where(args => args.EventArgs.PropertyName == property.Name).Select(_ => Unit.Default);
+        return target => Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+                addHandler: handler => ((INotifyPropertyChanged)target).PropertyChanged += handler,
+                removeHandler: handler => ((INotifyPropertyChanged)target).PropertyChanged -= handler)
+            .Where(pattern => pattern.EventArgs.PropertyName == property.Name)
+            .Select(static _ => Unit.Default);
     }
 
-    internal static Func<object, object> CreateValueAccessor(this MemberExpression source)
+    internal static Func<object, object?> CreateInvoker(this Expression source)
     {
-        // create an expression which accepts the parent and returns the child
-        var property = source.GetProperty();
-        var method = property.GetMethod;
-
-        if (method is null)
+        switch (source)
         {
-            throw new ArgumentException("The property does not have a valid get method.", nameof(method));
+            case MemberExpression memberExpression:
+                if (memberExpression.Member is not PropertyInfo property)
+                    throw new ArgumentException($"Unable to parse expression: Member type {memberExpression.Member.MemberType} is not supported", nameof(source));
+
+                if (property.GetMethod is null)
+                    throw new ArgumentException($"Unable to parse expression: Property \"{property.Name}\" has no getter", nameof(source));
+
+                if (property.GetMethod.IsStatic)
+                    throw new ArgumentException($"Unable to parse expression: Property \"{property.Name}\" is static", nameof(source));
+
+                return property.GetValue;
+
+            case UnaryExpression { NodeType: ExpressionType.Convert } convertExpression:
+                return (convertExpression.Type.IsGenericType
+                        && (convertExpression.Type.GetGenericTypeDefinition() == typeof(Nullable<>)))
+                    ? static target => target
+                    : target => Convert.ChangeType(
+                        value: target,
+                        conversionType: convertExpression.Type);
+
+            case null:
+                throw new ArgumentNullException(nameof(source));
+
+            default:
+                throw new ArgumentException($"Unable to parse expression: Node type {source.NodeType} not supported", nameof(source));
         }
-
-        if (source.Expression is null)
-        {
-            throw new ArgumentException("The source expression does not have a valid expression.", nameof(source));
-        }
-
-        // convert the parameter i.e. the declaring class to an object
-        var parameter = Expression.Parameter(typeof(object));
-        var converted = Expression.Convert(parameter, source.Expression.Type);
-
-        // call the get value of the property and box it
-        var propertyCall = Expression.Call(converted, method);
-        var boxed = Expression.Convert(propertyCall, typeof(object));
-        var accessorExpr = Expression.Lambda<Func<object, object>>(boxed, parameter);
-
-        return accessorExpr.Compile();
     }
 
     internal static MemberInfo GetMember<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
@@ -77,22 +79,29 @@ internal static class ExpressionBuilder
         return GetMemberInfo(expression);
     }
 
-    internal static IEnumerable<MemberExpression> GetMemberChain<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
+    internal static IEnumerable<Expression> SplitIntoSteps<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
     {
-        var memberExpression = expression.Body as MemberExpression;
-        while (memberExpression?.Expression is not null)
+        var currentStep = expression.Body;
+        while (currentStep is not null)
         {
-            if (memberExpression.Expression.NodeType != ExpressionType.Parameter)
+            switch (currentStep)
             {
-                var parent = memberExpression.Expression;
-                yield return memberExpression.Update(Expression.Parameter(parent.Type));
-            }
-            else
-            {
-                yield return memberExpression;
-            }
+                case MemberExpression memberExpression:
+                    yield return memberExpression;
+                    currentStep = memberExpression.Expression;
+                    break;
 
-            memberExpression = memberExpression.Expression as MemberExpression;
+                case ParameterExpression:
+                    yield break;
+
+                case UnaryExpression { NodeType: ExpressionType.Convert } unaryExpression:
+                    yield return unaryExpression;
+                    currentStep = unaryExpression.Operand;
+                    break;
+
+                default:
+                    throw new ArgumentException($"Unable to parse expression: Node type {currentStep.NodeType} is not supported", nameof(expression));
+            }
         }
     }
 
