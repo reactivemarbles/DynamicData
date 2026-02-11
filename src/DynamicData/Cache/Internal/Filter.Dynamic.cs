@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive;
 using System.Reactive.Linq;
 using DynamicData.Internal;
 
@@ -9,7 +10,7 @@ namespace DynamicData.Cache.Internal;
 
 internal static partial class Filter
 {
-    public static class WithPredicateState<TObject, TKey, TState>
+    public static class Dynamic<TObject, TKey, TState>
         where TObject : notnull
         where TKey : notnull
     {
@@ -17,16 +18,19 @@ internal static partial class Filter
             IObservable<IChangeSet<TObject, TKey>> source,
             IObservable<TState> predicateState,
             Func<TState, TObject, bool> predicate,
+            IObservable<Unit> reapplyFilter,
             bool suppressEmptyChangeSets)
         {
             source.ThrowArgumentNullExceptionIfNull(nameof(source));
             predicateState.ThrowArgumentNullExceptionIfNull(nameof(predicateState));
             predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+            reapplyFilter.ThrowArgumentNullExceptionIfNull(nameof(reapplyFilter));
 
             return Observable.Create<IChangeSet<TObject, TKey>>(downstreamObserver => new Subscription(
                 downstreamObserver: downstreamObserver,
                 predicate: predicate,
                 predicateState: predicateState,
+                reapplyFilter: reapplyFilter,
                 source: source,
                 suppressEmptyChangeSets: suppressEmptyChangeSets));
         }
@@ -39,10 +43,13 @@ internal static partial class Filter
             private readonly Dictionary<TKey, ItemState> _itemStatesByKey;
             private readonly Func<TState, TObject, bool> _predicate;
             private readonly IDisposable? _predicateStateSubscription;
+            private readonly IDisposable? _reapplyFilterSubscription;
             private readonly IDisposable? _sourceSubscription;
             private readonly bool _suppressEmptyChangeSets;
 
+            private bool _hasInitialized;
             private bool _hasPredicateStateCompleted;
+            private bool _hasReapplyFilterCompleted;
             private bool _hasSourceCompleted;
             private bool _isLatestPredicateStateValid;
             private TState _latestPredicateState;
@@ -51,6 +58,7 @@ internal static partial class Filter
                 IObserver<IChangeSet<TObject, TKey>> downstreamObserver,
                 Func<TState, TObject, bool> predicate,
                 IObservable<TState> predicateState,
+                IObservable<Unit> reapplyFilter,
                 IObservable<IChangeSet<TObject, TKey>> source,
                 bool suppressEmptyChangeSets)
             {
@@ -65,22 +73,46 @@ internal static partial class Filter
 
                 var onError = new Action<Exception>(OnError);
 
+                using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
+
                 _predicateStateSubscription = predicateState
                     .SubscribeSafe(
                         onNext: OnPredicateStateNext,
                         onError: onError,
                         onCompleted: OnPredicateStateCompleted);
 
+                _reapplyFilterSubscription = reapplyFilter
+                    .SubscribeSafe(
+                        onNext: OnReapplyFilterNext,
+                        onError: onError,
+                        onCompleted: OnReapplyFilterCompleted);
+
                 _sourceSubscription = source
                     .SubscribeSafe(
                         onNext: OnSourceNext,
                         onError: onError,
                         onCompleted: OnSourceCompleted);
+
+                _hasInitialized = true;
+
+                // We withhold completions triggered by the other upstreams until after the source stream has a chance to publish an initial changeset.
+                // If that happens, we need to publish the completion now.
+                var needToComplete = _suppressEmptyChangeSets
+                    && _hasPredicateStateCompleted
+                    && !_isLatestPredicateStateValid;
+
+                if (needToComplete)
+                {
+                    @lock.SwapTo(DownstreamSynchronizationGate);
+
+                    _downstreamObserver.OnCompleted();
+                }
             }
 
             public void Dispose()
             {
                 _predicateStateSubscription?.Dispose();
+                _reapplyFilterSubscription?.Dispose();
                 _sourceSubscription?.Dispose();
             }
 
@@ -121,7 +153,9 @@ internal static partial class Filter
 
                 // If we didn't get at least one predicateState value, we can't ever emit any (non-empty) downstream changesets,
                 // no matter how many items come through from source, so just go ahead and complete now.
-                if (_hasSourceCompleted || (!_isLatestPredicateStateValid && _suppressEmptyChangeSets))
+                if (_hasInitialized
+                    && ((_hasReapplyFilterCompleted && _hasSourceCompleted)
+                        || (!_isLatestPredicateStateValid && _suppressEmptyChangeSets)))
                 {
                     @lock.SwapTo(DownstreamSynchronizationGate);
 
@@ -136,36 +170,41 @@ internal static partial class Filter
                 _latestPredicateState = predicateState;
                 _isLatestPredicateStateValid = true;
 
-                foreach (var key in _itemStatesByKey.Keys)
-                {
-                    var itemState = _itemStatesByKey[key];
-
-                    var isIncluded = _predicate.Invoke(predicateState, itemState.Item);
-
-                    if (isIncluded && !itemState.IsIncluded)
-                    {
-                        _downstreamChangesBuffer.Add(new(
-                            reason: ChangeReason.Add,
-                            key: key,
-                            current: itemState.Item));
-                    }
-                    else if (!isIncluded && itemState.IsIncluded)
-                    {
-                        _downstreamChangesBuffer.Add(new(
-                            reason: ChangeReason.Remove,
-                            key: key,
-                            current: itemState.Item));
-                    }
-
-                    _itemStatesByKey[key] = new()
-                    {
-                        IsIncluded = isIncluded,
-                        Item = itemState.Item
-                    };
-                }
+                ReFilter(predicateState);
 
                 var downstreamChanges = AssembleDownstreamChanges();
-                if ((downstreamChanges.Count is not 0) || !_suppressEmptyChangeSets)
+                if (((downstreamChanges.Count is not 0) || !_suppressEmptyChangeSets) && _hasInitialized)
+                {
+                    @lock.SwapTo(DownstreamSynchronizationGate);
+
+                    _downstreamObserver.OnNext(downstreamChanges);
+                }
+            }
+
+            private void OnReapplyFilterCompleted()
+            {
+                using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
+
+                _hasReapplyFilterCompleted = true;
+
+                // If the other two sources have also completed, there's no chance of us ever needing to emit further changesets.
+                if (_hasPredicateStateCompleted && _hasSourceCompleted)
+                {
+                    @lock.SwapTo(DownstreamSynchronizationGate);
+
+                    _downstreamObserver.OnCompleted();
+                }
+            }
+
+            private void OnReapplyFilterNext(Unit value)
+            {
+                using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
+
+                if (_isLatestPredicateStateValid)
+                    ReFilter(_latestPredicateState);
+
+                var downstreamChanges = AssembleDownstreamChanges();
+                if (((downstreamChanges.Count is not 0) || !_suppressEmptyChangeSets) && _hasInitialized)
                 {
                     @lock.SwapTo(DownstreamSynchronizationGate);
 
@@ -181,7 +220,10 @@ internal static partial class Filter
 
                 // We can never emit any (non-empty) downstream changes in the future, if the collection is empty
                 // and the source has reported that it'll never change, so go ahead and complete now.
-                if (_hasPredicateStateCompleted || ((_itemStatesByKey.Count is 0) && _suppressEmptyChangeSets))
+                if ((_hasPredicateStateCompleted && _hasReapplyFilterCompleted)
+                    || (_suppressEmptyChangeSets
+                       && ((_itemStatesByKey.Count is 0)
+                           || (_hasPredicateStateCompleted && !_isLatestPredicateStateValid))))
                 {
                     @lock.SwapTo(DownstreamSynchronizationGate);
 
@@ -318,6 +360,37 @@ internal static partial class Filter
                     @lock.SwapTo(DownstreamSynchronizationGate);
 
                     _downstreamObserver.OnNext(downstreamChanges);
+                }
+            }
+
+            private void ReFilter(TState predicateState)
+            {
+                foreach (var key in _itemStatesByKey.Keys)
+                {
+                    var itemState = _itemStatesByKey[key];
+
+                    var isIncluded = _predicate.Invoke(predicateState, itemState.Item);
+
+                    if (isIncluded && !itemState.IsIncluded)
+                    {
+                        _downstreamChangesBuffer.Add(new(
+                            reason: ChangeReason.Add,
+                            key: key,
+                            current: itemState.Item));
+                    }
+                    else if (!isIncluded && itemState.IsIncluded)
+                    {
+                        _downstreamChangesBuffer.Add(new(
+                            reason: ChangeReason.Remove,
+                            key: key,
+                            current: itemState.Item));
+                    }
+
+                    _itemStatesByKey[key] = new()
+                    {
+                        IsIncluded = isIncluded,
+                        Item = itemState.Item
+                    };
                 }
             }
         }

@@ -1486,14 +1486,16 @@ public static partial class ObservableCacheEx
     /// <param name="filter">The filter.</param>
     /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status.</param>
     /// <returns>An observable which emits change sets.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, bool suppressEmptyChangeSets = true)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        return new StaticFilter<TObject, TKey>(source, filter, suppressEmptyChangeSets).Run();
-    }
+    public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(
+                this IObservable<IChangeSet<TObject, TKey>> source,
+                Func<TObject, bool> filter,
+                bool suppressEmptyChangeSets = true)
+            where TObject : notnull
+            where TKey : notnull
+        => Cache.Internal.Filter.Static<TObject, TKey>.Create(
+            source: source,
+            filter: filter,
+            suppressEmptyChangeSets: suppressEmptyChangeSets);
 
     /// <summary>
     /// Creates a filtered stream which can be dynamically filtered.
@@ -1504,15 +1506,16 @@ public static partial class ObservableCacheEx
     /// <param name="predicateChanged">Observable to change the underlying predicate.</param>
     /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status.</param>
     /// <returns>An observable which emits change sets.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, bool suppressEmptyChangeSets = true)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        predicateChanged.ThrowArgumentNullExceptionIfNull(nameof(predicateChanged));
-
-        return source.Filter(predicateChanged, Observable.Empty<Unit>(), suppressEmptyChangeSets);
-    }
+    public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(
+                this IObservable<IChangeSet<TObject, TKey>> source,
+                IObservable<Func<TObject, bool>> predicateChanged,
+                bool suppressEmptyChangeSets = true)
+            where TObject : notnull
+            where TKey : notnull
+        => source.Filter(
+            predicateChanged: predicateChanged,
+            reapplyFilter: Observable.Empty<Unit>(),
+            suppressEmptyChangeSets: suppressEmptyChangeSets);
 
     /// <summary>
     /// Creates a filtered stream which can be dynamically filtered, based on state values passed through to a static filtering predicate.
@@ -1536,10 +1539,11 @@ public static partial class ObservableCacheEx
                 bool suppressEmptyChangeSets = true)
             where TObject : notnull
             where TKey : notnull
-        => Cache.Internal.Filter.WithPredicateState<TObject, TKey, TState>.Create(
+        => Cache.Internal.Filter.Dynamic<TObject, TKey, TState>.Create(
             source: source,
             predicateState: predicateState,
             predicate: predicate,
+            reapplyFilter: Observable.Empty<Unit>(),
             suppressEmptyChangeSets: suppressEmptyChangeSets);
 
     /// <summary>
@@ -1552,16 +1556,20 @@ public static partial class ObservableCacheEx
     /// <param name="reapplyFilter">Observable to re-evaluate whether the filter still matches items. Use when filtering on mutable values.</param>
     /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status.</param>
     /// <returns>An observable which emits change sets.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, IObservable<Unit> reapplyFilter, bool suppressEmptyChangeSets = true)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        predicateChanged.ThrowArgumentNullExceptionIfNull(nameof(predicateChanged));
-        reapplyFilter.ThrowArgumentNullExceptionIfNull(nameof(reapplyFilter));
+    public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(
+                this IObservable<IChangeSet<TObject, TKey>> source,
+                IObservable<Func<TObject, bool>> predicateChanged,
+                IObservable<Unit> reapplyFilter,
+                bool suppressEmptyChangeSets = true)
+            where TObject : notnull
+            where TKey : notnull
 
-        return new DynamicFilter<TObject, TKey>(source, predicateChanged, reapplyFilter, suppressEmptyChangeSets).Run();
-    }
+        => Cache.Internal.Filter.Dynamic<TObject, TKey, Func<TObject, bool>>.Create(
+            source: source,
+            predicateState: predicateChanged,
+            predicate: static (predicate, item) => predicate.Invoke(item),
+            reapplyFilter: reapplyFilter,
+            suppressEmptyChangeSets: suppressEmptyChangeSets);
 
     /// <summary>
     /// Creates a filtered stream, optimized for stateless/deterministic filtering of immutable items.
