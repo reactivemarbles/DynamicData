@@ -55,11 +55,11 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
     // create notifier for all parts of the property path
     private static IEnumerable<IObservable<Unit>> GetNotifiers(TObject source, IEnumerable<ObservablePropertyPart> chain)
     {
-        object value = source;
+        object? value = source;
         foreach (var metadata in chain.Reverse())
         {
             var obs = metadata.Factory(value).Publish().RefCount();
-            value = metadata.Accessor(value);
+            value = metadata.Invoker(value);
             yield return obs;
 
             if (value is null)
@@ -72,10 +72,10 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
     // walk the tree and break at a null, or return the value [should reduce this to a null an expression]
     private static PropertyValue<TObject, TProperty> GetPropertyValue(TObject source, IEnumerable<ObservablePropertyPart> chain, Func<TObject, TProperty> valueAccessor)
     {
-        object value = source;
+        object? value = source;
         foreach (var metadata in chain.Reverse())
         {
-            value = metadata.Accessor(value);
+            value = metadata.Invoker(value);
             if (value is null)
             {
                 return new PropertyValue<TObject, TProperty>(source);

@@ -27,13 +27,13 @@ internal sealed class ObservablePropertyFactoryCache
             key,
             _ =>
             {
-                var memberChain = expression.GetMemberChain().ToArray();
-                if (memberChain.Length == 1)
+                var steps = expression.SplitIntoSteps().ToArray();
+                if (steps.Length == 1)
                 {
                     return new ObservablePropertyFactory<TObject, TProperty>(expression);
                 }
 
-                var chain = memberChain.Select(m => new ObservablePropertyPart(m)).ToArray();
+                var chain = steps.Select(m => new ObservablePropertyPart(m)).ToArray();
                 var accessor = expression.Compile() ?? throw new ArgumentNullException(nameof(expression));
 
                 return new ObservablePropertyFactory<TObject, TProperty>(accessor, chain);
