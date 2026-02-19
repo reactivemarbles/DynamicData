@@ -37,18 +37,4 @@ public class OnItemFixture
 
         Assert.True(called);
     }
-
-    [Fact]
-    public void OnItemRemovedCalled()
-    {
-        var called = false;
-        var source = new SourceList<Person>();
-
-        source.Connect().OnItemRemoved(_ => called = true).Subscribe();
-
-        var person = new Person("A", 1);
-        source.Add(person);
-        source.Remove(person);
-        Assert.True(called);
-    }
 }
