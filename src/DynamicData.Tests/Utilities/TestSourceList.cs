@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -71,6 +72,19 @@ public sealed class TestSourceList<T>
             _refreshRequestedPreview));
 
     // TODO: Formally add this to ISourceList
+    public void Refresh()
+    {
+        var changeSet = new ChangeSet<T>(_source.Items
+            .Select((item, index) => new Change<T>(
+                reason:     ListChangeReason.Refresh,
+                current:    item,
+                index:      index)));
+
+        _refreshRequestedPreview.OnNext(changeSet);
+        _refreshRequested.OnNext(changeSet);
+    }
+
+    // TODO: Formally add this to ISourceList
     public void Refresh(int index)
     {
         var changeSet = new ChangeSet<T>(capacity: 1)
@@ -115,14 +129,30 @@ public sealed class TestSourceList<T>
     }
 
     private IObservable<U> WrapStream<U>(IObservable<U> sourceStream)
-        => Observable
-            .Merge(
-                _error
-                    .Select(static error => (error is not null)
-                        ? Observable.Throw<U>(error!)
-                        : Observable.Empty<U>())
-                    .Switch(),
-                sourceStream)
-            .TakeUntil(_hasCompleted
-                .Where(static hasCompleted => hasCompleted));
+        => Observable.Create<U>(downstreamObserver =>
+        {
+            var hasCompleted = _hasCompleted
+                .Publish();
+            
+            var subscription = Observable
+                .Merge(
+                    _error
+                        .Select(static error => (error is not null)
+                            ? Observable.Throw<U>(error!)
+                            : Observable.Empty<U>())
+                        .Switch(),
+                    sourceStream)
+                .TakeUntil(hasCompleted
+                    .Where(static hasCompleted => hasCompleted))
+                .SubscribeSafe(downstreamObserver);
+            
+            // Make sure that an initial changeset gets published, before immediate completion.
+            var connection = hasCompleted.Connect();
+            
+            return Disposable.Create(() =>
+            {
+                connection.Dispose();
+                subscription.Dispose();
+            });
+        });
 }
