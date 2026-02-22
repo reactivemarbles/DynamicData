@@ -23,6 +23,9 @@ public sealed class ListItemRecordingObserver<T>
     public IReadOnlyList<T> RecordedItems
         => _recordedItems;
 
+    public void ClearChangeSets()
+        => _recordedChangeSets.Clear();
+    
     protected override void OnNext(IChangeSet<T> value)
     {
         if (!HasFinalized)
