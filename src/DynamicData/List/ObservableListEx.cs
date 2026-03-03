@@ -672,22 +672,22 @@ public static class ObservableListEx
             scheduler: scheduler);
 
     /// <summary>
-    /// Filters the source using the specified valueSelector.
+    /// Filters items, statically, in a list stream, based on a given predicate.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="predicate">The valueSelector.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
-        where T : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
-
-        return new Filter<T>(source, predicate).Run();
-    }
+    /// <typeparam name="T">The type of items in the list.</typeparam>
+    /// <param name="source">The list stream whose items are to be filtered.</param>
+    /// <param name="predicate">A static predicate to be used to determine which items should be included or excluded by the filter.</param>
+    /// <returns>A list stream, containing only the items matched by <paramref name="predicate"/>.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="predicate"/>.</exception>
+    /// <remarks>Note that, unlike some other overloads of this operator, ordering of items is preserved.</remarks>
+    public static IObservable<IChangeSet<T>> Filter<T>(
+                this IObservable<IChangeSet<T>> source,
+                Func<T, bool> predicate)
+            where T : notnull
+        => List.Internal.Filter.Static<T>.Create(
+            source: source,
+            predicate: predicate,
+            suppressEmptyChangesets: true);
 
     /// <summary>
     /// Filters source using the specified filter observable predicate.
@@ -707,7 +707,7 @@ public static class ObservableListEx
 
         predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
 
-        return new Filter<T>(source, predicate, filterPolicy).Run();
+        return new List.Internal.Filter.Dynamic<T>(source, predicate, filterPolicy).Run();
     }
 
     /// <summary>

@@ -126,7 +126,7 @@ public class AutoRefreshFixture
         items[60].Age = 160;
         results.Data.Count.Should().Be(51);
         results.Messages.Count.Should().Be(5);
-        results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Replace);
+        results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
 
         //remove an item and check no change is fired
         var toRemove = items[65];
@@ -142,7 +142,7 @@ public class AutoRefreshFixture
         toRemove.Age = 101;
         results.Messages.Count.Should().Be(8);
 
-        results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Replace);
+        results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
     }
 
     [Fact]
