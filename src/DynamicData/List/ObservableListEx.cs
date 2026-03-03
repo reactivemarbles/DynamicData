@@ -1276,26 +1276,24 @@ public static class ObservableListEx
             refreshAction: refreshAction);
 
     /// <summary>
-    /// Callback for each item as and when it is being removed from the stream.
+    /// Invokes a given action for every item removed from the source list stream.
     /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="removeAction">The remove action.</param>
-    /// <param name="invokeOnUnsubscribe"> Should the remove action be invoked when the subscription is disposed.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// removeAction.
-    /// </exception>
-    public static IObservable<IChangeSet<T>> OnItemRemoved<T>(this IObservable<IChangeSet<T>> source, Action<T> removeAction, bool invokeOnUnsubscribe = true)
-        where T : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
-
-        return new OnBeingRemoved<T>(source, removeAction, invokeOnUnsubscribe).Run();
-    }
+    /// <typeparam name="T">The type of items in the list.</typeparam>
+    /// <param name="source">The list stream whose items are to be passed to <paramref name="removeAction"/>.</param>
+    /// <param name="removeAction">The action to invoke upon each removed item.</param>
+    /// <param name="invokeOnUnsubscribe">A flag indicating whether <paramref name="removeAction"/> should be invoked upon teardown of the stream. This includes disposal of subscriptions, completion notifications, and error notifications.</param>
+    /// <returns>A list stream, containing all items in <paramref name="source"/>, with changes published after <paramref name="removeAction"/> has been invoked.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="removeAction"/>.</exception>
+    /// <remarks>Note that "removed" items includes items from <see cref="ListChangeReason.Remove"/>, <see cref="ListChangeReason.RemoveRange"/>, <see cref="ListChangeReason.Replace"/>, and <see cref="ListChangeReason.Clear"/> changes.</remarks>
+    public static IObservable<IChangeSet<T>> OnItemRemoved<T>(
+                this IObservable<IChangeSet<T>> source,
+                Action<T> removeAction,
+                bool invokeOnUnsubscribe = true)
+            where T : notnull
+        => List.Internal.OnItemRemoved<T>.Create(
+            source: source,
+            removeAction: removeAction,
+            invokeOnUnsubscribe: invokeOnUnsubscribe);
 
     /// <summary>
     /// Apply a logical Or operator between the collections.

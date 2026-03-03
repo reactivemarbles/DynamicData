@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using FluentAssertions;
 using Xunit;
 
@@ -11,6 +12,29 @@ namespace DynamicData.Tests.List;
 
 public class OnItemRemovedFixture
 {
+    // https://github.com/reactivemarbles/DynamicData/issues/1061
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void SubscriberDoesNotHandleErrors_ErrorBubblesUpstream(bool invokeOnUnsubscribe)
+    {
+        using var source = new TestSourceList<int>();
+
+        using var subscription = source.Connect()
+            .OnItemRemoved(
+                removeAction:           static _ => { },
+                invokeOnUnsubscribe:    invokeOnUnsubscribe)
+            .Subscribe();
+        
+        var error = new Exception("Test");
+
+        FluentActions.Invoking(() => source.SetError(error))
+            .Should()
+            .Throw<Exception>("errors not handled by the subscriber should propagate upstream to the caller")
+            .Which
+            .Should().BeSameAs(error);
+    }
+
     [Theory]
     [InlineData(0,  0,  0)]
     [InlineData(1,  0,  0)]
