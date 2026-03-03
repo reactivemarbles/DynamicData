@@ -2389,8 +2389,8 @@ namespace DynamicData
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> OnItemAdded<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Action<T> addAction)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject>> OnItemRefreshed<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Action<TObject> refreshAction)
-            where TObject :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<T>> OnItemRefreshed<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Action<T> refreshAction)
+            where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> OnItemRemoved<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Action<T> removeAction, bool invokeOnUnsubscribe = true)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> Or<T>(this DynamicData.IObservableList<DynamicData.IObservableList<T>> sources)

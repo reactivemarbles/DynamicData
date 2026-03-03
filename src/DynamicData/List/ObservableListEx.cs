@@ -1259,29 +1259,21 @@ public static class ObservableListEx
             addAction: addAction);
 
     /// <summary>
-    /// Callback for each item as and when it is being refreshed in the stream.
+    /// Invokes a given action for every item refreshed within the source list stream.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="refreshAction">The refresh action.</param>
-    /// <returns>An observable which emits a change set with items being added.</returns>
-    public static IObservable<IChangeSet<TObject>> OnItemRefreshed<TObject>(this IObservable<IChangeSet<TObject>> source, Action<TObject> refreshAction)
-        where TObject : notnull
-    {
-        var refreshAction2 = refreshAction;
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (refreshAction2 == null)
-        {
-            throw new ArgumentNullException(nameof(refreshAction));
-        }
-
-        return source.Do((IChangeSet<TObject> changes) =>
-            changes.Where((Change<TObject> c) => c.Reason == ListChangeReason.Refresh).ForEach((Change<TObject> c) => refreshAction2(c.Item.Current)));
-    }
+    /// <typeparam name="T">The type of items in the list.</typeparam>
+    /// <param name="source">The list stream whose items are to be passed to <paramref name="refreshAction"/>.</param>
+    /// <param name="refreshAction">The action to invoke upon each refreshed item.</param>
+    /// <returns>A list stream, containing all items in <paramref name="source"/>, with changes published after <paramref name="refreshAction"/> has been invoked.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="refreshAction"/>.</exception>
+    /// <remarks>Note that "refreshed" items refers to items from <see cref="ListChangeReason.Refresh"/> changes.</remarks>
+    public static IObservable<IChangeSet<T>> OnItemRefreshed<T>(
+                this IObservable<IChangeSet<T>> source,
+                Action<T> refreshAction)
+            where T : notnull
+        => List.Internal.OnItemRefreshed<T>.Create(
+            source: source,
+            refreshAction: refreshAction);
 
     /// <summary>
     /// Callback for each item as and when it is being removed from the stream.
