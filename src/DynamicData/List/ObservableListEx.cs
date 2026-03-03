@@ -1242,20 +1242,21 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Callback for each item as and when it is being added to the stream.
+    /// Invokes a given action for every item added to the source list stream.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="addAction">The add action.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    public static IObservable<IChangeSet<T>> OnItemAdded<T>(this IObservable<IChangeSet<T>> source, Action<T> addAction)
-        where T : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
-
-        return new OnBeingAdded<T>(source, addAction).Run();
-    }
+    /// <typeparam name="T">The type of items in the list.</typeparam>
+    /// <param name="source">The list stream whose items are to be passed to <paramref name="addAction"/>.</param>
+    /// <param name="addAction">The action to invoke upon each added item.</param>
+    /// <returns>A list stream, containing all items in <paramref name="source"/>, with changes published after <paramref name="addAction"/> has been invoked.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="addAction"/>.</exception>
+    /// <remarks>Note that "added" items includes items from <see cref="ListChangeReason.Add"/>, <see cref="ListChangeReason.AddRange"/>, and <see cref="ListChangeReason.Replace"/> changes.</remarks>
+    public static IObservable<IChangeSet<T>> OnItemAdded<T>(
+                this IObservable<IChangeSet<T>> source,
+                Action<T> addAction)
+            where T : notnull
+        => List.Internal.OnItemAdded<T>.Create(
+            source: source,
+            addAction: addAction);
 
     /// <summary>
     /// Callback for each item as and when it is being refreshed in the stream.
