@@ -18,6 +18,14 @@ internal ref struct SwappableLock
         return result;
     }
 
+#if NET9_0_OR_GREATER
+    public static SwappableLock CreateAndEnter(Lock gate)
+    {
+        gate.Enter();
+        return new SwappableLock() { _lockGate = gate };
+    }
+#endif
+
     public void SwapTo(object gate)
     {
         if (_gate is null)
@@ -33,8 +41,35 @@ internal ref struct SwappableLock
         _gate = gate;
     }
 
+#if NET9_0_OR_GREATER
+    public void SwapTo(Lock gate)
+    {
+        if (_lockGate is null && _gate is null)
+            throw new InvalidOperationException("Lock is not initialized");
+
+        gate.Enter();
+
+        if (_lockGate is not null)
+            _lockGate.Exit();
+        else if (_hasLock)
+            Monitor.Exit(_gate!);
+
+        _lockGate = gate;
+        _hasLock = false;
+        _gate = null;
+    }
+#endif
+
     public void Dispose()
     {
+#if NET9_0_OR_GREATER
+        if (_lockGate is not null)
+        {
+            _lockGate.Exit();
+            _lockGate = null;
+        }
+        else
+#endif
         if (_hasLock && (_gate is not null))
         {
             Monitor.Exit(_gate);
@@ -45,4 +80,8 @@ internal ref struct SwappableLock
 
     private bool _hasLock;
     private object? _gate;
+
+#if NET9_0_OR_GREATER
+    private Lock? _lockGate;
+#endif
 }
