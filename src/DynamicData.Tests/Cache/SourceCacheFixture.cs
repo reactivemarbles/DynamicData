@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 using DynamicData.Tests.Domain;
 
@@ -188,4 +190,43 @@ public class SourceCacheFixture : IDisposable
 
     public record class SomeObject(int Id, int Value);
 
+
+    [Fact]
+    public async Task ConcurrentEditsShouldNotDeadlockWithSubscribersThatModifyOtherCaches()
+    {
+        const int itemCount = 100;
+
+        using var cacheA = new SourceCache<TestItem, string>(static x => x.Key);
+        using var cacheB = new SourceCache<TestItem, string>(static x => x.Key);
+        using var destination = new SourceCache<TestItem, string>(static x => x.Key);
+        using var subA = cacheA.Connect().PopulateInto(destination);
+        using var subB = cacheB.Connect().PopulateInto(destination);
+        using var results = destination.Connect().AsAggregator();
+
+        var taskA = Task.Run(() =>
+        {
+            for (var i = 0; i < itemCount; i++)
+            {
+                cacheA.AddOrUpdate(new TestItem($"a-{i}", $"ValueA-{i}"));
+            }
+        });
+
+        var taskB = Task.Run(() =>
+        {
+            for (var i = 0; i < itemCount; i++)
+            {
+                cacheB.AddOrUpdate(new TestItem($"b-{i}", $"ValueB-{i}"));
+            }
+        });
+
+        var completed = Task.WhenAll(taskA, taskB);
+        var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(10)));
+
+        finished.Should().BeSameAs(completed, "concurrent edits with cross-cache subscribers should not deadlock");
+        results.Error.Should().BeNull();
+        results.Data.Count.Should().Be(itemCount * 2, "all items from both caches should arrive in the destination");
+        results.Data.Items.Should().BeEquivalentTo([.. cacheA.Items, .. cacheB.Items], "all items should be in the destination");
+    }
+
+    private sealed record TestItem(string Key, string Value);
 }
