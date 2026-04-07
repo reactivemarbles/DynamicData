@@ -139,7 +139,7 @@ internal sealed class DeliveryQueue<TItem>
                     }
                 }
             }
-            finally
+            catch
             {
                 // Safety net: if an exception bypassed the normal exit paths,
                 // ensure _isDelivering is reset so the queue doesn't get stuck.
@@ -147,6 +147,8 @@ internal sealed class DeliveryQueue<TItem>
                 {
                     _isDelivering = false;
                 }
+
+                throw;
             }
         }
     }
