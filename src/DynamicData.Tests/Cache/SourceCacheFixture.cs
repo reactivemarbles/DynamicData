@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
@@ -275,6 +276,54 @@ public class SourceCacheFixture : IDisposable
 
             finished.Should().BeSameAs(completed, $"iteration {iter}: bidirectional cross-cache writes should not deadlock");
         }
+    }
+
+    [Fact]
+    public void ConnectDuringDeliveryDoesNotDuplicate()
+    {
+        // Proves the dequeue-to-delivery gap. A slow subscriber holds delivery
+        // while another thread connects. The new subscriber's snapshot is taken
+        // under the lock, so it will not see a duplicate Add.
+        using var cache = new SourceCache<TestItem, string>(static x => x.Key);
+
+        var delivering = new ManualResetEventSlim(false);
+        var connectDone = new ManualResetEventSlim(false);
+
+        // First subscriber: signals when delivery starts, then waits
+        using var slowSub = cache.Connect().Subscribe(_ =>
+        {
+            delivering.Set();
+            connectDone.Wait(TimeSpan.FromSeconds(5));
+        });
+
+        // Write one item -- delivery starts, slow subscriber blocks
+        var writeTask = Task.Run(() => cache.AddOrUpdate(new TestItem("k1", "v1")));
+
+        // Wait for delivery to be in progress
+        delivering.Wait(TimeSpan.FromSeconds(5));
+
+        // Now Connect on the main thread while delivery is in progress.
+        // The item is already committed to ReaderWriter and dequeued from
+        // the delivery queue, but OnNext hasn't finished iterating observers.
+        var duplicateKeys = new List<string>();
+        using var newSub = cache.Connect().Subscribe(changes =>
+        {
+            foreach (var c in changes)
+            {
+                if (c.Reason == ChangeReason.Add)
+                {
+                    duplicateKeys.Add(c.Current.Key);
+                }
+            }
+        });
+
+        // Let delivery finish
+        connectDone.Set();
+        writeTask.Wait(TimeSpan.FromSeconds(5));
+
+        // Check: k1 should appear exactly once (either in snapshot or stream, not both)
+        var k1Count = duplicateKeys.Count(k => k == "k1");
+        k1Count.Should().Be(1, "k1 should appear exactly once via Connect, not duplicated from snapshot + in-flight delivery");
     }
     private sealed record TestItem(string Key, string Value);
 }

@@ -6,9 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using DynamicData.Internal;
-
 using FluentAssertions;
-
 using Xunit;
 
 namespace DynamicData.Tests.Internal;
@@ -31,8 +29,6 @@ public class DeliveryQueueFixture
     {
         using var notifications = queue.AcquireLock();
     }
-
-    // Category 1: Basic Behavior
 
     [Fact]
     public void EnqueueAndDeliverDeliversItem()
@@ -71,8 +67,6 @@ public class DeliveryQueueFixture
 
         delivered.Should().BeEmpty();
     }
-
-    // Category 2: Delivery Token Serialization
 
     [Fact]
     public async Task OnlyOneDelivererAtATime()
@@ -166,8 +160,6 @@ public class DeliveryQueueFixture
         maxDepth.Should().Be(1, "delivery callback should not recurse");
     }
 
-    // Category 3: Exception Safety
-
     [Fact]
     public void ExceptionInDeliveryResetsDeliveryToken()
     {
@@ -222,8 +214,6 @@ public class DeliveryQueueFixture
         delivered.Should().Equal("B");
     }
 
-    // Category 4: Termination
-
     [Fact]
     public void TerminalCallbackStopsDelivery()
     {
@@ -268,79 +258,6 @@ public class DeliveryQueueFixture
         var queue = new DeliveryQueue<string>(_gate, _ => true);
         queue.IsTerminated.Should().BeFalse();
     }
-
-    // Category 5: PendingCount
-
-    [Fact]
-    public void PendingCountTracksAutomatically()
-    {
-        var queue = new DeliveryQueue<string>(_gate, _ => true);
-
-        using (var notifications = queue.AcquireLock())
-        {
-            notifications.PendingCount.Should().Be(0);
-
-            notifications.Enqueue("A", countAsPending: true);
-            notifications.Enqueue("B", countAsPending: true);
-            notifications.Enqueue("C");
-
-            notifications.PendingCount.Should().Be(2);
-        }
-
-        using (var notifications = queue.AcquireLock())
-        {
-            notifications.PendingCount.Should().Be(0, "pending count should auto-decrement on delivery");
-        }
-    }
-
-    [Fact]
-    public void PendingCountPreservedOnException()
-    {
-        var callCount = 0;
-        var queue = new DeliveryQueue<string>(_gate, _ =>
-        {
-            if (++callCount == 1)
-            {
-                throw new InvalidOperationException("boom");
-            }
-
-            return true;
-        });
-
-        var act = () =>
-        {
-            using var notifications = queue.AcquireLock();
-            notifications.Enqueue("A", countAsPending: true);
-            notifications.Enqueue("B", countAsPending: true);
-        };
-
-        act.Should().Throw<InvalidOperationException>();
-
-        using (var rl = queue.AcquireReadLock())
-        {
-            rl.PendingCount.Should().Be(1, "only the dequeued item should be decremented");
-        }
-    }
-
-    [Fact]
-    public void PendingCountClearedOnTermination()
-    {
-        var queue = new DeliveryQueue<string>(_gate, item => item != "STOP");
-
-        using (var notifications = queue.AcquireLock())
-        {
-            notifications.Enqueue("A", countAsPending: true);
-            notifications.Enqueue("B", countAsPending: true);
-            notifications.Enqueue("STOP");
-        }
-
-        using (var rl = queue.AcquireReadLock())
-        {
-            rl.PendingCount.Should().Be(0);
-        }
-    }
-
-    // Category 6: Stress / Thread Safety
 
     [Fact]
     public async Task ConcurrentEnqueueAllItemsDelivered()

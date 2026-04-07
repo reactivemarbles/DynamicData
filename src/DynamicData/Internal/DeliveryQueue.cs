@@ -6,14 +6,14 @@ namespace DynamicData.Internal;
 
 /// <summary>
 /// A queue that serializes item delivery outside a caller-owned lock.
-/// Use <see cref="AcquireLock"/> to obtain a scoped ScopedAccess for enqueueing items
-/// and reading queue state. When the ScopedAccess is disposed, the lock is released
+/// Use <see cref="AcquireLock"/> to obtain a scoped ScopedAccess for enqueueing items.
+/// When the ScopedAccess is disposed, the lock is released
 /// and pending items are delivered. Only one thread delivers at a time.
 /// </summary>
 /// <typeparam name="TItem">The item type.</typeparam>
 internal sealed class DeliveryQueue<TItem>
 {
-    private readonly Queue<(TItem Item, bool CountAsPending)> _queue = new();
+    private readonly Queue<TItem> _queue = new();
     private readonly Func<TItem, bool> _deliver;
 
 #if NET9_0_OR_GREATER
@@ -24,7 +24,6 @@ internal sealed class DeliveryQueue<TItem>
 
     private bool _isDelivering;
     private volatile bool _isTerminated;
-    private int _pendingCount;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeliveryQueue{TItem}"/> class.
@@ -48,57 +47,31 @@ internal sealed class DeliveryQueue<TItem>
     public bool IsTerminated => _isTerminated;
 
     /// <summary>
-    /// Gets the number of pending items enqueued with <c>countAsPending: true</c>.
-    /// Must be read while the caller holds the gate.
-    /// </summary>
-    private int PendingCount => _pendingCount;
-
-    /// <summary>
-    /// Acquires the gate and returns a scoped ScopedAccess for enqueueing items and
-    /// reading queue state. When the ScopedAccess is disposed, the gate is released
+    /// Acquires the gate and returns a scoped ScopedAccess for enqueueing items.
+    /// When the ScopedAccess is disposed, the gate is released
     /// and delivery runs if needed. The ScopedAccess is a ref struct and cannot
     /// escape the calling method.
     /// </summary>
     public ScopedAccess AcquireLock() => new(this);
 
-    /// <summary>
-    /// Acquires the gate for read-only access and returns a scoped handle.
-    /// Provides access to queue state (e.g., <see cref="PendingCount"/>) but
-    /// cannot enqueue items and does not trigger delivery on dispose.
-    /// </summary>
-    public ReadOnlyScopedAccess AcquireReadLock() => new(this);
-
-    private void EnterLock()
-    {
 #if NET9_0_OR_GREATER
-        _gate.Enter();
-#else
-        Monitor.Enter(_gate);
-#endif
-    }
+    private void EnterLock() => _gate.Enter();
 
-    private void ExitLock()
-    {
-#if NET9_0_OR_GREATER
-        _gate.Exit();
+    private void ExitLock() => _gate.Exit();
 #else
-        Monitor.Exit(_gate);
-#endif
-    }
+    private void EnterLock() => Monitor.Enter(_gate);
 
-    private void EnqueueItem(TItem item, bool countAsPending)
+    private void ExitLock() => Monitor.Exit(_gate);
+#endif
+
+    private void EnqueueItem(TItem item)
     {
         if (_isTerminated)
         {
             return;
         }
 
-        _queue.Enqueue((item, countAsPending));
-
-        if (countAsPending)
-        {
-            _pendingCount++;
-        }
+        _queue.Enqueue(item);
     }
 
     private void ExitLockAndDeliver()
@@ -147,24 +120,18 @@ internal sealed class DeliveryQueue<TItem>
                             return;
                         }
 
-                        var entry = _queue.Dequeue();
-                        item = entry.Item;
-
-                        if (entry.CountAsPending)
-                        {
-                            _pendingCount--;
-                        }
+                        item = _queue.Dequeue();
                     }
 
-                    // Now the lock is release, we can deliver the item
-                    // If delivery returns false, it means the item was terminal and we should stop delivering and clear the queue.
+                    // Outside of the lock, invoke the callback to deliver the item.
+                    // If delivery returns false, it means the item was terminal
+                    // and we should stop delivering and clear the queue.
                     if (!_deliver(item))
                     {
                         lock (_gate)
                         {
                             _isTerminated = true;
                             _isDelivering = false;
-                            _pendingCount = 0;
                             _queue.Clear();
                         }
 
@@ -172,22 +139,21 @@ internal sealed class DeliveryQueue<TItem>
                     }
                 }
             }
-            catch
+            finally
             {
-                // If anything bad happens, we must release the flag so that deliveries aren't stuck
+                // Safety net: if an exception bypassed the normal exit paths,
+                // ensure _isDelivering is reset so the queue doesn't get stuck.
                 lock (_gate)
                 {
                     _isDelivering = false;
                 }
-
-                throw;
             }
         }
     }
 
     /// <summary>
-    /// A scoped ScopedAccess for working under the gate lock. All queue mutation and
-    /// state reads go through this ScopedAccess, ensuring the lock is held. Disposing
+    /// A scoped ScopedAccess for working under the gate lock. All queue mutation
+    /// goes through this ScopedAccess, ensuring the lock is held. Disposing
     /// releases the lock and triggers delivery if needed.
     /// </summary>
     public ref struct ScopedAccess
@@ -201,19 +167,10 @@ internal sealed class DeliveryQueue<TItem>
         }
 
         /// <summary>
-        /// Gets the number of pending items that were enqueued with
-        /// <c>countAsPending: true</c> and have not yet been dequeued for delivery.
-        /// </summary>
-        public readonly int PendingCount => _owner?._pendingCount ?? 0;
-
-        /// <summary>
         /// Adds an item to the queue. Ignored if the queue has been terminated.
         /// </summary>
         /// <param name="item">The item to enqueue.</param>
-        /// <param name="countAsPending">True if this item should be tracked by
-        /// <see cref="PendingCount"/>. The count is automatically decremented
-        /// when the item is dequeued for delivery.</param>
-        public readonly void Enqueue(TItem item, bool countAsPending = false) => _owner?.EnqueueItem(item, countAsPending);
+        public readonly void Enqueue(TItem item) => _owner?.EnqueueItem(item);
 
         /// <summary>
         /// Releases the gate lock and delivers pending items if this thread
@@ -229,42 +186,6 @@ internal sealed class DeliveryQueue<TItem>
 
             _owner = null;
             owner.ExitLockAndDeliver();
-        }
-    }
-
-    /// <summary>
-    /// A read-only scoped handle for reading queue state under the gate lock.
-    /// Cannot enqueue items and does not trigger delivery on dispose.
-    /// </summary>
-    public ref struct ReadOnlyScopedAccess
-    {
-        private DeliveryQueue<TItem>? _owner;
-
-        internal ReadOnlyScopedAccess(DeliveryQueue<TItem> owner)
-        {
-            _owner = owner;
-            owner.EnterLock();
-        }
-
-        /// <summary>
-        /// Gets the number of pending items that were enqueued with
-        /// <c>countAsPending: true</c> and have not yet been dequeued for delivery.
-        /// </summary>
-        public readonly int PendingCount => _owner?._pendingCount ?? 0;
-
-        /// <summary>
-        /// Releases the gate lock. Does not trigger delivery.
-        /// </summary>
-        public void Dispose()
-        {
-            var owner = _owner;
-            if (owner is null)
-            {
-                return;
-            }
-
-            _owner = null;
-            owner.ExitLock();
         }
     }
 }
