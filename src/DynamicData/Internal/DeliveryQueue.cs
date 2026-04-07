@@ -51,7 +51,7 @@ internal sealed class DeliveryQueue<TItem>
     /// Gets the number of pending items enqueued with <c>countAsPending: true</c>.
     /// Must be read while the caller holds the gate.
     /// </summary>
-    public int PendingCount => _pendingCount;
+    private int PendingCount => _pendingCount;
 
     /// <summary>
     /// Acquires the gate and returns a scoped ScopedAccess for enqueueing items and
@@ -61,12 +61,28 @@ internal sealed class DeliveryQueue<TItem>
     /// </summary>
     public ScopedAccess AcquireLock() => new(this);
 
+    /// <summary>
+    /// Acquires the gate for read-only access and returns a scoped handle.
+    /// Provides access to queue state (e.g., <see cref="PendingCount"/>) but
+    /// cannot enqueue items and does not trigger delivery on dispose.
+    /// </summary>
+    public ReadOnlyScopedAccess AcquireReadLock() => new(this);
+
     private void EnterLock()
     {
 #if NET9_0_OR_GREATER
         _gate.Enter();
 #else
         Monitor.Enter(_gate);
+#endif
+    }
+
+    private void ExitLock()
+    {
+#if NET9_0_OR_GREATER
+        _gate.Exit();
+#else
+        Monitor.Exit(_gate);
 #endif
     }
 
@@ -91,11 +107,7 @@ internal sealed class DeliveryQueue<TItem>
         var shouldDeliver = TryStartDelivery();
 
         // Now release the lock. We do this before delivering to allow other threads to enqueue items while delivery is in progress.
-#if NET9_0_OR_GREATER
-        _gate.Exit();
-#else
-        Monitor.Exit(_gate);
-#endif
+        ExitLock();
 
         // If this thread has been chosen to deliver, do it now that the lock is released.
         // If not, another thread is already delivering or there are no items to deliver.
@@ -217,6 +229,42 @@ internal sealed class DeliveryQueue<TItem>
 
             _owner = null;
             owner.ExitLockAndDeliver();
+        }
+    }
+
+    /// <summary>
+    /// A read-only scoped handle for reading queue state under the gate lock.
+    /// Cannot enqueue items and does not trigger delivery on dispose.
+    /// </summary>
+    public ref struct ReadOnlyScopedAccess
+    {
+        private DeliveryQueue<TItem>? _owner;
+
+        internal ReadOnlyScopedAccess(DeliveryQueue<TItem> owner)
+        {
+            _owner = owner;
+            owner.EnterLock();
+        }
+
+        /// <summary>
+        /// Gets the number of pending items that were enqueued with
+        /// <c>countAsPending: true</c> and have not yet been dequeued for delivery.
+        /// </summary>
+        public readonly int PendingCount => _owner?._pendingCount ?? 0;
+
+        /// <summary>
+        /// Releases the gate lock. Does not trigger delivery.
+        /// </summary>
+        public void Dispose()
+        {
+            var owner = _owner;
+            if (owner is null)
+            {
+                return;
+            }
+
+            _owner = null;
+            owner.ExitLock();
         }
     }
 }

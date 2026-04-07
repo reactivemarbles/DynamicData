@@ -316,9 +316,9 @@ public class DeliveryQueueFixture
 
         act.Should().Throw<InvalidOperationException>();
 
-        lock (_gate)
+        using (var rl = queue.AcquireReadLock())
         {
-            queue.PendingCount.Should().Be(1, "only the dequeued item should be decremented");
+            rl.PendingCount.Should().Be(1, "only the dequeued item should be decremented");
         }
     }
 
@@ -334,7 +334,10 @@ public class DeliveryQueueFixture
             notifications.Enqueue("STOP");
         }
 
-        queue.PendingCount.Should().Be(0);
+        using (var rl = queue.AcquireReadLock())
+        {
+            rl.PendingCount.Should().Be(0);
+        }
     }
 
     // Category 6: Stress / Thread Safety

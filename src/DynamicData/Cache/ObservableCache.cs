@@ -92,11 +92,10 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         Observable.Create<int>(
             observer =>
             {
-                lock (_locker)
-                {
-                    var source = _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
-                    return source.SubscribeSafe(observer);
-                }
+                using var readLock = _notifications.AcquireReadLock();
+
+                var source = _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
+                return source.SubscribeSafe(observer);
             });
 
     public IReadOnlyList<TObject> Items => _readerWriter.Items;
@@ -233,56 +232,54 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
-                lock (_locker)
+                using var readLock = _notifications.AcquireReadLock();
+
+                // Skip pending notifications to avoid duplicating items already in the snapshot.
+                var skipCount = readLock.PendingCount;
+
+                var initial = InternalEx.Return(() => (IChangeSet<TObject, TKey>)GetInitialUpdates(predicate));
+                var changesStream = skipCount > 0 ? _changes.Skip(skipCount) : _changes;
+                var changes = initial.Concat(changesStream);
+
+                if (predicate != null)
                 {
-                    // Skip pending notifications to avoid duplicating items already in the snapshot.
-                    var skipCount = _notifications.PendingCount;
-
-                    var initial = InternalEx.Return(() => (IChangeSet<TObject, TKey>)GetInitialUpdates(predicate));
-                    var changesStream = skipCount > 0 ? _changes.Skip(skipCount) : _changes;
-                    var changes = initial.Concat(changesStream);
-
-                    if (predicate != null)
-                    {
-                        changes = changes.Filter(predicate, suppressEmptyChangeSets);
-                    }
-                    else if (suppressEmptyChangeSets)
-                    {
-                        changes = changes.NotEmpty();
-                    }
-
-                    return changes.SubscribeSafe(observer);
+                    changes = changes.Filter(predicate, suppressEmptyChangeSets);
                 }
+                else if (suppressEmptyChangeSets)
+                {
+                    changes = changes.NotEmpty();
+                }
+
+                return changes.SubscribeSafe(observer);
             });
 
     private IObservable<Change<TObject, TKey>> CreateWatchObservable(TKey key) =>
         Observable.Create<Change<TObject, TKey>>(
             observer =>
             {
-                lock (_locker)
+                using var readLock = _notifications.AcquireReadLock();
+
+                var skipCount = readLock.PendingCount;
+
+                var initial = _readerWriter.Lookup(key);
+                if (initial.HasValue)
                 {
-                    var skipCount = _notifications.PendingCount;
-
-                    var initial = _readerWriter.Lookup(key);
-                    if (initial.HasValue)
-                    {
-                        observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
-                    }
-
-                    var changesStream = skipCount > 0 ? _changes.Skip(skipCount) : _changes;
-                    return changesStream.Finally(observer.OnCompleted).Subscribe(
-                        changes =>
-                        {
-                            foreach (var change in changes.ToConcreteType())
-                            {
-                                var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
-                                if (match)
-                                {
-                                    observer.OnNext(change);
-                                }
-                            }
-                        });
+                    observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
                 }
+
+                var changesStream = skipCount > 0 ? _changes.Skip(skipCount) : _changes;
+                return changesStream.Finally(observer.OnCompleted).Subscribe(
+                    changes =>
+                    {
+                        foreach (var change in changes.ToConcreteType())
+                        {
+                            var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
+                            if (match)
+                            {
+                                observer.OnNext(change);
+                            }
+                        }
+                    });
             });
 
     /// <summary>
@@ -325,7 +322,10 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
                 if (_suspensionTracker.IsValueCreated)
                 {
-                    _suspensionTracker.Value.Dispose();
+                    lock (_locker)
+                    {
+                        _suspensionTracker.Value.Dispose();
+                    }
                 }
                 return false;
 
@@ -340,7 +340,10 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
                 if (_suspensionTracker.IsValueCreated)
                 {
-                    _suspensionTracker.Value.Dispose();
+                    lock (_locker)
+                    {
+                        _suspensionTracker.Value.Dispose();
+                    }
                 }
                 return false;
 
