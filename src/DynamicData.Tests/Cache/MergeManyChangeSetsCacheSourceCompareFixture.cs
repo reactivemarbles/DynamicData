@@ -118,6 +118,11 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         }
         while (adding);
 
+        // Allow any in-flight notification deliveries to complete before checking results.
+        // With the queue-based drain pattern, Edit() returns after enqueueing but delivery
+        // may still be in progress on another thread. Give the drain a moment to finish.
+        await Task.Delay(250).ConfigureAwait(false);
+
         // Verify the results
         CheckResultContents(_marketCacheResults, priceResults, Market.RatingCompare);
     }
