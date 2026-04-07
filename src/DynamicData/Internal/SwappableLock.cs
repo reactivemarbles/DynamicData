@@ -28,14 +28,29 @@ internal ref struct SwappableLock
 
     public void SwapTo(object gate)
     {
+#if NET9_0_OR_GREATER
+        if (_gate is null && _lockGate is null)
+            throw new InvalidOperationException("Lock is not initialized");
+#else
         if (_gate is null)
             throw new InvalidOperationException("Lock is not initialized");
+#endif
 
         var hasNewLock = false;
         Monitor.Enter(gate, ref hasNewLock);
 
+#if NET9_0_OR_GREATER
+        if (_lockGate is not null)
+        {
+            _lockGate.Exit();
+            _lockGate = null;
+        }
+        else
+#endif
         if (_hasLock)
-            Monitor.Exit(_gate);
+        {
+            Monitor.Exit(_gate!);
+        }
 
         _hasLock = hasNewLock;
         _gate = gate;
