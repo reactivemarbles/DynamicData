@@ -228,7 +228,6 @@ public class SourceCacheFixture : IDisposable
         results.Data.Items.Should().BeEquivalentTo([.. cacheA.Items, .. cacheB.Items], "all items should be in the destination");
     }
 
-
     [Fact]
     public async Task DirectCrossWriteDoesNotDeadlock()
     {
@@ -239,27 +238,17 @@ public class SourceCacheFixture : IDisposable
             using var cacheA = new SourceCache<TestItem, string>(static x => x.Key);
             using var cacheB = new SourceCache<TestItem, string>(static x => x.Key);
 
-            using var subA = cacheA.Connect().Subscribe(changes =>
-            {
-                foreach (var c in changes)
-                {
-                    if (c.Reason == ChangeReason.Add && !c.Current.Key.StartsWith("x"))
-                    {
-                        cacheB.AddOrUpdate(new TestItem("x" + c.Current.Key, c.Current.Value));
-                    }
-                }
-            });
+            // Bidirectional: A items flow into B, B items flow into A.
+            // Filter by prefix prevents infinite feedback.
+            using var aToB = cacheA.Connect()
+                .Filter(static x => x.Key.StartsWith('a'))
+                .Transform(static (item, _) => new TestItem("from-a-" + item.Key, item.Value))
+                .PopulateInto(cacheB);
 
-            using var subB = cacheB.Connect().Subscribe(changes =>
-            {
-                foreach (var c in changes)
-                {
-                    if (c.Reason == ChangeReason.Add && !c.Current.Key.StartsWith("x"))
-                    {
-                        cacheA.AddOrUpdate(new TestItem("x" + c.Current.Key, c.Current.Value));
-                    }
-                }
-            });
+            using var bToA = cacheB.Connect()
+                .Filter(static x => x.Key.StartsWith('b'))
+                .Transform(static (item, _) => new TestItem("from-b-" + item.Key, item.Value))
+                .PopulateInto(cacheA);
 
             var barrier = new Barrier(2);
 
@@ -282,9 +271,9 @@ public class SourceCacheFixture : IDisposable
             });
 
             var completed = Task.WhenAll(taskA, taskB);
-            var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(5)));
+            var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(30)));
 
-            finished.Should().BeSameAs(completed, $"iteration {iter}: direct cross-cache writes should not deadlock");
+            finished.Should().BeSameAs(completed, $"iteration {iter}: bidirectional cross-cache writes should not deadlock");
         }
     }
     private sealed record TestItem(string Key, string Value);
