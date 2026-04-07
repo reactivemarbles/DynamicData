@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
@@ -228,5 +228,64 @@ public class SourceCacheFixture : IDisposable
         results.Data.Items.Should().BeEquivalentTo([.. cacheA.Items, .. cacheB.Items], "all items should be in the destination");
     }
 
+
+    [Fact]
+    public async Task DirectCrossWriteDoesNotDeadlock()
+    {
+        const int iterations = 100;
+
+        for (var iter = 0; iter < iterations; iter++)
+        {
+            using var cacheA = new SourceCache<TestItem, string>(static x => x.Key);
+            using var cacheB = new SourceCache<TestItem, string>(static x => x.Key);
+
+            using var subA = cacheA.Connect().Subscribe(changes =>
+            {
+                foreach (var c in changes)
+                {
+                    if (c.Reason == ChangeReason.Add && !c.Current.Key.StartsWith("x"))
+                    {
+                        cacheB.AddOrUpdate(new TestItem("x" + c.Current.Key, c.Current.Value));
+                    }
+                }
+            });
+
+            using var subB = cacheB.Connect().Subscribe(changes =>
+            {
+                foreach (var c in changes)
+                {
+                    if (c.Reason == ChangeReason.Add && !c.Current.Key.StartsWith("x"))
+                    {
+                        cacheA.AddOrUpdate(new TestItem("x" + c.Current.Key, c.Current.Value));
+                    }
+                }
+            });
+
+            var barrier = new Barrier(2);
+
+            var taskA = Task.Run(() =>
+            {
+                barrier.SignalAndWait();
+                for (var i = 0; i < 1000; i++)
+                {
+                    cacheA.AddOrUpdate(new TestItem("a" + i, "V" + i));
+                }
+            });
+
+            var taskB = Task.Run(() =>
+            {
+                barrier.SignalAndWait();
+                for (var i = 0; i < 1000; i++)
+                {
+                    cacheB.AddOrUpdate(new TestItem("b" + i, "V" + i));
+                }
+            });
+
+            var completed = Task.WhenAll(taskA, taskB);
+            var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(5)));
+
+            finished.Should().BeSameAs(completed, $"iteration {iter}: direct cross-cache writes should not deadlock");
+        }
+    }
     private sealed record TestItem(string Key, string Value);
 }
