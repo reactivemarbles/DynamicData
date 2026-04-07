@@ -280,7 +280,7 @@ internal static partial class ExpireAfter
                                 {
                                     if (_timeSelector.Invoke(change.Current) is { } expireAfter)
                                     {
-                                        haveExpirationsChanged = TrySetExpiration(
+                                        haveExpirationsChanged |= TrySetExpiration(
                                             key: change.Key,
                                             dueTime: now + expireAfter);
                                     }
