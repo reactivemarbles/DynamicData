@@ -420,24 +420,23 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private void ResumeNotifications()
     {
-        using (var notifications = _notifications.AcquireLock())
+        using var notifications = _notifications.AcquireLock();
+
+        Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Notifications without Suspend Notifications instance");
+
+        var (changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
+        if (changes is not null)
         {
-            Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Notifications without Suspend Notifications instance");
-
-            var (changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
-            if (changes is not null)
-            {
-                notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count, ++_currentVersion));
-            }
-
-            if (!emitResume)
-            {
-                return;
-            }
+            notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count, ++_currentVersion));
         }
 
-        // Emit the resume signal after releasing the lock so that deferred
-        // Connect/Watch subscribers are activated outside the lock scope.
+        if (!emitResume)
+        {
+            return;
+        }
+
+        // Emit the resume signal under the lock to eliminate the race where a concurrent
+        // SuspendNotifications could produce overlapping emissions.
         _suspensionTracker.Value.EmitResumeNotification();
     }
 
