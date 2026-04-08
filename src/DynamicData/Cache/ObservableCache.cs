@@ -318,12 +318,11 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                     _countChanged.Value.OnCompleted();
                 }
 
+                // Dispose outside lock — BehaviorSubject.OnCompleted runs observers
+                // synchronously which could execute subscriber code under the lock.
                 if (_suspensionTracker.IsValueCreated)
                 {
-                    lock (_locker)
-                    {
-                        _suspensionTracker.Value.Dispose();
-                    }
+                    _suspensionTracker.Value.Dispose();
                 }
 
                 return false;
@@ -337,12 +336,10 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                     _countChanged.Value.OnError(item.Error!);
                 }
 
+                // Dispose outside lock — same reasoning as Completed path above.
                 if (_suspensionTracker.IsValueCreated)
                 {
-                    lock (_locker)
-                    {
-                        _suspensionTracker.Value.Dispose();
-                    }
+                    _suspensionTracker.Value.Dispose();
                 }
 
                 return false;
