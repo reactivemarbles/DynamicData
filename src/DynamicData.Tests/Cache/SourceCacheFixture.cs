@@ -251,7 +251,7 @@ public class SourceCacheFixture : IDisposable
                 .Transform(static (item, _) => new TestItem("from-b-" + item.Key, item.Value))
                 .PopulateInto(cacheA);
 
-            var barrier = new Barrier(2);
+            using var barrier = new Barrier(2);
 
             var taskA = Task.Run(() =>
             {
