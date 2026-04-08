@@ -393,7 +393,7 @@ public sealed class SuspendNotificationsFixture : IDisposable
         results.Messages[1].Adds.Should().Be(dataSet2.Count, $"second message has {dataSet2.Count} adds");
         results.Messages[1].Removes.Should().Be(0, "no removes in second message");
         results.Messages[1].Updates.Should().Be(0, "no updates in second message");
-        results.Messages[1].Select(x => x.Key).Should().Equal(dataSet2, "snapshot should contain first batch keys");
+        results.Messages[1].Select(x => x.Key).Should().Equal(dataSet2, "second message should contain second batch keys");
 
         results.Summary.Overall.Adds.Should().Be(allData.Count, $"exactly {allData.Count} adds total");
         results.Summary.Overall.Removes.Should().Be(0, "no removes");

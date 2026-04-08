@@ -193,7 +193,7 @@ public class SourceCacheFixture : IDisposable
 
 
     [Fact]
-    public async Task ConcurrentEditsShouldNotDeadlockWithSubscribersThatModifyOtherCaches()
+    public async Task MultiCacheFanInDoesNotDeadlock()
     {
         const int itemCount = 100;
 
@@ -346,8 +346,8 @@ public class SourceCacheFixture : IDisposable
 
         // Unblock the slow subscriber — delivery resumes, item2 delivered
         connectDone.Set();
-        writeTask.Wait(TimeSpan.FromSeconds(5));
-        writeTask2.Wait(TimeSpan.FromSeconds(5));
+        writeTask.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("writeTask should complete");
+        writeTask2.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("writeTask2 should complete");
 
         // Each key should appear exactly once in the new subscriber's view
         addCounts.GetValueOrDefault("k1").Should().Be(1, "k1 should appear once (snapshot only)");

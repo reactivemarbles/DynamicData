@@ -93,11 +93,15 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         Observable.Create<int>(
             observer =>
             {
-                lock (_locker)
-                {
-                    var source = _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
-                    return source.SubscribeSafe(observer);
-                }
+                using var readLock = _notifications.AcquireReadLock();
+
+                var snapshotVersion = _currentVersion;
+                var countChanged = readLock.HasPending
+                    ? _countChanged.Value.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
+                    : _countChanged.Value;
+
+                var source = countChanged.StartWith(_readerWriter.Count).DistinctUntilChanged();
+                return source.SubscribeSafe(observer);
             });
 
     public IReadOnlyList<TObject> Items => _readerWriter.Items;
@@ -232,7 +236,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
                 // The current snapshot may contain changes that have been made but the notifications
                 // have yet to be delivered.  We need to filter those out to avoid delivering an update
-                // that has already been applied (but detect this possiblity and skip filtering unless absolutely needed)
+                // that has already been applied (but detect this possibility and skip filtering unless absolutely needed)
                 var snapshotVersion = _currentVersion;
                 var changes = readLock.HasPending
                     ? _changes.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
@@ -266,7 +270,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
                 // The current snapshot may contain changes that have been made but the notifications
                 // have yet to be delivered.  We need to filter those out to avoid delivering an update
-                // that has already been applied (but detect this possiblity and skip filtering unless absolutely needed)
+                // that has already been applied (but detect this possibility and skip filtering unless absolutely needed)
                 var snapshotVersion = _currentVersion;
                 var changes = readLock.HasPending
                     ? _changes.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
@@ -420,24 +424,26 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private void ResumeNotifications()
     {
-        using var notifications = _notifications.AcquireLock();
+        bool emitResume;
 
-        Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Notifications without Suspend Notifications instance");
-
-        var (changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
-        if (changes is not null)
+        using (var notifications = _notifications.AcquireLock())
         {
-            notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count, ++_currentVersion));
+            Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Notifications without Suspend Notifications instance");
+
+            (var changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
+            if (changes is not null)
+            {
+                notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count, ++_currentVersion));
+            }
         }
 
-        if (!emitResume)
+        // Emit the resume signal after releasing the delivery scope so that
+        // accumulated changes are delivered first
+        if (emitResume)
         {
-            return;
+            using var readLock = _notifications.AcquireReadLock();
+            _suspensionTracker.Value.EmitResumeNotification();
         }
-
-        // Emit the resume signal under the lock to eliminate the race where a concurrent
-        // SuspendNotifications could produce overlapping emissions.
-        _suspensionTracker.Value.EmitResumeNotification();
     }
 
     private enum NotificationKind

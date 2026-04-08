@@ -73,12 +73,32 @@ public class DeliveryQueueFixture
     {
         var concurrentCount = 0;
         var maxConcurrent = 0;
-        var queue = new DeliveryQueue<int>(_gate, _ =>
+        var deliveryCount = 0;
+        var delivered = new ConcurrentBag<int>();
+        using var firstDeliveryStarted = new ManualResetEventSlim(false);
+        using var allowFirstDeliveryToContinue = new ManualResetEventSlim(false);
+        using var startContenders = new ManualResetEventSlim(false);
+
+        var queue = new DeliveryQueue<int>(_gate, item =>
         {
             var current = Interlocked.Increment(ref concurrentCount);
-            if (current > maxConcurrent)
+            int snapshot;
+            do
             {
-                Interlocked.Exchange(ref maxConcurrent, current);
+                snapshot = maxConcurrent;
+                if (current <= snapshot)
+                {
+                    break;
+                }
+            }
+            while (Interlocked.CompareExchange(ref maxConcurrent, current, snapshot) != snapshot);
+
+            delivered.Add(item);
+
+            if (Interlocked.Increment(ref deliveryCount) == 1)
+            {
+                firstDeliveryStarted.Set();
+                allowFirstDeliveryToContinue.Wait();
             }
 
             Thread.SpinWait(1000);
@@ -86,18 +106,33 @@ public class DeliveryQueueFixture
             return true;
         });
 
-        using (var notifications = queue.AcquireLock())
-        {
-            for (var i = 0; i < 100; i++)
-            {
-                notifications.Enqueue(i);
-            }
-        }
+        // Start delivering the first item — it will block in the callback
+        var firstDelivery = Task.Run(() => EnqueueAndDeliver(queue, -1));
+        firstDeliveryStarted.Wait();
 
-        var tasks = Enumerable.Range(0, 4).Select(_ => Task.Run(() => TriggerDelivery(queue))).ToArray();
-        await Task.WhenAll(tasks);
+        // While first delivery is blocked, enqueue 100 items from concurrent threads
+        var enqueueTasks = Enumerable.Range(0, 100)
+            .Select(i => Task.Run(() =>
+            {
+                startContenders.Wait();
+                EnqueueAndDeliver(queue, i);
+            }));
+
+        var triggerTasks = Enumerable.Range(0, 4)
+            .Select(_ => Task.Run(() =>
+            {
+                startContenders.Wait();
+                TriggerDelivery(queue);
+            }));
+
+        var tasks = enqueueTasks.Concat(triggerTasks).ToArray();
+        startContenders.Set();
+        allowFirstDeliveryToContinue.Set();
+
+        await Task.WhenAll(tasks.Append(firstDelivery));
 
         maxConcurrent.Should().Be(1, "only one thread should be delivering at a time");
+        delivered.Should().HaveCount(101);
     }
 
     [Fact]
