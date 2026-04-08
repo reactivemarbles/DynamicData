@@ -281,49 +281,78 @@ public class SourceCacheFixture : IDisposable
     [Fact]
     public void ConnectDuringDeliveryDoesNotDuplicate()
     {
-        // Proves the dequeue-to-delivery gap. A slow subscriber holds delivery
-        // while another thread connects. The new subscriber's snapshot is taken
-        // under the lock, so it will not see a duplicate Add.
+        // Exploits the dequeue-to-OnNext window. Thread A writes two items in
+        // separate batches. The first delivery is held by a slow subscriber.
+        // While item1 delivery is blocked, item2 is committed to ReaderWriter
+        // and sitting in the queue. Thread B calls Connect(), takes a snapshot
+        // (sees both items), subscribes to _changes, then item2 is delivered
+        // via OnNext — producing a duplicate if not guarded by a generation counter.
         using var cache = new SourceCache<TestItem, string>(static x => x.Key);
 
-        var delivering = new ManualResetEventSlim(false);
-        var connectDone = new ManualResetEventSlim(false);
+        using var delivering = new ManualResetEventSlim(false);
+        using var item2Written = new ManualResetEventSlim(false);
+        using var connectDone = new ManualResetEventSlim(false);
 
-        // First subscriber: signals when delivery starts, then waits
+        var firstDelivery = true;
+
+        // First subscriber: blocks on the first delivery to create the window
         using var slowSub = cache.Connect().Subscribe(_ =>
         {
-            delivering.Set();
-            connectDone.Wait(TimeSpan.FromSeconds(5));
+            if (firstDelivery)
+            {
+                firstDelivery = false;
+                delivering.Set();
+
+                // Wait until item2 has been written and the Connect has subscribed
+                connectDone.Wait(TimeSpan.FromSeconds(5));
+            }
         });
 
-        // Write one item -- delivery starts, slow subscriber blocks
-        var writeTask = Task.Run(() => cache.AddOrUpdate(new TestItem("k1", "v1")));
+        // Write item1 on a background thread — delivery starts, slow subscriber blocks
+        var writeTask = Task.Run(() =>
+        {
+            cache.AddOrUpdate(new TestItem("k1", "v1"));
+        });
 
-        // Wait for delivery to be in progress
-        delivering.Wait(TimeSpan.FromSeconds(5));
+        // Wait for delivery of item1 to be in progress (slow sub is blocking)
+        delivering.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("delivery should have started");
 
-        // Now Connect on the main thread while delivery is in progress.
-        // The item is already committed to ReaderWriter and dequeued from
-        // the delivery queue, but OnNext hasn't finished iterating observers.
-        var duplicateKeys = new List<string>();
+        // Now write item2 on another thread. It will acquire the lock, commit to
+        // ReaderWriter, enqueue a notification, and return. The notification sits
+        // in the queue because the deliverer (Thread A) is blocked by the slow sub.
+        var writeTask2 = Task.Run(() =>
+        {
+            cache.AddOrUpdate(new TestItem("k2", "v2"));
+            item2Written.Set();
+        });
+        item2Written.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("item2 should have been written");
+
+        // Now Connect on the main thread. The snapshot from ReaderWriter includes
+        // BOTH k1 and k2. The subscription to _changes is added. When the slow
+        // subscriber unblocks, item2's notification will be delivered via OnNext
+        // and the new subscriber will see k2 again — a duplicate Add.
+        var addCounts = new Dictionary<string, int>();
         using var newSub = cache.Connect().Subscribe(changes =>
         {
             foreach (var c in changes)
             {
                 if (c.Reason == ChangeReason.Add)
                 {
-                    duplicateKeys.Add(c.Current.Key);
+                    var key = c.Current.Key;
+                    addCounts[key] = addCounts.GetValueOrDefault(key) + 1;
                 }
             }
         });
 
-        // Let delivery finish
+        // Unblock the slow subscriber — delivery resumes, item2 delivered
         connectDone.Set();
         writeTask.Wait(TimeSpan.FromSeconds(5));
+        writeTask2.Wait(TimeSpan.FromSeconds(5));
 
-        // Check: k1 should appear exactly once (either in snapshot or stream, not both)
-        var k1Count = duplicateKeys.Count(k => k == "k1");
-        k1Count.Should().Be(1, "k1 should appear exactly once via Connect, not duplicated from snapshot + in-flight delivery");
+        // Each key should appear exactly once in the new subscriber's view
+        addCounts.GetValueOrDefault("k1").Should().Be(1, "k1 should appear once (snapshot only)");
+        addCounts.GetValueOrDefault("k2").Should().Be(1, "k2 should appear once, not duplicated from snapshot + queued delivery");
     }
+
     private sealed record TestItem(string Key, string Value);
 }

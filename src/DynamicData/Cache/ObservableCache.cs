@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using DynamicData.Binding;
 using DynamicData.Cache;
 using DynamicData.Cache.Internal;
@@ -43,6 +44,10 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private int _editLevel; // The level of recursion in editing.
 
+    private long _currentVersion; // Monotonic counter incremented under lock for each enqueued change notification.
+
+    private long _currentDeliveryVersion; // Version of the item currently being delivered. Set before _changes.OnNext.
+
     public ObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
         _readerWriter = new ReaderWriter<TObject, TKey>();
@@ -59,7 +64,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
                 if (changes is not null)
                 {
-                    notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count));
+                    notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count, ++_currentVersion));
                 }
             },
             NotifyError,
@@ -186,7 +191,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         if (changes is not null && _editLevel == 0)
         {
-            notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count));
+            notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count, ++_currentVersion));
         }
     }
 
@@ -213,7 +218,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         if (changes is not null && _editLevel == 0)
         {
-            notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count));
+            notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count, ++_currentVersion));
         }
     }
 
@@ -221,53 +226,64 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
-                // Subject<T> snapshots its observer array before iterating OnNext, so a
-                // subscriber added here will not receive any in-flight notification.
-                lock (_locker)
+                using var readLock = _notifications.AcquireReadLock();
+
+                var initial = InternalEx.Return(() => (IChangeSet<TObject, TKey>)GetInitialUpdates(predicate));
+
+                // The current snapshot may contain changes that have been made but the notifications
+                // have yet to be delivered.  We need to filter those out to avoid delivering an update
+                // that has already been applied (but detect this possiblity and skip filtering unless absolutely needed)
+                var snapshotVersion = _currentVersion;
+                var changes = readLock.HasPending
+                    ? _changes.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
+                    : (IObservable<IChangeSet<TObject, TKey>>)_changes;
+
+                changes = initial.Concat(changes);
+
+                if (predicate != null)
                 {
-                    var initial = InternalEx.Return(() => (IChangeSet<TObject, TKey>)GetInitialUpdates(predicate));
-                    var changes = initial.Concat(_changes);
-
-                    if (predicate != null)
-                    {
-                        changes = changes.Filter(predicate, suppressEmptyChangeSets);
-                    }
-                    else if (suppressEmptyChangeSets)
-                    {
-                        changes = changes.NotEmpty();
-                    }
-
-                    return changes.SubscribeSafe(observer);
+                    changes = changes.Filter(predicate, suppressEmptyChangeSets);
                 }
+                else if (suppressEmptyChangeSets)
+                {
+                    changes = changes.NotEmpty();
+                }
+
+                return changes.SubscribeSafe(observer);
             });
 
     private IObservable<Change<TObject, TKey>> CreateWatchObservable(TKey key) =>
         Observable.Create<Change<TObject, TKey>>(
             observer =>
             {
-                // Subject<T> snapshots its observer array before iterating OnNext, so a
-                // subscriber added here will not receive any in-flight notification.
-                lock (_locker)
-                {
-                    var initial = _readerWriter.Lookup(key);
-                    if (initial.HasValue)
-                    {
-                        observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
-                    }
+                using var readLock = _notifications.AcquireReadLock();
 
-                    return _changes.Finally(observer.OnCompleted).Subscribe(
-                        changes =>
-                        {
-                            foreach (var change in changes.ToConcreteType())
-                            {
-                                var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
-                                if (match)
-                                {
-                                    observer.OnNext(change);
-                                }
-                            }
-                        });
+                var initial = _readerWriter.Lookup(key);
+                if (initial.HasValue)
+                {
+                    observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
                 }
+
+                // The current snapshot may contain changes that have been made but the notifications
+                // have yet to be delivered.  We need to filter those out to avoid delivering an update
+                // that has already been applied (but detect this possiblity and skip filtering unless absolutely needed)
+                var snapshotVersion = _currentVersion;
+                var changes = readLock.HasPending
+                    ? _changes.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
+                    : _changes;
+
+                return changes.Finally(observer.OnCompleted).Subscribe(
+                    changes =>
+                    {
+                        foreach (var change in changes)
+                        {
+                            var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
+                            if (match)
+                            {
+                                observer.OnNext(change);
+                            }
+                        }
+                    });
             });
 
     /// <summary>
@@ -318,8 +334,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                     _countChanged.Value.OnCompleted();
                 }
 
-                // Dispose outside lock — BehaviorSubject.OnCompleted runs observers
-                // synchronously which could execute subscriber code under the lock.
+                // Dispose outside lock because it fires OnCompleted
                 if (_suspensionTracker.IsValueCreated)
                 {
                     _suspensionTracker.Value.Dispose();
@@ -336,7 +351,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                     _countChanged.Value.OnError(item.Error!);
                 }
 
-                // Dispose outside lock — same reasoning as Completed path above.
+                // Dispose outside lock because it fires OnCompleted
                 if (_suspensionTracker.IsValueCreated)
                 {
                     _suspensionTracker.Value.Dispose();
@@ -349,6 +364,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                 return true;
 
             default:
+                Volatile.Write(ref _currentDeliveryVersion, item.Version);
                 EmitChanges(item.Changes);
                 EmitCount(item.Count);
                 return true;
@@ -411,7 +427,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             var (changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
             if (changes is not null)
             {
-                notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count));
+                notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count, ++_currentVersion));
             }
 
             if (!emitResume)
@@ -433,10 +449,10 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         Error,
     }
 
-    private readonly record struct NotificationItem(NotificationKind Kind, ChangeSet<TObject, TKey> Changes, int Count = 0, Exception? Error = null)
+    private readonly record struct NotificationItem(NotificationKind Kind, ChangeSet<TObject, TKey> Changes, int Count = 0, long Version = 0, Exception? Error = null)
     {
-        public static NotificationItem CreateChanges(ChangeSet<TObject, TKey> changes, int count) =>
-            new(NotificationKind.Changes, changes, count);
+        public static NotificationItem CreateChanges(ChangeSet<TObject, TKey> changes, int count, long version) =>
+            new(NotificationKind.Changes, changes, count, version);
 
         public static NotificationItem CreateCountOnly(int count) =>
             new(NotificationKind.CountOnly, [], count);

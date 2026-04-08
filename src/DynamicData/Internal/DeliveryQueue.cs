@@ -54,6 +54,13 @@ internal sealed class DeliveryQueue<TItem>
     /// </summary>
     public ScopedAccess AcquireLock() => new(this);
 
+    /// <summary>
+    /// Acquires the gate and returns a read-only scoped access for inspecting
+    /// queue state. No mutation is possible and disposing does not trigger
+    /// delivery — the lock is simply released.
+    /// </summary>
+    public ReadOnlyScopedAccess AcquireReadLock() => new(this);
+
 #if NET9_0_OR_GREATER
     private void EnterLock() => _gate.Enter();
 
@@ -188,6 +195,44 @@ internal sealed class DeliveryQueue<TItem>
 
             _owner = null;
             owner.ExitLockAndDeliver();
+        }
+    }
+
+    /// <summary>
+    /// A read-only scoped access for inspecting queue state under the gate lock.
+    /// No mutation is possible. Disposing releases the lock without triggering
+    /// delivery.
+    /// </summary>
+    public ref struct ReadOnlyScopedAccess
+    {
+        private DeliveryQueue<TItem>? _owner;
+
+        internal ReadOnlyScopedAccess(DeliveryQueue<TItem> owner)
+        {
+            _owner = owner;
+            owner.EnterLock();
+        }
+
+        /// <summary>
+        /// Gets whether there are notifications pending delivery (queued or
+        /// currently being delivered outside the lock).
+        /// </summary>
+        public readonly bool HasPending =>
+            _owner is not null && (_owner._queue.Count > 0 || _owner._isDelivering);
+
+        /// <summary>
+        /// Releases the gate lock. Does not trigger delivery.
+        /// </summary>
+        public void Dispose()
+        {
+            var owner = _owner;
+            if (owner is null)
+            {
+                return;
+            }
+
+            _owner = null;
+            owner.ExitLock();
         }
     }
 }
