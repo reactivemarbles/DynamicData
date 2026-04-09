@@ -5,6 +5,8 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TKey> removeAction)
@@ -18,8 +20,9 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
                 var cache = new Cache<TObject, TKey>();
-                var subscriber = _source.Synchronize(locker).Do(changes => RegisterForRemoval(changes, cache), observer.OnError).SubscribeSafe(observer);
+                var subscriber = _source.SynchronizeSafe(queue).Do(changes => RegisterForRemoval(changes, cache), observer.OnError).SubscribeSafe(observer);
 
                 return Disposable.Create(
                     () =>

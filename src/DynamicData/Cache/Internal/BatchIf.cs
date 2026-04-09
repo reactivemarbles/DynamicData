@@ -7,6 +7,8 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, TimeSpan? timeOut, bool initialPauseState = false, IObservable<Unit>? intervalTimer = null, IScheduler? scheduler = null)
@@ -24,6 +26,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
             {
                 var batchedChanges = new List<IChangeSet<TObject, TKey>>();
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
                 var paused = initialPauseState;
                 var timeoutDisposer = new SerialDisposable();
                 var intervalTimerDisposer = new SerialDisposable();
@@ -46,7 +49,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                 }
 
                 IDisposable IntervalFunction() =>
-                    intervalTimer.Synchronize(locker).Finally(() => paused = false).Subscribe(
+                    intervalTimer.SynchronizeSafe(queue).Finally(() => paused = false).Subscribe(
                         _ =>
                         {
                             paused = false;
@@ -62,7 +65,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                     intervalTimerDisposer.Disposable = IntervalFunction();
                 }
 
-                var pausedHandler = _pauseIfTrueSelector.Synchronize(locker).Subscribe(
+                var pausedHandler = _pauseIfTrueSelector.SynchronizeSafe(queue).Subscribe(
                     p =>
                     {
                         paused = p;
@@ -78,7 +81,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                         }
                         else if (timeOut.HasValue)
                         {
-                            timeoutDisposer.Disposable = Observable.Timer(timeOut.Value, _scheduler).Synchronize(locker).Subscribe(
+                            timeoutDisposer.Disposable = Observable.Timer(timeOut.Value, _scheduler).SynchronizeSafe(queue).Subscribe(
                                 _ =>
                                 {
                                     paused = false;
@@ -87,7 +90,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                         }
                     });
 
-                var publisher = _source.Synchronize(locker).Subscribe(
+                var publisher = _source.SynchronizeSafe(queue).Subscribe(
                     changes =>
                     {
                         batchedChanges.Add(changes);

@@ -7,6 +7,8 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey> pivotOn, IObservable<Func<Node<TObject, TKey>, bool>>? predicateChanged)
@@ -25,15 +27,16 @@ internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject,
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
                 var reFilterObservable = new BehaviorSubject<Unit>(Unit.Default);
 
-                var allData = _source.Synchronize(locker).AsObservableCache();
+                var allData = _source.SynchronizeSafe(queue).AsObservableCache();
 
                 // for each object we need a node which provides
                 // a structure to set the parent and children
-                var allNodes = allData.Connect().Synchronize(locker).Transform((t, v) => new Node<TObject, TKey>(t, v)).AsObservableCache();
+                var allNodes = allData.Connect().SynchronizeSafe(queue).Transform((t, v) => new Node<TObject, TKey>(t, v)).AsObservableCache();
 
-                var groupedByPivot = allNodes.Connect().Synchronize(locker).Group(x => _pivotOn(x.Item)).AsObservableCache();
+                var groupedByPivot = allNodes.Connect().SynchronizeSafe(queue).Group(x => _pivotOn(x.Item)).AsObservableCache();
 
                 void UpdateChildren(Node<TObject, TKey> parentNode)
                 {
@@ -197,7 +200,7 @@ internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject,
                         reFilterObservable.OnNext(Unit.Default);
                     }).DisposeMany().Subscribe();
 
-                var filter = _predicateChanged.Synchronize(locker).CombineLatest(reFilterObservable, (predicate, _) => predicate);
+                var filter = _predicateChanged.SynchronizeSafe(queue).CombineLatest(reFilterObservable, (predicate, _) => predicate);
                 var result = allNodes.Connect().Filter(filter).SubscribeSafe(observer);
 
                 return Disposable.Create(

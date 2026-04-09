@@ -1,9 +1,11 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Linq;
 using DynamicData.Binding;
+
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -44,6 +46,7 @@ internal sealed class SortAndPage<TObject, TKey>
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
 
                 var sortOptions = new SortAndBindOptions
                 {
@@ -62,7 +65,7 @@ internal sealed class SortAndPage<TObject, TKey>
                 SortedKeyValueApplicator<TObject, TKey>? applicator = null;
 
                 // used to maintain a sorted list of key value pairs
-                var comparerChanged = _comparerChanged.Synchronize(locker)
+                var comparerChanged = _comparerChanged.SynchronizeSafe(queue)
                     .Select(c =>
                     {
                         comparer = c;
@@ -79,7 +82,7 @@ internal sealed class SortAndPage<TObject, TKey>
                         return ApplyPagedChanges();
                     });
 
-                var paramsChanged = _pageRequests.Synchronize(locker)
+                var paramsChanged = _pageRequests.SynchronizeSafe(queue)
                     .DistinctUntilChanged()
                     // exclude dodgy params
                     .Where(parameters => parameters is { Page: > 0, Size: > 0 })
@@ -94,7 +97,7 @@ internal sealed class SortAndPage<TObject, TKey>
                         return ApplyPagedChanges();
                     });
 
-                var dataChange = _source.Synchronize(locker)
+                var dataChange = _source.SynchronizeSafe(queue)
                     // we need to ensure each change batch has unique keys only.
                     // Otherwise, calculation of virtualized changes is super complex
                     .EnsureUniqueKeys()

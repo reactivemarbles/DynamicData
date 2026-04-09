@@ -1,10 +1,12 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Internal;
+
 using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
@@ -17,13 +19,15 @@ internal sealed class GroupOnDynamic<TObject, TKey, TGroupKey>(IObservable<IChan
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(observer =>
     {
         var dynamicGrouper = new DynamicGrouper<TObject, TKey, TGroupKey>();
+        var locker = InternalEx.NewLock();
+        var queue = new SharedDeliveryQueue(locker);
         var notGrouped = new Cache<TObject, TKey>();
         var hasSelector = false;
 
         // Create shared observables for the 3 inputs
-        var sharedSource = source.Synchronize(dynamicGrouper).Publish();
-        var sharedGroupSelector = selectGroupObservable.DistinctUntilChanged().Synchronize(dynamicGrouper).Publish();
-        var sharedRegrouper = (regrouper ?? Observable.Empty<Unit>()).Synchronize(dynamicGrouper).Publish();
+        var sharedSource = source.SynchronizeSafe(queue).Publish();
+        var sharedGroupSelector = selectGroupObservable.DistinctUntilChanged().SynchronizeSafe(queue).Publish();
+        var sharedRegrouper = (regrouper ?? Observable.Empty<Unit>()).SynchronizeSafe(queue).Publish();
 
         // The first value from the Group Selector should update the Grouper with all the values seen so far
         // Then indicate a selector has been found.  Subsequent values should just update the group selector.

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,6 +6,8 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+
+using DynamicData.Internal;
 
 using DynamicData.Internal;
 
@@ -29,6 +31,7 @@ internal static class AsyncDisposeMany<TObject, TKey>
                 var itemsByKey = new Dictionary<TKey, TObject>();
 
                 var synchronizationGate = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(synchronizationGate);
 
                 var disposals = new Subject<IObservable<Unit>>();
                 var disposalsCompleted = disposals
@@ -43,7 +46,7 @@ internal static class AsyncDisposeMany<TObject, TKey>
                 disposalsCompletedAccessor.Invoke(disposalsCompleted);
 
                 var sourceSubscription = source
-                    .Synchronize(synchronizationGate)
+                    .SynchronizeSafe(queue)
                     // Using custom notification handlers instead of .Do() to make sure that we're not disposing items until AFTER we've notified all downstream listeners to remove them from their cached or bound collections.
                     .SubscribeSafe(
                         onNext: upstreamChanges =>
@@ -82,7 +85,7 @@ internal static class AsyncDisposeMany<TObject, TKey>
 
                 return Disposable.Create(() =>
                 {
-                    lock (synchronizationGate)
+                    using (var readLock = queue.AcquireReadLock())
                     {
                         sourceSubscription.Dispose();
 

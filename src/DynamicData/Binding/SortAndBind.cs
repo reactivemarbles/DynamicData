@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -8,6 +8,8 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Cache;
 using DynamicData.Cache.Internal;
+
+using DynamicData.Internal;
 
 namespace DynamicData.Binding;
 
@@ -66,10 +68,11 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
             }
 
             var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
             SortApplicator? sortApplicator = null;
 
             // Create a new sort applicator each time.
-            var latestComparer = comparerChanged.Synchronize(locker)
+            var latestComparer = comparerChanged.SynchronizeSafe(queue)
                 .Subscribe(comparer =>
                 {
                     sortApplicator = new SortApplicator(_cache, target, comparer, options);
@@ -77,7 +80,7 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
                 });
 
             // Listen to changes and apply the sorting
-            var subscriber = source.Synchronize(locker)
+            var subscriber = source.SynchronizeSafe(queue)
                 .Select((changes, index) =>
                 {
                     _cache.Clone(changes);

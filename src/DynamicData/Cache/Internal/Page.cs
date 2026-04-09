@@ -4,6 +4,8 @@
 
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
@@ -14,9 +16,10 @@ internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, 
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
                 var paginator = new Paginator();
-                var request = pageRequests.Synchronize(locker).Select(paginator.Paginate);
-                var dataChange = source.Synchronize(locker).Select(paginator.Update);
+                var request = pageRequests.SynchronizeSafe(queue).Select(paginator.Paginate);
+                var dataChange = source.SynchronizeSafe(queue).Select(paginator.Update);
 
                 return request.Merge(dataChange)
                     .Where(updates => updates is not null)

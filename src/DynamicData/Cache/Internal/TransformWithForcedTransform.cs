@@ -5,6 +5,8 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class TransformWithForcedTransform<TDestination, TSource, TKey>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>> forceTransform, Action<Error<TSource, TKey>>? exceptionCallback = null)
@@ -16,14 +18,15 @@ internal sealed class TransformWithForcedTransform<TDestination, TSource, TKey>(
             observer =>
             {
                 var locker = InternalEx.NewLock();
-                var shared = source.Synchronize(locker).Publish();
+                var queue = new SharedDeliveryQueue(locker);
+                var shared = source.SynchronizeSafe(queue).Publish();
 
                 // capture all items so we can apply a forced transform
                 var cache = new Cache<TSource, TKey>();
                 var cacheLoader = shared.Subscribe(changes => cache.Clone(changes));
 
                 // create change set of items where force refresh is applied
-                var refresher = forceTransform.Synchronize(locker).Select(selector => CaptureChanges(cache, selector)).Select(changes => new ChangeSet<TSource, TKey>(changes)).NotEmpty();
+                var refresher = forceTransform.SynchronizeSafe(queue).Select(selector => CaptureChanges(cache, selector)).Select(changes => new ChangeSet<TSource, TKey>(changes)).NotEmpty();
 
                 var sourceAndRefreshes = shared.Merge(refresher);
 

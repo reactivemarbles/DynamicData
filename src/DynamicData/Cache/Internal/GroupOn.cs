@@ -1,10 +1,12 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -23,11 +25,12 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
                 var grouper = new Grouper(_groupSelectorKey);
 
-                var groups = _source.Finally(observer.OnCompleted).Synchronize(locker).Select(grouper.Update).Where(changes => changes.Count != 0);
+                var groups = _source.Finally(observer.OnCompleted).SynchronizeSafe(queue).Select(grouper.Update).Where(changes => changes.Count != 0);
 
-                var regroup = _regrouper.Synchronize(locker).Select(_ => grouper.Regroup()).Where(changes => changes.Count != 0);
+                var regroup = _regrouper.SynchronizeSafe(queue).Select(_ => grouper.Regroup()).Where(changes => changes.Count != 0);
 
                 var published = groups.Merge(regroup).Publish();
                 var subscriber = published.SubscribeSafe(observer);

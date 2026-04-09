@@ -17,6 +17,8 @@ using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 
 // ReSharper disable once CheckNamespace
+using DynamicData.Internal;
+
 namespace DynamicData;
 
 /// <summary>
@@ -614,7 +616,8 @@ public static partial class ObservableCacheEx
             observer =>
             {
                 var locker = InternalEx.NewLock();
-                return source.Synchronize(locker).Select(
+                var queue = new SharedDeliveryQueue(locker);
+                return source.SynchronizeSafe(queue).Select(
                     changes =>
                     {
                         updater.Adapt(changes, destination);
@@ -742,7 +745,8 @@ public static partial class ObservableCacheEx
             observer =>
             {
                 var locker = InternalEx.NewLock();
-                return source.Synchronize(locker).Select(
+                var queue = new SharedDeliveryQueue(locker);
+                return source.SynchronizeSafe(queue).Select(
                     changes =>
                     {
                         updater.Adapt(changes, destination);
@@ -4510,8 +4514,9 @@ public static partial class ObservableCacheEx
             var seenValue = false;
             var locker = InternalEx.NewLock();
 
-            var optional = source.ToObservableOptional(key, equalityComparer).Synchronize(locker).Do(_ => seenValue = true);
-            var missing = Observable.Return(Optional.None<TObject>()).Synchronize(locker).Where(_ => !seenValue);
+                var queue = new SharedDeliveryQueue(locker);
+            var optional = source.ToObservableOptional(key, equalityComparer).SynchronizeSafe(queue).Do(_ => seenValue = true);
+            var missing = Observable.Return(Optional.None<TObject>()).SynchronizeSafe(queue).Where(_ => !seenValue);
 
             return optional.Merge(missing);
         }

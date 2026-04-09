@@ -6,6 +6,8 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source)
@@ -17,11 +19,12 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
     public IObservable<IChangeSet<TObject, TKey>> Run()
         => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
-            // Will be locking on cachedItems directly, instead of using an anonymous gate object. This is acceptable, since it's a privately-held object, there's no risk of deadlock from other consumers locking on it.
+            var locker = InternalEx.NewLock();
+            var queue = new SharedDeliveryQueue(locker);
             var cachedItems = new Dictionary<TKey, TObject>();
 
             var sourceSubscription = _source
-                .Synchronize(cachedItems)
+                .SynchronizeSafe(queue)
                 .SubscribeSafe(Observer.Create<IChangeSet<TObject, TKey>>(
                     onNext: changeSet =>
                     {
@@ -64,7 +67,7 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
             {
                 sourceSubscription.Dispose();
 
-                lock (cachedItems)
+                using (var readLock = queue.AcquireReadLock())
                 {
                     ProcessFinalization(cachedItems);
                 }

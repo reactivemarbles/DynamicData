@@ -1,10 +1,12 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -18,6 +20,7 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
 
                 var destination = new LockFreeObservableCache<TObject, TKey>();
 
@@ -25,10 +28,10 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
 
                 var populator = Observable.Switch(
                         _sources
-                            .Synchronize(locker)
+                            .SynchronizeSafe(queue)
                             .Do(onNext: _ => destination.Clear(),
                                 onError: error => errors.OnError(error)))
-                    .Synchronize(locker)
+                    .SynchronizeSafe(queue)
                     .Do(onNext: static _ => { },
                         onError: error => errors.OnError(error))
                     .PopulateInto(destination);

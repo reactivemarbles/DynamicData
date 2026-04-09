@@ -36,11 +36,12 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
             {
                 var counter = new SubscriptionCounter();
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
                 var disposable = _source.Concat(counter.DeferCleanup)
                                                 .SubscribeMany((t, key) =>
                                                 {
                                                     counter.Added();
-                                                    return _observableSelector(t, key).Synchronize(locker).Finally(() => counter.Finally()).Subscribe(observer.OnNext, static _ => { });
+                                                    return _observableSelector(t, key).SynchronizeSafe(queue).Finally(() => counter.Finally()).Subscribe(observer.OnNext, static _ => { });
                                                 })
                                                 .SubscribeSafe(observer.OnError, observer.OnCompleted);
 

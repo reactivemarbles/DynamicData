@@ -6,6 +6,8 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using DynamicData.Internal;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 /// <summary>
@@ -24,14 +26,15 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
         observer =>
         {
             var locker = InternalEx.NewLock();
+            var queue = new SharedDeliveryQueue(locker);
             var cache = new Cache<ChangeSetCache<TObject, TKey>, int>();
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<TObject, TKey>(() => cache.Items, comparer, equalityComparer);
 
             // Create a ChangeSet of Caches, synchronize, update the local copy, and merge the sub-observables together.
-            return CreateContainerObservable(source, locker)
-                .Synchronize(locker)
+            return CreateContainerObservable(source, queue)
+                .SynchronizeSafe(queue)
                 .Do(cache.Clone)
                 .MergeMany(mc => mc.Source.Do(static _ => { }, observer.OnError))
                 .SubscribeSafe(
@@ -42,19 +45,19 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
 
     // Can optimize for the Add case because that's the only one that applies
 #if NET9_0_OR_GREATER
-    private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, Lock locker) =>
-        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.IgnoreSameReferenceUpdate().Synchronize(locker)));
+    private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, SharedDeliveryQueue queue) =>
+        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.IgnoreSameReferenceUpdate().SynchronizeSafe(queue)));
 
     // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
-    private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, Lock locker) =>
-        source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index, locker) }));
+    private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, SharedDeliveryQueue queue) =>
+        source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index, queue) }));
 #else
-    private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, object locker) =>
-        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.IgnoreSameReferenceUpdate().Synchronize(locker)));
+    private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, SharedDeliveryQueue queue) =>
+        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.IgnoreSameReferenceUpdate().SynchronizeSafe(queue)));
 
     // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
-    private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, object locker) =>
-        source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index, locker) }));
+    private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, SharedDeliveryQueue queue) =>
+        source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index, queue) }));
 #endif
 
     // Create a ChangeSet Observable with a single event that adds all the values in the enum (and then completes, maybe)

@@ -4,6 +4,8 @@
 
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class QueryWhenChanged<TObject, TKey, TValue>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>>? itemChangedTrigger = null)
@@ -35,11 +37,12 @@ internal sealed class QueryWhenChanged<TObject, TKey, TValue>(IObservable<IChang
             shared =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
                 var state = new Cache<TObject, TKey>();
 
-                var inlineChange = shared.MergeMany(itemChangedTrigger).Synchronize(locker).Select(_ => new AnonymousQuery<TObject, TKey>(state));
+                var inlineChange = shared.MergeMany(itemChangedTrigger).SynchronizeSafe(queue).Select(_ => new AnonymousQuery<TObject, TKey>(state));
 
-                var sourceChanged = shared.Synchronize(locker).Scan(
+                var sourceChanged = shared.SynchronizeSafe(queue).Scan(
                     state,
                     (cache, changes) =>
                     {

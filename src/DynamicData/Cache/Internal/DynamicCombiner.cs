@@ -5,6 +5,8 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
@@ -17,18 +19,19 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
 
                 // this is the resulting cache which produces all notifications
                 var resultCache = new ChangeAwareCache<TObject, TKey>();
 
                 // Transform to a merge container.
                 // This populates a RefTracker when the original source is subscribed to
-                var sourceLists = _source.Connect().Synchronize(locker).Transform(changeSet => new MergeContainer(changeSet)).AsObservableList();
+                var sourceLists = _source.Connect().SynchronizeSafe(queue).Transform(changeSet => new MergeContainer(changeSet)).AsObservableList();
 
                 var sharedLists = sourceLists.Connect().Publish();
 
                 // merge the items back together
-                var allChanges = sharedLists.MergeMany(mc => mc.Source).Synchronize(locker).Subscribe(
+                var allChanges = sharedLists.MergeMany(mc => mc.Source).SynchronizeSafe(queue).Subscribe(
                     changes =>
                     {
                         // Populate result list and check for changes

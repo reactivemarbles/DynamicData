@@ -5,6 +5,8 @@
 using System.Reactive;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class Sort<TObject, TKey>
@@ -43,6 +45,7 @@ internal sealed class Sort<TObject, TKey>
             {
                 var sorter = new Sorter(_sortOptimisations, _comparer, _resetThreshold);
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
 
                 // check for nulls so we can prevent a lock when not required
                 if (_comparerChangedObservable is null && _resorter is null)
@@ -50,11 +53,11 @@ internal sealed class Sort<TObject, TKey>
                     return _source.Select(sorter.Sort).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer);
                 }
 
-                var comparerChanged = (_comparerChangedObservable ?? Observable.Never<IComparer<TObject>>()).Synchronize(locker).Select(sorter.Sort);
+                var comparerChanged = (_comparerChangedObservable ?? Observable.Never<IComparer<TObject>>()).SynchronizeSafe(queue).Select(sorter.Sort);
 
-                var sortAgain = (_resorter ?? Observable.Never<Unit>()).Synchronize(locker).Select(_ => sorter.Sort());
+                var sortAgain = (_resorter ?? Observable.Never<Unit>()).SynchronizeSafe(queue).Select(_ => sorter.Sort());
 
-                var dataChanged = _source.Synchronize(locker).Select(sorter.Sort);
+                var dataChanged = _source.SynchronizeSafe(queue).Select(sorter.Sort);
 
                 return comparerChanged.Merge(dataChanged).Merge(sortAgain).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer);
             });

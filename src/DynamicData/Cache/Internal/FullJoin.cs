@@ -5,6 +5,8 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, Optional<TLeft>, Optional<TRight>, TDestination> resultSelector)
@@ -26,10 +28,11 @@ internal sealed class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
 
                 // create local backing stores
-                var leftCache = _left.Synchronize(locker).AsObservableCache(false);
-                var rightCache = _right.Synchronize(locker).ChangeKey(_rightKeySelector).AsObservableCache(false);
+                var leftCache = _left.SynchronizeSafe(queue).AsObservableCache(false);
+                var rightCache = _right.SynchronizeSafe(queue).ChangeKey(_rightKeySelector).AsObservableCache(false);
 
                 // joined is the final cache
                 var joinedCache = new ChangeAwareCache<TDestination, TLeftKey>();

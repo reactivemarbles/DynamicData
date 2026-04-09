@@ -1,9 +1,11 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -26,12 +28,13 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
 
                 // create local backing stores
-                var leftShare = _left.Synchronize(locker).Publish();
+                var leftShare = _left.SynchronizeSafe(queue).Publish();
                 var leftCache = leftShare.AsObservableCache(false);
 
-                var rightShare = _right.Synchronize(locker).Publish();
+                var rightShare = _right.SynchronizeSafe(queue).Publish();
                 var rightCache = rightShare.AsObservableCache(false);
                 var rightForeignCache = rightShare.ChangeKey(_rightKeySelector).AsObservableCache(false);
 
