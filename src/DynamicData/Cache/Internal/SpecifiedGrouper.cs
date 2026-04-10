@@ -5,6 +5,8 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class SpecifiedGrouper<TObject, TKey, TGroupKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelector, IObservable<IDistinctChangeSet<TGroupKey>> resultGroupSource)
@@ -22,12 +24,13 @@ internal sealed class SpecifiedGrouper<TObject, TKey, TGroupKey>(IObservable<ICh
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
 
                 // create source group cache
-                var sourceGroups = _source.Synchronize(locker).Group(_groupSelector).DisposeMany().AsObservableCache();
+                var sourceGroups = _source.SynchronizeSafe(queue).Group(_groupSelector).DisposeMany().AsObservableCache();
 
                 // create parent groups
-                var parentGroups = _resultGroupSource.Synchronize(locker).Transform(
+                var parentGroups = _resultGroupSource.SynchronizeSafe(queue).Transform(
                     x =>
                     {
                         // if child already has data, populate it.
