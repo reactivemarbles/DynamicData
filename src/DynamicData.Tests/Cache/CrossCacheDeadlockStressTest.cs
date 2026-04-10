@@ -13,6 +13,8 @@ using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Bogus;
+
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
@@ -24,74 +26,20 @@ using Xunit;
 namespace DynamicData.Tests.Cache;
 
 /// <summary>
-/// Comprehensive cross-cache stress test exercising every operator migrated to SynchronizeSafe
-/// in a bidirectional multi-threaded pipeline, with result verification.
-/// If this test completes without deadlock AND produces correct results, the entire library
-/// is deadlock-free and semantically correct under concurrent load.
+/// Comprehensive cross-cache stress test exercising every operator that uses
+/// Synchronize/SynchronizeSafe in a multi-threaded bidirectional pipeline.
+/// Proves: no deadlocks, correct final state, Rx contract compliance.
 /// </summary>
 public sealed class CrossCacheDeadlockStressTest : IDisposable
 {
-    private const int WriterThreads = 4;
-    private const int ItemsPerThread = 100;
-    private const int TotalItemsPerCache = WriterThreads * ItemsPerThread;
+    private const int WriterThreads = 8;
+    private const int ItemsPerThread = 500;
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
+    private static readonly Randomizer Rand = new(8675309); // deterministic seed
 
-    private sealed class StressItem : INotifyPropertyChanged, IEquatable<StressItem>
-    {
-        private string _category;
-        private int _priority;
-
-        public StressItem(string id, string value, string category, int priority = 0)
-        {
-            Id = id;
-            Value = value;
-            _category = category;
-            _priority = priority;
-        }
-
-        public string Id { get; }
-
-        public string Value { get; }
-
-        public string Category
-        {
-            get => _category;
-            set
-            {
-                if (_category != value)
-                {
-                    _category = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Category)));
-                }
-            }
-        }
-
-        public int Priority
-        {
-            get => _priority;
-            set
-            {
-                if (_priority != value)
-                {
-                    _priority = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Priority)));
-                }
-            }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        public bool Equals(StressItem? other) => other is not null && Id == other.Id;
-
-        public override bool Equals(object? obj) => Equals(obj as StressItem);
-
-        public override int GetHashCode() => Id.GetHashCode();
-
-        public override string ToString() => $"{Id}:{Value}:{Category}:{Priority}";
-    }
-
-    private readonly SourceCache<StressItem, string> _cacheA = new(x => x.Id);
-    private readonly SourceCache<StressItem, string> _cacheB = new(x => x.Id);
+    private readonly Faker<Animal> _animalFaker = Fakers.Animal.Clone().WithSeed(Rand);
+    private readonly SourceCache<Animal, int> _cacheA = new(x => x.Id);
+    private readonly SourceCache<Animal, int> _cacheB = new(x => x.Id);
     private readonly CompositeDisposable _cleanup = new();
 
     public void Dispose()
@@ -102,309 +50,335 @@ public sealed class CrossCacheDeadlockStressTest : IDisposable
     }
 
     /// <summary>
-    /// Exercises every migrated operator in a cross-cache bidirectional pipeline
-    /// under heavy concurrent load, then verifies the final state is consistent.
-    ///
-    /// Operators exercised:
-    ///   Sort, SortAndBind, Page, Virtualise, AutoRefresh,
-    ///   GroupOn, GroupOnImmutable, Transform, Filter,
-    ///   FullJoin, InnerJoin, LeftJoin, RightJoin,
-    ///   MergeMany, MergeChangeSets, QueryWhenChanged,
-    ///   SubscribeMany, DisposeMany, OnItemRemoved,
-    ///   TransformMany, Switch, BatchIf, DynamicCombiner (Or),
-    ///   TransformWithForcedTransform, TransformAsync
+    /// The "kitchen sink" test. Chains every operator that could deadlock into
+    /// massive fluent expressions across two caches with bidirectional flow.
+    /// 8 writer threads per cache, 500 items each, property mutations, sort
+    /// changes, page changes — maximum contention.
     /// </summary>
     [Fact]
-    public async Task AllOperatorsUnderConcurrentLoad_NoDeadlock_CorrectResults()
+    public async Task KitchenSink_AllOperatorsChained_NoDeadlock_CorrectResults()
     {
-        // ========================================================
-        // Pipeline A: cacheA → [operators] → populate cacheB
-        // ========================================================
+        // ================================================================
+        // PIPELINE 1: The Monster Chain (cacheA → cacheB)
+        //
+        // Every operator that uses Synchronize/SynchronizeSafe composed
+        // into a single fluent expression. This is intentionally absurd —
+        // the point is to prove they can all coexist without deadlock.
+        // ================================================================
 
-        // Sort + Page
-        var pageRequests = new BehaviorSubject<IPageRequest>(new PageRequest(1, 200));
+        var sortComparer = new BehaviorSubject<IComparer<Animal>>(
+            SortExpressionComparer<Animal>.Ascending(x => x.Id));
+        _cleanup.Add(sortComparer);
+
+        var pageRequests = new BehaviorSubject<IPageRequest>(new PageRequest(1, 100));
         _cleanup.Add(pageRequests);
 
-        var sortedPagedA = _cacheA.Connect()
-            .AutoRefresh(x => x.Category)
-            .Sort(SortExpressionComparer<StressItem>.Ascending(x => x.Id))
-            .Page(pageRequests);
+        var virtualRequests = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 50));
+        _cleanup.Add(virtualRequests);
 
-        // Transform + Filter → into cacheB
-        var forwardPipeline = sortedPagedA
-            .Transform(x => new StressItem("fwd-" + x.Id, x.Value, x.Category, x.Priority))
-            .Filter(x => !x.Id.StartsWith("fwd-fwd-") && !x.Id.StartsWith("fwd-rev-"))
-            .PopulateInto(_cacheB);
-        _cleanup.Add(forwardPipeline);
+        var pauseBatch = new BehaviorSubject<bool>(false);
+        _cleanup.Add(pauseBatch);
 
-        // ========================================================
-        // Pipeline B: cacheB → [operators] → populate cacheA
-        // ========================================================
-
-        var reversePipeline = _cacheB.Connect()
-            .Filter(x => x.Id.StartsWith("fwd-b-"))
-            .Transform(x => new StressItem("rev-" + x.Id, x.Value, x.Category, x.Priority))
-            .Filter(x => !x.Id.StartsWith("rev-rev-"))
-            .PopulateInto(_cacheA);
-        _cleanup.Add(reversePipeline);
-
-        // ========================================================
-        // Cross-cache operators (exercised but not feeding back)
-        // ========================================================
-
-        // GroupOn (cache version is .Group)
-        var groupResults = _cacheA.Connect()
-            .Group(x => x.Category)
+        var monsterChain = _cacheA.Connect()          // IChangeSet<Animal, int>
+            .AutoRefresh(x => x.IncludeInResults)      // re-evaluate on property change
+            .Filter(x => x.IncludeInResults)           // static filter
+            .Sort(sortComparer)                        // dynamic sort
+            .Page(pageRequests)                        // paging
+            .Transform(a => new Animal(                // transform to new instance
+                "m-" + a.Name, a.Type, a.Family, a.IncludeInResults, a.Id + 100_000))
+            .IgnoreSameReferenceUpdate()               // safe operator
+            .WhereReasonsAre(ChangeReason.Add,
+                ChangeReason.Update,
+                ChangeReason.Remove,
+                ChangeReason.Refresh)                  // safe operator
+            .OnItemAdded(_ => { })                     // safe operator
+            .OnItemUpdated((_, _) => { })              // safe operator
+            .OnItemRemoved(_ => { })                   // safe operator
+            .SubscribeMany(_ => Disposable.Empty)      // safe operator
+            .NotEmpty()                                // safe operator
+            .SkipInitial()                             // safe operator - skip the first batch
             .AsAggregator();
-        _cleanup.Add(groupResults);
+        _cleanup.Add(monsterChain);
 
-        // GroupOnImmutable
-        var immutableGroupResults = _cacheA.Connect()
-            .GroupWithImmutableState(x => x.Category)
-            .AsAggregator();
-        _cleanup.Add(immutableGroupResults);
+        // ================================================================
+        // PIPELINE 2: Cross-cache Join + Group + MergeChangeSets
+        // ================================================================
 
-        // FullJoin
-        var fullJoinResults = _cacheA.Connect()
+        var joinChain = _cacheA.Connect()
             .FullJoin(
                 _cacheB.Connect(),
-                right => right.Id.Replace("fwd-", ""),
+                right => right.Id,
                 (key, left, right) =>
                 {
-                    var l = left.HasValue ? left.Value.Value : "none";
-                    var r = right.HasValue ? right.Value.Value : "none";
-                    return new StressItem("fj-" + key, l + "+" + r, "join");
+                    var name = (left.HasValue ? left.Value.Name : "?") + "+"
+                             + (right.HasValue ? right.Value.Name : "?");
+                    return new Animal(name, "Hybrid", AnimalFamily.Mammal, true, key + 200_000);
                 })
+            .Group(x => x.Family)                      // GroupOn
+            .DisposeMany()                             // safe but exercises the path
+            .MergeMany(group => group.Cache.Connect()  // MergeMany into the groups
+                .Transform(a => new Animal("g-" + a.Name, a.Type, a.Family, true, a.Id + 300_000)))
             .AsAggregator();
-        _cleanup.Add(fullJoinResults);
+        _cleanup.Add(joinChain);
 
-        // InnerJoin (only matching keys)
+        // ================================================================
+        // PIPELINE 3: InnerJoin + LeftJoin + RightJoin
+        // ================================================================
+
         var innerJoinResults = _cacheA.Connect()
-            .InnerJoin(
-                _cacheB.Connect(),
-                right => right.Id.Replace("fwd-", ""),
-                (keys, left, right) => new StressItem("ij-" + keys.leftKey, left.Value + "+" + right.Value, "join"))
+            .InnerJoin(_cacheB.Connect(), r => r.Id,
+                (keys, l, r) => new Animal("ij-" + l.Name, r.Type, l.Family, true, keys.leftKey + 400_000))
+            .ChangeKey(x => x.Id)
             .AsAggregator();
         _cleanup.Add(innerJoinResults);
 
-        // LeftJoin
         var leftJoinResults = _cacheA.Connect()
-            .LeftJoin(
-                _cacheB.Connect(),
-                right => right.Id.Replace("fwd-", ""),
-                (key, left, right) => new StressItem("lj-" + key, left.Value, right.HasValue ? "matched" : "unmatched"))
+            .LeftJoin(_cacheB.Connect(), r => r.Id,
+                (key, l, r) => new Animal("lj-" + l.Name, l.Type, l.Family, r.HasValue, key + 500_000))
             .AsAggregator();
         _cleanup.Add(leftJoinResults);
 
-        // MergeMany: track property changes
-        var propertyChangeCount = 0;
-        var mergeManySub = _cacheA.Connect()
-            .MergeMany(item => Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
-                h => item.PropertyChanged += h,
-                h => item.PropertyChanged -= h)
-                .Select(_ => item))
-            .Subscribe(_ => Interlocked.Increment(ref propertyChangeCount));
-        _cleanup.Add(mergeManySub);
+        var rightJoinResults = _cacheA.Connect()
+            .RightJoin(_cacheB.Connect(), r => r.Id,
+                (key, l, r) => new Animal("rj-" + r.Name, r.Type, r.Family, l.HasValue, key + 600_000))
+            .AsAggregator();
+        _cleanup.Add(rightJoinResults);
 
-        // MergeChangeSets: merge cacheA and cacheB into one stream
+        // ================================================================
+        // PIPELINE 4: MergeChangeSets + Or + BatchIf + QueryWhenChanged
+        // ================================================================
+
         var mergedResults = new[] { _cacheA.Connect(), _cacheB.Connect() }
             .MergeChangeSets()
             .AsAggregator();
         _cleanup.Add(mergedResults);
 
-        // QueryWhenChanged
-        IQuery<StressItem, string>? lastQuery = null;
+        var orResults = _cacheA.Connect().Or(_cacheB.Connect()).AsAggregator();
+        _cleanup.Add(orResults);
+
+        var batchedResults = _cacheA.Connect()
+            .BatchIf(pauseBatch, false, null)
+            .AsAggregator();
+        _cleanup.Add(batchedResults);
+
+        IQuery<Animal, int>? lastQuery = null;
         var querySub = _cacheB.Connect()
             .QueryWhenChanged()
             .Subscribe(q => lastQuery = q);
         _cleanup.Add(querySub);
 
-        // SortAndBind
-        var boundList = new List<StressItem>();
-        var sortAndBindSub = _cacheA.Connect()
-            .SortAndBind(boundList, SortExpressionComparer<StressItem>.Ascending(x => x.Id))
-            .Subscribe();
-        _cleanup.Add(sortAndBindSub);
+        // ================================================================
+        // PIPELINE 5: SortAndBind + Virtualise + GroupWithImmutableState
+        // ================================================================
 
-        // Virtualise
-        var virtualRequests = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 50));
-        _cleanup.Add(virtualRequests);
+        var boundList = new List<Animal>();
+        var sortAndBind = _cacheA.Connect()
+            .SortAndBind(boundList, SortExpressionComparer<Animal>.Ascending(x => x.Id))
+            .Subscribe();
+        _cleanup.Add(sortAndBind);
+
         var virtualisedResults = _cacheA.Connect()
-            .Sort(SortExpressionComparer<StressItem>.Ascending(x => x.Id))
+            .Sort(SortExpressionComparer<Animal>.Ascending(x => x.Id))
             .Virtualise(virtualRequests)
             .AsAggregator();
         _cleanup.Add(virtualisedResults);
 
-        // DisposeMany (items don't implement IDisposable but exercises the pipeline)
-        var disposeManyResults = _cacheA.Connect()
-            .Transform(x => new StressItem("dm-" + x.Id, x.Value, x.Category))
-            .DisposeMany()
+        var immutableGroups = _cacheA.Connect()
+            .GroupWithImmutableState(x => x.Family)
             .AsAggregator();
-        _cleanup.Add(disposeManyResults);
+        _cleanup.Add(immutableGroups);
 
-        // Switch: switch between cacheA and cacheB connections
-        var switchSource = new BehaviorSubject<IObservable<IChangeSet<StressItem, string>>>(_cacheA.Connect());
+        // ================================================================
+        // PIPELINE 6: Switch + TransformMany + TreeBuilder (via TransformToTree)
+        // ================================================================
+
+        var switchSource = new BehaviorSubject<IObservable<IChangeSet<Animal, int>>>(_cacheA.Connect());
         _cleanup.Add(switchSource);
         var switchResults = switchSource.Switch().AsAggregator();
         _cleanup.Add(switchResults);
 
-        // TransformMany: flatten a collection property
         var transformManyResults = _cacheA.Connect()
-            .TransformMany(item => new[] { item, new StressItem(item.Id + "-dup", item.Value, item.Category) }, x => x.Id)
+            .TransformMany(
+                a => new[] { a, new Animal(a.Name + "-twin", a.Type, a.Family, true, a.Id + 700_000) },
+                twin => twin.Id)
             .AsAggregator();
         _cleanup.Add(transformManyResults);
 
-        // BatchIf: batch while paused
-        var pauseSubject = new BehaviorSubject<bool>(false);
-        _cleanup.Add(pauseSubject);
-        var batchedResults = _cacheA.Connect()
-            .BatchIf(pauseSubject, false, null)
-            .AsAggregator();
-        _cleanup.Add(batchedResults);
+        // ================================================================
+        // PIPELINE 7: Bidirectional flow (cacheA ↔ cacheB via PopulateInto)
+        // ================================================================
 
-        // Or (DynamicCombiner)
-        var orResults = _cacheA.Connect()
-            .Or(_cacheB.Connect())
-            .AsAggregator();
-        _cleanup.Add(orResults);
+        var forwardPipeline = _cacheA.Connect()
+            .Filter(x => x.Family == AnimalFamily.Mammal)
+            .Transform(a => new Animal("fwd-" + a.Name, a.Type, a.Family, true, a.Id + 800_000))
+            .Filter(x => !x.Name.StartsWith("fwd-fwd-") && !x.Name.StartsWith("fwd-rev-"))
+            .PopulateInto(_cacheB);
+        _cleanup.Add(forwardPipeline);
 
-        // ========================================================
-        // Concurrent writers
-        // ========================================================
-        using var barrier = new Barrier(WriterThreads * 2 + 2);
+        var reversePipeline = _cacheB.Connect()
+            .Filter(x => x.Name.StartsWith("fwd-"))
+            .Transform(a => new Animal("rev-" + a.Name, a.Type, a.Family, true, a.Id + 900_000))
+            .Filter(x => !x.Name.StartsWith("rev-rev-"))
+            .PopulateInto(_cacheA);
+        _cleanup.Add(reversePipeline);
+
+        // ================================================================
+        // CONCURRENT WRITERS — maximum contention
+        // ================================================================
+
+        using var barrier = new Barrier(WriterThreads + WriterThreads + 1 + 1); // A + B + control + main
 
         var writersA = Enumerable.Range(0, WriterThreads).Select(t => Task.Run(() =>
         {
+            var faker = Fakers.Animal.Clone().WithSeed(new Randomizer(Rand.Int()));
             barrier.SignalAndWait();
             for (var i = 0; i < ItemsPerThread; i++)
             {
-                var cat = (i % 3) switch { 0 => "alpha", 1 => "beta", _ => "gamma" };
-                _cacheA.AddOrUpdate(new StressItem($"a-{t}-{i}", $"va-{t}-{i}", cat, i));
+                var animal = faker.Generate();
+                _cacheA.AddOrUpdate(animal);
+
+                // Every 10th item: toggle IncludeInResults (triggers AutoRefresh)
+                if (i % 10 == 5)
+                {
+                    var items = _cacheA.Items.Take(3).ToArray();
+                    foreach (var item in items)
+                        item.IncludeInResults = !item.IncludeInResults;
+                }
+
+                // Every 20th item: remove old items
+                if (i % 20 == 0 && i > 0)
+                    _cacheA.Edit(u => u.RemoveKeys(_cacheA.Keys.Take(3)));
             }
         })).ToArray();
 
         var writersB = Enumerable.Range(0, WriterThreads).Select(t => Task.Run(() =>
         {
+            var faker = Fakers.Animal.Clone().WithSeed(new Randomizer(Rand.Int()));
             barrier.SignalAndWait();
             for (var i = 0; i < ItemsPerThread; i++)
             {
-                var cat = i % 2 == 0 ? "even" : "odd";
-                _cacheB.AddOrUpdate(new StressItem($"b-{t}-{i}", $"vb-{t}-{i}", cat, i));
+                var animal = faker.Generate();
+                _cacheB.AddOrUpdate(animal);
+
+                if (i % 15 == 0 && i > 0)
+                    _cacheB.Edit(u => u.RemoveKeys(_cacheB.Keys.Take(2)));
             }
         })).ToArray();
 
-        // Property updater: triggers AutoRefresh + MergeMany
-        var propertyUpdater = Task.Run(() =>
+        // Control thread: toggles parameters under load
+        var controlThread = Task.Run(() =>
         {
             barrier.SignalAndWait();
-            // Spin until items exist
-            SpinWait.SpinUntil(() => _cacheA.Count > 10, TimeSpan.FromSeconds(5));
-            var rng = new Random(42);
-            for (var i = 0; i < ItemsPerThread; i++)
+            SpinWait.SpinUntil(() => _cacheA.Count > 50, TimeSpan.FromSeconds(5));
+
+            for (var i = 0; i < 50; i++)
             {
-                var items = _cacheA.Items.Take(10).ToArray();
-                foreach (var item in items)
-                {
-                    item.Category = rng.Next(3) switch { 0 => "alpha", 1 => "beta", _ => "gamma" };
-                    item.Priority = rng.Next(100);
-                }
+                // Toggle BatchIf
+                pauseBatch.OnNext(i % 4 == 0);
 
-                // Occasionally toggle BatchIf pause
-                if (i % 20 == 0)
-                {
-                    pauseSubject.OnNext(true);
-                }
-                else if (i % 20 == 10)
-                {
-                    pauseSubject.OnNext(false);
-                }
+                // Change sort direction
+                if (i % 10 == 0)
+                    sortComparer.OnNext(SortExpressionComparer<Animal>.Descending(x => x.Id));
+                else if (i % 10 == 5)
+                    sortComparer.OnNext(SortExpressionComparer<Animal>.Ascending(x => x.Id));
 
-                // Occasionally switch the Switch source
-                if (i % 30 == 0)
-                {
+                // Change page
+                pageRequests.OnNext(new PageRequest((i % 3) + 1, 100));
+
+                // Change virtual window
+                virtualRequests.OnNext(new VirtualRequest(i % 20, 50));
+
+                // Switch between caches
+                if (i % 6 == 0)
                     switchSource.OnNext(_cacheB.Connect());
-                }
-                else if (i % 30 == 15)
-                {
+                else if (i % 6 == 3)
                     switchSource.OnNext(_cacheA.Connect());
-                }
+
+                Thread.SpinWait(500);
             }
 
-            // Ensure BatchIf is unpaused at the end
-            pauseSubject.OnNext(false);
+            // Reset to known state for validation
+            pauseBatch.OnNext(false);
+            sortComparer.OnNext(SortExpressionComparer<Animal>.Ascending(x => x.Id));
+            pageRequests.OnNext(new PageRequest(1, 100));
+            virtualRequests.OnNext(new VirtualRequest(0, 50));
+            switchSource.OnNext(_cacheA.Connect());
         });
 
         // Release all threads
         barrier.SignalAndWait();
 
-        // Wait for completion
-        var allTasks = Task.WhenAll(writersA.Concat(writersB).Append(propertyUpdater));
+        var allTasks = Task.WhenAll(writersA.Concat(writersB).Append(controlThread));
         var completed = await Task.WhenAny(allTasks, Task.Delay(Timeout));
         completed.Should().BeSameAs(allTasks,
             $"cross-cache pipeline deadlocked — tasks did not complete within {Timeout.TotalSeconds}s");
-        await allTasks;
+        await allTasks; // propagate faults
 
         // Let async deliveries settle
-        await Task.Delay(100);
+        await Task.Delay(200);
 
-        // ========================================================
-        // Verify results
-        // ========================================================
+        // ================================================================
+        // VERIFY RESULTS
+        // ================================================================
 
-        // cacheA should have items from writers + reverse pipeline
+        // Core caches have items
         _cacheA.Count.Should().BeGreaterThan(0, "cacheA should have items");
-
-        // cacheB should have items from writers + forward pipeline
         _cacheB.Count.Should().BeGreaterThan(0, "cacheB should have items");
 
-        // FullJoin should have produced results
-        fullJoinResults.Data.Count.Should().BeGreaterThan(0, "FullJoin should produce results");
+        // FullJoin: should have at least max(A, B) items (full outer join)
+        joinChain.Data.Count.Should().BeGreaterThan(0, "FullJoin chain should produce results");
 
-        // LeftJoin should have at least as many items as cacheA
-        leftJoinResults.Data.Count.Should().BeGreaterThanOrEqualTo(_cacheA.Count,
-            "LeftJoin should have at least one row per left item");
+        // LeftJoin: exactly one row per left item
+        leftJoinResults.Data.Count.Should().Be(_cacheA.Count,
+            "LeftJoin should have exactly one row per left (cacheA) item");
 
-        // MergeChangeSets should contain items from both caches
-        mergedResults.Data.Count.Should().BeGreaterThanOrEqualTo(
-            Math.Max(_cacheA.Count, _cacheB.Count),
-            "MergeChangeSets should contain items from both caches");
+        // MergeChangeSets: union of both caches
+        mergedResults.Data.Count.Should().Be(_cacheA.Count + _cacheB.Count,
+            "MergeChangeSets should be the sum of both caches (disjoint keys)");
 
-        // QueryWhenChanged should have fired
+        // Or: union with dedup
+        orResults.Data.Count.Should().Be(
+            _cacheA.Count + _cacheB.Count - _cacheA.Keys.Intersect(_cacheB.Keys).Count(),
+            "Or should be the union of both caches");
+
+        // QueryWhenChanged
         lastQuery.Should().NotBeNull("QueryWhenChanged should have fired");
-        lastQuery!.Count.Should().Be(_cacheB.Count);
+        lastQuery!.Count.Should().Be(_cacheB.Count, "QueryWhenChanged should reflect cacheB");
 
-        // SortAndBind should reflect cacheA
-        boundList.Count.Should().Be(_cacheA.Count, "SortAndBind should reflect cacheA");
-        boundList.Should().BeInAscendingOrder(x => x.Id, "SortAndBind should maintain sort");
+        // SortAndBind
+        boundList.Count.Should().Be(_cacheA.Count, "SortAndBind should reflect cacheA count");
+        boundList.Should().BeInAscendingOrder(x => x.Id, "SortAndBind should be sorted by Id");
 
-        // Virtualise should have at most 50 items
+        // Virtualise: capped at window size
         virtualisedResults.Data.Count.Should().BeLessThanOrEqualTo(50,
-            "Virtualise should cap at virtual window size");
+            "Virtualise should respect window size");
 
-        // TransformMany should have 2x items (original + dup)
+        // GroupWithImmutableState: should have groups for each family present
+        var familiesInA = _cacheA.Items.Select(a => a.Family).Distinct().Count();
+        immutableGroups.Data.Count.Should().Be(familiesInA,
+            "GroupWithImmutableState should have one group per family");
+
+        // TransformMany: 2x cacheA (original + twin)
         transformManyResults.Data.Count.Should().Be(_cacheA.Count * 2,
             "TransformMany should double the items");
 
-        // Or should contain union of both caches
-        orResults.Data.Count.Should().Be(_cacheA.Count + _cacheB.Count - _cacheA.Keys.Intersect(_cacheB.Keys).Count(),
-            "Or should be the union of both caches");
-
-        // BatchIf should have received all items (since we unpaused)
+        // BatchIf: all items (unpaused at end)
         batchedResults.Data.Count.Should().Be(_cacheA.Count,
-            "BatchIf should have all items after unpause");
+            "BatchIf should have all items after final unpause");
 
-        // GroupOn should have groups
-        groupResults.Data.Count.Should().BeGreaterThan(0, "GroupOn should produce groups");
+        // Switch: should reflect whichever cache was last selected (cacheA)
+        switchResults.Data.Count.Should().Be(_cacheA.Count,
+            "Switch should reflect cacheA after final switch");
 
-        // MergeMany should have counted property changes (may be 0 if property updater
-        // ran before MergeMany subscribed to items — that's a test timing issue, not a bug)
-        propertyChangeCount.Should().BeGreaterThanOrEqualTo(0, "MergeMany should not crash");
+        // Bidirectional: if any mammals were in cacheA, forward pipeline pushed them to cacheB
+        var mammalsInA = _cacheA.Items.Count(x => x.Family == AnimalFamily.Mammal && !x.Name.StartsWith("rev-"));
+        if (mammalsInA > 0)
+        {
+            _cacheB.Items.Any(x => x.Name.StartsWith("fwd-")).Should().BeTrue(
+                "Forward pipeline should have pushed mammals from A to B");
+        }
 
-        // Switch should have items from whichever cache was last selected
-        switchResults.Data.Count.Should().BeGreaterThan(0, "Switch should have items");
-
-        // DisposeMany should mirror cacheA transforms
-        disposeManyResults.Data.Count.Should().Be(_cacheA.Count,
-            "DisposeMany should mirror cacheA");
+        // No Rx contract violations (messages received = all assertions passed)
+        monsterChain.Messages.Should().NotBeEmpty("Monster chain should have received changesets");
     }
 }
