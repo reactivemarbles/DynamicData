@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Reactive;
@@ -116,7 +117,7 @@ public sealed class CrossCacheDeadlockStressTest : IDisposable
                 })
             .Group(x => x.Family)                      // GroupOn
             .DisposeMany()                             // safe but exercises the path
-            .MergeMany(group => group.Cache.Connect()  // MergeMany into the groups
+            .MergeManyChangeSets(group => group.Cache.Connect()  // MergeManyChangeSets into groups
                 .Transform(a => new Animal("g-" + a.Name, a.Type, a.Family, true, a.Id + 300_000)))
             .AsAggregator();
         _cleanup.Add(joinChain);
@@ -221,6 +222,90 @@ public sealed class CrossCacheDeadlockStressTest : IDisposable
             .Filter(x => !x.Name.StartsWith("rev-rev-"))
             .PopulateInto(_cacheA);
         _cleanup.Add(reversePipeline);
+
+        // ================================================================
+        // PIPELINE 8: And + Except + Xor (remaining set operations)
+        // ================================================================
+
+        var andResults = _cacheA.Connect().And(_cacheB.Connect()).AsAggregator();
+        _cleanup.Add(andResults);
+
+        var exceptResults = _cacheA.Connect().Except(_cacheB.Connect()).AsAggregator();
+        _cleanup.Add(exceptResults);
+
+        var xorResults = _cacheA.Connect().Xor(_cacheB.Connect()).AsAggregator();
+        _cleanup.Add(xorResults);
+
+        // ================================================================
+        // PIPELINE 9: TransformOnObservable + FilterOnObservable +
+        //             TransformWithInlineUpdate + DistinctValues
+        // ================================================================
+
+        var transformOnObsResults = _cacheA.Connect()
+            .TransformOnObservable(animal =>
+                Observable.Return(new Animal("tob-" + animal.Name, animal.Type, animal.Family, true, animal.Id + 1_000_000)))
+            .AsAggregator();
+        _cleanup.Add(transformOnObsResults);
+
+        var filterOnObsResults = _cacheA.Connect()
+            .FilterOnObservable(animal =>
+                Observable.Return(animal.Family == AnimalFamily.Mammal))
+            .AsAggregator();
+        _cleanup.Add(filterOnObsResults);
+
+        var inlineUpdateResults = _cacheA.Connect()
+            .TransformWithInlineUpdate(
+                animal => new Animal("twiu-" + animal.Name, animal.Type, animal.Family, animal.IncludeInResults, animal.Id + 1_100_000),
+                (existing, incoming) => { })
+            .AsAggregator();
+        _cleanup.Add(inlineUpdateResults);
+
+        var distinctFamilies = _cacheA.Connect()
+            .DistinctValues(x => x.Family)
+            .AsAggregator();
+        _cleanup.Add(distinctFamilies);
+
+        // ================================================================
+        // PIPELINE 10: ToObservableChangeSet + ExpireAfter + MergeMany
+        //              (MergeMany kept separately from MergeManyChangeSets)
+        // ================================================================
+
+        var observableToChangeSet = Observable.Create<Animal>(observer =>
+            {
+                var sub = _cacheA.Connect()
+                    .Flatten()
+                    .Where(c => c.Reason == ChangeReason.Add)
+                    .Select(c => c.Current)
+                    .Subscribe(observer);
+                return sub;
+            })
+            .ToObservableChangeSet(a => a.Id + 1_200_000)
+            .AsAggregator();
+        _cleanup.Add(observableToChangeSet);
+
+        var mergeManyResults = _cacheA.Connect()
+            .MergeMany(animal => Observable.Return(animal.Name))
+            .ToList()
+            .Subscribe();
+        _cleanup.Add(mergeManyResults);
+
+        // ================================================================
+        // PIPELINE 11: Bind (ReadOnlyObservableCollection) + OnItemRefreshed
+        //              + ForEachChange + Cast + DeferUntilLoaded
+        // ================================================================
+
+        var sortedForBind = _cacheB.Connect()
+            .Sort(SortExpressionComparer<Animal>.Ascending(x => x.Id))
+            .Bind(out var boundCollection)
+            .OnItemRefreshed(_ => { })
+            .ForEachChange(_ => { })
+            .Subscribe();
+        _cleanup.Add(sortedForBind);
+
+        var deferredResults = _cacheA.Connect()
+            .DeferUntilLoaded()
+            .AsAggregator();
+        _cleanup.Add(deferredResults);
 
         // ================================================================
         // CONCURRENT WRITERS — maximum contention
@@ -380,5 +465,46 @@ public sealed class CrossCacheDeadlockStressTest : IDisposable
 
         // No Rx contract violations (messages received = all assertions passed)
         monsterChain.Messages.Should().NotBeEmpty("Monster chain should have received changesets");
+
+        // And: intersection of both caches
+        andResults.Data.Count.Should().Be(
+            _cacheA.Keys.Intersect(_cacheB.Keys).Count(),
+            "And should be the intersection of both caches");
+
+        // Except: A minus B
+        exceptResults.Data.Count.Should().Be(
+            _cacheA.Keys.Except(_cacheB.Keys).Count(),
+            "Except should be A minus B");
+
+        // Xor: symmetric difference
+        var expectedXor = _cacheA.Keys.Except(_cacheB.Keys).Count()
+                        + _cacheB.Keys.Except(_cacheA.Keys).Count();
+        xorResults.Data.Count.Should().Be(expectedXor,
+            "Xor should be the symmetric difference");
+
+        // TransformOnObservable
+        transformOnObsResults.Data.Count.Should().Be(_cacheA.Count,
+            "TransformOnObservable should have one item per source item");
+
+        // FilterOnObservable: only mammals
+        var mammalsInCache = _cacheA.Items.Count(a => a.Family == AnimalFamily.Mammal);
+        filterOnObsResults.Data.Count.Should().Be(mammalsInCache,
+            "FilterOnObservable should contain only mammals");
+
+        // TransformWithInlineUpdate
+        inlineUpdateResults.Data.Count.Should().Be(_cacheA.Count,
+            "TransformWithInlineUpdate should mirror cacheA count");
+
+        // DistinctValues
+        distinctFamilies.Data.Count.Should().Be(familiesInA,
+            "DistinctValues should track each distinct family");
+
+        // Bind (ReadOnlyObservableCollection)
+        boundCollection.Count.Should().Be(_cacheB.Count,
+            "Bind should reflect cacheB count");
+
+        // DeferUntilLoaded
+        deferredResults.Data.Count.Should().Be(_cacheA.Count,
+            "DeferUntilLoaded should have all items after loading");
     }
 }
