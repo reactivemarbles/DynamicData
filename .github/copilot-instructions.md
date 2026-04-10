@@ -91,13 +91,13 @@ internal sealed class Transform<TDest, TSource, TKey>
 
 When an operator has multiple input sources that share mutable state:
 - All sources must be serialized through a shared lock
-- **Never hold a lock during `observer.OnNext()`** — this is the #1 cause of deadlocks in reactive pipelines
-- The standard pattern is: acquire lock → mutate state → release lock → deliver downstream
+- Use `Synchronize(gate)` with a shared lock object to serialize multiple sources
+- Keep lock hold times as short as practical
 
 When operators use `Synchronize(lock)` from Rx:
 - The lock is held during the **entire** downstream delivery chain
-- This is safe for single-source operators but dangerous for multi-source operators in cross-cache scenarios
-- Consider the queue-drain pattern (enqueue under lock, deliver outside) for multi-source operators
+- This ensures serialized delivery across multiple sources sharing a lock
+- Always use a private lock object — never expose it to external consumers
 
 ## Testing
 

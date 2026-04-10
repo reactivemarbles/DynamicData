@@ -277,6 +277,134 @@ cd.Token; // CancellationToken that cancels on Dispose
 cd.Dispose(); // triggers cancellation
 ```
 
+## Standard Rx Operators Reference
+
+### Creation
+
+| Operator | Description |
+|----------|-------------|
+| `Observable.Return(value)` | Emit one value, then complete |
+| `Observable.Empty<T>()` | Complete immediately with no values |
+| `Observable.Never<T>()` | Never emit, never complete |
+| `Observable.Throw<T>(ex)` | Emit error immediately |
+| `Observable.Create<T>(subscribe)` | Build a custom observable from a subscribe function |
+| `Observable.Defer(factory)` | Defer observable creation until subscription |
+| `Observable.Range(start, count)` | Emit a range of integers |
+| `Observable.Generate(init, cond, iter, result)` | Iterative generation |
+| `Observable.Timer(dueTime)` | Emit one value after a delay |
+| `Observable.Interval(period)` | Emit incrementing long values at regular intervals |
+| `Observable.FromAsync(asyncFactory)` | Wrap an async method as an observable |
+| `Observable.FromEventPattern(add, remove)` | Convert .NET events to observables |
+| `Observable.Start(func)` | Run a function asynchronously, emit result |
+| `Observable.Using(resourceFactory, obsFactory)` | Create a resource with the subscription, dispose with it |
+
+### Transformation
+
+| Operator | Description |
+|----------|-------------|
+| `Select(selector)` | Project each item (aka Map) |
+| `SelectMany(selector)` | Project and flatten (aka FlatMap) |
+| `Scan(accumulator)` | Running aggregate (like Aggregate but emits each step) |
+| `Buffer(count)` / `Buffer(timeSpan)` | Collect items into batches |
+| `Window(count)` / `Window(timeSpan)` | Split into sub-observables |
+| `GroupBy(keySelector)` | Group items by key into sub-observables |
+| `Cast<T>()` | Cast items to a type |
+| `OfType<T>()` | Filter and cast to a type |
+| `Materialize()` | Wrap each notification as a `Notification<T>` value |
+| `Dematerialize()` | Unwrap `Notification<T>` values back to notifications |
+| `Timestamp()` | Attach timestamp to each item |
+| `TimeInterval()` | Attach time interval since previous item |
+
+### Filtering
+
+| Operator | Description |
+|----------|-------------|
+| `Where(predicate)` | Filter items by predicate |
+| `Distinct()` | Remove duplicates (all-time) |
+| `DistinctUntilChanged()` | Remove consecutive duplicates |
+| `Take(count)` | Take first N items, then complete |
+| `TakeLast(count)` | Take last N items (buffers until complete) |
+| `TakeWhile(predicate)` | Take while predicate is true |
+| `TakeUntil(other)` | Take until another observable emits |
+| `Skip(count)` | Skip first N items |
+| `SkipLast(count)` | Skip last N items |
+| `SkipWhile(predicate)` | Skip while predicate is true |
+| `SkipUntil(other)` | Skip until another observable emits |
+| `First()` / `FirstOrDefault()` | First item (or default), then complete |
+| `Last()` / `LastOrDefault()` | Last item (or default), then complete |
+| `Single()` / `SingleOrDefault()` | Exactly one item, error if more/less |
+| `ElementAt(index)` | Item at specific index |
+| `IgnoreElements()` | Suppress all values, pass through error/completed |
+| `Throttle(timeSpan)` | Suppress items followed by another within timespan |
+| `Debounce(timeSpan)` | Alias for Throttle |
+| `Sample(timeSpan)` | Emit most recent value at regular intervals |
+
+### Combining
+
+| Operator | Description |
+|----------|-------------|
+| `Merge(other)` | Merge multiple streams into one (interleaved) |
+| `Concat(other)` | Append one stream after another completes |
+| `Switch()` | Subscribe to latest inner observable, unsubscribe previous |
+| `Amb(other)` | Take whichever stream emits first, ignore the other |
+| `Zip(other, selector)` | Pair items 1:1 from two streams |
+| `CombineLatest(other, selector)` | Combine latest values whenever either emits |
+| `WithLatestFrom(other, selector)` | Combine with latest from other (only when source emits) |
+| `StartWith(values)` | Prepend values before the source |
+| `Append(value)` | Append a value after the source completes |
+| `Publish()` | Convert cold to hot via multicast (returns `IConnectableObservable<T>`) |
+| `Publish().RefCount()` | Auto-connect on first subscriber, auto-disconnect on last |
+| `Replay(bufferSize)` | Multicast with replay buffer |
+
+### Aggregation
+
+| Operator | Description |
+|----------|-------------|
+| `Aggregate(accumulator)` | Final aggregate (emits one value on complete) |
+| `Count()` | Count of items (on complete) |
+| `Sum()` / `Min()` / `Max()` / `Average()` | Numeric aggregates (on complete) |
+| `ToArray()` | Collect all items into array (on complete) |
+| `ToList()` | Collect all items into list (on complete) |
+| `ToDictionary(keySelector)` | Collect into dictionary (on complete) |
+
+### Error Handling
+
+| Operator | Description |
+|----------|-------------|
+| `Catch(handler)` | Handle error by switching to another observable |
+| `Catch<TException>(handler)` | Handle specific exception type |
+| `Retry()` / `Retry(count)` | Resubscribe on error |
+| `OnErrorResumeNext(other)` | Continue with another observable on error or complete |
+| `Finally(action)` | Run action on dispose, error, or complete |
+| `Do(onNext, onError, onCompleted)` | Side effects without affecting the stream |
+| `DoFinally(action)` | Side effect on termination (like Finally but for observation) |
+
+### Scheduling & Threading
+
+| Operator | Description |
+|----------|-------------|
+| `ObserveOn(scheduler)` | Deliver notifications on specified scheduler |
+| `SubscribeOn(scheduler)` | Subscribe (and produce) on specified scheduler |
+| `Delay(timeSpan)` | Delay each notification by a time span |
+| `Timeout(timeSpan)` | Error if no notification within timeout |
+| `Synchronize()` | Serialize notifications with internal gate |
+| `Synchronize(gate)` | Serialize notifications with external gate object |
+
+### Utility
+
+| Operator | Description |
+|----------|-------------|
+| `Do(action)` | Perform side effect for each notification |
+| `Publish().RefCount()` | Share a subscription among multiple subscribers |
+| `Replay(bufferSize).RefCount()` | Share with replay |
+| `AsObservable()` | Hide the implementation type (e.g., Subject → IObservable) |
+| `Subscribe(observer)` | Subscribe with an IObserver |
+| `Subscribe(onNext, onError, onCompleted)` | Subscribe with callbacks |
+| `SubscribeSafe(observer)` | Subscribe with exception routing to OnError |
+| `ForEachAsync(action)` | Async iteration (returns Task) |
+| `Wait()` | Block until complete (avoid on UI thread) |
+| `ToTask()` | Convert to Task (last value) |
+
 ## Writing Custom Operators
 
 ### The Observable.Create Pattern
@@ -328,7 +456,7 @@ public static IObservable<T> MyMerge<T>(
 }
 ```
 
-**Warning**: `Synchronize(gate)` holds the lock during downstream `OnNext` delivery. For DynamicData operators where the downstream might acquire other locks, this can cause deadlocks. See the DynamicData codebase for the queue-drain alternative pattern.
+**Note**: `Synchronize(gate)` holds the lock during downstream `OnNext` delivery. This ensures serialization but means the lock is held for the duration of all downstream processing. Keep downstream chains lightweight when using shared gates.
 
 ### Operator Checklist
 
@@ -373,7 +501,7 @@ _cleanup.Add(source.Subscribe(x => UpdateUI(x)));
 ### 3. Blocking on Rx (sync-over-async)
 
 ```csharp
-// WRONG: blocks the thread, can deadlock on UI thread
+// WRONG: blocks the thread, can hang on UI thread
 var result = source.FirstAsync().Wait();
 
 // RIGHT: use async/await

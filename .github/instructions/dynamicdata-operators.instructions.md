@@ -340,7 +340,7 @@ cache.Connect()
 4. Inside `Create`: subscribe to source(s), process each changeset incrementally
 5. Use `ChangeAwareCache<T,K>` for state management — call `CaptureChanges()` for output
 6. Handle **all four change reasons**: Add, Update, Remove, Refresh
-7. If multiple sources: serialize them (Synchronize with shared gate, or queue-drain pattern)
+7. If multiple sources: serialize them with `Synchronize` using a shared gate object
 8. Wire up `OnError` and `OnCompleted` propagation
 9. Return `CompositeDisposable` with all subscriptions and cleanup
 10. Write tests: single item, batch, concurrent, error propagation, disposal, empty changeset
