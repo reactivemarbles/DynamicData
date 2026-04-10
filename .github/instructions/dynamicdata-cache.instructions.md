@@ -165,8 +165,10 @@ Evaluates a `Func<TObject, bool>` predicate against each item.
 
 Like static filter, but when the predicate observable fires, **all items** are re-evaluated against the new predicate.
 
-| Input | Same as static filter per-item |
-|-------|-------------------------------|
+Per-item handling is the same as static filter. Additionally:
+
+| Event | Behavior |
+|-------|----------|
 | **Predicate fires** | Full re-evaluation of all items: items newly matching → Add, no longer matching → Remove, still matching → Refresh or Update. |
 
 ### FilterOnObservable
@@ -217,15 +219,13 @@ Applies `Func<TSource, TDest>` to produce a parallel keyed collection of transfo
 
 Same as Transform, but catches exceptions in the transform factory and routes them to an error callback instead of `OnError`.
 
-| Input | Same as Transform, but factory exceptions → error callback, not terminal. |
-|-------|----------|
+Same as Transform, but catches exceptions in the transform factory and routes them to an error callback instead of `OnError`. The changeset is still emitted — only the failed item is skipped and reported.
 
 ### TransformAsync
 
 Async version of Transform — `Func<TSource, Task<TDest>>`.
 
-| Input | Same as Transform, but factory is awaited. |
-|-------|----------|
+Same change handling as Transform, but the factory returns `Task<TDest>` and is awaited.
 
 ### TransformWithInlineUpdate
 
@@ -311,8 +311,7 @@ Sorts items using `IComparer<T>`. Emits `ISortedChangeSet` with index positions.
 
 Combines Sort + Bind into a single operator for efficiency. Maintains a sorted `IList<T>` in-place.
 
-| Input | Same as Sort, but directly applies insert/remove/move to the bound list. |
-|-------|----------|
+Same change handling as Sort, but directly applies insert/remove/move operations to the bound `IList<T>` instead of emitting a changeset.
 
 ### Page
 
@@ -327,8 +326,7 @@ Takes a sorted stream and applies page number + page size windowing.
 
 Takes a sorted stream and applies start index + size windowing (sliding window).
 
-| Input | Same as Page but with absolute index + size instead of page number. |
-|-------|----------|
+Same as Page but uses absolute start index + size instead of page number + page size.
 
 ### Top
 
@@ -357,8 +355,7 @@ Groups items by a key selector. Emits `IChangeSet<IGroup<TObject, TKey, TGroupKe
 
 Same grouping as Group, but emits immutable snapshots instead of live sub-caches.
 
-| Input | Same group logic, but each change emits a new immutable snapshot of the affected group(s). |
-|-------|----------|
+Same grouping logic as Group, but emits immutable snapshots instead of live sub-caches. Each affected group emits a new immutable snapshot on every change.
 
 ### GroupOnObservable
 
@@ -495,8 +492,7 @@ Monitors `INotifyPropertyChanged` on items and emits Refresh when a specified pr
 
 Like AutoRefresh, but uses a per-item `IObservable<TAny>` instead of `INotifyPropertyChanged`.
 
-| Input | Same as AutoRefresh but per-item observable triggers Refresh instead of PropertyChanged. |
-|-------|----------|
+Same as AutoRefresh but uses a per-item `IObservable<TAny>` to trigger Refresh instead of `INotifyPropertyChanged`.
 
 ### SuppressRefresh
 
@@ -535,8 +531,7 @@ Each item produces its own `IObservable<IChangeSet>`. All are merged into a sing
 
 Like MergeMany but wraps each value with its parent item.
 
-| Input | Same as MergeMany, output is `ItemWithValue<TObject, TValue>`. |
-|-------|----------|
+Same as MergeMany, but wraps each emission as `ItemWithValue<TObject, TValue>` — pairing the parent item with its emitted value.
 
 ### SubscribeMany
 
@@ -576,10 +571,7 @@ Side-effect callbacks for specific lifecycle events. The changeset is forwarded 
 
 ### ForEachChange
 
-Invokes an `Action<Change<T,K>>` for every individual change. Changeset forwarded unchanged.
-
-| Input | All reasons → action invoked, changeset passes through. |
-|-------|----------|
+Invokes an `Action<Change<T,K>>` for every individual change. All change reasons trigger the action. The changeset is forwarded unchanged.
 
 ---
 

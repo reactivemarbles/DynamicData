@@ -233,8 +233,7 @@ For each operator, Add/Remove from any source updates the reference counts and t
 
 Merges N list changeset streams into one. All changes are forwarded in order.
 
-| Input (from any source) | → Forwarded directly to output. |
-|-------|----------|
+All changes from any source are forwarded directly to the merged output stream in the order they arrive.
 
 ---
 
@@ -304,8 +303,7 @@ Applies page number + page size windowing.
 
 Start index + size sliding window.
 
-| Input | Same as Page but with absolute index. |
-|-------|----------|
+Same as Page but uses absolute start index + size instead of page number.
 
 ### Top
 
