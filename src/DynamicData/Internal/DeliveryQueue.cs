@@ -10,7 +10,7 @@ namespace DynamicData.Internal;
 /// is dispatched to an <see cref="IObserver{T}"/> outside the lock.
 /// </summary>
 /// <typeparam name="T">The value type delivered via OnNext.</typeparam>
-internal sealed class DeliveryQueue<T>
+internal sealed class DeliveryQueue<T> : IObserver<T>
 {
     private readonly Queue<Notification<T>> _queue = new();
 
@@ -68,6 +68,27 @@ internal sealed class DeliveryQueue<T>
     /// Acquires the gate for read-only inspection. Does not trigger delivery on dispose.
     /// </summary>
     public ReadOnlyScopedAccess AcquireReadLock() => new(this);
+
+    /// <summary>Enqueues an OnNext notification via the lock, then drains.</summary>
+    public void OnNext(T value)
+    {
+        using var scope = AcquireLock();
+        scope.Enqueue(value);
+    }
+
+    /// <summary>Enqueues an OnError notification via the lock, then drains.</summary>
+    public void OnError(Exception error)
+    {
+        using var scope = AcquireLock();
+        scope.EnqueueError(error);
+    }
+
+    /// <summary>Enqueues an OnCompleted notification via the lock, then drains.</summary>
+    public void OnCompleted()
+    {
+        using var scope = AcquireLock();
+        scope.EnqueueCompleted();
+    }
 
 #if NET9_0_OR_GREATER
     private void EnterLock() => _gate.Enter();

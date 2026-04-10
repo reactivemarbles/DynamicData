@@ -42,14 +42,9 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
                                                 .SubscribeMany((t, key) =>
                                                 {
                                                     counter.Added();
-                                                    return _observableSelector(t, key).Subscribe(
-                                                        item =>
-                                                        {
-                                                            using var scope = queue.AcquireLock();
-                                                            scope.Enqueue(item);
-                                                        },
-                                                        static _ => { },
-                                                        () => counter.Finally());
+                                                    return _observableSelector(t, key)
+                                                        .Finally(() => counter.Finally())
+                                                        .Subscribe(queue.OnNext, static _ => { });
                                                 })
                                                 .SubscribeSafe(observer.OnError, observer.OnCompleted);
 

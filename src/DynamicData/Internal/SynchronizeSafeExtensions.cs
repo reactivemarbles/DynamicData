@@ -53,22 +53,7 @@ internal static class SynchronizeSafeExtensions
         {
             queue.SetObserver(observer);
 
-            return source.SubscribeSafe(
-                item =>
-                {
-                    using var scope = queue.AcquireLock();
-                    scope.Enqueue(item);
-                },
-                ex =>
-                {
-                    using var scope = queue.AcquireLock();
-                    scope.EnqueueError(ex);
-                },
-                () =>
-                {
-                    using var scope = queue.AcquireLock();
-                    scope.EnqueueCompleted();
-                });
+            return source.Subscribe(queue);
         });
     }
 }
