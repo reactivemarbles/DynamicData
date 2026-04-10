@@ -6,15 +6,13 @@ namespace DynamicData.Internal;
 
 /// <summary>
 /// A queue that serializes item delivery outside a caller-owned lock.
-/// Use <see cref="AcquireLock"/> to obtain a scoped ScopedAccess for enqueueing items.
-/// When the ScopedAccess is disposed, the lock is released
-/// and pending items are delivered. Only one thread delivers at a time.
+/// Internally stores <see cref="Notification{T}"/> values. Delivery
+/// is dispatched to an <see cref="IObserver{T}"/> outside the lock.
 /// </summary>
-/// <typeparam name="TItem">The item type.</typeparam>
-internal sealed class DeliveryQueue<TItem>
+/// <typeparam name="T">The value type delivered via OnNext.</typeparam>
+internal sealed class DeliveryQueue<T>
 {
-    private readonly Queue<TItem> _queue = new();
-    private readonly Func<TItem, bool> _deliver;
+    private readonly Queue<Notification<T>> _queue = new();
 
 #if NET9_0_OR_GREATER
     private readonly Lock _gate;
@@ -22,24 +20,38 @@ internal sealed class DeliveryQueue<TItem>
     private readonly object _gate;
 #endif
 
+    private IObserver<T>? _observer;
     private bool _isDelivering;
     private volatile bool _isTerminated;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DeliveryQueue{TItem}"/> class.
+    /// Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class.
     /// </summary>
-    /// <param name="gate">The lock shared with the caller. The queue acquires this
-    /// lock during <see cref="AcquireLock"/> and during the dequeue step of delivery.</param>
-    /// <param name="deliver">Callback invoked for each item, outside the lock. Returns false if the item was terminal, which stops further delivery.</param>
+    /// <param name="gate">The lock shared with the caller.</param>
+    /// <param name="observer">The observer that receives delivered items.</param>
 #if NET9_0_OR_GREATER
-    public DeliveryQueue(Lock gate, Func<TItem, bool> deliver)
+    public DeliveryQueue(Lock gate, IObserver<T> observer)
 #else
-    public DeliveryQueue(object gate, Func<TItem, bool> deliver)
+    public DeliveryQueue(object gate, IObserver<T> observer)
 #endif
     {
         _gate = gate;
-        _deliver = deliver;
+        _observer = observer;
     }
+
+#if NET9_0_OR_GREATER
+    /// <summary>Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class without an observer. Call <see cref="SetObserver"/> before items are drained.</summary>
+    public DeliveryQueue(Lock gate) => _gate = gate;
+#else
+    /// <summary>Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class without an observer. Call <see cref="SetObserver"/> before items are drained.</summary>
+    public DeliveryQueue(object gate) => _gate = gate;
+#endif
+
+    /// <summary>
+    /// Sets the delivery observer. Must be called exactly once, before any items are drained.
+    /// </summary>
+    internal void SetObserver(IObserver<T> observer) =>
+        _observer = observer ?? throw new ArgumentNullException(nameof(observer));
 
     /// <summary>
     /// Gets whether this queue has been terminated. Safe to read from any thread.
@@ -47,17 +59,13 @@ internal sealed class DeliveryQueue<TItem>
     public bool IsTerminated => _isTerminated;
 
     /// <summary>
-    /// Acquires the gate and returns a scoped ScopedAccess for enqueueing items.
-    /// When the ScopedAccess is disposed, the gate is released
-    /// and delivery runs if needed. The ScopedAccess is a ref struct and cannot
-    /// escape the calling method.
+    /// Acquires the gate and returns a scoped access for enqueueing notifications.
+    /// Disposing releases the gate and triggers delivery if needed.
     /// </summary>
     public ScopedAccess AcquireLock() => new(this);
 
     /// <summary>
-    /// Acquires the gate and returns a read-only scoped access for inspecting
-    /// queue state. No mutation is possible and disposing does not trigger
-    /// delivery — the lock is simply released.
+    /// Acquires the gate for read-only inspection. Does not trigger delivery on dispose.
     /// </summary>
     public ReadOnlyScopedAccess AcquireReadLock() => new(this);
 
@@ -71,7 +79,7 @@ internal sealed class DeliveryQueue<TItem>
     private void ExitLock() => Monitor.Exit(_gate);
 #endif
 
-    private void EnqueueItem(TItem item)
+    private void EnqueueNotification(Notification<T> item)
     {
         if (_isTerminated)
         {
@@ -83,14 +91,9 @@ internal sealed class DeliveryQueue<TItem>
 
     private void ExitLockAndDeliver()
     {
-        // Before releasing the lock, check if we should start delivery. Only one thread can succeed
         var shouldDeliver = TryStartDelivery();
-
-        // Now release the lock. We do this before delivering to allow other threads to enqueue items while delivery is in progress.
         ExitLock();
 
-        // If this thread has been chosen to deliver, do it now that the lock is released.
-        // If not, another thread is already delivering or there are no items to deliver.
         if (shouldDeliver)
         {
             DeliverAll();
@@ -98,13 +101,11 @@ internal sealed class DeliveryQueue<TItem>
 
         bool TryStartDelivery()
         {
-            // Bail if something is already delivering or there's nothing to do
             if (_isDelivering || _queue.Count == 0)
             {
                 return false;
             }
 
-            // Mark that we're doing the delivering
             _isDelivering = true;
             return true;
         }
@@ -115,10 +116,8 @@ internal sealed class DeliveryQueue<TItem>
             {
                 while (true)
                 {
-                    TItem item;
+                    Notification<T> notification;
 
-                    // Inside of the lock, see if there is work and get the next item to deliver.
-                    // If there is no work, mark that we're done delivering and exit.
                     lock (_gate)
                     {
                         if (_queue.Count == 0)
@@ -127,13 +126,13 @@ internal sealed class DeliveryQueue<TItem>
                             return;
                         }
 
-                        item = _queue.Dequeue();
+                        notification = _queue.Dequeue();
                     }
 
-                    // Outside of the lock, invoke the callback to deliver the item.
-                    // If delivery returns false, it means the item was terminal
-                    // and we should stop delivering and clear the queue.
-                    if (!_deliver(item))
+                    // Deliver outside the lock
+                    notification.Accept(_observer!);
+
+                    if (notification.IsTerminal)
                     {
                         lock (_gate)
                         {
@@ -148,8 +147,6 @@ internal sealed class DeliveryQueue<TItem>
             }
             catch
             {
-                // Safety net: if an exception bypassed the normal exit paths,
-                // ensure _isDelivering is reset so the queue doesn't get stuck.
                 lock (_gate)
                 {
                     _isDelivering = false;
@@ -161,30 +158,28 @@ internal sealed class DeliveryQueue<TItem>
     }
 
     /// <summary>
-    /// A scoped ScopedAccess for working under the gate lock. All queue mutation
-    /// goes through this ScopedAccess, ensuring the lock is held. Disposing
-    /// releases the lock and triggers delivery if needed.
+    /// Scoped access for enqueueing notifications under the gate lock.
     /// </summary>
     public ref struct ScopedAccess
     {
-        private DeliveryQueue<TItem>? _owner;
+        private DeliveryQueue<T>? _owner;
 
-        internal ScopedAccess(DeliveryQueue<TItem> owner)
+        internal ScopedAccess(DeliveryQueue<T> owner)
         {
             _owner = owner;
             owner.EnterLock();
         }
 
-        /// <summary>
-        /// Adds an item to the queue. Ignored if the queue has been terminated.
-        /// </summary>
-        /// <param name="item">The item to enqueue.</param>
-        public readonly void Enqueue(TItem item) => _owner?.EnqueueItem(item);
+        /// <summary>Enqueues an OnNext notification.</summary>
+        public readonly void Enqueue(T value) => _owner?.EnqueueNotification(Notification<T>.Next(value));
 
-        /// <summary>
-        /// Releases the gate lock and delivers pending items if this thread
-        /// holds the delivery token.
-        /// </summary>
+        /// <summary>Enqueues an OnError notification (terminal).</summary>
+        public readonly void EnqueueError(Exception error) => _owner?.EnqueueNotification(Notification<T>.OnError(error));
+
+        /// <summary>Enqueues an OnCompleted notification (terminal).</summary>
+        public readonly void EnqueueCompleted() => _owner?.EnqueueNotification(Notification<T>.Completed);
+
+        /// <summary>Releases the gate lock and delivers pending items.</summary>
         public void Dispose()
         {
             var owner = _owner;
@@ -199,30 +194,23 @@ internal sealed class DeliveryQueue<TItem>
     }
 
     /// <summary>
-    /// A read-only scoped access for inspecting queue state under the gate lock.
-    /// No mutation is possible. Disposing releases the lock without triggering
-    /// delivery.
+    /// Read-only scoped access. Disposing releases the gate without triggering delivery.
     /// </summary>
     public ref struct ReadOnlyScopedAccess
     {
-        private DeliveryQueue<TItem>? _owner;
+        private DeliveryQueue<T>? _owner;
 
-        internal ReadOnlyScopedAccess(DeliveryQueue<TItem> owner)
+        internal ReadOnlyScopedAccess(DeliveryQueue<T> owner)
         {
             _owner = owner;
             owner.EnterLock();
         }
 
-        /// <summary>
-        /// Gets whether there are notifications pending delivery (queued or
-        /// currently being delivered outside the lock).
-        /// </summary>
+        /// <summary>Gets whether there are notifications pending delivery.</summary>
         public readonly bool HasPending =>
             _owner is not null && (_owner._queue.Count > 0 || _owner._isDelivering);
 
-        /// <summary>
-        /// Releases the gate lock. Does not trigger delivery.
-        /// </summary>
+        /// <summary>Releases the gate lock.</summary>
         public void Dispose()
         {
             var owner = _owner;

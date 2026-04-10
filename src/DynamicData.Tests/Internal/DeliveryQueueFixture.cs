@@ -19,53 +19,88 @@ public class DeliveryQueueFixture
     private readonly object _gate = new();
 #endif
 
+    /// <summary>Helper observer that captures OnNext items into a list.</summary>
+    private sealed class ListObserver<T> : IObserver<T>
+    {
+        private readonly List<T> _items = new();
+        public IReadOnlyList<T> Items => _items;
+        public Exception? Error { get; private set; }
+        public bool IsCompleted { get; private set; }
+
+        public void OnNext(T value) => _items.Add(value);
+        public void OnError(Exception error) => Error = error;
+        public void OnCompleted() => IsCompleted = true;
+    }
+
+    /// <summary>Thread-safe observer for concurrent tests.</summary>
+    private sealed class ConcurrentObserver<T> : IObserver<T>
+    {
+        private readonly ConcurrentBag<T> _items = new();
+        public ConcurrentBag<T> Items => _items;
+
+        public void OnNext(T value) => _items.Add(value);
+        public void OnError(Exception error) { }
+        public void OnCompleted() { }
+    }
+
+    /// <summary>Thread-safe ordered observer for concurrent tests.</summary>
+    private sealed class ConcurrentQueueObserver<T> : IObserver<T>
+    {
+        private readonly ConcurrentQueue<T> _items = new();
+        public ConcurrentQueue<T> Items => _items;
+
+        public void OnNext(T value) => _items.Enqueue(value);
+        public void OnError(Exception error) { }
+        public void OnCompleted() { }
+    }
+
     private static void EnqueueAndDeliver<T>(DeliveryQueue<T> queue, T item)
     {
-        using var notifications = queue.AcquireLock();
-        notifications.Enqueue(item);
+        using var scope = queue.AcquireLock();
+        scope.Enqueue(item);
     }
 
     private static void TriggerDelivery<T>(DeliveryQueue<T> queue)
     {
-        using var notifications = queue.AcquireLock();
+        using var scope = queue.AcquireLock();
     }
 
     [Fact]
     public void EnqueueAndDeliverDeliversItem()
     {
-        var delivered = new List<string>();
-        var queue = new DeliveryQueue<string>(_gate, item => { delivered.Add(item); return true; });
+        var observer = new ListObserver<string>();
+        var queue = new DeliveryQueue<string>(_gate, observer);
 
         EnqueueAndDeliver(queue, "A");
 
-        delivered.Should().Equal("A");
+        observer.Items.Should().Equal("A");
     }
 
     [Fact]
     public void DeliverDeliversItemsInFifoOrder()
     {
-        var delivered = new List<string>();
-        var queue = new DeliveryQueue<string>(_gate, item => { delivered.Add(item); return true; });
+        var observer = new ListObserver<string>();
+        var queue = new DeliveryQueue<string>(_gate, observer);
 
-        using (var notifications = queue.AcquireLock())
+        using (var scope = queue.AcquireLock())
         {
-            notifications.Enqueue("A");
-            notifications.Enqueue("B");
-            notifications.Enqueue("C");
+            scope.Enqueue("A");
+            scope.Enqueue("B");
+            scope.Enqueue("C");
         }
 
-        delivered.Should().Equal("A", "B", "C");
+        observer.Items.Should().Equal("A", "B", "C");
     }
 
     [Fact]
     public void DeliverWithEmptyQueueIsNoOp()
     {
-        var delivered = new List<string>();
-        var queue = new DeliveryQueue<string>(_gate, item => { delivered.Add(item); return true; });
+        var observer = new ListObserver<string>();
+        var queue = new DeliveryQueue<string>(_gate, observer);
 
         TriggerDelivery(queue);
 
-        delivered.Should().BeEmpty();
+        observer.Items.Should().BeEmpty();
     }
 
     [Fact]
@@ -79,38 +114,35 @@ public class DeliveryQueueFixture
         using var allowFirstDeliveryToContinue = new ManualResetEventSlim(false);
         using var startContenders = new ManualResetEventSlim(false);
 
-        var queue = new DeliveryQueue<int>(_gate, item =>
-        {
-            var current = Interlocked.Increment(ref concurrentCount);
-            int snapshot;
-            do
+        var observer = new BlockingObserver<int>(
+            onNextAction: item =>
             {
-                snapshot = maxConcurrent;
-                if (current <= snapshot)
+                var current = Interlocked.Increment(ref concurrentCount);
+                int snapshot;
+                do
                 {
-                    break;
+                    snapshot = maxConcurrent;
+                    if (current <= snapshot) break;
                 }
-            }
-            while (Interlocked.CompareExchange(ref maxConcurrent, current, snapshot) != snapshot);
+                while (Interlocked.CompareExchange(ref maxConcurrent, current, snapshot) != snapshot);
 
-            delivered.Add(item);
+                delivered.Add(item);
 
-            if (Interlocked.Increment(ref deliveryCount) == 1)
-            {
-                firstDeliveryStarted.Set();
-                allowFirstDeliveryToContinue.Wait();
-            }
+                if (Interlocked.Increment(ref deliveryCount) == 1)
+                {
+                    firstDeliveryStarted.Set();
+                    allowFirstDeliveryToContinue.Wait();
+                }
 
-            Thread.SpinWait(1000);
-            Interlocked.Decrement(ref concurrentCount);
-            return true;
-        });
+                Thread.SpinWait(1000);
+                Interlocked.Decrement(ref concurrentCount);
+            });
 
-        // Start delivering the first item — it will block in the callback
+        var queue = new DeliveryQueue<int>(_gate, observer);
+
         var firstDelivery = Task.Run(() => EnqueueAndDeliver(queue, -1));
         firstDeliveryStarted.Wait();
 
-        // While first delivery is blocked, enqueue 100 items from concurrent threads
         var enqueueTasks = Enumerable.Range(0, 100)
             .Select(i => Task.Run(() =>
             {
@@ -138,26 +170,25 @@ public class DeliveryQueueFixture
     [Fact]
     public void SecondWriterItemPickedUpByFirstDeliverer()
     {
-        var delivered = new List<string>();
-        var deliveryCount = 0;
+        var observer = new ListObserver<string>();
         DeliveryQueue<string>? q = null;
 
-        var queue = new DeliveryQueue<string>(_gate, item =>
+        var enqueuingObserver = new DelegateObserver<string>(item =>
         {
-            delivered.Add(item);
-            if (Interlocked.Increment(ref deliveryCount) == 1)
+            observer.OnNext(item);
+            if (observer.Items.Count == 1)
             {
-                using var notifications = q!.AcquireLock();
-                notifications.Enqueue("B");
+                using var scope = q!.AcquireLock();
+                scope.Enqueue("B");
             }
-
-            return true;
         });
+
+        var queue = new DeliveryQueue<string>(_gate, enqueuingObserver);
         q = queue;
 
         EnqueueAndDeliver(queue, "A");
 
-        delivered.Should().Equal("A", "B");
+        observer.Items.Should().Equal("A", "B");
     }
 
     [Fact]
@@ -168,25 +199,23 @@ public class DeliveryQueueFixture
         var delivered = new List<string>();
         DeliveryQueue<string>? q = null;
 
-        var queue = new DeliveryQueue<string>(_gate, item =>
+        var observer = new DelegateObserver<string>(item =>
         {
             callDepth++;
-            if (callDepth > maxDepth)
-            {
-                maxDepth = callDepth;
-            }
+            if (callDepth > maxDepth) maxDepth = callDepth;
 
             delivered.Add(item);
 
             if (item == "A")
             {
-                using var notifications = q!.AcquireLock();
-                notifications.Enqueue("B");
+                using var scope = q!.AcquireLock();
+                scope.Enqueue("B");
             }
 
             callDepth--;
-            return true;
         });
+
+        var queue = new DeliveryQueue<string>(_gate, observer);
         q = queue;
 
         EnqueueAndDeliver(queue, "A");
@@ -199,16 +228,13 @@ public class DeliveryQueueFixture
     public void ExceptionInDeliveryResetsDeliveryToken()
     {
         var callCount = 0;
-        var queue = new DeliveryQueue<string>(_gate, item =>
+        var observer = new DelegateObserver<string>(_ =>
         {
-            callCount++;
-            if (callCount == 1)
-            {
+            if (++callCount == 1)
                 throw new InvalidOperationException("boom");
-            }
-
-            return true;
         });
+
+        var queue = new DeliveryQueue<string>(_gate, observer);
 
         var act = () => EnqueueAndDeliver(queue, "A");
         act.Should().Throw<InvalidOperationException>();
@@ -223,22 +249,20 @@ public class DeliveryQueueFixture
     {
         var delivered = new List<string>();
         var shouldThrow = true;
-        var queue = new DeliveryQueue<string>(_gate, item =>
+        var observer = new DelegateObserver<string>(item =>
         {
             if (shouldThrow && item == "A")
-            {
                 throw new InvalidOperationException("boom");
-            }
-
             delivered.Add(item);
-            return true;
         });
+
+        var queue = new DeliveryQueue<string>(_gate, observer);
 
         var act = () =>
         {
-            using var notifications = queue.AcquireLock();
-            notifications.Enqueue("A");
-            notifications.Enqueue("B");
+            using var scope = queue.AcquireLock();
+            scope.Enqueue("A");
+            scope.Enqueue("B");
         };
 
         act.Should().Throw<InvalidOperationException>();
@@ -250,47 +274,63 @@ public class DeliveryQueueFixture
     }
 
     [Fact]
-    public void TerminalCallbackStopsDelivery()
+    public void TerminalCompletedStopsDelivery()
     {
-        var delivered = new List<string>();
-        var queue = new DeliveryQueue<string>(_gate, item =>
-        {
-            delivered.Add(item);
-            return item != "STOP";
-        });
+        var observer = new ListObserver<string>();
+        var queue = new DeliveryQueue<string>(_gate, observer);
 
-        using (var notifications = queue.AcquireLock())
+        using (var scope = queue.AcquireLock())
         {
-            notifications.Enqueue("A");
-            notifications.Enqueue("STOP");
-            notifications.Enqueue("B");
+            scope.Enqueue("A");
+            scope.EnqueueCompleted();
+            scope.Enqueue("B"); // should be ignored after terminal
         }
 
-        delivered.Should().Equal("A", "STOP");
+        observer.Items.Should().Equal("A");
+        observer.IsCompleted.Should().BeTrue();
+        queue.IsTerminated.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TerminalErrorStopsDelivery()
+    {
+        var observer = new ListObserver<string>();
+        var queue = new DeliveryQueue<string>(_gate, observer);
+        var error = new InvalidOperationException("test");
+
+        using (var scope = queue.AcquireLock())
+        {
+            scope.Enqueue("A");
+            scope.EnqueueError(error);
+            scope.Enqueue("B"); // should be ignored after terminal
+        }
+
+        observer.Items.Should().Equal("A");
+        observer.Error.Should().BeSameAs(error);
         queue.IsTerminated.Should().BeTrue();
     }
 
     [Fact]
     public void EnqueueAfterTerminationIsIgnored()
     {
-        var delivered = new List<string>();
-        var queue = new DeliveryQueue<string>(_gate, item =>
-        {
-            delivered.Add(item);
-            return item != "STOP";
-        });
+        var observer = new ListObserver<string>();
+        var queue = new DeliveryQueue<string>(_gate, observer);
 
-        EnqueueAndDeliver(queue, "STOP");
+        using (var scope = queue.AcquireLock())
+        {
+            scope.EnqueueCompleted();
+        }
 
         EnqueueAndDeliver(queue, "AFTER");
 
-        delivered.Should().Equal("STOP");
+        observer.Items.Should().BeEmpty();
     }
 
     [Fact]
     public void IsTerminatedIsFalseInitially()
     {
-        var queue = new DeliveryQueue<string>(_gate, _ => true);
+        var observer = new ListObserver<string>();
+        var queue = new DeliveryQueue<string>(_gate, observer);
         queue.IsTerminated.Should().BeFalse();
     }
 
@@ -299,21 +339,19 @@ public class DeliveryQueueFixture
     {
         const int threadCount = 8;
         const int itemsPerThread = 500;
-        var delivered = new ConcurrentBag<int>();
-        var queue = new DeliveryQueue<int>(_gate, item => { delivered.Add(item); return true; });
+        var observer = new ConcurrentObserver<int>();
+        var queue = new DeliveryQueue<int>(_gate, observer);
 
         var tasks = Enumerable.Range(0, threadCount).Select(t => Task.Run(() =>
         {
             for (var i = 0; i < itemsPerThread; i++)
-            {
                 EnqueueAndDeliver(queue, (t * itemsPerThread) + i);
-            }
         })).ToArray();
 
         await Task.WhenAll(tasks);
         TriggerDelivery(queue);
 
-        delivered.Count.Should().Be(threadCount * itemsPerThread);
+        observer.Items.Count.Should().Be(threadCount * itemsPerThread);
     }
 
     [Fact]
@@ -321,21 +359,19 @@ public class DeliveryQueueFixture
     {
         const int threadCount = 8;
         const int itemsPerThread = 500;
-        var delivered = new ConcurrentBag<int>();
-        var queue = new DeliveryQueue<int>(_gate, item => { delivered.Add(item); return true; });
+        var observer = new ConcurrentObserver<int>();
+        var queue = new DeliveryQueue<int>(_gate, observer);
 
         var tasks = Enumerable.Range(0, threadCount).Select(t => Task.Run(() =>
         {
             for (var i = 0; i < itemsPerThread; i++)
-            {
                 EnqueueAndDeliver(queue, (t * itemsPerThread) + i);
-            }
         })).ToArray();
 
         await Task.WhenAll(tasks);
         TriggerDelivery(queue);
 
-        delivered.Distinct().Count().Should().Be(threadCount * itemsPerThread, "each item should be delivered exactly once");
+        observer.Items.Distinct().Count().Should().Be(threadCount * itemsPerThread);
     }
 
     [Fact]
@@ -343,25 +379,38 @@ public class DeliveryQueueFixture
     {
         const int threadCount = 4;
         const int itemsPerThread = 200;
-        var delivered = new ConcurrentQueue<(int Thread, int Seq)>();
-        var queue = new DeliveryQueue<(int Thread, int Seq)>(_gate, item => { delivered.Enqueue(item); return true; });
+        var observer = new ConcurrentQueueObserver<(int Thread, int Seq)>();
+        var queue = new DeliveryQueue<(int Thread, int Seq)>(_gate, observer);
 
         var tasks = Enumerable.Range(0, threadCount).Select(t => Task.Run(() =>
         {
             for (var i = 0; i < itemsPerThread; i++)
-            {
                 EnqueueAndDeliver(queue, (t, i));
-            }
         })).ToArray();
 
         await Task.WhenAll(tasks);
         TriggerDelivery(queue);
 
-        var itemsByThread = delivered.ToArray().GroupBy(x => x.Thread).ToDictionary(g => g.Key, g => g.Select(x => x.Seq).ToList());
+        var itemsByThread = observer.Items.ToArray().GroupBy(x => x.Thread)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Seq).ToList());
 
         foreach (var (thread, sequences) in itemsByThread)
-        {
             sequences.Should().BeInAscendingOrder($"items from thread {thread} should preserve enqueue order");
-        }
+    }
+
+    /// <summary>Observer that delegates OnNext to an action.</summary>
+    private sealed class DelegateObserver<T>(Action<T> onNextAction) : IObserver<T>
+    {
+        public void OnNext(T value) => onNextAction(value);
+        public void OnError(Exception error) { }
+        public void OnCompleted() { }
+    }
+
+    /// <summary>Observer with blocking capability for concurrency tests.</summary>
+    private sealed class BlockingObserver<T>(Action<T> onNextAction) : IObserver<T>
+    {
+        public void OnNext(T value) => onNextAction(value);
+        public void OnError(Exception error) { }
+        public void OnCompleted() { }
     }
 }

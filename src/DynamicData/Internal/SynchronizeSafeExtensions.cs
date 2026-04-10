@@ -13,9 +13,8 @@ namespace DynamicData.Internal;
 internal static class SynchronizeSafeExtensions
 {
     /// <summary>
-    /// Synchronizes the source observable through a shared <see cref="SharedDeliveryQueue"/>.
-    /// The lock is held only during enqueue; delivery runs outside the lock.
-    /// Use this overload when multiple sources of different types share a gate.
+    /// Synchronizes the source observable through a <see cref="SharedDeliveryQueue"/>.
+    /// Use when multiple sources of different types share a gate.
     /// </summary>
     public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, SharedDeliveryQueue queue)
     {
@@ -44,29 +43,32 @@ internal static class SynchronizeSafeExtensions
 
     /// <summary>
     /// Synchronizes the source observable through a typed <see cref="DeliveryQueue{T}"/>.
-    /// The lock is held only during enqueue; delivery runs outside the lock via the
-    /// queue's delivery callback. Use this for single-source operators that need
-    /// direct access to the queue (e.g., for <see cref="DeliveryQueue{T}.AcquireReadLock"/>).
+    /// Use for single-source operators that need direct access to the queue.
+    /// The caller creates the queue (deferred observer) and this method wires
+    /// the observer on subscription.
     /// </summary>
-    /// <returns>An <see cref="IDisposable"/> subscription. Delivery happens through
-    /// the queue's callback, not through Rx composition.</returns>
-    public static IDisposable SynchronizeSafe<T>(this IObservable<T> source, DeliveryQueue<Notification<T>> queue)
+    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, DeliveryQueue<T> queue)
     {
-        return source.SubscribeSafe(
-            item =>
-            {
-                using var scope = queue.AcquireLock();
-                scope.Enqueue(Notification<T>.Next(item));
-            },
-            ex =>
-            {
-                using var scope = queue.AcquireLock();
-                scope.Enqueue(Notification<T>.OnError(ex));
-            },
-            () =>
-            {
-                using var scope = queue.AcquireLock();
-                scope.Enqueue(Notification<T>.Completed);
-            });
+        return Observable.Create<T>(observer =>
+        {
+            queue.SetObserver(observer);
+
+            return source.SubscribeSafe(
+                item =>
+                {
+                    using var scope = queue.AcquireLock();
+                    scope.Enqueue(item);
+                },
+                ex =>
+                {
+                    using var scope = queue.AcquireLock();
+                    scope.EnqueueError(ex);
+                },
+                () =>
+                {
+                    using var scope = queue.AcquireLock();
+                    scope.EnqueueCompleted();
+                });
+        });
     }
 }

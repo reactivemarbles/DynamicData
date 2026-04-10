@@ -4514,7 +4514,7 @@ public static partial class ObservableCacheEx
             var seenValue = false;
             var locker = InternalEx.NewLock();
 
-                var queue = new SharedDeliveryQueue(locker);
+            var queue = new SharedDeliveryQueue(locker);
             var optional = source.ToObservableOptional(key, equalityComparer).SynchronizeSafe(queue).Do(_ => seenValue = true);
             var missing = Observable.Return(Optional.None<TObject>()).SynchronizeSafe(queue).Where(_ => !seenValue);
 

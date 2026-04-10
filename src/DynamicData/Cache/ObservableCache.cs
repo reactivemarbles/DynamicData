@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -40,7 +40,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private readonly ReaderWriter<TObject, TKey> _readerWriter;
 
-    private readonly DeliveryQueue<NotificationItem> _notifications;
+    private readonly DeliveryQueue<CacheUpdate> _notifications;
 
     private int _editLevel; // The level of recursion in editing.
 
@@ -51,7 +51,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     public ObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
         _readerWriter = new ReaderWriter<TObject, TKey>();
-        _notifications = new DeliveryQueue<NotificationItem>(_locker, DeliverNotification);
+        _notifications = new DeliveryQueue<CacheUpdate>(_locker, new CacheUpdateObserver(this));
         _suspensionTracker = new(() => new SuspensionTracker());
 
         var loader = source.Subscribe(
@@ -64,7 +64,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
                 if (changes is not null)
                 {
-                    notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count, ++_currentVersion));
+                    notifications.Enqueue(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
                 }
             },
             NotifyError,
@@ -81,7 +81,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     public ObservableCache(Func<TObject, TKey>? keySelector = null)
     {
         _readerWriter = new ReaderWriter<TObject, TKey>(keySelector);
-        _notifications = new DeliveryQueue<NotificationItem>(_locker, DeliverNotification);
+        _notifications = new DeliveryQueue<CacheUpdate>(_locker, new CacheUpdateObserver(this));
         _suspensionTracker = new(() => new SuspensionTracker());
 
         _cleanUp = Disposable.Create(NotifyCompleted);
@@ -195,7 +195,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         if (changes is not null && _editLevel == 0)
         {
-            notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count, ++_currentVersion));
+            notifications.Enqueue(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
         }
     }
 
@@ -222,7 +222,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         if (changes is not null && _editLevel == 0)
         {
-            notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count, ++_currentVersion));
+            notifications.Enqueue(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
         }
     }
 
@@ -306,13 +306,13 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     private void NotifyCompleted()
     {
         using var notifications = _notifications.AcquireLock();
-        notifications.Enqueue(NotificationItem.CreateCompleted());
+        notifications.EnqueueCompleted();
     }
 
     private void NotifyError(Exception ex)
     {
         using var notifications = _notifications.AcquireLock();
-        notifications.Enqueue(NotificationItem.CreateError(ex));
+        notifications.EnqueueError(ex);
     }
 
     /// <summary>
@@ -325,92 +325,6 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     /// Returns true to continue delivery, or false for terminal items (OnCompleted/OnError)
     /// which causes the queue to self-terminate.
     /// </summary>
-    private bool DeliverNotification(NotificationItem item)
-    {
-        switch (item.Kind)
-        {
-            case NotificationKind.Completed:
-                _changes.OnCompleted();
-                _changesPreview.OnCompleted();
-
-                if (_countChanged.IsValueCreated)
-                {
-                    _countChanged.Value.OnCompleted();
-                }
-
-                // Dispose outside lock because it fires OnCompleted
-                if (_suspensionTracker.IsValueCreated)
-                {
-                    _suspensionTracker.Value.Dispose();
-                }
-
-                return false;
-
-            case NotificationKind.Error:
-                _changesPreview.OnError(item.Error!);
-                _changes.OnError(item.Error!);
-
-                if (_countChanged.IsValueCreated)
-                {
-                    _countChanged.Value.OnError(item.Error!);
-                }
-
-                // Dispose outside lock because it fires OnCompleted
-                if (_suspensionTracker.IsValueCreated)
-                {
-                    _suspensionTracker.Value.Dispose();
-                }
-
-                return false;
-
-            case NotificationKind.CountOnly:
-                EmitCount(item.Count);
-                return true;
-
-            default:
-                Volatile.Write(ref _currentDeliveryVersion, item.Version);
-                EmitChanges(item.Changes);
-                EmitCount(item.Count);
-                return true;
-        }
-
-        void EmitChanges(ChangeSet<TObject, TKey> changes)
-        {
-            if (_suspensionTracker.IsValueCreated)
-            {
-                lock (_locker)
-                {
-                    if (_suspensionTracker.Value.AreNotificationsSuspended)
-                    {
-                        _suspensionTracker.Value.EnqueueChanges(changes);
-                        return;
-                    }
-                }
-            }
-
-            _changes.OnNext(changes);
-        }
-
-        void EmitCount(int count)
-        {
-            if (_suspensionTracker.IsValueCreated)
-            {
-                lock (_locker)
-                {
-                    if (_suspensionTracker.Value.IsCountSuspended)
-                    {
-                        return;
-                    }
-                }
-            }
-
-            if (_countChanged.IsValueCreated)
-            {
-                _countChanged.Value.OnNext(count);
-            }
-        }
-    }
-
     private void ResumeCount()
     {
         using var notifications = _notifications.AcquireLock();
@@ -418,7 +332,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         if (_suspensionTracker.Value.ResumeCount() && _countChanged.IsValueCreated)
         {
-            notifications.Enqueue(NotificationItem.CreateCountOnly(_readerWriter.Count));
+            notifications.Enqueue(new CacheUpdate(null, _readerWriter.Count));
         }
     }
 
@@ -433,7 +347,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             (var changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
             if (changes is not null)
             {
-                notifications.Enqueue(NotificationItem.CreateChanges(changes, _readerWriter.Count, ++_currentVersion));
+                notifications.Enqueue(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
             }
         }
 
@@ -446,27 +360,95 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         }
     }
 
-    private enum NotificationKind
+    /// <summary>
+    /// The notification payload for cache delivery. Null Changes = count-only notification.
+    /// </summary>
+    private readonly record struct CacheUpdate(ChangeSet<TObject, TKey>? Changes, int Count, long Version = 0);
+
+    /// <summary>
+    /// Observer that dispatches <see cref="CacheUpdate"/> items to the cache's
+    /// downstream subjects. Used as the delivery target for <see cref="_notifications"/>.
+    /// </summary>
+    private sealed class CacheUpdateObserver(ObservableCache<TObject, TKey> cache) : IObserver<CacheUpdate>
     {
-        Changes,
-        CountOnly,
-        Completed,
-        Error,
-    }
+        public void OnNext(CacheUpdate value)
+        {
+            if (value.Changes is not null)
+            {
+                Volatile.Write(ref cache._currentDeliveryVersion, value.Version);
+                EmitChanges(value.Changes);
+            }
 
-    private readonly record struct NotificationItem(NotificationKind Kind, ChangeSet<TObject, TKey> Changes, int Count = 0, long Version = 0, Exception? Error = null)
-    {
-        public static NotificationItem CreateChanges(ChangeSet<TObject, TKey> changes, int count, long version) =>
-            new(NotificationKind.Changes, changes, count, version);
+            EmitCount(value.Count);
+        }
 
-        public static NotificationItem CreateCountOnly(int count) =>
-            new(NotificationKind.CountOnly, [], count);
+        public void OnError(Exception error)
+        {
+            cache._changesPreview.OnError(error);
+            cache._changes.OnError(error);
 
-        public static NotificationItem CreateCompleted() =>
-            new(NotificationKind.Completed, []);
+            if (cache._countChanged.IsValueCreated)
+            {
+                cache._countChanged.Value.OnError(error);
+            }
 
-        public static NotificationItem CreateError(Exception error) =>
-            new(NotificationKind.Error, [], Error: error);
+            if (cache._suspensionTracker.IsValueCreated)
+            {
+                cache._suspensionTracker.Value.Dispose();
+            }
+        }
+
+        public void OnCompleted()
+        {
+            cache._changes.OnCompleted();
+            cache._changesPreview.OnCompleted();
+
+            if (cache._countChanged.IsValueCreated)
+            {
+                cache._countChanged.Value.OnCompleted();
+            }
+
+            if (cache._suspensionTracker.IsValueCreated)
+            {
+                cache._suspensionTracker.Value.Dispose();
+            }
+        }
+
+        private void EmitChanges(ChangeSet<TObject, TKey> changes)
+        {
+            if (cache._suspensionTracker.IsValueCreated)
+            {
+                lock (cache._locker)
+                {
+                    if (cache._suspensionTracker.Value.AreNotificationsSuspended)
+                    {
+                        cache._suspensionTracker.Value.EnqueueChanges(changes);
+                        return;
+                    }
+                }
+            }
+
+            cache._changes.OnNext(changes);
+        }
+
+        private void EmitCount(int count)
+        {
+            if (cache._suspensionTracker.IsValueCreated)
+            {
+                lock (cache._locker)
+                {
+                    if (cache._suspensionTracker.Value.IsCountSuspended)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            if (cache._countChanged.IsValueCreated)
+            {
+                cache._countChanged.Value.OnNext(count);
+            }
+        }
     }
 
     private sealed class SuspensionTracker : IDisposable

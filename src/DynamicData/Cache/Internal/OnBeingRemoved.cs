@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -20,29 +20,9 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new DeliveryQueue<IChangeSet<TObject, TKey>>(locker);
                 var cache = new Cache<TObject, TKey>();
-
-                var queue = new DeliveryQueue<DynamicData.Internal.Notification<IChangeSet<TObject, TKey>>>(locker, notification =>
-                {
-                    if (notification.HasValue)
-                    {
-                        var changes = notification.Value!;
-                        RegisterForRemoval(changes, cache);
-                        observer.OnNext(changes);
-                    }
-                    else if (notification.Error is not null)
-                    {
-                        observer.OnError(notification.Error);
-                    }
-                    else
-                    {
-                        observer.OnCompleted();
-                    }
-
-                    return !notification.IsTerminal;
-                });
-
-                var subscriber = _source.SynchronizeSafe(queue);
+                var subscriber = _source.SynchronizeSafe(queue).Do(changes => RegisterForRemoval(changes, cache), observer.OnError).SubscribeSafe(observer);
 
                 return Disposable.Create(
                     () =>
@@ -65,7 +45,6 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
                 switch (change.Reason)
                 {
                     case ChangeReason.Remove:
-                        // ReSharper disable once InconsistentlySynchronizedField
                         _removeAction(change.Current, change.Key);
                         break;
                 }

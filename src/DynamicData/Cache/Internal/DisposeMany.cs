@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -20,51 +20,48 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
         => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
             var locker = InternalEx.NewLock();
+            var queue = new DeliveryQueue<IChangeSet<TObject, TKey>>(locker);
             var cachedItems = new Dictionary<TKey, TObject>();
 
-            var queue = new DeliveryQueue<DynamicData.Internal.Notification<IChangeSet<TObject, TKey>>>(locker, notification =>
-            {
-                if (notification.HasValue)
-                {
-                    var changeSet = notification.Value!;
-
-                    observer.OnNext(changeSet);
-
-                    foreach (var change in changeSet.ToConcreteType())
+            var sourceSubscription = _source
+                .SynchronizeSafe(queue)
+                .SubscribeSafe(Observer.Create<IChangeSet<TObject, TKey>>(
+                    onNext: changeSet =>
                     {
-                        switch (change.Reason)
+                        observer.OnNext(changeSet);
+
+                        foreach (var change in changeSet.ToConcreteType())
                         {
-                            case ChangeReason.Update:
-                                if (change.Previous.HasValue && !EqualityComparer<TObject>.Default.Equals(change.Current, change.Previous.Value))
-                                {
-                                    (change.Previous.Value as IDisposable)?.Dispose();
-                                }
+                            switch (change.Reason)
+                            {
+                                case ChangeReason.Update:
+                                    if (change.Previous.HasValue && !EqualityComparer<TObject>.Default.Equals(change.Current, change.Previous.Value))
+                                    {
+                                        (change.Previous.Value as IDisposable)?.Dispose();
+                                    }
 
-                                break;
+                                    break;
 
-                            case ChangeReason.Remove:
-                                (change.Current as IDisposable)?.Dispose();
-                                break;
+                                case ChangeReason.Remove:
+                                    (change.Current as IDisposable)?.Dispose();
+                                    break;
+                            }
                         }
-                    }
 
-                    cachedItems.Clone(changeSet);
-                }
-                else if (notification.Error is not null)
-                {
-                    observer.OnError(notification.Error);
-                    ProcessFinalization(cachedItems);
-                }
-                else
-                {
-                    observer.OnCompleted();
-                    ProcessFinalization(cachedItems);
-                }
+                        cachedItems.Clone(changeSet);
+                    },
+                    onError: error =>
+                    {
+                        observer.OnError(error);
 
-                return !notification.IsTerminal;
-            });
+                        ProcessFinalization(cachedItems);
+                    },
+                    onCompleted: () =>
+                    {
+                        observer.OnCompleted();
 
-            var sourceSubscription = _source.SynchronizeSafe(queue);
+                        ProcessFinalization(cachedItems);
+                    }));
 
             return Disposable.Create(() =>
             {
