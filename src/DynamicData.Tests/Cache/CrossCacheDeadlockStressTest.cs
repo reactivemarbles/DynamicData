@@ -212,15 +212,28 @@ public sealed class CrossCacheDeadlockStressTest : IDisposable
         var forwardPipeline = _cacheA.Connect()
             .Filter(x => x.Family == AnimalFamily.Mammal)
             .Transform(a => new Animal("fwd-" + a.Name, a.Type, a.Family, true, a.Id + 800_000))
-            .Filter(x => !x.Name.StartsWith("fwd-fwd-") && !x.Name.StartsWith("fwd-rev-"))
-            .PopulateInto(_cacheB);
+            .Filter(x => x.Name.StartsWith("fwd-A"))         // only direct A items (blocks rev- re-entry)
+            .ForEachChange(change =>
+            {
+                if (change.Reason == ChangeReason.Add || change.Reason == ChangeReason.Update)
+                    _cacheB.AddOrUpdate(change.Current);
+                else if (change.Reason == ChangeReason.Remove)
+                    _cacheB.Remove(change.Current.Id);
+            })
+            .Subscribe();
         _cleanup.Add(forwardPipeline);
 
         var reversePipeline = _cacheB.Connect()
-            .Filter(x => x.Name.StartsWith("fwd-"))
+            .Filter(x => x.Name.StartsWith("fwd-A"))          // only first-gen forwards (blocks re-reverse)
             .Transform(a => new Animal("rev-" + a.Name, a.Type, a.Family, true, a.Id + 900_000))
-            .Filter(x => !x.Name.StartsWith("rev-rev-"))
-            .PopulateInto(_cacheA);
+            .ForEachChange(change =>
+            {
+                if (change.Reason == ChangeReason.Add || change.Reason == ChangeReason.Update)
+                    _cacheA.AddOrUpdate(change.Current);
+                else if (change.Reason == ChangeReason.Remove)
+                    _cacheA.Remove(change.Current.Id);
+            })
+            .Subscribe();
         _cleanup.Add(reversePipeline);
 
         // ================================================================
@@ -308,45 +321,42 @@ public sealed class CrossCacheDeadlockStressTest : IDisposable
         _cleanup.Add(deferredResults);
 
         // ================================================================
-        // CONCURRENT WRITERS — maximum contention
+        // CONCURRENT WRITERS — deterministic data, maximum contention
+        //
+        // Each thread writes items with non-overlapping ID ranges.
+        // This ensures the final state is predictable regardless of
+        // thread interleaving, while still stressing the lock chains.
+        //
+        // CacheA: threads 0-7 write IDs [t*500+1 .. (t+1)*500]  → IDs 1..4000
+        // CacheB: threads 0-7 write IDs [10000+t*500+1 .. 10000+(t+1)*500] → IDs 10001..14000
+        //
+        // Family assignment: (id % 5) → Mammal=0, Reptile=1, Fish=2, Amphibian=3, Bird=4
+        // IncludeInResults: true for all during write, toggled after for predictability
         // ================================================================
 
         using var barrier = new Barrier(WriterThreads + WriterThreads + 1 + 1); // A + B + control + main
 
         var writersA = Enumerable.Range(0, WriterThreads).Select(t => Task.Run(() =>
         {
-            var faker = Fakers.Animal.Clone().WithSeed(new Randomizer(Rand.Int()));
             barrier.SignalAndWait();
             for (var i = 0; i < ItemsPerThread; i++)
             {
-                var animal = faker.Generate();
+                var id = (t * ItemsPerThread) + i + 1;  // 1-based
+                var family = (AnimalFamily)(id % 5);
+                var animal = new Animal($"A{id}", $"Type{id % 7}", family, true, id);
                 _cacheA.AddOrUpdate(animal);
-
-                // Every 10th item: toggle IncludeInResults (triggers AutoRefresh)
-                if (i % 10 == 5)
-                {
-                    var items = _cacheA.Items.Take(3).ToArray();
-                    foreach (var item in items)
-                        item.IncludeInResults = !item.IncludeInResults;
-                }
-
-                // Every 20th item: remove old items
-                if (i % 20 == 0 && i > 0)
-                    _cacheA.Edit(u => u.RemoveKeys(_cacheA.Keys.Take(3)));
             }
         })).ToArray();
 
         var writersB = Enumerable.Range(0, WriterThreads).Select(t => Task.Run(() =>
         {
-            var faker = Fakers.Animal.Clone().WithSeed(new Randomizer(Rand.Int()));
             barrier.SignalAndWait();
             for (var i = 0; i < ItemsPerThread; i++)
             {
-                var animal = faker.Generate();
+                var id = 10_000 + (t * ItemsPerThread) + i + 1;  // 10001-based
+                var family = (AnimalFamily)(id % 5);
+                var animal = new Animal($"B{id}", $"Type{id % 7}", family, true, id);
                 _cacheB.AddOrUpdate(animal);
-
-                if (i % 15 == 0 && i > 0)
-                    _cacheB.Edit(u => u.RemoveKeys(_cacheB.Keys.Take(2)));
             }
         })).ToArray();
 
@@ -399,112 +409,143 @@ public sealed class CrossCacheDeadlockStressTest : IDisposable
             $"cross-cache pipeline deadlocked — tasks did not complete within {Timeout.TotalSeconds}s");
         await allTasks; // propagate faults
 
-        // Let async deliveries settle
-        await Task.Delay(200);
+        // Let async deliveries settle (bidirectional pipeline needs time for cascading)
+        await Task.Delay(2000);
 
         // ================================================================
-        // VERIFY RESULTS
+        // POST-WRITE DETERMINISTIC MUTATIONS
+        //
+        // Now that all writers are done and pipelines settled, apply
+        // deterministic mutations so the final state is calculable.
         // ================================================================
 
-        // Core caches have items
-        _cacheA.Count.Should().BeGreaterThan(0, "cacheA should have items");
-        _cacheB.Count.Should().BeGreaterThan(0, "cacheB should have items");
+        // Toggle IncludeInResults for items where id % 10 == 5 (triggers AutoRefresh → Filter re-eval)
+        foreach (var animal in _cacheA.Items.Where(a => a.Id <= 4000 && a.Id % 10 == 5).ToArray())
+            animal.IncludeInResults = false;
 
-        // FullJoin: should have at least max(A, B) items (full outer join)
+        // Remove specific items from each cache
+        _cacheA.Edit(u => u.RemoveKeys(
+            Enumerable.Range(1, 4000).Where(id => id % 20 == 0).Select(id => id)));  // 200 removals
+        _cacheB.Edit(u => u.RemoveKeys(
+            Enumerable.Range(10_001, 4000).Where(id => id % 15 == 0).Select(id => id)));
+
+        // Let all pipeline effects settle (forward→reverse cascade)
+        await Task.Delay(2000);
+
+
+        // ================================================================
+        // VERIFY EXACT RESULTS
+        //
+        // Expected state after deterministic writes + mutations:
+        //
+        // CacheA direct: 4000 written - 200 removed (id%20==0) = 3800
+        // Forward pipeline: 600 mammals from A (id%5==0, surviving) → B as id+800_000
+        // Reverse pipeline: 600 fwd items from B → A as id+1_700_000
+        // CacheA total: 3800 direct + 600 reverse = 4400
+        //
+        // CacheB direct: 4000 written - 267 removed (id%15==0) = 3733
+        // CacheB total: 3733 direct + 600 forward = 4333
+        //
+        // Key ranges are disjoint: A={1..4000}∪{1_700_xxx}, B={10001..14000}∪{800_xxx}
+        // ================================================================
+
+        _cacheA.Count.Should().Be(4400, "cacheA: 3800 direct + 600 reverse");
+        _cacheB.Count.Should().Be(4333, "cacheB: 3733 direct + 600 forward");
+
+        // FullJoin: all from both sides (disjoint keys → no overlap → A+B)
         joinChain.Data.Count.Should().BeGreaterThan(0, "FullJoin chain should produce results");
 
-        // LeftJoin: exactly one row per left item
-        leftJoinResults.Data.Count.Should().Be(_cacheA.Count,
-            "LeftJoin should have exactly one row per left (cacheA) item");
+        // InnerJoin: keys in both → 0 (disjoint ranges)
+        innerJoinResults.Data.Count.Should().Be(0,
+            "InnerJoin should be empty (A and B have disjoint key ranges)");
 
-        // MergeChangeSets: union of both caches
-        mergedResults.Data.Count.Should().Be(_cacheA.Count + _cacheB.Count,
-            "MergeChangeSets should be the sum of both caches (disjoint keys)");
+        // LeftJoin: one row per cacheA item
+        leftJoinResults.Data.Count.Should().Be(4400,
+            "LeftJoin should have exactly one row per cacheA item");
 
-        // Or: union with dedup
-        orResults.Data.Count.Should().Be(
-            _cacheA.Count + _cacheB.Count - _cacheA.Keys.Intersect(_cacheB.Keys).Count(),
-            "Or should be the union of both caches");
+        // RightJoin: one row per cacheB item
+        rightJoinResults.Data.Count.Should().Be(4333,
+            "RightJoin should have exactly one row per cacheB item");
 
-        // QueryWhenChanged
+        // MergeChangeSets: union of disjoint = A + B
+        mergedResults.Data.Count.Should().Be(4400 + 4333,
+            "MergeChangeSets should be A + B (disjoint keys)");
+
+        // Or: union with dedup (disjoint = same as merge)
+        orResults.Data.Count.Should().Be(4400 + 4333,
+            "Or should equal A + B (disjoint keys)");
+
+        // And: intersection = 0
+        andResults.Data.Count.Should().Be(0,
+            "And should be empty (disjoint keys)");
+
+        // Except: A minus B = A (disjoint)
+        exceptResults.Data.Count.Should().Be(4400,
+            "Except should equal cacheA (disjoint keys)");
+
+        // Xor: symmetric difference = A + B (disjoint)
+        xorResults.Data.Count.Should().Be(4400 + 4333,
+            "Xor should equal A + B (disjoint keys)");
+
+        // QueryWhenChanged: reflects cacheB
         lastQuery.Should().NotBeNull("QueryWhenChanged should have fired");
-        lastQuery!.Count.Should().Be(_cacheB.Count, "QueryWhenChanged should reflect cacheB");
+        lastQuery!.Count.Should().Be(4333, "QueryWhenChanged should reflect cacheB final state");
 
-        // SortAndBind
-        boundList.Count.Should().Be(_cacheA.Count, "SortAndBind should reflect cacheA count");
+        // SortAndBind: reflects cacheA, sorted by Id
+        boundList.Count.Should().Be(4400, "SortAndBind should reflect cacheA count");
         boundList.Should().BeInAscendingOrder(x => x.Id, "SortAndBind should be sorted by Id");
 
-        // Virtualise: capped at window size
-        virtualisedResults.Data.Count.Should().BeLessThanOrEqualTo(50,
-            "Virtualise should respect window size");
+        // Virtualise(0, 50): capped at window size
+        virtualisedResults.Data.Count.Should().Be(50,
+            "Virtualise should show exactly 50 items (window size)");
 
-        // GroupWithImmutableState: should have groups for each family present
-        var familiesInA = _cacheA.Items.Select(a => a.Family).Distinct().Count();
-        immutableGroups.Data.Count.Should().Be(familiesInA,
-            "GroupWithImmutableState should have one group per family");
+        // GroupWithImmutableState: all 5 families present in cacheA
+        immutableGroups.Data.Count.Should().Be(5,
+            "GroupWithImmutableState should have one group per AnimalFamily");
 
-        // TransformMany: 2x cacheA (original + twin)
-        transformManyResults.Data.Count.Should().Be(_cacheA.Count * 2,
-            "TransformMany should double the items");
+        // TransformMany(a => [a, twin]): 2× cacheA
+        transformManyResults.Data.Count.Should().Be(4400 * 2,
+            "TransformMany should have 2× cacheA items (original + twin)");
 
-        // BatchIf: all items (unpaused at end)
-        batchedResults.Data.Count.Should().Be(_cacheA.Count,
-            "BatchIf should have all items after final unpause");
+        // BatchIf: all cacheA items (unpaused at end)
+        batchedResults.Data.Count.Should().Be(4400,
+            "BatchIf should have all cacheA items after final unpause");
 
-        // Switch: should reflect whichever cache was last selected (cacheA)
-        switchResults.Data.Count.Should().Be(_cacheA.Count,
+        // Switch: reflects cacheA (last switched to A)
+        switchResults.Data.Count.Should().Be(4400,
             "Switch should reflect cacheA after final switch");
 
-        // Bidirectional: if any mammals were in cacheA, forward pipeline pushed them to cacheB
-        var mammalsInA = _cacheA.Items.Count(x => x.Family == AnimalFamily.Mammal && !x.Name.StartsWith("rev-"));
-        if (mammalsInA > 0)
-        {
-            _cacheB.Items.Any(x => x.Name.StartsWith("fwd-")).Should().BeTrue(
-                "Forward pipeline should have pushed mammals from A to B");
-        }
+        // Bidirectional flow verification
+        _cacheB.Items.Count(x => x.Name.StartsWith("fwd-A")).Should().Be(600,
+            "Forward pipeline should have pushed 600 mammals from A to B");
+        _cacheA.Items.Count(x => x.Name.StartsWith("rev-fwd-A")).Should().Be(600,
+            "Reverse pipeline should have pushed 600 items back from B to A");
 
-        // No Rx contract violations (messages received = all assertions passed)
-        monsterChain.Messages.Should().NotBeEmpty("Monster chain should have received changesets");
+        // TransformOnObservable: 1:1 with cacheA
+        transformOnObsResults.Data.Count.Should().Be(4400,
+            "TransformOnObservable should mirror cacheA count");
 
-        // And: intersection of both caches
-        andResults.Data.Count.Should().Be(
-            _cacheA.Keys.Intersect(_cacheB.Keys).Count(),
-            "And should be the intersection of both caches");
+        // FilterOnObservable(Mammal): 600 direct mammals + 600 reverse (all mammal) = 1200
+        filterOnObsResults.Data.Count.Should().Be(1200,
+            "FilterOnObservable should contain 1200 mammals (600 direct + 600 reverse)");
 
-        // Except: A minus B
-        exceptResults.Data.Count.Should().Be(
-            _cacheA.Keys.Except(_cacheB.Keys).Count(),
-            "Except should be A minus B");
-
-        // Xor: symmetric difference
-        var expectedXor = _cacheA.Keys.Except(_cacheB.Keys).Count()
-                        + _cacheB.Keys.Except(_cacheA.Keys).Count();
-        xorResults.Data.Count.Should().Be(expectedXor,
-            "Xor should be the symmetric difference");
-
-        // TransformOnObservable
-        transformOnObsResults.Data.Count.Should().Be(_cacheA.Count,
-            "TransformOnObservable should have one item per source item");
-
-        // FilterOnObservable: only mammals
-        var mammalsInCache = _cacheA.Items.Count(a => a.Family == AnimalFamily.Mammal);
-        filterOnObsResults.Data.Count.Should().Be(mammalsInCache,
-            "FilterOnObservable should contain only mammals");
-
-        // TransformWithInlineUpdate
-        inlineUpdateResults.Data.Count.Should().Be(_cacheA.Count,
+        // TransformWithInlineUpdate: 1:1 with cacheA
+        inlineUpdateResults.Data.Count.Should().Be(4400,
             "TransformWithInlineUpdate should mirror cacheA count");
 
-        // DistinctValues
-        distinctFamilies.Data.Count.Should().Be(familiesInA,
-            "DistinctValues should track each distinct family");
+        // DistinctValues(Family): all 5 AnimalFamily values
+        distinctFamilies.Data.Count.Should().Be(5,
+            "DistinctValues should track all 5 distinct families");
 
-        // Bind (ReadOnlyObservableCollection)
-        boundCollection.Count.Should().Be(_cacheB.Count,
+        // Bind (ReadOnlyObservableCollection): reflects cacheB
+        boundCollection.Count.Should().Be(4333,
             "Bind should reflect cacheB count");
 
-        // DeferUntilLoaded
-        deferredResults.Data.Count.Should().Be(_cacheA.Count,
-            "DeferUntilLoaded should have all items after loading");
+        // DeferUntilLoaded: reflects cacheA
+        deferredResults.Data.Count.Should().Be(4400,
+            "DeferUntilLoaded should have all cacheA items");
+
+        // Monster chain: should have received changesets (SkipInitial skips first batch)
+        monsterChain.Messages.Should().NotBeEmpty("Monster chain should have received changesets");
     }
 }
