@@ -9,8 +9,6 @@ using System.Reactive.Subjects;
 
 using DynamicData.Internal;
 
-using DynamicData.Internal;
-
 namespace DynamicData.Cache.Internal;
 
 #if SUPPORTS_ASYNC_DISPOSABLE
@@ -31,7 +29,6 @@ internal static class AsyncDisposeMany<TObject, TKey>
                 var itemsByKey = new Dictionary<TKey, TObject>();
 
                 var synchronizationGate = InternalEx.NewLock();
-                var queue = new SharedDeliveryQueue(synchronizationGate);
 
                 var disposals = new Subject<IObservable<Unit>>();
                 var disposalsCompleted = disposals
@@ -45,43 +42,73 @@ internal static class AsyncDisposeMany<TObject, TKey>
                 // Make sure the consumer gets a chance to subscribe BEFORE we actually start processing items, so there's no risk of the consumer missing notifications.
                 disposalsCompletedAccessor.Invoke(disposalsCompleted);
 
-                var sourceSubscription = source
-                    .SynchronizeSafe(queue)
-                    // Using custom notification handlers instead of .Do() to make sure that we're not disposing items until AFTER we've notified all downstream listeners to remove them from their cached or bound collections.
-                    .SubscribeSafe(
-                        onNext: upstreamChanges =>
-                        {
-                            downstreamObserver.OnNext(upstreamChanges);
+                var queue = new DeliveryQueue<DynamicData.Internal.Notification<IChangeSet<TObject, TKey>>>(synchronizationGate, notification =>
+                {
+                    if (notification.HasValue)
+                    {
+                        var upstreamChanges = notification.Value!;
 
-                            foreach (var change in upstreamChanges.ToConcreteType())
+                        downstreamObserver.OnNext(upstreamChanges);
+
+                        foreach (var change in upstreamChanges.ToConcreteType())
+                        {
+                            switch (change.Reason)
                             {
-                                switch (change.Reason)
-                                {
-                                    case ChangeReason.Update:
-                                        if (change.Previous.HasValue && !EqualityComparer<TObject>.Default.Equals(change.Current, change.Previous.Value))
-                                            TryDisposeItem(change.Previous.Value);
-                                        break;
+                                case ChangeReason.Update:
+                                    if (change.Previous.HasValue && !EqualityComparer<TObject>.Default.Equals(change.Current, change.Previous.Value))
+                                        TryDisposeItem(change.Previous.Value);
+                                    break;
 
-                                    case ChangeReason.Remove:
-                                        TryDisposeItem(change.Current);
-                                        break;
-                                }
+                                case ChangeReason.Remove:
+                                    TryDisposeItem(change.Current);
+                                    break;
                             }
+                        }
 
-                            itemsByKey.Clone(upstreamChanges);
-                        },
-                        onError: error =>
+                        itemsByKey.Clone(upstreamChanges);
+                    }
+                    else if (notification.Error is not null)
+                    {
+                        downstreamObserver.OnError(notification.Error);
+                        TearDown();
+                    }
+                    else
+                    {
+                        downstreamObserver.OnCompleted();
+                        TearDown();
+                    }
+
+                    return !notification.IsTerminal;
+
+                    void TearDown()
+                    {
+                        if (disposals.HasObservers)
                         {
-                            downstreamObserver.OnError(error);
+                            try
+                            {
+                                foreach (var item in itemsByKey.Values)
+                                    TryDisposeItem(item);
+                                disposals.OnCompleted();
 
-                            TearDown();
-                        },
-                        onCompleted: () =>
-                        {
-                            downstreamObserver.OnCompleted();
+                                itemsByKey.Clear();
+                            }
+                            catch (Exception error)
+                            {
+                                disposals.OnError(error);
+                            }
+                        }
+                    }
 
-                            TearDown();
-                        });
+                    void TryDisposeItem(TObject item)
+                    {
+                        if (item is IDisposable disposable)
+                            disposable.Dispose();
+                        else if (item is IAsyncDisposable asyncDisposable)
+                            disposals.OnNext(Observable.FromAsync(() => asyncDisposable.DisposeAsync().AsTask()));
+                    }
+                });
+
+                var sourceSubscription = source.SynchronizeSafe(queue);
 
                 return Disposable.Create(() =>
                 {
@@ -89,36 +116,28 @@ internal static class AsyncDisposeMany<TObject, TKey>
                     {
                         sourceSubscription.Dispose();
 
-                        TearDown();
+                        if (disposals.HasObservers)
+                        {
+                            try
+                            {
+                                foreach (var item in itemsByKey.Values)
+                                {
+                                    if (item is IDisposable disposable)
+                                        disposable.Dispose();
+                                    else if (item is IAsyncDisposable asyncDisposable)
+                                        disposals.OnNext(Observable.FromAsync(() => asyncDisposable.DisposeAsync().AsTask()));
+                                }
+
+                                disposals.OnCompleted();
+                                itemsByKey.Clear();
+                            }
+                            catch (Exception error)
+                            {
+                                disposals.OnError(error);
+                            }
+                        }
                     }
                 });
-
-                void TearDown()
-                {
-                    if (disposals.HasObservers)
-                    {
-                        try
-                        {
-                            foreach (var item in itemsByKey.Values)
-                                TryDisposeItem(item);
-                            disposals.OnCompleted();
-
-                            itemsByKey.Clear();
-                        }
-                        catch (Exception error)
-                        {
-                            disposals.OnError(error);
-                        }
-                    }
-                }
-
-                void TryDisposeItem(TObject item)
-                {
-                    if (item is IDisposable disposable)
-                        disposable.Dispose();
-                    else if (item is IAsyncDisposable asyncDisposable)
-                        disposals.OnNext(Observable.FromAsync(() => asyncDisposable.DisposeAsync().AsTask()));
-                }
             });
     }
 }

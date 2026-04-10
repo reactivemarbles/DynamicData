@@ -20,16 +20,36 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
             observer =>
             {
                 var locker = InternalEx.NewLock();
-                var queue = new SharedDeliveryQueue(locker);
                 var cache = new Cache<TObject, TKey>();
-                var subscriber = _source.SynchronizeSafe(queue).Do(changes => RegisterForRemoval(changes, cache), observer.OnError).SubscribeSafe(observer);
+
+                var queue = new DeliveryQueue<DynamicData.Internal.Notification<IChangeSet<TObject, TKey>>>(locker, notification =>
+                {
+                    if (notification.HasValue)
+                    {
+                        var changes = notification.Value!;
+                        RegisterForRemoval(changes, cache);
+                        observer.OnNext(changes);
+                    }
+                    else if (notification.Error is not null)
+                    {
+                        observer.OnError(notification.Error);
+                    }
+                    else
+                    {
+                        observer.OnCompleted();
+                    }
+
+                    return !notification.IsTerminal;
+                });
+
+                var subscriber = _source.SynchronizeSafe(queue);
 
                 return Disposable.Create(
                     () =>
                     {
                         subscriber.Dispose();
 
-                        lock (locker)
+                        using (var readLock = queue.AcquireReadLock())
                         {
                             cache.KeyValues.ForEach(kvp => _removeAction(kvp.Value, kvp.Key));
                             cache.Clear();
