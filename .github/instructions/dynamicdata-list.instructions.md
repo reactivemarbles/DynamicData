@@ -5,19 +5,6 @@ applyTo: "src/DynamicData/**/*.cs"
 
 List operators work with **unkeyed, ordered collections**: `IObservable<IChangeSet<T>>`. Items are identified by **index position**, not by key. This is the counterpart to Cache operators.
 
-## When to Use List vs Cache
-
-| | **Cache** (`SourceCache<T, TKey>`) | **List** (`SourceList<T>`) |
-|---|---|---|
-| **Identity** | Items identified by key | Items identified by index position |
-| **Duplicates** | Not allowed (key must be unique) | Allowed (same item at multiple positions) |
-| **Ordering** | Unordered by default (Sort adds ordering) | Inherently ordered (like `List<T>`) |
-| **Best for** | Entities with IDs, lookup by key | Ordered sequences, duplicates OK |
-| **Change types** | Add, Update, Remove, Refresh, Moved | Add, AddRange, Replace, Remove, RemoveRange, Moved, Refresh, Clear |
-| **Changeset** | `IChangeSet<TObject, TKey>` | `IChangeSet<T>` |
-
-**Rule of thumb:** If your items have a natural unique key (ID, name, etc.), use Cache. If order matters and/or duplicates are possible, use List.
-
 ## SourceList — Where List Changesets Come From
 
 `SourceList<T>` is the entry point. It is a **mutable, observable, ordered collection**.

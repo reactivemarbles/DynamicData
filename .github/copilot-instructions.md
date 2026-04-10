@@ -6,6 +6,25 @@ DynamicData is a reactive collections library for .NET, built on top of [Reactiv
 
 DynamicData is used in production by thousands of applications. It is the reactive data layer for [ReactiveUI](https://reactiveui.net/), making it foundational infrastructure for the .NET reactive ecosystem.
 
+## Cache vs List — Two Collection Types
+
+DynamicData provides two parallel collection types. **Choose the right one — they are not interchangeable.**
+
+| | **Cache** (`SourceCache<T, TKey>`) | **List** (`SourceList<T>`) |
+|---|---|---|
+| **Identity** | Items identified by unique key | Items identified by index position |
+| **Duplicates** | Not allowed (key must be unique) | Allowed (same item at multiple positions) |
+| **Ordering** | Unordered by default (Sort adds ordering) | Inherently ordered (like `List<T>`) |
+| **Best for** | Entities with IDs, lookup by key | Ordered sequences, duplicates OK |
+| **Change types** | Add, Update, Remove, Refresh, Moved | Add, AddRange, Replace, Remove, RemoveRange, Moved, Refresh, Clear |
+| **Changeset** | `IChangeSet<TObject, TKey>` | `IChangeSet<T>` |
+
+**Rule of thumb:** If your items have a natural unique key (ID, name, etc.), use **Cache**. If order matters and/or duplicates are possible, use **List**. Cache is used far more often in practice.
+
+See `.github/instructions/dynamicdata-cache.instructions.md` for the complete cache operator reference.
+
+See `.github/instructions/dynamicdata-list.instructions.md` for the complete list operator reference.
+
 ## Why Performance Matters
 
 Every item flowing through a DynamicData pipeline passes through multiple operators. Each operator processes changesets — not individual items — so a single cache edit with 1000 items creates a changeset that flows through every operator in the chain. At library scale:
@@ -21,10 +40,6 @@ When optimizing, measure allocation rates and lock contention, not just wall-clo
 DynamicData operators compose — the output of one is the input of the next. If any operator violates the Rx contract (e.g., concurrent `OnNext` calls, calls after `OnCompleted`), every downstream operator can corrupt its internal state. This is not a crash — it's silent data corruption that manifests as wrong results, missing items, or phantom entries. In a reactive UI, this means the user sees stale or incorrect data with no error message.
 
 See `.github/instructions/rx.instructions.md` for comprehensive Rx contract rules, scheduler usage, disposable patterns, and a complete standard Rx operator reference.
-
-See `.github/instructions/dynamicdata-cache.instructions.md` for the cache operator catalog with changeset internals and usage examples.
-
-See `.github/instructions/dynamicdata-list.instructions.md` for the list operator catalog — the unkeyed counterpart to cache.
 
 ## Breaking Changes
 
