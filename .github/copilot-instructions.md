@@ -22,7 +22,9 @@ DynamicData operators compose — the output of one is the input of the next. If
 
 See `.github/instructions/rx.instructions.md` for comprehensive Rx contract rules, scheduler usage, disposable patterns, and a complete standard Rx operator reference.
 
-See `.github/instructions/dynamicdata-operators.instructions.md` for the full DynamicData operator catalog with usage examples and guidance on writing new operators.
+See `.github/instructions/dynamicdata-cache.instructions.md` for the cache operator catalog with changeset internals and usage examples.
+
+See `.github/instructions/dynamicdata-list.instructions.md` for the list operator catalog — the unkeyed counterpart to cache.
 
 ## Breaking Changes
 
@@ -185,7 +187,7 @@ results.HasCompleted.Should().BeFalse();
 
 **When to use which:**
 - **New tests**: Prefer `RecordCacheItems` + `ValidateSynchronization` + `ValidateChangeSets`.
-- **Existing tests**: Don't refactor from `AsAggregator` unless you're already modifying them.
+- **Existing tests**: Don't refactor from `AsAggregator` unless asked to do so.
 - **Sort/Page/Virtual tests**: The specialized aggregators have no `RecordCacheItems` equivalent yet — use them.
 
 ### What Every Operator Test Must Cover
