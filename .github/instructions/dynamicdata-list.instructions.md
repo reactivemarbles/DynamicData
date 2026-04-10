@@ -62,6 +62,46 @@ list.Edit(inner =>
 });
 ```
 
+## ObservableChangeSet.Create — Implicit List Factory
+
+`ObservableChangeSet.Create<T>` (single type parameter, no key) is the list equivalent. It gives you a `SourceList` inside a lambda and returns `IObservable<IChangeSet<T>>`.
+
+```csharp
+// Synchronous — populate the list, return cleanup
+IObservable<IChangeSet<string>> logLines = ObservableChangeSet.Create<string>(
+    list =>
+    {
+        var watcher = new FileSystemWatcher("logs");
+        watcher.Changed += (s, e) =>
+        {
+            var newLines = File.ReadAllLines(e.FullPath);
+            list.Edit(inner => inner.AddRange(newLines));
+        };
+        watcher.EnableRaisingEvents = true;
+
+        return Disposable.Create(() => watcher.Dispose());
+    });
+
+// Async with cancellation
+IObservable<IChangeSet<LogEntry>> entries = ObservableChangeSet.Create<LogEntry>(
+    async (list, cancellationToken) =>
+    {
+        var stream = _client.GetLogStreamAsync(cancellationToken);
+        await foreach (var entry in stream.WithCancellation(cancellationToken))
+        {
+            list.Add(entry);
+        }
+
+        return Disposable.Empty;
+    });
+```
+
+**Key behaviors:**
+- A new `SourceList` is created **per subscriber** (cold observable)
+- No key selector needed (lists are unkeyed)
+- Same overload set as the cache version (sync, async, cancellable)
+- On unsubscribe, cleanup runs and the list is disposed
+
 ## List Changesets — The Core Data Model
 
 A list changeset (`IChangeSet<T>`) is an `IEnumerable<Change<T>>`. Each change has a different structure than cache changes.

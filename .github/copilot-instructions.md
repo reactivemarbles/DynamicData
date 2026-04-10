@@ -59,6 +59,15 @@ DynamicData follows [Semantic Versioning (SemVer)](https://semver.org/). Breakin
 - Adding required parameters to existing methods
 - Changing the default behavior of an existing overload
 
+## Maintaining These Instructions
+
+These instruction files are living documentation. **They must be kept in sync with the code.**
+
+- When a **new operator** is added, it **MUST** be added to the appropriate instruction file (`dynamicdata-cache.instructions.md` or `dynamicdata-list.instructions.md`) with its change reason handling table.
+- When an **operator's behavior changes**, update its table in the instruction file.
+- When a **new test utility** is added, update the test utilities reference in the main instructions and the appropriate `testing-*.instructions.md`.
+- When a **new domain type** is added to `Tests/Domain/`, add it to the Domain Types section.
+
 ## Repository Structure
 
 ```

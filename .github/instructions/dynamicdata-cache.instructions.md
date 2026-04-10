@@ -56,6 +56,78 @@ cache.Edit(updater =>
 });
 ```
 
+## ObservableChangeSet.Create — Implicit Cache Factory
+
+`ObservableChangeSet.Create` is the cache equivalent of `Observable.Create`. It gives you a `SourceCache` inside a lambda and returns `IObservable<IChangeSet<T,K>>` — the cache is created and disposed automatically per subscriber.
+
+This is the **preferred way to bridge imperative code into DynamicData** without managing a `SourceCache` lifetime yourself.
+
+```csharp
+// Synchronous — populate the cache, return a cleanup action
+IObservable<IChangeSet<Person, string>> people = ObservableChangeSet.Create<Person, string>(
+    cache =>
+    {
+        // Populate the cache — changes flow to subscribers automatically
+        cache.AddOrUpdate(new Person("Alice", 30));
+        cache.AddOrUpdate(new Person("Bob", 25));
+
+        // Return cleanup action (called on unsubscribe)
+        return () => { /* cleanup resources */ };
+    },
+    keySelector: p => p.Name);
+
+// Synchronous — return IDisposable for cleanup
+IObservable<IChangeSet<Device, Guid>> devices = ObservableChangeSet.Create<Device, Guid>(
+    cache =>
+    {
+        // Subscribe to an external event source and pump into the cache
+        var watcher = new DeviceWatcher();
+        watcher.DeviceAdded += (s, d) => cache.AddOrUpdate(d);
+        watcher.DeviceRemoved += (s, d) => cache.Remove(d.Id);
+        watcher.Start();
+
+        return Disposable.Create(() => watcher.Dispose());
+    },
+    keySelector: d => d.Id);
+
+// Async — useful for loading from APIs, databases, etc.
+IObservable<IChangeSet<Product, int>> products = ObservableChangeSet.Create<Product, int>(
+    async (cache, cancellationToken) =>
+    {
+        var items = await _api.GetProductsAsync(cancellationToken);
+        cache.AddOrUpdate(items);
+
+        // Set up SignalR for live updates
+        var connection = new HubConnectionBuilder().WithUrl("/products").Build();
+        connection.On<Product>("Updated", p => cache.AddOrUpdate(p));
+        connection.On<int>("Removed", id => cache.Remove(id));
+        await connection.StartAsync(cancellationToken);
+
+        return Disposable.Create(() => connection.DisposeAsync().AsTask().Wait());
+    },
+    keySelector: p => p.Id);
+```
+
+**Key behaviors:**
+- A new `SourceCache` is created **per subscriber** (cold observable)
+- The cache's `Connect()` is wired to the subscriber automatically
+- The lambda can populate the cache synchronously or asynchronously
+- On unsubscribe, cleanup runs and the cache is disposed
+- Exceptions in the lambda propagate as `OnError`
+
+**Overloads:**
+
+| Signature | Use when |
+|-----------|----------|
+| `Create(Func<ISourceCache, Action>, keySelector)` | Sync, cleanup is an Action |
+| `Create(Func<ISourceCache, IDisposable>, keySelector)` | Sync, cleanup is IDisposable |
+| `Create(Func<ISourceCache, Task<IDisposable>>, keySelector)` | Async setup |
+| `Create(Func<ISourceCache, CancellationToken, Task<IDisposable>>, keySelector)` | Async with cancellation |
+| `Create(Func<ISourceCache, Task<Action>>, keySelector)` | Async, cleanup is Action |
+| `Create(Func<ISourceCache, CancellationToken, Task<Action>>, keySelector)` | Async with cancellation, Action cleanup |
+| `Create(Func<ISourceCache, Task>, keySelector)` | Async, no explicit cleanup |
+| `Create(Func<ISourceCache, CancellationToken, Task>, keySelector)` | Async with cancellation, no cleanup |
+
 ## Changesets — The Core Data Model
 
 A changeset (`IChangeSet<TObject, TKey>`) is an `IEnumerable<Change<TObject, TKey>>` — a batch of individual changes.
