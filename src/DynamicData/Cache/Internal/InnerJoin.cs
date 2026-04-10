@@ -31,11 +31,11 @@ internal sealed class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
                 var queue = new SharedDeliveryQueue(locker);
 
                 // create local backing stores
-                var leftCache = _left.SynchronizeSafe(queue).AsObservableCache(false);
+                var leftCache = _left.SynchronizeSafe(queue).AsObservableCache();
 
                 var rightShare = _right.SynchronizeSafe(queue).Publish();
-                var rightCache = rightShare.AsObservableCache(false);
-                var rightGrouped = rightShare.GroupWithImmutableState(_rightKeySelector).AsObservableCache(false);
+                var rightCache = rightShare.AsObservableCache();
+                var rightGrouped = rightShare.GroupWithImmutableState(_rightKeySelector).AsObservableCache();
 
                 var rightForeignKeysByKey = new Dictionary<TRightKey, TLeftKey>();
 

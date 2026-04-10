@@ -31,15 +31,15 @@ internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
                 var queue = new SharedDeliveryQueue(locker);
 
                 // create local backing stores
-                var leftCache = _left.SynchronizeSafe(queue).AsObservableCache(false);
+                var leftCache = _left.SynchronizeSafe(queue).AsObservableCache();
 
                 var rightShare = _right.SynchronizeSafe(queue).Publish();
 
-                var rightCache = rightShare.AsObservableCache(false);
+                var rightCache = rightShare.AsObservableCache();
                 var rightForeignCache = rightShare
                     .Transform(static (item, key) => (item, key))
                     .ChangeKey(pair => _rightKeySelector.Invoke(pair.item))
-                    .AsObservableCache(false);
+                    .AsObservableCache();
 
                 var rightForeignKeysByKey = new Dictionary<TRightKey, TLeftKey>();
 

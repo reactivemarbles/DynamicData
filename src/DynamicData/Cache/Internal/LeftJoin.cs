@@ -32,11 +32,11 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
 
                 // create local backing stores
                 var leftShare = _left.SynchronizeSafe(queue).Publish();
-                var leftCache = leftShare.AsObservableCache(false);
+                var leftCache = leftShare.AsObservableCache();
 
                 var rightShare = _right.SynchronizeSafe(queue).Publish();
-                var rightCache = rightShare.AsObservableCache(false);
-                var rightForeignCache = rightShare.ChangeKey(_rightKeySelector).AsObservableCache(false);
+                var rightCache = rightShare.AsObservableCache();
+                var rightForeignCache = rightShare.ChangeKey(_rightKeySelector).AsObservableCache();
 
                 var rightForeignKeysByKey = new Dictionary<TRightKey, TLeftKey>();
 

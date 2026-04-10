@@ -31,8 +31,8 @@ internal sealed class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                 var queue = new SharedDeliveryQueue(locker);
 
                 // create local backing stores
-                var leftCache = _left.SynchronizeSafe(queue).AsObservableCache(false);
-                var rightCache = _right.SynchronizeSafe(queue).ChangeKey(_rightKeySelector).AsObservableCache(false);
+                var leftCache = _left.SynchronizeSafe(queue).AsObservableCache();
+                var rightCache = _right.SynchronizeSafe(queue).ChangeKey(_rightKeySelector).AsObservableCache();
 
                 // joined is the final cache
                 var joinedCache = new ChangeAwareCache<TDestination, TLeftKey>();
