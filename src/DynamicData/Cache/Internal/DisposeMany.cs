@@ -20,11 +20,10 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
         => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
             var locker = InternalEx.NewLock();
-            var queue = new DeliveryQueue<IChangeSet<TObject, TKey>>(locker);
-            var cachedItems = new Dictionary<TKey, TObject>();
+            var tracked = new KeyedDisposable<TKey>();
 
             var sourceSubscription = _source
-                .SynchronizeSafe(queue)
+                .SynchronizeSafe(locker, out var queue)
                 .SubscribeSafe(Observer.Create<IChangeSet<TObject, TKey>>(
                     onNext: changeSet =>
                     {
@@ -34,53 +33,25 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
                         {
                             switch (change.Reason)
                             {
+                                case ChangeReason.Add:
                                 case ChangeReason.Update:
-                                    if (change.Previous.HasValue && !EqualityComparer<TObject>.Default.Equals(change.Current, change.Previous.Value))
-                                    {
-                                        (change.Previous.Value as IDisposable)?.Dispose();
-                                    }
-
+                                    tracked.AddIfDisposable(change.Key, change.Current);
                                     break;
 
                                 case ChangeReason.Remove:
-                                    (change.Current as IDisposable)?.Dispose();
+                                    tracked.Remove(change.Key);
                                     break;
                             }
                         }
-
-                        cachedItems.Clone(changeSet);
                     },
-                    onError: error =>
-                    {
-                        observer.OnError(error);
-
-                        ProcessFinalization(cachedItems);
-                    },
-                    onCompleted: () =>
-                    {
-                        observer.OnCompleted();
-
-                        ProcessFinalization(cachedItems);
-                    }));
+                    onError: observer.OnError,
+                    onCompleted: observer.OnCompleted));
 
             return Disposable.Create(() =>
             {
                 sourceSubscription.Dispose();
-
-                using (var readLock = queue.AcquireReadLock())
-                {
-                    ProcessFinalization(cachedItems);
-                }
+                queue.ForceTerminate();
+                tracked.Dispose();
             });
         });
-
-    private static void ProcessFinalization(Dictionary<TKey, TObject> cachedItems)
-    {
-        foreach (var pair in cachedItems)
-        {
-            (pair.Value as IDisposable)?.Dispose();
-        }
-
-        cachedItems.Clear();
-    }
 }

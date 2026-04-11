@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -22,6 +22,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
 
     private IObserver<T>? _observer;
     private bool _isDelivering;
+    private int _drainThreadId;
     private volatile bool _isTerminated;
 
     /// <summary>
@@ -40,23 +41,45 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
     }
 
 #if NET9_0_OR_GREATER
-    /// <summary>Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class without an observer. Call <see cref="SetObserver"/> before items are drained.</summary>
-    public DeliveryQueue(Lock gate) => _gate = gate;
+    /// <summary>Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class with a deferred observer. Call <see cref="SetObserver"/> before items are drained.</summary>
+    internal DeliveryQueue(Lock gate) => _gate = gate;
 #else
-    /// <summary>Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class without an observer. Call <see cref="SetObserver"/> before items are drained.</summary>
-    public DeliveryQueue(object gate) => _gate = gate;
+    /// <summary>Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class with a deferred observer. Call <see cref="SetObserver"/> before items are drained.</summary>
+    internal DeliveryQueue(object gate) => _gate = gate;
 #endif
 
-    /// <summary>
-    /// Sets the delivery observer. Must be called exactly once, before any items are drained.
-    /// </summary>
-    internal void SetObserver(IObserver<T> observer) =>
-        _observer = observer ?? throw new ArgumentNullException(nameof(observer));
+    /// <summary>Sets the delivery observer. Must be called exactly once, before any items are drained.</summary>
+    internal void SetObserver(IObserver<T> observer) => _observer = observer ?? throw new ArgumentNullException(nameof(observer));
 
     /// <summary>
     /// Gets whether this queue has been terminated. Safe to read from any thread.
     /// </summary>
     public bool IsTerminated => _isTerminated;
+
+    /// <summary>
+    /// Terminates the queue (rejecting further enqueues) and blocks until
+    /// any in-flight delivery has completed. After this returns, no more
+    /// observer callbacks will fire. Safe to call from within a delivery
+    /// callback (skips the spin-wait if the calling thread is the deliverer).
+    /// </summary>
+    public void ForceTerminate()
+    {
+        lock (_gate)
+        {
+            _isTerminated = true;
+            _queue.Clear();
+
+            // If we're being called from within the drain loop (e.g., downstream
+            // disposed during OnNext), the current thread IS the deliverer.
+            // The drain loop will see _isTerminated and exit after we return.
+            if (_drainThreadId == Environment.CurrentManagedThreadId)
+                return;
+        }
+
+        SpinWait spinner = default;
+        while (_isDelivering)
+            spinner.SpinOnce();
+    }
 
     /// <summary>
     /// Acquires the gate and returns a scoped access for enqueueing notifications.
@@ -128,6 +151,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
             }
 
             _isDelivering = true;
+            _drainThreadId = Environment.CurrentManagedThreadId;
             return true;
         }
 
@@ -141,7 +165,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
 
                     lock (_gate)
                     {
-                        if (_queue.Count == 0)
+                        if (_queue.Count == 0 || _isTerminated)
                         {
                             _isDelivering = false;
                             return;

@@ -21,6 +21,7 @@ internal sealed class SharedDeliveryQueue
 #endif
 
     private bool _isDelivering;
+    private int _drainThreadId;
     private volatile bool _isTerminated;
 
 #if NET9_0_OR_GREATER
@@ -33,6 +34,31 @@ internal sealed class SharedDeliveryQueue
 
     /// <summary>Gets whether this queue has been terminated.</summary>
     public bool IsTerminated => _isTerminated;
+
+    /// <summary>
+    /// Terminates the queue (rejecting further enqueues) and blocks until
+    /// any in-flight delivery has completed. After this returns, no more
+    /// observer callbacks will fire. Safe to call from within a delivery
+    /// callback (skips the spin-wait if the calling thread is the deliverer).
+    /// </summary>
+    public void ForceTerminate()
+    {
+        lock (_gate)
+        {
+            _isTerminated = true;
+            foreach (var s in _sources)
+            {
+                s.Clear();
+            }
+
+            if (_drainThreadId == Environment.CurrentManagedThreadId)
+                return;
+        }
+
+        SpinWait spinner = default;
+        while (_isDelivering)
+            spinner.SpinOnce();
+    }
 
     /// <summary>Creates a typed sub-queue bound to the specified observer.</summary>
     public DeliverySubQueue<T> CreateQueue<T>(IObserver<T> observer)
@@ -74,6 +100,7 @@ internal sealed class SharedDeliveryQueue
                 if (s.HasItems)
                 {
                     _isDelivering = true;
+                    _drainThreadId = Environment.CurrentManagedThreadId;
                     shouldDrain = true;
                     break;
                 }

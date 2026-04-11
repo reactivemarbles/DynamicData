@@ -27,9 +27,7 @@ internal static class AsyncDisposeMany<TObject, TKey>
             .Create<IChangeSet<TObject, TKey>>(downstreamObserver =>
             {
                 var itemsByKey = new Dictionary<TKey, TObject>();
-
                 var synchronizationGate = InternalEx.NewLock();
-                var queue = new DeliveryQueue<IChangeSet<TObject, TKey>>(synchronizationGate);
 
                 var disposals = new Subject<IObservable<Unit>>();
                 var disposalsCompleted = disposals
@@ -42,7 +40,7 @@ internal static class AsyncDisposeMany<TObject, TKey>
                 disposalsCompletedAccessor.Invoke(disposalsCompleted);
 
                 var sourceSubscription = source
-                    .SynchronizeSafe(queue)
+                    .SynchronizeSafe(synchronizationGate, out var queue)
                     .SubscribeSafe(
                         onNext: upstreamChanges =>
                         {
@@ -68,24 +66,19 @@ internal static class AsyncDisposeMany<TObject, TKey>
                         onError: error =>
                         {
                             downstreamObserver.OnError(error);
-
                             TearDown();
                         },
                         onCompleted: () =>
                         {
                             downstreamObserver.OnCompleted();
-
                             TearDown();
                         });
 
                 return Disposable.Create(() =>
                 {
-                    using (var readLock = queue.AcquireReadLock())
-                    {
-                        sourceSubscription.Dispose();
-
-                        TearDown();
-                    }
+                    sourceSubscription.Dispose();
+                    queue.ForceTerminate();
+                    TearDown();
                 });
 
                 void TearDown()
@@ -97,7 +90,6 @@ internal static class AsyncDisposeMany<TObject, TKey>
                             foreach (var item in itemsByKey.Values)
                                 TryDisposeItem(item);
                             disposals.OnCompleted();
-
                             itemsByKey.Clear();
                         }
                         catch (Exception error)

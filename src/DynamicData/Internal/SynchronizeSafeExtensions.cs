@@ -42,18 +42,42 @@ internal static class SynchronizeSafeExtensions
     }
 
     /// <summary>
-    /// Synchronizes the source observable through a typed <see cref="DeliveryQueue{T}"/>.
-    /// Use for single-source operators that need direct access to the queue.
-    /// The caller creates the queue (deferred observer) and this method wires
-    /// the observer on subscription.
+    /// Synchronizes the source observable through an implicitly created <see cref="DeliveryQueue{T}"/>.
+    /// Drop-in replacement for <c>Synchronize(locker)</c>.
     /// </summary>
-    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, DeliveryQueue<T> queue)
+#if NET9_0_OR_GREATER
+    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, Lock gate)
+#else
+    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, object gate)
+#endif
     {
         return Observable.Create<T>(observer =>
         {
-            queue.SetObserver(observer);
-
+            var queue = new DeliveryQueue<T>(gate, observer);
             return source.Subscribe(queue);
+        });
+    }
+
+    /// <summary>
+    /// Synchronizes the source observable through an implicitly created <see cref="DeliveryQueue{T}"/>,
+    /// exposing the queue for callers that need <see cref="DeliveryQueue{T}.ForceTerminate"/>
+    /// or <see cref="DeliveryQueue{T}.AcquireReadLock"/> during disposal.
+    /// </summary>
+#if NET9_0_OR_GREATER
+    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, Lock gate, out DeliveryQueue<T> queue)
+#else
+    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, object gate, out DeliveryQueue<T> queue)
+#endif
+    {
+        // Queue must be created eagerly so the caller can capture the reference.
+        // Observer is set lazily when Observable.Create subscribes.
+        var q = new DeliveryQueue<T>(gate);
+        queue = q;
+
+        return Observable.Create<T>(observer =>
+        {
+            q.SetObserver(observer);
+            return source.Subscribe(q);
         });
     }
 }

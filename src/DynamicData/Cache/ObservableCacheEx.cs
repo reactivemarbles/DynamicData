@@ -616,8 +616,7 @@ public static partial class ObservableCacheEx
             observer =>
             {
                 var locker = InternalEx.NewLock();
-                var queue = new SharedDeliveryQueue(locker);
-                return source.SynchronizeSafe(queue).Select(
+                return source.SynchronizeSafe(locker).Select(
                     changes =>
                     {
                         updater.Adapt(changes, destination);
@@ -745,8 +744,7 @@ public static partial class ObservableCacheEx
             observer =>
             {
                 var locker = InternalEx.NewLock();
-                var queue = new SharedDeliveryQueue(locker);
-                return source.SynchronizeSafe(queue).Select(
+                return source.SynchronizeSafe(locker).Select(
                     changes =>
                     {
                         updater.Adapt(changes, destination);
