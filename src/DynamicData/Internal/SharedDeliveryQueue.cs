@@ -20,8 +20,8 @@ internal sealed class SharedDeliveryQueue
     private readonly object _gate;
 #endif
 
-    private bool _isDelivering;
-    private int _drainThreadId;
+    private volatile bool _isDelivering;
+    private int _drainThreadId = -1;
     private volatile bool _isTerminated;
 
 #if NET9_0_OR_GREATER
@@ -41,7 +41,7 @@ internal sealed class SharedDeliveryQueue
     /// observer callbacks will fire. Safe to call from within a delivery
     /// callback (skips the spin-wait if the calling thread is the deliverer).
     /// </summary>
-    public void ForceTerminate()
+    public void EnsureDeliveryComplete()
     {
         lock (_gate)
         {

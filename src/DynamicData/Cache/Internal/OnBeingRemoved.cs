@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -29,7 +29,7 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
                     () =>
                     {
                         subscriber.Dispose();
-                        queue.ForceTerminate();
+                        queue.EnsureDeliveryComplete();
                         cache.KeyValues.ForEach(kvp => _removeAction(kvp.Value, kvp.Key));
                         cache.Clear();
                     });

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -60,7 +60,7 @@ internal static class SynchronizeSafeExtensions
 
     /// <summary>
     /// Synchronizes the source observable through an implicitly created <see cref="DeliveryQueue{T}"/>,
-    /// exposing the queue for callers that need <see cref="DeliveryQueue{T}.ForceTerminate"/>
+    /// exposing the queue for callers that need <see cref="DeliveryQueue{T}.EnsureDeliveryComplete"/>
     /// or <see cref="DeliveryQueue{T}.AcquireReadLock"/> during disposal.
     /// </summary>
 #if NET9_0_OR_GREATER

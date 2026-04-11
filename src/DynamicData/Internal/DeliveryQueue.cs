@@ -21,8 +21,8 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
 #endif
 
     private IObserver<T>? _observer;
-    private bool _isDelivering;
-    private int _drainThreadId;
+    private volatile bool _isDelivering;
+    private int _drainThreadId = -1;
     private volatile bool _isTerminated;
 
     /// <summary>
@@ -49,7 +49,13 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
 #endif
 
     /// <summary>Sets the delivery observer. Must be called exactly once, before any items are drained.</summary>
-    internal void SetObserver(IObserver<T> observer) => _observer = observer ?? throw new ArgumentNullException(nameof(observer));
+    internal void SetObserver(IObserver<T> observer)
+    {
+        if (_observer is not null)
+            throw new InvalidOperationException("Observer has already been set.");
+
+        _observer = observer ?? throw new ArgumentNullException(nameof(observer));
+    }
 
     /// <summary>
     /// Gets whether this queue has been terminated. Safe to read from any thread.
@@ -62,7 +68,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
     /// observer callbacks will fire. Safe to call from within a delivery
     /// callback (skips the spin-wait if the calling thread is the deliverer).
     /// </summary>
-    public void ForceTerminate()
+    public void EnsureDeliveryComplete()
     {
         lock (_gate)
         {
