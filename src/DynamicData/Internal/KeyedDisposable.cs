@@ -55,8 +55,8 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
 #else
         if (_disposables.TryGetValue(key, out var disposable))
         {
-            disposable.Dispose();
             _disposables.Remove(key);
+            disposable.Dispose();
         }
 #endif
     }
@@ -75,8 +75,25 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
             _disposedValue = true;
             if (disposing)
             {
-                _disposables.Values.ForEach(d => d.Dispose());
+                List<Exception>? errors = null;
+                foreach (var d in _disposables.Values)
+                {
+                    try
+                    {
+                        d.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        (errors ??= []).Add(ex);
+                    }
+                }
+
                 _disposables.Clear();
+
+                if (errors is { Count: > 0 })
+                {
+                    throw new AggregateException(errors);
+                }
             }
         }
     }

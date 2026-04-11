@@ -178,6 +178,14 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
                         }
 
                         notification = _queue.Dequeue();
+
+                        // Mark terminated BEFORE delivery so concurrent code
+                        // (e.g., InvokePreview) sees the terminal state immediately.
+                        if (notification.IsTerminal)
+                        {
+                            _isTerminated = true;
+                            _queue.Clear();
+                        }
                     }
 
                     // Deliver outside the lock
@@ -187,9 +195,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
                     {
                         lock (_gate)
                         {
-                            _isTerminated = true;
                             _isDelivering = false;
-                            _queue.Clear();
                         }
 
                         return;

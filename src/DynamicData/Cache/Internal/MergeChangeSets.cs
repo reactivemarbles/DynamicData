@@ -6,8 +6,6 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using DynamicData.Internal;
 
-using DynamicData.Internal;
-
 namespace DynamicData.Cache.Internal;
 
 /// <summary>

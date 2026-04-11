@@ -7,8 +7,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Internal;
 
-using DynamicData.Internal;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class GroupOnDynamic<TObject, TKey, TGroupKey>(IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, TKey, TGroupKey>> selectGroupObservable, IObservable<Unit>? regrouper = null)
