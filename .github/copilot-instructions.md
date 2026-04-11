@@ -188,6 +188,98 @@ public void RemoveThenReAddWithSameKey_ShouldNotDuplicate()
 public void FixBug1234()
 ```
 
+### Waiting for Pipeline Completion
+
+**Never use `Task.Delay` to wait for pipelines to settle.** Use the `Publish` + `LastOrDefaultAsync` + `ToTask` pattern for deterministic completion:
+
+```csharp
+var published = source.Connect()
+    .Filter(x => x.IsActive)
+    .Sort(comparer)
+    .Publish();
+
+var hasCompleted = published.LastOrDefaultAsync().ToTask();
+using var results = published.AsAggregator();
+using var connect = published.Connect();
+
+// Do stuff — write to source
+source.AddOrUpdate(items);
+
+// Signal completion — cascades OnCompleted through the chain
+source.Dispose();
+
+await hasCompleted;  // deterministic wait — no timeout, no polling
+
+// Assert exact results
+results.Data.Items.Should().BeEquivalentTo(expectedItems);
+```
+
+**Why this works:** `LastOrDefaultAsync()` subscribes to the published stream and completes only when the source completes. `ToTask()` converts it to an awaitable. Disposing the source cascades `OnCompleted` through the entire chain.
+
+### Chaining Intermediate Caches
+
+Use `AsObservableCache()` to materialize pipeline stages into queryable caches. Each cache's `Connect()` feeds the next stage:
+
+```csharp
+// Stage 1: complex pipeline → materialized cache
+using var cache1 = source.Connect()
+    .AutoRefresh(x => x.Rating)
+    .Filter(x => x.Rating > 3.0)
+    .Transform(x => new ViewModel(x))
+    .AsObservableCache();
+
+// Stage 2: chain from cache1 → another cache
+using var cache2 = cache1.Connect()
+    .GroupOn(x => x.Category)
+    .MergeManyChangeSets(g => g.Cache.Connect())
+    .AsObservableCache();
+
+// Stage 3: final pipeline with completion tracking
+var published = cache2.Connect()
+    .Sort(comparer)
+    .Publish();
+
+var hasCompleted = published.LastOrDefaultAsync().ToTask();
+using var finalResults = published.AsAggregator();
+using var connect = published.Connect();
+
+source.Dispose();  // cascades through cache1 → cache2 → finalResults
+await hasCompleted;
+
+// Verify exact contents at every stage
+cache1.Items.Should().BeEquivalentTo(expectedStage1);
+cache2.Items.Should().BeEquivalentTo(expectedStage2);
+finalResults.Data.Items.Should().BeEquivalentTo(expectedFinal);
+```
+
+### Stress Test Pattern
+
+The complete pattern for stress testing DynamicData operators:
+
+1. **Generate deterministic test data** from a `Bogus.Randomizer` with a fixed seed. All quantities (item counts, property values, thread counts) come from the seed — nothing hardcoded except the seed itself.
+
+2. **Wire up chained pipelines** with intermediate `AsObservableCache()` stages. Use long fluent operator chains (10+ operators per chain). Each operator should appear in at least 2 different chains.
+
+3. **Track completion** with `Publish()` + `LastOrDefaultAsync().ToTask()` on terminal chains.
+
+4. **Feed data from multiple threads** using `Barrier` for simultaneous start — maximum contention. Interleave adds, updates, removes, and property mutations.
+
+5. **Pre-compute expected results** by simulating each chain's logic in plain LINQ on the same generated data — before the Rx pipelines run.
+
+6. **Dispose sources** → `await hasCompleted` on all terminal chains.
+
+7. **Verify exact contents** of ALL intermediate and final caches — not just counts, but the actual items via `BeEquivalentTo`.
+
+```csharp
+// Pre-compute expected results via LINQ
+var expectedFiltered = generatedItems.Where(x => x.IsActive).ToList();
+var expectedTransformed = expectedFiltered.Select(x => Transform(x)).ToList();
+
+// After pipelines complete
+cache1.Items.Should().BeEquivalentTo(expectedFiltered);
+cache2.Items.Should().BeEquivalentTo(expectedTransformed);
+```
+
 ### Stress Test Principles
 
 - Use `Barrier` for simultaneous start — maximizes contention. Include the main thread in participant count.
@@ -241,6 +333,21 @@ var owners = Fakers.AnimalOwnerWithAnimals.Generate(10);  // pre-populated with 
 results.Messages.Count.Should().Be(3);
 // GOOD: test the observable behavior and final state
 results.Data.Count.Should().Be(expectedCount);
+results.Data.Items.Should().BeEquivalentTo(expectedItems);
+```
+
+**❌ Using `Task.Delay` to wait for pipelines to settle:**
+```csharp
+// BAD: flaky, slow, non-deterministic
+await Task.Delay(2000); // "wait for async deliveries to settle"
+results.Data.Count.Should().Be(expected);
+// GOOD: deterministic completion via Publish + LastOrDefaultAsync
+var published = pipeline.Publish();
+var hasCompleted = published.LastOrDefaultAsync().ToTask();
+using var results = published.AsAggregator();
+using var connect = published.Connect();
+source.Dispose();
+await hasCompleted;
 results.Data.Items.Should().BeEquivalentTo(expectedItems);
 ```
 
