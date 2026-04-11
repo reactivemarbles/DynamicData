@@ -413,4 +413,148 @@ public class DeliveryQueueFixture
         public void OnError(Exception error) { }
         public void OnCompleted() { }
     }
+
+    [Fact]
+    public void EnsureDeliveryCompleteTerminatesQueue()
+    {
+        var observer = new ListObserver<string>();
+        var queue = new DeliveryQueue<string>(_gate, observer);
+
+        EnqueueAndDeliver(queue, "A");
+        queue.EnsureDeliveryComplete();
+
+        queue.IsTerminated.Should().BeTrue();
+
+        // Further enqueues should be ignored
+        EnqueueAndDeliver(queue, "B");
+        observer.Items.Should().Equal("A");
+    }
+
+    [Fact]
+    public void EnsureDeliveryCompleteClearsPendingItems()
+    {
+        var observer = new ListObserver<string>();
+        var deliveryCount = 0;
+        DeliveryQueue<string>? q = null;
+
+        var blockingObserver = new DelegateObserver<string>(item =>
+        {
+            observer.OnNext(item);
+            if (++deliveryCount == 1)
+            {
+                // While delivering first item, enqueue more then terminate
+                using (var scope = q!.AcquireLock())
+                {
+                    scope.Enqueue("B");
+                    scope.Enqueue("C");
+                }
+
+                q!.EnsureDeliveryComplete(); // re-entrant — should not spin
+            }
+        });
+
+        var queue = new DeliveryQueue<string>(_gate, blockingObserver);
+        q = queue;
+
+        EnqueueAndDeliver(queue, "A");
+
+        // Only "A" should be delivered — "B" and "C" were cleared by EnsureDeliveryComplete
+        observer.Items.Should().Equal("A");
+        queue.IsTerminated.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EnsureDeliveryCompleteFromDrainThreadDoesNotDeadlock()
+    {
+        var observer = new ListObserver<string>();
+        DeliveryQueue<string>? q = null;
+
+        var terminatingObserver = new DelegateObserver<string>(_ =>
+        {
+            // Called from drain thread — EnsureDeliveryComplete must detect
+            // re-entrancy via _drainThreadId and skip the spin-wait
+            q!.EnsureDeliveryComplete();
+        });
+
+        var queue = new DeliveryQueue<string>(_gate, terminatingObserver);
+        q = queue;
+
+        // This should NOT deadlock
+        var completed = Task.Run(() => EnqueueAndDeliver(queue, "A"));
+        var finished = Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(5))).Result;
+        finished.Should().BeSameAs(completed, "EnsureDeliveryComplete from drain thread should not deadlock");
+    }
+
+    [Fact]
+    public async Task EnsureDeliveryCompleteWaitsForInFlightDelivery()
+    {
+        var observer = new ListObserver<int>();
+        using var deliveryStarted = new ManualResetEventSlim(false);
+        using var allowDeliveryToFinish = new ManualResetEventSlim(false);
+
+        var slowObserver = new DelegateObserver<int>(item =>
+        {
+            observer.OnNext(item);
+            deliveryStarted.Set();
+            allowDeliveryToFinish.Wait();
+        });
+
+        var queue = new DeliveryQueue<int>(_gate, slowObserver);
+
+        // Start delivering — will block in observer
+        var deliverTask = Task.Run(() => EnqueueAndDeliver(queue, 42));
+        deliveryStarted.Wait();
+
+        // Drain thread is blocked in observer callback. EnsureDeliveryComplete should spin.
+        var terminateTask = Task.Run(() => queue.EnsureDeliveryComplete());
+
+        // Give terminate a moment to enter spin-wait
+        await Task.Delay(100);
+        terminateTask.IsCompleted.Should().BeFalse("should be spinning waiting for delivery");
+
+        // Release the delivery
+        allowDeliveryToFinish.Set();
+
+        await Task.WhenAll(deliverTask, terminateTask);
+        queue.IsTerminated.Should().BeTrue();
+        observer.Items.Should().Equal(42);
+    }
+
+    [Fact]
+    public void TerminalItemsDeliveredBeforeTermination()
+    {
+        var observer = new ListObserver<string>();
+        var queue = new DeliveryQueue<string>(_gate, observer);
+
+        using (var scope = queue.AcquireLock())
+        {
+            scope.Enqueue("A");
+            scope.Enqueue("B");
+            scope.EnqueueCompleted();
+            scope.Enqueue("C"); // should be ignored — after terminal
+        }
+
+        observer.Items.Should().Equal("A", "B");
+        observer.IsCompleted.Should().BeTrue();
+        queue.IsTerminated.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ErrorTerminatesAndClearsPending()
+    {
+        var observer = new ListObserver<string>();
+        var queue = new DeliveryQueue<string>(_gate, observer);
+        var error = new InvalidOperationException("test");
+
+        using (var scope = queue.AcquireLock())
+        {
+            scope.Enqueue("A");
+            scope.EnqueueError(error);
+            scope.Enqueue("B"); // should be ignored
+        }
+
+        observer.Items.Should().Equal("A");
+        observer.Error.Should().BeSameAs(error);
+        queue.IsTerminated.Should().BeTrue();
+    }
 }
