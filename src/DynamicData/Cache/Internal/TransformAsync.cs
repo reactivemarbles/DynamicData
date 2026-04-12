@@ -1,11 +1,9 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
-
-using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -29,8 +27,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
 
             if (forceTransform is not null)
             {
-                var locker = InternalEx.NewLock();
-                var queue = new SharedDeliveryQueue(locker);
+                var queue = new SharedDeliveryQueue();
                 var forced = forceTransform.SynchronizeSafe(queue)
                     .Select(shouldTransform => DoTransform(cache, shouldTransform)).Concat();
 

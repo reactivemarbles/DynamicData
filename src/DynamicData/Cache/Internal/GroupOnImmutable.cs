@@ -1,11 +1,9 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive;
 using System.Reactive.Linq;
-
-using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -23,8 +21,7 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
     public IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
-                var queue = new SharedDeliveryQueue(locker);
+                var queue = new SharedDeliveryQueue();
                 var grouper = new Grouper(_groupSelectorKey);
 
                 var groups = _source.SynchronizeSafe(queue).Select(grouper.Update).Where(changes => changes.Count != 0);

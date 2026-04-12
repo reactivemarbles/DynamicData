@@ -1,12 +1,10 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-
-using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -34,8 +32,7 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(IObservable<IChangeSet<TO
                     changes.Buffer(buffer.Value, _scheduler).Where(list => list.Count > 0).Select(items => new ChangeSet<TObject, TKey>(items));
 
                 // publish refreshes and underlying changes
-                var locker = InternalEx.NewLock();
-                var queue = new SharedDeliveryQueue(locker);
+                var queue = new SharedDeliveryQueue();
                 var publisher = shared.SynchronizeSafe(queue).Merge(refreshChanges.SynchronizeSafe(queue)).SubscribeSafe(observer);
 
                 return new CompositeDisposable(publisher, shared.Connect());

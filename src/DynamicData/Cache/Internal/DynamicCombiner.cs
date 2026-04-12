@@ -1,11 +1,9 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-
-using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -18,8 +16,7 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
-                var queue = new SharedDeliveryQueue(locker);
+                var queue = new SharedDeliveryQueue();
 
                 // this is the resulting cache which produces all notifications
                 var resultCache = new ChangeAwareCache<TObject, TKey>();

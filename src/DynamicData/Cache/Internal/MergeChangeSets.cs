@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -23,8 +23,7 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
         observer =>
         {
-            var locker = InternalEx.NewLock();
-            var queue = new SharedDeliveryQueue(locker);
+            var queue = new SharedDeliveryQueue();
             var cache = new Cache<ChangeSetCache<TObject, TKey>, int>();
 
             // This is manages all of the changes

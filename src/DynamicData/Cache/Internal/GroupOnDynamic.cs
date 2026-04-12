@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -17,8 +17,7 @@ internal sealed class GroupOnDynamic<TObject, TKey, TGroupKey>(IObservable<IChan
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(observer =>
     {
         var dynamicGrouper = new DynamicGrouper<TObject, TKey, TGroupKey>();
-        var locker = InternalEx.NewLock();
-        var queue = new SharedDeliveryQueue(locker);
+        var queue = new SharedDeliveryQueue();
         var notGrouped = new Cache<TObject, TKey>();
         var hasSelector = false;
 

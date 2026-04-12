@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -17,7 +17,6 @@ using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 
 // ReSharper disable once CheckNamespace
-using DynamicData.Internal;
 
 namespace DynamicData;
 
@@ -4510,9 +4509,7 @@ public static partial class ObservableCacheEx
         if (initialOptionalWhenMissing)
         {
             var seenValue = false;
-            var locker = InternalEx.NewLock();
-
-            var queue = new SharedDeliveryQueue(locker);
+            var queue = new SharedDeliveryQueue();
             var optional = source.ToObservableOptional(key, equalityComparer).SynchronizeSafe(queue).Do(_ => seenValue = true);
             var missing = Observable.Return(Optional.None<TObject>()).SynchronizeSafe(queue).Where(_ => !seenValue);
 

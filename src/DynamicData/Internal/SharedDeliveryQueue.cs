@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -13,6 +13,7 @@ namespace DynamicData.Internal;
 internal sealed class SharedDeliveryQueue
 {
     private readonly List<IDrainable> _sources = [];
+    private readonly Action? _onDrainComplete;
 
 #if NET9_0_OR_GREATER
     private readonly Lock _gate;
@@ -24,11 +25,31 @@ internal sealed class SharedDeliveryQueue
     private int _drainThreadId = -1;
     private volatile bool _isTerminated;
 
+    /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with its own internal lock.</summary>
+    public SharedDeliveryQueue()
+        : this(onDrainComplete: null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with its own internal lock
+    /// and a callback that fires outside the lock after each drain cycle completes.
+    /// </summary>
+    public SharedDeliveryQueue(Action? onDrainComplete)
+    {
 #if NET9_0_OR_GREATER
-    /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class.</summary>
+        _gate = new Lock();
+#else
+        _gate = new object();
+#endif
+        _onDrainComplete = onDrainComplete;
+    }
+
+#if NET9_0_OR_GREATER
+    /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with a caller-provided lock.</summary>
     public SharedDeliveryQueue(Lock gate) => _gate = gate;
 #else
-    /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class.</summary>
+    /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with a caller-provided lock.</summary>
     public SharedDeliveryQueue(object gate) => _gate = gate;
 #endif
 
@@ -92,6 +113,17 @@ internal sealed class SharedDeliveryQueue
 
     internal void ExitLockAndDrain()
     {
+        // Same-thread reentrant: if we're already draining on this thread,
+        // deliver newly enqueued items inline. This preserves the same delivery
+        // order as Synchronize(lock) — child items emitted synchronously during
+        // parent delivery are delivered immediately, not deferred.
+        if (_isDelivering && _drainThreadId == Environment.CurrentManagedThreadId)
+        {
+            ExitLock();
+            DrainPending();
+            return;
+        }
+
         var shouldDrain = false;
         if (!_isDelivering && !_isTerminated)
         {
@@ -119,60 +151,96 @@ internal sealed class SharedDeliveryQueue
     {
         try
         {
-            while (true)
+            do
             {
-                IDrainable? active = null;
-                var isError = false;
-
-                lock (_gate)
+                if (!DrainPending())
                 {
-                    foreach (var s in _sources)
-                    {
-                        if (s.HasItems)
-                        {
-                            active = s;
-                            break;
-                        }
-                    }
-
-                    if (active is null)
-                    {
-                        _isDelivering = false;
-                        return;
-                    }
-
-                    isError = active.StageNext();
+                    return; // error terminated the queue
                 }
 
-                // Deliver outside lock
-                active.DeliverStaged();
-
-                // Errors terminate the entire queue AFTER delivery
-                if (isError)
+                if (_onDrainComplete is null)
                 {
-                    lock (_gate)
-                    {
-                        _isTerminated = true;
-                        _isDelivering = false;
-                        foreach (var s in _sources)
-                        {
-                            s.Clear();
-                        }
-                    }
-
-                    return;
+                    break;
                 }
+
+                _onDrainComplete();
             }
+            while (HasPendingItems());
         }
-        catch
+        finally
         {
-            lock (_gate)
+            using (AcquireReadLock())
             {
                 _isDelivering = false;
+                _drainThreadId = -1;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Delivers all pending items from all sub-queues, one at a time.
+    /// Uses <see cref="ReadOnlyScopedAccess"/> (not <c>lock</c>) so it works correctly both
+    /// from the outermost drain and from reentrant same-thread calls.
+    /// </summary>
+    /// <returns>True if completed normally; false if an error terminated the queue.</returns>
+    private bool DrainPending()
+    {
+        while (true)
+        {
+            IDrainable? active = null;
+            bool isError;
+
+            using (AcquireReadLock())
+            {
+                foreach (var s in _sources)
+                {
+                    if (s.HasItems)
+                    {
+                        active = s;
+                        break;
+                    }
+                }
+
+                if (active is null || _isTerminated)
+                {
+                    return !_isTerminated;
+                }
+
+                isError = active.StageNext();
             }
 
-            throw;
+            // Deliver outside lock
+            active.DeliverStaged();
+
+            if (isError)
+            {
+                using (AcquireReadLock())
+                {
+                    _isTerminated = true;
+                    foreach (var s in _sources)
+                    {
+                        s.Clear();
+                    }
+                }
+
+                return false;
+            }
         }
+    }
+
+    private bool HasPendingItems()
+    {
+        using var scope = AcquireReadLock();
+
+        foreach (var s in _sources)
+        {
+            if (s.HasItems)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Read-only scoped access. Disposing releases the gate without triggering delivery.</summary>
