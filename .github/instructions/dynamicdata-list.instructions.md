@@ -1,5 +1,5 @@
-﻿---
-applyTo: "src/DynamicData/**/*.cs"
+---
+applyTo: "src/DynamicData/List/**/*.cs"
 ---
 # DynamicData List Operators — Comprehensive Guide
 

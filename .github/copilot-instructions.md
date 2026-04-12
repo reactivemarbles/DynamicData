@@ -1,4 +1,4 @@
-﻿# DynamicData — AI Instructions
+# DynamicData — AI Instructions
 
 ## What is DynamicData?
 

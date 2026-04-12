@@ -1,4 +1,4 @@
-﻿---
+---
 applyTo: "src/DynamicData.Tests/List/**/*.cs"
 ---
 # Testing List Operators

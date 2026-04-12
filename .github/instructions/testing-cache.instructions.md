@@ -1,4 +1,4 @@
-﻿---
+---
 applyTo: "src/DynamicData.Tests/Cache/**/*.cs"
 ---
 # Testing Cache Operators
