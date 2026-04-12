@@ -24,9 +24,9 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     where TKey : notnull
     where TChild : notnull
 {
-    private readonly SharedDeliveryQueue _queue;
     private readonly KeyedDisposable<TKey> _childSubscriptions = new();
     private readonly SingleAssignmentDisposable _parentSubscription = new();
+    private readonly SharedDeliveryQueue _queue;
     private readonly IObserver<TObserver> _observer;
     private int _subscriptionCounter = 1;
     private bool _disposedValue;
