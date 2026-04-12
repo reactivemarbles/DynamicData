@@ -1,5 +1,5 @@
-﻿---
-applyTo: "src/DynamicData/**/*.cs"
+---
+applyTo: "src/DynamicData/Cache/**/*.cs"
 ---
 # DynamicData Cache Operators — Comprehensive Guide
 
