@@ -37,15 +37,20 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
         {
             if (!_disposedValue)
             {
-                IDisposable? old = null;
-                if (_disposables.TryGetValue(key, out var existing) && !ReferenceEquals(existing, disposable))
+                if (_disposables.TryGetValue(key, out var existing))
                 {
-                    old = existing;
+                    if (ReferenceEquals(existing, disposable))
+                    {
+                        return item;
+                    }
+
+                    _disposables[key] = disposable;
+                    existing.Dispose();
                 }
-
-                _disposables[key] = disposable;
-
-                old?.Dispose();
+                else
+                {
+                    _disposables[key] = disposable;
+                }
             }
             else
             {

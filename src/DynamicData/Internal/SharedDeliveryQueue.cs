@@ -21,7 +21,6 @@ internal sealed class SharedDeliveryQueue
     private readonly object _gate;
 #endif
 
-    private volatile bool _isDelivering;
     private int _drainThreadId = -1;
     private volatile bool _isTerminated;
     private bool _hasRemovedQueues;
@@ -65,7 +64,7 @@ internal sealed class SharedDeliveryQueue
     /// </summary>
     public void EnsureDeliveryComplete()
     {
-        lock (_gate)
+        using (AcquireReadLock())
         {
             _isTerminated = true;
             foreach (var s in _sources)
@@ -78,7 +77,7 @@ internal sealed class SharedDeliveryQueue
         }
 
         SpinWait spinner = default;
-        while (_isDelivering)
+        while (Volatile.Read(ref _drainThreadId) != -1)
             spinner.SpinOnce();
     }
 
@@ -121,7 +120,7 @@ internal sealed class SharedDeliveryQueue
         // deliver newly enqueued items inline. This preserves the same delivery
         // order as Synchronize(lock) — child items emitted synchronously during
         // parent delivery are delivered immediately, not deferred.
-        if (_isDelivering && _drainThreadId == Environment.CurrentManagedThreadId)
+        if (_drainThreadId == Environment.CurrentManagedThreadId)
         {
             ExitLock();
             DrainPending();
@@ -129,13 +128,12 @@ internal sealed class SharedDeliveryQueue
         }
 
         var shouldDrain = false;
-        if (!_isDelivering && !_isTerminated)
+        if (_drainThreadId == -1 && !_isTerminated)
         {
             foreach (var s in _sources)
             {
                 if (s.HasItems)
                 {
-                    _isDelivering = true;
                     _drainThreadId = Environment.CurrentManagedThreadId;
                     shouldDrain = true;
                     break;
@@ -175,7 +173,6 @@ internal sealed class SharedDeliveryQueue
         {
             using (AcquireReadLock())
             {
-                _isDelivering = false;
                 _drainThreadId = -1;
                 CompactRemovedQueues();
             }
@@ -186,13 +183,11 @@ internal sealed class SharedDeliveryQueue
     /// Delivers all pending items from all sub-queues, one at a time.
     /// Uses <see cref="ReadOnlyScopedAccess"/> (not <c>lock</c>) so it works correctly both
     /// from the outermost drain and from reentrant same-thread calls.
-    /// Sub-queues are iterated newest-first (LIFO). This is required for correctness
-    /// when <see cref="CacheParentSubscription{TParent,TKey,TChild,TObserver}"/> disposes
-    /// child subscriptions during parent delivery: child items must be fully delivered
-    /// before the parent can dispose them, because disposal stops the child's observer
-    /// and any undelivered items (including Removes) would be silently lost.
-    /// Child sub-queues are always created after the parent sub-queue, so LIFO
-    /// naturally processes children before parents.
+    /// Sub-queues are iterated newest-first (LIFO) so that newer sub-queues
+    /// (typically children) are drained before older ones (typically parents).
+    /// This ensures pending child items are fully delivered before a parent
+    /// delivery can dispose them, which would stop the child's observer and
+    /// silently lose any undelivered items.
     /// </summary>
     /// <returns>True if completed normally; false if an error terminated the queue.</returns>
     private bool DrainPending()
@@ -291,7 +286,7 @@ internal sealed class SharedDeliveryQueue
                     return false;
                 }
 
-                if (_owner._isDelivering)
+                if (_owner._drainThreadId != -1)
                 {
                     return true;
                 }
@@ -362,10 +357,10 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
     }
 
     /// <inheritdoc/>
-    public bool HasItems => !_isRemoved && _items.Count > 0;
+    bool IDrainable.HasItems => !_isRemoved && _items.Count > 0;
 
     /// <inheritdoc/>
-    public bool IsRemoved => _isRemoved;
+    bool IDrainable.IsRemoved => _isRemoved;
 
     /// <summary>Acquires the parent gate. Disposing releases the lock and triggers drain.</summary>
     public ScopedAccess AcquireLock() => new(this);
@@ -403,7 +398,7 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
     }
 
     /// <inheritdoc/>
-    public bool StageNext()
+    bool IDrainable.StageNext()
     {
         _staged = _items.Dequeue();
 
@@ -413,14 +408,14 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
     }
 
     /// <inheritdoc/>
-    public void DeliverStaged()
+    void IDrainable.DeliverStaged()
     {
         _staged.Accept(_observer);
         _staged = default;
     }
 
     /// <inheritdoc/>
-    public void Clear() => _items.Clear();
+    void IDrainable.Clear() => _items.Clear();
 
     private void EnqueueItem(Notification<T> item)
     {

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -33,9 +33,9 @@ public class SharedDeliveryQueueFixture
 
         using (var scope = sub.AcquireLock())
         {
-            scope.Enqueue(1);
-            scope.Enqueue(2);
-            scope.Enqueue(3);
+            scope.EnqueueNext(1);
+            scope.EnqueueNext(2);
+            scope.EnqueueNext(3);
         }
 
         delivered.Should().Equal(1, 2, 3);
@@ -53,12 +53,12 @@ public class SharedDeliveryQueueFixture
 
         using (var scope1 = sub1.AcquireLock())
         {
-            scope1.Enqueue(1);
+            scope1.EnqueueNext(1);
         }
 
         using (var scope2 = sub2.AcquireLock())
         {
-            scope2.Enqueue("hello");
+            scope2.EnqueueNext("hello");
         }
 
         delivered.Should().Equal("int:1", "str:hello");
@@ -77,7 +77,7 @@ public class SharedDeliveryQueueFixture
 
         using (var scope1 = sub1.AcquireLock())
         {
-            scope1.Enqueue(1);
+            scope1.EnqueueNext(1);
             scope1.EnqueueError(new InvalidOperationException("boom"));
         }
 
@@ -86,7 +86,7 @@ public class SharedDeliveryQueueFixture
         // Further enqueues should be ignored
         using (var scope2 = sub2.AcquireLock())
         {
-            scope2.Enqueue("ignored");
+            scope2.EnqueueNext("ignored");
         }
 
         delivered1.Should().Equal(1);
@@ -107,7 +107,7 @@ public class SharedDeliveryQueueFixture
 
         using (var scope1 = sub1.AcquireLock())
         {
-            scope1.Enqueue(1);
+            scope1.EnqueueNext(1);
             scope1.EnqueueCompleted();
         }
 
@@ -117,7 +117,7 @@ public class SharedDeliveryQueueFixture
         // Other sub-queue should still work
         using (var scope2 = sub2.AcquireLock())
         {
-            scope2.Enqueue("still alive");
+            scope2.EnqueueNext("still alive");
         }
 
         delivered2.Should().Equal("still alive");
@@ -132,7 +132,7 @@ public class SharedDeliveryQueueFixture
 
         using (var scope = sub.AcquireLock())
         {
-            scope.Enqueue(1);
+            scope.EnqueueNext(1);
         }
 
         queue.EnsureDeliveryComplete();
@@ -159,7 +159,7 @@ public class SharedDeliveryQueueFixture
             for (var i = 0; i < itemsPerThread; i++)
             {
                 using var scope = subQueues[t].AcquireLock();
-                scope.Enqueue(i);
+                scope.EnqueueNext(i);
             }
         })).ToArray();
 

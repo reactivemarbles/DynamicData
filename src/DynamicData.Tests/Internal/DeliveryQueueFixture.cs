@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,7 +57,7 @@ public class DeliveryQueueFixture
     private static void EnqueueAndDeliver<T>(DeliveryQueue<T> queue, T item)
     {
         using var scope = queue.AcquireLock();
-        scope.Enqueue(item);
+        scope.EnqueueNext(item);
     }
 
     private static void TriggerDelivery<T>(DeliveryQueue<T> queue)
@@ -84,9 +84,9 @@ public class DeliveryQueueFixture
 
         using (var scope = queue.AcquireLock())
         {
-            scope.Enqueue("A");
-            scope.Enqueue("B");
-            scope.Enqueue("C");
+            scope.EnqueueNext("A");
+            scope.EnqueueNext("B");
+            scope.EnqueueNext("C");
         }
 
         observer.Items.Should().Equal("A", "B", "C");
@@ -179,7 +179,7 @@ public class DeliveryQueueFixture
             if (observer.Items.Count == 1)
             {
                 using var scope = q!.AcquireLock();
-                scope.Enqueue("B");
+                scope.EnqueueNext("B");
             }
         });
 
@@ -209,7 +209,7 @@ public class DeliveryQueueFixture
             if (item == "A")
             {
                 using var scope = q!.AcquireLock();
-                scope.Enqueue("B");
+                scope.EnqueueNext("B");
             }
 
             callDepth--;
@@ -261,8 +261,8 @@ public class DeliveryQueueFixture
         var act = () =>
         {
             using var scope = queue.AcquireLock();
-            scope.Enqueue("A");
-            scope.Enqueue("B");
+            scope.EnqueueNext("A");
+            scope.EnqueueNext("B");
         };
 
         act.Should().Throw<InvalidOperationException>();
@@ -281,9 +281,9 @@ public class DeliveryQueueFixture
 
         using (var scope = queue.AcquireLock())
         {
-            scope.Enqueue("A");
+            scope.EnqueueNext("A");
             scope.EnqueueCompleted();
-            scope.Enqueue("B"); // should be ignored after terminal
+            scope.EnqueueNext("B"); // should be ignored after terminal
         }
 
         observer.Items.Should().Equal("A");
@@ -300,9 +300,9 @@ public class DeliveryQueueFixture
 
         using (var scope = queue.AcquireLock())
         {
-            scope.Enqueue("A");
+            scope.EnqueueNext("A");
             scope.EnqueueError(error);
-            scope.Enqueue("B"); // should be ignored after terminal
+            scope.EnqueueNext("B"); // should be ignored after terminal
         }
 
         observer.Items.Should().Equal("A");
@@ -445,8 +445,8 @@ public class DeliveryQueueFixture
                 // While delivering first item, enqueue more then terminate
                 using (var scope = q!.AcquireLock())
                 {
-                    scope.Enqueue("B");
-                    scope.Enqueue("C");
+                    scope.EnqueueNext("B");
+                    scope.EnqueueNext("C");
                 }
 
                 q!.EnsureDeliveryComplete(); // re-entrant — should not spin
@@ -528,10 +528,10 @@ public class DeliveryQueueFixture
 
         using (var scope = queue.AcquireLock())
         {
-            scope.Enqueue("A");
-            scope.Enqueue("B");
+            scope.EnqueueNext("A");
+            scope.EnqueueNext("B");
             scope.EnqueueCompleted();
-            scope.Enqueue("C"); // should be ignored — after terminal
+            scope.EnqueueNext("C"); // should be ignored — after terminal
         }
 
         observer.Items.Should().Equal("A", "B");
@@ -548,9 +548,9 @@ public class DeliveryQueueFixture
 
         using (var scope = queue.AcquireLock())
         {
-            scope.Enqueue("A");
+            scope.EnqueueNext("A");
             scope.EnqueueError(error);
-            scope.Enqueue("B"); // should be ignored
+            scope.EnqueueNext("B"); // should be ignored
         }
 
         observer.Items.Should().Equal("A");

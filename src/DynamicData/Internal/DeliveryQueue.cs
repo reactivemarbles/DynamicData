@@ -11,6 +11,7 @@ namespace DynamicData.Internal;
 /// </summary>
 /// <typeparam name="T">The value type delivered via OnNext.</typeparam>
 internal sealed class DeliveryQueue<T> : IObserver<T>
+    where T : notnull
 {
     private readonly Queue<Notification<T>> _queue = new();
 
@@ -21,7 +22,6 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
 #endif
 
     private IObserver<T>? _observer;
-    private volatile bool _isDelivering;
     private int _drainThreadId = -1;
     private volatile bool _isTerminated;
 
@@ -84,7 +84,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
     /// </summary>
     public void EnsureDeliveryComplete()
     {
-        lock (_gate)
+        using (AcquireReadLock())
         {
             _isTerminated = true;
             _queue.Clear();
@@ -97,7 +97,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
         }
 
         SpinWait spinner = default;
-        while (_isDelivering)
+        while (Volatile.Read(ref _drainThreadId) != -1)
             spinner.SpinOnce();
     }
 
@@ -165,12 +165,11 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
 
         bool TryStartDelivery()
         {
-            if (_isDelivering || _queue.Count == 0)
+            if (_drainThreadId != -1 || _queue.Count == 0)
             {
                 return false;
             }
 
-            _isDelivering = true;
             _drainThreadId = Environment.CurrentManagedThreadId;
             return true;
         }
@@ -183,11 +182,10 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
                 {
                     Notification<T> notification;
 
-                    lock (_gate)
+                    using (AcquireReadLock())
                     {
                         if (_queue.Count == 0 || _isTerminated)
                         {
-                            _isDelivering = false;
                             _drainThreadId = -1;
                             return;
                         }
@@ -208,9 +206,8 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
 
                     if (notification.IsTerminal)
                     {
-                        lock (_gate)
+                        using (AcquireReadLock())
                         {
-                            _isDelivering = false;
                             _drainThreadId = -1;
                         }
 
@@ -220,9 +217,8 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
             }
             catch
             {
-                lock (_gate)
+                using (AcquireReadLock())
                 {
-                    _isDelivering = false;
                     _drainThreadId = -1;
                 }
 
@@ -282,7 +278,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
 
         /// <summary>Gets whether there are notifications pending delivery.</summary>
         public readonly bool HasPending =>
-            _owner is not null && (_owner._queue.Count > 0 || _owner._isDelivering);
+            _owner is not null && (_owner._queue.Count > 0 || _owner._drainThreadId != -1);
 
         /// <summary>Releases the gate lock.</summary>
         public void Dispose()
