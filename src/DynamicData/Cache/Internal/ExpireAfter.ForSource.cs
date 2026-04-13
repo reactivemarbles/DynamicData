@@ -161,11 +161,18 @@ internal static partial class ExpireAfter
                         {
                             _expirationDueTimesByKey.Remove(proposedExpiration.Key);
 
-                            _removedItemsBuffer.Add(new(
-                                key: proposedExpiration.Key,
-                                value: updater.Lookup(proposedExpiration.Key).Value));
+                            // The item may have been removed or updated by another thread between when
+                            // this expiration was scheduled and when it fired. Check that the item is
+                            // still present and still has an expiration before removing it.
+                            var lookup = updater.Lookup(proposedExpiration.Key);
+                            if (lookup.HasValue && _timeSelector.Invoke(lookup.Value) is not null)
+                            {
+                                _removedItemsBuffer.Add(new(
+                                    key: proposedExpiration.Key,
+                                    value: lookup.Value));
 
-                            updater.RemoveKey(proposedExpiration.Key);
+                                updater.RemoveKey(proposedExpiration.Key);
+                            }
                         }
                     }
                     _proposedExpirationsQueue.RemoveRange(0, proposedExpirationIndex);
@@ -273,7 +280,7 @@ internal static partial class ExpireAfter
                                 {
                                     if (_timeSelector.Invoke(change.Current) is { } expireAfter)
                                     {
-                                        haveExpirationsChanged = TrySetExpiration(
+                                        haveExpirationsChanged |= TrySetExpiration(
                                             key: change.Key,
                                             dueTime: now + expireAfter);
                                     }
