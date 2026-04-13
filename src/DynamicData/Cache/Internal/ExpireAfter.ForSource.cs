@@ -161,10 +161,9 @@ internal static partial class ExpireAfter
                         {
                             _expirationDueTimesByKey.Remove(proposedExpiration.Key);
 
-                            // Re-check the item still exists and still has an expiration.
-                            // With deferred notification delivery, _expirationDueTimesByKey
-                            // can be stale if the item was updated/removed after the
-                            // expiration was scheduled but before the notification was delivered.
+                            // The item may have been removed or updated by another thread between when
+                            // this expiration was scheduled and when it fired. Check that the item is
+                            // still present and still has an expiration before removing it.
                             var lookup = updater.Lookup(proposedExpiration.Key);
                             if (lookup.HasValue && _timeSelector.Invoke(lookup.Value) is not null)
                             {
@@ -281,7 +280,7 @@ internal static partial class ExpireAfter
                                 {
                                     if (_timeSelector.Invoke(change.Current) is { } expireAfter)
                                     {
-                                        haveExpirationsChanged = TrySetExpiration(
+                                        haveExpirationsChanged |= TrySetExpiration(
                                             key: change.Key,
                                             dueTime: now + expireAfter);
                                     }
