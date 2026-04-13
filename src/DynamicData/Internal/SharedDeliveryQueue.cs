@@ -183,11 +183,12 @@ internal sealed class SharedDeliveryQueue
     /// Delivers all pending items from all sub-queues, one at a time.
     /// Uses <see cref="ReadOnlyScopedAccess"/> (not <c>lock</c>) so it works correctly both
     /// from the outermost drain and from reentrant same-thread calls.
-    /// Sub-queues are iterated newest-first (LIFO) so that newer sub-queues
-    /// (typically children) are drained before older ones (typically parents).
-    /// This ensures pending child items are fully delivered before a parent
-    /// delivery can dispose them, which would stop the child's observer and
-    /// silently lose any undelivered items.
+    /// Sub-queues are iterated newest-first (LIFO). When one sub-queue's delivery
+    /// can dispose another (parent disposing a child), the child must drain first
+    /// to prevent pending child notifications from being silently lost. Newer
+    /// sub-queues are always children of older ones, so LIFO provides this guarantee.
+    /// For peer sub-queues (no disposal relationship), iteration order does not
+    /// affect correctness because all pending items are drained in the same pass.
     /// </summary>
     /// <returns>True if completed normally; false if an error terminated the queue.</returns>
     private bool DrainPending()
@@ -343,6 +344,7 @@ internal interface IDrainable
 /// which acquires the parent's lock.
 /// </summary>
 internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposable
+    where T : notnull
 {
     private readonly Queue<Notification<T>> _items = new();
     private readonly SharedDeliveryQueue _parent;
