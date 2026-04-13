@@ -31,8 +31,7 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
                         {
                             switch (change.Reason)
                             {
-                                case ChangeReason.Add:
-                                case ChangeReason.Update:
+                                case ChangeReason.Add or ChangeReason.Update:
                                     tracked.AddIfDisposable(change.Key, change.Current);
                                     break;
 

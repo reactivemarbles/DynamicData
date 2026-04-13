@@ -38,7 +38,7 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
         changes.ForEach(
             change =>
             {
-                if (change.Reason == ChangeReason.Remove)
+                if (change.Reason is ChangeReason.Remove)
                 {
                     _removeAction(change.Current, change.Key);
                 }

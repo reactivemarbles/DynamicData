@@ -4,7 +4,6 @@
 
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -41,21 +40,12 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
         });
 
     // Can optimize for the Add case because that's the only one that applies
-#if NET9_0_OR_GREATER
     private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, SharedDeliveryQueue queue) =>
         new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.IgnoreSameReferenceUpdate().SynchronizeSafe(queue)));
 
     // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
     private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, SharedDeliveryQueue queue) =>
         source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index, queue) }));
-#else
-    private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, SharedDeliveryQueue queue) =>
-        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.IgnoreSameReferenceUpdate().SynchronizeSafe(queue)));
-
-    // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
-    private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, SharedDeliveryQueue queue) =>
-        source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index, queue) }));
-#endif
 
     // Create a ChangeSet Observable with a single event that adds all the values in the enum (and then completes, maybe)
     private static IObservable<IObservable<IChangeSet<TObject, TKey>>> CreateObservable(IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, bool completable, IScheduler? scheduler = null)

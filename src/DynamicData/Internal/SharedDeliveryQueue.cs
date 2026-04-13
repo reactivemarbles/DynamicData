@@ -181,6 +181,13 @@ internal sealed class SharedDeliveryQueue
     /// Delivers all pending items from all sub-queues, one at a time.
     /// Uses <see cref="ReadOnlyScopedAccess"/> (not <c>lock</c>) so it works correctly both
     /// from the outermost drain and from reentrant same-thread calls.
+    /// Sub-queues are iterated newest-first (LIFO). This is required for correctness
+    /// when <see cref="CacheParentSubscription{TParent,TKey,TChild,TObserver}"/> disposes
+    /// child subscriptions during parent delivery: child items must be fully delivered
+    /// before the parent can dispose them, because disposal stops the child's observer
+    /// and any undelivered items (including Removes) would be silently lost.
+    /// Child sub-queues are always created after the parent sub-queue, so LIFO
+    /// naturally processes children before parents.
     /// </summary>
     /// <returns>True if completed normally; false if an error terminated the queue.</returns>
     private bool DrainPending()
@@ -192,11 +199,11 @@ internal sealed class SharedDeliveryQueue
 
             using (AcquireReadLock())
             {
-                foreach (var s in _sources)
+                for (var i = _sources.Count - 1; i >= 0; i--)
                 {
-                    if (s.HasItems)
+                    if (_sources[i].HasItems)
                     {
-                        active = s;
+                        active = _sources[i];
                         break;
                     }
                 }

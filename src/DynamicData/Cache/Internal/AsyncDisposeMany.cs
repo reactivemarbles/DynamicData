@@ -7,8 +7,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
-using DynamicData.Internal;
-
 namespace DynamicData.Cache.Internal;
 
 #if SUPPORTS_ASYNC_DISPOSABLE

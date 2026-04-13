@@ -161,11 +161,19 @@ internal static partial class ExpireAfter
                         {
                             _expirationDueTimesByKey.Remove(proposedExpiration.Key);
 
-                            _removedItemsBuffer.Add(new(
-                                key: proposedExpiration.Key,
-                                value: updater.Lookup(proposedExpiration.Key).Value));
+                            // Re-check the item still exists and still has an expiration.
+                            // With deferred notification delivery, _expirationDueTimesByKey
+                            // can be stale if the item was updated/removed after the
+                            // expiration was scheduled but before the notification was delivered.
+                            var lookup = updater.Lookup(proposedExpiration.Key);
+                            if (lookup.HasValue && _timeSelector.Invoke(lookup.Value) is not null)
+                            {
+                                _removedItemsBuffer.Add(new(
+                                    key: proposedExpiration.Key,
+                                    value: lookup.Value));
 
-                            updater.RemoveKey(proposedExpiration.Key);
+                                updater.RemoveKey(proposedExpiration.Key);
+                            }
                         }
                     }
                     _proposedExpirationsQueue.RemoveRange(0, proposedExpirationIndex);

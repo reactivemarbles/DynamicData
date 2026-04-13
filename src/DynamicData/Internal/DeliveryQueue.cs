@@ -26,6 +26,20 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
     private volatile bool _isTerminated;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class with its own internal lock.
+    /// </summary>
+    /// <param name="observer">The observer that receives delivered items.</param>
+    public DeliveryQueue(IObserver<T> observer)
+    {
+#if NET9_0_OR_GREATER
+        _gate = new Lock();
+#else
+        _gate = new object();
+#endif
+        _observer = observer;
+    }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class.
     /// </summary>
     /// <param name="gate">The lock shared with the caller.</param>

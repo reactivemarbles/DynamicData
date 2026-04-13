@@ -6,8 +6,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
-using DynamicData.Internal;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class MergeMany<TObject, TKey, TDestination>
@@ -36,8 +34,7 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
             observer =>
             {
                 var counter = new SubscriptionCounter();
-                var locker = InternalEx.NewLock();
-                var queue = new DeliveryQueue<TDestination>(locker, observer);
+                var queue = new DeliveryQueue<TDestination>(observer);
                 var disposable = _source.Concat(counter.DeferCleanup)
                                                 .SubscribeMany((t, key) =>
                                                 {
