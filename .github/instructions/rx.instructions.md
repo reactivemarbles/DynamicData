@@ -407,7 +407,96 @@ cd.Dispose(); // triggers cancellation
 
 ## Writing Custom Operators
 
+### Composition First — Observable.Create is a Last Resort
+
+**The Rx contracts are axioms, not guidelines.** `Merge` subscribes sequentially. `Defer` evaluates at subscription time. `Do` fires synchronously during delivery. `Concat` subscribes to the second source only after the first completes. These guarantees are unconditional — they hold in every case, on every scheduler, under every threading model. If they didn't, nothing in Rx would work.
+
+**Trust the contracts completely.** When you compose operators, you can reason about ordering, state, and lifecycle *because* the contracts are absolute. The moment you doubt them and add "safety" wrappers, you've abandoned the very thing that makes Rx code correct by construction.
+
+**Before reaching for `Observable.Create`, ask: can this be expressed as a composition of existing operators?** Rx operators already handle subscription lifecycle, error propagation, disposal, and serialization. Manual observer forwarding inside `Observable.Create` reimplements all of that — and introduces bugs that the operators would have prevented.
+
+**The smell:** If you're writing `observer.OnNext(x)` / `observer.OnError(ex)` / `observer.OnCompleted()` inside `Observable.Create`, you're manually reimplementing what `Subscribe` already does. Stop and look for the composition.
+
+```csharp
+// ❌ WRONG: imperative Observable.Create with manual forwarding
+// This reimplements Subscribe, adds boilerplate, and is harder to reason about.
+return Observable.Create<Optional<TObject>>(observer =>
+{
+    var seenValue = false;
+    var sub = source.ToObservableOptional(key)
+        .Subscribe(
+            value =>
+            {
+                seenValue = true;
+                observer.OnNext(value);
+            },
+            observer.OnError,
+            observer.OnCompleted);
+
+    if (!seenValue)
+        observer.OnNext(Optional.None<TObject>());
+
+    return sub;
+});
+
+// ✅ RIGHT: declarative composition using existing operators
+// Each operator does one thing. The intent is immediately clear.
+return Observable.Defer(() =>
+{
+    var seenValue = false;
+    return source.ToObservableOptional(key)
+        .Do(_ => seenValue = true)
+        .Merge(Observable.Defer(() => seenValue
+            ? Observable.Empty<Optional<TObject>>()
+            : Observable.Return(Optional.None<TObject>())));
+});
+```
+
+**Why the composition wins:**
+- `Defer` creates per-subscription state (the `seenValue` bool) — no shared mutable state
+- `Do` captures a side effect without altering the stream — no manual forwarding
+- `Merge` with inner `Defer` evaluates the condition *after* the synchronous subscription phase — the `Defer` factory runs when `Merge` subscribes to its second source, which happens after the first source's synchronous emissions
+- Error propagation, completion, and disposal are all handled by the operators — zero manual wiring
+
+**When Observable.Create IS appropriate:**
+- You need to manage non-Rx resources (event handlers, timers, native resources) tied to subscription lifetime
+- You're building a genuinely novel source (not transforming existing observables)
+- You need fine-grained control over when/how disposal cascades
+- The operator maintains complex mutable state that doesn't map to any existing operator's semantics
+
+Even then, prefer `Observable.Using` for resource lifecycle and `Observable.Defer` for per-subscription state before reaching for `Observable.Create`.
+
+### The Defer Pattern — Per-Subscription State Without Observable.Create
+
+`Observable.Defer` is the key to per-subscription mutable state in a purely compositional style:
+
+```csharp
+// Per-subscription counter without Observable.Create
+public static IObservable<(T Item, int Index)> WithIndex<T>(this IObservable<T> source) =>
+    Observable.Defer(() =>
+    {
+        var index = 0;
+        return source.Select(item => (item, index++));
+    });
+
+// Per-subscription flag for conditional behavior
+public static IObservable<T> EmitDefaultIfEmpty<T>(this IObservable<T> source, T defaultValue) =>
+    Observable.Defer(() =>
+    {
+        var hasEmitted = false;
+        return source
+            .Do(_ => hasEmitted = true)
+            .Concat(Observable.Defer(() => hasEmitted
+                ? Observable.Empty<T>()
+                : Observable.Return(defaultValue)));
+    });
+```
+
+Each subscription gets its own `index` / `hasEmitted` — cold observable semantics, no shared state, no locking.
+
 ### The Observable.Create Pattern
+
+When you genuinely need `Observable.Create`, follow this structure:
 
 ```csharp
 public static IObservable<TResult> MyOperator<TSource, TResult>(
