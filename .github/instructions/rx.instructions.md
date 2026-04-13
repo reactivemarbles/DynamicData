@@ -409,7 +409,11 @@ cd.Dispose(); // triggers cancellation
 
 ### Composition First — Observable.Create is a Last Resort
 
-**Before reaching for `Observable.Create`, ask: can this be expressed as a composition of existing operators?** Rx operators already handle subscription lifecycle, error propagation, disposal, and serialization. Manual observer forwarding inside `Observable.Create` reimplements all of that — poorly.
+**The Rx contracts are axioms, not guidelines.** `Merge` subscribes sequentially. `Defer` evaluates at subscription time. `Do` fires synchronously during delivery. `Concat` subscribes to the second source only after the first completes. These guarantees are unconditional — they hold in every case, on every scheduler, under every threading model. If they didn't, nothing in Rx would work.
+
+**Trust the contracts completely.** When you compose operators, you can reason about ordering, state, and lifecycle *because* the contracts are absolute. The moment you doubt them and add "safety" wrappers, you've abandoned the very thing that makes Rx code correct by construction.
+
+**Before reaching for `Observable.Create`, ask: can this be expressed as a composition of existing operators?** Rx operators already handle subscription lifecycle, error propagation, disposal, and serialization. Manual observer forwarding inside `Observable.Create` reimplements all of that — and introduces bugs that the operators would have prevented.
 
 **The smell:** If you're writing `observer.OnNext(x)` / `observer.OnError(ex)` / `observer.OnCompleted()` inside `Observable.Create`, you're manually reimplementing what `Subscribe` already does. Stop and look for the composition.
 
