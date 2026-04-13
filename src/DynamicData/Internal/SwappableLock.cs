@@ -4,6 +4,40 @@
 
 namespace DynamicData;
 
+#if NET9_0_OR_GREATER
+
+internal ref struct SwappableLock
+{
+    public static SwappableLock CreateAndEnter(Lock gate)
+    {
+        gate.Enter();
+        return new SwappableLock { _gate = gate };
+    }
+
+    public void SwapTo(Lock gate)
+    {
+        if (_gate is null)
+            throw new InvalidOperationException("Lock is not initialized");
+
+        gate.Enter();
+        _gate.Exit();
+        _gate = gate;
+    }
+
+    public void Dispose()
+    {
+        if (_gate is not null)
+        {
+            _gate.Exit();
+            _gate = null;
+        }
+    }
+
+    private Lock? _gate;
+}
+
+#else
+
 internal ref struct SwappableLock
 {
     public static SwappableLock CreateAndEnter(object gate)
@@ -18,73 +52,25 @@ internal ref struct SwappableLock
         return result;
     }
 
-#if NET9_0_OR_GREATER
-    public static SwappableLock CreateAndEnter(Lock gate)
-    {
-        gate.Enter();
-        return new SwappableLock() { _lockGate = gate };
-    }
-#endif
-
     public void SwapTo(object gate)
     {
-#if NET9_0_OR_GREATER
-        if (_gate is null && _lockGate is null)
-            throw new InvalidOperationException("Lock is not initialized");
-#else
         if (_gate is null)
             throw new InvalidOperationException("Lock is not initialized");
-#endif
 
         var hasNewLock = false;
         Monitor.Enter(gate, ref hasNewLock);
 
-#if NET9_0_OR_GREATER
-        if (_lockGate is not null)
-        {
-            _lockGate.Exit();
-            _lockGate = null;
-        }
-        else
-#endif
         if (_hasLock)
         {
-            Monitor.Exit(_gate!);
+            Monitor.Exit(_gate);
         }
 
         _hasLock = hasNewLock;
         _gate = gate;
     }
 
-#if NET9_0_OR_GREATER
-    public void SwapTo(Lock gate)
-    {
-        if (_lockGate is null && _gate is null)
-            throw new InvalidOperationException("Lock is not initialized");
-
-        gate.Enter();
-
-        if (_lockGate is not null)
-            _lockGate.Exit();
-        else if (_hasLock)
-            Monitor.Exit(_gate!);
-
-        _lockGate = gate;
-        _hasLock = false;
-        _gate = null;
-    }
-#endif
-
     public void Dispose()
     {
-#if NET9_0_OR_GREATER
-        if (_lockGate is not null)
-        {
-            _lockGate.Exit();
-            _lockGate = null;
-        }
-        else
-#endif
         if (_hasLock && (_gate is not null))
         {
             Monitor.Exit(_gate);
@@ -95,8 +81,6 @@ internal ref struct SwappableLock
 
     private bool _hasLock;
     private object? _gate;
-
-#if NET9_0_OR_GREATER
-    private Lock? _lockGate;
-#endif
 }
+
+#endif
