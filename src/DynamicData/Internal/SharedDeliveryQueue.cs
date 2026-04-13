@@ -374,7 +374,7 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
     public void OnNext(T value)
     {
         using var scope = AcquireLock();
-        scope.Enqueue(value);
+        scope.EnqueueNext(value);
     }
 
     /// <summary>Enqueues an OnError notification via the lock, then drains.</summary>
@@ -406,7 +406,10 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
     public bool StageNext()
     {
         _staged = _items.Dequeue();
-        return _staged.Error is not null;
+
+        // Errors are fatal to the entire queue and terminate all sub-queues.
+        // Completions are scoped to a single sub-queue and delivered normally.
+        return _staged.IsError;
     }
 
     /// <inheritdoc/>
@@ -441,13 +444,13 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
         }
 
         /// <summary>Enqueues an OnNext item.</summary>
-        public readonly void Enqueue(T item) => _owner?.EnqueueItem(Notification<T>.Next(item));
+        public readonly void EnqueueNext(T item) => _owner?.EnqueueItem(Notification<T>.CreateNext(item));
 
         /// <summary>Enqueues a terminal error.</summary>
-        public readonly void EnqueueError(Exception error) => _owner?.EnqueueItem(Notification<T>.OnError(error));
+        public readonly void EnqueueError(Exception error) => _owner?.EnqueueItem(Notification<T>.CreateError(error));
 
         /// <summary>Enqueues a terminal completion.</summary>
-        public readonly void EnqueueCompleted() => _owner?.EnqueueItem(Notification<T>.Completed);
+        public readonly void EnqueueCompleted() => _owner?.EnqueueItem(Notification<T>.CreateCompleted());
 
         /// <summary>Releases the parent gate lock and delivers pending items.</summary>
         public void Dispose()

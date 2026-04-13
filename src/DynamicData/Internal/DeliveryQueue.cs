@@ -116,7 +116,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
     public void OnNext(T value)
     {
         using var scope = AcquireLock();
-        scope.Enqueue(value);
+        scope.EnqueueNext(value);
     }
 
     /// <summary>Enqueues an OnError notification via the lock, then drains.</summary>
@@ -245,13 +245,13 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
         }
 
         /// <summary>Enqueues an OnNext notification.</summary>
-        public readonly void Enqueue(T value) => _owner?.EnqueueNotification(Notification<T>.Next(value));
+        public readonly void EnqueueNext(T value) => _owner?.EnqueueNotification(Notification<T>.CreateNext(value));
 
         /// <summary>Enqueues an OnError notification (terminal).</summary>
-        public readonly void EnqueueError(Exception error) => _owner?.EnqueueNotification(Notification<T>.OnError(error));
+        public readonly void EnqueueError(Exception error) => _owner?.EnqueueNotification(Notification<T>.CreateError(error));
 
         /// <summary>Enqueues an OnCompleted notification (terminal).</summary>
-        public readonly void EnqueueCompleted() => _owner?.EnqueueNotification(Notification<T>.Completed);
+        public readonly void EnqueueCompleted() => _owner?.EnqueueNotification(Notification<T>.CreateCompleted());
 
         /// <summary>Releases the gate lock and delivers pending items.</summary>
         public void Dispose()

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -63,7 +63,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
                 if (changes is not null)
                 {
-                    notifications.Enqueue(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+                    notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
                 }
             },
             NotifyError,
@@ -194,7 +194,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         if (changes is not null && _editLevel == 0)
         {
-            notifications.Enqueue(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+            notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
         }
     }
 
@@ -221,7 +221,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         if (changes is not null && _editLevel == 0)
         {
-            notifications.Enqueue(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+            notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
         }
     }
 
@@ -331,7 +331,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         if (_suspensionTracker.Value.ResumeCount() && _countChanged.IsValueCreated)
         {
-            notifications.Enqueue(new CacheUpdate(null, _readerWriter.Count));
+            notifications.EnqueueNext(new CacheUpdate(null, _readerWriter.Count));
         }
     }
 
@@ -346,7 +346,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             (var changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
             if (changes is not null)
             {
-                notifications.Enqueue(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+                notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
             }
         }
 

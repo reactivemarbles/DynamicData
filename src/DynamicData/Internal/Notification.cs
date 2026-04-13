@@ -11,12 +11,6 @@ namespace DynamicData.Internal;
 internal readonly struct Notification<T>
     where T : notnull
 {
-    /// <summary>The value for OnNext notifications.</summary>
-    public readonly Optional<T> Value;
-
-    /// <summary>The exception for OnError notifications.</summary>
-    public readonly Exception? Error;
-
     private Notification(Optional<T> value, Exception? error)
     {
         Value = value;
@@ -24,17 +18,26 @@ internal readonly struct Notification<T>
     }
 
     /// <summary>Creates an OnNext notification.</summary>
-    public static Notification<T> Next(T value) => new(value, null);
+    public static Notification<T> CreateNext(T value) => new(value, null);
 
     /// <summary>Creates an OnError notification (terminal).</summary>
-    public static Notification<T> OnError(Exception error)
+    public static Notification<T> CreateError(Exception error)
     {
         error.ThrowArgumentNullExceptionIfNull(nameof(error));
         return new(Optional.None<T>(), error);
     }
 
     /// <summary>Creates an OnCompleted notification (terminal).</summary>
-    public static readonly Notification<T> Completed = new(Optional.None<T>(), null);
+    public static Notification<T> CreateCompleted() => new(Optional.None<T>(), null);
+
+    /// <summary>Gets the value for OnNext notifications.</summary>
+    public Optional<T> Value { get; }
+
+    /// <summary>Gets the exception for OnError notifications.</summary>
+    public Exception? Error { get; }
+
+    /// <summary>Gets whether this is an OnError notification.</summary>
+    public bool IsError => Error is not null;
 
     /// <summary>Gets whether this is a terminal notification.</summary>
     public bool IsTerminal => !Value.HasValue;

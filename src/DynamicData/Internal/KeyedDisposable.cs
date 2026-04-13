@@ -35,22 +35,22 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
     {
         if (item is IDisposable disposable)
         {
-            IDisposable? old = null;
             if (!_disposedValue)
             {
+                IDisposable? old = null;
                 if (_disposables.TryGetValue(key, out var existing) && !ReferenceEquals(existing, disposable))
                 {
                     old = existing;
                 }
 
                 _disposables[key] = disposable;
+
+                old?.Dispose();
             }
             else
             {
                 disposable.Dispose();
             }
-
-            old?.Dispose();
         }
         else
         {
@@ -78,37 +78,27 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
 
     public void Dispose()
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
-    }
-
-    private void Dispose(bool disposing)
-    {
         if (!_disposedValue)
         {
             _disposedValue = true;
-            if (disposing)
+            List<Exception>? errors = null;
+            foreach (var d in _disposables.Values)
             {
-                List<Exception>? errors = null;
-                foreach (var d in _disposables.Values)
+                try
                 {
-                    try
-                    {
-                        d.Dispose();
-                    }
-                    catch (Exception ex)
-                    {
-                        (errors ??= []).Add(ex);
-                    }
+                    d.Dispose();
                 }
-
-                _disposables.Clear();
-
-                if (errors is { Count: > 0 })
+                catch (Exception ex)
                 {
-                    throw new AggregateException(errors);
+                    (errors ??= []).Add(ex);
                 }
+            }
+
+            _disposables.Clear();
+
+            if (errors is { Count: > 0 })
+            {
+                throw new AggregateException(errors);
             }
         }
     }

@@ -22,13 +22,8 @@ internal static class SynchronizeSafeExtensions
         return Observable.Create<T>(observer =>
         {
             var subQueue = queue.CreateQueue(observer);
-            var sourceSubscription = source.SubscribeSafe(subQueue);
 
-            return Disposable.Create(() =>
-            {
-                sourceSubscription.Dispose();
-                subQueue.Dispose();
-            });
+            return new CompositeDisposable(source.SubscribeSafe(subQueue), subQueue);
         });
     }
 
