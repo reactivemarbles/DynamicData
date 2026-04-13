@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Internal;
@@ -21,23 +22,13 @@ internal static class SynchronizeSafeExtensions
         return Observable.Create<T>(observer =>
         {
             var subQueue = queue.CreateQueue(observer);
+            var sourceSubscription = source.SubscribeSafe(subQueue);
 
-            return source.SubscribeSafe(
-                item =>
-                {
-                    using var scope = subQueue.AcquireLock();
-                    scope.Enqueue(item);
-                },
-                ex =>
-                {
-                    using var scope = subQueue.AcquireLock();
-                    scope.EnqueueError(ex);
-                },
-                () =>
-                {
-                    using var scope = subQueue.AcquireLock();
-                    scope.EnqueueCompleted();
-                });
+            return Disposable.Create(() =>
+            {
+                sourceSubscription.Dispose();
+                subQueue.Dispose();
+            });
         });
     }
 

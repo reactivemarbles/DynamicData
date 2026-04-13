@@ -4508,12 +4508,15 @@ public static partial class ObservableCacheEx
     {
         if (initialOptionalWhenMissing)
         {
-            var seenValue = false;
-            var queue = new SharedDeliveryQueue();
-            var optional = source.ToObservableOptional(key, equalityComparer).SynchronizeSafe(queue).Do(_ => seenValue = true);
-            var missing = Observable.Return(Optional.None<TObject>()).SynchronizeSafe(queue).Where(_ => !seenValue);
-
-            return optional.Merge(missing);
+            return Observable.Defer(() =>
+            {
+                var seenValue = false;
+                return source.ToObservableOptional(key, equalityComparer)
+                    .Do(_ => seenValue = true)
+                    .Merge(Observable.Defer(() => seenValue
+                        ? Observable.Empty<Optional<TObject>>()
+                        : Observable.Return(Optional.None<TObject>())));
+            });
         }
 
         return source.ToObservableOptional(key, equalityComparer);

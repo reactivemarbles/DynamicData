@@ -24,25 +24,40 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
 
     public bool IsDisposed => _disposedValue;
 
-    public TDisposable Add<TDisposable>(TKey key, TDisposable disposable)
-        where TDisposable : IDisposable
+    /// <summary>
+    /// Tracks an item by key. If the item implements <see cref="IDisposable"/>,
+    /// it replaces any existing entry (disposing the previous one if different).
+    /// If the item is NOT disposable, any existing entry for the key is removed
+    /// and disposed.
+    /// </summary>
+    public TItem Add<TItem>(TKey key, TItem item)
+        where TItem : notnull
     {
-        disposable.ThrowArgumentNullExceptionIfNull(nameof(disposable));
-
-        if (!_disposedValue)
+        if (item is IDisposable disposable)
         {
-            if (!_disposables.TryGetValue(key, out var existing) || !ReferenceEquals(existing, disposable))
+            IDisposable? old = null;
+            if (!_disposedValue)
             {
-                Remove(key);
-                _disposables.Add(key, disposable);
+                if (_disposables.TryGetValue(key, out var existing) && !ReferenceEquals(existing, disposable))
+                {
+                    old = existing;
+                }
+
+                _disposables[key] = disposable;
             }
+            else
+            {
+                disposable.Dispose();
+            }
+
+            old?.Dispose();
         }
         else
         {
-            disposable.Dispose();
+            Remove(key);
         }
 
-        return disposable;
+        return item;
     }
 
     public void Remove(TKey key)

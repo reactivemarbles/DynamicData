@@ -122,38 +122,23 @@ public class KeyedDisposableFixture
     }
 
     [Fact]
-    public void AddIfDisposableTracksDisposableItem()
-    {
-        var tracker = new KeyedDisposable<string>();
-        var disposed = false;
-        var item = new TestDisposable(() => disposed = true);
-
-        tracker.AddIfDisposable("key", item);
-
-        tracker.ContainsKey("key").Should().BeTrue();
-
-        tracker.Remove("key");
-        disposed.Should().BeTrue();
-    }
-
-    [Fact]
-    public void AddIfDisposableIgnoresNonDisposableItem()
+    public void AddNonDisposableTracksNothing()
     {
         var tracker = new KeyedDisposable<string>();
 
-        tracker.AddIfDisposable("key", "not disposable");
+        tracker.Add("key", "not disposable");
 
         tracker.ContainsKey("key").Should().BeFalse();
     }
 
     [Fact]
-    public void AddIfDisposableRemovesPreviousWhenNewIsNotDisposable()
+    public void AddNonDisposableRemovesPrevious()
     {
         var tracker = new KeyedDisposable<string>();
         var disposed = false;
         tracker.Add("key", new TestDisposable(() => disposed = true));
 
-        tracker.AddIfDisposable("key", "not disposable");
+        tracker.Add("key", "not disposable");
 
         disposed.Should().BeTrue("previous disposable should be disposed");
         tracker.ContainsKey("key").Should().BeFalse();

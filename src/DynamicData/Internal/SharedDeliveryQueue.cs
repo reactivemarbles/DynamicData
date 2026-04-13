@@ -24,6 +24,7 @@ internal sealed class SharedDeliveryQueue
     private volatile bool _isDelivering;
     private int _drainThreadId = -1;
     private volatile bool _isTerminated;
+    private bool _hasRemovedQueues;
 
     /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with its own internal lock.</summary>
     public SharedDeliveryQueue()
@@ -101,6 +102,9 @@ internal sealed class SharedDeliveryQueue
     /// <summary>Acquires the gate for read-only inspection. Does not trigger delivery on dispose.</summary>
     public ReadOnlyScopedAccess AcquireReadLock() => new(this);
 
+    /// <summary>Called by a sub-queue when it is disposed, to trigger lazy compaction.</summary>
+    internal void NotifyQueueRemoved() => _hasRemovedQueues = true;
+
 #if NET9_0_OR_GREATER
     internal void EnterLock() => _gate.Enter();
 
@@ -173,6 +177,7 @@ internal sealed class SharedDeliveryQueue
             {
                 _isDelivering = false;
                 _drainThreadId = -1;
+                CompactRemovedQueues();
             }
         }
     }
@@ -250,6 +255,21 @@ internal sealed class SharedDeliveryQueue
         return false;
     }
 
+    /// <summary>
+    /// Removes dead sub-queues from <see cref="_sources"/>. Must be called
+    /// under the lock (inside AcquireReadLock) when no iteration is active.
+    /// </summary>
+    private void CompactRemovedQueues()
+    {
+        if (!_hasRemovedQueues)
+        {
+            return;
+        }
+
+        _hasRemovedQueues = false;
+        _sources.RemoveAll(s => s.IsRemoved);
+    }
+
     /// <summary>Read-only scoped access. Disposing releases the gate without triggering delivery.</summary>
     public ref struct ReadOnlyScopedAccess
     {
@@ -309,6 +329,9 @@ internal interface IDrainable
     /// <summary>Gets whether this sub-queue has items.</summary>
     bool HasItems { get; }
 
+    /// <summary>Gets whether this sub-queue has been removed and should be skipped/compacted.</summary>
+    bool IsRemoved { get; }
+
     /// <summary>Dequeues the next item into staging. Returns true if error (terminal).</summary>
     /// <returns>True if the staged item is an error notification.</returns>
     bool StageNext();
@@ -324,12 +347,13 @@ internal interface IDrainable
 /// A typed sub-queue. All enqueue access goes through <see cref="ScopedAccess"/>
 /// which acquires the parent's lock.
 /// </summary>
-internal sealed class DeliverySubQueue<T> : IDrainable
+internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposable
 {
     private readonly Queue<Notification<T>> _items = new();
     private readonly SharedDeliveryQueue _parent;
     private readonly IObserver<T> _observer;
     private Notification<T> _staged;
+    private bool _isRemoved;
 
     internal DeliverySubQueue(SharedDeliveryQueue parent, IObserver<T> observer)
     {
@@ -338,10 +362,45 @@ internal sealed class DeliverySubQueue<T> : IDrainable
     }
 
     /// <inheritdoc/>
-    public bool HasItems => _items.Count > 0;
+    public bool HasItems => !_isRemoved && _items.Count > 0;
+
+    /// <inheritdoc/>
+    public bool IsRemoved => _isRemoved;
 
     /// <summary>Acquires the parent gate. Disposing releases the lock and triggers drain.</summary>
     public ScopedAccess AcquireLock() => new(this);
+
+    /// <summary>Enqueues an OnNext notification via the lock, then drains.</summary>
+    public void OnNext(T value)
+    {
+        using var scope = AcquireLock();
+        scope.Enqueue(value);
+    }
+
+    /// <summary>Enqueues an OnError notification via the lock, then drains.</summary>
+    public void OnError(Exception error)
+    {
+        using var scope = AcquireLock();
+        scope.EnqueueError(error);
+    }
+
+    /// <summary>Enqueues an OnCompleted notification via the lock, then drains.</summary>
+    public void OnCompleted()
+    {
+        using var scope = AcquireLock();
+        scope.EnqueueCompleted();
+    }
+
+    /// <summary>
+    /// Marks this sub-queue as removed, stopping further enqueues.
+    /// Physical removal from the parent's source list happens lazily
+    /// during the next drain cycle's completion.
+    /// </summary>
+    public void Dispose()
+    {
+        _isRemoved = true;
+        _parent.NotifyQueueRemoved();
+    }
 
     /// <inheritdoc/>
     public bool StageNext()
@@ -351,14 +410,18 @@ internal sealed class DeliverySubQueue<T> : IDrainable
     }
 
     /// <inheritdoc/>
-    public void DeliverStaged() => _staged.Accept(_observer);
+    public void DeliverStaged()
+    {
+        _staged.Accept(_observer);
+        _staged = default;
+    }
 
     /// <inheritdoc/>
     public void Clear() => _items.Clear();
 
     private void EnqueueItem(Notification<T> item)
     {
-        if (_parent.IsTerminated)
+        if (_parent.IsTerminated || _isRemoved)
         {
             return;
         }

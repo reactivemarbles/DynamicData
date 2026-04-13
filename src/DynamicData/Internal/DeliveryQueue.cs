@@ -188,6 +188,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
                         if (_queue.Count == 0 || _isTerminated)
                         {
                             _isDelivering = false;
+                            _drainThreadId = -1;
                             return;
                         }
 
@@ -210,6 +211,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
                         lock (_gate)
                         {
                             _isDelivering = false;
+                            _drainThreadId = -1;
                         }
 
                         return;
@@ -221,6 +223,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
                 lock (_gate)
                 {
                     _isDelivering = false;
+                    _drainThreadId = -1;
                 }
 
                 throw;

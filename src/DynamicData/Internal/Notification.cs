@@ -9,41 +9,42 @@ namespace DynamicData.Internal;
 /// OnNext, OnError, and OnCompleted without heap allocation.
 /// </summary>
 internal readonly struct Notification<T>
+    where T : notnull
 {
     /// <summary>The value for OnNext notifications.</summary>
-    public readonly T? Value;
+    public readonly Optional<T> Value;
 
     /// <summary>The exception for OnError notifications.</summary>
     public readonly Exception? Error;
 
-    /// <summary>True if this is an OnNext notification.</summary>
-    public readonly bool HasValue;
-
-    private Notification(T? value, Exception? error, bool hasValue)
+    private Notification(Optional<T> value, Exception? error)
     {
         Value = value;
         Error = error;
-        HasValue = hasValue;
     }
 
     /// <summary>Creates an OnNext notification.</summary>
-    public static Notification<T> Next(T value) => new(value, null, true);
+    public static Notification<T> Next(T value) => new(value, null);
 
     /// <summary>Creates an OnError notification (terminal).</summary>
-    public static Notification<T> OnError(Exception error) => new(default, error, false);
+    public static Notification<T> OnError(Exception error)
+    {
+        error.ThrowArgumentNullExceptionIfNull(nameof(error));
+        return new(Optional.None<T>(), error);
+    }
 
     /// <summary>Creates an OnCompleted notification (terminal).</summary>
-    public static Notification<T> Completed => new(default, null, false);
+    public static readonly Notification<T> Completed = new(Optional.None<T>(), null);
 
     /// <summary>Gets whether this is a terminal notification.</summary>
-    public bool IsTerminal => !HasValue;
+    public bool IsTerminal => !Value.HasValue;
 
     /// <summary>Delivers this notification to the specified observer.</summary>
     public void Accept(IObserver<T> observer)
     {
-        if (HasValue)
+        if (Value.HasValue)
         {
-            observer.OnNext(Value!);
+            observer.OnNext(Value.Value);
         }
         else if (Error is not null)
         {
