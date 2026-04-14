@@ -371,7 +371,7 @@ public static class ObservableListEx
 
     /// <inheritdoc cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>
     /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to bind to a collection.</param>
-    /// <param name="readOnlyObservableCollection">An output parameter receiving the created <see cref="ReadOnlyObservableCollection{T}"/>.</param>
+    /// <param name="readOnlyObservableCollection">An output parameter that receives the created <see cref="ReadOnlyObservableCollection{T}"/>, bound to the sorted results.</param>
     /// <param name="resetThreshold">When a changeset exceeds this many changes, the collection is reset.</param>
     /// <remarks>This overload creates a <see cref="ReadOnlyObservableCollection{T}"/> via an <c>out</c> parameter, backed by an internal <c>ObservableCollectionExtended</c>.</remarks>
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, out ReadOnlyObservableCollection<T> readOnlyObservableCollection, int resetThreshold = BindingOptions.DefaultResetThreshold)
@@ -391,7 +391,7 @@ public static class ObservableListEx
 
     /// <inheritdoc cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>
     /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to bind to a collection.</param>
-    /// <param name="readOnlyObservableCollection">An output parameter receiving the created <see cref="ReadOnlyObservableCollection{T}"/>.</param>
+    /// <param name="readOnlyObservableCollection">An output parameter that receives the created <see cref="ReadOnlyObservableCollection{T}"/>, bound to the sorted results.</param>
     /// <param name="options"><see cref="BindingOptions"/> options controlling reset threshold and other behaviors.</param>
     /// <remarks>This overload creates a <see cref="ReadOnlyObservableCollection{T}"/> with <see cref="BindingOptions"/> for fine-grained control.</remarks>
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, out ReadOnlyObservableCollection<T> readOnlyObservableCollection, BindingOptions options)
@@ -679,7 +679,7 @@ public static class ObservableListEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the source list.</typeparam>
     /// <typeparam name="TValue">The type of distinct values produced.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to extract distinct values from.</param>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to extract distinct values.</param>
     /// <param name="valueSelector">A <see cref="Func{T, TResult}"/> function that extracts the value to track from each source item.</param>
     /// <returns>A list changeset stream of distinct values.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="valueSelector"/> is <see langword="null"/>.</exception>
@@ -1268,7 +1268,7 @@ public static class ObservableListEx
     /// </summary>
     /// <typeparam name="T">The type of items in the source list.</typeparam>
     /// <typeparam name="TDestination">The type of values emitted by per-item observables.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to subscribe to per-item observables from.</param>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> whose items each produce an observable.</param>
     /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns an observable for each source item.</param>
     /// <returns>An observable that emits values from all per-item observables, merged together.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
@@ -1345,7 +1345,7 @@ public static class ObservableListEx
     /// Merges two list changeset streams into a single unified stream.
     /// </summary>
     /// <param name="source">The first <see cref="IObservable{IChangeSet{TObject}}"/> to merge.</param>
-    /// <param name="other">The second <see cref="IObservable{IChangeSet{TObject}}"/>.</param>
+    /// <param name="other">The second <see cref="IObservable{IChangeSet{TObject}}"/> to merge with.</param>
     /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TObject}"/> used to compare items.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling enumeration.</param>
     /// <param name="completable">When <see langword="true"/> (default), the result completes when all sources complete.</param>
@@ -1505,7 +1505,7 @@ public static class ObservableListEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the source list.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to subscribe to per-item changeset streams from.</param>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> whose items each produce a child changeset stream.</param>
     /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns a child list changeset stream for each source item.</param>
     /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TDestination}"/> used to compare child items.</param>
     /// <returns>A single list changeset stream containing all items from all child streams.</returns>
@@ -1552,7 +1552,7 @@ public static class ObservableListEx
     /// <typeparam name="TObject">The type of items in the source list.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child cache changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key in the child cache changesets.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to subscribe to per-item changeset streams from.</param>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> whose items each produce a child changeset stream.</param>
     /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns a child cache changeset stream for each source item.</param>
     /// <param name="comparer"><see cref="IComparer{TDestination}"/> to resolve which value wins when the same key appears from multiple children.</param>
     /// <returns>A single cache changeset stream with key-based deduplication.</returns>
@@ -1580,7 +1580,7 @@ public static class ObservableListEx
     /// <typeparam name="TObject">The type of items in the source list.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child cache changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key in the child cache changesets.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to subscribe to per-item changeset streams from.</param>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> whose items each produce a child changeset stream.</param>
     /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns a child cache changeset stream for each source item.</param>
     /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TDestination}"/> to determine if two elements are the same.</param>
     /// <param name="comparer">An optional <see cref="IComparer{TDestination}"/> to resolve conflicts when the same key appears from multiple children.</param>
@@ -1610,7 +1610,7 @@ public static class ObservableListEx
     /// Suppresses empty changesets from the stream. Only changesets with at least one change are forwarded.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to suppress empty changesets from.</param>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to suppress empty changesets.</param>
     /// <returns>A list changeset stream with empty changesets filtered out.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="StartWithEmpty{T}(IObservable{IChangeSet{T}})"/>
@@ -1816,7 +1816,7 @@ public static class ObservableListEx
     /// Subscribes to the source changeset stream and pipes all changes into the <paramref name="destination"/> <see cref="ISourceList{T}"/>.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to populate a target list from.</param>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to pipe into a target list.</param>
     /// <param name="destination">The destination <see cref="ISourceList{T}"/> to receive all changes.</param>
     /// <returns>An <see cref="IDisposable"/> representing the subscription. Dispose to stop piping changes.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="destination"/> is <see langword="null"/>.</exception>
@@ -1952,7 +1952,7 @@ public static class ObservableListEx
     /// Internally defers until loaded, then skips the first emission.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to skip the initial changeset from.</param>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to skip the initial changeset.</param>
     /// <returns>A list changeset stream that omits the initial snapshot.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="DeferUntilLoaded{T}(IObservable{IChangeSet{T}})"/>
@@ -2043,7 +2043,7 @@ public static class ObservableListEx
     /// The changeset is forwarded downstream unmodified.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to create per-item subscriptions from.</param>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to create a subscription for each item in.</param>
     /// <param name="subscriptionFactory">A function that creates an <see cref="IDisposable"/> for each item.</param>
     /// <returns>A continuation of the source changeset stream with per-item subscriptions managed as a side effect.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="subscriptionFactory"/> is <see langword="null"/>.</exception>
@@ -2074,7 +2074,7 @@ public static class ObservableListEx
     /// Suppresses all <see cref="ListChangeReason.Refresh"/> changes from the stream. All other change reasons pass through.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to strip refresh events from.</param>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to strip refresh events.</param>
     /// <returns>A list changeset stream with Refresh changes removed.</returns>
     /// <seealso cref="WhereReasonsAreNot{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
     /// <seealso cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
