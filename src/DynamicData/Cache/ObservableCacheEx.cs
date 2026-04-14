@@ -1786,15 +1786,34 @@ public static partial class ObservableCacheEx
     /// <param name="scheduler">Optional scheduler used for buffering.</param>
     /// <returns>An observable changeset containing only items whose per-item observable most recently emitted <c>true</c>.</returns>
     /// <remarks>
+    /// <para>
+    /// <b>Source changeset handling (parent events):</b>
+    /// </para>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Add</term><description>Subscribes to the per-item observable. When it first emits <c>true</c>, an <b>Add</b> is emitted downstream. Subsequent <c>false</c>/<c>true</c> emissions toggle inclusion (emitting <b>Remove</b>/<b>Add</b>).</description></item>
-    /// <item><term>Update</term><description>Disposes the old item's subscription and subscribes to the new item's observable. Inclusion state is re-evaluated.</description></item>
-    /// <item><term>Remove</term><description>Disposes the item's subscription. If the item was included downstream, a <b>Remove</b> is emitted.</description></item>
-    /// <item><term>Refresh</term><description>Forwarded as <b>Refresh</b> if the item is currently included downstream.</description></item>
-    /// <item><term>OnError</term><description>Forwarded. Also triggered if any per-item observable errors.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
+    /// <item><term>Add</term><description>Subscribes to the per-item observable. The item is <b>not included downstream until the observable emits its first <c>true</c></b>.</description></item>
+    /// <item><term>Update</term><description>Disposes the old item's observable subscription and subscribes to the new item's observable. Inclusion state is reset; the new observable must emit before the item reappears.</description></item>
+    /// <item><term>Remove</term><description>Disposes the item's observable subscription. If the item was included downstream, a <b>Remove</b> is emitted.</description></item>
+    /// <item><term>Refresh</term><description>Forwarded as <b>Refresh</b> if the item is currently included downstream. Otherwise dropped.</description></item>
     /// </list>
+    /// <para>
+    /// <b>Per-item observable handling (filter observable events):</b>
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Emission</term><description>Behavior</description></listheader>
+    /// <item><term>First <c>true</c></term><description>The item is included: an <b>Add</b> is emitted downstream.</description></item>
+    /// <item><term><c>false</c> (was included)</term><description>The item is excluded: a <b>Remove</b> is emitted downstream.</description></item>
+    /// <item><term><c>true</c> (was excluded)</term><description>The item is re-included: an <b>Add</b> is emitted downstream.</description></item>
+    /// <item><term><c>true</c> (was included)</term><description>No effect (already included).</description></item>
+    /// <item><term><c>false</c> (was excluded)</term><description>No effect (already excluded).</description></item>
+    /// <item><term>Error</term><description>Terminates the entire output stream.</description></item>
+    /// <item><term>Completed</term><description>The item remains in its current inclusion state. No further toggling is possible for this item.</description></item>
+    /// </list>
+    /// <para>
+    /// <b>Worth noting:</b> Items are invisible downstream until their per-item observable emits at least one <c>true</c>.
+    /// If an item's observable never emits, the item never appears. The <paramref name="buffer"/> parameter batches
+    /// rapid inclusion changes from per-item observables into a single re-evaluation, reducing changeset chatter.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="filterFactory"/> is <c>null</c>.</exception>
     /// <seealso cref="Filter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, bool}, bool)"/>
@@ -2214,17 +2233,52 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Groups the source by the latest value from their observable created by the given factory.
+    /// Groups items where each item's group key is determined by a per-item observable.
+    /// The observable is created by <paramref name="groupObservableSelector"/> for each item.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
     /// <param name="source">The source changeset stream.</param>
-    /// <param name="groupObservableSelector">The group selector key.</param>
-    /// <returns>An observable which will emit group change sets.</returns>
+    /// <param name="groupObservableSelector">Factory that creates a group key observable for each item and its key.</param>
+    /// <returns>An observable that emits group changesets. Each group is a live sub-cache of its members.</returns>
     /// <remarks>
-    /// <para><b>Worth noting:</b> Items do not appear in any group until their per-item observable emits the first group key. Per-item observable errors terminate the entire stream.</para>
+    /// <para>
+    /// Unlike <see cref="Group{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TGroupKey})"/> which evaluates
+    /// the group key synchronously, this operator defers group assignment until the per-item observable emits.
+    /// </para>
+    /// <para>
+    /// <b>Source changeset handling (parent events):</b>
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add</term><description>Subscribes to the per-item group key observable. The item is <b>not placed in any group until the observable emits its first group key</b>.</description></item>
+    /// <item><term>Update</term><description>Disposes the old item's group key subscription and subscribes to the new item's observable. The item is removed from its current group until the new observable emits.</description></item>
+    /// <item><term>Remove</term><description>Disposes the item's group key subscription. The item is removed from its current group. Empty groups are removed.</description></item>
+    /// <item><term>Refresh</term><description>No effect on subscriptions. The item remains in its current group.</description></item>
+    /// </list>
+    /// <para>
+    /// <b>Per-item observable handling (group key observable events):</b>
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Emission</term><description>Behavior</description></listheader>
+    /// <item><term>First value</term><description>The item is placed into the group matching the emitted key. An <b>Add</b> appears in that group's sub-cache. If the group is new, the group itself is added to the output.</description></item>
+    /// <item><term>New value (different key)</term><description>The item moves: <b>Remove</b> from the old group, <b>Add</b> to the new group. If the old group becomes empty, it is removed from the output.</description></item>
+    /// <item><term>Same value (unchanged key)</term><description>No effect (filtered by <c>DistinctUntilChanged</c>).</description></item>
+    /// <item><term>Error</term><description>Terminates the entire output stream.</description></item>
+    /// <item><term>Completed</term><description>The item remains in its current group. No further group key changes are possible for this item.</description></item>
+    /// </list>
+    /// <para>
+    /// <b>Worth noting:</b> Items are invisible (not in any group) until their per-item observable emits at least one
+    /// group key. If an item's observable never emits, the item never appears in any group. Per-item observable errors
+    /// terminate the entire stream. The output completes when the source completes and all per-item observables have
+    /// also completed.
+    /// </para>
     /// </remarks>
+    /// <seealso cref="Group{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TGroupKey})"/>
+    /// <seealso cref="GroupOnProperty{TObject, TKey, TGroupKey}"/>
+    /// <seealso cref="FilterOnObservable{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="TransformOnObservable{TSource, TKey, TDestination}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, TKey, IObservable{TDestination}})"/>
     public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnObservable<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TGroupKey>> groupObservableSelector)
         where TObject : notnull
         where TKey : notnull
@@ -5785,22 +5839,38 @@ public static partial class ObservableCacheEx
     /// <param name="transformFactory">A function that, given a source item and its key, returns an <see cref="IObservable{T}"/> whose emissions become the transformed values.</param>
     /// <returns>An observable changeset where each key's value is the latest emission from its per-item observable.</returns>
     /// <remarks>
-    /// <para><b>Change reason handling:</b></para>
-    /// <list type="table">
-    ///   <listheader><term>Input reason</term><description>Output behavior</description></listheader>
-    ///   <item><term>Add</term><description>Subscribes to the per-item observable. First emission: Add downstream. Subsequent emissions: Update.</description></item>
-    ///   <item><term>Update</term><description>Disposes old subscription, subscribes to new item's observable.</description></item>
-    ///   <item><term>Remove</term><description>Disposes subscription, emits Remove.</description></item>
-    ///   <item><term>Refresh</term><description>Forwarded if item is currently downstream.</description></item>
-    /// </list>
-    /// <para><b>Worth noting:</b> Items do not appear downstream until the per-item observable emits its first value. Per-item observable errors terminate the entire stream.</para>
     /// <para>
-    /// An error from any per-item observable terminates the entire stream.
-    /// The per-item observable's selector runs under an internal lock, so it must not synchronously
-    /// access other DynamicData caches (deadlock risk in cross-cache pipelines).
+    /// <b>Source changeset handling (parent events):</b>
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add</term><description>Calls <paramref name="transformFactory"/> and subscribes to the returned observable. The item is <b>not visible downstream until the observable emits its first value</b>.</description></item>
+    /// <item><term>Update</term><description>Disposes the old item's observable subscription and subscribes to the new item's observable. The item disappears from downstream until the new observable emits.</description></item>
+    /// <item><term>Remove</term><description>Disposes the item's observable subscription. If the item was visible downstream, a <b>Remove</b> is emitted.</description></item>
+    /// <item><term>Refresh</term><description>Forwarded as <b>Refresh</b> if the item is currently visible downstream. Otherwise dropped.</description></item>
+    /// </list>
+    /// <para>
+    /// <b>Per-item observable handling (transform observable events):</b>
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Emission</term><description>Behavior</description></listheader>
+    /// <item><term>First value</term><description>The transformed item appears downstream as an <b>Add</b>.</description></item>
+    /// <item><term>Subsequent values</term><description>Each new value replaces the previous one: an <b>Update</b> is emitted downstream.</description></item>
+    /// <item><term>Error</term><description>Terminates the entire output stream.</description></item>
+    /// <item><term>Completed</term><description>The item remains at its last emitted value. No further updates are possible for this item.</description></item>
+    /// </list>
+    /// <para>
+    /// <b>Worth noting:</b> Items are invisible downstream until their per-item observable emits at least one value.
+    /// If an item's observable never emits, that item never appears in the output. The transform factory's selector
+    /// runs under an internal lock, so it must not synchronously access other DynamicData caches (deadlock risk in
+    /// cross-cache pipelines). The output completes when the source completes and all per-item observables have
+    /// also completed.
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <c>null</c>.</exception>
+    /// <seealso cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, TKey, TDestination}, bool)"/>
+    /// <seealso cref="FilterOnObservable{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="GroupOnObservable{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{TGroupKey}})"/>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformOnObservable<TSource, TKey, TDestination>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, IObservable<TDestination>> transformFactory)
         where TSource : notnull
         where TKey : notnull
