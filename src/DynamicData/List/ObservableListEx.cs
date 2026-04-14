@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -31,7 +31,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="adaptor">The <see cref="IChangeSetAdaptor{T}"/> adaptor whose <c>Adapt</c> method is invoked for each changeset.</param>
     /// <returns>A list changeset stream identical to the source, with the adaptor side effect applied.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="adaptor"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="adaptor"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// This operator synchronizes access with a lock, then calls <c>adaptor.Adapt(changes)</c> before forwarding the changeset.
@@ -157,7 +157,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of items in the list.</typeparam>
     /// <param name="source">The <see cref="ISourceList{T}"/> mutable source list to wrap.</param>
     /// <returns>A read-only observable list that mirrors the source.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IObservableList<T> AsObservableList<T>(this ISourceList<T> source)
         where T : notnull
     {
@@ -173,7 +173,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of items in the list.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <returns>A read-only observable list reflecting the current state of the stream.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="AsObservableList{T}(ISourceList{T})"/>
     public static IObservableList<T> AsObservableList<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
@@ -309,7 +309,7 @@ public static class ObservableListEx
     /// <param name="targetCollection">The <see cref="IObservableCollection{T}"/> target collection to keep in sync.</param>
     /// <param name="resetThreshold">When a changeset exceeds this many changes, the collection is reset instead of applying individual changes.</param>
     /// <returns>A continuation of the source changeset stream (allows further chaining).</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="targetCollection"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="targetCollection"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Delegates to <see cref="Adapt{T}(IObservable{IChangeSet{T}}, IChangeSetAdaptor{T})"/> with an an internal collection adaptor.
@@ -446,12 +446,12 @@ public static class ObservableListEx
     /// </summary>
     /// <typeparam name="T">The type of items in the list.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
-    /// <param name="pauseIfTrueSelector">An <see cref="IObservable{T}"/> of <see cref="bool"/> that controls buffering: <c>true</c> pauses (buffers), <c>false</c> resumes (flushes).</param>
-    /// <param name="initialPauseState">The initial pause state. When <c>true</c>, buffering starts immediately.</param>
+    /// <param name="pauseIfTrueSelector">An <see cref="IObservable{T}"/> of <see cref="bool"/> that controls buffering: <see langword="true"/> pauses (buffers), <see langword="false"/> resumes (flushes).</param>
+    /// <param name="initialPauseState">The initial pause state. When <see langword="true"/>, buffering starts immediately.</param>
     /// <param name="timeOut">Optional <see cref="TimeSpan"/> maximum duration to keep the buffer open. After this time, the buffer is flushed regardless of pause state.</param>
     /// <param name="scheduler">The <see cref="IScheduler"/> for timeout scheduling.</param>
     /// <returns>A list changeset stream that buffers during pause and emits combined changesets on resume.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="pauseIfTrueSelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="pauseIfTrueSelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// All changeset events are buffered at the changeset level (not individual changes) while paused.
@@ -558,7 +558,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="target">The <see cref="IList{T}"/> target list to clone changes into.</param>
     /// <returns>A continuation of the source changeset stream.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Lower-level than <see cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>. Uses <see cref="IList{T}"/>.Clone() to apply all changeset operations directly.</para>
     /// </remarks>
@@ -599,7 +599,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <returns>A list changeset stream that begins emitting only after the source has produced its first changeset.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Subscribes to the source immediately but buffers internally until the first changeset arrives, at which point it emits
@@ -642,7 +642,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <returns>A continuation of the source changeset stream with disposal side effects applied.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Items are cast to <see cref="IDisposable"/> and disposed after the changeset has been forwarded downstream.
@@ -677,7 +677,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="valueSelector">A <see cref="Func{T, TResult}"/> function that extracts the value to track from each source item.</param>
     /// <returns>A list changeset stream of distinct values.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="valueSelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="valueSelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Maintains an internal reference count per distinct value. A value is included when its count first exceeds zero
@@ -715,7 +715,7 @@ public static class ObservableListEx
     /// <param name="source">The primary source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="others">The other <see cref="IObservable{T}"/> changeset streams to exclude from the result.</param>
     /// <returns>A list changeset stream containing items from <paramref name="source"/> that are not in any of <paramref name="others"/>.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="others"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="others"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Uses reference-counted equality comparison across all sources. Items are compared by equality (not index position).
@@ -780,7 +780,7 @@ public static class ObservableListEx
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The <see cref="ISourceList{T}"/> source list to monitor and remove expired items from.</param>
-    /// <param name="timeSelector">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <c>null</c> for items that should never expire.</param>
+    /// <param name="timeSelector">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <see langword="null"/> for items that should never expire.</param>
     /// <param name="pollingInterval">Optional <see cref="TimeSpan"/> polling interval to batch expiry checks. If omitted, a separate timer is created for each unique expiry time.</param>
     /// <param name="scheduler">The scheduler for scheduling expiry timers. Defaults to <see cref="GlobalConfig.DefaultScheduler"/>.</param>
     /// <returns>An observable that emits collections of items each time expired items are removed from the source list.</returns>
@@ -815,9 +815,9 @@ public static class ObservableListEx
     /// </summary>
     /// <typeparam name="T">The type of items in the list.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>. to filter.</param>
-    /// <param name="predicate">A <see cref="Func{T, TResult}"/> predicate that determines which items are included. Items returning <c>true</c> appear downstream; items returning <c>false</c> are excluded.</param>
+    /// <param name="predicate">A <see cref="Func{T, TResult}"/> predicate that determines which items are included. Items returning <see langword="true"/> appear downstream; items returning <see langword="false"/> are excluded.</param>
     /// <returns>A list changeset stream containing only items that satisfy <paramref name="predicate"/>.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="source"/> or <paramref name="predicate"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="source"/> or <paramref name="predicate"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Use this overload when the predicate is fixed for the lifetime of the subscription. Item ordering is preserved.</para>
     /// <list type="table">
@@ -874,7 +874,7 @@ public static class ObservableListEx
     /// </list>
     /// <para><b>Worth noting:</b> No items are included until <paramref name="predicate"/> emits its first function. <see cref="ListFilterPolicy.CalculateDiff"/> is generally preferred for performance; <see cref="ListFilterPolicy.ClearAndReplace"/> is useful when downstream consumers (like UI bindings) handle full resets more efficiently than individual changes.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="predicate"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="predicate"/> is <see langword="null"/>.</exception>
     /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/>
     /// <seealso cref="FilterOnObservable{TObject}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
     public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate, ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff)
@@ -895,11 +895,11 @@ public static class ObservableListEx
     /// <typeparam name="TState">The type of state value required by <paramref name="predicate"/>.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="predicateState">An <see cref="IObservable{T}"/> stream of state values to be passed to <paramref name="predicate"/>.</param>
-    /// <param name="predicate">A <see cref="Func{T, TResult}"/> predicate receiving the current state and an item, returning <c>true</c> to include or <c>false</c> to exclude.</param>
+    /// <param name="predicate">A <see cref="Func{T, TResult}"/> predicate receiving the current state and an item, returning <see langword="true"/> to include or <see langword="false"/> to exclude.</param>
     /// <param name="filterPolicy">Controls re-filtering behavior: <see cref="ListFilterPolicy.CalculateDiff"/> (default) computes minimal diff; <see cref="ListFilterPolicy.ClearAndReplace"/> clears and repopulates.</param>
-    /// <param name="suppressEmptyChangeSets">When <c>true</c> (default), empty changesets are suppressed. Set to <c>false</c> to publish empty changesets (useful for monitoring loading status).</param>
+    /// <param name="suppressEmptyChangeSets">When <see langword="true"/> (default), empty changesets are suppressed. Set to <see langword="false"/> to publish empty changesets (useful for monitoring loading status).</param>
     /// <returns>A list changeset stream containing only items satisfying <paramref name="predicate"/> with the current state.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="predicateState"/>, or <paramref name="predicate"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="predicateState"/>, or <paramref name="predicate"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// The predicate cannot be invoked until the first state value is received. Until then, all items are treated as excluded.
@@ -936,15 +936,15 @@ public static class ObservableListEx
 
     /// <summary>
     /// Filters each item using a per-item <see cref="IObservable{T}"/> of <see cref="bool"/> that dynamically controls inclusion.
-    /// When an item's observable emits <c>true</c> the item enters the result; when it emits <c>false</c> the item is removed.
+    /// When an item's observable emits <see langword="true"/> the item enters the result; when it emits <see langword="false"/> the item is removed.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="objectFilterObservable">A function that returns an observable of <see cref="bool"/> for each item, controlling its inclusion.</param>
     /// <param name="propertyChangedThrottle">Optional <see cref="TimeSpan"/> throttle duration applied to each per-item observable to reduce re-evaluation frequency.</param>
     /// <param name="scheduler">The <see cref="IScheduler"/> used when throttling. Defaults to the system default scheduler.</param>
-    /// <returns>A list changeset stream containing only items whose per-item observable most recently emitted <c>true</c>.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="objectFilterObservable"/> is <c>null</c>.</exception>
+    /// <returns>A list changeset stream containing only items whose per-item observable most recently emitted <see langword="true"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="objectFilterObservable"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Each item in the source gets its own subscription to the observable returned by <paramref name="objectFilterObservable"/>.
@@ -952,7 +952,7 @@ public static class ObservableListEx
     /// </para>
     /// <list type="table">
     /// <listheader><term>Event (source)</term><description>Behavior</description></listheader>
-    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the per-item observable. Item is included when it first emits <c>true</c>.</description></item>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the per-item observable. Item is included when it first emits <see langword="true"/>.</description></item>
     /// <item><term><b>Replace</b></term><description>Old subscription disposed, new subscription created for the replacement item.</description></item>
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Subscription disposed. If the item was downstream, a <b>Remove</b> is emitted.</description></item>
     /// <item><term><b>Refresh</b></term><description>Forwarded if the item is currently included.</description></item>
@@ -961,8 +961,8 @@ public static class ObservableListEx
     /// </list>
     /// <list type="table">
     /// <listheader><term>Event (per-item observable)</term><description>Behavior</description></listheader>
-    /// <item><term>Emits <c>true</c></term><description>If not already included, an <b>Add</b> is emitted downstream.</description></item>
-    /// <item><term>Emits <c>false</c></term><description>If currently included, a <b>Remove</b> is emitted downstream.</description></item>
+    /// <item><term>Emits <see langword="true"/></term><description>If not already included, an <b>Add</b> is emitted downstream.</description></item>
+    /// <item><term>Emits <see langword="false"/></term><description>If currently included, a <b>Remove</b> is emitted downstream.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/>
@@ -1028,7 +1028,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="action">The action invoked for each <see cref="Change{T}"/>. Range changes (AddRange, RemoveRange, Clear) are received as a single <see cref="Change{T}"/> with a populated <c>Range</c> property.</param>
     /// <returns>A continuation of the source changeset stream.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="action"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="action"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>This is a side-effect operator. It does not modify the changeset. If you need each individual item from range operations flattened out, use <see cref="ForEachItemChange{TObject}(IObservable{IChangeSet{TObject}}, Action{ItemChange{TObject}})"/> instead.</para>
     /// <list type="table">
@@ -1060,7 +1060,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="action">The <see cref="Action{T}"/> action invoked for each individual item change.</param>
     /// <returns>A continuation of the source changeset stream.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="action"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="action"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Unlike <see cref="ForEachChange{TObject}(IObservable{IChangeSet{TObject}}, Action{Change{TObject}})"/>, this operator flattens
@@ -1088,7 +1088,7 @@ public static class ObservableListEx
     /// <param name="groupSelector">A <see cref="Func{T, TResult}"/> function that returns the group key for each item.</param>
     /// <param name="regrouper">Optional <see cref="IObservable{T}"/> of <see cref="Unit"/> that forces all items to be re-evaluated against <paramref name="groupSelector"/> when it fires. Useful for time-based groupings (e.g., "Last Hour", "Today").</param>
     /// <returns>A list changeset stream of <see cref="IGroup{TObject, TGroup}"/> objects, each containing the items belonging to that group.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="groupSelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="groupSelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Groups are created lazily and removed when empty. Each group exposes an inner observable list that receives incremental updates.
@@ -1130,7 +1130,7 @@ public static class ObservableListEx
     /// <param name="propertyChangedThrottle">Optional <see cref="TimeSpan"/> throttle duration for property change notifications.</param>
     /// <param name="scheduler">The <see cref="IScheduler"/> used when throttling.</param>
     /// <returns>A list changeset stream of <see cref="IGroup{TObject, TGroup}"/> objects.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertySelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Convenience operator equivalent to <c>.AutoRefresh(propertySelector).GroupOn(item => property)</c>.
@@ -1162,7 +1162,7 @@ public static class ObservableListEx
     /// <param name="propertyChangedThrottle">Optional <see cref="TimeSpan"/> throttle duration for property change notifications.</param>
     /// <param name="scheduler">The <see cref="IScheduler"/> used when throttling.</param>
     /// <returns>A list changeset stream of <see cref="List.IGrouping{TObject, TGroup}"/> immutable group snapshots.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertySelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Combines <see cref="AutoRefresh{TObject, TProperty}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TProperty}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
@@ -1194,7 +1194,7 @@ public static class ObservableListEx
     /// <param name="groupSelectorKey">A <see cref="Func{T, TResult}"/> function that returns the group key for each item.</param>
     /// <param name="regrouper">Optional <see cref="IObservable{T}"/> of <see cref="Unit"/> that forces all items to be re-evaluated when it fires.</param>
     /// <returns>A list changeset stream of <see cref="List.IGrouping{TObject, TGroupKey}"/> immutable snapshots.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="groupSelectorKey"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="groupSelectorKey"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Works like <see cref="GroupOn{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Func{TObject, TGroup}, IObservable{Unit}?)"/>
@@ -1225,7 +1225,7 @@ public static class ObservableListEx
     /// <param name="sizeLimit">The maximum number of items allowed. Must be greater than zero.</param>
     /// <param name="scheduler">The scheduler for scheduling size checks. Defaults to <see cref="GlobalConfig.DefaultScheduler"/>.</param>
     /// <returns>An observable that emits collections of items each time excess items are removed from the source list.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException"><paramref name="sizeLimit"/> is zero or negative.</exception>
     /// <remarks>
     /// <para>
@@ -1261,7 +1261,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns an observable for each source item.</param>
     /// <returns>An observable that emits values from all per-item observables, merged together.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Internally uses <see cref="SubscribeMany{T}(IObservable{IChangeSet{T}}, Func{T, IDisposable})"/> to manage per-item subscriptions.
@@ -1298,7 +1298,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of nested changeset observables.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> used by the merge tracker to compare items.</param>
     /// <returns>A single list changeset stream containing all changes from all inner streams.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// All changes from inner streams are forwarded to the output.
@@ -1336,7 +1336,7 @@ public static class ObservableListEx
     /// <param name="other">The second <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/> changeset stream to merge with.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> used to compare items.</param>
     /// <param name="scheduler">Optional <see cref="IScheduler"/> for scheduling enumeration.</param>
-    /// <param name="completable">When <c>true</c> (default), the result completes when all sources complete.</param>
+    /// <param name="completable">When <see langword="true"/> (default), the result completes when all sources complete.</param>
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IObservable<IChangeSet<TObject>> source, IObservable<IChangeSet<TObject>> other, IEqualityComparer<TObject>? equalityComparer = null, IScheduler? scheduler = null, bool completable = true)
         where TObject : notnull
     {
@@ -1354,7 +1354,7 @@ public static class ObservableListEx
     /// <param name="others">Additional <see cref="IEnumerable{T}"/> of list changeset streams to merge with.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> used to compare items.</param>
     /// <param name="scheduler">Optional <see cref="IScheduler"/> for scheduling enumeration.</param>
-    /// <param name="completable">When <c>true</c> (default), the result completes when all sources complete.</param>
+    /// <param name="completable">When <see langword="true"/> (default), the result completes when all sources complete.</param>
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IObservable<IChangeSet<TObject>> source, IEnumerable<IObservable<IChangeSet<TObject>>> others, IEqualityComparer<TObject>? equalityComparer = null, IScheduler? scheduler = null, bool completable = true)
         where TObject : notnull
     {
@@ -1372,9 +1372,9 @@ public static class ObservableListEx
     /// <param name="source">The <see cref="IEnumerable{T}"/> collection of list changeset streams to merge.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> used by the merge tracker to compare items.</param>
     /// <param name="scheduler">Optional <see cref="IScheduler"/> for scheduling enumeration.</param>
-    /// <param name="completable">When <c>true</c> (default), the result completes when all sources complete.</param>
+    /// <param name="completable">When <see langword="true"/> (default), the result completes when all sources complete.</param>
     /// <returns>A single list changeset stream containing all changes from all sources.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// <b>Replace</b> changes from inner streams are handled as a replace-or-add: if the old item is found in the merged output, it is replaced; otherwise the new item is added. <b>Moved</b> changes from inner streams are ignored.
@@ -1425,7 +1425,7 @@ public static class ObservableListEx
     /// <param name="source">The <see cref="IObservableList{T}"/> of cache changeset observables.</param>
     /// <param name="comparer"><see cref="IComparer{T}"/> to resolve which value wins when the same key appears in multiple sources.</param>
     /// <returns>A single cache changeset stream with key-based deduplication.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Sources can be added or removed dynamically from the observable list. Parent item removal triggers cleanup of all child items from that source.</para>
     /// </remarks>
@@ -1497,7 +1497,7 @@ public static class ObservableListEx
     /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns a child list changeset stream for each source item.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> used to compare child items.</param>
     /// <returns>A single list changeset stream containing all items from all child streams.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Internally subscribes to each child stream when a source item is added and disposes the subscription when it is removed.
@@ -1543,9 +1543,9 @@ public static class ObservableListEx
     /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns a child cache changeset stream for each source item.</param>
     /// <param name="comparer"><see cref="IComparer{T}"/> to resolve which value wins when the same key appears from multiple children.</param>
     /// <returns>A single cache changeset stream with key-based deduplication.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="observableSelector"/>, or <paramref name="comparer"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="observableSelector"/>, or <paramref name="comparer"/> is <see langword="null"/>.</exception>
     /// <remarks>
-    /// <para>Delegates to <see cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/> with a <c>null</c> equality comparer.</para>
+    /// <para>Delegates to <see cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/> with a <see langword="null"/> equality comparer.</para>
     /// </remarks>
     /// <seealso cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TDestination> comparer)
@@ -1572,7 +1572,7 @@ public static class ObservableListEx
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> to determine if two elements are the same.</param>
     /// <param name="comparer">Optional <see cref="IComparer{T}"/> to resolve conflicts when the same key appears from multiple children.</param>
     /// <returns>A single cache changeset stream with key-based deduplication.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Each source item produces a keyed child stream via <paramref name="observableSelector"/>. All child items are tracked by key.
@@ -1599,7 +1599,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <returns>A list changeset stream with empty changesets filtered out.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="StartWithEmpty{T}(IObservable{IChangeSet{T}})"/>
     /// <seealso cref="WhereReasonsAre{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
     public static IObservable<IChangeSet<T>> NotEmpty<T>(this IObservable<IChangeSet<T>> source)
@@ -1618,7 +1618,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="addAction">The <see cref="Action{T}"/> action to invoke for each added item.</param>
     /// <returns>A continuation of the source changeset stream, with the side effect applied before forwarding.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="addAction"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="addAction"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>The action fires before the changeset is forwarded downstream.</para>
     /// <list type="table">
@@ -1650,7 +1650,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="refreshAction">The <see cref="Action{T}"/> action to invoke for each refreshed item.</param>
     /// <returns>A continuation of the source changeset stream, with the side effect applied before forwarding.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="refreshAction"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="refreshAction"/> is <see langword="null"/>.</exception>
     /// <seealso cref="OnItemAdded{T}(IObservable{IChangeSet{T}}, Action{T})"/>
     /// <seealso cref="OnItemRemoved{T}(IObservable{IChangeSet{T}}, Action{T}, bool)"/>
     /// <seealso cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
@@ -1669,25 +1669,25 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of items in the list.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="removeAction">The <see cref="Action{T}"/> action to invoke for each removed item.</param>
-    /// <param name="invokeOnUnsubscribe">When <c>true</c> (default), <paramref name="removeAction"/> is also invoked for all remaining tracked items upon stream disposal, completion, or error.</param>
+    /// <param name="invokeOnUnsubscribe">When <see langword="true"/> (default), <paramref name="removeAction"/> is also invoked for all remaining tracked items upon stream disposal, completion, or error.</param>
     /// <returns>A continuation of the source changeset stream, with the side effect applied before forwarding.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="removeAction"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="removeAction"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
-    /// When <paramref name="invokeOnUnsubscribe"/> is <c>true</c>, the operator tracks all items that have been added but not yet removed,
+    /// When <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>, the operator tracks all items that have been added but not yet removed,
     /// and fires <paramref name="removeAction"/> for each of them during finalization. This is useful for resource cleanup patterns.
     /// </para>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Add/AddRange</term><description>Tracked internally (when <paramref name="invokeOnUnsubscribe"/> is <c>true</c>). No callback invoked. Changeset forwarded.</description></item>
+    /// <item><term>Add/AddRange</term><description>Tracked internally (when <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>). No callback invoked. Changeset forwarded.</description></item>
     /// <item><term>Replace</term><description>Callback invoked for the <b>previous</b> (replaced) item. New item tracked. Changeset forwarded.</description></item>
     /// <item><term>Remove</term><description>Callback invoked for the removed item. Changeset forwarded.</description></item>
     /// <item><term>RemoveRange/Clear</term><description>Callback invoked for each removed item. Changeset forwarded.</description></item>
     /// <item><term>Moved/Refresh</term><description>No callback. Changeset forwarded.</description></item>
-    /// <item><term>OnError</term><description>If <paramref name="invokeOnUnsubscribe"/> is <c>true</c>, callback is invoked for all tracked items before the error propagates.</description></item>
-    /// <item><term>OnCompleted</term><description>If <paramref name="invokeOnUnsubscribe"/> is <c>true</c>, callback is invoked for all tracked items before completion propagates.</description></item>
+    /// <item><term>OnError</term><description>If <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>, callback is invoked for all tracked items before the error propagates.</description></item>
+    /// <item><term>OnCompleted</term><description>If <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>, callback is invoked for all tracked items before completion propagates.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> When <paramref name="invokeOnUnsubscribe"/> is <c>true</c> (the default), disposing the subscription also invokes the callback for every item still in the list, not just items that were explicitly removed during the subscription. Exceptions in <paramref name="removeAction"/> are not caught.</para>
+    /// <para><b>Worth noting:</b> When <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/> (the default), disposing the subscription also invokes the callback for every item still in the list, not just items that were explicitly removed during the subscription. Exceptions in <paramref name="removeAction"/> are not caught.</para>
     /// </remarks>
     /// <seealso cref="OnItemAdded{T}(IObservable{IChangeSet{T}}, Action{T})"/>
     /// <seealso cref="DisposeMany{T}(IObservable{IChangeSet{T}})"/>
@@ -1717,7 +1717,7 @@ public static class ObservableListEx
     /// <param name="source">The primary source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="others">The other <see cref="IObservable{T}"/> changeset streams to combine with.</param>
     /// <returns>A list changeset stream containing items that exist in at least one source.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="others"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="others"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Uses reference-counted equality comparison. An item is included when it first appears in any source and removed when it no longer exists in any source.
@@ -1774,7 +1774,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="requests">An observable of <see cref="IPageRequest"/> controlling which page to display (page number and page size).</param>
     /// <returns>An <see cref="IPageChangeSet{T}"/> stream containing only items within the current page window.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="requests"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="requests"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Maintains the full source list internally and calculates the page window on each change or page request.
@@ -1802,7 +1802,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="destination">The destination <see cref="ISourceList{T}"/> to receive all changes.</param>
     /// <returns>An <see cref="IDisposable"/> representing the subscription. Dispose to stop piping changes.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="destination"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="destination"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Each changeset is applied to the destination using <c>Clone()</c> inside an <c>Edit()</c> call, producing a single batch update per changeset.</para>
     /// </remarks>
@@ -1826,7 +1826,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="resultSelector">A <see cref="Func{T, TResult}"/> function projecting the current list snapshot to a result value.</param>
     /// <returns>An observable emitting the projected value after each changeset.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="resultSelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="resultSelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Delegates to <see cref="QueryWhenChanged{T}(IObservable{IChangeSet{T}})"/> and applies <paramref name="resultSelector"/> via <c>Select</c>.</para>
     /// </remarks>
@@ -1848,7 +1848,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of items in the list.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <returns>An observable emitting the full list snapshot as <see cref="IReadOnlyCollection{T}"/> after each change.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>This is a non-changeset operator. It emits the entire collection state on each change, not incremental diffs.</para>
     /// <list type="table">
@@ -1877,7 +1877,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <returns>A list changeset stream backed by a shared, reference-counted <see cref="IObservableList{T}"/>.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Equivalent to <c>Publish().RefCount()</c> for changeset streams. The underlying list is created lazily on first subscription.</para>
     /// </remarks>
@@ -1896,7 +1896,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <returns>A list changeset stream with all index values removed from changes.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Removes index positions from every change in each changeset. This is useful when downstream operators do not require or support index-based operations.</para>
     /// </remarks>
@@ -1915,7 +1915,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <returns>A list changeset stream with all index positions reversed.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>This is a pure index transformation. The items themselves are unchanged; only their positional indices are inverted.</para>
     /// </remarks>
@@ -1936,7 +1936,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <returns>A list changeset stream that omits the initial snapshot.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="DeferUntilLoaded{T}(IObservable{IChangeSet{T}})"/>
     /// <seealso cref="StartWithEmpty{T}(IObservable{IChangeSet{T}})"/>
     public static IObservable<IChangeSet<T>> SkipInitial<T>(this IObservable<IChangeSet<T>> source)
@@ -1958,7 +1958,7 @@ public static class ObservableListEx
     /// <param name="comparerChanged">Optional <see cref="IObservable{T}"/> of <see cref="IComparer{T}"/> that replaces the comparer, triggering a full re-sort.</param>
     /// <param name="resetThreshold">When the number of changes exceeds this threshold, a full reset is performed instead of incremental updates. Default is 50.</param>
     /// <returns>A list changeset stream with items in sorted order.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="comparer"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="comparer"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Maintains an internal sorted list. Each incoming change is applied incrementally: adds are inserted at the correct sorted position,
@@ -2027,7 +2027,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="subscriptionFactory">A function that creates an <see cref="IDisposable"/> for each item.</param>
     /// <returns>A continuation of the source changeset stream with per-item subscriptions managed as a side effect.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="subscriptionFactory"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="subscriptionFactory"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
@@ -2067,7 +2067,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="sources">An observable that emits <see cref="IObservableList{T}"/> instances. Each emission triggers a switch to the new list.</param>
     /// <returns>A list changeset stream reflecting the most recently received inner list.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="sources"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="sources"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Convenience overload that calls <c>Connect()</c> on each inner list, then delegates to <see cref="Switch{T}(IObservable{IObservable{IChangeSet{T}}})"/>.</para>
     /// </remarks>
@@ -2087,7 +2087,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="sources">The source <see cref="IObservable{T}"/> of nested changeset observables.</param>
     /// <returns>A list changeset stream reflecting the most recently received inner changeset stream.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="sources"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="sources"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// On each new inner stream, the operator clears the destination, disposes the previous subscription, and subscribes to the new stream.
@@ -2122,7 +2122,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/>.</param>
     /// <param name="scheduler">Optional <see cref="IScheduler"/> for time-based operations (expiry, size limiting).</param>
     /// <returns>A list changeset stream where each source emission is an <b>Add</b>.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// This is the primary bridge from standard Rx into DynamicData's list changeset model. Each item emitted by <paramref name="source"/>
@@ -2149,7 +2149,7 @@ public static class ObservableListEx
     /// Expired items are automatically removed.
     /// </summary>
     /// <param name="source">The source <see cref="IObservable{T}"/>.</param>
-    /// <param name="expireAfter">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <c>null</c> for non-expiring items.</param>
+    /// <param name="expireAfter">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <see langword="null"/> for non-expiring items.</param>
     /// <param name="scheduler">Optional <see cref="IScheduler"/> for expiry timers.</param>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
                 this IObservable<T> source,
@@ -2186,7 +2186,7 @@ public static class ObservableListEx
     /// Bridges an <see cref="IObservable{T}"/> into a list changeset stream with both time-based expiry and FIFO size limiting.
     /// </summary>
     /// <param name="source">The source <see cref="IObservable{T}"/>.</param>
-    /// <param name="expireAfter">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <c>null</c> for non-expiring items.</param>
+    /// <param name="expireAfter">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <see langword="null"/> for non-expiring items.</param>
     /// <param name="limitSizeTo">Maximum list size. Supply -1 to disable size limiting.</param>
     /// <param name="scheduler">Optional <see cref="IScheduler"/> for expiry timers and size-limit checks.</param>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
@@ -2241,7 +2241,7 @@ public static class ObservableListEx
     /// Bridges an <see cref="IObservable{T}"/> of <see cref="IEnumerable{T}"/> batches into a list changeset stream with time-based expiry.
     /// </summary>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IEnumerable{T}"/>.</param>
-    /// <param name="expireAfter">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <c>null</c> for non-expiring items.</param>
+    /// <param name="expireAfter">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <see langword="null"/> for non-expiring items.</param>
     /// <param name="scheduler">Optional <see cref="IScheduler"/> for expiry timers.</param>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
                 this IObservable<IEnumerable<T>> source,
@@ -2259,7 +2259,7 @@ public static class ObservableListEx
     /// Bridges an <see cref="IObservable{T}"/> of <see cref="IEnumerable{T}"/> batches into a list changeset stream with both time-based expiry and FIFO size limiting.
     /// </summary>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IEnumerable{T}"/>.</param>
-    /// <param name="expireAfter">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <c>null</c> for non-expiring items.</param>
+    /// <param name="expireAfter">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <see langword="null"/> for non-expiring items.</param>
     /// <param name="limitSizeTo">Maximum list size. Oldest items removed when exceeded.</param>
     /// <param name="scheduler">Optional <see cref="IScheduler"/> for expiry timers and size-limit checks.</param>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
@@ -2281,7 +2281,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="numberOfItems">The maximum number of items to include. Must be greater than zero.</param>
     /// <returns>A virtual changeset stream containing at most <paramref name="numberOfItems"/> items from the beginning of the source.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="numberOfItems"/> is zero or negative.</exception>
     /// <remarks>
     /// <para>The source should ideally be sorted before applying Top, since list order determines which items appear.</para>
@@ -2342,7 +2342,7 @@ public static class ObservableListEx
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="transformFactory">The <see cref="Func{T, TResult}"/> transform function applied to each item.</param>
-    /// <param name="transformOnRefresh">When <c>true</c>, Refresh events re-invoke the factory and emit an update. When <c>false</c> (the default), Refresh is forwarded without re-transforming.</param>
+    /// <param name="transformOnRefresh">When <see langword="true"/>, Refresh events re-invoke the factory and emit an update. When <see langword="false"/> (the default), Refresh is forwarded without re-transforming.</param>
     /// <returns>A list changeset stream of transformed items.</returns>
     /// <remarks>
     /// <para>
@@ -2357,14 +2357,14 @@ public static class ObservableListEx
     /// <item><term>Remove</term><description>A <b>Remove</b> is emitted (no factory call).</description></item>
     /// <item><term>RemoveRange</term><description>A <b>RemoveRange</b> is emitted.</description></item>
     /// <item><term>Moved</term><description>A <b>Moved</b> is emitted with updated indices (no factory call). Throws <see cref="UnspecifiedIndexException"/> if the source change has no index information.</description></item>
-    /// <item><term>Refresh</term><description>If <paramref name="transformOnRefresh"/> is <c>false</c> (default), the <b>Refresh</b> is forwarded without re-transforming. If <c>true</c>, the factory is re-invoked and the result replaces the current value.</description></item>
+    /// <item><term>Refresh</term><description>If <paramref name="transformOnRefresh"/> is <see langword="false"/> (default), the <b>Refresh</b> is forwarded without re-transforming. If <see langword="true"/>, the factory is re-invoked and the result replaces the current value.</description></item>
     /// <item><term>Clear</term><description>A <b>Clear</b> is emitted and the internal list is emptied.</description></item>
     /// <item><term>OnError</term><description>Forwarded. If the factory throws, the exception propagates as OnError.</description></item>
     /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> By default, Refresh does NOT re-transform the item (it just forwards the signal). Set <paramref name="transformOnRefresh"/> to <c>true</c> if you need the factory re-invoked on Refresh. Add operations with out-of-bounds indices silently append to the end.</para>
+    /// <para><b>Worth noting:</b> By default, Refresh does NOT re-transform the item (it just forwards the signal). Set <paramref name="transformOnRefresh"/> to <see langword="true"/> if you need the factory re-invoked on Refresh. Add operations with out-of-bounds indices silently append to the end.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <see langword="null"/>.</exception>
     /// <seealso cref="TransformAsync{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, Task{TDestination}}, bool)"/>
     /// <seealso cref="TransformMany{TDestination, TSource}(IObservable{IChangeSet{TSource}}, Func{TSource, IEnumerable{TDestination}}, IEqualityComparer{TDestination}?)"/>
     /// <seealso cref="Convert{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination})"/>
@@ -2385,7 +2385,7 @@ public static class ObservableListEx
     /// </summary>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="transformFactory">A <see cref="Func{T, TResult}"/> function receiving the source item and its index, returning the transformed item.</param>
-    /// <param name="transformOnRefresh">When <c>true</c>, Refresh events re-invoke the factory.</param>
+    /// <param name="transformOnRefresh">When <see langword="true"/>, Refresh events re-invoke the factory.</param>
     public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, int, TDestination> transformFactory, bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
@@ -2403,7 +2403,7 @@ public static class ObservableListEx
     /// </summary>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="transformFactory">A function receiving the source item and the previous transformed value (as <see cref="Optional{T}"/>), returning the new transformed item.</param>
-    /// <param name="transformOnRefresh">When <c>true</c>, Refresh events re-invoke the factory.</param>
+    /// <param name="transformOnRefresh">When <see langword="true"/>, Refresh events re-invoke the factory.</param>
     public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, TDestination> transformFactory, bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
@@ -2421,7 +2421,7 @@ public static class ObservableListEx
     /// </summary>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="transformFactory">A <see cref="Func{T, TResult}"/> function receiving the source item, previous transformed value, and index.</param>
-    /// <param name="transformOnRefresh">When <c>true</c>, Refresh events re-invoke the factory.</param>
+    /// <param name="transformOnRefresh">When <see langword="true"/>, Refresh events re-invoke the factory.</param>
     public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> transformFactory, bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
@@ -2439,9 +2439,9 @@ public static class ObservableListEx
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="transformFactory">An <see cref="Func{T, TResult}"/> async function that transforms each source item.</param>
-    /// <param name="transformOnRefresh">When <c>true</c>, Refresh events re-invoke the factory.</param>
+    /// <param name="transformOnRefresh">When <see langword="true"/>, Refresh events re-invoke the factory.</param>
     /// <returns>A list changeset stream of asynchronously transformed items.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Change handling is identical to the synchronous <see cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/> except the factory is awaited. Operations are serialized per changeset via a semaphore.</para>
     /// <list type="table">
@@ -2450,7 +2450,7 @@ public static class ObservableListEx
     /// <item><term>Replace</term><description>The async factory is awaited for the new item. A <b>Replace</b> is emitted.</description></item>
     /// <item><term>Remove/RemoveRange</term><description>Emitted without invoking the factory.</description></item>
     /// <item><term>Moved</term><description>Emitted with updated indices (no factory call).</description></item>
-    /// <item><term>Refresh</term><description>If <paramref name="transformOnRefresh"/> is <c>false</c> (default), forwarded without re-transforming. If <c>true</c>, the factory is re-awaited.</description></item>
+    /// <item><term>Refresh</term><description>If <paramref name="transformOnRefresh"/> is <see langword="false"/> (default), forwarded without re-transforming. If <see langword="true"/>, the factory is re-awaited.</description></item>
     /// <item><term>Clear</term><description>Emitted and internal list cleared.</description></item>
     /// <item><term>OnError</term><description>Forwarded. If the async factory throws, the exception propagates as OnError.</description></item>
     /// <item><term>OnCompleted</term><description>Forwarded after the last changeset is processed.</description></item>
@@ -2536,7 +2536,7 @@ public static class ObservableListEx
     /// <param name="manySelector">A <see cref="Func{T, TResult}"/> function that returns the child items for each source item.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> comparer used during Replace to determine which child items changed between old and new parent values.</param>
     /// <returns>A list changeset stream of all child items from all source items.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="manySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="manySelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
@@ -2592,7 +2592,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="requests">An observable of <see cref="IVirtualRequest"/> specifying the start index and size of the window.</param>
     /// <returns>An <see cref="IVirtualChangeSet{T}"/> stream containing only items within the current virtual window.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="requests"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="requests"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Like <see cref="Page{T}(IObservable{IChangeSet{T}}, IObservable{IPageRequest})"/> but uses absolute start index and size instead of page number and page size.
@@ -2620,7 +2620,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="propertiesToMonitor">Optional list of property names to monitor. If empty, all property changes are observed.</param>
     /// <returns>An observable emitting the item whenever any monitored property changes.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Implemented via <see cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>. Subscriptions are managed per item: created on add, disposed on remove.</para>
     /// </remarks>
@@ -2644,9 +2644,9 @@ public static class ObservableListEx
     /// <typeparam name="TValue">The type of the property value.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="propertyAccessor">An <see cref="Expression{TDelegate}"/> expression selecting the property to observe.</param>
-    /// <param name="notifyOnInitialValue">When <c>true</c> (default), the current value is emitted immediately upon subscribing to each item.</param>
+    /// <param name="notifyOnInitialValue">When <see langword="true"/> (default), the current value is emitted immediately upon subscribing to each item.</param>
     /// <returns>An observable emitting <see cref="PropertyValue{TObject, TValue}"/> whenever the property changes on any tracked item.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertyAccessor"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertyAccessor"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Implemented via <see cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>.</para>
     /// </remarks>
@@ -2671,9 +2671,9 @@ public static class ObservableListEx
     /// <typeparam name="TValue">The type of the property value.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="propertyAccessor">An <see cref="Expression{TDelegate}"/> expression selecting the property to observe.</param>
-    /// <param name="notifyOnInitialValue">When <c>true</c> (default), the current value is emitted immediately upon subscribing to each item.</param>
+    /// <param name="notifyOnInitialValue">When <see langword="true"/> (default), the current value is emitted immediately upon subscribing to each item.</param>
     /// <returns>An observable emitting the property value whenever it changes on any tracked item.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertyAccessor"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertyAccessor"/> is <see langword="null"/>.</exception>
     /// <seealso cref="WhenPropertyChanged{TObject, TValue}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TValue}}, bool)"/>
     /// <seealso cref="WhenAnyPropertyChanged{TObject}(IObservable{IChangeSet{TObject}}, string[])"/>
     public static IObservable<TValue?> WhenValueChanged<TObject, TValue>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
@@ -2694,7 +2694,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="reasons">The <see cref="ListChangeReason"/> change reasons to include. Must specify at least one.</param>
     /// <returns>A list changeset stream containing only changes with the specified reasons.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="reasons"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="reasons"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException"><paramref name="reasons"/> is empty.</exception>
     /// <remarks>
     /// <para>Filters individual changes within each changeset. If filtering removes all changes from a changeset, the empty changeset is suppressed via <see cref="NotEmpty{T}(IObservable{IChangeSet{T}})"/>.</para>
@@ -2738,7 +2738,7 @@ public static class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="reasons">The <see cref="ListChangeReason"/> change reasons to exclude. Must specify at least one.</param>
     /// <returns>A list changeset stream with the specified change reasons removed.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="reasons"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="reasons"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException"><paramref name="reasons"/> is empty.</exception>
     /// <remarks>
     /// <para>
@@ -2786,7 +2786,7 @@ public static class ObservableListEx
     /// <param name="source">The primary source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="others">The other <see cref="IObservable{T}"/> changeset streams to combine with.</param>
     /// <returns>A list changeset stream containing items that exist in exactly one source.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="others"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="others"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// Uses reference-counted equality. An item is included when it exists in exactly one source.
