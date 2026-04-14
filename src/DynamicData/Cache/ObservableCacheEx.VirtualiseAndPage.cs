@@ -43,8 +43,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{ISortedChangeSet{TObject, TKey}}"/> to paginate.</param>
-    /// <param name="comparer">The comparer to order the resulting dataset.</param>
-    /// <param name="virtualRequests">The virtualizing requests (start index and page size).</param>
+    /// <param name="comparer">The <see cref="IComparer{TObject}"/> that determines sort order.</param>
+    /// <param name="virtualRequests">The <see cref="IObservable{IVirtualRequest}"/> that controls which window of sorted items to include.</param>
     /// <param name="options">The <see cref="SortAndVirtualizeOptions"/> for controlling virtualization behavior.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
@@ -87,8 +87,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{ISortedChangeSet{TObject, TKey}}"/> to paginate.</param>
-    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>
-    /// <param name="virtualRequests">The virtualizing requests (start index and page size).</param>
+    /// <param name="comparerChanged">An <see cref="IObservable{IComparer{TObject}}"/> that emits new comparers to re-sort with.</param>
+    /// <param name="virtualRequests">The <see cref="IObservable{IVirtualRequest}"/> that controls which window of sorted items to include.</param>
     /// <param name="options">The <see cref="SortAndVirtualizeOptions"/> for controlling virtualization behavior.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
@@ -130,7 +130,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{ISortedChangeSet{TObject, TKey}}"/> to paginate.</param>
-    /// <param name="virtualRequests">The <see cref="IObservable{IVirtualRequest}"/> virtualising requests.</param>
+    /// <param name="virtualRequests">The <see cref="IObservable{IVirtualRequest}"/> that controls which window of sorted items to include.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     [Obsolete(Constants.VirtualizeIsObsolete)]
@@ -151,7 +151,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to limit.</param>
-    /// <param name="comparer">The <see cref="IComparer{TObject}"/> used to determine sort order.</param>
+    /// <param name="comparer">The <see cref="IComparer{TObject}"/> that determines sort order.</param>
     /// <param name="size">The maximum number of items to return.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
@@ -185,7 +185,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{ISortedChangeSet{TObject, TKey}}"/> to paginate.</param>
-    /// <param name="size">The size.</param>
+    /// <param name="size">The maximum number of items to include.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     /// <exception cref="ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
@@ -235,8 +235,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{ISortedChangeSet{TObject, TKey}}"/> to paginate.</param>
-    /// <param name="comparer">The comparer to order the resulting dataset.</param>
-    /// <param name="pageRequests">The page requests (page number and page size).</param>
+    /// <param name="comparer">The <see cref="IComparer{TObject}"/> that determines sort order.</param>
+    /// <param name="pageRequests">The <see cref="IObservable{IPageRequest}"/> that controls which page of sorted items to include.</param>
     /// <param name="options">The <see cref="SortAndPageOptions"/> for controlling paging behavior.</param>
     /// <returns>An observable which will emit paged change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
@@ -278,8 +278,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{ISortedChangeSet{TObject, TKey}}"/> to paginate.</param>
-    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>
-    /// <param name="pageRequests">The page requests (page number and page size).</param>
+    /// <param name="comparerChanged">An <see cref="IObservable{IComparer{TObject}}"/> that emits new comparers to re-sort with.</param>
+    /// <param name="pageRequests">The <see cref="IObservable{IPageRequest}"/> that controls which page of sorted items to include.</param>
     /// <param name="options">The <see cref="SortAndPageOptions"/> for controlling paging behavior.</param>
     /// <returns>An observable which will emit paged change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
@@ -320,7 +320,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{ISortedChangeSet{TObject, TKey}}"/> to paginate.</param>
-    /// <param name="pageRequests">The <see cref="IObservable{IPageRequest}"/> page requests.</param>
+    /// <param name="pageRequests">The <see cref="IObservable{IPageRequest}"/> that controls which page of sorted items to include.</param>
     /// <returns>An observable which emits change sets.</returns>
     [Obsolete(Constants.PageIsObsolete)]
     public static IObservable<IPagedChangeSet<TObject, TKey>> Page<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
