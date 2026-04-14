@@ -2892,10 +2892,21 @@ public static partial class ObservableCacheEx
     /// <returns>A unified changeset stream containing changes from all active source streams.</returns>
     /// <remarks>
     /// <para>
-    /// Each inner changeset stream is independently tracked. When multiple sources provide the same key,
+    /// Each inner changeset stream is independently tracked in its own cache. When multiple sources provide the same key,
     /// this overload uses first-in-wins semantics: the value from whichever source added the key first is
     /// the one published downstream. To control which value wins for duplicate keys, use an overload that
     /// accepts an <see cref="IComparer{T}"/>, which selects the lowest-ordered value across all sources.
+    /// An <see cref="IEqualityComparer{T}"/> can be provided separately to suppress no-op updates when
+    /// the new value equals the currently published value for a key.
+    /// </para>
+    /// <para>
+    /// <b>Overload families:</b> MergeChangeSets has 16 overloads organized along three axes:
+    /// (1) <b>Source type</b>: dynamic (<c>IObservable&lt;IObservable&lt;IChangeSet&gt;&gt;</c>, sources arrive at runtime),
+    /// pair (<c>source + other</c>, exactly two streams), or static (<c>IEnumerable</c>, all sources known up front).
+    /// (2) <b>Conflict resolution</b>: none (first-in-wins), <c>IComparer</c> (lowest-ordered wins),
+    /// <c>IEqualityComparer</c> (suppresses duplicate updates), or both.
+    /// (3) <b>Completion</b>: static overloads accept a <c>completable</c> flag; when <c>false</c>, the output never completes
+    /// even after all sources finish (useful for "live" merge scenarios).
     /// </para>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
@@ -2904,7 +2915,7 @@ public static partial class ObservableCacheEx
     /// <item><term>Remove</term><description>If the removed value was the one published downstream, the operator scans all remaining sources for the same key. If another source still holds that key, an <b>Update</b> is emitted with the replacement value (selected by comparer if provided, otherwise the next available). If no other source holds the key, a <b>Remove</b> is emitted.</description></item>
     /// <item><term>Refresh</term><description>If the refreshed item matches the currently published value, the <b>Refresh</b> is forwarded. With a comparer, all sources are re-evaluated first; if a different value now wins, an <b>Update</b> is emitted instead of the Refresh.</description></item>
     /// <item><term>OnError</term><description>An error from any source (outer or inner) terminates the entire merged output.</description></item>
-    /// <item><term>OnCompleted</term><description>The output completes when the outer observable completes and all subscribed inner observables have also completed.</description></item>
+    /// <item><term>OnCompleted</term><description>For dynamic overloads, the output completes when the outer observable completes and all subscribed inner observables have also completed. For static overloads, completion depends on the <c>completable</c> parameter (default <c>true</c>).</description></item>
     /// </list>
     /// <para>
     /// <b>Worth noting:</b> When a source removes a key that was published downstream, the fallback to another
@@ -3354,38 +3365,65 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// For each item in the source cache, subscribes to a child cache changeset stream produced by
-    /// <paramref name="observableSelector"/> and merges all child changes into a single flattened output stream.
-    /// Child subscriptions follow the source item lifecycle: created on Add, replaced on Update (the old
-    /// subscription is disposed), and disposed on Remove (emitting Removes for all of that item's children).
+    /// For each item in the source cache, subscribes to a child changeset stream and merges all child
+    /// changes into a single flattened output stream. Child subscriptions track the parent item lifecycle:
+    /// created on Add, replaced on Update, disposed on Remove.
     /// </summary>
-    /// <typeparam name="TObject">The type of items in the source cache.</typeparam>
-    /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
+    /// <typeparam name="TObject">The type of items in the source (parent) cache.</typeparam>
+    /// <typeparam name="TKey">The type of the key identifying parent items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source cache changeset stream.</param>
-    /// <param name="observableSelector">Factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
-    /// <param name="equalityComparer">Optional equality comparer to suppress updates when the incoming child value equals the current value for a destination key.</param>
-    /// <param name="comparer">Optional comparer to resolve key conflicts when multiple child streams provide items with the same destination key. The lowest-ordered item wins.</param>
-    /// <returns>A merged changeset stream containing items from all active child streams.</returns>
+    /// <param name="source">The source cache changeset stream whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">Factory function that receives a parent item and its key, and returns a child cache changeset stream. Called once per parent Add/Update.</param>
+    /// <param name="equalityComparer">Optional equality comparer to suppress no-op child updates. When a child key's new value equals the current value per this comparer, the update is not emitted.</param>
+    /// <param name="comparer">Optional comparer to resolve child key conflicts when multiple parents contribute children with the same destination key. The lowest-ordered child value wins. Without a comparer, the first parent to provide a key retains priority.</param>
+    /// <returns>A merged changeset stream containing all child items from all active parent subscriptions.</returns>
     /// <remarks>
     /// <para>
-    /// Unlike <see cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>,
-    /// errors from child changeset streams propagate to the output (they are not silently swallowed).
-    /// An error from the source or any child terminates the merged output.
+    /// This is the changeset-aware counterpart to <see cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>.
+    /// Where MergeMany produces a flat <c>IObservable&lt;T&gt;</c>, MergeManyChangeSets produces an <c>IObservable&lt;IChangeSet&gt;</c>
+    /// that tracks the full lifecycle of child items, including key conflict resolution across parents.
+    /// </para>
+    /// <para>
+    /// <b>Parent-side change handling (source changeset events):</b>
     /// </para>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Add</term><description>Subscribes to the child changeset stream for the new source item. All changes from the child are merged into the output.</description></item>
-    /// <item><term>Update</term><description>Disposes the old child subscription, subscribes to a new child stream for the updated item. Items from the old child are removed from the output.</description></item>
-    /// <item><term>Remove</term><description>Disposes the child subscription. All items contributed by that child are emitted as <b>Remove</b> changes in the output.</description></item>
-    /// <item><term>Refresh</term><description>No effect on child subscriptions.</description></item>
-    /// <item><term>OnError</term><description>Errors from child changeset streams propagate and terminate the output (unlike MergeMany which swallows child errors).</description></item>
-    /// <item><term>OnCompleted</term><description>Completes when the source completes and all active child streams have also completed.</description></item>
+    /// <item><term>Add</term><description>Calls <paramref name="observableSelector"/> with the new parent item to obtain a child changeset stream, then subscribes. As the child stream emits changesets, those child items are merged into the output. The downstream observer sees <b>Add</b> changes for each new child item.</description></item>
+    /// <item><term>Update</term><description>Disposes the previous parent's child subscription (removing all of its contributed child items from the output as <b>Remove</b> changes), then creates a new child subscription for the updated parent. The new child's items appear as <b>Add</b> changes.</description></item>
+    /// <item><term>Remove</term><description>Disposes the parent's child subscription. All child items contributed by that parent are emitted as <b>Remove</b> changes in the output. If another parent also provides a child with the same destination key, that parent's value is promoted as an <b>Update</b> (not an Add).</description></item>
+    /// <item><term>Refresh</term><description>No effect on the child subscription. The parent's child stream continues unchanged.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> When multiple children produce items with the same destination key, the <paramref name="comparer"/> determines which value wins. Without a comparer, first-in-wins. The <paramref name="equalityComparer"/> suppresses no-op updates when the new value equals the current one.</para>
+    /// <para>
+    /// <b>Child-side change handling (changes arriving from child changeset streams):</b>
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add</term><description>If the destination key is new, an <b>Add</b> is emitted. If another parent already contributed a child with the same key, the conflict is resolved by <paramref name="comparer"/> (lowest wins) or first-in-wins if no comparer. The losing value is tracked internally but not emitted.</description></item>
+    /// <item><term>Update</term><description>If this parent currently owns the destination key downstream, an <b>Update</b> is emitted. With a comparer, all parents are re-evaluated for that key; a different parent's value may win, producing an <b>Update</b> to that value instead.</description></item>
+    /// <item><term>Remove</term><description>If this parent's value was the one published downstream for that destination key, the operator scans other parents for the same key. If found, an <b>Update</b> is emitted with the replacement. If not, a <b>Remove</b> is emitted.</description></item>
+    /// <item><term>Refresh</term><description>If the child item is the one currently published downstream, the <b>Refresh</b> is forwarded. With a comparer, all parents are re-evaluated first; if a different value now wins, an <b>Update</b> is emitted instead.</description></item>
+    /// </list>
+    /// <para>
+    /// <b>Error and completion:</b>
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>OnError</term><description>An error from the source (parent) stream or from any child changeset stream terminates the entire output. Unlike <see cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>, child errors are NOT swallowed.</description></item>
+    /// <item><term>OnCompleted</term><description>The output completes when the source (parent) stream completes <b>and</b> all active child changeset streams have also completed.</description></item>
+    /// </list>
+    /// <para>
+    /// <b>Worth noting:</b> When multiple parents contribute children with the same destination key, only one value is published
+    /// downstream at a time. The <paramref name="comparer"/> controls which value wins; without it, the first parent to add the key
+    /// retains priority. Removing a parent that owned a contested key causes the next-best value (per comparer or next available)
+    /// to surface as an <b>Update</b>, not an Add. The <paramref name="equalityComparer"/> independently controls whether a child
+    /// Update for an already-published key is suppressed when the new value equals the old.
+    /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <c>null</c>.</exception>
+    /// <seealso cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>
+    /// <seealso cref="MergeChangeSets{TObject, TKey}(IObservable{IObservable{IChangeSet{TObject, TKey}}})"/>
+    /// <seealso cref="TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, IObservable{IChangeSet{TDestination, TDestinationKey}}}, Func{TDestination, TDestinationKey})"/>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
         where TObject : notnull
         where TKey : notnull
