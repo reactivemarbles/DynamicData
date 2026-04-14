@@ -1030,6 +1030,13 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="action"/> is <c>null</c>.</exception>
     /// <remarks>
     /// <para>This is a side-effect operator. It does not modify the changeset. If you need each individual item from range operations flattened out, use <see cref="ForEachItemChange{TObject}(IObservable{IChangeSet{TObject}}, Action{ItemChange{TObject}})"/> instead.</para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add/Replace/Remove/Moved/Refresh</term><description>Callback invoked with the <see cref="Change{T}"/> (single-item change). Changeset forwarded.</description></item>
+    /// <item><term>AddRange/RemoveRange/Clear</term><description>Callback invoked once with the <see cref="Change{T}"/> containing the range (accessible via <c>Range</c> property). Changeset forwarded.</description></item>
+    /// <item><term>OnError</term><description>Forwarded. If callback throws, propagates as OnError.</description></item>
+    /// <item><term>OnCompleted</term><description>Forwarded.</description></item>
+    /// </list>
     /// </remarks>
     /// <seealso cref="ForEachItemChange{TObject}(IObservable{IChangeSet{TObject}}, Action{ItemChange{TObject}})"/>
     /// <seealso cref="OnItemAdded{T}(IObservable{IChangeSet{T}}, Action{T})"/>
@@ -1843,6 +1850,13 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
     /// <remarks>
     /// <para>This is a non-changeset operator. It emits the entire collection state on each change, not incremental diffs.</para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add/AddRange/Replace/Remove/RemoveRange/Moved/Refresh/Clear</term><description>The internal list is updated, then the full <see cref="IReadOnlyCollection{T}"/> snapshot is emitted.</description></item>
+    /// <item><term>OnError</term><description>Forwarded.</description></item>
+    /// <item><term>OnCompleted</term><description>Forwarded.</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> A new snapshot is emitted on every changeset, which can be chatty. The collection is rebuilt by cloning each changeset into an internal list. For sorted output, use <see cref="ToSortedCollection{TObject, TSortKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TSortKey}, SortDirection)"/>.</para>
     /// </remarks>
     /// <seealso cref="QueryWhenChanged{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{IReadOnlyCollection{TObject}, TDestination})"/>
     /// <seealso cref="ToCollection{TObject}(IObservable{IChangeSet{TObject}})"/>
