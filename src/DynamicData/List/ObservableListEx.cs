@@ -1890,15 +1890,16 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Strips index information from all changes in the stream using <c>YieldWithoutIndex</c>.
+    /// Strips index information from all changes in the stream.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source list changeset stream.</param>
     /// <returns>A list changeset stream with all index values removed from changes.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
     /// <remarks>
-    /// <para>This is a workaround operator introduced for internal use (e.g., creating Or operators via MergeMany). Most consumers should not need this.</para>
+    /// <para>Removes index positions from every change in each changeset. This is useful when downstream operators do not require or support index-based operations.</para>
     /// </remarks>
+    /// <seealso cref="ChangeSetEx.YieldWithoutIndex{T}(IEnumerable{Change{T}})"/>
     public static IObservable<IChangeSet<T>> RemoveIndex<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -2686,7 +2687,7 @@ public static class ObservableListEx
 
     /// <summary>
     /// Filters the changeset stream to include only changes with the specified <see cref="ListChangeReason"/> values.
-    /// Index information is stripped from the output (via <c>YieldWithoutIndex</c>).
+    /// Index information is stripped from the output because removing some changes invalidates the original index positions.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source list changeset stream.</param>
@@ -2707,6 +2708,7 @@ public static class ObservableListEx
     /// </remarks>
     /// <seealso cref="WhereReasonsAreNot{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
     /// <seealso cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="ChangeSetEx.YieldWithoutIndex{T}(IEnumerable{Change{T}})"/>
     public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
         where T : notnull
     {
@@ -2728,7 +2730,8 @@ public static class ObservableListEx
 
     /// <summary>
     /// Filters the changeset stream to exclude changes with the specified <see cref="ListChangeReason"/> values.
-    /// Index information is stripped from the output (via <c>YieldWithoutIndex</c>), except when only filtering out <see cref="ListChangeReason.Refresh"/>.
+    /// Index information is stripped from the output because removing some changes invalidates the original index positions.
+    /// The exception is when only <see cref="ListChangeReason.Refresh"/> is excluded, since removing Refresh does not affect index calculations.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source list changeset stream.</param>
@@ -2739,11 +2742,12 @@ public static class ObservableListEx
     /// <remarks>
     /// <para>
     /// Empty changesets (after filtering) are automatically suppressed. When only <see cref="ListChangeReason.Refresh"/> is excluded,
-    /// indices are preserved (no <c>YieldWithoutIndex</c>), since removing Refresh does not affect index calculations.
+    /// indices are preserved, since removing Refresh does not affect index calculations.
     /// </para>
     /// </remarks>
     /// <seealso cref="WhereReasonsAre{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
     /// <seealso cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="ChangeSetEx.YieldWithoutIndex{T}(IEnumerable{Change{T}})"/>
     public static IObservable<IChangeSet<T>> WhereReasonsAreNot<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
         where T : notnull
     {
