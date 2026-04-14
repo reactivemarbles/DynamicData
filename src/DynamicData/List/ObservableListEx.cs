@@ -1300,7 +1300,7 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
     /// <remarks>
     /// <para>
-    /// Uses <c>ChangeSetMergeTracker</c> internally. All changes from inner streams are forwarded to the output.
+    /// All changes from inner streams are forwarded to the output.
     /// <b>Replace</b> changes are decomposed into a Remove of the old item followed by an Add of the new item.
     /// <b>Moved</b> changes from inner streams are ignored.
     /// </para>
@@ -1376,7 +1376,7 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
     /// <remarks>
     /// <para>
-    /// Uses <c>ChangeSetMergeTracker</c> internally. <b>Replace</b> is decomposed into Remove + Add. <b>Moved</b> is ignored.
+    /// <b>Replace</b> changes from inner streams are handled as a replace-or-add: if the old item is found in the merged output, it is replaced; otherwise the new item is added. <b>Moved</b> changes from inner streams are ignored.
     /// There is no key-based deduplication (unlike cache MergeChangeSets).
     /// </para>
     /// </remarks>
@@ -1959,7 +1959,7 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="comparer"/> is <c>null</c>.</exception>
     /// <remarks>
     /// <para>
-    /// Maintains an internal sorted <c>ChangeAwareList</c>. Each incoming change is applied incrementally: adds are inserted at the correct sorted position,
+    /// Maintains an internal sorted list. Each incoming change is applied incrementally: adds are inserted at the correct sorted position,
     /// removes are removed by index, and refreshes re-evaluate position (emitting <b>Moved</b> if changed).
     /// </para>
     /// <list type="table">
@@ -2344,7 +2344,7 @@ public static class ObservableListEx
     /// <returns>A list changeset stream of transformed items.</returns>
     /// <remarks>
     /// <para>
-    /// Maintains an internal list of transformed items via <c>ChangeAwareList</c>. Each source changeset is
+    /// Maintains an internal list of transformed items. Each source changeset is
     /// processed and a corresponding output changeset is produced with the transformed items.
     /// </para>
     /// <list type="table">
