@@ -2905,7 +2905,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnError</term><description>Errors from child observables are silently swallowed (the child is unsubscribed). Errors from the source changeset stream terminate the merged output.</description></item>
     /// <item><term>OnCompleted</term><description>The output completes only when the source completes <b>and</b> all active child observables have also completed.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> The output is a plain <c>IObservable&lt;TDestination&gt;</c>, not a changeset stream. If you need merged changesets, use <see cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IComparer{TDestination}, IEqualityComparer{TDestination})"/> instead.</para>
+    /// <para><b>Worth noting:</b> The output is a plain <see cref="IObservable{TDestination}"/>, not a changeset stream. If you need merged changesets, use <see cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IComparer{TDestination}, IEqualityComparer{TDestination})"/> instead.</para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
     /// <seealso cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IComparer{TDestination}, IEqualityComparer{TDestination})"/>
@@ -2956,9 +2956,9 @@ public static partial class ObservableCacheEx
     /// <para>
     /// <b>Overload families:</b> MergeChangeSets has 16 overloads organized along three axes:
     /// (1) <b>Source type</b>: dynamic (<c>IObservable&lt;IObservable&lt;IChangeSet&gt;&gt;</c>, sources arrive at runtime),
-    /// pair (<c>source + other</c>, exactly two streams), or static (<c>IEnumerable</c>, all sources known up front).
-    /// (2) <b>Conflict resolution</b>: none (first-in-wins), <c>IComparer</c> (lowest-ordered wins),
-    /// <c>IEqualityComparer</c> (suppresses duplicate updates), or both.
+    /// pair (<c>source + other</c>, exactly two streams), or static (<see cref="IEnumerable{T}"/>, all sources known up front).
+    /// (2) <b>Conflict resolution</b>: none (first-in-wins), <see cref="IComparer{T}"/> (lowest-ordered wins),
+    /// <see cref="IEqualityComparer{T}"/> (suppresses duplicate updates), or both.
     /// (3) <b>Completion</b>: static overloads accept a <c>completable</c> flag; when <c>false</c>, the output never completes
     /// even after all sources finish (useful for "live" merge scenarios).
     /// </para>
@@ -4512,8 +4512,8 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Strips the key from a cache changeset, converting <c>IChangeSet&lt;TObject, TKey&gt;</c> to
-    /// <c>IChangeSet&lt;TObject&gt;</c> (list changeset). All indexed changes are dropped (sorting is not supported).
+    /// Strips the key from a cache changeset, converting <see cref="IChangeSet{TObject, TKey}"/> to
+    /// <see cref="IChangeSet{TObject}"/> (list changeset). All indexed changes are dropped (sorting is not supported).
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -5171,7 +5171,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source changeset stream.</param>
     /// <param name="key">The key to watch.</param>
     /// <param name="equalityComparer">Optional comparer to suppress duplicate emissions. Uses default equality if <c>null</c>.</param>
-    /// <returns>An observable of <c>Optional&lt;TObject&gt;</c> that reflects the presence or absence of the specified key.</returns>
+    /// <returns>An observable of <see cref="Optional{TObject}"/> that reflects the presence or absence of the specified key.</returns>
     /// <remarks>
     /// <para>
     /// Unlike <see cref="WatchValue{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey)"/>, this emits <c>None</c> on removal
