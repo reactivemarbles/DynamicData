@@ -31,8 +31,8 @@ Start from this template for any primary overload. Delete sections that do not a
 /// </summary>
 /// <typeparam name="TObject">The type of items.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
-/// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
-/// <param name="exampleParam">An <see cref="IComparer{T}"/> that [what it controls].</param>
+/// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to [verb: filter, transform, sort, etc.].</param>
+/// <param name="exampleParam">An <see cref="IComparer{TObject}"/> that determines sort order.</param>
 /// <returns>[What it emits and what each emission represents.]</returns>
 /// <exception cref="ArgumentNullException">Thrown when <paramref name="source"/> is <c>null</c>.</exception>
 /// <remarks>
@@ -129,26 +129,67 @@ Refresh behavior varies significantly between operators: some re-evaluate (Filte
 **Params**: Every `<param>` must read as natural English with the type linked via `<see cref="..."/>` woven into the sentence. No type is exempt from linking (including enums, `Optional`, `Change`, `IChangeSet`, standard library types like `IComparer`, `TimeSpan`, `IScheduler`). Use `<see langword="true"/>` / `<see langword="false"/>` / `<see langword="null"/>` for C# keywords.
 
 Param writing rules:
-- Start with an article ("The", "A", "An") or a condition ("When", "If")
-- The type link appears naturally in the sentence, not as a prefix dumped before the description
-- Never echo the parameter name as the entire description ("The source.", "The destination.")
-- For `IObservable<IChangeSet<T,K>>` source params, use the two-part format: `The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.`
-- For deeply nested generics (3+ levels), use `{T}` in the cref and describe the actual type in prose
-- For `params` array parameters, do not include `[]` in the cref. Mention "array" in prose if needed.
-- For `Optional.None` references, use `<see cref="Optional.None{T}"/>`
+- **Reads as English.** Read it aloud. If it sounds wrong, it IS wrong.
+- **Starts with an article** ("The", "A", "An") or a condition ("When", "If").
+- **Links the actual parameter type** from the method signature. Use `<see cref="..."/>`. Get the generic type arguments right (e.g., `IComparer{TObject}` not `IComparer{T}` when the param type is `IComparer<TObject>`).
+- **Describes the purpose**, not just the type. Every param description must answer: "what does the caller use this for?"
+- **No redundancy with the type name.** The type `IChangeSet` already says "changeset", so don't add "changeset stream" after it. The type `IObservable` already says "observable", so don't add "observable" after it. The type `IComparer` already says "comparer", so don't add "comparer" after it.
+- **No double articles.** "The source [type] the left stream" has two articles fighting each other.
+- **Combined nested crefs** for observable changeset types. Write `IObservable{IChangeSet{TObject, TKey}}` as one cref. NEVER split into `IObservable{T}` + "of" + `IChangeSet{...}`.
+- **For deeply nested generics** (3+ nesting levels), use `{T}` in the cref and describe the actual type in prose.
+- **For `params` array parameters**, do not include `[]` in the cref.
+- **For `Optional.None`**, use `<see cref="Optional.None{T}"/>`.
 
 ```xml
-<!-- BAD: type dumped as prefix, meaningless description -->
-/// <param name="source"><see cref="IObservable{T}"/> the source.</param>
-/// <param name="destination"><see cref="IObservable{T}"/> the destination.</param>
-/// <param name="options">A <see cref="BindingOptions"/> that  The binding options.</param>
+<!-- ======================== BAD EXAMPLES ======================== -->
 
-<!-- GOOD: natural English with type links woven in -->
+<!-- BAD: split type into two parts -->
 /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
+
+<!-- BAD: redundant "changeset stream" after IChangeSet type -->
+/// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> changeset stream.</param>
+
+<!-- BAD: no purpose, just the type name -->
+/// <param name="comparer">The <see cref="IComparer{TObject}"/>.</param>
+
+<!-- BAD: echoes the type name ("comparer" after IComparer) -->
+/// <param name="comparer">The <see cref="IComparer{TObject}"/> comparer used for sorting.</param>
+
+<!-- BAD: double article ("The source ... the left") -->
+/// <param name="left">The source <see cref="IObservable{IChangeSet{TLeft, TLeftKey}}"/> the left input.</param>
+
+<!-- ======================== GOOD EXAMPLES ======================== -->
+
+<!-- source params: "The source [type] to [operator verb]." -->
+/// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to filter.</param>
+/// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to transform.</param>
+/// <param name="source">The source <see cref="IObservable{ISortedChangeSet{TObject, TKey}}"/> to bind.</param>
+/// <param name="source">The <see cref="ISourceCache{TObject, TKey}"/> to add items to.</param>
+
+<!-- join left/right params -->
+/// <param name="left">The left <see cref="IObservable{IChangeSet{TLeft, TLeftKey}}"/> to join.</param>
+/// <param name="right">The right <see cref="IObservable{IChangeSet{TRight, TRightKey}}"/> to join.</param>
+
+<!-- destination/output params: describe what it receives -->
 /// <param name="destination">The <see cref="IObservableCollection{TObject}"/> that will receive the changes.</param>
-/// <param name="options">The <see cref="BindingOptions"/> that controls binding behavior.</param>
-/// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
-/// <param name="equalityComparer">The <see cref="IEqualityComparer{TObject}"/> used to determine whether a new item is the same as an existing cached item.</param>
+/// <param name="readOnlyObservableCollection">The output <see cref="ReadOnlyObservableCollection{TObject}"/> that will be populated with the results.</param>
+
+<!-- comparer/equality params: describe what they control -->
+/// <param name="comparer">The <see cref="IComparer{TObject}"/> that determines sort order.</param>
+/// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TObject}"/> for determining item equality.</param>
+
+<!-- factory/selector params: describe what the function does -->
+/// <param name="transformFactory">A <see cref="Func{TSource, TDestination}"/> that projects each source item into a destination item.</param>
+/// <param name="filter">A <see cref="Func{TObject, bool}"/> predicate that determines which items to include.</param>
+/// <param name="rightKeySelector">A <see cref="Func{TRight, TLeftKey}"/> that extracts the join key from each right item.</param>
+
+<!-- scheduler/options params: describe what they configure -->
+/// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling expiry timers.</param>
+/// <param name="options">The <see cref="BindingOptions"/> that controls reset threshold and binding behavior.</param>
+
+<!-- bool params: describe the effect -->
+/// <param name="transformOnRefresh">When <see langword="true"/>, re-invokes the transform factory on Refresh changes instead of forwarding them.</param>
+/// <param name="invokeOnUnsubscribe">When <see langword="true"/>, invokes the callback for all tracked items when the subscription is disposed.</param>
 ```
 
 **SeeAlso**: Bidirectional for overload sets. Link safe/async/immutable variants, similar operators, complementary operators, commonly confused operators.
