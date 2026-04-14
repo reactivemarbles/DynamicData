@@ -73,7 +73,7 @@ public static class ObservableListEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source list changeset stream.</param>
     /// <param name="keySelector">A function to extract a unique key from each item.</param>
-    /// <returns>A cache changeset stream (<c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c>) with keyed items.</returns>
+    /// <returns>A cache changeset stream (<see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>) with keyed items.</returns>
     /// <remarks>
     /// <para>
     /// All index information is dropped during conversion because cache changesets are unordered by default.
@@ -311,7 +311,7 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="targetCollection"/> is <c>null</c>.</exception>
     /// <remarks>
     /// <para>
-    /// Delegates to <see cref="Adapt{T}(IObservable{IChangeSet{T}}, IChangeSetAdaptor{T})"/> with an <c>ObservableCollectionAdaptor</c>.
+    /// Delegates to <see cref="Adapt{T}(IObservable{IChangeSet{T}}, IChangeSetAdaptor{T})"/> with an an internal collection adaptor.
     /// Each changeset is applied to the target collection on the calling thread. For UI binding, ensure the source is
     /// observed on the UI thread (e.g., via <c>ObserveOn</c>).
     /// </para>
@@ -407,7 +407,7 @@ public static class ObservableListEx
     /// <param name="source">The source list changeset stream.</param>
     /// <param name="bindingList">The target <see cref="BindingList{T}"/> to keep in sync.</param>
     /// <param name="resetThreshold">When a changeset exceeds this many changes, the list is reset.</param>
-    /// <remarks>This overload binds to a <see cref="BindingList{T}"/> (WinForms binding). Uses a <c>BindingListAdaptor</c> internally.</remarks>
+    /// <remarks>This overload binds to a <see cref="BindingList{T}"/> (WinForms binding). Uses a an internal binding list adaptor internally.</remarks>
     public static IObservable<IChangeSet<T>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this IObservable<IChangeSet<T>> source, BindingList<T> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where T : notnull
     {
@@ -559,7 +559,7 @@ public static class ObservableListEx
     /// <returns>A continuation of the source changeset stream.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
     /// <remarks>
-    /// <para>Lower-level than <see cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>. Uses <c>IList&lt;T&gt;.Clone()</c> to apply all changeset operations directly.</para>
+    /// <para>Lower-level than <see cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>. Uses <see cref="IList{T}"/>.Clone() to apply all changeset operations directly.</para>
     /// </remarks>
     /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>
     /// <seealso cref="PopulateInto{T}(IObservable{IChangeSet{T}}, ISourceList{T})"/>
@@ -852,7 +852,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source list changeset stream.</param>
     /// <param name="predicate">An observable that emits new predicate functions. Each emission triggers a full re-evaluation of all items.</param>
-    /// <param name="filterPolicy">Controls re-filtering behavior: <c>CalculateDiff</c> (default) computes the minimal diff between old and new results; <c>ClearAndReplace</c> clears and repopulates entirely.</param>
+    /// <param name="filterPolicy">Controls re-filtering behavior: <see cref="ListFilterPolicy.CalculateDiff"/> (default) computes the minimal diff between old and new results; <see cref="ListFilterPolicy.ClearAndReplace"/> clears and repopulates entirely.</param>
     /// <returns>A list changeset stream containing only items that satisfy the most recent predicate.</returns>
     /// <remarks>
     /// <para>
@@ -867,11 +867,11 @@ public static class ObservableListEx
     /// <item><term>Remove</term><description>If the item was downstream, a <b>Remove</b> is emitted. Otherwise dropped.</description></item>
     /// <item><term>Refresh</term><description>Re-evaluated. If inclusion status changed, an <b>Add</b> or <b>Remove</b> is emitted. If unchanged, <b>Refresh</b> forwarded or dropped.</description></item>
     /// <item><term>Clear</term><description>All downstream items are cleared.</description></item>
-    /// <item><term>Predicate changed</term><description>All items re-evaluated against the new predicate. With <c>CalculateDiff</c>, only items that changed status emit Add/Remove. With <c>ClearAndReplace</c>, a Clear is emitted followed by AddRange of all matching items.</description></item>
+    /// <item><term>Predicate changed</term><description>All items re-evaluated against the new predicate. With <see cref="ListFilterPolicy.CalculateDiff"/>, only items that changed status emit Add/Remove. With <see cref="ListFilterPolicy.ClearAndReplace"/>, a Clear is emitted followed by AddRange of all matching items.</description></item>
     /// <item><term>OnError</term><description>Forwarded from the source or from <paramref name="predicate"/>.</description></item>
     /// <item><term>OnCompleted</term><description>Forwarded when the source completes. Independent completion of <paramref name="predicate"/> does not terminate the filter.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> No items are included until <paramref name="predicate"/> emits its first function. <c>CalculateDiff</c> is generally preferred for performance; <c>ClearAndReplace</c> is useful when downstream consumers (like UI bindings) handle full resets more efficiently than individual changes.</para>
+    /// <para><b>Worth noting:</b> No items are included until <paramref name="predicate"/> emits its first function. <see cref="ListFilterPolicy.CalculateDiff"/> is generally preferred for performance; <see cref="ListFilterPolicy.ClearAndReplace"/> is useful when downstream consumers (like UI bindings) handle full resets more efficiently than individual changes.</para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="predicate"/> is <c>null</c>.</exception>
     /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/>
@@ -895,7 +895,7 @@ public static class ObservableListEx
     /// <param name="source">The source list changeset stream.</param>
     /// <param name="predicateState">A stream of state values to be passed to <paramref name="predicate"/>.</param>
     /// <param name="predicate">A predicate receiving the current state and an item, returning <c>true</c> to include or <c>false</c> to exclude.</param>
-    /// <param name="filterPolicy">Controls re-filtering behavior: <c>CalculateDiff</c> (default) computes minimal diff; <c>ClearAndReplace</c> clears and repopulates.</param>
+    /// <param name="filterPolicy">Controls re-filtering behavior: <see cref="ListFilterPolicy.CalculateDiff"/> (default) computes minimal diff; <see cref="ListFilterPolicy.ClearAndReplace"/> clears and repopulates.</param>
     /// <param name="suppressEmptyChangeSets">When <c>true</c> (default), empty changesets are suppressed. Set to <c>false</c> to publish empty changesets (useful for monitoring loading status).</param>
     /// <returns>A list changeset stream containing only items satisfying <paramref name="predicate"/> with the current state.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="predicateState"/>, or <paramref name="predicate"/> is <c>null</c>.</exception>
@@ -911,7 +911,7 @@ public static class ObservableListEx
     /// <item><term><b>Remove</b>/<b>RemoveRange</b></term><description>If the item was downstream, a <b>Remove</b> is emitted.</description></item>
     /// <item><term><b>Refresh</b></term><description>Re-evaluated against current state. Inclusion status may change.</description></item>
     /// <item><term><b>Clear</b></term><description>All downstream items are cleared.</description></item>
-    /// <item><term>State changed</term><description>All items re-evaluated with new state value. <c>CalculateDiff</c> emits minimal Add/Remove; <c>ClearAndReplace</c> emits Clear then AddRange.</description></item>
+    /// <item><term>State changed</term><description>All items re-evaluated with new state value. <see cref="ListFilterPolicy.CalculateDiff"/> emits minimal Add/Remove; <see cref="ListFilterPolicy.ClearAndReplace"/> emits Clear then AddRange.</description></item>
     /// <item><term>OnError</term><description>Forwarded from the source or from <paramref name="predicateState"/>.</description></item>
     /// <item><term>OnCompleted</term><description>Forwarded when the source completes.</description></item>
     /// </list>
@@ -2352,7 +2352,7 @@ public static class ObservableListEx
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
     /// <item><term>Add</term><description>The factory is called and an <b>Add</b> is emitted at the same index.</description></item>
     /// <item><term>AddRange</term><description>The factory is called for each item. An <b>AddRange</b> is emitted at the same start index.</description></item>
-    /// <item><term>Replace</term><description>The factory is called for the new item. A <b>Replace</b> is emitted at the same index. The previous transformed value is available to overloads that accept <c>Optional&lt;TDestination&gt;</c>.</description></item>
+    /// <item><term>Replace</term><description>The factory is called for the new item. A <b>Replace</b> is emitted at the same index. The previous transformed value is available to overloads that accept <see cref="Optional{TDestination}"/>.</description></item>
     /// <item><term>Remove</term><description>A <b>Remove</b> is emitted (no factory call).</description></item>
     /// <item><term>RemoveRange</term><description>A <b>RemoveRange</b> is emitted.</description></item>
     /// <item><term>Moved</term><description>A <b>Moved</b> is emitted with updated indices (no factory call). Throws <see cref="UnspecifiedIndexException"/> if the source change has no index information.</description></item>
