@@ -41,7 +41,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source changeset stream.</param>
     /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
-    /// <param name="options">Bind and sort default options.</param>
+    /// <param name="options">The <see cref="SortAndBindOptions"/> with default settings.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <remarks>Creates a <see cref="ReadOnlyObservableCollection{T}"/> and delegates to <see cref="Bind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey, PageContext{TObject}}}, IList{TObject}, SortAndBindOptions)"/>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
@@ -80,7 +80,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source changeset stream.</param>
     /// <param name="targetList">The list to bind to.</param>
-    /// <param name="options">Bind and sort default options.</param>
+    /// <param name="options">The <see cref="SortAndBindOptions"/> with default settings.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <remarks>This overload accepts <see cref="SortAndBindOptions"/> to control reset threshold behavior.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
@@ -119,7 +119,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source changeset stream.</param>
     /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
-    /// <param name="options">Bind and sort default options.</param>
+    /// <param name="options">The <see cref="SortAndBindOptions"/> with default settings.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <remarks>Creates a <see cref="ReadOnlyObservableCollection{T}"/> and delegates to <see cref="Bind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey, VirtualContext{TObject}}}, IList{TObject}, SortAndBindOptions)"/>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
@@ -158,7 +158,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source changeset stream.</param>
     /// <param name="targetList">The list to bind to.</param>
-    /// <param name="options">Bind and sort default options.</param>
+    /// <param name="options">The <see cref="SortAndBindOptions"/> with default settings.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <remarks>This overload accepts <see cref="SortAndBindOptions"/> to control reset threshold behavior.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
@@ -207,7 +207,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source changeset stream.</param>
     /// <param name="targetList">The list to bind to. Items are inserted, removed, and moved in-place to maintain sort order.</param>
     /// <param name="comparer">The comparer to order the resulting dataset.</param>
-    /// <param name="options">Bind and sort options controlling reset threshold and initial capacity.</param>
+    /// <param name="options">The <see cref="SortAndBindOptions"/> controlling reset threshold and initial capacity.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <remarks>
     /// <para>
@@ -253,7 +253,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source changeset stream.</param>
     /// <param name="targetList">The list to bind to. Items are inserted, removed, and moved in-place to maintain sort order.</param>
     /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>
-    /// <param name="options">Bind and sort options controlling reset threshold and initial capacity.</param>
+    /// <param name="options">The <see cref="SortAndBindOptions"/> controlling reset threshold and initial capacity.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <remarks>
     /// <para>
@@ -313,7 +313,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source changeset stream.</param>
     /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
     /// <param name="comparer">The comparer to order the resulting dataset.</param>
-    /// <param name="options">Bind and sort options controlling reset threshold and initial capacity.</param>
+    /// <param name="options">The <see cref="SortAndBindOptions"/> controlling reset threshold and initial capacity.</param>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
@@ -345,7 +345,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source changeset stream.</param>
     /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
     /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>
-    /// <param name="options">Bind and sort options controlling reset threshold and initial capacity.</param>
+    /// <param name="options">The <see cref="SortAndBindOptions"/> controlling reset threshold and initial capacity.</param>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,

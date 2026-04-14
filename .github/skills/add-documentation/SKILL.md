@@ -126,11 +126,34 @@ Refresh behavior varies significantly between operators: some re-evaluate (Filte
 
 ### 3. Apply Quality Rules
 
-**Params**: Every `<param>` links its type via `<see cref="..."/>`. Exempt: `bool`, `int`, `string`.
+**Params**: Every `<param>` must read as natural English with the type linked via `<see cref="..."/>` woven into the sentence. No type is exempt from linking (including enums, `Optional`, `Change`, `IChangeSet`, standard library types like `IComparer`, `TimeSpan`, `IScheduler`). Use `<see langword="true"/>` / `<see langword="false"/>` / `<see langword="null"/>` for C# keywords.
+
+Param writing rules:
+- Start with an article ("The", "A", "An") or a condition ("When", "If")
+- The type link appears naturally in the sentence, not as a prefix dumped before the description
+- Never echo the parameter name as the entire description ("The source.", "The destination.")
+- For `IObservable<IChangeSet<T,K>>` source params, use the two-part format: `The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.`
+- For deeply nested generics (3+ levels), use `{T}` in the cref and describe the actual type in prose
+- For `params` array parameters, do not include `[]` in the cref. Mention "array" in prose if needed.
+- For `Optional.None` references, use `<see cref="Optional.None{T}"/>`
+
+```xml
+<!-- BAD: type dumped as prefix, meaningless description -->
+/// <param name="source"><see cref="IObservable{T}"/> the source.</param>
+/// <param name="destination"><see cref="IObservable{T}"/> the destination.</param>
+/// <param name="options">A <see cref="BindingOptions"/> that  The binding options.</param>
+
+<!-- GOOD: natural English with type links woven in -->
+/// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
+/// <param name="destination">The <see cref="IObservableCollection{TObject}"/> that will receive the changes.</param>
+/// <param name="options">The <see cref="BindingOptions"/> that controls binding behavior.</param>
+/// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
+/// <param name="equalityComparer">The <see cref="IEqualityComparer{TObject}"/> used to determine whether a new item is the same as an existing cached item.</param>
+```
 
 **SeeAlso**: Bidirectional for overload sets. Link safe/async/immutable variants, similar operators, complementary operators, commonly confused operators.
 
-**Type references**: Types use `<see cref="..."/>`. Method/event/property names use `<c>...</c>`. Internal types must not appear; describe behavior instead.
+**Type references**: All types use `<see cref="..."/>`, including enums, structs, and standard library types. Method/event/property names use `<c>...</c>`. Internal types must not appear; describe behavior instead.
 
 **Tone**: No em dashes. No emoji. No filler words (comprehensive, robust, seamlessly, leverage, utilize, facilitate). Be specific: "an **Update** is emitted" not "the change is propagated". Use "Worth noting" for non-obvious behavior.
 
