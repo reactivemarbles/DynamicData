@@ -85,7 +85,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
-    /// <param name="item">The item to add or update.</param>
+    /// <param name="item">The <typeparamref name="TObject"/> item to add or update.</param>
     /// <remarks>
     /// <para>Convenience method that wraps a single-item mutation inside <see cref="ISourceCache{TObject,TKey}.Edit"/>.</para>
     /// <list type="table">
@@ -112,7 +112,7 @@ public static partial class ObservableCacheEx
 
     /// <inheritdoc cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, TObject)"/>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
-    /// <param name="item">The item to add or update.</param>
+    /// <param name="item">The <typeparamref name="TObject"/> item to add or update.</param>
     /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> the equality comparer used to determine whether a new item is the same as an existing cached item. When equal, the update is skipped.</param>
     /// <remarks>This overload uses <paramref name="equalityComparer"/> to suppress no-op updates when the new value equals the existing one.</remarks>
     public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item, IEqualityComparer<TObject> equalityComparer)
@@ -153,8 +153,8 @@ public static partial class ObservableCacheEx
 
     /// <inheritdoc cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, TObject)"/>
     /// <param name="source"><see cref="IIntermediateCache{{TObject, TKey}}"/> the source intermediate cache.</param>
-    /// <param name="item">The item to add or update.</param>
-    /// <param name="key">The key to associate with the item.</param>
+    /// <param name="item">The <typeparamref name="TObject"/> item to add or update.</param>
+    /// <param name="key">The <typeparamref name="TKey"/> key to associate with the item.</param>
     /// <remarks>This overload operates on <see cref="IIntermediateCache{TObject, TKey}"/>, which requires an explicit key parameter.</remarks>
     public static void AddOrUpdate<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TObject item, TKey key)
         where TObject : notnull
@@ -608,7 +608,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <param name="destination"><see cref="IObservable{{T}}"/> the destination.</param>
-    /// <param name="options"> The binding options.</param>
+    /// <param name="options">A <see cref="BindingOptions"/> that  The binding options.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, BindingOptions options)
@@ -657,8 +657,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
-    /// <param name="options"> The binding options.</param>
+    /// <param name="readOnlyObservableCollection"><see cref="ReadOnlyObservableCollection{T}"/> the resulting read only observable collection.</param>
+    /// <param name="options">A <see cref="BindingOptions"/> that  The binding options.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, BindingOptions options)
@@ -678,7 +678,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <param name="readOnlyObservableCollection"><see cref="ReadOnlyObservableCollection{T}"/> the resulting read only observable collection.</param>
     /// <param name="resetThreshold">The number of changes before a reset notification is triggered.</param>
     /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates.  NB: Some platforms to not support replace notifications for binding.</param>
     /// <param name="adaptor">An optional <see cref="IObservable{{T}}"/> specify an adaptor to change the algorithm to update the target collection.</param>
@@ -734,7 +734,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <param name="destination"><see cref="IObservable{{T}}"/> the destination.</param>
-    /// <param name="options"> The binding options.</param>
+    /// <param name="options">A <see cref="BindingOptions"/> that  The binding options.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, BindingOptions options)
@@ -755,7 +755,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <param name="destination"><see cref="IObservable{{T}}"/> the destination.</param>
-    /// <param name="updater">The updater.</param>
+    /// <param name="updater"><see cref="ISortedObservableCollectionAdaptor{TObject, TKey}"/> the updater.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, ISortedObservableCollectionAdaptor<TObject, TKey> updater)
@@ -785,8 +785,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
-    /// <param name="options"> The binding options.</param>
+    /// <param name="readOnlyObservableCollection"><see cref="ReadOnlyObservableCollection{T}"/> the resulting read only observable collection.</param>
+    /// <param name="options">A <see cref="BindingOptions"/> that  The binding options.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, BindingOptions options)
@@ -808,7 +808,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <param name="readOnlyObservableCollection"><see cref="ReadOnlyObservableCollection{T}"/> the resulting read only observable collection.</param>
     /// <param name="resetThreshold">The number of changes before a reset event is called on the observable collection.</param>
     /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates.  NB: Some platforms to not support replace notifications for binding.</param>
     /// <param name="adaptor">An <see cref="IChangeSetAdaptor{TObject, TKey}"/> that specify an adaptor to change the algorithm to update the target collection.</param>
@@ -842,7 +842,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The object type.</typeparam>
     /// <typeparam name="TKey">The key type.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="bindingList">The target binding list.</param>
+    /// <param name="bindingList"><see cref="BindingList{T}"/> the target binding list.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="ArgumentNullException">
@@ -866,7 +866,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The object type.</typeparam>
     /// <typeparam name="TKey">The key type.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="bindingList">The target binding list.</param>
+    /// <param name="bindingList"><see cref="BindingList{T}"/> the target binding list.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="ArgumentNullException">
@@ -1541,8 +1541,7 @@ public static partial class ObservableCacheEx
     /// <inheritdoc cref="ExpireAfter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TimeSpan?})"/>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <param name="timeSelector">A optional <see cref="Func{{T, TResult}}"/> a function returning the expiration timeout for each item, or <c>null</c> for no expiration.</param>
-    /// <param name="pollingInterval">If specified, items are expired on a polling interval rather than per-item timers.
-    /// This is less accurate but more efficient when many items share similar expiration times.</param>
+    /// <param name="pollingInterval">An optional <see cref="TimeSpan"/> polling interval. If specified, items are expired on a polling interval rather than per-item timers. Less accurate but more efficient when many items share similar expiration times.</param>
     /// <remarks>
     /// This overload uses periodic polling instead of per-item timers. Expired items are removed on the next
     /// poll after their timeout elapses, which trades accuracy for reduced timer overhead.
@@ -1732,7 +1731,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of collection items to be filtered.</typeparam>
     /// <typeparam name="TKey">The type of the key values of each collection item.</typeparam>
-    /// <param name="source">The source stream of collection items to be filtered.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the source stream of collection items to be filtered.</param>
     /// <param name="predicate"><see cref="Func{T, TResult}"/> the filtering predicate to be applied to each item.</param>
     /// <param name="suppressEmptyChangeSets">A flag indicating whether the created stream should emit empty changesets. Empty changesets are suppressed by default, for performance. Set to ensure that a downstream changeset occurs for every upstream changeset.</param>
     /// <returns>A stream of collection changesets where upstream collection items are filtered by the given predicate.</returns>
@@ -1882,7 +1881,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source observable of buffered changeset lists.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the source observable of buffered changeset lists.</param>
     /// <returns>An observable changeset combining all changes from each buffer into a single emission.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> FlattenBufferResult<TObject, TKey>(this IObservable<IList<IChangeSet<TObject, TKey>>> source)
@@ -2096,9 +2095,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <param name="groupSelector"><see cref="Func{{T, TResult}}"/> the group selector factory.</param>
-    /// <param name="resultGroupSource">
-    ///   A distinct stream used to determine the result.
-    /// </param>
+    /// <param name="resultGroupSource">An <see cref="IObservable{T}"/> of <see cref="IDistinctChangeSet{TGroupKey}"/> used to determine which groups appear in the result.</param>
     /// <remarks>
     /// Useful for parent-child collection when the parent and child are soured from different streams.
     /// </remarks>
@@ -2887,7 +2884,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of items in the source cache.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of values emitted by child observables.</typeparam>
-    /// <param name="source">The source cache changeset stream.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the source cache changeset stream.</param>
     /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> that factory function that produces a child observable for each source item.</param>
     /// <returns>An observable that emits values from all active child observables, interleaved by arrival order.</returns>
     /// <remarks>
@@ -3246,7 +3243,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The collection of changeset streams to merge.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the collection of changeset streams to merge.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
     /// <param name="completable">If <c>true</c> (default), the output completes when all source streams have completed. If <c>false</c>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all source streams.</returns>
@@ -3278,7 +3275,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The collection of changeset streams to merge.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the collection of changeset streams to merge.</param>
     /// <param name="comparer">An <see cref="IComparer{T}"/> that comparer to determine which value wins when multiple sources provide the same key. The lowest-ordered value is published.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
     /// <param name="completable">If <c>true</c> (default), the output completes when all source streams have completed. If <c>false</c>, the output never completes.</param>
@@ -3301,7 +3298,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The collection of changeset streams to merge.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the collection of changeset streams to merge.</param>
     /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that equality comparer to detect duplicate values for the same key, suppressing no-op updates.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
     /// <param name="completable">If <c>true</c> (default), the output completes when all source streams have completed. If <c>false</c>, the output never completes.</param>
@@ -3323,7 +3320,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The collection of changeset streams to merge.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the collection of changeset streams to merge.</param>
     /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that equality comparer to detect duplicate values for the same key, suppressing no-op updates.</param>
     /// <param name="comparer">An <see cref="IComparer{T}"/> that comparer to determine which value wins when multiple sources provide the same key. The lowest-ordered value is published.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
@@ -4050,7 +4047,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The first source changeset stream.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the first source changeset stream.</param>
     /// <param name="others">An <see cref="IEnumerable{T}"/> that additional changeset streams to combine with.</param>
     /// <returns>A changeset stream containing items present in any of the sources.</returns>
     /// <remarks>
@@ -4350,7 +4347,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
-    /// <param name="item">The item to refresh.</param>
+    /// <param name="item">The <typeparamref name="TObject"/> item to refresh.</param>
     /// <remarks>
     /// <para>Convenience method that wraps a Refresh inside <see cref="ISourceCache{TObject,TKey}.Edit"/>. A Refresh does not change data in the cache; it signals downstream operators (such as <see cref="Filter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, bool}, bool)"/> or <see cref="Sort{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IComparer{TObject}, SortOptimisations, int)"/>) to re-evaluate the item.</para>
     /// <list type="table">
@@ -4410,7 +4407,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
-    /// <param name="item">The item to remove.</param>
+    /// <param name="item">The <typeparamref name="TObject"/> item to remove.</param>
     /// <remarks>
     /// <para>Convenience method that wraps a single-item removal inside <see cref="ISourceCache{TObject,TKey}.Edit"/>. The key is extracted from the item using the cache's key selector.</para>
     /// <list type="table">
@@ -4438,7 +4435,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
-    /// <param name="key">The key of the item to remove.</param>
+    /// <param name="key">The <typeparamref name="TKey"/> key of the item to remove.</param>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
         where TObject : notnull
@@ -4487,7 +4484,7 @@ public static partial class ObservableCacheEx
 
     /// <inheritdoc cref="Remove{TObject, TKey}(ISourceCache{TObject, TKey}, TKey)"/>
     /// <param name="source"><see cref="IIntermediateCache{{TObject, TKey}}"/> the intermediate cache.</param>
-    /// <param name="key">The key of the item to remove.</param>
+    /// <param name="key">The <typeparamref name="TKey"/> key of the item to remove.</param>
     /// <remarks>Overload that targets an <see cref="IIntermediateCache{TObject, TKey}"/>.</remarks>
     public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TKey key)
         where TObject : notnull
@@ -4540,7 +4537,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
-    /// <param name="key">The key to remove.</param>
+    /// <param name="key">The <typeparamref name="TKey"/> key to remove.</param>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
     public static void RemoveKey<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
         where TObject : notnull
@@ -4847,7 +4844,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <param name="expression">A <see cref="Func{{T, TResult}}"/> that expression that selects a comparable value from each item.</param>
-    /// <param name="sortOrder">The sort direction. Defaults to ascending.</param>
+    /// <param name="sortOrder"><see cref="SortDirection"/> the sort direction. Defaults to ascending.</param>
     /// <param name="sortOptimisations">A <see cref="SortOptimisations"/> that sort optimization flags.</param>
     /// <param name="resetThreshold">The number of updates before the entire list is re-sorted (rather than inline sort).</param>
     /// <returns>An observable that emits sorted changesets.</returns>
@@ -4960,8 +4957,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="item">The item to prepend.</param>
-    /// <param name="key">The key for the item.</param>
+    /// <param name="item">The <typeparamref name="TObject"/> item to prepend.</param>
+    /// <param name="key">The <typeparamref name="TKey"/> key for the item.</param>
     /// <returns>An observable that emits a single-item Add changeset first, then all source changesets.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> StartWithItem<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TObject item, TKey key)
         where TObject : notnull
@@ -5169,7 +5166,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
-    /// <param name="key">The key to watch.</param>
+    /// <param name="key">The <typeparamref name="TKey"/> key to watch.</param>
     /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that optional comparer to suppress duplicate emissions. Uses default equality if <c>null</c>.</param>
     /// <returns>An observable of <see cref="Optional{TObject}"/> that reflects the presence or absence of the specified key.</returns>
     /// <remarks>
@@ -5206,7 +5203,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="key">The key value.</param>
+    /// <param name="key">The <typeparamref name="TKey"/> key value.</param>
     /// <param name="initialOptionalWhenMissing">Indicates if an initial Optional None should be emitted if the value doesn't exist.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance used to determine if an object value has changed.</param>
     /// <returns>An observable optional.</returns>
@@ -5240,7 +5237,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TSortKey">The sort key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <param name="sort"><see cref="Func{{T, TResult}}"/> the sort function.</param>
-    /// <param name="sortOrder">The sort order. Defaults to ascending.</param>
+    /// <param name="sortOrder"><see cref="SortDirection"/> the sort order. Defaults to ascending.</param>
     /// <returns>An observable which emits the read only collection.</returns>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TKey, TSortKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TSortKey> sort, SortDirection sortOrder = SortDirection.Ascending)
         where TObject : notnull
@@ -6364,7 +6361,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="key">The key to observe.</param>
+    /// <param name="key">The <typeparamref name="TKey"/> key to observe.</param>
     /// <returns>An observable of <see cref="Change{TObject, TKey}"/> for the specified key only.</returns>
     /// <remarks>
     /// <para>
@@ -6392,7 +6389,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
-    /// <param name="key">The key to observe.</param>
+    /// <param name="key">The <typeparamref name="TKey"/> key to observe.</param>
     /// <returns>An observable of the item's value whenever it changes for the specified key.</returns>
     /// <remarks>
     /// <para>
@@ -6424,7 +6421,7 @@ public static partial class ObservableCacheEx
 
     /// <inheritdoc cref="WatchValue{TObject, TKey}(IObservableCache{TObject, TKey}, TKey)"/>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="key">The key to observe.</param>
+    /// <param name="key">The <typeparamref name="TKey"/> key to observe.</param>
     /// <remarks>This overload extends <see cref="IObservable{T}">IObservable</see>&lt;<see cref="IChangeSet{TObject, TKey}"/>&gt; instead of <see cref="IObservableCache{TObject, TKey}"/>.</remarks>
     public static IObservable<TObject> WatchValue<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key)
         where TObject : notnull
@@ -6556,7 +6553,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="reasons">The reasons.</param>
+    /// <param name="reasons"><see cref="ChangeReason"/> the reasons.</param>
     /// <returns>An observable which emits a change set with items matching the reasons.</returns>
     /// <exception cref="ArgumentNullException">reasons.</exception>
     /// <exception cref="ArgumentException">Must select at least on reason.</exception>
@@ -6586,7 +6583,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="reasons">The reasons.</param>
+    /// <param name="reasons"><see cref="ChangeReason"/> the reasons.</param>
     /// <returns>An observable which emits a change set with items not matching the reasons.</returns>
     /// <exception cref="ArgumentNullException">reasons.</exception>
     /// <exception cref="ArgumentException">Must select at least on reason.</exception>
@@ -6615,7 +6612,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The first source changeset stream.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the first source changeset stream.</param>
     /// <param name="others">An <see cref="IEnumerable{T}"/> that additional changeset streams to combine with.</param>
     /// <returns>A changeset stream containing items present in exactly one source.</returns>
     /// <remarks>
