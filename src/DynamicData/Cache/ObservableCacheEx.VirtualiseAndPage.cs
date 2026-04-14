@@ -129,8 +129,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source changeset stream.</param>
-    /// <param name="virtualRequests">The virtualising requests.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the source changeset stream.</param>
+    /// <param name="virtualRequests"><see cref="IObservable{T}"/> the virtualising requests.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     [Obsolete(Constants.VirtualizeIsObsolete)]
@@ -150,8 +150,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source changeset stream.</param>
-    /// <param name="comparer">The comparer.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the source changeset stream.</param>
+    /// <param name="comparer"><see cref="IComparer{T}"/> the comparer.</param>
     /// <param name="size">The maximum number of items to return.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
@@ -184,7 +184,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source changeset stream.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the source changeset stream.</param>
     /// <param name="size">The size.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
@@ -319,8 +319,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source changeset stream.</param>
-    /// <param name="pageRequests">The page requests.</param>
+    /// <param name="source"><see cref="IObservable{T}"/> the source changeset stream.</param>
+    /// <param name="pageRequests"><see cref="IObservable{T}"/> the page requests.</param>
     /// <returns>An observable which emits change sets.</returns>
     [Obsolete(Constants.PageIsObsolete)]
     public static IObservable<IPagedChangeSet<TObject, TKey>> Page<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
