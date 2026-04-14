@@ -718,7 +718,7 @@ public static class ObservableListEx
     /// Items present in the first source but not in any of the <paramref name="others"/> are included in the result.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The primary source <see cref="IObservable{IChangeSet{T}}"/> to subtract from.</param>
+    /// <param name="source">The primary <see cref="IObservable{IChangeSet{T}}"/> from which other streams are subtracted.</param>
     /// <param name="others">The other <see cref="IObservable{IChangeSet{T}}"/> changeset streams to exclude from the result.</param>
     /// <returns>A list changeset stream containing items from <paramref name="source"/> that are not in any of <paramref name="others"/>.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="others"/> is <see langword="null"/>.</exception>
@@ -786,7 +786,7 @@ public static class ObservableListEx
     /// Returns an observable of the items that were expired and removed.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The <see cref="ISourceList{T}"/> source list to monitor and remove expired items from.</param>
+    /// <param name="source">The <see cref="ISourceList{T}"/> source list to apply time-based expiration to.</param>
     /// <param name="timeSelector">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <see langword="null"/> for items that should never expire.</param>
     /// <param name="pollingInterval">An optional <see cref="TimeSpan"/> polling interval to batch expiry checks. If omitted, a separate timer is created for each unique expiry time.</param>
     /// <param name="scheduler">The scheduler for scheduling expiry timers. Defaults to <see cref="GlobalConfig.DefaultScheduler"/>.</param>
@@ -1231,7 +1231,7 @@ public static class ObservableListEx
     /// Returns an observable of the items that were removed.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The <see cref="ISourceList{T}"/> source list to monitor and evict items from.</param>
+    /// <param name="source">The <see cref="ISourceList{T}"/> source list to apply size limits to.</param>
     /// <param name="sizeLimit">The maximum number of items allowed. Must be greater than zero.</param>
     /// <param name="scheduler">The scheduler for scheduling size checks. Defaults to <see cref="GlobalConfig.DefaultScheduler"/>.</param>
     /// <returns>An observable that emits collections of items each time excess items are removed from the source list.</returns>
@@ -1912,7 +1912,7 @@ public static class ObservableListEx
     /// Strips index information from all changes in the stream.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to strip index information from.</param>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to strip index information.</param>
     /// <returns>A list changeset stream with all index values removed from changes.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -2298,7 +2298,7 @@ public static class ObservableListEx
     /// Takes the first <paramref name="numberOfItems"/> items from the source list. Implemented as <c>Virtualise</c> with a fixed window starting at index 0.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to take the top items from.</param>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to take the top items.</param>
     /// <param name="numberOfItems">The maximum number of items to include. Must be greater than zero.</param>
     /// <returns>A virtual changeset stream containing at most <paramref name="numberOfItems"/> items from the beginning of the source.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
