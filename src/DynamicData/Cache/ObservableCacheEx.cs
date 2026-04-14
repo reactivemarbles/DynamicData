@@ -94,8 +94,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Produced when the key already exists. The previous value is included in the changeset.</description></item>
     /// <item><term>Remove</term><description>Not produced by this method.</description></item>
     /// <item><term>Refresh</term><description>Not produced by this method.</description></item>
-    /// <item><term>OnError</term><description>Not applicable (synchronous mutation).</description></item>
-    /// <item><term>OnCompleted</term><description>Not applicable (synchronous mutation).</description></item>
     /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
@@ -1024,8 +1022,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Not produced by this operation.</description></item>
     /// <item><term>Remove</term><description>A <b>Remove</b> is emitted for every item currently in the cache.</description></item>
     /// <item><term>Refresh</term><description>Not produced by this operation.</description></item>
-    /// <item><term>OnError</term><description>Not applicable (synchronous mutation method).</description></item>
-    /// <item><term>OnCompleted</term><description>Not applicable (synchronous mutation method).</description></item>
     /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
@@ -1285,8 +1281,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Items present in both <paramref name="allItems"/> and the cache that differ (per <paramref name="areItemsEqual"/>) produce an <b>Update</b>.</description></item>
     /// <item><term>Remove</term><description>Items in the cache whose key is not in <paramref name="allItems"/> produce a <b>Remove</b>.</description></item>
     /// <item><term>Refresh</term><description>Not produced by this operation.</description></item>
-    /// <item><term>OnError</term><description>Not applicable (synchronous mutation method).</description></item>
-    /// <item><term>OnCompleted</term><description>Not applicable (synchronous mutation method).</description></item>
     /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="allItems"/>, or <paramref name="areItemsEqual"/> is <see langword="null"/>.</exception>
