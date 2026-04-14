@@ -51,7 +51,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="adaptor"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="adaptor"/> is <see langword="null"/>.</exception>
     /// <seealso cref="Adapt{TObject, TKey}(IObservable{ISortedChangeSet{TObject, TKey}}, ISortedChangeSetAdaptor{TObject, TKey})"/>
     /// <seealso cref="Bind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservableCollection{TObject}, IObservableCollectionAdaptor{TObject, TKey})"/>
     public static IObservable<IChangeSet<TObject, TKey>> Adapt<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IChangeSetAdaptor<TObject, TKey> adaptor)
@@ -98,7 +98,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnCompleted</term><description>Not applicable (synchronous mutation).</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="EditDiff{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject}, IEqualityComparer{TObject})"/>
     /// <seealso cref="Remove{TObject, TKey}(ISourceCache{TObject, TKey}, TObject)"/>
     public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
@@ -266,7 +266,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source cache to wrap.</param>
     /// <returns>A read-only <see cref="IObservableCache{TObject, TKey}"/>.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="AsObservableCache{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, bool)"/>
     public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservableCache<TObject, TKey> source)
         where TObject : notnull
@@ -284,16 +284,16 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="applyLocking">If <c>true</c> (default), all cache operations are synchronized. Set to <c>false</c> when the caller guarantees single-threaded access.</param>
+    /// <param name="applyLocking">If <see langword="true"/> (default), all cache operations are synchronized. Set to <see langword="false"/> when the caller guarantees single-threaded access.</param>
     /// <returns>A read-only observable cache that reflects the current state of the pipeline.</returns>
     /// <remarks>
     /// <para>
     /// Disposing the returned cache unsubscribes from the source stream. The cache's <c>Connect()</c>
     /// method provides a changeset stream of its own, which re-emits the current state on each new subscriber.
     /// </para>
-    /// <para>When <paramref name="applyLocking"/> is <c>false</c>, a <see cref="LockFreeObservableCache{TObject, TKey}"/> is used internally.</para>
+    /// <para>When <paramref name="applyLocking"/> is <see langword="false"/>, a <see cref="LockFreeObservableCache{TObject, TKey}"/> is used internally.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="AsObservableCache{TObject, TKey}(IObservableCache{TObject, TKey})"/>
     /// <seealso cref="PopulateInto{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, ISourceCache{TObject, TKey})"/>
     public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, bool applyLocking = true)
@@ -353,7 +353,7 @@ public static partial class ObservableCacheEx
     /// are dispatched via the <paramref name="disposalsCompletedAccessor"/> signal.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="disposalsCompletedAccessor"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="disposalsCompletedAccessor"/> is <see langword="null"/>.</exception>
     /// <seealso cref="DisposeMany{TObject,TKey}"/>
     public static IObservable<IChangeSet<TObject, TKey>> AsyncDisposeMany<TObject, TKey>(
                 this IObservable<IChangeSet<TObject, TKey>> source,
@@ -492,7 +492,7 @@ public static partial class ObservableCacheEx
     /// </list>
     /// <para><b>Worth noting:</b> The merged changeset may contain contradictory changes (e.g., Add then Remove for the same key). Downstream operators handle this correctly, but raw inspection of the changeset may be surprising.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
     /// <seealso cref="BufferInitial{TObject, TKey}"/>
     public static IObservable<IChangeSet<TObject, TKey>> Batch<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TimeSpan timeSpan, IScheduler? scheduler = null)
@@ -517,7 +517,7 @@ public static partial class ObservableCacheEx
         where TKey : notnull => new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, initialPauseState, scheduler: scheduler).Run();
 
     /// <inheritdoc cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
-    /// <remarks>This overload omits <c>initialPauseState</c> (defaults to <c>false</c>) but accepts a timeout.</remarks>
+    /// <remarks>This overload omits <c>initialPauseState</c> (defaults to <see langword="false"/>) but accepts a timeout.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, TimeSpan? timeOut = null, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull => BatchIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
@@ -529,8 +529,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
-    /// <param name="pauseIfTrueSelector">An <see cref="IObservable{T}"/> that when <c>true</c>, buffering begins. When <c>false</c>, the buffer is flushed.</param>
-    /// <param name="initialPauseState">If <c>true</c>, starts in a paused (buffering) state.</param>
+    /// <param name="pauseIfTrueSelector">An <see cref="IObservable{T}"/> that when <see langword="true"/>, buffering begins. When <see langword="false"/>, the buffer is flushed.</param>
+    /// <param name="initialPauseState">If <see langword="true"/>, starts in a paused (buffering) state.</param>
     /// <param name="timeOut">A <see cref="TimeSpan"/> that maximum time the buffer stays open. When elapsed, the buffer is flushed regardless of pause state.</param>
     /// <param name="scheduler"><see cref="IScheduler"/> the scheduler for timeout timing.</param>
     /// <returns>An observable that emits changesets, buffered or passthrough depending on pause state.</returns>
@@ -550,7 +550,7 @@ public static partial class ObservableCacheEx
     /// </list>
     /// <para><b>Worth noting:</b> If the source completes while paused, buffered data IS flushed before OnCompleted. However, if the source errors while paused, buffered data is lost.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="pauseIfTrueSelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="pauseIfTrueSelector"/> is <see langword="null"/>.</exception>
     /// <seealso cref="Batch{TObject, TKey}"/>
     /// <seealso cref="BufferInitial{TObject, TKey}"/>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, TimeSpan? timeOut = null, IScheduler? scheduler = null)
@@ -565,8 +565,8 @@ public static partial class ObservableCacheEx
 
     /// <inheritdoc cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="pauseIfTrueSelector">An <see cref="IObservable{{T}}"/> that when <c>true</c>, buffering begins. When <c>false</c>, the buffer is flushed.</param>
-    /// <param name="initialPauseState">If <c>true</c>, starts in a paused (buffering) state.</param>
+    /// <param name="pauseIfTrueSelector">An <see cref="IObservable{{T}}"/> that when <see langword="true"/>, buffering begins. When <see langword="false"/>, the buffer is flushed.</param>
+    /// <param name="initialPauseState">If <see langword="true"/>, starts in a paused (buffering) state.</param>
     /// <param name="timer">An optional <see cref="IObservable{{T}}"/> an observable timer. The buffer is flushed each time the timer produces a value, and buffering ceases when it completes.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> the scheduler.</param>
     /// <remarks>This overload accepts an explicit timer observable instead of a <see cref="TimeSpan"/> timeout.</remarks>
@@ -1024,7 +1024,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnCompleted</term><description>Not applicable (synchronous mutation method).</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void Clear<TObject, TKey>(this ISourceCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull
@@ -1207,7 +1207,7 @@ public static partial class ObservableCacheEx
     /// For items that implement <see cref="IAsyncDisposable"/>, use <see cref="AsyncDisposeMany{TObject,TKey}"/> instead.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="AsyncDisposeMany{TObject,TKey}"/>
     /// <seealso cref="SubscribeMany{TObject,TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IDisposable})"/>
     public static IObservable<IChangeSet<TObject, TKey>> DisposeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
@@ -1271,7 +1271,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache to diff against.</param>
     /// <param name="allItems"><see cref="IEnumerable{{T}}"/> the complete snapshot of desired items.</param>
-    /// <param name="areItemsEqual"><see cref="Func{{T, TResult}}"/> a function that returns <c>true</c> when the current and previous items are considered equal, e.g. <c>(current, previous) =&gt; current.Version == previous.Version</c>.</param>
+    /// <param name="areItemsEqual"><see cref="Func{{T, TResult}}"/> a function that returns <see langword="true"/> when the current and previous items are considered equal, e.g. <c>(current, previous) =&gt; current.Version == previous.Version</c>.</param>
     /// <remarks>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
@@ -1283,7 +1283,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnCompleted</term><description>Not applicable (synchronous mutation method).</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="allItems"/>, or <paramref name="areItemsEqual"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="allItems"/>, or <paramref name="areItemsEqual"/> is <see langword="null"/>.</exception>
     public static void EditDiff<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> allItems, Func<TObject, TObject, bool> areItemsEqual)
         where TObject : notnull
         where TKey : notnull
@@ -1305,7 +1305,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source observable of item snapshots.</param>
     /// <param name="keySelector"><see cref="Func{{T, TResult}}"/> a function to extract the unique key from each item.</param>
-    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> for comparing items. Uses default equality if <c>null</c>.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> for comparing items. Uses default equality if <see langword="null"/>.</param>
     /// <returns>An observable changeset representing the incremental differences between successive snapshots.</returns>
     /// <remarks>
     /// <list type="table">
@@ -1318,7 +1318,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     /// <seealso cref="ToCollection{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
     public static IObservable<IChangeSet<TObject, TKey>> EditDiff<TObject, TKey>(this IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
@@ -1338,7 +1338,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source observable of optional values.</param>
     /// <param name="keySelector"><see cref="Func{{T, TResult}}"/> a function to extract the unique key from each item.</param>
-    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> for comparing items. Uses default equality if <c>null</c>.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> for comparing items. Uses default equality if <see langword="null"/>.</param>
     /// <returns>An observable changeset tracking the single optional item.</returns>
     /// <remarks>
     /// <list type="table">
@@ -1351,7 +1351,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> EditDiff<TObject, TKey>(this IObservable<Optional<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -1493,12 +1493,12 @@ public static partial class ObservableCacheEx
 
     /// <summary>
     /// Schedules automatic removal of items after the timeout returned by <paramref name="timeSelector"/>.
-    /// If <paramref name="timeSelector"/> returns <c>null</c>, the item never expires.
+    /// If <paramref name="timeSelector"/> returns <see langword="null"/>, the item never expires.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="timeSelector">A optional <see cref="Func{{T, TResult}}"/> a function returning the expiration timeout for each item, or <c>null</c> for no expiration.</param>
+    /// <param name="timeSelector">A optional <see cref="Func{{T, TResult}}"/> a function returning the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
     /// <returns>An observable changeset that includes timer-driven <b>Remove</b> changes for expired items.</returns>
     /// <remarks>
     /// <para>When a timer fires, a <b>Remove</b> is emitted for the expired item.</para>
@@ -1511,9 +1511,9 @@ public static partial class ObservableCacheEx
     /// <item><term>OnError</term><description>Forwarded. All pending timers are cancelled.</description></item>
     /// <item><term>OnCompleted</term><description>Forwarded. All pending timers are cancelled.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> A <c>null</c> return from <paramref name="timeSelector"/> means "never expire". <b>Update</b> changes reset the expiration timer.</para>
+    /// <para><b>Worth noting:</b> A <see langword="null"/> return from <paramref name="timeSelector"/> means "never expire". <b>Update</b> changes reset the expiration timer.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="timeSelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="timeSelector"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(
                 this IObservable<IChangeSet<TObject, TKey>> source,
                 Func<TObject, TimeSpan?> timeSelector)
@@ -1525,7 +1525,7 @@ public static partial class ObservableCacheEx
 
     /// <inheritdoc cref="ExpireAfter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TimeSpan?})"/>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="timeSelector">A optional <see cref="Func{{T, TResult}}"/> a function returning the expiration timeout for each item, or <c>null</c> for no expiration.</param>
+    /// <param name="timeSelector">A optional <see cref="Func{{T, TResult}}"/> a function returning the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
     /// <param name="scheduler"><see cref="IScheduler"/> the scheduler used to schedule expiration timers.</param>
     public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(
                 this IObservable<IChangeSet<TObject, TKey>> source,
@@ -1540,7 +1540,7 @@ public static partial class ObservableCacheEx
 
     /// <inheritdoc cref="ExpireAfter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TimeSpan?})"/>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="timeSelector">A optional <see cref="Func{{T, TResult}}"/> a function returning the expiration timeout for each item, or <c>null</c> for no expiration.</param>
+    /// <param name="timeSelector">A optional <see cref="Func{{T, TResult}}"/> a function returning the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
     /// <param name="pollingInterval">An optional <see cref="TimeSpan"/> polling interval. If specified, items are expired on a polling interval rather than per-item timers. Less accurate but more efficient when many items share similar expiration times.</param>
     /// <remarks>
     /// This overload uses periodic polling instead of per-item timers. Expired items are removed on the next
@@ -1559,7 +1559,7 @@ public static partial class ObservableCacheEx
 
     /// <inheritdoc cref="ExpireAfter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TimeSpan?}, TimeSpan?)"/>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
-    /// <param name="timeSelector">A optional <see cref="Func{{T, TResult}}"/> a function returning the expiration timeout for each item, or <c>null</c> for no expiration.</param>
+    /// <param name="timeSelector">A optional <see cref="Func{{T, TResult}}"/> a function returning the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
     /// <param name="pollingInterval">A optional <see cref="TimeSpan"/> if specified, items are expired on a polling interval rather than per-item timers.</param>
     /// <param name="scheduler"><see cref="IScheduler"/> the scheduler used to schedule polling and expiration timers.</param>
     public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(
@@ -1582,16 +1582,16 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache from which expired items are removed.</param>
-    /// <param name="timeSelector">A optional <see cref="Func{{T, TResult}}"/> a function returning the expiration timeout for each item, or <c>null</c> for no expiration.</param>
+    /// <param name="timeSelector">A optional <see cref="Func{{T, TResult}}"/> a function returning the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
     /// <param name="pollingInterval">A optional <see cref="TimeSpan"/> if specified, items are expired on a polling interval rather than per-item timers.</param>
-    /// <param name="scheduler">The scheduler used to schedule expiration timers. Defaults to <see cref="GlobalConfig.DefaultScheduler"/> if <c>null</c>.</param>
+    /// <param name="scheduler">The scheduler used to schedule expiration timers. Defaults to <see cref="GlobalConfig.DefaultScheduler"/> if <see langword="null"/>.</param>
     /// <returns>An observable that emits the key-value pairs of items removed from the cache by expiration.</returns>
     /// <remarks>
     /// Unlike the stream-based overloads, this operates directly on the <see cref="ISourceCache{TObject, TKey}"/>
     /// and returns the removed items as <see cref="KeyValuePair{TKey, TObject}"/> collections,
     /// not as a changeset stream.
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="timeSelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="timeSelector"/> is <see langword="null"/>.</exception>
     public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(
                 this ISourceCache<TObject, TKey> source,
                 Func<TObject, TimeSpan?> timeSelector,
@@ -1613,7 +1613,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <param name="filter"><see cref="Func{{T, TResult}}"/> the predicate used to determine whether each item is included.</param>
-    /// <param name="suppressEmptyChangeSets">When <c>true</c> (default), empty changesets are suppressed for performance. Set to <c>false</c> to emit empty changesets, which can be useful for monitoring loading status.</param>
+    /// <param name="suppressEmptyChangeSets">When <see langword="true"/> (default), empty changesets are suppressed for performance. Set to <see langword="false"/> to emit empty changesets, which can be useful for monitoring loading status.</param>
     /// <returns>An observable changeset containing only items that satisfy <paramref name="filter"/>.</returns>
     /// <remarks>
     /// <list type="table">
@@ -1665,10 +1665,10 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TState">The type of state value required by <paramref name="predicate"/>.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
     /// <param name="predicateState"><see cref="IObservable{T}"/> a stream of state values to be passed to <paramref name="predicate"/>.</param>
-    /// <param name="predicate"><see cref="Func{T, TResult}"/> a predicate that receives the current state and an item, returning <c>true</c> to include or <c>false</c> to exclude.</param>
-    /// <param name="suppressEmptyChangeSets">When <c>true</c> (default), empty changesets are suppressed for performance. Set to <c>false</c> to emit empty changesets.</param>
+    /// <param name="predicate"><see cref="Func{T, TResult}"/> a predicate that receives the current state and an item, returning <see langword="true"/> to include or <see langword="false"/> to exclude.</param>
+    /// <param name="suppressEmptyChangeSets">When <see langword="true"/> (default), empty changesets are suppressed for performance. Set to <see langword="false"/> to emit empty changesets.</param>
     /// <returns>An observable changeset containing only items satisfying <paramref name="predicate"/> for the latest state.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="predicateState"/>, or <paramref name="predicate"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="predicateState"/>, or <paramref name="predicate"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
     /// <paramref name="predicateState"/> should emit an initial value immediately upon subscription.
@@ -1704,7 +1704,7 @@ public static partial class ObservableCacheEx
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <param name="predicateChanged"><see cref="IObservable{{T}}"/> an observable that emits new predicates. Each emission replaces the current predicate and triggers a full re-evaluation of all items.</param>
     /// <param name="reapplyFilter"><see cref="IObservable{{T}}"/> an observable that, when it emits, triggers a full re-evaluation of all items against the current predicate. Useful when filtering on mutable item properties.</param>
-    /// <param name="suppressEmptyChangeSets">When <c>true</c> (default), empty changesets are suppressed for performance.</param>
+    /// <param name="suppressEmptyChangeSets">When <see langword="true"/> (default), empty changesets are suppressed for performance.</param>
     /// <remarks>
     /// In addition to the per-item behavior described in the static <see cref="Filter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, bool}, bool)"/> overload,
     /// emissions from <paramref name="predicateChanged"/> replace the predicate and trigger full re-filtering,
@@ -1780,17 +1780,17 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
-    /// <param name="filterFactory">A factory that creates an <see cref="IObservable{Boolean}"/> for each item and its key. When the observable emits <c>true</c>, the item is included; when <c>false</c>, it is excluded.</param>
+    /// <param name="filterFactory">A factory that creates an <see cref="IObservable{Boolean}"/> for each item and its key. When the observable emits <see langword="true"/>, the item is included; when <see langword="false"/>, it is excluded.</param>
     /// <param name="buffer">A <see cref="TimeSpan"/> that optional time window to buffer inclusion changes from per-item observables before re-evaluating.</param>
     /// <param name="scheduler">An <see cref="IScheduler"/> that optional scheduler used for buffering.</param>
-    /// <returns>An observable changeset containing only items whose per-item observable most recently emitted <c>true</c>.</returns>
+    /// <returns>An observable changeset containing only items whose per-item observable most recently emitted <see langword="true"/>.</returns>
     /// <remarks>
     /// <para>
     /// <b>Source changeset handling (parent events):</b>
     /// </para>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Add</term><description>Subscribes to the per-item observable. The item is <b>not included downstream until the observable emits its first <c>true</c></b>.</description></item>
+    /// <item><term>Add</term><description>Subscribes to the per-item observable. The item is <b>not included downstream until the observable emits its first <see langword="true"/></b>.</description></item>
     /// <item><term>Update</term><description>Disposes the old item's observable subscription and subscribes to the new item's observable. Inclusion state is reset; the new observable must emit before the item reappears.</description></item>
     /// <item><term>Remove</term><description>Disposes the item's observable subscription. If the item was included downstream, a <b>Remove</b> is emitted.</description></item>
     /// <item><term>Refresh</term><description>Forwarded as <b>Refresh</b> if the item is currently included downstream. Otherwise dropped.</description></item>
@@ -1800,21 +1800,21 @@ public static partial class ObservableCacheEx
     /// </para>
     /// <list type="table">
     /// <listheader><term>Emission</term><description>Behavior</description></listheader>
-    /// <item><term>First <c>true</c></term><description>The item is included: an <b>Add</b> is emitted downstream.</description></item>
-    /// <item><term><c>false</c> (was included)</term><description>The item is excluded: a <b>Remove</b> is emitted downstream.</description></item>
-    /// <item><term><c>true</c> (was excluded)</term><description>The item is re-included: an <b>Add</b> is emitted downstream.</description></item>
-    /// <item><term><c>true</c> (was included)</term><description>No effect (already included).</description></item>
-    /// <item><term><c>false</c> (was excluded)</term><description>No effect (already excluded).</description></item>
+    /// <item><term>First <see langword="true"/></term><description>The item is included: an <b>Add</b> is emitted downstream.</description></item>
+    /// <item><term><see langword="false"/> (was included)</term><description>The item is excluded: a <b>Remove</b> is emitted downstream.</description></item>
+    /// <item><term><see langword="true"/> (was excluded)</term><description>The item is re-included: an <b>Add</b> is emitted downstream.</description></item>
+    /// <item><term><see langword="true"/> (was included)</term><description>No effect (already included).</description></item>
+    /// <item><term><see langword="false"/> (was excluded)</term><description>No effect (already excluded).</description></item>
     /// <item><term>Error</term><description>Terminates the entire output stream.</description></item>
     /// <item><term>Completed</term><description>The item remains in its current inclusion state. No further toggling is possible for this item.</description></item>
     /// </list>
     /// <para>
-    /// <b>Worth noting:</b> Items are invisible downstream until their per-item observable emits at least one <c>true</c>.
+    /// <b>Worth noting:</b> Items are invisible downstream until their per-item observable emits at least one <see langword="true"/>.
     /// If an item's observable never emits, the item never appears. The <paramref name="buffer"/> parameter batches
     /// rapid inclusion changes from per-item observables into a single re-evaluation, reducing changeset chatter.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="filterFactory"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="filterFactory"/> is <see langword="null"/>.</exception>
     /// <seealso cref="Filter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, bool}, bool)"/>
     public static IObservable<IChangeSet<TObject, TKey>> FilterOnObservable<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<bool>> filterFactory, TimeSpan? buffer = null, IScheduler? scheduler = null)
         where TObject : notnull
@@ -1864,7 +1864,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <returns>An observable of individual <see cref="Change{TObject, TKey}"/> values.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="ForEachChange{TObject, TKey}"/>
     public static IObservable<Change<TObject, TKey>> Flatten<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
@@ -1883,7 +1883,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{T}"/> the source observable of buffered changeset lists.</param>
     /// <returns>An observable changeset combining all changes from each buffer into a single emission.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> FlattenBufferResult<TObject, TKey>(this IObservable<IList<IChangeSet<TObject, TKey>>> source)
         where TObject : notnull
         where TKey : notnull
@@ -1916,7 +1916,7 @@ public static partial class ObservableCacheEx
     /// Exceptions thrown in <paramref name="action"/> propagate as <c>OnError</c> to the subscriber. No try-catch is applied.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="action"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="action"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ForEachChange<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<Change<TObject, TKey>> action)
         where TObject : notnull
         where TKey : notnull
@@ -1986,7 +1986,7 @@ public static partial class ObservableCacheEx
     /// </para>
     /// <para>Both sources are serialized through a shared lock held during downstream delivery. Avoid blocking operations in subscribers.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException">Any argument is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Any argument is <see langword="null"/>.</exception>
     /// <seealso cref="InnerJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{ValueTuple{TLeftKey, TRightKey}, TLeft, TRight, TDestination})"/>
     /// <seealso cref="LeftJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, Optional{TRight}, TDestination})"/>
     /// <seealso cref="RightJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TRightKey, Optional{TLeft}, TRight, TDestination})"/>
@@ -2066,7 +2066,7 @@ public static partial class ObservableCacheEx
     /// </para>
     /// <para>Both sources are serialized through a shared lock held during downstream delivery. Avoid blocking operations in subscribers.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException">Any argument is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Any argument is <see langword="null"/>.</exception>
     /// <seealso cref="FullJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, Optional{TLeft}, Optional{TRight}, TDestination})"/>
     /// <seealso cref="InnerJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
     /// <seealso cref="LeftJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
@@ -2514,7 +2514,7 @@ public static partial class ObservableCacheEx
     /// <para>The output is keyed by a <c>(TLeftKey, TRightKey)</c> composite tuple, since a single left item may match multiple right items.</para>
     /// <para>Both sources are serialized through a shared lock held during downstream delivery. Avoid blocking operations in subscribers.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException">Any argument is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Any argument is <see langword="null"/>.</exception>
     /// <seealso cref="LeftJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, Optional{TRight}, TDestination})"/>
     /// <seealso cref="RightJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TRightKey, Optional{TLeft}, TRight, TDestination})"/>
     /// <seealso cref="FullJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, Optional{TLeft}, Optional{TRight}, TDestination})"/>
@@ -2593,7 +2593,7 @@ public static partial class ObservableCacheEx
     /// </para>
     /// <para>Both sources are serialized through a shared lock held during downstream delivery. Avoid blocking operations in subscribers.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException">Any argument is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Any argument is <see langword="null"/>.</exception>
     /// <seealso cref="InnerJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{ValueTuple{TLeftKey, TRightKey}, TLeft, TRight, TDestination})"/>
     /// <seealso cref="LeftJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
     /// <seealso cref="RightJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, Optional{TLeft}, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
@@ -2695,7 +2695,7 @@ public static partial class ObservableCacheEx
     /// </para>
     /// <para>Both sources are serialized through a shared lock held during downstream delivery. Avoid blocking operations in subscribers.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException">Any argument is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Any argument is <see langword="null"/>.</exception>
     /// <seealso cref="InnerJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{ValueTuple{TLeftKey, TRightKey}, TLeft, TRight, TDestination})"/>
     /// <seealso cref="RightJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TRightKey, Optional{TLeft}, TRight, TDestination})"/>
     /// <seealso cref="FullJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, Optional{TLeft}, Optional{TRight}, TDestination})"/>
@@ -2774,7 +2774,7 @@ public static partial class ObservableCacheEx
     /// </para>
     /// <para>Both sources are serialized through a shared lock held during downstream delivery. Avoid blocking operations in subscribers.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException">Any argument is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Any argument is <see langword="null"/>.</exception>
     /// <seealso cref="LeftJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, Optional{TRight}, TDestination})"/>
     /// <seealso cref="InnerJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
     /// <seealso cref="RightJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, Optional{TLeft}, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
@@ -2814,7 +2814,7 @@ public static partial class ObservableCacheEx
     ///   <item><term>OnCompleted</term><description>Forwarded to subscribers.</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException"><paramref name="size"/> is zero or negative.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> LimitSizeTo<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, int size)
         where TObject : notnull
@@ -2840,7 +2840,7 @@ public static partial class ObservableCacheEx
     /// <param name="sizeLimit">The maximum number of items allowed. Must be greater than zero.</param>
     /// <param name="scheduler">Optional scheduler for observing changes. Defaults to <see cref="GlobalConfig.DefaultScheduler"/>.</param>
     /// <returns>An observable that emits batches of evicted key-value pairs whenever the cache exceeds the size limit.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException"><paramref name="sizeLimit"/> is zero or negative.</exception>
     public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> LimitSizeTo<TObject, TKey>(this ISourceCache<TObject, TKey> source, int sizeLimit, IScheduler? scheduler = null)
         where TObject : notnull
@@ -2956,7 +2956,7 @@ public static partial class ObservableCacheEx
     /// pair (<c>source + other</c>, exactly two streams), or static (<see cref="IEnumerable{T}"/>, all sources known up front).
     /// (2) <b>Conflict resolution</b>: none (first-in-wins), <see cref="IComparer{T}"/> (lowest-ordered wins),
     /// <see cref="IEqualityComparer{T}"/> (suppresses duplicate updates), or both.
-    /// (3) <b>Completion</b>: static overloads accept a <c>completable</c> flag; when <c>false</c>, the output never completes
+    /// (3) <b>Completion</b>: static overloads accept a <c>completable</c> flag; when <see langword="false"/>, the output never completes
     /// even after all sources finish (useful for "live" merge scenarios).
     /// </para>
     /// <list type="table">
@@ -2966,7 +2966,7 @@ public static partial class ObservableCacheEx
     /// <item><term>Remove</term><description>If the removed value was the one published downstream, the operator scans all remaining sources for the same key. If another source still holds that key, an <b>Update</b> is emitted with the replacement value (selected by comparer if provided, otherwise the next available). If no other source holds the key, a <b>Remove</b> is emitted.</description></item>
     /// <item><term>Refresh</term><description>If the refreshed item matches the currently published value, the <b>Refresh</b> is forwarded. With a comparer, all sources are re-evaluated first; if a different value now wins, an <b>Update</b> is emitted instead of the Refresh.</description></item>
     /// <item><term>OnError</term><description>An error from any source (outer or inner) terminates the entire merged output.</description></item>
-    /// <item><term>OnCompleted</term><description>For dynamic overloads, the output completes when the outer observable completes and all subscribed inner observables have also completed. For static overloads, completion depends on the <c>completable</c> parameter (default <c>true</c>).</description></item>
+    /// <item><term>OnCompleted</term><description>For dynamic overloads, the output completes when the outer observable completes and all subscribed inner observables have also completed. For static overloads, completion depends on the <c>completable</c> parameter (default <see langword="true"/>).</description></item>
     /// </list>
     /// <para>
     /// <b>Worth noting:</b> When a source removes a key that was published downstream, the fallback to another
@@ -2975,7 +2975,7 @@ public static partial class ObservableCacheEx
     /// stream, so consider error handling within individual sources if isolation is needed.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>
     /// <seealso cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IComparer{TDestination}, IEqualityComparer{TDestination})"/>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> source)
@@ -3060,7 +3060,7 @@ public static partial class ObservableCacheEx
     /// <param name="source"><see cref="IObservable{{T}}"/> the first changeset stream.</param>
     /// <param name="other"><see cref="IObservable{{T}}"/> the second changeset stream to merge with <paramref name="source"/>.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
-    /// <param name="completable">If <c>true</c> (default), the output completes when both streams complete. If <c>false</c>, the output never completes.</param>
+    /// <param name="completable">If <see langword="true"/> (default), the output completes when both streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from both sources.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="other"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IChangeSet<TObject, TKey>> other, IScheduler? scheduler = null, bool completable = true)
@@ -3082,7 +3082,7 @@ public static partial class ObservableCacheEx
     /// <param name="other"><see cref="IObservable{{T}}"/> the second changeset stream to merge with <paramref name="source"/>.</param>
     /// <param name="comparer">An <see cref="IComparer{T}"/> that comparer to determine which value wins when both sources provide the same key.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
-    /// <param name="completable">If <c>true</c> (default), the output completes when both streams complete. If <c>false</c>, the output never completes.</param>
+    /// <param name="completable">If <see langword="true"/> (default), the output completes when both streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from both sources.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="other"/>, or <paramref name="comparer"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IChangeSet<TObject, TKey>> other, IComparer<TObject> comparer, IScheduler? scheduler = null, bool completable = true)
@@ -3105,7 +3105,7 @@ public static partial class ObservableCacheEx
     /// <param name="other"><see cref="IObservable{{T}}"/> the second changeset stream to merge with <paramref name="source"/>.</param>
     /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that equality comparer to detect duplicate values for the same key.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
-    /// <param name="completable">If <c>true</c> (default), the output completes when both streams complete. If <c>false</c>, the output never completes.</param>
+    /// <param name="completable">If <see langword="true"/> (default), the output completes when both streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from both sources.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="other"/>, or <paramref name="equalityComparer"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IChangeSet<TObject, TKey>> other, IEqualityComparer<TObject> equalityComparer, IScheduler? scheduler = null, bool completable = true)
@@ -3129,7 +3129,7 @@ public static partial class ObservableCacheEx
     /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that equality comparer to detect duplicate values for the same key.</param>
     /// <param name="comparer">An <see cref="IComparer{T}"/> that comparer to determine which value wins when both sources provide the same key.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
-    /// <param name="completable">If <c>true</c> (default), the output completes when both streams complete. If <c>false</c>, the output never completes.</param>
+    /// <param name="completable">If <see langword="true"/> (default), the output completes when both streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from both sources.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="other"/>, <paramref name="equalityComparer"/>, or <paramref name="comparer"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IChangeSet<TObject, TKey>> other, IEqualityComparer<TObject> equalityComparer, IComparer<TObject> comparer, IScheduler? scheduler = null, bool completable = true)
@@ -3153,7 +3153,7 @@ public static partial class ObservableCacheEx
     /// <param name="source"><see cref="IObservable{{T}}"/> the primary changeset stream.</param>
     /// <param name="others">An <see cref="IEnumerable{T}"/> that additional changeset streams to merge with <paramref name="source"/>.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
-    /// <param name="completable">If <c>true</c> (default), the output completes when all streams complete. If <c>false</c>, the output never completes.</param>
+    /// <param name="completable">If <see langword="true"/> (default), the output completes when all streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all sources.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="others"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IEnumerable<IObservable<IChangeSet<TObject, TKey>>> others, IScheduler? scheduler = null, bool completable = true)
@@ -3175,7 +3175,7 @@ public static partial class ObservableCacheEx
     /// <param name="others">An <see cref="IEnumerable{T}"/> that additional changeset streams to merge with <paramref name="source"/>.</param>
     /// <param name="comparer">An <see cref="IComparer{T}"/> that comparer to determine which value wins when multiple sources provide the same key.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
-    /// <param name="completable">If <c>true</c> (default), the output completes when all streams complete. If <c>false</c>, the output never completes.</param>
+    /// <param name="completable">If <see langword="true"/> (default), the output completes when all streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all sources.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="others"/>, or <paramref name="comparer"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IEnumerable<IObservable<IChangeSet<TObject, TKey>>> others, IComparer<TObject> comparer, IScheduler? scheduler = null, bool completable = true)
@@ -3198,7 +3198,7 @@ public static partial class ObservableCacheEx
     /// <param name="others">An <see cref="IEnumerable{T}"/> that additional changeset streams to merge with <paramref name="source"/>.</param>
     /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that equality comparer to detect duplicate values for the same key.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
-    /// <param name="completable">If <c>true</c> (default), the output completes when all streams complete. If <c>false</c>, the output never completes.</param>
+    /// <param name="completable">If <see langword="true"/> (default), the output completes when all streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all sources.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="others"/>, or <paramref name="equalityComparer"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IEnumerable<IObservable<IChangeSet<TObject, TKey>>> others, IEqualityComparer<TObject> equalityComparer, IScheduler? scheduler = null, bool completable = true)
@@ -3222,7 +3222,7 @@ public static partial class ObservableCacheEx
     /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that equality comparer to detect duplicate values for the same key.</param>
     /// <param name="comparer">An <see cref="IComparer{T}"/> that comparer to determine which value wins when multiple sources provide the same key.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
-    /// <param name="completable">If <c>true</c> (default), the output completes when all streams complete. If <c>false</c>, the output never completes.</param>
+    /// <param name="completable">If <see langword="true"/> (default), the output completes when all streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all sources.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="others"/>, <paramref name="equalityComparer"/>, or <paramref name="comparer"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IEnumerable<IObservable<IChangeSet<TObject, TKey>>> others, IEqualityComparer<TObject> equalityComparer, IComparer<TObject> comparer, IScheduler? scheduler = null, bool completable = true)
@@ -3245,7 +3245,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
     /// <param name="source"><see cref="IObservable{T}"/> the collection of changeset streams to merge.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
-    /// <param name="completable">If <c>true</c> (default), the output completes when all source streams have completed. If <c>false</c>, the output never completes.</param>
+    /// <param name="completable">If <see langword="true"/> (default), the output completes when all source streams have completed. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all source streams.</returns>
     /// <remarks>
     /// <para>
@@ -3278,7 +3278,7 @@ public static partial class ObservableCacheEx
     /// <param name="source"><see cref="IObservable{T}"/> the collection of changeset streams to merge.</param>
     /// <param name="comparer">An <see cref="IComparer{T}"/> that comparer to determine which value wins when multiple sources provide the same key. The lowest-ordered value is published.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
-    /// <param name="completable">If <c>true</c> (default), the output completes when all source streams have completed. If <c>false</c>, the output never completes.</param>
+    /// <param name="completable">If <see langword="true"/> (default), the output completes when all source streams have completed. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all source streams.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="comparer"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, IComparer<TObject> comparer, IScheduler? scheduler = null, bool completable = true)
@@ -3301,7 +3301,7 @@ public static partial class ObservableCacheEx
     /// <param name="source"><see cref="IObservable{T}"/> the collection of changeset streams to merge.</param>
     /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that equality comparer to detect duplicate values for the same key, suppressing no-op updates.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
-    /// <param name="completable">If <c>true</c> (default), the output completes when all source streams have completed. If <c>false</c>, the output never completes.</param>
+    /// <param name="completable">If <see langword="true"/> (default), the output completes when all source streams have completed. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all source streams.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="equalityComparer"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject> equalityComparer, IScheduler? scheduler = null, bool completable = true)
@@ -3324,7 +3324,7 @@ public static partial class ObservableCacheEx
     /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that equality comparer to detect duplicate values for the same key, suppressing no-op updates.</param>
     /// <param name="comparer">An <see cref="IComparer{T}"/> that comparer to determine which value wins when multiple sources provide the same key. The lowest-ordered value is published.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler used when subscribing to the source streams.</param>
-    /// <param name="completable">If <c>true</c> (default), the output completes when all source streams have completed. If <c>false</c>, the output never completes.</param>
+    /// <param name="completable">If <see langword="true"/> (default), the output completes when all source streams have completed. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all source streams.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="equalityComparer"/>, or <paramref name="comparer"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject> equalityComparer, IComparer<TObject> comparer, IScheduler? scheduler = null, bool completable = true)
@@ -3471,7 +3471,7 @@ public static partial class ObservableCacheEx
     /// Update for an already-published key is suppressed when the new value equals the old.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
     /// <seealso cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>
     /// <seealso cref="MergeChangeSets{TObject, TKey}(IObservable{IObservable{IChangeSet{TObject, TKey}}})"/>
     /// <seealso cref="TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, IObservable{IChangeSet{TDestination, TDestinationKey}}}, Func{TDestination, TDestinationKey})"/>
@@ -3547,7 +3547,7 @@ public static partial class ObservableCacheEx
     /// <param name="source"><see cref="IObservable{{T}}"/> the source cache changeset stream.</param>
     /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> that factory function that receives a source item and returns a child cache changeset stream.</param>
     /// <param name="sourceComparer">An <see cref="IComparer{T}"/> that comparer to prioritize between source items when their children produce the same destination key.</param>
-    /// <param name="resortOnSourceRefresh">If <c>true</c>, a Refresh in the source stream re-evaluates source priorities. If <c>false</c>, Refresh events are ignored for priority recalculation.</param>
+    /// <param name="resortOnSourceRefresh">If <see langword="true"/>, a Refresh in the source stream re-evaluates source priorities. If <see langword="false"/>, Refresh events are ignored for priority recalculation.</param>
     /// <param name="childComparer">An <see cref="IComparer{T}"/> that fallback comparer to resolve destination key conflicts when source items compare equal.</param>
     /// <returns>A merged changeset stream with conflicts resolved by source priority.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
@@ -3574,7 +3574,7 @@ public static partial class ObservableCacheEx
     /// <param name="source"><see cref="IObservable{{T}}"/> the source cache changeset stream.</param>
     /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> that factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
     /// <param name="sourceComparer">An <see cref="IComparer{T}"/> that comparer to prioritize between source items when their children produce the same destination key.</param>
-    /// <param name="resortOnSourceRefresh">If <c>true</c>, a Refresh in the source stream re-evaluates source priorities. If <c>false</c>, Refresh events are ignored for priority recalculation.</param>
+    /// <param name="resortOnSourceRefresh">If <see langword="true"/>, a Refresh in the source stream re-evaluates source priorities. If <see langword="false"/>, Refresh events are ignored for priority recalculation.</param>
     /// <param name="childComparer">An <see cref="IComparer{T}"/> that fallback comparer to resolve destination key conflicts when source items compare equal.</param>
     /// <returns>A merged changeset stream with conflicts resolved by source priority.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
@@ -3644,7 +3644,7 @@ public static partial class ObservableCacheEx
     /// <param name="source"><see cref="IObservable{{T}}"/> the source cache changeset stream.</param>
     /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> that factory function that receives a source item and returns a child cache changeset stream.</param>
     /// <param name="sourceComparer">An <see cref="IComparer{T}"/> that comparer to prioritize between source items when their children produce the same destination key.</param>
-    /// <param name="resortOnSourceRefresh">If <c>true</c>, a Refresh in the source stream re-evaluates source priorities. If <c>false</c>, Refresh events are ignored for priority recalculation.</param>
+    /// <param name="resortOnSourceRefresh">If <see langword="true"/>, a Refresh in the source stream re-evaluates source priorities. If <see langword="false"/>, Refresh events are ignored for priority recalculation.</param>
     /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that optional equality comparer to suppress updates when the incoming child value equals the current value.</param>
     /// <param name="childComparer">An <see cref="IComparer{T}"/> that optional fallback comparer for destination key conflicts when source items compare equal.</param>
     /// <returns>A merged changeset stream with conflicts resolved by source priority.</returns>
@@ -3674,7 +3674,7 @@ public static partial class ObservableCacheEx
     /// <param name="source"><see cref="IObservable{{T}}"/> the source cache changeset stream.</param>
     /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> that factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
     /// <param name="sourceComparer">An <see cref="IComparer{T}"/> that comparer to prioritize between source items when their children produce the same destination key. Lower-ordered source wins.</param>
-    /// <param name="resortOnSourceRefresh">If <c>true</c> (default), a Refresh in the source stream re-evaluates source priorities. If <c>false</c>, Refresh events are ignored for priority recalculation.</param>
+    /// <param name="resortOnSourceRefresh">If <see langword="true"/> (default), a Refresh in the source stream re-evaluates source priorities. If <see langword="false"/>, Refresh events are ignored for priority recalculation.</param>
     /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that optional equality comparer to suppress updates when the incoming child value equals the current value for a destination key.</param>
     /// <param name="childComparer">An <see cref="IComparer{T}"/> that optional fallback comparer to resolve destination key conflicts when source items compare equal.</param>
     /// <returns>A merged changeset stream containing items from all active child streams, with conflicts resolved by source priority.</returns>
@@ -3788,7 +3788,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="T">The type of the source observable.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source observable to monitor.</param>
     /// <returns>An observable that emits <see cref="ConnectionStatus"/> values reflecting the source's lifecycle.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="DeferUntilLoaded{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
     public static IObservable<ConnectionStatus> MonitorStatus<T>(this IObservable<T> source) => new StatusMonitor<T>(source).Run();
 
@@ -3799,7 +3799,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <returns>An observable that emits only non-empty changesets.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="StartWithEmpty{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}})"/>
     public static IObservable<IChangeSet<TObject, TKey>> NotEmpty<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
@@ -3818,7 +3818,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TDestination">The destination type to filter and cast to.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source observable changeset.</param>
-    /// <param name="suppressEmptyChangeSets">If <c>true</c>, changesets that become empty after filtering are suppressed.</param>
+    /// <param name="suppressEmptyChangeSets">If <see langword="true"/>, changesets that become empty after filtering are suppressed.</param>
     /// <returns>An observable changeset of <typeparamref name="TDestination"/> items.</returns>
     /// <remarks>
     /// <list type="table">
@@ -3831,7 +3831,7 @@ public static partial class ObservableCacheEx
     ///   <item><term>OnCompleted</term><description>Forwarded to subscribers.</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> OfType<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, bool suppressEmptyChangeSets = true)
         where TObject : notnull
         where TKey : notnull
@@ -3865,7 +3865,7 @@ public static partial class ObservableCacheEx
     /// Exceptions thrown in <paramref name="addAction"/> propagate as <c>OnError</c>. No try-catch is applied.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="addAction"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="addAction"/> is <see langword="null"/>.</exception>
     /// <seealso cref="OnItemUpdated{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, Action{TObject,TObject,TKey})"/>
     /// <seealso cref="OnItemRemoved{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, Action{TObject,TKey}, bool)"/>
     /// <seealso cref="ForEachChange{TObject,TKey}"/>
@@ -3911,7 +3911,7 @@ public static partial class ObservableCacheEx
     /// Exceptions thrown in <paramref name="refreshAction"/> propagate as <c>OnError</c>. No try-catch is applied.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="refreshAction"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="refreshAction"/> is <see langword="null"/>.</exception>
     /// <seealso cref="AutoRefresh{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
     public static IObservable<IChangeSet<TObject, TKey>> OnItemRefreshed<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TKey> refreshAction)
         where TObject : notnull
@@ -3941,8 +3941,8 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
     /// <param name="removeAction"><see cref="Action{T}"/> the callback invoked for each removed item. Receives the removed item and its key.</param>
     /// <param name="invokeOnUnsubscribe">
-    /// When <c>true</c> (the default), the callback is also invoked for <b>every item still in the cache</b>
-    /// when the subscription is disposed. When <c>false</c>, only inline Remove changes trigger the callback.
+    /// When <see langword="true"/> (the default), the callback is also invoked for <b>every item still in the cache</b>
+    /// when the subscription is disposed. When <see langword="false"/>, only inline Remove changes trigger the callback.
     /// </param>
     /// <returns>A stream that forwards all changesets from <paramref name="source"/> unchanged.</returns>
     /// <remarks>
@@ -3950,14 +3950,14 @@ public static partial class ObservableCacheEx
     /// <b>Change reason handling:</b>
     /// <list type="table">
     ///   <listheader><term>Event</term><description>Behavior</description></listheader>
-    ///   <item><term>Add</term><description>Ignored (but tracked internally when <paramref name="invokeOnUnsubscribe"/> is <c>true</c>).</description></item>
-    ///   <item><term>Update</term><description>Ignored (cache updated internally when <paramref name="invokeOnUnsubscribe"/> is <c>true</c>).</description></item>
+    ///   <item><term>Add</term><description>Ignored (but tracked internally when <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>).</description></item>
+    ///   <item><term>Update</term><description>Ignored (cache updated internally when <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>).</description></item>
     ///   <item><term>Remove</term><description>Invokes <paramref name="removeAction"/> with the item and key.</description></item>
     ///   <item><term>Refresh</term><description>Ignored.</description></item>
     /// </list>
     /// </para>
     /// <para>
-    /// <b>Unsubscribe behavior:</b> when <paramref name="invokeOnUnsubscribe"/> is <c>true</c>, the operator
+    /// <b>Unsubscribe behavior:</b> when <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>, the operator
     /// maintains an internal cache mirroring the stream. On disposal, it iterates all remaining items and
     /// invokes <paramref name="removeAction"/> for each. This is useful for cleanup logic (e.g. event unsubscription)
     /// that must run for items that were never explicitly removed.
@@ -3966,9 +3966,9 @@ public static partial class ObservableCacheEx
     /// Exceptions thrown in <paramref name="removeAction"/> propagate as <c>OnError</c> during inline removes.
     /// During unsubscribe disposal, exceptions are not caught.
     /// </para>
-    /// <para><b>Worth noting:</b> The action also fires for ALL remaining items when the subscription is disposed (unless <c>invokeOnUnsubscribe</c> is <c>false</c>). The action runs under a lock; avoid calling into other caches from within it.</para>
+    /// <para><b>Worth noting:</b> The action also fires for ALL remaining items when the subscription is disposed (unless <c>invokeOnUnsubscribe</c> is <see langword="false"/>). The action runs under a lock; avoid calling into other caches from within it.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="removeAction"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="removeAction"/> is <see langword="null"/>.</exception>
     /// <seealso cref="DisposeMany{TObject,TKey}"/>
     /// <seealso cref="SubscribeMany{TObject,TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IDisposable})"/>
     public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TKey> removeAction, bool invokeOnUnsubscribe = true)
@@ -3989,7 +3989,7 @@ public static partial class ObservableCacheEx
     /// <inheritdoc cref="OnItemRemoved{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject, TKey}, bool)"/>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <param name="removeAction"><see cref="Action{{T}}"/> the callback invoked for each removed item. Receives only the item (no key).</param>
-    /// <param name="invokeOnUnsubscribe">When <c>true</c> (the default), also invoked for all remaining items on disposal.</param>
+    /// <param name="invokeOnUnsubscribe">When <see langword="true"/> (the default), also invoked for all remaining items on disposal.</param>
     /// <remarks>Overload that omits the key from the callback. Delegates to <see cref="OnItemRemoved{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject, TKey}, bool)"/>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction, bool invokeOnUnsubscribe = true)
         where TObject : notnull
@@ -4020,7 +4020,7 @@ public static partial class ObservableCacheEx
     /// Exceptions thrown in <paramref name="updateAction"/> propagate as <c>OnError</c>. No try-catch is applied.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="updateAction"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="updateAction"/> is <see langword="null"/>.</exception>
     /// <seealso cref="OnItemAdded{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, Action{TObject,TKey})"/>
     /// <seealso cref="ForEachChange{TObject,TKey}"/>
     public static IObservable<IChangeSet<TObject, TKey>> OnItemUpdated<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TObject, TKey> updateAction)
@@ -4065,7 +4065,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnCompleted</term><description>The output completes when all sources have completed.</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="others"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="others"/> is <see langword="null"/>.</exception>
     /// <seealso cref="And{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
     /// <seealso cref="Except{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
     /// <seealso cref="Xor{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
@@ -4158,7 +4158,7 @@ public static partial class ObservableCacheEx
     /// <remarks>
     /// <para>Each emission from <paramref name="observable"/> is passed to <see cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject})"/>, producing one changeset per emission containing <b>Add</b> or <b>Update</b> events for each item. Errors from <paramref name="observable"/> propagate and terminate the subscription. Completion ends the subscription; the cache retains all items.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observable"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observable"/> is <see langword="null"/>.</exception>
     /// <seealso cref="PopulateInto{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, ISourceCache{TObject, TKey})"/>
     /// <seealso cref="ToObservableChangeSet{TObject, TKey}(IObservable{IEnumerable{TObject}}, Func{TObject, TKey}, Func{TObject, TimeSpan?}, int, IScheduler?)"/>
     public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<IEnumerable<TObject>> observable)
@@ -4178,7 +4178,7 @@ public static partial class ObservableCacheEx
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache to populate.</param>
     /// <param name="observable"><see cref="IObservable{{T}}"/> the observable that emits individual items.</param>
     /// <returns>An <see cref="IDisposable"/> that, when disposed, unsubscribes from <paramref name="observable"/>.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observable"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observable"/> is <see langword="null"/>.</exception>
     public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<TObject> observable)
         where TObject : notnull
         where TKey : notnull
@@ -4210,7 +4210,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnCompleted</term><description>The subscription ends. The destination cache retains all items.</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="destination"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="destination"/> is <see langword="null"/>.</exception>
     /// <seealso cref="PopulateFrom{TObject, TKey}(ISourceCache{TObject, TKey}, IObservable{IEnumerable{TObject}})"/>
     /// <seealso cref="AsObservableCache{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, bool)"/>
     public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ISourceCache<TObject, TKey> destination)
@@ -4273,7 +4273,7 @@ public static partial class ObservableCacheEx
     /// </list>
     /// <para><b>Worth noting:</b> The selector is called on every changeset, which can be chatty. The <see cref="IQuery{TObject, TKey}"/> exposes the full cache state for LINQ-style queries.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="resultSelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="resultSelector"/> is <see langword="null"/>.</exception>
     /// <seealso cref="ToCollection{TObject, TKey}"/>
     /// <seealso cref="ToSortedCollection{TObject, TKey, TSortKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TSortKey}, SortDirection)"/>
     public static IObservable<TDestination> QueryWhenChanged<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<IQuery<TObject, TKey>, TDestination> resultSelector)
@@ -4356,7 +4356,7 @@ public static partial class ObservableCacheEx
     /// <item><term>Other</term><description>No Add, Update, or Remove events are produced by this method.</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="AutoRefresh{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
     /// <seealso cref="SuppressRefresh{TObject, TKey}"/>
     public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
@@ -4375,7 +4375,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
     /// <param name="items"><see cref="IEnumerable{{T}}"/> the items to refresh.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         where TObject : notnull
         where TKey : notnull
@@ -4391,7 +4391,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull
@@ -4416,7 +4416,7 @@ public static partial class ObservableCacheEx
     /// <item><term>Other</term><description>No Add, Update, or Refresh events are produced by this method.</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, TObject)"/>
     /// <seealso cref="Clear{TObject, TKey}(ISourceCache{TObject, TKey})"/>
     /// <seealso cref="RemoveKeys{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TKey})"/>
@@ -4436,7 +4436,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
     /// <param name="key">The <typeparamref name="TKey"/> key of the item to remove.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -4454,7 +4454,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
     /// <param name="items"><see cref="IEnumerable{{T}}"/> the items to remove.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         where TObject : notnull
         where TKey : notnull
@@ -4472,7 +4472,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
     /// <param name="keys"><see cref="IEnumerable{{T}}"/> the keys to remove.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
         where TObject : notnull
         where TKey : notnull
@@ -4538,7 +4538,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
     /// <param name="key">The <typeparamref name="TKey"/> key to remove.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void RemoveKey<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -4555,7 +4555,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="ISourceCache{{TObject, TKey}}"/> the source cache.</param>
     /// <param name="keys"><see cref="IEnumerable{{T}}"/> the keys to remove.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void RemoveKeys<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
         where TObject : notnull
         where TKey : notnull
@@ -4624,7 +4624,7 @@ public static partial class ObservableCacheEx
     /// </para>
     /// <para>Both sources are serialized through a shared lock held during downstream delivery. Avoid blocking operations in subscribers.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException">Any argument is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Any argument is <see langword="null"/>.</exception>
     /// <seealso cref="InnerJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{ValueTuple{TLeftKey, TRightKey}, TLeft, TRight, TDestination})"/>
     /// <seealso cref="LeftJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, Optional{TRight}, TDestination})"/>
     /// <seealso cref="FullJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, Optional{TLeft}, Optional{TRight}, TDestination})"/>
@@ -4704,7 +4704,7 @@ public static partial class ObservableCacheEx
     /// </para>
     /// <para>Both sources are serialized through a shared lock held during downstream delivery. Avoid blocking operations in subscribers.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException">Any argument is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException">Any argument is <see langword="null"/>.</exception>
     /// <seealso cref="RightJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TRightKey, Optional{TLeft}, TRight, TDestination})"/>
     /// <seealso cref="InnerJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
     /// <seealso cref="LeftJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
@@ -4732,7 +4732,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset stream.</param>
     /// <returns>An observable that skips the first changeset and forwards all others.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="DeferUntilLoaded{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}})"/>
     /// <seealso cref="StartWithEmpty{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}})"/>
     public static IObservable<IChangeSet<TObject, TKey>> SkipInitial<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
@@ -5000,7 +5000,7 @@ public static partial class ObservableCacheEx
     /// to the lifecycle of items in the cache.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="subscriptionFactory"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="subscriptionFactory"/> is <see langword="null"/>.</exception>
     /// <seealso cref="DisposeMany{TObject,TKey}"/>
     /// <seealso cref="OnItemRemoved{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, Action{TObject,TKey}, bool)"/>
     public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
@@ -5100,11 +5100,11 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source observable of individual items.</param>
     /// <param name="keySelector">A <see cref="Func{{T, TResult}}"/> that selects the unique key for each item.</param>
-    /// <param name="expireAfter">A optional <see cref="Func{{T, TResult}}"/> optional: per-item expiration time. Return <c>null</c> for no expiration.</param>
+    /// <param name="expireAfter">A optional <see cref="Func{{T, TResult}}"/> optional: per-item expiration time. Return <see langword="null"/> for no expiration.</param>
     /// <param name="limitSizeTo">Optional: maximum cache size. Oldest items are removed when exceeded. Use -1 for no limit.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler for expiration timing.</param>
     /// <returns>An observable changeset stream.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(
             this IObservable<TObject> source,
             Func<TObject, TKey> keySelector,
@@ -5134,11 +5134,11 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source"><see cref="IObservable{{T}}"/> the source observable of item batches.</param>
     /// <param name="keySelector">A <see cref="Func{{T, TResult}}"/> that selects the unique key for each item.</param>
-    /// <param name="expireAfter">A optional <see cref="Func{{T, TResult}}"/> optional: per-item expiration time. Return <c>null</c> for no expiration.</param>
+    /// <param name="expireAfter">A optional <see cref="Func{{T, TResult}}"/> optional: per-item expiration time. Return <see langword="null"/> for no expiration.</param>
     /// <param name="limitSizeTo">Optional: maximum cache size. Oldest items are removed when exceeded. Use -1 for no limit.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> optional scheduler for expiration timing.</param>
     /// <returns>An observable changeset stream.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(
             this IObservable<IEnumerable<TObject>> source,
             Func<TObject, TKey> keySelector,
@@ -5167,7 +5167,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
     /// <param name="key">The <typeparamref name="TKey"/> key to watch.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that optional comparer to suppress duplicate emissions. Uses default equality if <c>null</c>.</param>
+    /// <param name="equalityComparer">An <see cref="IEqualityComparer{T}"/> that optional comparer to suppress duplicate emissions. Uses default equality if <see langword="null"/>.</param>
     /// <returns>An observable of <see cref="Optional{TObject}"/> that reflects the presence or absence of the specified key.</returns>
     /// <remarks>
     /// <para>
@@ -5185,7 +5185,7 @@ public static partial class ObservableCacheEx
     /// </list>
     /// <para><b>Worth noting:</b> No emission occurs if the key is not present at subscription time. To get an initial <c>None</c> when the key is absent, use the overload with <c>initialOptionalWhenMissing: true</c>.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="Watch{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey)"/>
     /// <seealso cref="WatchValue{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey)"/>
     public static IObservable<Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, IEqualityComparer<TObject>? equalityComparer = null)
@@ -5263,7 +5263,7 @@ public static partial class ObservableCacheEx
             });
 
     /// <inheritdoc cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>
-    /// <remarks>This overload accepts a <c>bool transformOnRefresh</c> flag. When <c>true</c>, Refresh changes cause re-transformation (emitted as Update). The factory receives only the current item.</remarks>
+    /// <remarks>This overload accepts a <c>bool transformOnRefresh</c> flag. When <see langword="true"/>, Refresh changes cause re-transformation (emitted as Update). The factory receives only the current item.</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, bool transformOnRefresh)
         where TDestination : notnull
         where TSource : notnull
@@ -5276,7 +5276,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <inheritdoc cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>
-    /// <remarks>This overload accepts a <c>bool transformOnRefresh</c> flag. When <c>true</c>, Refresh changes cause re-transformation (emitted as Update). The factory receives the current item and key.</remarks>
+    /// <remarks>This overload accepts a <c>bool transformOnRefresh</c> flag. When <see langword="true"/>, Refresh changes cause re-transformation (emitted as Update). The factory receives the current item and key.</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, bool transformOnRefresh)
         where TDestination : notnull
         where TSource : notnull
@@ -5289,7 +5289,7 @@ public static partial class ObservableCacheEx
     }
 
     /// <inheritdoc cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>
-    /// <remarks>This overload accepts a <c>bool transformOnRefresh</c> flag. When <c>true</c>, Refresh changes cause re-transformation (emitted as Update).</remarks>
+    /// <remarks>This overload accepts a <c>bool transformOnRefresh</c> flag. When <see langword="true"/>, Refresh changes cause re-transformation (emitted as Update).</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, bool transformOnRefresh)
         where TDestination : notnull
         where TSource : notnull
@@ -5335,7 +5335,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TSource, TKey}"/>.</param>
     /// <param name="transformFactory"><see cref="Func{T, TResult}"/> a function that produces a <typeparamref name="TDestination"/> from the current source item, the previous source item (if any), and the key.</param>
-    /// <param name="forceTransform">An observable that, when it emits a predicate, re-transforms all items for which the predicate returns <c>true</c>. Re-transformed items are emitted as <see cref="ChangeReason.Update"/> changes. If <c>null</c>, no forced re-transforms occur.</param>
+    /// <param name="forceTransform">An observable that, when it emits a predicate, re-transforms all items for which the predicate returns <see langword="true"/>. Re-transformed items are emitted as <see cref="ChangeReason.Update"/> changes. If <see langword="null"/>, no forced re-transforms occur.</param>
     /// <returns>An observable changeset of transformed items.</returns>
     /// <remarks>
     /// <para>
@@ -5364,7 +5364,7 @@ public static partial class ObservableCacheEx
     /// <seealso cref="TransformSafe{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, Action{Error{TSource, TKey}}, IObservable{Func{TSource, TKey, bool}}?)"/>
     /// <seealso cref="TransformAsync{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, Task{TDestination}}, IObservable{Func{TSource, TKey, bool}}?)"/>
     /// <seealso cref="TransformImmutable{TDestination, TSource, TKey}"/>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
         where TSource : notnull
@@ -5452,7 +5452,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TSource, TKey}"/>.</param>
     /// <param name="transformFactory"><see cref="Func{T, TResult}"/> an async function that produces a <typeparamref name="TDestination"/> from the current source item, the previous source item (if any), and the key.</param>
-    /// <param name="forceTransform">An observable that, when it emits a predicate, re-transforms all items for which the predicate returns <c>true</c>. Re-transformed items are emitted as <see cref="ChangeReason.Update"/> changes. If <c>null</c>, no forced re-transforms occur.</param>
+    /// <param name="forceTransform">An observable that, when it emits a predicate, re-transforms all items for which the predicate returns <see langword="true"/>. Re-transformed items are emitted as <see cref="ChangeReason.Update"/> changes. If <see langword="null"/>, no forced re-transforms occur.</param>
     /// <returns>An observable changeset of transformed items.</returns>
     /// <remarks>
     /// <para>
@@ -5475,7 +5475,7 @@ public static partial class ObservableCacheEx
     /// to catch factory errors without terminating the stream.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <see langword="null"/>.</exception>
     [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
@@ -5555,7 +5555,7 @@ public static partial class ObservableCacheEx
     /// </list>
     /// <para>Use this when items are immutable, the factory is pure, and the factory is cheap. If any of these conditions are false, use <see cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/> instead.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformImmutable<TDestination, TSource, TKey>(
             this IObservable<IChangeSet<TSource, TKey>> source,
             Func<TSource, TDestination> transformFactory)
@@ -5596,7 +5596,7 @@ public static partial class ObservableCacheEx
     /// <para><b>Worth noting:</b> If two source items produce children with the same key, last-in-wins. <b>Refresh</b> does NOT re-expand children (only <b>Update</b> does).</para>
     /// <para>If two parents produce children with the same key, last-in-wins. Use the async variant with a <see cref="IComparer{T}"/> to control conflict resolution.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="manySelector"/>, or <paramref name="keySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="manySelector"/>, or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     /// <seealso cref="TransformManyAsync{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, TSourceKey, Task{IEnumerable{TDestination}}}, Func{TDestination, TDestinationKey}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, IEnumerable<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         where TDestination : notnull
@@ -5653,7 +5653,7 @@ public static partial class ObservableCacheEx
     /// to catch errors without killing the stream.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="manySelector"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="manySelector"/> is <see langword="null"/>.</exception>
     [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformManyAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, TSourceKey, Task<IEnumerable<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
         where TDestination : notnull
@@ -5746,7 +5746,7 @@ public static partial class ObservableCacheEx
     /// <param name="comparer">An <see cref="IComparer{T}"/> that optional comparer to resolve key collisions when the same destination key is produced by multiple parents.</param>
     /// <returns>An observable changeset of flattened child items.</returns>
     /// <remarks>Because the transformations are asynchronous, each sub-collection may be emitted via a separate changeset.</remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="manySelector"/>, or <paramref name="errorHandler"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="manySelector"/>, or <paramref name="errorHandler"/> is <see langword="null"/>.</exception>
     [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformManySafeAsync<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, TSourceKey, Task<IEnumerable<TDestination>>> manySelector, Func<TDestination, TDestinationKey> keySelector, Action<Error<TSource, TSourceKey>> errorHandler, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
         where TDestination : notnull
@@ -5864,7 +5864,7 @@ public static partial class ObservableCacheEx
     /// also completed.
     /// </para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <see langword="null"/>.</exception>
     /// <seealso cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, TKey, TDestination}, bool)"/>
     /// <seealso cref="FilterOnObservable{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
     /// <seealso cref="GroupOnObservable{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{TGroupKey}})"/>
@@ -5929,7 +5929,7 @@ public static partial class ObservableCacheEx
     /// <param name="source"><see cref="IObservable{{T}}"/> the source changeset observable.</param>
     /// <param name="transformFactory"><see cref="Func{T, TResult}"/> a function that produces a <typeparamref name="TDestination"/> from the current source item, the previous source item (if any), and the key.</param>
     /// <param name="errorHandler">Called when <paramref name="transformFactory"/> throws. Receives an <see cref="Error{TSource, TKey}"/> containing the exception and the faulting item. The item is skipped and the stream continues.</param>
-    /// <param name="forceTransform">An optional <see cref="IObservable{{T}}"/> an observable that, when it emits a predicate, re-transforms all items for which the predicate returns <c>true</c>. If <c>null</c>, no forced re-transforms occur.</param>
+    /// <param name="forceTransform">An optional <see cref="IObservable{{T}}"/> an observable that, when it emits a predicate, re-transforms all items for which the predicate returns <see langword="true"/>. If <see langword="null"/>, no forced re-transforms occur.</param>
     /// <returns>An observable changeset of transformed items.</returns>
     /// <remarks>
     /// <para>
@@ -5939,7 +5939,7 @@ public static partial class ObservableCacheEx
     /// </para>
     /// <para><b>Worth noting:</b> Factory exceptions are caught per-item; the faulting item is skipped and reported to the error handler while the stream continues. Source-level errors still terminate the stream.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="transformFactory"/>, or <paramref name="errorHandler"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="transformFactory"/>, or <paramref name="errorHandler"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
         where TSource : notnull
@@ -6034,7 +6034,7 @@ public static partial class ObservableCacheEx
     /// <param name="forceTransform">An optional <see cref="IObservable{{T}}"/> optional observable to force re-transformation of matching items.</param>
     /// <returns>An observable changeset of transformed items.</returns>
     /// <remarks>Combines the async execution model of <see cref="TransformAsync{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, Task{TDestination}}, IObservable{Func{TSource, TKey, bool}}?)"/> with the error-safe behavior of <see cref="TransformSafe{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, Action{Error{TSource, TKey}}, IObservable{Func{TSource, TKey, bool}}?)"/>.</remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="transformFactory"/>, or <paramref name="errorHandler"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="transformFactory"/>, or <paramref name="errorHandler"/> is <see langword="null"/>.</exception>
     [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
@@ -6114,7 +6114,7 @@ public static partial class ObservableCacheEx
     /// </list>
     /// <para>Circular references are NOT detected. If item A is the parent of B and B is the parent of A, behavior is undefined.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="pivotOn"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="pivotOn"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<Node<TObject, TKey>, TKey>> TransformToTree<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey> pivotOn, IObservable<Func<Node<TObject, TKey>, bool>>? predicateChanged = null)
         where TObject : class
         where TKey : notnull
@@ -6179,7 +6179,7 @@ public static partial class ObservableCacheEx
     /// <param name="transformFactory">A <see cref="Func{T, TResult}"/> that called on Add (and optionally Refresh) to create a new <typeparamref name="TDestination"/>.</param>
     /// <param name="updateAction">A <see cref="Action{{T}}"/> that called on Update. Receives <c>(existingTransformed, newSource)</c>. Mutate the existing transformed item to reflect the new source value. Example: <c>(vm, model) =&gt; vm.Value = model.Value</c>.</param>
     /// <param name="errorHandler">A <see cref="Action{{T}}"/> that called when <paramref name="transformFactory"/> or <paramref name="updateAction"/> throws. The faulting item is skipped.</param>
-    /// <param name="transformOnRefresh">When <c>true</c>, Refresh changes call <paramref name="updateAction"/> on the existing item.</param>
+    /// <param name="transformOnRefresh">When <see langword="true"/>, Refresh changes call <paramref name="updateAction"/> on the existing item.</param>
     /// <returns>An observable changeset of transformed items.</returns>
     /// <remarks>
     /// <para>
@@ -6195,7 +6195,7 @@ public static partial class ObservableCacheEx
     ///   <item><term>Refresh</term><description>If <paramref name="transformOnRefresh"/> is true, calls <paramref name="updateAction"/>. Otherwise forwarded as Refresh.</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="transformFactory"/>, <paramref name="updateAction"/>, or <paramref name="errorHandler"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="transformFactory"/>, <paramref name="updateAction"/>, or <paramref name="errorHandler"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<TDestination, TSource> updateAction, Action<Error<TSource, TKey>> errorHandler, bool transformOnRefresh)
         where TDestination : class
         where TSource : notnull
@@ -6243,8 +6243,8 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Emits <c>true</c> when all items in the cache satisfy a condition based on their per-item observable,
-    /// and <c>false</c> otherwise. Re-evaluates whenever the cache changes or any per-item observable emits.
+    /// Emits <see langword="true"/> when all items in the cache satisfy a condition based on their per-item observable,
+    /// and <see langword="false"/> otherwise. Re-evaluates whenever the cache changes or any per-item observable emits.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -6253,7 +6253,7 @@ public static partial class ObservableCacheEx
     /// <param name="observableSelector">A <see cref="Func{{T, TResult}}"/> that factory that produces a condition observable for each item.</param>
     /// <param name="equalityCondition">A <see cref="Func{{T, TResult}}"/> that predicate applied to each per-item observable's latest value.</param>
     /// <returns>An observable of <c>bool</c> that emits whenever the all-items condition changes.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="observableSelector"/>, or <paramref name="equalityCondition"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="observableSelector"/>, or <paramref name="equalityCondition"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
@@ -6264,7 +6264,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnError</term><description>An error from any per-item observable terminates the entire stream. Source errors also terminate.</description></item>
     /// <item><term>OnCompleted</term><description>Completes when the source and all per-item observables have completed.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> Items whose per-item observable has not yet emitted are treated as not satisfying the condition. An empty cache is vacuously <c>true</c>. The result uses <c>DistinctUntilChanged</c>, so duplicate <c>bool</c> values are suppressed.</para>
+    /// <para><b>Worth noting:</b> Items whose per-item observable has not yet emitted are treated as not satisfying the condition. An empty cache is vacuously <see langword="true"/>. The result uses <c>DistinctUntilChanged</c>, so duplicate <c>bool</c> values are suppressed.</para>
     /// </remarks>
     /// <seealso cref="TrueForAny{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TValue}}, Func{TValue, bool})"/>
     public static IObservable<bool> TrueForAll<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TValue, bool> equalityCondition)
@@ -6296,8 +6296,8 @@ public static partial class ObservableCacheEx
         where TValue : notnull => source.TrueFor(observableSelector, items => items.All(o => o.LatestValue.HasValue && equalityCondition(o.Item, o.LatestValue.Value)));
 
     /// <summary>
-    /// Emits <c>true</c> when any item in the cache satisfies a condition based on its per-item observable,
-    /// and <c>false</c> when none do. Re-evaluates whenever the cache changes or any per-item observable emits.
+    /// Emits <see langword="true"/> when any item in the cache satisfies a condition based on its per-item observable,
+    /// and <see langword="false"/> when none do. Re-evaluates whenever the cache changes or any per-item observable emits.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -6306,7 +6306,7 @@ public static partial class ObservableCacheEx
     /// <param name="observableSelector">A <see cref="Func{{T, TResult}}"/> that factory that produces a condition observable for each item.</param>
     /// <param name="equalityCondition">A <see cref="Func{{T, TResult}}"/> that predicate applied to each item and its per-item observable's latest value.</param>
     /// <returns>An observable of <c>bool</c> that emits whenever the any-item condition changes.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="observableSelector"/>, or <paramref name="equalityCondition"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="observableSelector"/>, or <paramref name="equalityCondition"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
@@ -6317,7 +6317,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnError</term><description>An error from any per-item observable terminates the entire stream. Source errors also terminate.</description></item>
     /// <item><term>OnCompleted</term><description>Completes when the source and all per-item observables have completed.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> Items whose per-item observable has not yet emitted are treated as not satisfying the condition. An empty cache yields <c>false</c>. The result uses <c>DistinctUntilChanged</c>, so duplicate <c>bool</c> values are suppressed.</para>
+    /// <para><b>Worth noting:</b> Items whose per-item observable has not yet emitted are treated as not satisfying the condition. An empty cache yields <see langword="false"/>. The result uses <c>DistinctUntilChanged</c>, so duplicate <c>bool</c> values are suppressed.</para>
     /// </remarks>
     /// <seealso cref="TrueForAll{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TValue}}, Func{TValue, bool})"/>
     public static IObservable<bool> TrueForAny<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TObject, TValue, bool> equalityCondition)
@@ -6479,7 +6479,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TValue">The type of the monitored property.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
     /// <param name="propertyAccessor">A <see cref="Expression{{TDelegate}}"/> that expression selecting the property to monitor.</param>
-    /// <param name="notifyOnInitialValue">When <c>true</c> (the default), the current property value is emitted immediately for each item upon subscription.</param>
+    /// <param name="notifyOnInitialValue">When <see langword="true"/> (the default), the current property value is emitted immediately for each item upon subscription.</param>
     /// <returns>An observable of <see cref="PropertyValue{TObject, TValue}"/> containing both the item and its property value.</returns>
     /// <remarks>
     /// <para>
@@ -6516,7 +6516,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TValue">The type of the monitored property.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
     /// <param name="propertyAccessor">A <see cref="Expression{TDelegate}"/> that expression selecting the property to monitor.</param>
-    /// <param name="notifyOnInitialValue">When <c>true</c> (the default), the current property value is emitted immediately for each item upon subscription.</param>
+    /// <param name="notifyOnInitialValue">When <see langword="true"/> (the default), the current property value is emitted immediately for each item upon subscription.</param>
     /// <returns>An observable of property values. The owning item is not included; use <see cref="WhenPropertyChanged{TObject, TKey, TValue}"/> if you need it.</returns>
     /// <remarks>
     /// <para>
@@ -6631,7 +6631,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnCompleted</term><description>The output completes when all sources have completed.</description></item>
     /// </list>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="others"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="others"/> is <see langword="null"/>.</exception>
     /// <seealso cref="And{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
     /// <seealso cref="Or{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
     /// <seealso cref="Except{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
