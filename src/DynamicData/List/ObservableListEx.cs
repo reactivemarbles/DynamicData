@@ -950,7 +950,7 @@ public static class ObservableListEx
     /// The item's inclusion is determined by the most recent boolean value emitted by that observable.
     /// </para>
     /// <list type="table">
-    /// <listheader><term>Source changeset event</term><description>Behavior</description></listheader>
+    /// <listheader><term>Event (source)</term><description>Behavior</description></listheader>
     /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the per-item observable. Item is included when it first emits <c>true</c>.</description></item>
     /// <item><term><b>Replace</b></term><description>Old subscription disposed, new subscription created for the replacement item.</description></item>
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Subscription disposed. If the item was downstream, a <b>Remove</b> is emitted.</description></item>
@@ -959,7 +959,7 @@ public static class ObservableListEx
     /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// <list type="table">
-    /// <listheader><term>Per-item observable event</term><description>Behavior</description></listheader>
+    /// <listheader><term>Event (per-item observable)</term><description>Behavior</description></listheader>
     /// <item><term>Emits <c>true</c></term><description>If not already included, an <b>Add</b> is emitted downstream.</description></item>
     /// <item><term>Emits <c>false</c></term><description>If currently included, a <b>Remove</b> is emitted downstream.</description></item>
     /// </list>
@@ -1267,7 +1267,7 @@ public static class ObservableListEx
     /// When an item is added, a new subscription is created via <paramref name="observableSelector"/>. When removed or replaced, the old subscription is disposed.
     /// </para>
     /// <list type="table">
-    /// <listheader><term>Source changeset event</term><description>Subscription behavior</description></listheader>
+    /// <listheader><term>Event (source)</term><description>Subscription behavior</description></listheader>
     /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the per-item observable. Emissions are merged into the output.</description></item>
     /// <item><term><b>Replace</b></term><description>Old subscription disposed, new subscription created for the replacement item.</description></item>
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Subscription disposed.</description></item>
@@ -1307,7 +1307,7 @@ public static class ObservableListEx
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
     /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Forwarded to the merged output.</description></item>
-    /// <item><term><b>Replace</b></term><description>Decomposed into <b>Remove</b> (old) + <b>Add</b> (new).</description></item>
+    /// <item><term><b>Replace</b></term><description>The old value is replaced by the new value in the merged output. If the old value is not found (by reference), the new value is added instead.</description></item>
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Forwarded to the merged output.</description></item>
     /// <item><term><b>Refresh</b></term><description>Forwarded to the merged output.</description></item>
     /// <item><term><b>Moved</b></term><description>Ignored.</description></item>
@@ -1503,7 +1503,7 @@ public static class ObservableListEx
     /// All child items from a removed parent are removed from the merged output.
     /// </para>
     /// <list type="table">
-    /// <listheader><term>Source changeset event</term><description>Behavior</description></listheader>
+    /// <listheader><term>Event (source)</term><description>Behavior</description></listheader>
     /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the child stream. Child emissions are merged into the output.</description></item>
     /// <item><term><b>Replace</b></term><description>Old child subscription disposed (and its items removed from output). New child subscription created.</description></item>
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Child subscription disposed. All child items from that parent are removed.</description></item>
@@ -2354,7 +2354,7 @@ public static class ObservableListEx
     /// <item><term>Replace</term><description>The factory is called for the new item. A <b>Replace</b> is emitted at the same index. The previous transformed value is available to overloads that accept <c>Optional&lt;TDestination&gt;</c>.</description></item>
     /// <item><term>Remove</term><description>A <b>Remove</b> is emitted (no factory call).</description></item>
     /// <item><term>RemoveRange</term><description>A <b>RemoveRange</b> is emitted.</description></item>
-    /// <item><term>Moved</term><description>A <b>Moved</b> is emitted with updated indices (no factory call).</description></item>
+    /// <item><term>Moved</term><description>A <b>Moved</b> is emitted with updated indices (no factory call). Throws <see cref="UnspecifiedIndexException"/> if the source change has no index information.</description></item>
     /// <item><term>Refresh</term><description>If <paramref name="transformOnRefresh"/> is <c>false</c> (default), the <b>Refresh</b> is forwarded without re-transforming. If <c>true</c>, the factory is re-invoked and the result replaces the current value.</description></item>
     /// <item><term>Clear</term><description>A <b>Clear</b> is emitted and the internal list is emptied.</description></item>
     /// <item><term>OnError</term><description>Forwarded. If the factory throws, the exception propagates as OnError.</description></item>
