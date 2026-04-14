@@ -234,6 +234,7 @@ public static class ObservableListEx
     }
 
     /// <inheritdoc cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <typeparam name="TObject">The type of items in the list. Must implement <see cref="INotifyPropertyChanged"/>.</typeparam>
     /// <typeparam name="TProperty">The type of the monitored property.</typeparam>
     /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{T}"/>.</param>
     /// <param name="propertyAccessor">An <see cref="Expression{TDelegate}"/> expression selecting the specific property to monitor.</param>
