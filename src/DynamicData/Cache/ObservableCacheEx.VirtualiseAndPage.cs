@@ -17,9 +17,10 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparer">The comparer to order the resulting dataset.</param>
-    /// <param name="virtualRequests">The virtualizing requests.</param>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
+    /// <param name="comparer">An <see cref="IComparer{T}"/> comparer to order the resulting dataset.</param>
+    /// <param name="virtualRequests">An <see cref="IObservable{T}"/> of <see cref="IVirtualRequest"/> that specifies the virtualizing parameters.</param>
+    /// <seealso cref="SortAndVirtualize{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IComparer{TObject}}, IObservable{IVirtualRequest}, SortAndVirtualizeOptions)"/>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> SortAndVirtualize<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
@@ -34,9 +35,10 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>>
-    /// <param name="virtualRequests">The virtualizing requests.</param>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
+    /// <param name="comparerChanged">An <see cref="IObservable{T}"/> of <see cref="IComparer{T}"/> which enables the sort order to be changed.</param>>
+    /// <param name="virtualRequests">An <see cref="IObservable{T}"/> of <see cref="IVirtualRequest"/> that specifies the virtualizing parameters.</param>
+    /// <seealso cref="SortAndVirtualize{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IComparer{TObject}}, IObservable{IVirtualRequest}, SortAndVirtualizeOptions)"/>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> SortAndVirtualize<TObject, TKey>(
@@ -57,10 +59,11 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparer">The comparer to order the resulting dataset.</param>
-    /// <param name="virtualRequests">The virtualizing requests.</param>
-    /// <param name="options"> Addition optimization options for virtualization.</param>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
+    /// <param name="comparer">An <see cref="IComparer{T}"/> comparer to order the resulting dataset.</param>
+    /// <param name="virtualRequests">An <see cref="IObservable{T}"/> of <see cref="IVirtualRequest"/> that specifies the virtualizing parameters.</param>
+    /// <param name="options">The <see cref="SortAndVirtualizeOptions"/> Addition optimization options for virtualization.</param>
+    /// <seealso cref="SortAndVirtualize{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IComparer{TObject}}, IObservable{IVirtualRequest}, SortAndVirtualizeOptions)"/>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> SortAndVirtualize<TObject, TKey>(
@@ -82,10 +85,13 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>>
-    /// <param name="virtualRequests">The virtualizing requests.</param>
-    /// <param name="options"> Addition optimization options for virtualization.</param>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
+    /// <param name="comparerChanged">An <see cref="IObservable{T}"/> of <see cref="IComparer{T}"/> which enables the sort order to be changed.</param>>
+    /// <param name="virtualRequests">An <see cref="IObservable{T}"/> of <see cref="IVirtualRequest"/> that specifies the virtualizing parameters.</param>
+    /// <param name="options">The <see cref="SortAndVirtualizeOptions"/> Addition optimization options for virtualization.</param>
+    /// <seealso cref="SortAndVirtualize{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IComparer{TObject}, IObservable{IVirtualRequest})"/>
+    /// <seealso cref="SortAndVirtualize{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IComparer{TObject}}, IObservable{IVirtualRequest})"/>
+    /// <seealso cref="SortAndVirtualize{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IComparer{TObject}, IObservable{IVirtualRequest}, SortAndVirtualizeOptions)"/>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> SortAndVirtualize<TObject, TKey>(
@@ -107,8 +113,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="virtualRequests">The virtualising requests.</param>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="ISortedChangeSet{TObject, TKey}"/>.</param>
+    /// <param name="virtualRequests">An <see cref="IObservable{T}"/> of <see cref="IVirtualRequest"/> that specifies the virtualizing parameters.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     [Obsolete(Constants.VirtualizeIsObsolete)]
@@ -127,9 +133,10 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparer">The comparer.</param>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
+    /// <param name="comparer">An <see cref="IComparer{T}"/> comparer.</param>
     /// <param name="size">The size.</param>
+    /// <seealso cref="Top{TObject, TKey}(IObservable{ISortedChangeSet{TObject, TKey}}, int)"/>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     /// <exception cref="ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
@@ -153,8 +160,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="ISortedChangeSet{TObject, TKey}"/>.</param>
     /// <param name="size">The size.</param>
+    /// <seealso cref="Top{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IComparer{TObject}, int)"/>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     /// <exception cref="ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
@@ -178,9 +186,10 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparer">The comparer to order the resulting dataset.</param>
-    /// <param name="pageRequests">The virtualizing requests.</param>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
+    /// <param name="comparer">An <see cref="IComparer{T}"/> comparer to order the resulting dataset.</param>
+    /// <param name="pageRequests">An <see cref="IObservable{T}"/> of <see cref="IPageRequest"/> that specifies the paging parameters.</param>
+    /// <seealso cref="SortAndPage{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IComparer{TObject}}, IObservable{IPageRequest}, SortAndPageOptions)"/>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> SortAndPage<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
@@ -195,9 +204,10 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>>
-    /// <param name="pageRequests">The virtualizing requests.</param>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
+    /// <param name="comparerChanged">An <see cref="IObservable{T}"/> of <see cref="IComparer{T}"/> which enables the sort order to be changed.</param>>
+    /// <param name="pageRequests">An <see cref="IObservable{T}"/> of <see cref="IPageRequest"/> that specifies the paging parameters.</param>
+    /// <seealso cref="SortAndPage{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IComparer{TObject}}, IObservable{IPageRequest}, SortAndPageOptions)"/>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> SortAndPage<TObject, TKey>(
@@ -218,10 +228,11 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparer">The comparer to order the resulting dataset.</param>
-    /// <param name="pageRequests">The virtualizing requests.</param>
-    /// <param name="options"> Addition optimization options for virtualization.</param>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
+    /// <param name="comparer">An <see cref="IComparer{T}"/> comparer to order the resulting dataset.</param>
+    /// <param name="pageRequests">An <see cref="IObservable{T}"/> of <see cref="IPageRequest"/> that specifies the paging parameters.</param>
+    /// <param name="options">The <see cref="SortAndPageOptions"/> Addition optimization options for virtualization.</param>
+    /// <seealso cref="SortAndPage{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IComparer{TObject}}, IObservable{IPageRequest}, SortAndPageOptions)"/>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> SortAndPage<TObject, TKey>(
@@ -243,10 +254,13 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparerChanged">An observable of comparers which enables the sort order to be changed.</param>>
-    /// <param name="pageRequests">The virtualizing requests.</param>
-    /// <param name="options"> Addition optimization options for virtualization.</param>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="IChangeSet{TObject, TKey}"/>.</param>
+    /// <param name="comparerChanged">An <see cref="IObservable{T}"/> of <see cref="IComparer{T}"/> which enables the sort order to be changed.</param>>
+    /// <param name="pageRequests">An <see cref="IObservable{T}"/> of <see cref="IPageRequest"/> that specifies the paging parameters.</param>
+    /// <param name="options">The <see cref="SortAndPageOptions"/> Addition optimization options for virtualization.</param>
+    /// <seealso cref="SortAndPage{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IComparer{TObject}, IObservable{IPageRequest})"/>
+    /// <seealso cref="SortAndPage{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IComparer{TObject}}, IObservable{IPageRequest})"/>
+    /// <seealso cref="SortAndPage{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IComparer{TObject}, IObservable{IPageRequest}, SortAndPageOptions)"/>
     /// <returns>An observable which will emit virtual change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> SortAndPage<TObject, TKey>(
@@ -268,8 +282,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="pageRequests">The page requests.</param>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of <see cref="ISortedChangeSet{TObject, TKey}"/>.</param>
+    /// <param name="pageRequests">An <see cref="IObservable{T}"/> of <see cref="IPageRequest"/> that specifies the paging parameters.</param>
     /// <returns>An observable which emits change sets.</returns>
     [Obsolete(Constants.PageIsObsolete)]
     public static IObservable<IPagedChangeSet<TObject, TKey>> Page<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -81,6 +81,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="item">The item.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject}, IEqualityComparer{TObject})"/>
     public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         where TObject : notnull
         where TKey : notnull
@@ -99,6 +100,7 @@ public static partial class ObservableCacheEx
     /// <param name="item">The item.</param>
     /// <param name="equalityComparer">The equality comparer used to determine whether a new item is the same as an existing cached item.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject}, IEqualityComparer{TObject})"/>
     public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item, IEqualityComparer<TObject> equalityComparer)
         where TObject : notnull
         where TKey : notnull
@@ -118,6 +120,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="items">The items.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject}, IEqualityComparer{TObject})"/>
     public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         where TObject : notnull
         where TKey : notnull
@@ -138,6 +141,10 @@ public static partial class ObservableCacheEx
     /// <param name="items">The items.</param>
     /// <param name="equalityComparer">The equality comparer used to determine whether a new item is the same as an existing cached item.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, TObject)"/>
+    /// <seealso cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, TObject, IEqualityComparer{TObject})"/>
+    /// <seealso cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject})"/>
+    /// <seealso cref="AddOrUpdate{TObject, TKey}(IIntermediateCache{TObject, TKey}, TObject, TKey)"/>
     public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items, IEqualityComparer<TObject> equalityComparer)
         where TObject : notnull
         where TKey : notnull
@@ -156,6 +163,7 @@ public static partial class ObservableCacheEx
     /// <param name="item">The item to add or update.</param>
     /// <param name="key">The key to add or update.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject}, IEqualityComparer{TObject})"/>
     public static void AddOrUpdate<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TObject item, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -955,6 +963,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="Clear{TObject, TKey}(IIntermediateCache{TObject, TKey})"/>
+    /// <seealso cref="Clear{TObject, TKey}(LockFreeObservableCache{TObject, TKey})"/>
     public static void Clear<TObject, TKey>(this ISourceCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull
@@ -971,6 +981,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="Clear{TObject, TKey}(ISourceCache{TObject, TKey})"/>
     public static void Clear<TObject, TKey>(this IIntermediateCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull
@@ -987,6 +998,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="Clear{TObject, TKey}(ISourceCache{TObject, TKey})"/>
     public static void Clear<TObject, TKey>(this LockFreeObservableCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull
@@ -1154,6 +1166,7 @@ public static partial class ObservableCacheEx
     /// <param name="allItems">The items to add, update or delete.</param>
     /// <param name="equalityComparer">The equality comparer used to determine whether a new item is the same as an existing cached item.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="EditDiff{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject}, Func{TObject, TObject, bool})"/>
     public static void EditDiff<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> allItems, IEqualityComparer<TObject> equalityComparer)
         where TObject : notnull
         where TKey : notnull
@@ -1175,6 +1188,9 @@ public static partial class ObservableCacheEx
     /// <param name="allItems">The items to compare and add, update or delete.</param>
     /// <param name="areItemsEqual">Expression to determine whether an item's value is equal to the old value (current, previous) => current.Version == previous.Version.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="EditDiff{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject}, IEqualityComparer{TObject})"/>
+    /// <seealso cref="EditDiff{TObject, TKey}(IObservable{IEnumerable{TObject}}, Func{TObject, TKey}, IEqualityComparer{TObject})"/>
+    /// <seealso cref="EditDiff{TObject, TKey}(IObservable{Optional{TObject}}, Func{TObject, TKey}, IEqualityComparer{TObject})"/>
     public static void EditDiff<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> allItems, Func<TObject, TObject, bool> areItemsEqual)
         where TObject : notnull
         where TKey : notnull
@@ -1197,6 +1213,7 @@ public static partial class ObservableCacheEx
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to use for comparing values.</param>
     /// <returns>An observable cache.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="EditDiff{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject}, Func{TObject, TObject, bool})"/>
     public static IObservable<IChangeSet<TObject, TKey>> EditDiff<TObject, TKey>(this IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -1217,6 +1234,7 @@ public static partial class ObservableCacheEx
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to use for comparing values.</param>
     /// <returns>An observable changeset.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="EditDiff{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject}, Func{TObject, TObject, bool})"/>
     public static IObservable<IChangeSet<TObject, TKey>> EditDiff<TObject, TKey>(this IObservable<Optional<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -2466,6 +2484,7 @@ public static partial class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// observableSelector.</exception>
+    /// <seealso cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{TDestination}})"/>
     public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
         where TObject : notnull
         where TKey : notnull
@@ -2489,6 +2508,7 @@ public static partial class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// observableSelector.</exception>
+    /// <seealso cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>
     public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TDestination>> observableSelector)
         where TObject : notnull
         where TKey : notnull
@@ -3150,6 +3170,7 @@ public static partial class ObservableCacheEx
     /// <param name="observableSelector">Factory Function used to create child changesets.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
     /// <returns>The result from merging the child changesets together.</returns>
+    /// <seealso cref="MergeManyChangeSets{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination})"/>
     public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -3171,6 +3192,7 @@ public static partial class ObservableCacheEx
     /// <param name="observableSelector">Factory Function used to create child changesets.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
     /// <returns>The result from merging the child changesets together.</returns>
+    /// <seealso cref="MergeManyChangeSets{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination})"/>
     public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -3530,6 +3552,7 @@ public static partial class ObservableCacheEx
     /// or
     /// keySelector.
     /// </exception>
+    /// <seealso cref="PopulateFrom{TObject, TKey}(ISourceCache{TObject, TKey}, IObservable{TObject})"/>
     public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<IEnumerable<TObject>> observable)
         where TObject : notnull
         where TKey : notnull
@@ -3552,6 +3575,7 @@ public static partial class ObservableCacheEx
     /// or
     /// keySelector.
     /// </exception>
+    /// <seealso cref="PopulateFrom{TObject, TKey}(ISourceCache{TObject, TKey}, IObservable{IEnumerable{TObject}})"/>
     public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<TObject> observable)
         where TObject : notnull
         where TKey : notnull
@@ -3574,6 +3598,8 @@ public static partial class ObservableCacheEx
     /// or
     /// destination.
     /// </exception>
+    /// <seealso cref="PopulateInto{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IIntermediateCache{TObject, TKey})"/>
+    /// <seealso cref="PopulateInto{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, LockFreeObservableCache{TObject, TKey})"/>
     public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ISourceCache<TObject, TKey> destination)
         where TObject : notnull
         where TKey : notnull
@@ -3595,6 +3621,7 @@ public static partial class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// destination.</exception>
+    /// <seealso cref="PopulateInto{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, ISourceCache{TObject, TKey})"/>
     public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IIntermediateCache<TObject, TKey> destination)
         where TObject : notnull
         where TKey : notnull
@@ -3613,6 +3640,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="destination">The destination.</param>
     /// <returns>A disposable which will unsubscribe from the source.</returns>
+    /// <seealso cref="PopulateInto{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, ISourceCache{TObject, TKey})"/>
     public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, LockFreeObservableCache<TObject, TKey> destination)
         where TObject : notnull
         where TKey : notnull
@@ -3708,6 +3736,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="item">The item.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="Refresh{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject})"/>
     public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         where TObject : notnull
         where TKey : notnull
@@ -3725,6 +3754,8 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="items">The items.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="Refresh{TObject, TKey}(ISourceCache{TObject, TKey}, TObject)"/>
+    /// <seealso cref="Refresh{TObject, TKey}(ISourceCache{TObject, TKey})"/>
     public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         where TObject : notnull
         where TKey : notnull
@@ -3741,6 +3772,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="Refresh{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject})"/>
     public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull
@@ -3759,6 +3791,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="item">The item.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="Remove{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TKey})"/>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         where TObject : notnull
         where TKey : notnull
@@ -3777,6 +3810,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="key">The key.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="Remove{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TKey})"/>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -3795,6 +3829,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="items">The items.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="Remove{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TKey})"/>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         where TObject : notnull
         where TKey : notnull
@@ -3813,6 +3848,11 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="keys">The keys.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="Remove{TObject, TKey}(ISourceCache{TObject, TKey}, TObject)"/>
+    /// <seealso cref="Remove{TObject, TKey}(ISourceCache{TObject, TKey}, TKey)"/>
+    /// <seealso cref="Remove{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject})"/>
+    /// <seealso cref="Remove{TObject, TKey}(IIntermediateCache{TObject, TKey}, TKey)"/>
+    /// <seealso cref="Remove{TObject, TKey}(IIntermediateCache{TObject, TKey}, IEnumerable{TKey})"/>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
         where TObject : notnull
         where TKey : notnull
@@ -3831,6 +3871,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="key">The key.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="Remove{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TKey})"/>
     public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -3849,6 +3890,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="keys">The keys.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="Remove{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TKey})"/>
     public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, IEnumerable<TKey> keys)
         where TObject : notnull
         where TKey : notnull
@@ -3868,6 +3910,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of  key.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits change sets.</returns>
+    /// <seealso cref="RemoveKey{TObject, TKey}(ISourceCache{TObject, TKey}, TKey)"/>
     public static IObservable<IChangeSet<TObject>> RemoveKey<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull
@@ -3891,6 +3934,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="key">The key.</param>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="RemoveKey{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
     public static void RemoveKey<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -4481,6 +4525,7 @@ public static partial class ObservableCacheEx
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance used to determine if an object value has changed.</param>
     /// <returns>An observable optional.</returns>
     /// <exception cref="ArgumentNullException">source is null.</exception>
+    /// <seealso cref="ToObservableOptional{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey, bool, IEqualityComparer{TObject})"/>
     public static IObservable<Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -4501,6 +4546,7 @@ public static partial class ObservableCacheEx
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance used to determine if an object value has changed.</param>
     /// <returns>An observable optional.</returns>
     /// <exception cref="ArgumentNullException">source is null.</exception>
+    /// <seealso cref="ToObservableOptional{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey, IEqualityComparer{TObject})"/>
     public static IObservable<Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, bool initialOptionalWhenMissing, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -4529,6 +4575,7 @@ public static partial class ObservableCacheEx
     /// <param name="sort">The sort function.</param>
     /// <param name="sortOrder">The sort order. Defaults to ascending.</param>
     /// <returns>An observable which emits the read only collection.</returns>
+    /// <seealso cref="ToSortedCollection{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IComparer{TObject})"/>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TKey, TSortKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TSortKey> sort, SortDirection sortOrder = SortDirection.Ascending)
         where TObject : notnull
         where TKey : notnull
@@ -4542,6 +4589,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="comparer">The sort comparer.</param>
     /// <returns>An observable which emits the read only collection.</returns>
+    /// <seealso cref="ToSortedCollection{TObject, TKey, TSortKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TSortKey}, SortDirection)"/>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer)
         where TObject : notnull
         where TKey : notnull => source.QueryWhenChanged(
@@ -5936,6 +5984,7 @@ public static partial class ObservableCacheEx
     /// <param name="equalityCondition">The equality condition.</param>
     /// <returns>An observable which boolean values indicating if true.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="TrueForAll{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TValue}}, Func{TObject, TValue, bool})"/>
     public static IObservable<bool> TrueForAll<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TValue, bool> equalityCondition)
         where TObject : notnull
         where TKey : notnull
@@ -5959,6 +6008,7 @@ public static partial class ObservableCacheEx
     /// <param name="equalityCondition">The equality condition.</param>
     /// <returns>An observable which boolean values indicating if true.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="TrueForAll{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TValue}}, Func{TValue, bool})"/>
     public static IObservable<bool> TrueForAll<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TObject, TValue, bool> equalityCondition)
         where TObject : notnull
         where TKey : notnull
@@ -5984,6 +6034,7 @@ public static partial class ObservableCacheEx
     /// or
     /// equalityCondition.
     /// </exception>
+    /// <seealso cref="TrueForAny{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TValue}}, Func{TValue, bool})"/>
     public static IObservable<bool> TrueForAny<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TObject, TValue, bool> equalityCondition)
         where TObject : notnull
         where TKey : notnull
@@ -6009,6 +6060,7 @@ public static partial class ObservableCacheEx
     /// or
     /// equalityCondition.
     /// </exception>
+    /// <seealso cref="TrueForAny{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TValue}}, Func{TObject, TValue, bool})"/>
     public static IObservable<bool> TrueForAny<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TValue, bool> equalityCondition)
         where TObject : notnull
         where TKey : notnull
@@ -6058,6 +6110,7 @@ public static partial class ObservableCacheEx
     /// <param name="key">The key.</param>
     /// <returns>An observable which emits the object value.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="WatchValue{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey)"/>
     public static IObservable<TObject> WatchValue<TObject, TKey>(this IObservableCache<TObject, TKey> source, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -6076,6 +6129,7 @@ public static partial class ObservableCacheEx
     /// <param name="key">The key.</param>
     /// <returns>An observable which emits the object value.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="WatchValue{TObject, TKey}(IObservableCache{TObject, TKey}, TKey)"/>
     public static IObservable<TObject> WatchValue<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key)
         where TObject : notnull
         where TKey : notnull
