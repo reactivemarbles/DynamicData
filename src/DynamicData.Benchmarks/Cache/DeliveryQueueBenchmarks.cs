@@ -204,3 +204,102 @@ public class ContentionBenchmarks
     public sealed record ContentionItem(int Id, string Name, decimal Price);
     public sealed record ContentionItemVm(ContentionItem Source);
 }
+
+/// <summary>
+/// MergeManyChangeSets contention benchmark. Multiple threads mutating
+/// child SourceLists while a CPS pipeline is subscribed.
+/// </summary>
+[MemoryDiagnoser]
+[MarkdownExporterAttribute.GitHub]
+public class MmcsContentionBenchmarks
+{
+    private SourceCache<MmcsParent, int> _parents = null!;
+    private MmcsParent[] _parentItems = null!;
+    private IDisposable? _subscription;
+
+    [Params(1, 2, 4)]
+    public int ThreadCount;
+
+    private const int ParentCount = 50;
+    private const int ChildOpsPerThread = 200;
+
+    [GlobalSetup]
+    public void GlobalSetup()
+    {
+        _parents = new SourceCache<MmcsParent, int>(p => p.Id);
+        _parentItems = Enumerable.Range(0, ParentCount).Select(i =>
+        {
+            var p = new MmcsParent(i);
+            for (var j = 0; j < 10; j++)
+                p.Children.Add(new MmcsChild(i * 100 + j, $"Child_{i}_{j}"));
+            return p;
+        }).ToArray();
+    }
+
+    [GlobalCleanup]
+    public void GlobalCleanup()
+    {
+        _subscription?.Dispose();
+        foreach (var p in _parentItems) p.Dispose();
+        _parents.Dispose();
+    }
+
+    [IterationSetup]
+    public void IterationSetup()
+    {
+        _subscription?.Dispose();
+        _parents.Clear();
+        _parents.AddOrUpdate(_parentItems);
+
+        _subscription = _parents.Connect()
+            .MergeManyChangeSets(p => p.Children.Connect())
+            .Subscribe(_ => { });
+    }
+
+    [Benchmark]
+    public void ConcurrentChildMutations()
+    {
+        if (ThreadCount == 1)
+        {
+            MutateChildren(0);
+        }
+        else
+        {
+            var barrier = new Barrier(ThreadCount);
+            var tasks = new Task[ThreadCount];
+            for (var t = 0; t < ThreadCount; t++)
+            {
+                var threadId = t;
+                tasks[t] = Task.Run(() =>
+                {
+                    barrier.SignalAndWait();
+                    MutateChildren(threadId);
+                });
+            }
+            Task.WaitAll(tasks);
+            barrier.Dispose();
+        }
+    }
+
+    private void MutateChildren(int threadId)
+    {
+        for (var i = 0; i < ChildOpsPerThread; i++)
+        {
+            var parentIdx = (threadId * ChildOpsPerThread + i) % ParentCount;
+            var parent = _parentItems[parentIdx];
+            var childId = threadId * 100_000 + i;
+            parent.Children.Add(new MmcsChild(childId, $"New_{childId}"));
+            if (parent.Children.Count > 15)
+                parent.Children.RemoveAt(0);
+        }
+    }
+
+    public sealed record MmcsChild(int Id, string Name);
+
+    public sealed class MmcsParent(int id) : IDisposable
+    {
+        public int Id { get; } = id;
+        public SourceList<MmcsChild> Children { get; } = new();
+        public void Dispose() => Children.Dispose();
+    }
+}
