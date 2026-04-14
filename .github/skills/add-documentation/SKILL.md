@@ -87,11 +87,16 @@ Start from this template for any primary overload. Delete sections that do not a
 /// <seealso cref="[ComplementaryOperator]"/>
 ```
 
-For **secondary overloads** that delegate to a primary:
+For **secondary overloads** in an overload set:
 ```xml
+<!-- When the overload delegates to the primary (simpler signature, fewer params): -->
 /// <inheritdoc cref="[PrimarySignature]"/>
 /// <param name="[delta]">A <see cref="[Type]"/> that [specific difference].</param>
 /// <remarks>This overload [what differs]. Delegates to <see cref="[Primary]"/>.</remarks>
+
+<!-- When the overload has a different implementation (different input type, different behavior): -->
+<!-- Use the full unified template above. It needs its own complete documentation. -->
+<!-- Still link to the other overloads via seealso for discoverability. -->
 ```
 
 ## Process
