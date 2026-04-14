@@ -176,6 +176,7 @@ public static partial class ObservableCacheEx
     /// <param name="others"><see cref="IEnumerable{T}"/> the others.</param>
     /// <returns>An observable which emits change sets.</returns>
     /// <exception cref="ArgumentNullException">source or others.</exception>
+    /// <seealso cref="ObservableListEx.And"/>
     public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params IObservable<IChangeSet<TObject, TKey>>[] others)
         where TObject : notnull
         where TKey : notnull
@@ -375,6 +376,7 @@ public static partial class ObservableCacheEx
     /// <param name="propertyChangeThrottle">A optional <see cref="TimeSpan"/> when observing on multiple property changes, apply a throttle to prevent excessive refresh invocations.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> the scheduler.</param>
     /// <returns>An observable change set with additional refresh changes.</returns>
+    /// <seealso cref="ObservableListEx.AutoRefresh"/>
     public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
         where TKey : notnull
@@ -438,6 +440,7 @@ public static partial class ObservableCacheEx
     /// <param name="changeSetBuffer">A optional <see cref="TimeSpan"/> batch up changes by specifying the buffer. This greatly increases performance when many elements require a refresh.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> the scheduler.</param>
     /// <returns>An observable change set with additional refresh changes.</returns>
+    /// <seealso cref="ObservableListEx.AutoRefreshOnObservable"/>
     public static IObservable<IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull => source.AutoRefreshOnObservable((t, _) => reevaluator(t), changeSetBuffer, scheduler);
@@ -584,6 +587,7 @@ public static partial class ObservableCacheEx
     /// <param name="refreshThreshold">The number of changes before a reset notification is triggered.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <seealso cref="ObservableListEx.Bind"/>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, int refreshThreshold = BindingOptions.DefaultResetThreshold)
         where TObject : notnull
         where TKey : notnull
@@ -1210,6 +1214,7 @@ public static partial class ObservableCacheEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="AsyncDisposeMany{TObject,TKey}"/>
     /// <seealso cref="SubscribeMany{TObject,TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IDisposable})"/>
+    /// <seealso cref="ObservableListEx.DisposeMany"/>
     public static IObservable<IChangeSet<TObject, TKey>> DisposeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull
@@ -1233,6 +1238,7 @@ public static partial class ObservableCacheEx
     /// <para><b>Worth noting:</b> Reference counting assumes value equality is transitive. Mutable value objects with inconsistent <c>Equals</c> implementations can corrupt ref counts.</para>
     /// </remarks>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="ObservableListEx.DistinctValues"/>
     public static IObservable<IDistinctChangeSet<TValue>> DistinctValues<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
         where TObject : notnull
         where TKey : notnull
@@ -1404,6 +1410,7 @@ public static partial class ObservableCacheEx
     /// or
     /// others.
     /// </exception>
+    /// <seealso cref="ObservableListEx.Except"/>
     public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params IObservable<IChangeSet<TObject, TKey>>[] others)
         where TObject : notnull
         where TKey : notnull
@@ -1629,6 +1636,7 @@ public static partial class ObservableCacheEx
     /// </remarks>
     /// <seealso cref="FilterImmutable{TObject, TKey}"/>
     /// <seealso cref="FilterOnObservable{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="ObservableListEx.Filter"/>
     public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(
                 this IObservable<IChangeSet<TObject, TKey>> source,
                 Func<TObject, bool> filter,
@@ -1816,6 +1824,7 @@ public static partial class ObservableCacheEx
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="filterFactory"/> is <see langword="null"/>.</exception>
     /// <seealso cref="Filter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, bool}, bool)"/>
+    /// <seealso cref="ObservableListEx.FilterOnObservable"/>
     public static IObservable<IChangeSet<TObject, TKey>> FilterOnObservable<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<bool>> filterFactory, TimeSpan? buffer = null, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull
@@ -1917,6 +1926,7 @@ public static partial class ObservableCacheEx
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <seealso cref="ObservableListEx.ForEachChange"/>
     public static IObservable<IChangeSet<TObject, TKey>> ForEachChange<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<Change<TObject, TKey>> action)
         where TObject : notnull
         where TKey : notnull
@@ -2908,6 +2918,7 @@ public static partial class ObservableCacheEx
     /// <seealso cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IComparer{TDestination}, IEqualityComparer{TDestination})"/>
     /// <seealso cref="MergeChangeSets{TObject, TKey}(IObservable{IObservable{IChangeSet{TObject, TKey}}})"/>
     /// <seealso cref="SubscribeMany{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IDisposable})"/>
+    /// <seealso cref="ObservableListEx.MergeMany"/>
     public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
         where TObject : notnull
         where TKey : notnull
@@ -2978,6 +2989,7 @@ public static partial class ObservableCacheEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>
     /// <seealso cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IComparer{TDestination}, IEqualityComparer{TDestination})"/>
+    /// <seealso cref="ObservableListEx.MergeChangeSets"/>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> source)
         where TObject : notnull
         where TKey : notnull
@@ -3352,6 +3364,7 @@ public static partial class ObservableCacheEx
     /// <param name="comparer">An <see cref="IComparer{T}"/> that comparer to resolve key conflicts when multiple child streams provide items with the same destination key. The lowest-ordered item wins.</param>
     /// <returns>A merged changeset stream containing items from all active child streams.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="observableSelector"/> or <paramref name="comparer"/> is null.</exception>
+    /// <seealso cref="ObservableListEx.MergeManyChangeSets"/>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TDestination> comparer)
         where TObject : notnull
         where TKey : notnull
@@ -3869,6 +3882,7 @@ public static partial class ObservableCacheEx
     /// <seealso cref="OnItemUpdated{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, Action{TObject,TObject,TKey})"/>
     /// <seealso cref="OnItemRemoved{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, Action{TObject,TKey}, bool)"/>
     /// <seealso cref="ForEachChange{TObject,TKey}"/>
+    /// <seealso cref="ObservableListEx.OnItemAdded"/>
     public static IObservable<IChangeSet<TObject, TKey>> OnItemAdded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TKey> addAction)
         where TObject : notnull
         where TKey : notnull
@@ -3913,6 +3927,7 @@ public static partial class ObservableCacheEx
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="refreshAction"/> is <see langword="null"/>.</exception>
     /// <seealso cref="AutoRefresh{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="ObservableListEx.OnItemRefreshed"/>
     public static IObservable<IChangeSet<TObject, TKey>> OnItemRefreshed<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TKey> refreshAction)
         where TObject : notnull
         where TKey : notnull
@@ -3971,6 +3986,7 @@ public static partial class ObservableCacheEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="removeAction"/> is <see langword="null"/>.</exception>
     /// <seealso cref="DisposeMany{TObject,TKey}"/>
     /// <seealso cref="SubscribeMany{TObject,TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IDisposable})"/>
+    /// <seealso cref="ObservableListEx.OnItemRemoved"/>
     public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TKey> removeAction, bool invokeOnUnsubscribe = true)
         where TObject : notnull
         where TKey : notnull
@@ -4070,6 +4086,7 @@ public static partial class ObservableCacheEx
     /// <seealso cref="Except{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
     /// <seealso cref="Xor{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
     /// <seealso cref="MergeChangeSets{TObject, TKey}(IObservable{IObservable{IChangeSet{TObject, TKey}}})"/>
+    /// <seealso cref="ObservableListEx.Or"/>
     public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params IObservable<IChangeSet<TObject, TKey>>[] others)
         where TObject : notnull
         where TKey : notnull
@@ -4276,6 +4293,7 @@ public static partial class ObservableCacheEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="resultSelector"/> is <see langword="null"/>.</exception>
     /// <seealso cref="ToCollection{TObject, TKey}"/>
     /// <seealso cref="ToSortedCollection{TObject, TKey, TSortKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TSortKey}, SortDirection)"/>
+    /// <seealso cref="ObservableListEx.QueryWhenChanged"/>
     public static IObservable<TDestination> QueryWhenChanged<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<IQuery<TObject, TKey>, TDestination> resultSelector)
         where TObject : notnull
         where TKey : notnull
@@ -4760,6 +4778,7 @@ public static partial class ObservableCacheEx
     /// or
     /// comparer.
     /// </exception>
+    /// <seealso cref="ObservableListEx.Sort"/>
     [Obsolete(Constants.SortIsObsolete)]
     public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
         where TObject : notnull
@@ -5004,6 +5023,7 @@ public static partial class ObservableCacheEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="subscriptionFactory"/> is <see langword="null"/>.</exception>
     /// <seealso cref="DisposeMany{TObject,TKey}"/>
     /// <seealso cref="OnItemRemoved{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, Action{TObject,TKey}, bool)"/>
+    /// <seealso cref="ObservableListEx.SubscribeMany"/>
     public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
         where TObject : notnull
         where TKey : notnull
@@ -5265,6 +5285,7 @@ public static partial class ObservableCacheEx
 
     /// <inheritdoc cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>
     /// <remarks>This overload accepts a <c>bool transformOnRefresh</c> flag. When <see langword="true"/>, Refresh changes cause re-transformation (emitted as Update). The factory receives only the current item.</remarks>
+    /// <seealso cref="ObservableListEx.Transform"/>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, bool transformOnRefresh)
         where TDestination : notnull
         where TSource : notnull
@@ -5418,6 +5439,7 @@ public static partial class ObservableCacheEx
 
     /// <inheritdoc cref="TransformAsync{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, Task{TDestination}}, IObservable{Func{TSource, TKey, bool}}?)"/>
     /// <remarks>This overload takes a simpler factory that receives only the current item.</remarks>
+    /// <seealso cref="ObservableListEx.TransformAsync"/>
     [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
@@ -5599,6 +5621,7 @@ public static partial class ObservableCacheEx
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="manySelector"/>, or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     /// <seealso cref="TransformManyAsync{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, TSourceKey, Task{IEnumerable{TDestination}}}, Func{TDestination, TDestinationKey}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
+    /// <seealso cref="ObservableListEx.TransformMany"/>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, IEnumerable<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         where TDestination : notnull
         where TDestinationKey : notnull
@@ -6462,6 +6485,7 @@ public static partial class ObservableCacheEx
     /// <seealso cref="WhenPropertyChanged{TObject, TKey, TValue}"/>
     /// <seealso cref="WhenValueChanged{TObject, TKey, TValue}"/>
     /// <seealso cref="AutoRefresh{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="ObservableListEx.WhenAnyPropertyChanged"/>
     public static IObservable<TObject?> WhenAnyPropertyChanged<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params string[] propertiesToMonitor)
         where TObject : INotifyPropertyChanged
         where TKey : notnull
@@ -6498,6 +6522,7 @@ public static partial class ObservableCacheEx
     /// <item><term>OnCompleted</term><description>Completes when the source changeset stream completes.</description></item>
     /// </list>
     /// </remarks>
+    /// <seealso cref="ObservableListEx.WhenPropertyChanged"/>
     public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
         where TObject : INotifyPropertyChanged
         where TKey : notnull
@@ -6538,6 +6563,7 @@ public static partial class ObservableCacheEx
     /// <seealso cref="WhenPropertyChanged{TObject, TKey, TValue}"/>
     /// <seealso cref="WhenAnyPropertyChanged{TObject, TKey}"/>
     /// <seealso cref="AutoRefresh{TObject, TKey, TProperty}(IObservable{IChangeSet{TObject, TKey}}, Expression{Func{TObject, TProperty}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="ObservableListEx.WhenValueChanged"/>
     public static IObservable<TValue?> WhenValueChanged<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
         where TObject : INotifyPropertyChanged
         where TKey : notnull
@@ -6636,6 +6662,7 @@ public static partial class ObservableCacheEx
     /// <seealso cref="And{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
     /// <seealso cref="Or{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
     /// <seealso cref="Except{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
+    /// <seealso cref="ObservableListEx.Xor"/>
     public static IObservable<IChangeSet<TObject, TKey>> Xor<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params IObservable<IChangeSet<TObject, TKey>>[] others)
         where TObject : notnull
         where TKey : notnull
