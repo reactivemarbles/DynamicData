@@ -1,6 +1,8 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+
+using System.Runtime.CompilerServices;
 
 namespace DynamicData.Internal;
 
@@ -8,7 +10,8 @@ namespace DynamicData.Internal;
 /// A type-erased delivery queue that serializes delivery across multiple sources
 /// with different item types. Each source gets a typed <see cref="DeliverySubQueue{T}"/>
 /// via <see cref="CreateQueue{T}"/>. A single drain loop delivers items from all
-/// sub-queues outside the lock, one item per iteration.
+/// sub-queues outside the lock, one item per iteration. An <see cref="Bitset"/>
+/// tracks which sub-queues have pending items, replacing O(N) scans with O(1) lookups.
 /// </summary>
 internal sealed class SharedDeliveryQueue
 {
@@ -21,9 +24,10 @@ internal sealed class SharedDeliveryQueue
     private readonly object _gate;
 #endif
 
+    private Bitset _activeBits = new();
+    private int _deadCount;
     private int _drainThreadId = -1;
     private volatile bool _isTerminated;
-    private bool _hasRemovedQueues;
 
     /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with its own internal lock.</summary>
     public SharedDeliveryQueue()
@@ -54,7 +58,11 @@ internal sealed class SharedDeliveryQueue
 #endif
 
     /// <summary>Gets whether this queue has been terminated.</summary>
-    public bool IsTerminated => _isTerminated;
+    public bool IsTerminated
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _isTerminated;
+    }
 
     /// <summary>
     /// Terminates the queue (rejecting further enqueues) and blocks until
@@ -64,17 +72,23 @@ internal sealed class SharedDeliveryQueue
     /// </summary>
     public void EnsureDeliveryComplete()
     {
-        using (AcquireReadLock())
-        {
-            _isTerminated = true;
-            foreach (var s in _sources)
-            {
-                s.Clear();
-            }
+        EnterLock();
 
-            if (_drainThreadId == Environment.CurrentManagedThreadId)
-                return;
+        _isTerminated = true;
+        _activeBits.ClearAll();
+
+        foreach (var s in _sources)
+        {
+            s.Clear();
         }
+
+        if (_drainThreadId == Environment.CurrentManagedThreadId)
+        {
+            ExitLock();
+            return;
+        }
+
+        ExitLock();
 
         SpinWait spinner = default;
         while (Volatile.Read(ref _drainThreadId) != -1)
@@ -83,34 +97,50 @@ internal sealed class SharedDeliveryQueue
 
     /// <summary>Creates a typed sub-queue bound to the specified observer.</summary>
     public DeliverySubQueue<T> CreateQueue<T>(IObserver<T> observer)
+        where T : notnull
     {
-        var queue = new DeliverySubQueue<T>(this, observer);
         EnterLock();
         try
         {
+            var index = _sources.Count;
+            var queue = new DeliverySubQueue<T>(this, observer, index);
             _sources.Add(queue);
+
+            return queue;
         }
         finally
         {
             ExitLock();
         }
-
-        return queue;
     }
 
     /// <summary>Acquires the gate for read-only inspection. Does not trigger delivery on dispose.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlyScopedAccess AcquireReadLock() => new(this);
 
-    /// <summary>Called by a sub-queue when it is disposed, to trigger lazy compaction.</summary>
-    internal void NotifyQueueRemoved() => _hasRemovedQueues = true;
+    /// <summary>Called by a sub-queue when it is disposed. Clears its active bit and tracks dead slots.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void NotifyQueueRemoved(int index)
+    {
+        _activeBits.Clear(index);
+        _deadCount++;
+    }
+
+    /// <summary>Sets the active bit for a sub-queue when an item is enqueued.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void SetActive(int index) => _activeBits.Set(index);
 
 #if NET9_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void EnterLock() => _gate.Enter();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void ExitLock() => _gate.Exit();
 #else
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void EnterLock() => Monitor.Enter(_gate);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void ExitLock() => Monitor.Exit(_gate);
 #endif
 
@@ -118,7 +148,7 @@ internal sealed class SharedDeliveryQueue
     {
         // Same-thread reentrant: if we're already draining on this thread,
         // deliver newly enqueued items inline. This preserves the same delivery
-        // order as Synchronize(lock) — child items emitted synchronously during
+        // order as Synchronize(lock): child items emitted synchronously during
         // parent delivery are delivered immediately, not deferred.
         if (_drainThreadId == Environment.CurrentManagedThreadId)
         {
@@ -128,17 +158,10 @@ internal sealed class SharedDeliveryQueue
         }
 
         var shouldDrain = false;
-        if (_drainThreadId == -1 && !_isTerminated)
+        if (_drainThreadId == -1 && !_isTerminated && _activeBits.HasAny())
         {
-            foreach (var s in _sources)
-            {
-                if (s.HasItems)
-                {
-                    _drainThreadId = Environment.CurrentManagedThreadId;
-                    shouldDrain = true;
-                    break;
-                }
-            }
+            _drainThreadId = Environment.CurrentManagedThreadId;
+            shouldDrain = true;
         }
 
         ExitLock();
@@ -153,117 +176,143 @@ internal sealed class SharedDeliveryQueue
     {
         try
         {
-            do
+            while (true)
             {
                 if (!DrainPending())
                 {
                     return; // error terminated the queue
                 }
 
-                if (_onDrainComplete is null)
+                if (_onDrainComplete is not null)
                 {
-                    break;
+                    _onDrainComplete();
                 }
 
-                _onDrainComplete();
-            }
-            while (HasPendingItems());
-        }
-        finally
-        {
-            using (AcquireReadLock())
-            {
+                // Atomically check for pending items and release drain ownership
+                // if empty. This closes the TOCTOU window: if we checked and released
+                // in separate lock scopes, Thread B could enqueue between them,
+                // see _drainThreadId != -1, and rely on us to drain, but we'd exit
+                // without draining Thread B's item.
+                EnterLock();
+
+                if (_activeBits.HasAny() && !_isTerminated && _onDrainComplete is not null)
+                {
+                    // Items arrived during _onDrainComplete. Loop back to drain them.
+                    ExitLock();
+                    continue;
+                }
+
                 _drainThreadId = -1;
-                CompactRemovedQueues();
+                CompactIfNeeded();
+                ExitLock();
+                return;
             }
+        }
+        catch
+        {
+            EnterLock();
+            _drainThreadId = -1;
+            ExitLock();
+            throw;
         }
     }
 
     /// <summary>
     /// Delivers all pending items from all sub-queues, one at a time.
-    /// Uses <see cref="ReadOnlyScopedAccess"/> (not <c>lock</c>) so it works correctly both
-    /// from the outermost drain and from reentrant same-thread calls.
-    /// Sub-queues are iterated newest-first (LIFO). When one sub-queue's delivery
-    /// can dispose another (parent disposing a child), the child must drain first
-    /// to prevent pending child notifications from being silently lost. Newer
-    /// sub-queues are always children of older ones, so LIFO provides this guarantee.
-    /// For peer sub-queues (no disposal relationship), iteration order does not
-    /// affect correctness because all pending items are drained in the same pass.
+    /// Sub-queues are found via the active bitset using LZCNT (highest-index first
+    /// for LIFO ordering). When one sub-queue's delivery can dispose another
+    /// (parent disposing a child), the child must drain first to prevent pending
+    /// child notifications from being silently lost. Newer sub-queues are always
+    /// children of older ones, so LIFO provides this guarantee.
     /// </summary>
     /// <returns>True if completed normally; false if an error terminated the queue.</returns>
     private bool DrainPending()
     {
         while (true)
         {
-            IDrainable? active = null;
-            bool isError;
+            EnterLock();
 
-            using (AcquireReadLock())
+            if (_isTerminated)
             {
-                for (var i = _sources.Count - 1; i >= 0; i--)
-                {
-                    if (_sources[i].HasItems)
-                    {
-                        active = _sources[i];
-                        break;
-                    }
-                }
-
-                if (active is null || _isTerminated)
-                {
-                    return !_isTerminated;
-                }
-
-                isError = active.StageNext();
+                ExitLock();
+                return false;
             }
 
-            // Deliver outside lock
+            var sourceIndex = _activeBits.FindHighest();
+            if (sourceIndex < 0)
+            {
+                ExitLock();
+                return true;
+            }
+
+            var active = _sources[sourceIndex];
+            var isError = active.StageNext();
+
+            // If sub-queue is now empty, clear its active bit immediately.
+            if (!active.HasItems)
+            {
+                _activeBits.Clear(sourceIndex);
+            }
+
+            ExitLock();
+
             active.DeliverStaged();
 
             if (isError)
             {
-                using (AcquireReadLock())
+                EnterLock();
+                _isTerminated = true;
+                _activeBits.ClearAll();
+                foreach (var s in _sources)
                 {
-                    _isTerminated = true;
-                    foreach (var s in _sources)
-                    {
-                        s.Clear();
-                    }
+                    s.Clear();
                 }
 
+                ExitLock();
                 return false;
             }
         }
     }
 
-    private bool HasPendingItems()
-    {
-        using var scope = AcquireReadLock();
-
-        foreach (var s in _sources)
-        {
-            if (s.HasItems)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     /// <summary>
-    /// Removes dead sub-queues from <see cref="_sources"/>. Must be called
-    /// under the lock (inside AcquireReadLock) when no iteration is active.
+    /// Compacts the source list when dead slots exceed 50% of capacity.
+    /// Rebuilds indices and the bitset atomically. Must be called under lock.
     /// </summary>
-    private void CompactRemovedQueues()
+    private void CompactIfNeeded()
     {
-        if (!_hasRemovedQueues)
+        if (_deadCount == 0 || _deadCount <= _sources.Count / 2)
         {
             return;
         }
 
-        _hasRemovedQueues = false;
-        _sources.RemoveAll(s => s.IsRemoved);
+        _deadCount = 0;
+        _activeBits.ClearAll();
+
+        var writeIndex = 0;
+        for (var readIndex = 0; readIndex < _sources.Count; readIndex++)
+        {
+            var source = _sources[readIndex];
+            if (!source.IsRemoved)
+            {
+                source.Index = writeIndex;
+                _sources[writeIndex] = source;
+
+                if (source.HasItems)
+                {
+                    SetActive(writeIndex);
+                }
+
+                writeIndex++;
+            }
+        }
+
+        // Remove trailing dead entries
+        if (writeIndex < _sources.Count)
+        {
+            _sources.RemoveRange(writeIndex, _sources.Count - writeIndex);
+        }
+
+        _activeBits.Compact();
     }
 
     /// <summary>Read-only scoped access. Disposing releases the gate without triggering delivery.</summary>
@@ -271,6 +320,7 @@ internal sealed class SharedDeliveryQueue
     {
         private SharedDeliveryQueue? _owner;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal ReadOnlyScopedAccess(SharedDeliveryQueue owner)
         {
             _owner = owner;
@@ -280,6 +330,7 @@ internal sealed class SharedDeliveryQueue
         /// <summary>Gets whether any sub-queue has pending items.</summary>
         public readonly bool HasPending
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 if (_owner is null)
@@ -287,24 +338,12 @@ internal sealed class SharedDeliveryQueue
                     return false;
                 }
 
-                if (_owner._drainThreadId != -1)
-                {
-                    return true;
-                }
-
-                foreach (var s in _owner._sources)
-                {
-                    if (s.HasItems)
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
+                return _owner._drainThreadId != -1 || _owner._activeBits.HasAny();
             }
         }
 
         /// <summary>Releases the gate lock.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             var owner = _owner;
@@ -328,6 +367,9 @@ internal interface IDrainable
     /// <summary>Gets whether this sub-queue has been removed and should be skipped/compacted.</summary>
     bool IsRemoved { get; }
 
+    /// <summary>Gets or sets the stable index in the parent's source list.</summary>
+    int Index { get; set; }
+
     /// <summary>Dequeues the next item into staging. Returns true if error (terminal).</summary>
     /// <returns>True if the staged item is an error notification.</returns>
     bool StageNext();
@@ -350,21 +392,42 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
     private readonly SharedDeliveryQueue _parent;
     private readonly IObserver<T> _observer;
     private Notification<T> _staged;
+    private int _index;
     private bool _isRemoved;
 
-    internal DeliverySubQueue(SharedDeliveryQueue parent, IObserver<T> observer)
+    internal DeliverySubQueue(SharedDeliveryQueue parent, IObserver<T> observer, int index)
     {
         _parent = parent;
         _observer = observer;
+        _index = index;
     }
 
     /// <inheritdoc/>
-    bool IDrainable.HasItems => !_isRemoved && _items.Count > 0;
+    bool IDrainable.HasItems
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => !_isRemoved && _items.Count > 0;
+    }
 
     /// <inheritdoc/>
-    bool IDrainable.IsRemoved => _isRemoved;
+    bool IDrainable.IsRemoved
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _isRemoved;
+    }
+
+    /// <inheritdoc/>
+    int IDrainable.Index
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _index;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        set => _index = value;
+    }
 
     /// <summary>Acquires the parent gate. Disposing releases the lock and triggers drain.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ScopedAccess AcquireLock() => new(this);
 
     /// <summary>Enqueues an OnNext notification via the lock, then drains.</summary>
@@ -390,22 +453,18 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
 
     /// <summary>
     /// Marks this sub-queue as removed, stopping further enqueues.
-    /// Physical removal from the parent's source list happens lazily
-    /// during the next drain cycle's completion.
+    /// Clears the active bit and increments the dead count for GC compaction.
     /// </summary>
     public void Dispose()
     {
         _isRemoved = true;
-        _parent.NotifyQueueRemoved();
+        _parent.NotifyQueueRemoved(_index);
     }
 
     /// <inheritdoc/>
     bool IDrainable.StageNext()
     {
         _staged = _items.Dequeue();
-
-        // Errors are fatal to the entire queue and terminate all sub-queues.
-        // Completions are scoped to a single sub-queue and delivered normally.
         return _staged.IsError;
     }
 
@@ -419,6 +478,7 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
     /// <inheritdoc/>
     void IDrainable.Clear() => _items.Clear();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnqueueItem(Notification<T> item)
     {
         if (_parent.IsTerminated || _isRemoved)
@@ -427,6 +487,7 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
         }
 
         _items.Enqueue(item);
+        _parent.SetActive(_index);
     }
 
     /// <summary>Scoped access for enqueueing items. Acquires the parent's gate lock.</summary>
@@ -434,6 +495,7 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
     {
         private DeliverySubQueue<T>? _owner;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal ScopedAccess(DeliverySubQueue<T> owner)
         {
             _owner = owner;
@@ -441,12 +503,15 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
         }
 
         /// <summary>Enqueues an OnNext item.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void EnqueueNext(T item) => _owner?.EnqueueItem(Notification<T>.CreateNext(item));
 
         /// <summary>Enqueues a terminal error.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void EnqueueError(Exception error) => _owner?.EnqueueItem(Notification<T>.CreateError(error));
 
         /// <summary>Enqueues a terminal completion.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void EnqueueCompleted() => _owner?.EnqueueItem(Notification<T>.CreateCompleted());
 
         /// <summary>Releases the parent gate lock and delivers pending items.</summary>
