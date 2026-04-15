@@ -14,7 +14,6 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
     where T : notnull
 {
     private readonly Queue<Notification<T>> _queue = new();
-    private readonly List<Notification<T>> _drainBuffer = new();
 
 #if NET9_0_OR_GREATER
     private readonly Lock _gate;
@@ -181,11 +180,8 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
             {
                 while (true)
                 {
-                    bool hasTerminal;
+                    Notification<T> notification;
 
-                    // Batch: dequeue all pending items in one lock acquisition.
-                    // Under contention, multiple producers can enqueue while we deliver.
-                    // Batching reduces lock acquisitions from N to 1 per drain cycle.
                     using (AcquireReadLock())
                     {
                         if (_queue.Count == 0 || _isTerminated)
@@ -194,67 +190,21 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
                             return;
                         }
 
-                        hasTerminal = false;
-                        while (_queue.Count > 0)
+                        notification = _queue.Dequeue();
+
+                        // Mark terminated BEFORE delivery so concurrent code
+                        // (e.g., InvokePreview) sees the terminal state immediately.
+                        if (notification.IsTerminal)
                         {
-                            var item = _queue.Dequeue();
-                            _drainBuffer.Add(item);
-                            if (item.IsTerminal)
-                            {
-                                _isTerminated = true;
-                                _queue.Clear();
-                                hasTerminal = true;
-                                break;
-                            }
+                            _isTerminated = true;
+                            _queue.Clear();
                         }
                     }
 
-                    // Deliver batch outside the lock. Track index so we can
-                    // re-enqueue undelivered items if the observer throws.
-                    var deliveredCount = 0;
-                    try
-                    {
-                        for (var i = 0; i < _drainBuffer.Count; i++)
-                        {
-                            _drainBuffer[i].Accept(_observer!);
-                            deliveredCount = i + 1;
-                        }
-                    }
-                    catch
-                    {
-                        // Skip the failed item (deliveredCount), preserve items after it.
-                        var remainderStart = deliveredCount + 1;
-                        if (remainderStart < _drainBuffer.Count)
-                        {
-                            using (AcquireReadLock())
-                            {
-                                var existing = _queue.Count;
-                                for (var i = remainderStart; i < _drainBuffer.Count; i++)
-                                {
-                                    _queue.Enqueue(_drainBuffer[i]);
-                                }
+                    // Deliver outside the lock
+                    notification.Accept(_observer!);
 
-                                // Rotate existing items to maintain order.
-                                for (var i = 0; i < existing; i++)
-                                {
-                                    _queue.Enqueue(_queue.Dequeue());
-                                }
-                            }
-                        }
-
-                        _drainBuffer.Clear();
-
-                        using (AcquireReadLock())
-                        {
-                            _drainThreadId = -1;
-                        }
-
-                        throw;
-                    }
-
-                    _drainBuffer.Clear();
-
-                    if (hasTerminal)
+                    if (notification.IsTerminal)
                     {
                         using (AcquireReadLock())
                         {
@@ -267,8 +217,6 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
             }
             catch
             {
-                _drainBuffer.Clear();
-
                 using (AcquireReadLock())
                 {
                     _drainThreadId = -1;
