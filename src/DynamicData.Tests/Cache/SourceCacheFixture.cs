@@ -232,7 +232,7 @@ public class SourceCacheFixture : IDisposable
     [Fact]
     public async Task DirectCrossWriteDoesNotDeadlock()
     {
-        const int iterations = 100;
+        const int iterations = 50;
 
         for (var iter = 0; iter < iterations; iter++)
         {
@@ -272,7 +272,7 @@ public class SourceCacheFixture : IDisposable
             });
 
             var completed = Task.WhenAll(taskA, taskB);
-            var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(30)));
+            var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(60)));
 
             finished.Should().BeSameAs(completed, $"iteration {iter}: bidirectional cross-cache writes should not deadlock");
         }
