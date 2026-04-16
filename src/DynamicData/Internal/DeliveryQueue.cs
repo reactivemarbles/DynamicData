@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -11,7 +11,6 @@ namespace DynamicData.Internal;
 /// </summary>
 /// <typeparam name="T">The value type delivered via OnNext.</typeparam>
 internal sealed class DeliveryQueue<T> : IObserver<T>
-    where T : notnull
 {
     private readonly Queue<Notification<T>> _queue = new(1);
 
