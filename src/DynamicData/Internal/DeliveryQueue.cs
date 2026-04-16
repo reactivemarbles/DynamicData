@@ -13,7 +13,7 @@ namespace DynamicData.Internal;
 internal sealed class DeliveryQueue<T> : IObserver<T>
     where T : notnull
 {
-    private readonly Queue<Notification<T>> _queue = new();
+    private readonly Queue<Notification<T>> _queue = new(1);
 
 #if NET9_0_OR_GREATER
     private readonly Lock _gate;

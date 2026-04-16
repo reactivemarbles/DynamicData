@@ -15,7 +15,7 @@ namespace DynamicData.Internal;
 /// </summary>
 internal sealed class SharedDeliveryQueue
 {
-    private readonly List<IDrainable> _sources = [];
+    private readonly List<DrainableBase> _sources = [];
     private readonly Action? _onDrainComplete;
 
 #if NET9_0_OR_GREATER
@@ -146,11 +146,13 @@ internal sealed class SharedDeliveryQueue
 
     internal void ExitLockAndDrain()
     {
+        var currentThreadId = Environment.CurrentManagedThreadId;
+
         // Same-thread reentrant: if we're already draining on this thread,
         // deliver newly enqueued items inline. This preserves the same delivery
         // order as Synchronize(lock): child items emitted synchronously during
         // parent delivery are delivered immediately, not deferred.
-        if (_drainThreadId == Environment.CurrentManagedThreadId)
+        if (_drainThreadId == currentThreadId)
         {
             ExitLock();
             DrainPending();
@@ -160,7 +162,7 @@ internal sealed class SharedDeliveryQueue
         var shouldDrain = false;
         if (_drainThreadId == -1 && !_isTerminated && _activeBits.HasAny())
         {
-            _drainThreadId = Environment.CurrentManagedThreadId;
+            _drainThreadId = currentThreadId;
             shouldDrain = true;
         }
 
@@ -180,7 +182,11 @@ internal sealed class SharedDeliveryQueue
             {
                 if (!DrainPending())
                 {
-                    return; // error terminated the queue
+                    EnterLock();
+                    _drainThreadId = -1;
+                    CompactIfNeeded();
+                    ExitLock();
+                    return;
                 }
 
                 if (_onDrainComplete is not null)
@@ -195,7 +201,7 @@ internal sealed class SharedDeliveryQueue
                 // without draining Thread B's item.
                 EnterLock();
 
-                if (_activeBits.HasAny() && !_isTerminated && _onDrainComplete is not null)
+                if (_activeBits.HasAny() && !_isTerminated)
                 {
                     // Items arrived during _onDrainComplete. Loop back to drain them.
                     ExitLock();
@@ -358,37 +364,37 @@ internal sealed class SharedDeliveryQueue
     }
 }
 
-/// <summary>Implemented by typed sub-queues for the drain loop.</summary>
-internal interface IDrainable
+/// <summary>Base class for typed sub-queues. Enables devirtualization in the drain loop.</summary>
+internal abstract class DrainableBase
 {
     /// <summary>Gets whether this sub-queue has items.</summary>
-    bool HasItems { get; }
+    internal abstract bool HasItems { get; }
 
     /// <summary>Gets whether this sub-queue has been removed and should be skipped/compacted.</summary>
-    bool IsRemoved { get; }
+    internal abstract bool IsRemoved { get; }
 
     /// <summary>Gets or sets the stable index in the parent's source list.</summary>
-    int Index { get; set; }
+    internal abstract int Index { get; set; }
 
     /// <summary>Dequeues the next item into staging. Returns true if error (terminal).</summary>
     /// <returns>True if the staged item is an error notification.</returns>
-    bool StageNext();
+    internal abstract bool StageNext();
 
     /// <summary>Delivers the staged item to the observer.</summary>
-    void DeliverStaged();
+    internal abstract void DeliverStaged();
 
     /// <summary>Clears all pending items.</summary>
-    void Clear();
+    internal abstract void Clear();
 }
 
 /// <summary>
 /// A typed sub-queue. All enqueue access goes through <see cref="ScopedAccess"/>
 /// which acquires the parent's lock.
 /// </summary>
-internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposable
+internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDisposable
     where T : notnull
 {
-    private readonly Queue<Notification<T>> _items = new();
+    private readonly Queue<Notification<T>> _items = new(1);
     private readonly SharedDeliveryQueue _parent;
     private readonly IObserver<T> _observer;
     private Notification<T> _staged;
@@ -403,21 +409,21 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
     }
 
     /// <inheritdoc/>
-    bool IDrainable.HasItems
+    internal override bool HasItems
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => !_isRemoved && _items.Count > 0;
     }
 
     /// <inheritdoc/>
-    bool IDrainable.IsRemoved
+    internal override bool IsRemoved
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _isRemoved;
     }
 
     /// <inheritdoc/>
-    int IDrainable.Index
+    internal override int Index
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _index;
@@ -452,31 +458,45 @@ internal sealed class DeliverySubQueue<T> : IDrainable, IObserver<T>, IDisposabl
     }
 
     /// <summary>
-    /// Marks this sub-queue as removed, stopping further enqueues.
-    /// Clears the active bit and increments the dead count for GC compaction.
+    /// Marks this sub-queue as removed under the parent lock, clearing pending items
+    /// and notifying the parent for GC compaction. Idempotent.
     /// </summary>
     public void Dispose()
     {
-        _isRemoved = true;
-        _parent.NotifyQueueRemoved(_index);
+        _parent.EnterLock();
+        try
+        {
+            if (_isRemoved)
+            {
+                return;
+            }
+
+            _isRemoved = true;
+            _items.Clear();
+            _parent.NotifyQueueRemoved(_index);
+        }
+        finally
+        {
+            _parent.ExitLock();
+        }
     }
 
     /// <inheritdoc/>
-    bool IDrainable.StageNext()
+    internal override bool StageNext()
     {
         _staged = _items.Dequeue();
         return _staged.IsError;
     }
 
     /// <inheritdoc/>
-    void IDrainable.DeliverStaged()
+    internal override void DeliverStaged()
     {
         _staged.Accept(_observer);
         _staged = default;
     }
 
     /// <inheritdoc/>
-    void IDrainable.Clear() => _items.Clear();
+    internal override void Clear() => _items.Clear();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnqueueItem(Notification<T> item)

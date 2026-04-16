@@ -128,7 +128,7 @@ public sealed class CacheParentSubscriptionFixture
     [Fact]
     public void Completion_RequiresParentAndAllChildren()
     {
-        using var source = new SourceCache<TestItem, int>(x => x.Key);
+        using var source = new TestSourceCache<TestItem, int>(x => x.Key);
         var childSubjects = new List<Subject<string>>();
         var observer = new TestObserver();
         using var sub = new TestSubscription(observer, key =>
@@ -142,7 +142,7 @@ public sealed class CacheParentSubscriptionFixture
         source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
         childSubjects.Should().HaveCount(1);
 
-        source.Dispose();
+        source.Complete();
         observer.IsCompleted.Should().BeFalse("parent complete but child still active");
 
         childSubjects[0].OnCompleted();
@@ -152,12 +152,12 @@ public sealed class CacheParentSubscriptionFixture
     [Fact]
     public void Completion_ParentOnly_NoChildren()
     {
-        using var source = new SourceCache<TestItem, int>(x => x.Key);
+        using var source = new TestSourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
         using var sub = new TestSubscription(observer);
         sub.ExposeCreateParent(source.Connect());
 
-        source.Dispose();
+        source.Complete();
         observer.IsCompleted.Should().BeTrue("immediate OnCompleted when no children");
     }
 

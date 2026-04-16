@@ -40,7 +40,7 @@ internal static class SynchronizeSafeExtensions
         return Observable.Create<T>(observer =>
         {
             var queue = new DeliveryQueue<T>(gate, observer);
-            return source.Subscribe(queue);
+            return source.SubscribeSafe(queue);
         });
     }
 
@@ -49,6 +49,10 @@ internal static class SynchronizeSafeExtensions
     /// exposing the queue for callers that need <see cref="DeliveryQueue{T}.EnsureDeliveryComplete"/>
     /// or <see cref="DeliveryQueue{T}.AcquireReadLock"/> during disposal.
     /// </summary>
+    /// <remarks>
+    /// The returned observable supports only a single subscription. The queue's observer is
+    /// set lazily on the first (and only) subscribe call.
+    /// </remarks>
 #if NET9_0_OR_GREATER
     public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, Lock gate, out DeliveryQueue<T> queue)
 #else
@@ -63,7 +67,7 @@ internal static class SynchronizeSafeExtensions
         return Observable.Create<T>(observer =>
         {
             q.SetObserver(observer);
-            return source.Subscribe(q);
+            return source.SubscribeSafe(q);
         });
     }
 }

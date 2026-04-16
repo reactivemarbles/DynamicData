@@ -28,7 +28,9 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     private readonly SingleAssignmentDisposable _parentSubscription = new();
     private readonly SharedDeliveryQueue _queue;
     private readonly IObserver<TObserver> _observer;
-    private int _subscriptionCounter = 1;
+    private int _subscriptionCounter = 1; // Starts at 1 for the parent subscription
+    private bool _isCompleted;
+    private bool _hasTerminated;
     private bool _disposedValue;
 
     /// <summary>
@@ -38,7 +40,7 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     protected CacheParentSubscription(IObserver<TObserver> observer)
     {
         _observer = observer;
-        _queue = new SharedDeliveryQueue(onDrainComplete: () => EmitChanges(_observer));
+        _queue = new SharedDeliveryQueue(onDrainComplete: OnDrainComplete);
     }
 
     /// <inheritdoc/>
@@ -65,11 +67,17 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         // Create the subscription
         // Will Dispose immediately if OnCompleted fires upon subscription because OnCompleted disposes the container
         // Remove the child subscription if it completes because its not needed anymore
+        //
+        // THREADING INVARIANT: Finally(CheckCompleted) fires on completion, error, AND disposal,
+        // ensuring the subscription counter always decrements. The onCompleted callback only fires
+        // on normal completion (not disposal), so RemoveChildSubscription is NOT called when the
+        // parent disposes child subscriptions during Dispose(). This asymmetry is intentional:
+        // disposal cleanup is handled by KeyedDisposable, not by individual completion callbacks.
         disposableContainer.Disposable = observable
             .Finally(CheckCompleted)
             .SubscribeSafe(
                 onNext: val => ChildOnNext(val, parentKey),
-                onError: _observer.OnError,
+                onError: TerminalError,
                 onCompleted: () => RemoveChildSubscription(parentKey));
     }
 
@@ -81,7 +89,7 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
                 .SynchronizeSafe(_queue)
                 .SubscribeSafe(
                     onNext: ParentOnNext,
-                    onError: _observer.OnError,
+                    onError: TerminalError,
                     onCompleted: CheckCompleted);
 
     protected virtual void Dispose(bool disposing)
@@ -99,18 +107,37 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         }
     }
 
-    // This must be called by the derived class on anything passed to AddChildSubscription.
-    // Manual step so that the derived class has full control on where it is called.
-    // Same-thread reentrant delivery ensures child items are delivered inline during
-    // parent processing, preserving the original Synchronize(lock) ordering semantics.
+    /// <summary>
+    /// Wraps a child observable through the shared delivery queue for serialization.
+    /// Must be called by derived classes on observables passed to <see cref="AddChildSubscription"/>.
+    /// Same-thread reentrant delivery ensures child items are delivered inline during
+    /// parent processing, preserving the original Synchronize(lock) ordering semantics.
+    /// </summary>
     protected IObservable<T> MakeChildObservable<T>(IObservable<T> observable) =>
         observable.SynchronizeSafe(_queue);
+
+    private void OnDrainComplete()
+    {
+        EmitChanges(_observer);
+
+        if (Volatile.Read(ref _isCompleted) && !_hasTerminated)
+        {
+            _hasTerminated = true;
+            _observer.OnCompleted();
+        }
+    }
+
+    private void TerminalError(Exception error)
+    {
+        _hasTerminated = true;
+        _observer.OnError(error);
+    }
 
     private void CheckCompleted()
     {
         if (Interlocked.Decrement(ref _subscriptionCounter) == 0)
         {
-            _observer.OnCompleted();
+            Volatile.Write(ref _isCompleted, true);
         }
 
         Debug.Assert(_subscriptionCounter >= 0, "Should never be negative");

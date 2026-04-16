@@ -99,6 +99,17 @@ internal struct Bitset
     public readonly int FindHighest()
     {
         var words = _words;
+        if (words.Length == 1)
+        {
+            var w0 = words[0];
+            if (w0 == 0) return -1;
+#if NETCOREAPP3_0_OR_GREATER
+            return 63 - BitOperations.LeadingZeroCount((ulong)w0);
+#else
+            return HighestSetBit(w0);
+#endif
+        }
+
         for (var w = words.Length - 1; w >= 0; w--)
         {
             var word = words[w];
@@ -156,7 +167,15 @@ internal struct Bitset
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearAll()
     {
-        Array.Clear(_words, 0, _words.Length);
+        if (_words.Length == 1)
+        {
+            _words[0] = 0;
+        }
+        else
+        {
+            Array.Clear(_words, 0, _words.Length);
+        }
+
         Count = 0;
     }
 

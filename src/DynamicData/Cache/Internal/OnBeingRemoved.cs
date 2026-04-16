@@ -20,7 +20,7 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
                 var locker = InternalEx.NewLock();
                 var cache = new Cache<TObject, TKey>();
                 var subscriber = _source.SynchronizeSafe(locker, out var queue)
-                    .Do(changes => RegisterForRemoval(changes, cache), observer.OnError)
+                    .Do(changes => RegisterForRemoval(changes, cache))
                     .SubscribeSafe(observer);
 
                 return Disposable.Create(
