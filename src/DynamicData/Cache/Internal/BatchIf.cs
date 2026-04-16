@@ -99,6 +99,6 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                         }
                     });
 
-                return new CompositeDisposable(publisher, pausedHandler, timeoutDisposer, intervalTimerDisposer);
+                return new CompositeDisposable(publisher, pausedHandler, timeoutDisposer, intervalTimerDisposer, queue);
             });
 }

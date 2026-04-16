@@ -89,7 +89,7 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
                 })
                 .SubscribeSafe(observer);
 
-            return new CompositeDisposable(latestComparer, subscriber);
+            return new CompositeDisposable(latestComparer, subscriber, queue);
         });
 
     public IObservable<IChangeSet<TObject, TKey>> Run() => _sorted;

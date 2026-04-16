@@ -98,7 +98,7 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         {
             if (disposing)
             {
-                _queue.EnsureDeliveryComplete();
+                _queue.Dispose();
                 _parentSubscription.Dispose();
                 _childSubscriptions.Dispose();
             }

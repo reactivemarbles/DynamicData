@@ -17,9 +17,8 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
                 var cache = new Cache<TObject, TKey>();
-                var subscriber = _source.SynchronizeSafe(locker, out var queue)
+                var subscriber = _source.SynchronizeSafe()
                     .Do(changes => RegisterForRemoval(changes, cache))
                     .SubscribeSafe(observer);
 
@@ -27,7 +26,6 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
                     () =>
                     {
                         subscriber.Dispose();
-                        queue.EnsureDeliveryComplete();
                         cache.KeyValues.ForEach(kvp => _removeAction(kvp.Value, kvp.Key));
                         cache.Clear();
                     });

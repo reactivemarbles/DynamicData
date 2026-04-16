@@ -14,14 +14,13 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
 {
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source;
 
-    public IObservable<IChangeSet<TObject, TKey>> Run()
-        => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+    public IObservable<IChangeSet<TObject, TKey>> Run() =>
+        Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
-            var locker = InternalEx.NewLock();
             var tracked = new KeyedDisposable<TKey>();
 
             var sourceSubscription = _source
-                .SynchronizeSafe(locker, out var queue)
+                .SynchronizeSafe()
                 .SubscribeSafe(Observer.Create<IChangeSet<TObject, TKey>>(
                     onNext: changeSet =>
                     {
@@ -44,11 +43,6 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
                     onError: observer.OnError,
                     onCompleted: observer.OnCompleted));
 
-            return Disposable.Create(() =>
-            {
-                sourceSubscription.Dispose();
-                queue.EnsureDeliveryComplete();
-                tracked.Dispose();
-            });
+            return new CompositeDisposable(sourceSubscription, tracked);
         });
 }

@@ -84,6 +84,7 @@ internal sealed class GroupOnDynamic<TObject, TKey, TGroupKey>(IObservable<IChan
             subChanges,
             subGroupSelector,
             subRegrouper,
-            subOnComplete);
+            subOnComplete,
+            queue);
     });
 }

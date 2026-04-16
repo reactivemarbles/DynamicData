@@ -124,7 +124,7 @@ public class SharedDeliveryQueueFixture
     }
 
     [Fact]
-    public void EnsureDeliveryCompleteTerminatesAndWaits()
+    public void DisposeTerminatesAndWaits()
     {
         var queue = new SharedDeliveryQueue(_gate);
         var observer = new TestObserver<int>(_ => { });
@@ -135,7 +135,7 @@ public class SharedDeliveryQueueFixture
             scope.EnqueueNext(1);
         }
 
-        queue.EnsureDeliveryComplete();
+        queue.Dispose();
 
         queue.IsTerminated.Should().BeTrue();
     }

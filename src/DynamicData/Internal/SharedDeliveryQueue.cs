@@ -13,7 +13,7 @@ namespace DynamicData.Internal;
 /// sub-queues outside the lock, one item per iteration. An <see cref="Bitset"/>
 /// tracks which sub-queues have pending items, replacing O(N) scans with O(1) lookups.
 /// </summary>
-internal sealed class SharedDeliveryQueue
+internal sealed class SharedDeliveryQueue : IDisposable
 {
     private readonly List<DrainableBase> _sources = [];
     private readonly Action? _onDrainComplete;
@@ -70,7 +70,7 @@ internal sealed class SharedDeliveryQueue
     /// observer callbacks will fire. Safe to call from within a delivery
     /// callback (skips the spin-wait if the calling thread is the deliverer).
     /// </summary>
-    public void EnsureDeliveryComplete()
+    private void EnsureDeliveryComplete()
     {
         EnterLock();
 
@@ -95,8 +95,12 @@ internal sealed class SharedDeliveryQueue
             spinner.SpinOnce();
     }
 
+    /// <summary>Disposes the queue by calling <see cref="EnsureDeliveryComplete"/>.</summary>
+    public void Dispose() => EnsureDeliveryComplete();
+
     /// <summary>Creates a typed sub-queue bound to the specified observer.</summary>
     public DeliverySubQueue<T> CreateQueue<T>(IObserver<T> observer)
+        where T : notnull
     {
         EnterLock();
         try
@@ -391,6 +395,7 @@ internal abstract class DrainableBase
 /// which acquires the parent's lock.
 /// </summary>
 internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDisposable
+    where T : notnull
 {
     private readonly Queue<Notification<T>> _items = new(1);
     private readonly SharedDeliveryQueue _parent;

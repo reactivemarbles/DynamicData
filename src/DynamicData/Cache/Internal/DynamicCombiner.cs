@@ -79,7 +79,7 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
                         }
                     }).Subscribe();
 
-                return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged, sharedLists.Connect());
+                return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged, sharedLists.Connect(), queue);
             });
 
     private bool MatchesConstraint(MergeContainer[] sources, TKey key)

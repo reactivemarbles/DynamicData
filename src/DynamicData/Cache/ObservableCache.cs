@@ -39,6 +39,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private readonly ReaderWriter<TObject, TKey> _readerWriter;
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Terminated via NotifyCompleted in _cleanUp")]
     private readonly DeliveryQueue<CacheUpdate> _notifications;
 
     private int _editLevel; // The level of recursion in editing.

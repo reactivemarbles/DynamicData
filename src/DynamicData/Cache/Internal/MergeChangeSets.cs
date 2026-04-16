@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
@@ -29,14 +30,14 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
             var changeTracker = new ChangeSetMergeTracker<TObject, TKey>(() => cache.Items, comparer, equalityComparer);
 
             // Create a ChangeSet of Caches, synchronize, update the local copy, and merge the sub-observables together.
-            return CreateContainerObservable(source, queue)
+            return new CompositeDisposable(CreateContainerObservable(source, queue)
                 .SynchronizeSafe(queue)
                 .Do(cache.Clone)
                 .MergeMany(mc => mc.Source.Do(static _ => { }, observer.OnError))
                 .SubscribeSafe(
                     changes => changeTracker.ProcessChangeSet(changes, observer),
                     observer.OnError,
-                    observer.OnCompleted);
+                    observer.OnCompleted), queue);
         });
 
     // Can optimize for the Add case because that's the only one that applies

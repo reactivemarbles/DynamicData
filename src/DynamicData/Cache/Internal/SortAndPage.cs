@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Binding;
 
@@ -110,11 +111,11 @@ internal sealed class SortAndPage<TObject, TKey>
                         return ApplyPagedChanges(changes);
                     });
 
-                return Observable.Merge(
+                return new CompositeDisposable(Observable.Merge(
                         comparerChanged.Skip(1),
                         paramsChanged.Where(changes => changes.Count is not 0),
                         dataChange.Where(changes => changes.Count is not 0))
-                    .SubscribeSafe(observer);
+                    .SubscribeSafe(observer), queue);
 
                 ChangeSet<TObject, TKey, PageContext<TObject>> ApplyPagedChanges(IChangeSet<TObject, TKey>? changeSet = null)
                 {

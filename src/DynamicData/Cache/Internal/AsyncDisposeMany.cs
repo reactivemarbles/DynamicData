@@ -25,7 +25,6 @@ internal static class AsyncDisposeMany<TObject, TKey>
             .Create<IChangeSet<TObject, TKey>>(downstreamObserver =>
             {
                 var itemsByKey = new Dictionary<TKey, TObject>();
-                var synchronizationGate = InternalEx.NewLock();
 
                 var disposals = new Subject<IObservable<Unit>>();
                 var disposalsCompleted = disposals
@@ -38,7 +37,7 @@ internal static class AsyncDisposeMany<TObject, TKey>
                 disposalsCompletedAccessor.Invoke(disposalsCompleted);
 
                 var sourceSubscription = source
-                    .SynchronizeSafe(synchronizationGate, out var queue)
+                    .SynchronizeSafe()
                     .SubscribeSafe(
                         onNext: upstreamChanges =>
                         {
@@ -75,7 +74,6 @@ internal static class AsyncDisposeMany<TObject, TKey>
                 return Disposable.Create(() =>
                 {
                     sourceSubscription.Dispose();
-                    queue.EnsureDeliveryComplete();
                     TearDown();
                 });
 

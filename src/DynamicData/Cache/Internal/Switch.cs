@@ -40,6 +40,7 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
                     destination
                         .Connect()
                         .Merge(errors)
-                        .SubscribeSafe(observer));
+                        .SubscribeSafe(observer),
+                    queue);
             });
 }

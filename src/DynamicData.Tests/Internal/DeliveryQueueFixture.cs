@@ -415,13 +415,13 @@ public class DeliveryQueueFixture
     }
 
     [Fact]
-    public void EnsureDeliveryCompleteTerminatesQueue()
+    public void DisposeTerminatesQueue()
     {
         var observer = new ListObserver<string>();
         var queue = new DeliveryQueue<string>(_gate, observer);
 
         EnqueueAndDeliver(queue, "A");
-        queue.EnsureDeliveryComplete();
+        queue.Dispose();
 
         queue.IsTerminated.Should().BeTrue();
 
@@ -431,7 +431,7 @@ public class DeliveryQueueFixture
     }
 
     [Fact]
-    public void EnsureDeliveryCompleteClearsPendingItems()
+    public void DisposeClearsPendingItems()
     {
         var observer = new ListObserver<string>();
         var deliveryCount = 0;
@@ -449,7 +449,7 @@ public class DeliveryQueueFixture
                     scope.EnqueueNext("C");
                 }
 
-                q!.EnsureDeliveryComplete(); // re-entrant — should not spin
+                q!.Dispose(); // re-entrant — should not spin
             }
         });
 
@@ -458,22 +458,22 @@ public class DeliveryQueueFixture
 
         EnqueueAndDeliver(queue, "A");
 
-        // Only "A" should be delivered — "B" and "C" were cleared by EnsureDeliveryComplete
+        // Only "A" should be delivered — "B" and "C" were cleared by Dispose
         observer.Items.Should().Equal("A");
         queue.IsTerminated.Should().BeTrue();
     }
 
     [Fact]
-    public void EnsureDeliveryCompleteFromDrainThreadDoesNotDeadlock()
+    public void DisposeFromDrainThreadDoesNotDeadlock()
     {
         var observer = new ListObserver<string>();
         DeliveryQueue<string>? q = null;
 
         var terminatingObserver = new DelegateObserver<string>(_ =>
         {
-            // Called from drain thread — EnsureDeliveryComplete must detect
+            // Called from drain thread — Dispose must detect
             // re-entrancy via _drainThreadId and skip the spin-wait
-            q!.EnsureDeliveryComplete();
+            q!.Dispose();
         });
 
         var queue = new DeliveryQueue<string>(_gate, terminatingObserver);
@@ -482,11 +482,11 @@ public class DeliveryQueueFixture
         // This should NOT deadlock
         var completed = Task.Run(() => EnqueueAndDeliver(queue, "A"));
         var finished = Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(5))).Result;
-        finished.Should().BeSameAs(completed, "EnsureDeliveryComplete from drain thread should not deadlock");
+        finished.Should().BeSameAs(completed, "Dispose from drain thread should not deadlock");
     }
 
     [Fact]
-    public async Task EnsureDeliveryCompleteWaitsForInFlightDelivery()
+    public async Task DisposeWaitsForInFlightDelivery()
     {
         var observer = new ListObserver<int>();
         using var deliveryStarted = new ManualResetEventSlim(false);
@@ -505,8 +505,8 @@ public class DeliveryQueueFixture
         var deliverTask = Task.Run(() => EnqueueAndDeliver(queue, 42));
         deliveryStarted.Wait();
 
-        // Drain thread is blocked in observer callback. EnsureDeliveryComplete should spin.
-        var terminateTask = Task.Run(() => queue.EnsureDeliveryComplete());
+        // Drain thread is blocked in observer callback. Dispose should spin.
+        var terminateTask = Task.Run(() => queue.Dispose());
 
         // Give terminate a moment to enter spin-wait
         await Task.Delay(100);

@@ -35,13 +35,7 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
 
                 var connected = published.Connect();
 
-                return Disposable.Create(
-                    () =>
-                    {
-                        connected.Dispose();
-                        disposer.Dispose();
-                        subscriber.Dispose();
-                    });
+                return new CompositeDisposable(connected, disposer, subscriber, queue);
             });
 
     private sealed class Grouper(Func<TObject, TGroupKey> groupSelectorKey)

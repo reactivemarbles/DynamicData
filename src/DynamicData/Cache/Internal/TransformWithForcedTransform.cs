@@ -30,7 +30,7 @@ internal sealed class TransformWithForcedTransform<TDestination, TSource, TKey>(
                 // do raw transform
                 var transform = new Transform<TDestination, TSource, TKey>(sourceAndRefreshes, transformFactory, exceptionCallback, true).Run();
 
-                return new CompositeDisposable(cacheLoader, transform.SubscribeSafe(observer), shared.Connect());
+                return new CompositeDisposable(cacheLoader, transform.SubscribeSafe(observer), shared.Connect(), queue);
             });
 
     private static IEnumerable<Change<TSource, TKey>> CaptureChanges(Cache<TSource, TKey> cache, Func<TSource, TKey, bool> shouldTransform) =>

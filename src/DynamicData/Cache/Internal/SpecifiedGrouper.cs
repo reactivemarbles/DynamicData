@@ -62,13 +62,6 @@ internal sealed class SpecifiedGrouper<TObject, TKey, TGroupKey>(IObservable<ICh
                         return new GroupChangeSet<TObject, TKey, TGroupKey>(groups);
                     }).SubscribeSafe(observer);
 
-                return Disposable.Create(
-                    () =>
-                    {
-                        notifier.Dispose();
-                        sourceGroups.Dispose();
-                        parentGroups.Dispose();
-                        updatesFromChildren.Dispose();
-                    });
+                return new CompositeDisposable(notifier, sourceGroups, parentGroups, updatesFromChildren, queue);
             });
 }

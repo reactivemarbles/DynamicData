@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -10,7 +10,7 @@ namespace DynamicData.Internal;
 /// is dispatched to an <see cref="IObserver{T}"/> outside the lock.
 /// </summary>
 /// <typeparam name="T">The value type delivered via OnNext.</typeparam>
-internal sealed class DeliveryQueue<T> : IObserver<T>
+internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
 {
     private readonly Queue<Notification<T>> _queue = new(1);
 
@@ -20,7 +20,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
     private readonly object _gate;
 #endif
 
-    private IObserver<T>? _observer;
+    private readonly IObserver<T> _observer;
     private int _drainThreadId = -1;
     private volatile bool _isTerminated;
 
@@ -53,23 +53,6 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
         _observer = observer;
     }
 
-#if NET9_0_OR_GREATER
-    /// <summary>Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class with a deferred observer. Call <see cref="SetObserver"/> before items are drained.</summary>
-    internal DeliveryQueue(Lock gate) => _gate = gate;
-#else
-    /// <summary>Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class with a deferred observer. Call <see cref="SetObserver"/> before items are drained.</summary>
-    internal DeliveryQueue(object gate) => _gate = gate;
-#endif
-
-    /// <summary>Sets the delivery observer. Must be called exactly once, before any items are drained.</summary>
-    internal void SetObserver(IObserver<T> observer)
-    {
-        if (_observer is not null)
-            throw new InvalidOperationException("Observer has already been set.");
-
-        _observer = observer ?? throw new ArgumentNullException(nameof(observer));
-    }
-
     /// <summary>
     /// Gets whether this queue has been terminated. Safe to read from any thread.
     /// </summary>
@@ -81,7 +64,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
     /// observer callbacks will fire. Safe to call from within a delivery
     /// callback (skips the spin-wait if the calling thread is the deliverer).
     /// </summary>
-    public void EnsureDeliveryComplete()
+    private void EnsureDeliveryComplete()
     {
         using (AcquireReadLock())
         {
@@ -99,6 +82,9 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
         while (Volatile.Read(ref _drainThreadId) != -1)
             spinner.SpinOnce();
     }
+
+    /// <inheritdoc/>
+    public void Dispose() => EnsureDeliveryComplete();
 
     /// <summary>
     /// Acquires the gate and returns a scoped access for enqueueing notifications.
@@ -201,7 +187,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>
                     }
 
                     // Deliver outside the lock
-                    notification.Accept(_observer!);
+                    notification.Accept(_observer);
 
                     if (notification.IsTerminal)
                     {

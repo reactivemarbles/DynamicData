@@ -200,15 +200,6 @@ internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject,
                 var filter = _predicateChanged.SynchronizeSafe(queue).CombineLatest(reFilterObservable, (predicate, _) => predicate);
                 var result = allNodes.Connect().Filter(filter).SubscribeSafe(observer);
 
-                return Disposable.Create(
-                    () =>
-                    {
-                        result.Dispose();
-                        parentSetter.Dispose();
-                        allData.Dispose();
-                        allNodes.Dispose();
-                        groupedByPivot.Dispose();
-                        reFilterObservable.OnCompleted();
-                    });
+                return new CompositeDisposable(result, parentSetter, allData, allNodes, groupedByPivot, Disposable.Create(() => reFilterObservable.OnCompleted()), queue);
             });
 }

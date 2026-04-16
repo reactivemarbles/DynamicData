@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
@@ -56,7 +57,7 @@ internal sealed class Sort<TObject, TKey>
 
                 var dataChanged = _source.SynchronizeSafe(queue).Select(sorter.Sort);
 
-                return comparerChanged.Merge(dataChanged).Merge(sortAgain).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer);
+                return new CompositeDisposable(comparerChanged.Merge(dataChanged).Merge(sortAgain).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer), queue);
             });
 
     private sealed class Sorter(SortOptimisations optimisations, IComparer<TObject>? comparer = null, int resetThreshold = -1)

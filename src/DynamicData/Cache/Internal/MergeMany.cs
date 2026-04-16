@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
@@ -34,7 +35,7 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
                 var counter = new[] { 1 };
                 var queue = new DeliveryQueue<TDestination>(observer);
 
-                return _source
+                return new CompositeDisposable(_source
                     .Do(static _ => { }, static _ => { }, () => CheckCompleted(counter, queue))
                     .Concat(Observable.Never<IChangeSet<TObject, TKey>>())
                     .SubscribeMany((t, key) =>
@@ -44,7 +45,7 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
                             .Finally(() => CheckCompleted(counter, queue))
                             .Subscribe(queue.OnNext, static _ => { });
                     })
-                    .Subscribe(static _ => { }, observer.OnError);
+                    .Subscribe(static _ => { }, observer.OnError), queue);
             });
 
     private static void CheckCompleted(int[] counter, DeliveryQueue<TDestination> queue)
