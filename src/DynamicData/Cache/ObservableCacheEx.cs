@@ -4224,6 +4224,7 @@ public static partial class ObservableCacheEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="destination"/> is <see langword="null"/>.</exception>
     /// <seealso cref="PopulateFrom{TObject, TKey}(ISourceCache{TObject, TKey}, IObservable{IEnumerable{TObject}})"/>
     /// <seealso cref="AsObservableCache{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, bool)"/>
+    /// <seealso cref="ObservableListEx.PopulateInto{T}(IObservable{IChangeSet{T}}, ISourceList{T})"/>
     public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ISourceCache<TObject, TKey> destination)
         where TObject : notnull
         where TKey : notnull
@@ -4892,6 +4893,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to prepend an empty changeset to.</param>
     /// <returns>An observable that emits an empty changeset first, then all source changesets.</returns>
+    /// <seealso cref="ObservableListEx.StartWithEmpty{T}(IObservable{IChangeSet{T}})"/>
     public static IObservable<IChangeSet<TObject, TKey>> StartWithEmpty<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull => source.StartWith(ChangeSet<TObject, TKey>.Empty);
@@ -5102,6 +5104,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to materialize into a collection on each change.</param>
     /// <returns>An observable which emits the read only collection.</returns>
+    /// <seealso cref="ObservableListEx.ToCollection{TObject}(IObservable{IChangeSet{TObject}})"/>
     public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull => source.QueryWhenChanged(query => new ReadOnlyCollectionLight<TObject>(query.Items));
@@ -5254,6 +5257,7 @@ public static partial class ObservableCacheEx
     /// <param name="sort">The <see cref="Func{TObject, TSortKey}"/> sort function.</param>
     /// <param name="sortOrder">The <see cref="SortDirection"/> sort order. Defaults to ascending.</param>
     /// <returns>An observable which emits the read only collection.</returns>
+    /// <seealso cref="ObservableListEx.ToSortedCollection{TObject, TSortKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TSortKey}, SortDirection)"/>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TKey, TSortKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TSortKey> sort, SortDirection sortOrder = SortDirection.Ascending)
         where TObject : notnull
         where TKey : notnull
