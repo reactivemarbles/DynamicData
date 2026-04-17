@@ -132,7 +132,7 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
                 return;
 
             _disposedValue = true;
-            snapshot = [];
+            snapshot = new Dictionary<TKey, IDisposable>(_disposables);
             _disposables.Clear();
         }
 
