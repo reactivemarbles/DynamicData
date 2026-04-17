@@ -4,6 +4,7 @@
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 
 namespace DynamicData.Cache.Internal;
 
@@ -32,25 +33,27 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
     public IObservable<TDestination> Run() => Observable.Create<TDestination>(
             observer =>
             {
-                var counter = new[] { 1 };
+                var counter = new StrongBox<int>(1);
                 var queue = new DeliveryQueue<TDestination>(observer);
 
-                return new CompositeDisposable(_source
+                // Queue first: terminate before subscription disposal to prevent
+                // Finally callbacks from delivering spurious OnCompleted during teardown.
+                return new CompositeDisposable(queue, _source
                     .Do(static _ => { }, static _ => { }, () => CheckCompleted(counter, queue))
                     .Concat(Observable.Never<IChangeSet<TObject, TKey>>())
                     .SubscribeMany((t, key) =>
                     {
-                        Interlocked.Increment(ref counter[0]);
+                        Interlocked.Increment(ref counter.Value);
                         return _observableSelector(t, key)
                             .Finally(() => CheckCompleted(counter, queue))
                             .Subscribe(queue.OnNext, static _ => { });
                     })
-                    .Subscribe(static _ => { }, observer.OnError), queue);
+                    .Subscribe(static _ => { }, observer.OnError));
             });
 
-    private static void CheckCompleted(int[] counter, DeliveryQueue<TDestination> queue)
+    private static void CheckCompleted(StrongBox<int> counter, DeliveryQueue<TDestination> queue)
     {
-        if (Interlocked.Decrement(ref counter[0]) == 0)
+        if (Interlocked.Decrement(ref counter.Value) == 0 && !queue.IsTerminated)
         {
             queue.OnCompleted();
         }
