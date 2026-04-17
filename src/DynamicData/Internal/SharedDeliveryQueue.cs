@@ -185,9 +185,16 @@ internal sealed class SharedDeliveryQueue : IDisposable
                 if (!DrainPending())
                 {
                     EnterLock();
-                    _drainThreadId = -1;
-                    CompactIfNeeded();
-                    ExitLock();
+                    try
+                    {
+                        _drainThreadId = -1;
+                        CompactIfNeeded();
+                    }
+                    finally
+                    {
+                        ExitLock();
+                    }
+
                     return;
                 }
 
@@ -210,9 +217,16 @@ internal sealed class SharedDeliveryQueue : IDisposable
                     continue;
                 }
 
-                _drainThreadId = -1;
-                CompactIfNeeded();
-                ExitLock();
+                try
+                {
+                    _drainThreadId = -1;
+                    CompactIfNeeded();
+                }
+                finally
+                {
+                    ExitLock();
+                }
+
                 return;
             }
         }
