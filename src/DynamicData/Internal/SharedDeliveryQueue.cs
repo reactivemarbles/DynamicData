@@ -100,7 +100,6 @@ internal sealed class SharedDeliveryQueue : IDisposable
 
     /// <summary>Creates a typed sub-queue bound to the specified observer.</summary>
     public DeliverySubQueue<T> CreateQueue<T>(IObserver<T> observer)
-        where T : notnull
     {
         EnterLock();
         try
@@ -395,7 +394,6 @@ internal abstract class DrainableBase
 /// which acquires the parent's lock.
 /// </summary>
 internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDisposable
-    where T : notnull
 {
     private readonly Queue<Notification<T>> _items = new(1);
     private readonly SharedDeliveryQueue _parent;

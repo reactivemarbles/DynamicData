@@ -613,15 +613,12 @@ public static partial class ObservableCacheEx
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
-            {
-                var locker = InternalEx.NewLock();
-                return source.SynchronizeSafe(locker).Select(
+                source.SynchronizeSafe(InternalEx.NewLock()).Select(
                     changes =>
                     {
                         updater.Adapt(changes, destination);
                         return changes;
-                    }).SubscribeSafe(observer);
-            });
+                    }).SubscribeSafe(observer));
     }
 
     /// <summary>
@@ -741,15 +738,12 @@ public static partial class ObservableCacheEx
 
         return Observable.Create<ISortedChangeSet<TObject, TKey>>(
             observer =>
-            {
-                var locker = InternalEx.NewLock();
-                return source.SynchronizeSafe(locker).Select(
+                source.SynchronizeSafe(InternalEx.NewLock()).Select(
                     changes =>
                     {
                         updater.Adapt(changes, destination);
                         return changes;
-                    }).SubscribeSafe(observer);
-            });
+                    }).SubscribeSafe(observer));
     }
 
     /// <summary>

@@ -20,7 +20,6 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
             var tracked = new KeyedDisposable<TKey>();
 
             var sourceSubscription = _source
-                .SynchronizeSafe()
                 .SubscribeSafe(Observer.Create<IChangeSet<TObject, TKey>>(
                     onNext: changeSet =>
                     {
