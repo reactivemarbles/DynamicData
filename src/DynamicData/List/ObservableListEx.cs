@@ -1825,6 +1825,7 @@ public static class ObservableListEx
     /// </remarks>
     /// <seealso cref="Clone{T}(IObservable{IChangeSet{T}}, IList{T})"/>
     /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
+    /// <seealso cref="ObservableCacheEx.PopulateInto{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, ISourceCache{TObject, TKey})"/>
     public static IDisposable PopulateInto<T>(this IObservable<IChangeSet<T>> source, ISourceList<T> destination)
         where T : notnull
     {
@@ -2034,6 +2035,7 @@ public static class ObservableListEx
     /// <returns>A list changeset stream that begins with an empty changeset.</returns>
     /// <seealso cref="DeferUntilLoaded{T}(IObservable{IChangeSet{T}})"/>
     /// <seealso cref="SkipInitial{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="ObservableCacheEx.StartWithEmpty{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
     public static IObservable<IChangeSet<T>> StartWithEmpty<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull => source.StartWith(ChangeSet<T>.Empty);
 
@@ -2131,6 +2133,7 @@ public static class ObservableListEx
     /// <returns>An observable emitting the full collection snapshot after each change.</returns>
     /// <seealso cref="QueryWhenChanged{T}(IObservable{IChangeSet{T}})"/>
     /// <seealso cref="ToSortedCollection{TObject, TSortKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TSortKey}, SortDirection)"/>
+    /// <seealso cref="ObservableCacheEx.ToCollection{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
     public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject>(this IObservable<IChangeSet<TObject>> source)
         where TObject : notnull => source.QueryWhenChanged(items => items);
 
@@ -2334,6 +2337,7 @@ public static class ObservableListEx
     /// <seealso cref="ToCollection{TObject}(IObservable{IChangeSet{TObject}})"/>
     /// <seealso cref="ToSortedCollection{TObject}(IObservable{IChangeSet{TObject}}, IComparer{TObject})"/>
     /// <seealso cref="QueryWhenChanged{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="ObservableCacheEx.ToSortedCollection{TObject, TKey}"/>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TSortKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TSortKey> sort, SortDirection sortOrder = SortDirection.Ascending)
         where TObject : notnull => source.QueryWhenChanged(query => sortOrder == SortDirection.Ascending ? new ReadOnlyCollectionLight<TObject>(query.OrderBy(sort)) : new ReadOnlyCollectionLight<TObject>(query.OrderByDescending(sort)));
 
