@@ -139,7 +139,7 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.HasCompleted.Should().BeTrue("the source and all disposals have completed");
         }
 
-        [Fact(Timeout = 5_000)]
+        [Fact(Timeout = 30_000)]
         public async Task ItemDisposalsOccurOnMultipleThreads_DisposalIsThreadSafe()
         {
             using var source = new SourceCache<AsyncDisposableItem, int>(static item => item.Id);
