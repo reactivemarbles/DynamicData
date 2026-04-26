@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -26,10 +26,11 @@ internal sealed class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
 
                 // create local backing stores
-                var leftCache = _left.Synchronize(locker).AsObservableCache(false);
-                var rightCache = _right.Synchronize(locker).ChangeKey(_rightKeySelector).AsObservableCache(false);
+                var leftCache = _left.SynchronizeSafe(queue).AsObservableCache();
+                var rightCache = _right.SynchronizeSafe(queue).ChangeKey(_rightKeySelector).AsObservableCache();
 
                 // joined is the final cache
                 var joinedCache = new ChangeAwareCache<TDestination, TLeftKey>();
@@ -118,7 +119,7 @@ internal sealed class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
 
                 lock (locker)
                 {
-                    return new CompositeDisposable(leftLoader.Merge(rightLoader).SubscribeSafe(observer), leftCache, rightCache);
+                    return new CompositeDisposable(leftLoader.Merge(rightLoader).SubscribeSafe(observer), leftCache, rightCache, queue);
                 }
             });
 }

@@ -5,7 +5,6 @@
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -17,13 +16,14 @@ internal sealed class GroupOnDynamic<TObject, TKey, TGroupKey>(IObservable<IChan
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(observer =>
     {
         var dynamicGrouper = new DynamicGrouper<TObject, TKey, TGroupKey>();
+        var queue = new SharedDeliveryQueue();
         var notGrouped = new Cache<TObject, TKey>();
         var hasSelector = false;
 
         // Create shared observables for the 3 inputs
-        var sharedSource = source.Synchronize(dynamicGrouper).Publish();
-        var sharedGroupSelector = selectGroupObservable.DistinctUntilChanged().Synchronize(dynamicGrouper).Publish();
-        var sharedRegrouper = (regrouper ?? Observable.Empty<Unit>()).Synchronize(dynamicGrouper).Publish();
+        var sharedSource = source.SynchronizeSafe(queue).Publish();
+        var sharedGroupSelector = selectGroupObservable.DistinctUntilChanged().SynchronizeSafe(queue).Publish();
+        var sharedRegrouper = (regrouper ?? Observable.Empty<Unit>()).SynchronizeSafe(queue).Publish();
 
         // The first value from the Group Selector should update the Grouper with all the values seen so far
         // Then indicate a selector has been found.  Subsequent values should just update the group selector.
@@ -73,6 +73,7 @@ internal sealed class GroupOnDynamic<TObject, TKey, TGroupKey>(IObservable<IChan
 
         // Create an observable that completes when all 3 inputs complete so the downstream can be completed as well
         var subOnComplete = Observable.Merge(sharedSource.ToUnit(), sharedGroupSelector.ToUnit(), sharedRegrouper)
+            .IgnoreElements()
             .SubscribeSafe(observer.OnError, observer.OnCompleted);
 
         return new CompositeDisposable(
@@ -83,6 +84,7 @@ internal sealed class GroupOnDynamic<TObject, TKey, TGroupKey>(IObservable<IChan
             subChanges,
             subGroupSelector,
             subRegrouper,
-            subOnComplete);
+            subOnComplete,
+            queue);
     });
 }

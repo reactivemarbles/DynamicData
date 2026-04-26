@@ -1,7 +1,8 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
@@ -13,15 +14,15 @@ internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, 
     public IObservable<IPagedChangeSet<TObject, TKey>> Run() => Observable.Create<IPagedChangeSet<TObject, TKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue();
                 var paginator = new Paginator();
-                var request = pageRequests.Synchronize(locker).Select(paginator.Paginate);
-                var dataChange = source.Synchronize(locker).Select(paginator.Update);
+                var request = pageRequests.SynchronizeSafe(queue).Select(paginator.Paginate);
+                var dataChange = source.SynchronizeSafe(queue).Select(paginator.Update);
 
-                return request.Merge(dataChange)
+                return new CompositeDisposable(request.Merge(dataChange)
                     .Where(updates => updates is not null)
                     .Select(x => x!)
-                    .SubscribeSafe(observer);
+                    .SubscribeSafe(observer), queue);
             });
 
     private sealed class Paginator

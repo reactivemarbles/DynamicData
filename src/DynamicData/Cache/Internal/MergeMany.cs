@@ -1,11 +1,10 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using DynamicData.Internal;
+using System.Runtime.CompilerServices;
 
 namespace DynamicData.Cache.Internal;
 
@@ -34,50 +33,29 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
     public IObservable<TDestination> Run() => Observable.Create<TDestination>(
             observer =>
             {
-                var counter = new SubscriptionCounter();
-                var locker = InternalEx.NewLock();
-                var disposable = _source.Concat(counter.DeferCleanup)
-                                                .SubscribeMany((t, key) =>
-                                                {
-                                                    counter.Added();
-                                                    return _observableSelector(t, key).Synchronize(locker).Finally(() => counter.Finally()).Subscribe(observer.OnNext, static _ => { });
-                                                })
-                                                .SubscribeSafe(observer.OnError, observer.OnCompleted);
+                var counter = new StrongBox<int>(1);
+                var queue = new DeliveryQueue<TDestination>(observer);
 
-                return new CompositeDisposable(disposable, counter);
+                // Queue first: terminate before subscription disposal to prevent
+                // Finally callbacks from delivering spurious OnCompleted during teardown.
+                return new CompositeDisposable(queue, _source
+                    .Do(static _ => { }, static _ => { }, () => CheckCompleted(counter, queue))
+                    .Concat(Observable.Never<IChangeSet<TObject, TKey>>())
+                    .SubscribeMany((t, key) =>
+                    {
+                        Interlocked.Increment(ref counter.Value);
+                        return _observableSelector(t, key)
+                            .Finally(() => CheckCompleted(counter, queue))
+                            .Subscribe(queue.OnNext, static _ => { });
+                    })
+                    .Subscribe(static _ => { }, observer.OnError));
             });
 
-    private sealed class SubscriptionCounter : IDisposable
+    private static void CheckCompleted(StrongBox<int> counter, DeliveryQueue<TDestination> queue)
     {
-        private readonly Subject<IChangeSet<TObject, TKey>> _subject = new();
-        private int _subscriptionCount = 1;
-
-        public IObservable<IChangeSet<TObject, TKey>> DeferCleanup => Observable.Defer(() =>
+        if (Interlocked.Decrement(ref counter.Value) == 0 && !queue.IsTerminated)
         {
-            CheckCompleted();
-            return _subject.AsObservable();
-        });
-
-        public void Added() => _ = Interlocked.Increment(ref _subscriptionCount);
-
-        public void Finally() => CheckCompleted();
-
-        public void Dispose()
-        {
-            if (Interlocked.Exchange(ref _subscriptionCount, 0) != 0)
-            {
-                _subject.OnCompleted();
-            }
-
-            _subject.Dispose();
-        }
-
-        private void CheckCompleted()
-        {
-            if (Interlocked.Decrement(ref _subscriptionCount) == 0)
-            {
-                _subject.OnCompleted();
-            }
+            queue.OnCompleted();
         }
     }
 }

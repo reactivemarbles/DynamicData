@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using DynamicData.Binding;
 using DynamicData.Cache;
 using DynamicData.Cache.Internal;
@@ -38,69 +39,52 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private readonly ReaderWriter<TObject, TKey> _readerWriter;
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Terminated via NotifyCompleted in _cleanUp")]
+    private readonly DeliveryQueue<CacheUpdate> _notifications;
+
     private int _editLevel; // The level of recursion in editing.
+
+    private long _currentVersion; // Monotonic counter incremented under lock for each enqueued change notification.
+
+    private long _currentDeliveryVersion; // Version of the item currently being delivered. Set before _changes.OnNext.
 
     public ObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
-        _suspensionTracker = new(() => new SuspensionTracker(_changes.OnNext, InvokeCountNext));
         _readerWriter = new ReaderWriter<TObject, TKey>();
+        _notifications = new DeliveryQueue<CacheUpdate>(_locker, new CacheUpdateObserver(this));
+        _suspensionTracker = new(() => new SuspensionTracker());
 
-        var loader = source.Synchronize(_locker).Finally(
-            () =>
-            {
-                _changes.OnCompleted();
-                _changesPreview.OnCompleted();
-            }).Subscribe(
+        var loader = source.Subscribe(
             changeSet =>
             {
+                using var notifications = _notifications.AcquireLock();
+
                 var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
                 var changes = _readerWriter.Write(changeSet, previewHandler, _changes.HasObservers);
-                InvokeNext(changes);
+
+                if (changes is not null)
+                {
+                    notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+                }
             },
-            ex =>
-            {
-                _changesPreview.OnError(ex);
-                _changes.OnError(ex);
-            });
+            NotifyError,
+            NotifyCompleted);
 
         _cleanUp = Disposable.Create(
             () =>
             {
                 loader.Dispose();
-                _changes.OnCompleted();
-                _changesPreview.OnCompleted();
-                if (_suspensionTracker.IsValueCreated)
-                {
-                    _suspensionTracker.Value.Dispose();
-                }
-
-                if (_countChanged.IsValueCreated)
-                {
-                    _countChanged.Value.OnCompleted();
-                }
+                NotifyCompleted();
             });
     }
 
     public ObservableCache(Func<TObject, TKey>? keySelector = null)
     {
-        _suspensionTracker = new(() => new SuspensionTracker(_changes.OnNext, InvokeCountNext));
         _readerWriter = new ReaderWriter<TObject, TKey>(keySelector);
+        _notifications = new DeliveryQueue<CacheUpdate>(_locker, new CacheUpdateObserver(this));
+        _suspensionTracker = new(() => new SuspensionTracker());
 
-        _cleanUp = Disposable.Create(
-            () =>
-            {
-                _changes.OnCompleted();
-                _changesPreview.OnCompleted();
-                if (_suspensionTracker.IsValueCreated)
-                {
-                    _suspensionTracker.Value.Dispose();
-                }
-
-                if (_countChanged.IsValueCreated)
-                {
-                    _countChanged.Value.OnCompleted();
-                }
-            });
+        _cleanUp = Disposable.Create(NotifyCompleted);
     }
 
     public int Count => _readerWriter.Count;
@@ -109,11 +93,15 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         Observable.Create<int>(
             observer =>
             {
-                lock (_locker)
-                {
-                    var source = _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
-                    return source.SubscribeSafe(observer);
-                }
+                using var readLock = _notifications.AcquireReadLock();
+
+                var snapshotVersion = _currentVersion;
+                var countChanged = readLock.HasPending
+                    ? _countChanged.Value.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
+                    : _countChanged.Value;
+
+                var source = countChanged.StartWith(_readerWriter.Count).DistinctUntilChanged();
+                return source.SubscribeSafe(observer);
             });
 
     public IReadOnlyList<TObject> Items => _readerWriter.Items;
@@ -188,27 +176,26 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     {
         updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
 
-        lock (_locker)
+        using var notifications = _notifications.AcquireLock();
+
+        ChangeSet<TObject, TKey>? changes = null;
+
+        _editLevel++;
+        if (_editLevel == 1)
         {
-            ChangeSet<TObject, TKey>? changes = null;
+            var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
+            changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
+        }
+        else
+        {
+            _readerWriter.WriteNested(updateAction);
+        }
 
-            _editLevel++;
-            if (_editLevel == 1)
-            {
-                var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
-                changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
-            }
-            else
-            {
-                _readerWriter.WriteNested(updateAction);
-            }
+        _editLevel--;
 
-            _editLevel--;
-
-            if (changes is not null && _editLevel == 0)
-            {
-                InvokeNext(changes);
-            }
+        if (changes is not null && _editLevel == 0)
+        {
+            notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
         }
     }
 
@@ -216,27 +203,26 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     {
         updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
 
-        lock (_locker)
+        using var notifications = _notifications.AcquireLock();
+
+        ChangeSet<TObject, TKey>? changes = null;
+
+        _editLevel++;
+        if (_editLevel == 1)
         {
-            ChangeSet<TObject, TKey>? changes = null;
+            var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
+            changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
+        }
+        else
+        {
+            _readerWriter.WriteNested(updateAction);
+        }
 
-            _editLevel++;
-            if (_editLevel == 1)
-            {
-                var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
-                changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
-            }
-            else
-            {
-                _readerWriter.WriteNested(updateAction);
-            }
+        _editLevel--;
 
-            _editLevel--;
-
-            if (changes is not null && _editLevel == 0)
-            {
-                InvokeNext(changes);
-            }
+        if (changes is not null && _editLevel == 0)
+        {
+            notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
         }
     }
 
@@ -244,122 +230,230 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
-                lock (_locker)
+                using var readLock = _notifications.AcquireReadLock();
+
+                var initial = InternalEx.Return(() => (IChangeSet<TObject, TKey>)GetInitialUpdates(predicate));
+
+                // The current snapshot may contain changes that have been made but the notifications
+                // have yet to be delivered.  We need to filter those out to avoid delivering an update
+                // that has already been applied (but detect this possibility and skip filtering unless absolutely needed)
+                var snapshotVersion = _currentVersion;
+                var changes = readLock.HasPending
+                    ? _changes.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
+                    : (IObservable<IChangeSet<TObject, TKey>>)_changes;
+
+                changes = initial.Concat(changes);
+
+                if (predicate != null)
                 {
-                    var initial = InternalEx.Return(() => (IChangeSet<TObject, TKey>)GetInitialUpdates(predicate));
-                    var changes = initial.Concat(_changes);
-
-                    if (predicate != null)
-                    {
-                        changes = changes.Filter(predicate, suppressEmptyChangeSets);
-                    }
-                    else if (suppressEmptyChangeSets)
-                    {
-                        changes = changes.NotEmpty();
-                    }
-
-                    return changes.SubscribeSafe(observer);
+                    changes = changes.Filter(predicate, suppressEmptyChangeSets);
                 }
+                else if (suppressEmptyChangeSets)
+                {
+                    changes = changes.NotEmpty();
+                }
+
+                return changes.SubscribeSafe(observer);
             });
 
     private IObservable<Change<TObject, TKey>> CreateWatchObservable(TKey key) =>
         Observable.Create<Change<TObject, TKey>>(
             observer =>
             {
-                lock (_locker)
-                {
-                    var initial = _readerWriter.Lookup(key);
-                    if (initial.HasValue)
-                    {
-                        observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
-                    }
+                using var readLock = _notifications.AcquireReadLock();
 
-                    return _changes.Finally(observer.OnCompleted).Subscribe(
-                        changes =>
-                        {
-                            foreach (var change in changes.ToConcreteType())
-                            {
-                                var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
-                                if (match)
-                                {
-                                    observer.OnNext(change);
-                                }
-                            }
-                        });
+                var initial = _readerWriter.Lookup(key);
+                if (initial.HasValue)
+                {
+                    observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
                 }
+
+                // The current snapshot may contain changes that have been made but the notifications
+                // have yet to be delivered.  We need to filter those out to avoid delivering an update
+                // that has already been applied (but detect this possibility and skip filtering unless absolutely needed)
+                var snapshotVersion = _currentVersion;
+                var changes = readLock.HasPending
+                    ? _changes.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
+                    : _changes;
+
+                return changes.Finally(observer.OnCompleted).Subscribe(
+                    changes =>
+                    {
+                        foreach (var change in changes)
+                        {
+                            var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
+                            if (match)
+                            {
+                                observer.OnNext(change);
+                            }
+                        }
+                    });
             });
 
-    private void InvokeNext(ChangeSet<TObject, TKey> changes)
-    {
-        lock (_locker)
-        {
-            // If Notifications are not suspended
-            if (!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.AreNotificationsSuspended)
-            {
-                // Emit the changes
-                _changes.OnNext(changes);
-            }
-            else
-            {
-                // Don't emit the changes, but add them to the list
-                _suspensionTracker.Value.EnqueueChanges(changes);
-            }
-
-            // If CountChanges are not suspended
-            if (!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.IsCountSuspended)
-            {
-                InvokeCountNext();
-            }
-        }
-    }
-
+    /// <summary>
+    /// Delivers a preview notification synchronously under _locker. Preview is
+    /// called by ReaderWriter during a write, between two data swaps, so it MUST
+    /// fire under the lock with the pre-write state visible to subscribers.
+    /// </summary>
     private void InvokePreview(ChangeSet<TObject, TKey> changes)
     {
-        lock (_locker)
+        if (changes.Count != 0 && !_notifications.IsTerminated)
         {
-            if (changes.Count != 0)
-            {
-                _changesPreview.OnNext(changes);
-            }
+            _changesPreview.OnNext(changes);
         }
     }
 
-    private void InvokeCountNext()
+    private void NotifyCompleted()
     {
-        lock (_locker)
-        {
-            if (_countChanged.IsValueCreated)
-            {
-                _countChanged.Value.OnNext(_readerWriter.Count);
-            }
-        }
+        using var notifications = _notifications.AcquireLock();
+        notifications.EnqueueCompleted();
     }
 
+    private void NotifyError(Exception ex)
+    {
+        using var notifications = _notifications.AcquireLock();
+        notifications.EnqueueError(ex);
+    }
+
+    /// <summary>
+    /// Delivers a single notification to subscribers. This method is the delivery
+    /// callback for <see cref="_notifications"/> and must never be called directly.
+    /// It is invoked by the <see cref="DeliveryQueue{TItem}"/> after releasing the
+    /// lock, which guarantees that no lock is held when subscriber code runs. The
+    /// queue's single-deliverer token ensures this method is never called concurrently,
+    /// preserving the Rx serialization contract across all subjects.
+    /// Returns true to continue delivery, or false for terminal items (OnCompleted/OnError)
+    /// which causes the queue to self-terminate.
+    /// </summary>
     private void ResumeCount()
     {
-        lock (_locker)
+        using var notifications = _notifications.AcquireLock();
+        Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Count without Suspend Count instance");
+
+        if (_suspensionTracker.Value.ResumeCount() && _countChanged.IsValueCreated)
         {
-            Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Count without Suspend Count instance");
-            _suspensionTracker.Value.ResumeCount();
+            notifications.EnqueueNext(new CacheUpdate(null, _readerWriter.Count));
         }
     }
 
     private void ResumeNotifications()
     {
-        lock (_locker)
+        bool emitResume;
+
+        using (var notifications = _notifications.AcquireLock())
         {
-            Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Notifications without Suspend Count instance");
-            _suspensionTracker.Value.ResumeNotifications();
+            Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Notifications without Suspend Notifications instance");
+
+            (var changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
+            if (changes is not null)
+            {
+                notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+            }
+        }
+
+        // Emit the resume signal after releasing the delivery scope so that
+        // accumulated changes are delivered first
+        if (emitResume)
+        {
+            using var readLock = _notifications.AcquireReadLock();
+            _suspensionTracker.Value.EmitResumeNotification();
         }
     }
 
-    private sealed class SuspensionTracker(Action<ChangeSet<TObject, TKey>> onResumeNotifications, Action onResumeCount) : IDisposable
+    /// <summary>
+    /// The notification payload for cache delivery. Null Changes = count-only notification.
+    /// </summary>
+    private readonly record struct CacheUpdate(ChangeSet<TObject, TKey>? Changes, int Count, long Version = 0);
+
+    /// <summary>
+    /// Observer that dispatches <see cref="CacheUpdate"/> items to the cache's
+    /// downstream subjects. Used as the delivery target for <see cref="_notifications"/>.
+    /// </summary>
+    private sealed class CacheUpdateObserver(ObservableCache<TObject, TKey> cache) : IObserver<CacheUpdate>
+    {
+        public void OnNext(CacheUpdate value)
+        {
+            if (value.Changes is not null)
+            {
+                Volatile.Write(ref cache._currentDeliveryVersion, value.Version);
+                EmitChanges(value.Changes);
+            }
+
+            EmitCount(value.Count);
+        }
+
+        public void OnError(Exception error)
+        {
+            cache._changesPreview.OnError(error);
+            cache._changes.OnError(error);
+
+            if (cache._countChanged.IsValueCreated)
+            {
+                cache._countChanged.Value.OnError(error);
+            }
+
+            if (cache._suspensionTracker.IsValueCreated)
+            {
+                cache._suspensionTracker.Value.Dispose();
+            }
+        }
+
+        public void OnCompleted()
+        {
+            cache._changes.OnCompleted();
+            cache._changesPreview.OnCompleted();
+
+            if (cache._countChanged.IsValueCreated)
+            {
+                cache._countChanged.Value.OnCompleted();
+            }
+
+            if (cache._suspensionTracker.IsValueCreated)
+            {
+                cache._suspensionTracker.Value.Dispose();
+            }
+        }
+
+        private void EmitChanges(ChangeSet<TObject, TKey> changes)
+        {
+            if (cache._suspensionTracker.IsValueCreated)
+            {
+                lock (cache._locker)
+                {
+                    if (cache._suspensionTracker.Value.AreNotificationsSuspended)
+                    {
+                        cache._suspensionTracker.Value.EnqueueChanges(changes);
+                        return;
+                    }
+                }
+            }
+
+            cache._changes.OnNext(changes);
+        }
+
+        private void EmitCount(int count)
+        {
+            if (cache._suspensionTracker.IsValueCreated)
+            {
+                lock (cache._locker)
+                {
+                    if (cache._suspensionTracker.Value.IsCountSuspended)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            if (cache._countChanged.IsValueCreated)
+            {
+                cache._countChanged.Value.OnNext(count);
+            }
+        }
+    }
+
+    private sealed class SuspensionTracker : IDisposable
     {
         private readonly BehaviorSubject<bool> _areNotificationsSuspended = new(false);
-
-        private readonly Action<ChangeSet<TObject, TKey>> _onResumeNotifications = onResumeNotifications;
-
-        private readonly Action _onResumeCount = onResumeCount;
 
         private List<Change<TObject, TKey>> _pendingChanges = [];
 
@@ -392,29 +486,28 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         public void SuspendCount() => ++_countSuspendCount;
 
-        public void ResumeNotifications()
+        public bool ResumeCount() => --_countSuspendCount == 0;
+
+        public (ChangeSet<TObject, TKey>? Changes, bool EmitResume) ResumeNotifications()
         {
             if (--_notifySuspendCount == 0 && !_areNotificationsSuspended.IsDisposed)
             {
-                // Fire pending changes to existing subscribers
+                ChangeSet<TObject, TKey>? changes = null;
+
                 if (_pendingChanges.Count > 0)
                 {
-                    _onResumeNotifications(new ChangeSet<TObject, TKey>(_pendingChanges));
-                    _pendingChanges.Clear();
+                    var changesToDeliver = _pendingChanges;
+                    _pendingChanges = [];
+                    changes = new ChangeSet<TObject, TKey>(changesToDeliver);
                 }
 
-                // Tell deferred subscribers they can continue
-                _areNotificationsSuspended.OnNext(false);
+                return (changes, true);
             }
+
+            return (null, false);
         }
 
-        public void ResumeCount()
-        {
-            if (--_countSuspendCount == 0)
-            {
-                _onResumeCount();
-            }
-        }
+        public void EmitResumeNotification() => _areNotificationsSuspended.OnNext(false);
 
         public void Dispose()
         {

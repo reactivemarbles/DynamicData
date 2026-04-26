@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -14,14 +14,12 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
 {
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source;
 
-    public IObservable<IChangeSet<TObject, TKey>> Run()
-        => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+    public IObservable<IChangeSet<TObject, TKey>> Run() =>
+        Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
-            // Will be locking on cachedItems directly, instead of using an anonymous gate object. This is acceptable, since it's a privately-held object, there's no risk of deadlock from other consumers locking on it.
-            var cachedItems = new Dictionary<TKey, TObject>();
+            var tracked = new KeyedDisposable<TKey>();
 
             var sourceSubscription = _source
-                .Synchronize(cachedItems)
                 .SubscribeSafe(Observer.Create<IChangeSet<TObject, TKey>>(
                     onNext: changeSet =>
                     {
@@ -31,53 +29,19 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
                         {
                             switch (change.Reason)
                             {
-                                case ChangeReason.Update:
-                                    if (change.Previous.HasValue && !EqualityComparer<TObject>.Default.Equals(change.Current, change.Previous.Value))
-                                    {
-                                        (change.Previous.Value as IDisposable)?.Dispose();
-                                    }
-
+                                case ChangeReason.Add or ChangeReason.Update:
+                                    tracked.Add(change.Key, change.Current);
                                     break;
 
                                 case ChangeReason.Remove:
-                                    (change.Current as IDisposable)?.Dispose();
+                                    tracked.Remove(change.Key);
                                     break;
                             }
                         }
-
-                        cachedItems.Clone(changeSet);
                     },
-                    onError: error =>
-                    {
-                        observer.OnError(error);
+                    onError: observer.OnError,
+                    onCompleted: observer.OnCompleted));
 
-                        ProcessFinalization(cachedItems);
-                    },
-                    onCompleted: () =>
-                    {
-                        observer.OnCompleted();
-
-                        ProcessFinalization(cachedItems);
-                    }));
-
-            return Disposable.Create(() =>
-            {
-                sourceSubscription.Dispose();
-
-                lock (cachedItems)
-                {
-                    ProcessFinalization(cachedItems);
-                }
-            });
+            return new CompositeDisposable(sourceSubscription, tracked);
         });
-
-    private static void ProcessFinalization(Dictionary<TKey, TObject> cachedItems)
-    {
-        foreach (var pair in cachedItems)
-        {
-            (pair.Value as IDisposable)?.Dispose();
-        }
-
-        cachedItems.Clear();
-    }
 }

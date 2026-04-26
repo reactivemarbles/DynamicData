@@ -65,11 +65,11 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
                 comparerChanged = comparerChanged.ObserveOn(scheduler);
             }
 
-            var locker = InternalEx.NewLock();
+            var queue = new SharedDeliveryQueue();
             SortApplicator? sortApplicator = null;
 
             // Create a new sort applicator each time.
-            var latestComparer = comparerChanged.Synchronize(locker)
+            var latestComparer = comparerChanged.SynchronizeSafe(queue)
                 .Subscribe(comparer =>
                 {
                     sortApplicator = new SortApplicator(_cache, target, comparer, options);
@@ -77,7 +77,7 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
                 });
 
             // Listen to changes and apply the sorting
-            var subscriber = source.Synchronize(locker)
+            var subscriber = source.SynchronizeSafe(queue)
                 .Select((changes, index) =>
                 {
                     _cache.Clone(changes);
@@ -89,7 +89,7 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
                 })
                 .SubscribeSafe(observer);
 
-            return new CompositeDisposable(latestComparer, subscriber);
+            return new CompositeDisposable(latestComparer, subscriber, queue);
         });
 
     public IObservable<IChangeSet<TObject, TKey>> Run() => _sorted;

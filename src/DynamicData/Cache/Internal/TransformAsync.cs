@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 
@@ -27,11 +28,13 @@ internal class TransformAsync<TDestination, TSource, TKey>(
 
             if (forceTransform is not null)
             {
-                var locker = InternalEx.NewLock();
-                var forced = forceTransform.Synchronize(locker)
+                var queue = new SharedDeliveryQueue();
+                var forced = forceTransform.SynchronizeSafe(queue)
                     .Select(shouldTransform => DoTransform(cache, shouldTransform)).Concat();
 
-                transformer = transformer.Synchronize(locker).Merge(forced);
+                transformer = transformer.SynchronizeSafe(queue).Merge(forced);
+
+                return new CompositeDisposable(transformer.SubscribeSafe(observer), queue);
             }
 
             return transformer.SubscribeSafe(observer);

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -21,13 +21,13 @@ internal sealed class SpecifiedGrouper<TObject, TKey, TGroupKey>(IObservable<ICh
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue();
 
                 // create source group cache
-                var sourceGroups = _source.Synchronize(locker).Group(_groupSelector).DisposeMany().AsObservableCache();
+                var sourceGroups = _source.SynchronizeSafe(queue).Group(_groupSelector).DisposeMany().AsObservableCache();
 
                 // create parent groups
-                var parentGroups = _resultGroupSource.Synchronize(locker).Transform(
+                var parentGroups = _resultGroupSource.SynchronizeSafe(queue).Transform(
                     x =>
                     {
                         // if child already has data, populate it.
@@ -62,13 +62,6 @@ internal sealed class SpecifiedGrouper<TObject, TKey, TGroupKey>(IObservable<ICh
                         return new GroupChangeSet<TObject, TKey, TGroupKey>(groups);
                     }).SubscribeSafe(observer);
 
-                return Disposable.Create(
-                    () =>
-                    {
-                        notifier.Dispose();
-                        sourceGroups.Dispose();
-                        parentGroups.Dispose();
-                        updatesFromChildren.Dispose();
-                    });
+                return new CompositeDisposable(notifier, sourceGroups, parentGroups, updatesFromChildren, queue);
             });
 }

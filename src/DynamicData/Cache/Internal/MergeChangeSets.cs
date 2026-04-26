@@ -1,10 +1,10 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -23,39 +23,30 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
         observer =>
         {
-            var locker = InternalEx.NewLock();
+            var queue = new SharedDeliveryQueue();
             var cache = new Cache<ChangeSetCache<TObject, TKey>, int>();
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<TObject, TKey>(() => cache.Items, comparer, equalityComparer);
 
             // Create a ChangeSet of Caches, synchronize, update the local copy, and merge the sub-observables together.
-            return CreateContainerObservable(source, locker)
-                .Synchronize(locker)
+            return new CompositeDisposable(CreateContainerObservable(source, queue)
+                .SynchronizeSafe(queue)
                 .Do(cache.Clone)
                 .MergeMany(mc => mc.Source.Do(static _ => { }, observer.OnError))
                 .SubscribeSafe(
                     changes => changeTracker.ProcessChangeSet(changes, observer),
                     observer.OnError,
-                    observer.OnCompleted);
+                    observer.OnCompleted), queue);
         });
 
     // Can optimize for the Add case because that's the only one that applies
-#if NET9_0_OR_GREATER
-    private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, Lock locker) =>
-        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.IgnoreSameReferenceUpdate().Synchronize(locker)));
+    private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, SharedDeliveryQueue queue) =>
+        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.IgnoreSameReferenceUpdate().SynchronizeSafe(queue)));
 
     // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
-    private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, Lock locker) =>
-        source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index, locker) }));
-#else
-    private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, object locker) =>
-        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.IgnoreSameReferenceUpdate().Synchronize(locker)));
-
-    // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
-    private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, object locker) =>
-        source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index, locker) }));
-#endif
+    private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, SharedDeliveryQueue queue) =>
+        source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index, queue) }));
 
     // Create a ChangeSet Observable with a single event that adds all the values in the enum (and then completes, maybe)
     private static IObservable<IObservable<IChangeSet<TObject, TKey>>> CreateObservable(IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, bool completable, IScheduler? scheduler = null)

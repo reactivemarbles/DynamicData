@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -17,6 +17,7 @@ using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 
 // ReSharper disable once CheckNamespace
+
 namespace DynamicData;
 
 /// <summary>
@@ -642,15 +643,12 @@ public static partial class ObservableCacheEx
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
-            {
-                var locker = InternalEx.NewLock();
-                return source.Synchronize(locker).Select(
+                source.SynchronizeSafe(InternalEx.NewLock()).Select(
                     changes =>
                     {
                         updater.Adapt(changes, destination);
                         return changes;
-                    }).SubscribeSafe(observer);
-            });
+                    }).SubscribeSafe(observer));
     }
 
     /// <summary>
@@ -770,15 +768,12 @@ public static partial class ObservableCacheEx
 
         return Observable.Create<ISortedChangeSet<TObject, TKey>>(
             observer =>
-            {
-                var locker = InternalEx.NewLock();
-                return source.Synchronize(locker).Select(
+                source.SynchronizeSafe(InternalEx.NewLock()).Select(
                     changes =>
                     {
                         updater.Adapt(changes, destination);
                         return changes;
-                    }).SubscribeSafe(observer);
-            });
+                    }).SubscribeSafe(observer));
     }
 
     /// <summary>
@@ -5232,13 +5227,15 @@ public static partial class ObservableCacheEx
     {
         if (initialOptionalWhenMissing)
         {
-            var seenValue = false;
-            var locker = InternalEx.NewLock();
-
-            var optional = source.ToObservableOptional(key, equalityComparer).Synchronize(locker).Do(_ => seenValue = true);
-            var missing = Observable.Return(Optional.None<TObject>()).Synchronize(locker).Where(_ => !seenValue);
-
-            return optional.Merge(missing);
+            return Observable.Defer(() =>
+            {
+                var seenValue = false;
+                return source.ToObservableOptional(key, equalityComparer)
+                    .Do(_ => seenValue = true)
+                    .Merge(Observable.Defer(() => seenValue
+                        ? Observable.Empty<Optional<TObject>>()
+                        : Observable.Return(Optional.None<TObject>())));
+            });
         }
 
         return source.ToObservableOptional(key, equalityComparer);

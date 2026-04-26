@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
@@ -21,14 +22,14 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
     public IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue();
                 var grouper = new Grouper(_groupSelectorKey);
 
-                var groups = _source.Synchronize(locker).Select(grouper.Update).Where(changes => changes.Count != 0);
+                var groups = _source.SynchronizeSafe(queue).Select(grouper.Update).Where(changes => changes.Count != 0);
 
-                var regroup = _regrouper.Synchronize(locker).Select(_ => grouper.Regroup()).Where(changes => changes.Count != 0);
+                var regroup = _regrouper.SynchronizeSafe(queue).Select(_ => grouper.Regroup()).Where(changes => changes.Count != 0);
 
-                return groups.Merge(regroup).SubscribeSafe(observer);
+                return new CompositeDisposable(groups.Merge(regroup).SubscribeSafe(observer), queue);
             });
 
     private sealed class Grouper(Func<TObject, TGroupKey> groupSelectorKey)

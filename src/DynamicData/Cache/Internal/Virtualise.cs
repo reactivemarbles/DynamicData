@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
@@ -18,11 +19,11 @@ internal sealed class Virtualise<TObject, TKey>(IObservable<ISortedChangeSet<TOb
             observer =>
             {
                 var virtualiser = new Virtualiser();
-                var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue();
 
-                var request = _virtualRequests.Synchronize(locker).Select(virtualiser.Virtualise).Where(x => x is not null).Select(x => x!);
-                var dataChange = _source.Synchronize(locker).Select(virtualiser.Update).Where(x => x is not null).Select(x => x!);
-                return request.Merge(dataChange).Where(updates => updates is not null).SubscribeSafe(observer);
+                var request = _virtualRequests.SynchronizeSafe(queue).Select(virtualiser.Virtualise).Where(x => x is not null).Select(x => x!);
+                var dataChange = _source.SynchronizeSafe(queue).Select(virtualiser.Update).Where(x => x is not null).Select(x => x!);
+                return new CompositeDisposable(request.Merge(dataChange).Where(updates => updates is not null).SubscribeSafe(observer), queue);
             });
 
     private sealed class Virtualiser(VirtualRequest? request = null)

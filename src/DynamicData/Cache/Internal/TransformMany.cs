@@ -117,10 +117,10 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
                             changes);
                     }).Publish();
 
-                var outerLock = new object();
-                var initial = transformed.Synchronize(outerLock).Select(changes => new ChangeSet<TDestination, TDestinationKey>(new DestinationEnumerator(changes)));
+                var queue = new SharedDeliveryQueue();
+                var initial = transformed.SynchronizeSafe(queue).Select(changes => new ChangeSet<TDestination, TDestinationKey>(new DestinationEnumerator(changes)));
 
-                var subsequent = transformed.MergeMany(x => x.Changes).Synchronize(outerLock);
+                var subsequent = transformed.MergeMany(x => x.Changes).SynchronizeSafe(queue);
 
                 var allChanges = initial.Merge(subsequent).Select(
                     changes =>
@@ -129,7 +129,7 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
                         return result.CaptureChanges();
                     });
 
-                return new CompositeDisposable(allChanges.SubscribeSafe(observer), transformed.Connect());
+                return new CompositeDisposable(allChanges.SubscribeSafe(observer), transformed.Connect(), queue);
             });
     }
 

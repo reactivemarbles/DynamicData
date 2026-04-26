@@ -5,6 +5,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using Bogus;
 using DynamicData.Kernel;
@@ -90,9 +91,11 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
                 .Parallelize(priceCount, parallel, obs => obs.StressAddRemove(market.PricesCache, _ => GetRemoveTime(), scheduler))
                 .Finally(market.PricesCache.Dispose);
 
-        var merged = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices, Market.RatingCompare, resortOnSourceRefresh: true);
+        var merged = _marketCache.Connect().MergeManyChangeSets(market => market.LatestPrices, Market.RatingCompare, resortOnSourceRefresh: true).Publish();
         var adding = true;
+        var cacheCompleted = merged.LastOrDefaultAsync().ToTask();
         using var priceResults = merged.AsAggregator();
+        using var connect = merged.Connect();
 
         // Start asynchrononously modifying the parent list and the child lists
         using var addingSub = AddRemoveStress(marketCount, priceCount, Environment.ProcessorCount, TaskPoolScheduler.Default)
@@ -117,6 +120,9 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
             }
         }
         while (adding);
+
+        // Wait for the source cache to finish delivering all notifications.
+        await cacheCompleted;
 
         // Verify the results
         CheckResultContents(_marketCacheResults, priceResults, Market.RatingCompare);

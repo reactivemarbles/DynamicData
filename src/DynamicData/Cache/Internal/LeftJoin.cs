@@ -26,14 +26,15 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
 
                 // create local backing stores
-                var leftShare = _left.Synchronize(locker).Publish();
-                var leftCache = leftShare.AsObservableCache(false);
+                var leftShare = _left.SynchronizeSafe(queue).Publish();
+                var leftCache = leftShare.AsObservableCache();
 
-                var rightShare = _right.Synchronize(locker).Publish();
-                var rightCache = rightShare.AsObservableCache(false);
-                var rightForeignCache = rightShare.ChangeKey(_rightKeySelector).AsObservableCache(false);
+                var rightShare = _right.SynchronizeSafe(queue).Publish();
+                var rightCache = rightShare.AsObservableCache();
+                var rightForeignCache = rightShare.ChangeKey(_rightKeySelector).AsObservableCache();
 
                 var rightForeignKeysByKey = new Dictionary<TRightKey, TLeftKey>();
 
@@ -146,7 +147,7 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
 
                     hasInitialized = true;
 
-                    return new CompositeDisposable(observerSubscription, leftCache, rightCache, rightShareConnection, leftShare.Connect());
+                    return new CompositeDisposable(observerSubscription, leftCache, rightCache, rightShareConnection, leftShare.Connect(), queue);
                 }
             });
 }

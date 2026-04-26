@@ -7,8 +7,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
-using DynamicData.Internal;
-
 namespace DynamicData.Cache.Internal;
 
 #if SUPPORTS_ASYNC_DISPOSABLE
@@ -28,23 +26,18 @@ internal static class AsyncDisposeMany<TObject, TKey>
             {
                 var itemsByKey = new Dictionary<TKey, TObject>();
 
-                var synchronizationGate = InternalEx.NewLock();
-
                 var disposals = new Subject<IObservable<Unit>>();
                 var disposalsCompleted = disposals
                     .Merge()
                     .IgnoreElements()
                     .Concat(Observable.Return(Unit.Default))
-                    // If no one subscribes to this stream, disposals won't actually occur, so make sure we have one (and only one) regardless of what the consumer does.
                     .Publish()
                     .AutoConnect(0);
 
-                // Make sure the consumer gets a chance to subscribe BEFORE we actually start processing items, so there's no risk of the consumer missing notifications.
                 disposalsCompletedAccessor.Invoke(disposalsCompleted);
 
                 var sourceSubscription = source
-                    .Synchronize(synchronizationGate)
-                    // Using custom notification handlers instead of .Do() to make sure that we're not disposing items until AFTER we've notified all downstream listeners to remove them from their cached or bound collections.
+                    .SynchronizeSafe()
                     .SubscribeSafe(
                         onNext: upstreamChanges =>
                         {
@@ -70,24 +63,18 @@ internal static class AsyncDisposeMany<TObject, TKey>
                         onError: error =>
                         {
                             downstreamObserver.OnError(error);
-
                             TearDown();
                         },
                         onCompleted: () =>
                         {
                             downstreamObserver.OnCompleted();
-
                             TearDown();
                         });
 
                 return Disposable.Create(() =>
                 {
-                    lock (synchronizationGate)
-                    {
-                        sourceSubscription.Dispose();
-
-                        TearDown();
-                    }
+                    sourceSubscription.Dispose();
+                    TearDown();
                 });
 
                 void TearDown()
@@ -99,7 +86,6 @@ internal static class AsyncDisposeMany<TObject, TKey>
                             foreach (var item in itemsByKey.Values)
                                 TryDisposeItem(item);
                             disposals.OnCompleted();
-
                             itemsByKey.Clear();
                         }
                         catch (Exception error)
