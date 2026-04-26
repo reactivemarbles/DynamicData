@@ -608,7 +608,7 @@ public sealed class CrossCacheDeadlockStressTest
             writerTasks.Add(Task.Run(() =>
             {
                 barrier.SignalAndWait();
-                foreach (var m in slice) sourceA.AddOrUpdate(m);
+                sourceA.Edit(updater => { foreach (var m in slice) updater.AddOrUpdate(m); });
                 for (var i = 0; i < ratingMutations; i++)
                     slice[tRand.Number(0, slice.Count - 1)].Rating = tRand.Double(RatingMin, RatingMax);
                 for (var i = 0; i < regionMutations; i++)
@@ -624,7 +624,7 @@ public sealed class CrossCacheDeadlockStressTest
             writerTasks.Add(Task.Run(() =>
             {
                 barrier.SignalAndWait();
-                foreach (var m in slice) sourceB.AddOrUpdate(m);
+                sourceB.Edit(updater => { foreach (var m in slice) updater.AddOrUpdate(m); });
                 for (var i = 0; i < ratingMutations; i++)
                     slice[tRand.Number(0, slice.Count - 1)].Rating = tRand.Double(RatingMin, RatingMax);
                 barrier.SignalAndWait();
