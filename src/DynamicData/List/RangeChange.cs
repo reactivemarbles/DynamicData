@@ -63,7 +63,7 @@ public sealed class RangeChange<T> : IEnumerable<T>
     public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
 
     /// <summary>
-    /// Inserts the  item in the range at the specified index.
+    /// Inserts the item in the range at the specified index.
     /// </summary>
     /// <param name="index">The index.</param>
     /// <param name="item">The item.</param>
