@@ -10,4 +10,8 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('netstandard')) or $(TargetFramework.StartsWith('net6')) or $(TargetFramework.StartsWith('net7')) or $(TargetFramework.StartsWith('net8')) or $(TargetFramework.StartsWith('net9')) or $(TargetFramework.StartsWith('net10'))">
     <DefineConstants>$(DefineConstants);NETSTANDARD;P_LINQ;SUPPORTS_BINDINGLIST;SUPPORTS_ASYNC_DISPOSABLE</DefineConstants>
   </PropertyGroup>
+
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('netstandard2.1')) or $(TargetFramework.StartsWith('netcoreapp3')) or $(TargetFramework.StartsWith('net5')) or $(TargetFramework.StartsWith('net6')) or $(TargetFramework.StartsWith('net7')) or $(TargetFramework.StartsWith('net8')) or $(TargetFramework.StartsWith('net9')) or $(TargetFramework.StartsWith('net10'))">
+    <DefineConstants>$(DefineConstants);SUPPORTS_DICTIONARY_MUTATION_DURING_ENUMERATION</DefineConstants>
+  </PropertyGroup>
 </Project>
