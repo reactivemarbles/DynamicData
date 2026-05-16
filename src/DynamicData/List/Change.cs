@@ -47,7 +47,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Change{T}"/> class.
-    /// Constructor for ChangeReason.Move.
+    /// Constructor for <see cref="ListChangeReason.Moved"/>.
     /// </summary>
     /// <param name="current">The current.</param>
     /// <param name="currentIndex">The CurrentIndex.</param>
@@ -84,25 +84,27 @@ public sealed class Change<T> : IEquatable<Change<T>>
     /// <param name="currentIndex">Value of the current.</param>
     /// <param name="previousIndex">Value of the previous.</param>
     /// <exception cref="ArgumentException">
-    /// For ChangeReason.Add, a previous value cannot be specified
+    /// For <see cref="ListChangeReason.Add"/>, a previous value cannot be specified
     /// or
-    /// For ChangeReason.Change, must supply previous value.
+    /// For <see cref="ListChangeReason.Replace"/>, must supply previous value.
+    /// or
+    /// For <see cref="ListChangeReason.Refresh"/>, must supply an index.
     /// </exception>
     public Change(ListChangeReason reason, T current, in Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
     {
         if (reason == ListChangeReason.Add && previous.HasValue)
         {
-            throw new ArgumentException("For ChangeReason.Add, a previous value cannot be specified");
+            throw new ArgumentException("For ListChangeReason.Add, a previous value cannot be specified");
         }
 
         if (reason == ListChangeReason.Replace && !previous.HasValue)
         {
-            throw new ArgumentException("For ChangeReason.Replace, must supply previous value");
+            throw new ArgumentException("For ListChangeReason.Replace, must supply previous value");
         }
 
         if (reason == ListChangeReason.Refresh && currentIndex < 0)
         {
-            throw new ArgumentException("For ChangeReason.Refresh, must supply an index");
+            throw new ArgumentException("For ListChangeReason.Refresh, must supply an index");
         }
 
         Reason = reason;
