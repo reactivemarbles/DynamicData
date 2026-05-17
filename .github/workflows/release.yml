@@ -44,7 +44,32 @@ jobs:
       uses: dotnet/nbgv@master
       with:
         setAllVars: true
-        
+
+    - name: Verify prerelease does not regress past stable
+      shell: pwsh
+      env:
+        SEMVER2: ${{ steps.nbgv.outputs.SemVer2 }}
+        PRERELEASE: ${{ steps.nbgv.outputs.PrereleaseVersion }}
+      run: |
+        if (-not $env:PRERELEASE) {
+          Write-Host "Stable release ($env:SEMVER2); skipping prerelease regression check."
+          exit 0
+        }
+        if ($env:SEMVER2 -notmatch '^(\d+)\.(\d+)\.\d+-') {
+          throw "Could not parse SemVer2 '$env:SEMVER2'"
+        }
+        $major = $matches[1]
+        $minor = $matches[2]
+        git fetch --tags --force 2>$null
+        $stableTags = git tag --list "$major.$minor.*" | Where-Object { $_ -match "^$major\.$minor\.\d+$" }
+        if ($stableTags) {
+          $list = $stableTags -join ', '
+          $msg = "Stable for $major.$minor has already shipped (tags: $list); cannot publish prerelease '$env:SEMVER2'. Bump main's version.json to the next minor or major preview line."
+          Write-Error "::error::$msg"
+          exit 1
+        }
+        Write-Host "OK: no stable $major.$minor.* tag exists; '$env:SEMVER2' is safe to publish."
+
     - name: NuGet Restore
       run: dotnet restore DynamicData.sln
       working-directory: src

@@ -1,0 +1,134 @@
+name: Cut major release
+
+on:
+  workflow_dispatch:
+    inputs:
+      major_version:
+        description: 'Major version to ship as stable (e.g., 10). Main must currently be on this major''s preview line.'
+        required: true
+        type: string
+      next_main_version:
+        description: 'Next preview version for main as major.minor (default: <major>.1). Use the next major if more breaking changes are queued.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  cut:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Configure git
+      run: |
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+
+    - name: Validate inputs
+      shell: pwsh
+      run: |
+        $major = '${{ inputs.major_version }}'
+        if ($major -notmatch '^\d+$') {
+          throw "major_version must be a single integer (got: '$major')"
+        }
+
+        $releaseBranch = "release/$major.x"
+        $stableVersion = "$major.0"
+
+        $mainVersionJson = git show "origin/main:version.json" | ConvertFrom-Json
+        $mainVer = $mainVersionJson.version
+        if ($mainVer -notmatch "^$major\.0-preview") {
+          throw "main's version is '$mainVer' but should be '$major.0-preview.{height}' to cut $major.0 stable. Run 'Bump main to next major preview' first if needed."
+        }
+
+        $existing = git ls-remote --heads origin "refs/heads/$releaseBranch"
+        if ($existing) {
+          throw "Branch '$releaseBranch' already exists. Cannot cut a new major release branch that exists."
+        }
+
+        $nextMain = '${{ inputs.next_main_version }}'
+        if (-not $nextMain) { $nextMain = "$major.1" }
+        if ($nextMain -notmatch '^(\d+)\.(\d+)$') {
+          throw "next_main_version must be 'major.minor' (got: '$nextMain')"
+        }
+        $nextPreview = "$nextMain-preview.{height}"
+
+        Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_BRANCH=$releaseBranch"
+        Add-Content -Path $env:GITHUB_ENV -Value "STABLE_VERSION=$stableVersion"
+        Add-Content -Path $env:GITHUB_ENV -Value "NEXT_PREVIEW=$nextPreview"
+        Add-Content -Path $env:GITHUB_ENV -Value "NEXT_MAIN_VERSION=$nextMain"
+        Add-Content -Path $env:GITHUB_ENV -Value "BUMP_BRANCH=bot/bump-main-after-$stableVersion"
+
+    - name: Create release branch from main
+      run: |
+        git checkout main
+        git checkout -b "$RELEASE_BRANCH"
+
+    - name: Set stable version on release branch
+      shell: pwsh
+      run: |
+        $path = 'version.json'
+        $content = [System.IO.File]::ReadAllText($path)
+        $new = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:STABLE_VERSION`"")
+        [System.IO.File]::WriteAllText($path, $new)
+
+    - name: Commit and push release branch
+      run: |
+        git add version.json
+        git commit -m "Cut $RELEASE_BRANCH at $STABLE_VERSION stable"
+        git push -u origin "$RELEASE_BRANCH"
+
+    - name: Create main bump branch
+      run: |
+        git checkout main
+        git checkout -b "$BUMP_BRANCH"
+
+    - name: Bump main to next preview
+      shell: pwsh
+      run: |
+        $path = 'version.json'
+        $content = [System.IO.File]::ReadAllText($path)
+        $new = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:NEXT_PREVIEW`"")
+        [System.IO.File]::WriteAllText($path, $new)
+
+    - name: Commit and push main bump branch
+      run: |
+        git add version.json
+        git commit -m "Bump main to $NEXT_PREVIEW after cutting $RELEASE_BRANCH"
+        git push -u origin "$BUMP_BRANCH"
+
+    - name: Open main bump PR
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: pwsh
+      run: |
+        $body = @"
+        Companion PR to cutting ``$env:RELEASE_BRANCH``.
+
+        The release branch ``$env:RELEASE_BRANCH`` has been pushed and will publish ``$env:STABLE_VERSION.0`` stable.
+
+        This PR advances ``main`` to ``$env:NEXT_PREVIEW`` so subsequent PRs publish that preview line.
+        "@
+        $url = gh pr create `
+          --base main `
+          --head "$env:BUMP_BRANCH" `
+          --title "Bump main to $env:NEXT_PREVIEW after $env:RELEASE_BRANCH cut" `
+          --body $body
+        Add-Content -Path $env:GITHUB_ENV -Value "BUMP_PR_URL=$url"
+
+    - name: Summary
+      shell: pwsh
+      run: |
+        $summary = @"
+        ## Major release cut
+
+        - **New release branch**: ``$env:RELEASE_BRANCH`` (will publish ``$env:STABLE_VERSION.0`` stable on push).
+        - **Main bump PR** (merge to advance main to next preview): $env:BUMP_PR_URL
+        "@
+        Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summary

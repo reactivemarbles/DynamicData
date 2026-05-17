@@ -1,0 +1,71 @@
+name: PR version check
+
+on:
+  pull_request:
+    branches: [main, release/**]
+    types: [opened, edited, labeled, unlabeled, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout PR head
+      uses: actions/checkout@v6
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+
+    - name: Validate version.json against PR labels and history
+      shell: pwsh
+      env:
+        BASE_REF: ${{ github.base_ref }}
+        LABELS_JSON: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+      run: |
+        $labels = $env:LABELS_JSON | ConvertFrom-Json
+        $isBreaking = ($labels -contains 'breaking-change') -or ($labels -contains 'semver:major')
+
+        if (-not $isBreaking) {
+          Write-Host "PR is not labeled 'breaking-change' or 'semver:major'; no major-bump check needed."
+          exit 0
+        }
+
+        Write-Host "PR is labeled as breaking. Verifying main's version.json reflects a newer major than the latest stable release."
+
+        git fetch origin $env:BASE_REF --depth=1 2>$null
+        $baseVersionJson = git show "origin/${env:BASE_REF}:version.json" | ConvertFrom-Json
+        $baseVer = $baseVersionJson.version
+        if ($baseVer -notmatch '^(\d+)\.') {
+          Write-Error "::error file=version.json::Could not parse major version from base version.json: '$baseVer'"
+          exit 1
+        }
+        $baseMajor = [int]$matches[1]
+
+        git fetch --tags --force 2>$null
+        $latestStable = git tag --list --sort=-v:refname |
+            Where-Object { $_ -match '^(\d+)\.\d+\.\d+$' } |
+            Select-Object -First 1
+
+        if (-not $latestStable) {
+          Write-Host "No stable tags found; cannot determine latest released major. Skipping check."
+          exit 0
+        }
+
+        if ($latestStable -notmatch '^(\d+)\.') {
+          Write-Error "Could not parse latest stable tag: '$latestStable'"
+          exit 1
+        }
+        $latestMajor = [int]$matches[1]
+
+        Write-Host "Latest stable major: $latestMajor; current main major: $baseMajor"
+
+        if ($baseMajor -le $latestMajor) {
+          $msg = "PR is labeled breaking-change but main's major ($baseMajor) is not greater than the latest stable release major ($latestMajor; tag '$latestStable'). Run the 'Bump main to next major preview' workflow first, then re-target this PR."
+          Write-Error "::error file=version.json::$msg"
+          exit 1
+        }
+
+        Write-Host "OK: main major ($baseMajor) > latest stable major ($latestMajor)."

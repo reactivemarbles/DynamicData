@@ -1,0 +1,97 @@
+name: Bump main to next major preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      next_major:
+        description: 'Next major version (e.g., 10) for the new preview line on main'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        ref: main
+        fetch-depth: 0
+
+    - name: Configure git
+      run: |
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+
+    - name: Validate inputs
+      shell: pwsh
+      run: |
+        $next = '${{ inputs.next_major }}'
+        if ($next -notmatch '^\d+$') {
+          throw "next_major must be a single integer (got: '$next')"
+        }
+        $nextInt = [int]$next
+
+        $versionJson = Get-Content version.json -Raw | ConvertFrom-Json
+        $ver = $versionJson.version
+        if ($ver -notmatch '^(\d+)\.\d+-preview') {
+          throw "main's version is '$ver' but should be '<major>.<minor>-preview.{height}'"
+        }
+        $currentMajor = [int]$matches[1]
+        if ($nextInt -le $currentMajor) {
+          throw "next_major ($nextInt) must be greater than current major ($currentMajor)"
+        }
+
+        $newVersion = "$next.0-preview.{height}"
+        Add-Content -Path $env:GITHUB_ENV -Value "NEW_VERSION=$newVersion"
+        Add-Content -Path $env:GITHUB_ENV -Value "NEXT_MAJOR=$next"
+        Add-Content -Path $env:GITHUB_ENV -Value "BUMP_BRANCH=bot/bump-major-$next"
+
+    - name: Create bump branch
+      run: git checkout -b "$BUMP_BRANCH"
+
+    - name: Bump version.json
+      shell: pwsh
+      run: |
+        $path = 'version.json'
+        $content = [System.IO.File]::ReadAllText($path)
+        $new = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:NEW_VERSION`"")
+        [System.IO.File]::WriteAllText($path, $new)
+
+    - name: Commit and push
+      run: |
+        git add version.json
+        git commit -m "Bump main to $NEW_VERSION (next major preview line)"
+        git push -u origin "$BUMP_BRANCH"
+
+    - name: Open PR
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: pwsh
+      run: |
+        $body = @"
+        Bumps ``main`` from its current preview to ``$env:NEW_VERSION`` ahead of upcoming breaking changes for ``$env:NEXT_MAJOR.0``.
+
+        Merge this **before** any PR labeled ``breaking-change`` so the prereleases are correctly versioned as ``$env:NEXT_MAJOR.0.0-preview.N``.
+        "@
+        $url = gh pr create `
+          --base main `
+          --head "$env:BUMP_BRANCH" `
+          --title "Bump main to $env:NEW_VERSION (next major preview)" `
+          --body $body
+        Add-Content -Path $env:GITHUB_ENV -Value "PR_URL=$url"
+
+    - name: Summary
+      shell: pwsh
+      run: |
+        $summary = @"
+        ## Major preview bump
+
+        - **PR**: $env:PR_URL
+        - Merge this before landing the first breaking-change PR.
+        "@
+        Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summary
