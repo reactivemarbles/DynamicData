@@ -38,7 +38,7 @@ Two passive guards run on every PR / release:
 
 ## Day-to-day flows
 
-### Patch on the current stable line (e.g. `9.4.36`)
+### Patch on the current stable line (e.g. `9.4.38`)
 Open a PR targeting `release/9.x`. Merge. `release.yml` publishes `9.4.N` to NuGet automatically. **No manual version edits.**
 
 ### Preview of the next minor (e.g. `9.5.0-preview.42`)
@@ -76,8 +76,8 @@ After this PR merges to `main`:
     ```
 3. On `release/9.x`, edit `version.json`:
     - Set `"version"` back to `"9.4"`.
-    - Add `"versionHeightOffset": 36` (the height main was at just before this PR merged — needed so the next build doesn't collide with the existing `9.4.35` tag).
-4. Commit and push `release/9.x`. The next build produces `9.4.37` stable.
+    - Add `"versionHeightOffset": 37` (the height of the latest published stable tag `9.4.37`, so the next build doesn't collide with it).
+4. Commit and push `release/9.x`. The next build produces `9.4.38` stable.
 
 From this point on, all subsequent releases use the automation workflows above. No more manual `version.json` edits.
 
