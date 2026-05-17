@@ -33,7 +33,7 @@ Two passive guards run on every PR / release:
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| **PR version check** (`pr-version-check.yml`) | Pull request to `main` / `release/**`. | If the PR is labeled `breaking-change` or `semver:major`, fails the check unless `main`'s major is already greater than the latest stable tag. |
+| **PR version check** (`pr-version-check.yml`) | Pull request to `main` / `release/**`. | If the PR is labeled `breaking-change` or `semver:major`, fails the check unless `main`'s major is **exactly one greater** than the latest stable tag's major (no skipping). |
 | **Prerelease regression guard** (in `release.yml`) | Every push to `main`. | Fails the publish step if a stable `X.Y.*` tag already exists for the major.minor being prereleased. |
 
 ## Day-to-day flows
@@ -50,7 +50,7 @@ Open a PR targeting `main`. Merge. `release.yml` publishes `9.5.0-preview.N`. Th
 3. `release.yml` ships `9.5.0` stable on the release branch; `main` continues at `9.6-preview.{height}`.
 
 ### Breaking change landing on `main`
-1. Run the **Bump main to next major preview** workflow before merging the first breaking change. Inputs: `next_major=10`.
+1. Run the **Bump main to next major preview** workflow before merging the first breaking change. Inputs: `next_major=10` (must be exactly one greater than the latest stable major; the workflow refuses skips like `next_major=11` when stable is `9.x`).
 2. Merge the PR it creates. `main` now publishes `10.0.0-preview.N`.
 3. Label the breaking-change PR with `breaking-change`. The **PR version check** workflow will block it until step 2 has merged.
 

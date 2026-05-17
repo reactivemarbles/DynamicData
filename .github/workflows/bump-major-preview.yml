@@ -46,6 +46,24 @@ jobs:
           throw "next_major ($nextInt) must be greater than current major ($currentMajor)"
         }
 
+        git fetch --tags --force 2>$null
+        $latestStable = git tag --list --sort=-v:refname |
+            Where-Object { $_ -match '^(\d+)\.\d+\.\d+$' } |
+            Select-Object -First 1
+        if ($latestStable) {
+          if ($latestStable -notmatch '^(\d+)\.') {
+            throw "Could not parse latest stable tag: '$latestStable'"
+          }
+          $latestStableMajor = [int]$matches[1]
+          $expectedMajor = $latestStableMajor + 1
+          if ($nextInt -ne $expectedMajor) {
+            throw "next_major ($nextInt) must be exactly one greater than the latest stable major ($latestStableMajor; tag '$latestStable'). Expected: $expectedMajor. Major versions must be incremented sequentially to avoid accidentally skipping a major."
+          }
+          Write-Host "OK: next_major ($nextInt) is exactly one greater than latest stable major ($latestStableMajor)."
+        } else {
+          Write-Host "No stable tags found; skipping sequential-major check."
+        }
+
         $newVersion = "$next.0-preview.{height}"
         Add-Content -Path $env:GITHUB_ENV -Value "NEW_VERSION=$newVersion"
         Add-Content -Path $env:GITHUB_ENV -Value "NEXT_MAJOR=$next"

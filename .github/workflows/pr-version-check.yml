@@ -62,10 +62,15 @@ jobs:
 
         Write-Host "Latest stable major: $latestMajor; current main major: $baseMajor"
 
-        if ($baseMajor -le $latestMajor) {
-          $msg = "PR is labeled breaking-change but main's major ($baseMajor) is not greater than the latest stable release major ($latestMajor; tag '$latestStable'). Run the 'Bump main to next major preview' workflow first, then re-target this PR."
+        $expectedMajor = $latestMajor + 1
+        if ($baseMajor -ne $expectedMajor) {
+          if ($baseMajor -le $latestMajor) {
+            $msg = "PR is labeled breaking-change but main's major ($baseMajor) is not greater than the latest stable release major ($latestMajor; tag '$latestStable'). Run the 'Bump main to next major preview' workflow with next_major=$expectedMajor first, then re-target this PR."
+          } else {
+            $msg = "PR is labeled breaking-change but main's major ($baseMajor) skips past major $expectedMajor. Main must be at exactly one greater than the latest stable major ($latestMajor + 1 = $expectedMajor). Major versions must be incremented sequentially. Reset main to $expectedMajor.0-preview.{height} before merging this PR."
+          }
           Write-Error "::error file=version.json::$msg"
           exit 1
         }
 
-        Write-Host "OK: main major ($baseMajor) > latest stable major ($latestMajor)."
+        Write-Host "OK: main major ($baseMajor) is exactly one greater than latest stable major ($latestMajor)."
