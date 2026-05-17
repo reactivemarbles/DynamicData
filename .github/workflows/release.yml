@@ -2,7 +2,7 @@ name: Build and Release
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, release/** ]
 
 env:
   configuration: Release
@@ -64,6 +64,7 @@ jobs:
       with:
           tag_name: ${{ steps.nbgv.outputs.SemVer2 }}
           release_name: ${{ steps.nbgv.outputs.SemVer2 }}
+          prerelease: ${{ steps.nbgv.outputs.PrereleaseVersion != '' }}
           body: |
             ${{ steps.changelog.outputs.commitLog }}
             
