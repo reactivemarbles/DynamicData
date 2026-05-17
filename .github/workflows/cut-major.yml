@@ -57,6 +57,22 @@ jobs:
         if ($nextMain -notmatch '^(\d+)\.(\d+)$') {
           throw "next_main_version must be 'major.minor' (got: '$nextMain')"
         }
+        $nextMainMajor = [int]$matches[1]
+        $nextMainMinor = [int]$matches[2]
+        $cutMajor = [int]$major
+
+        if ($nextMainMajor -eq $cutMajor) {
+          if ($nextMainMinor -lt 1) {
+            throw "next_main_version ($nextMain) for the same major as the cut release must have minor >= 1. After cutting $major.0, the next main version should be $major.1 or later."
+          }
+        } elseif ($nextMainMajor -eq $cutMajor + 1) {
+          if ($nextMainMinor -ne 0) {
+            throw "next_main_version ($nextMain) for the next major must be $($cutMajor + 1).0. Use sequential major bumps (no skipping)."
+          }
+        } else {
+          throw "next_main_version ($nextMain) must be either '$major.<minor>' (continued minors of the cut major) or '$($cutMajor + 1).0' (next sequential major). To skip a major, edit version.json by hand."
+        }
+
         $nextPreview = "$nextMain-preview.{height}"
 
         Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_BRANCH=$releaseBranch"
@@ -75,8 +91,10 @@ jobs:
       run: |
         $path = 'version.json'
         $content = [System.IO.File]::ReadAllText($path)
-        $new = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:STABLE_VERSION`"")
-        [System.IO.File]::WriteAllText($path, $new)
+        $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:STABLE_VERSION`"")
+        $content = [regex]::Replace($content, '(?m)^\s*"versionHeightOffset"\s*:\s*-?\d+\s*,?\s*\r?\n', '')
+        $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
+        [System.IO.File]::WriteAllText($path, $content)
 
     - name: Commit and push release branch
       run: |

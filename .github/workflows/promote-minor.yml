@@ -72,6 +72,10 @@ jobs:
         $mainMajor = [int]$matches[1]
         $mainMinor = [int]$matches[2]
 
+        if ($versionMajor -ne $mainMajor -or $versionMinor -ne $mainMinor) {
+          throw "stable_version ($version) must match main's current preview ($mainMajor.$mainMinor-preview.{height}). Promoting any other version would mislabel main's code as the wrong stable release. To ship a different version, run 'Bump main to next major preview' first or wait for main to be at the version you want to promote."
+        }
+
         $nextMain = "$mainMajor.$($mainMinor + 1)-preview.{height}"
 
         Add-Content -Path $env:GITHUB_ENV -Value "TARGET_RELEASE_BRANCH=$branch"
@@ -91,8 +95,10 @@ jobs:
       run: |
         $path = 'version.json'
         $content = [System.IO.File]::ReadAllText($path)
-        $new = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:STABLE_VERSION`"")
-        [System.IO.File]::WriteAllText($path, $new)
+        $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:STABLE_VERSION`"")
+        $content = [regex]::Replace($content, '(?m)^\s*"versionHeightOffset"\s*:\s*-?\d+\s*,?\s*\r?\n', '')
+        $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
+        [System.IO.File]::WriteAllText($path, $content)
 
     - name: Commit and push promotion branch
       run: |

@@ -2,7 +2,7 @@ name: PR version check
 
 on:
   pull_request:
-    branches: [main, release/**]
+    branches: [main, 'release/*.x']
     types: [opened, edited, labeled, unlabeled, synchronize, reopened]
 
 permissions:

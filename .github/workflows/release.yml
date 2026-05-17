@@ -2,7 +2,7 @@ name: Build and Release
 
 on:
   push:
-    branches: [ main, release/** ]
+    branches: [ main, 'release/*.x' ]
 
 env:
   configuration: Release
@@ -23,6 +23,16 @@ jobs:
       uses: actions/checkout@v6
       with:
         fetch-depth: 0
+
+    - name: Validate publish branch
+      shell: pwsh
+      env:
+        REF_NAME: ${{ github.ref_name }}
+      run: |
+        if ($env:REF_NAME -ne 'main' -and $env:REF_NAME -notmatch '^release/\d+\.x$') {
+          throw "release.yml triggered on '$env:REF_NAME' which is neither 'main' nor 'release/<major>.x'. Refusing to publish."
+        }
+        Write-Host "OK: publishing from '$env:REF_NAME'."
 
     - name: Setup .NET (With cache)
       uses: actions/setup-dotnet@v5.0.1
