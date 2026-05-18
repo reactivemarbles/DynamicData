@@ -16,9 +16,16 @@ permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: promote-minor-${{ inputs.target_release_branch }}-${{ inputs.stable_version }}
+  cancel-in-progress: false
+
 jobs:
   promote:
     runs-on: ubuntu-latest
+    env:
+      TARGET_RELEASE_BRANCH_INPUT: ${{ inputs.target_release_branch }}
+      STABLE_VERSION_INPUT: ${{ inputs.stable_version }}
     steps:
     - name: Checkout
       uses: actions/checkout@v6
@@ -33,122 +40,177 @@ jobs:
     - name: Validate inputs and compute next preview
       shell: pwsh
       run: |
-        $branch = '${{ inputs.target_release_branch }}'
-        $version = '${{ inputs.stable_version }}'
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
 
-        if ($branch -notmatch '^release/(\d+)\.x$') {
-          throw "target_release_branch must match 'release/<major>.x' (got: '$branch')"
+        $branch = $env:TARGET_RELEASE_BRANCH_INPUT
+        $version = $env:STABLE_VERSION_INPUT
+
+        if ($branch -notmatch '^release/(0|[1-9]\d*)\.x$') {
+          throw "target_release_branch must match 'release/<major>.x' with no leading zeros (got: '$branch')"
         }
         $branchMajor = [int]$matches[1]
 
-        if ($version -notmatch '^(\d+)\.(\d+)$') {
-          throw "stable_version must be 'major.minor' (got: '$version')"
+        if ($version -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+          throw "stable_version must be 'major.minor' with no leading zeros (got: '$version')"
         }
         $versionMajor = [int]$matches[1]
         $versionMinor = [int]$matches[2]
+        $version = "$versionMajor.$versionMinor"
 
         if ($branchMajor -ne $versionMajor) {
           throw "stable_version major ($versionMajor) must match target_release_branch major ($branchMajor)"
         }
 
-        git fetch origin $branch 2>$null
-        if ($LASTEXITCODE -ne 0) { throw "Branch '$branch' does not exist on origin" }
+        $existing = git ls-remote --heads --exit-code origin "refs/heads/$branch"
+        $lsExit = $LASTEXITCODE
+        if ($lsExit -eq 2) {
+          throw "Branch '$branch' does not exist on origin"
+        }
+        if ($lsExit -ne 0) {
+          throw "git ls-remote failed (exit $lsExit); cannot verify branch state."
+        }
 
         $branchVersionJson = git show "origin/${branch}:version.json" | ConvertFrom-Json
         $branchVer = $branchVersionJson.version
-        if ($branchVer -notmatch '^(\d+)\.(\d+)') {
-          throw "Could not parse current version on '$branch': '$branchVer'"
+        if ($branchVer -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+          throw "version.json on '$branch' is '$branchVer', which is not a clean stable '<major>.<minor>' value. Refusing to promote on top of a non-stable release branch."
         }
         $branchCurrentMinor = [int]$matches[2]
         if ($versionMinor -le $branchCurrentMinor) {
           throw "stable_version ($version) must be greater than current version on '$branch' ($branchVer)"
         }
 
-        $mainVersionJson = git show "origin/main:version.json" | ConvertFrom-Json
+        $mainHeadSha = (git rev-parse origin/main).Trim()
+        $mainVersionJson = git show "${mainHeadSha}:version.json" | ConvertFrom-Json
         $mainVer = $mainVersionJson.version
-        if ($mainVer -notmatch '^(\d+)\.(\d+)-preview') {
+        if ($mainVer -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)-preview') {
           throw "main's version.json must be in '<major>.<minor>-preview.{height}' form (got: '$mainVer')"
         }
         $mainMajor = [int]$matches[1]
         $mainMinor = [int]$matches[2]
 
         if ($versionMajor -ne $mainMajor -or $versionMinor -ne $mainMinor) {
-          throw "stable_version ($version) must match main's current preview ($mainMajor.$mainMinor-preview.{height}). Promoting any other version would mislabel main's code as the wrong stable release. To ship a different version, run 'Bump main to next major preview' first or wait for main to be at the version you want to promote."
+          throw "stable_version ($version) must match main's current preview ($mainMajor.$mainMinor-preview.{height}). Promoting any other version would mislabel main's code as the wrong stable release."
         }
 
         $nextMain = "$mainMajor.$($mainMinor + 1)-preview.{height}"
+        $runId = $env:GITHUB_RUN_ID
 
         Add-Content -Path $env:GITHUB_ENV -Value "TARGET_RELEASE_BRANCH=$branch"
         Add-Content -Path $env:GITHUB_ENV -Value "STABLE_VERSION=$version"
         Add-Content -Path $env:GITHUB_ENV -Value "NEXT_PREVIEW=$nextMain"
-        Add-Content -Path $env:GITHUB_ENV -Value "PROMOTE_BRANCH=bot/promote-$version"
-        Add-Content -Path $env:GITHUB_ENV -Value "BUMP_BRANCH=bot/bump-main-after-$version"
+        Add-Content -Path $env:GITHUB_ENV -Value "MAIN_HEAD_SHA=$mainHeadSha"
+        Add-Content -Path $env:GITHUB_ENV -Value "PROMOTE_BRANCH=bot/promote-$version-$runId"
+        Add-Content -Path $env:GITHUB_ENV -Value "BUMP_BRANCH=bot/bump-main-after-$version-$runId"
 
     - name: Create promotion branch (merges main into release branch)
+      shell: pwsh
       run: |
-        git checkout "$TARGET_RELEASE_BRANCH"
-        git checkout -b "$PROMOTE_BRANCH"
-        git merge origin/main --no-edit
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+        git checkout "$env:TARGET_RELEASE_BRANCH"
+        git checkout -b "$env:PROMOTE_BRANCH"
+        # -X theirs: prefer main's content on conflict. The next step overwrites version.json
+        # to the stable value regardless, so version.json conflicts are mooted either way.
+        # We invoke through cmd to avoid PowerShell halting on git's non-zero exit when
+        # the merge succeeds with the chosen strategy.
+        git merge -X theirs origin/main --no-edit
+        if ($LASTEXITCODE -ne 0) {
+          throw "git merge of origin/main into $env:PROMOTE_BRANCH failed (exit $LASTEXITCODE). Resolve manually and re-run."
+        }
 
     - name: Set stable version on promotion branch
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
         $path = 'version.json'
         $content = [System.IO.File]::ReadAllText($path)
         $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:STABLE_VERSION`"")
-        $content = [regex]::Replace($content, '(?m)^\s*"versionHeightOffset"\s*:\s*-?\d+\s*,?\s*\r?\n', '')
+        $content = [regex]::Replace($content, '(?m)^\s*"versionHeightOffset"\s*:\s*-?\d+\s*,?\s*(\r?\n|$)', '')
         $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
         [System.IO.File]::WriteAllText($path, $content)
 
     - name: Commit and push promotion branch
+      shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
         git add version.json
-        git commit -m "Set version to $STABLE_VERSION (stable)"
-        git push -u origin "$PROMOTE_BRANCH"
+        git commit -m "Set version to $env:STABLE_VERSION (stable)"
+        git push --force-with-lease -u origin "$env:PROMOTE_BRANCH"
 
     - name: Open promotion PR
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
         $body = @"
         Promotes ``main`` into ``$env:TARGET_RELEASE_BRANCH`` and sets ``version.json`` to ``$env:STABLE_VERSION`` stable.
 
+        > This PR is NOT mechanical: it contains the full diff of ``main`` since the last promotion. Review accordingly. Because it is bot-authored, GitHub does not run CI on it by default; close and reopen the PR to trigger CI.
+
         Merge this PR **first**, then merge the companion PR that bumps ``main`` to ``$env:NEXT_PREVIEW``.
         "@
-        $url = gh pr create `
+        $url = (gh pr create `
           --base "$env:TARGET_RELEASE_BRANCH" `
           --head "$env:PROMOTE_BRANCH" `
-          --title "Promote main to $env:STABLE_VERSION.0 stable" `
-          --body $body
+          --title "Promote main to $env:STABLE_VERSION stable" `
+          --body $body | Select-Object -Last 1).Trim()
+        if ($LASTEXITCODE -ne 0 -or -not $url -or $url -notmatch '^https?://') {
+          throw "gh pr create did not return a valid URL (exit $LASTEXITCODE; got: '$url')"
+        }
         Add-Content -Path $env:GITHUB_ENV -Value "PROMOTE_PR_URL=$url"
 
-    - name: Create main bump branch
+    - name: Verify main hasn't moved since validation
+      shell: pwsh
       run: |
-        git fetch origin main
-        git checkout main
-        git pull --ff-only origin main
-        git checkout -b "$BUMP_BRANCH"
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+        git fetch origin main --quiet
+        $currentMainSha = (git rev-parse origin/main).Trim()
+        if ($currentMainSha -ne $env:MAIN_HEAD_SHA) {
+          throw "main moved during promotion run (was $env:MAIN_HEAD_SHA, now $currentMainSha). The promotion PR has been opened against the validated SHA, but the bump-main PR was NOT created because the computed NEXT_PREVIEW may now be stale. Re-run the workflow after merging the promotion PR."
+        }
+        Write-Host "OK: main is still at $env:MAIN_HEAD_SHA."
+
+    - name: Create main bump branch (from validated main SHA)
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+        git checkout "$env:MAIN_HEAD_SHA"
+        git checkout -b "$env:BUMP_BRANCH"
 
     - name: Bump main to next preview
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
         $path = 'version.json'
         $content = [System.IO.File]::ReadAllText($path)
-        $new = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:NEXT_PREVIEW`"")
-        [System.IO.File]::WriteAllText($path, $new)
+        $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:NEXT_PREVIEW`"")
+        $content = [regex]::Replace($content, '(?m)^\s*"versionHeightOffset"\s*:\s*-?\d+\s*,?\s*(\r?\n|$)', '')
+        $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
+        [System.IO.File]::WriteAllText($path, $content)
 
     - name: Commit and push main bump branch
+      shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
         git add version.json
-        git commit -m "Bump main to $NEXT_PREVIEW after $STABLE_VERSION promotion"
-        git push -u origin "$BUMP_BRANCH"
+        git commit -m "Bump main to $env:NEXT_PREVIEW after $env:STABLE_VERSION promotion"
+        git push --force-with-lease -u origin "$env:BUMP_BRANCH"
 
     - name: Open main bump PR
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
         $body = @"
         Companion PR to the ``$env:STABLE_VERSION`` promotion.
 
@@ -156,11 +218,14 @@ jobs:
 
         Merge this PR **after** the promotion PR: $env:PROMOTE_PR_URL
         "@
-        $url = gh pr create `
+        $url = (gh pr create `
           --base main `
           --head "$env:BUMP_BRANCH" `
           --title "Bump main to $env:NEXT_PREVIEW after $env:STABLE_VERSION promotion" `
-          --body $body
+          --body $body | Select-Object -Last 1).Trim()
+        if ($LASTEXITCODE -ne 0 -or -not $url -or $url -notmatch '^https?://') {
+          throw "gh pr create did not return a valid URL (exit $LASTEXITCODE; got: '$url')"
+        }
         Add-Content -Path $env:GITHUB_ENV -Value "BUMP_PR_URL=$url"
 
     - name: Summary
@@ -171,7 +236,7 @@ jobs:
 
         | Order | PR | Purpose |
         | :-: | --- | --- |
-        | 1 | $env:PROMOTE_PR_URL | Merge first. Promotes main to ``$env:STABLE_VERSION``.0 stable on ``$env:TARGET_RELEASE_BRANCH``. |
+        | 1 | $env:PROMOTE_PR_URL | Merge first. Promotes main to ``$env:STABLE_VERSION`` stable on ``$env:TARGET_RELEASE_BRANCH``. First published patch is ``$env:STABLE_VERSION.1``. |
         | 2 | $env:BUMP_PR_URL | Merge second. Bumps main to ``$env:NEXT_PREVIEW``. |
         "@
         Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summary

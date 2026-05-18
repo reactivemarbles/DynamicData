@@ -3,10 +3,14 @@ name: Build and Release
 on:
   push:
     branches: [ main, 'release/*.x' ]
+  workflow_dispatch:
 
 env:
   configuration: Release
-  productNamespacePrefix: "DynamicData"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -29,7 +33,8 @@ jobs:
       env:
         REF_NAME: ${{ github.ref_name }}
       run: |
-        if ($env:REF_NAME -ne 'main' -and $env:REF_NAME -notmatch '^release/\d+\.x$') {
+        $ErrorActionPreference = 'Stop'
+        if ($env:REF_NAME -ne 'main' -and $env:REF_NAME -notmatch '^release/(0|[1-9]\d*)\.x$') {
           throw "release.yml triggered on '$env:REF_NAME' which is neither 'main' nor 'release/<major>.x'. Refusing to publish."
         }
         Write-Host "OK: publishing from '$env:REF_NAME'."
@@ -53,7 +58,7 @@ jobs:
 
     - name: NBGV
       id: nbgv
-      uses: dotnet/nbgv@master
+      uses: dotnet/nbgv@v0.5.1
       with:
         setAllVars: true
 
@@ -62,7 +67,15 @@ jobs:
       env:
         SEMVER2: ${{ steps.nbgv.outputs.SemVer2 }}
         PRERELEASE: ${{ steps.nbgv.outputs.PrereleaseVersion }}
+        REF_NAME: ${{ github.ref_name }}
       run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+
+        if ($env:PRERELEASE -and $env:REF_NAME -match '^release/(0|[1-9]\d*)\.x$') {
+          throw "Refusing to publish prerelease '$env:SEMVER2' from a release branch ('$env:REF_NAME'). Release branches must only publish stable versions."
+        }
+
         if (-not $env:PRERELEASE) {
           Write-Host "Stable release ($env:SEMVER2); skipping prerelease regression check."
           exit 0
@@ -72,8 +85,12 @@ jobs:
         }
         $major = $matches[1]
         $minor = $matches[2]
-        git fetch --tags --force 2>$null
-        $stableTags = git tag --list "$major.$minor.*" | Where-Object { $_ -match "^$major\.$minor\.\d+$" }
+        git fetch --tags --force origin
+        if ($LASTEXITCODE -ne 0) { throw "git fetch --tags failed (exit $LASTEXITCODE); cannot validate prerelease regression." }
+
+        $majorEsc = [regex]::Escape($major)
+        $minorEsc = [regex]::Escape($minor)
+        $stableTags = git tag --list "$major.$minor.*" | Where-Object { $_ -match "^${majorEsc}\.${minorEsc}\.\d+$" }
         if ($stableTags) {
           $list = $stableTags -join ', '
           $msg = "Stable for $major.$minor has already shipped (tags: $list); cannot publish prerelease '$env:SEMVER2'. Bump main's version.json to the next minor or major preview line."
@@ -86,26 +103,26 @@ jobs:
       run: dotnet restore DynamicData.sln
       working-directory: src
       
-    - name: Build
+    - name: Pack
       run: dotnet pack --no-restore --configuration Release DynamicData.sln
       working-directory: src
+
+    - name: NuGet Push
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
+        SOURCE_URL: https://api.nuget.org/v3/index.json
+      run: |
+        dotnet nuget push -s ${{ env.SOURCE_URL }} -k ${{ env.NUGET_AUTH_TOKEN }} --skip-duplicate src/**/bin/Release/*.nupkg
 
     - name: Changelog
       uses: glennawatson/ChangeLog@v1
       id: changelog
 
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2.6.2
       with:
           tag_name: ${{ steps.nbgv.outputs.SemVer2 }}
           name: ${{ steps.nbgv.outputs.SemVer2 }}
           prerelease: ${{ steps.nbgv.outputs.PrereleaseVersion != '' }}
           body: |
             ${{ steps.changelog.outputs.commitLog }}
-            
-    - name: NuGet Push
-      env:
-        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
-        SOURCE_URL: https://api.nuget.org/v3/index.json
-      run: |
-        dotnet nuget push -s ${{ env.SOURCE_URL }} -k ${{ env.NUGET_AUTH_TOKEN }} --skip-duplicate **/*.nupkg

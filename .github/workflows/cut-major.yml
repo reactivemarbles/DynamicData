@@ -15,14 +15,23 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write
+
+concurrency:
+  group: cut-major-${{ inputs.major_version }}
+  cancel-in-progress: false
 
 jobs:
   cut:
     runs-on: ubuntu-latest
+    env:
+      MAJOR_VERSION_INPUT: ${{ inputs.major_version }}
+      NEXT_MAIN_VERSION_INPUT: ${{ inputs.next_main_version }}
     steps:
     - name: Checkout
       uses: actions/checkout@v6
       with:
+        ref: main
         fetch-depth: 0
 
     - name: Configure git
@@ -33,33 +42,43 @@ jobs:
     - name: Validate inputs
       shell: pwsh
       run: |
-        $major = '${{ inputs.major_version }}'
-        if ($major -notmatch '^\d+$') {
-          throw "major_version must be a single integer (got: '$major')"
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+
+        $major = $env:MAJOR_VERSION_INPUT
+        if ($major -notmatch '^(0|[1-9]\d*)$') {
+          throw "major_version must be a positive integer with no leading zeros (got: '$major')"
         }
+        $cutMajor = [int]$major
+        $major = [string]$cutMajor
 
         $releaseBranch = "release/$major.x"
         $stableVersion = "$major.0"
 
-        $mainVersionJson = git show "origin/main:version.json" | ConvertFrom-Json
+        git fetch --tags --force origin
+        if ($LASTEXITCODE -ne 0) { throw "git fetch failed (exit $LASTEXITCODE); cannot proceed." }
+
+        $mainHeadSha = (git rev-parse origin/main).Trim()
+        $mainVersionJson = git show "${mainHeadSha}:version.json" | ConvertFrom-Json
         $mainVer = $mainVersionJson.version
         if ($mainVer -notmatch "^$major\.0-preview") {
           throw "main's version is '$mainVer' but should be '$major.0-preview.{height}' to cut $major.0 stable. Run 'Bump main to next major preview' first if needed."
         }
 
         $existing = git ls-remote --heads origin "refs/heads/$releaseBranch"
+        if ($LASTEXITCODE -ne 0) { throw "git ls-remote failed (exit $LASTEXITCODE); cannot verify branch state." }
         if ($existing) {
           throw "Branch '$releaseBranch' already exists. Cannot cut a new major release branch that exists."
         }
 
-        $nextMain = '${{ inputs.next_main_version }}'
+        $nextMain = $env:NEXT_MAIN_VERSION_INPUT
         if (-not $nextMain) { $nextMain = "$major.1" }
-        if ($nextMain -notmatch '^(\d+)\.(\d+)$') {
-          throw "next_main_version must be 'major.minor' (got: '$nextMain')"
+        if ($nextMain -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+          throw "next_main_version must be 'major.minor' with no leading zeros (got: '$nextMain')"
         }
         $nextMainMajor = [int]$matches[1]
         $nextMainMinor = [int]$matches[2]
-        $cutMajor = [int]$major
+        $nextMain = "$nextMainMajor.$nextMainMinor"
 
         if ($nextMainMajor -eq $cutMajor) {
           if ($nextMainMinor -lt 1) {
@@ -74,71 +93,119 @@ jobs:
         }
 
         $nextPreview = "$nextMain-preview.{height}"
+        $runId = $env:GITHUB_RUN_ID
 
         Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_BRANCH=$releaseBranch"
         Add-Content -Path $env:GITHUB_ENV -Value "STABLE_VERSION=$stableVersion"
         Add-Content -Path $env:GITHUB_ENV -Value "NEXT_PREVIEW=$nextPreview"
         Add-Content -Path $env:GITHUB_ENV -Value "NEXT_MAIN_VERSION=$nextMain"
-        Add-Content -Path $env:GITHUB_ENV -Value "BUMP_BRANCH=bot/bump-main-after-$stableVersion"
+        Add-Content -Path $env:GITHUB_ENV -Value "BUMP_BRANCH=bot/bump-main-after-$stableVersion-$runId"
+        Add-Content -Path $env:GITHUB_ENV -Value "MAIN_HEAD_SHA=$mainHeadSha"
 
-    - name: Create release branch from main
-      run: |
-        git checkout main
-        git checkout -b "$RELEASE_BRANCH"
-
-    - name: Set stable version on release branch
+    - name: Create main bump branch (from validated main SHA)
       shell: pwsh
       run: |
-        $path = 'version.json'
-        $content = [System.IO.File]::ReadAllText($path)
-        $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:STABLE_VERSION`"")
-        $content = [regex]::Replace($content, '(?m)^\s*"versionHeightOffset"\s*:\s*-?\d+\s*,?\s*\r?\n', '')
-        $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
-        [System.IO.File]::WriteAllText($path, $content)
-
-    - name: Commit and push release branch
-      run: |
-        git add version.json
-        git commit -m "Cut $RELEASE_BRANCH at $STABLE_VERSION stable"
-        git push -u origin "$RELEASE_BRANCH"
-
-    - name: Create main bump branch
-      run: |
-        git checkout main
-        git checkout -b "$BUMP_BRANCH"
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+        git checkout "$env:MAIN_HEAD_SHA"
+        git checkout -b "$env:BUMP_BRANCH"
 
     - name: Bump main to next preview
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
         $path = 'version.json'
         $content = [System.IO.File]::ReadAllText($path)
-        $new = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:NEXT_PREVIEW`"")
-        [System.IO.File]::WriteAllText($path, $new)
+        $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:NEXT_PREVIEW`"")
+        $content = [regex]::Replace($content, '(?m)^\s*"versionHeightOffset"\s*:\s*-?\d+\s*,?\s*(\r?\n|$)', '')
+        $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
+        [System.IO.File]::WriteAllText($path, $content)
 
     - name: Commit and push main bump branch
+      shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
         git add version.json
-        git commit -m "Bump main to $NEXT_PREVIEW after cutting $RELEASE_BRANCH"
-        git push -u origin "$BUMP_BRANCH"
+        git commit -m "Bump main to $env:NEXT_PREVIEW after cutting $env:RELEASE_BRANCH"
+        git push --force-with-lease -u origin "$env:BUMP_BRANCH"
 
     - name: Open main bump PR
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
         $body = @"
         Companion PR to cutting ``$env:RELEASE_BRANCH``.
 
-        The release branch ``$env:RELEASE_BRANCH`` has been pushed and will publish ``$env:STABLE_VERSION.0`` stable.
+        Once ``$env:RELEASE_BRANCH`` is pushed it will publish the first ``$env:STABLE_VERSION.x`` stable build (first patch is ``$env:STABLE_VERSION.1``).
 
         This PR advances ``main`` to ``$env:NEXT_PREVIEW`` so subsequent PRs publish that preview line.
         "@
-        $url = gh pr create `
+        $url = (gh pr create `
           --base main `
           --head "$env:BUMP_BRANCH" `
           --title "Bump main to $env:NEXT_PREVIEW after $env:RELEASE_BRANCH cut" `
-          --body $body
+          --body $body | Select-Object -Last 1).Trim()
+        if ($LASTEXITCODE -ne 0 -or -not $url -or $url -notmatch '^https?://') {
+          throw "gh pr create did not return a valid URL (exit $LASTEXITCODE; got: '$url')"
+        }
         Add-Content -Path $env:GITHUB_ENV -Value "BUMP_PR_URL=$url"
+
+    - name: Verify main hasn't moved since validation
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+        git fetch origin main --quiet
+        $currentMainSha = (git rev-parse origin/main).Trim()
+        if ($currentMainSha -ne $env:MAIN_HEAD_SHA) {
+          throw "main moved during cut-major run (was $env:MAIN_HEAD_SHA, now $currentMainSha). The bump PR has been opened; the release branch was NOT pushed. Re-run the workflow after closing the bump PR."
+        }
+        Write-Host "OK: main is still at $env:MAIN_HEAD_SHA."
+
+    - name: Create release branch from validated main SHA
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+        git checkout "$env:MAIN_HEAD_SHA"
+        git checkout -b "$env:RELEASE_BRANCH"
+
+    - name: Set stable version on release branch
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $path = 'version.json'
+        $content = [System.IO.File]::ReadAllText($path)
+        $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:STABLE_VERSION`"")
+        $content = [regex]::Replace($content, '(?m)^\s*"versionHeightOffset"\s*:\s*-?\d+\s*,?\s*(\r?\n|$)', '')
+        $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
+        [System.IO.File]::WriteAllText($path, $content)
+
+    - name: Commit and push release branch
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+        git add version.json
+        git commit -m "Cut $env:RELEASE_BRANCH at $env:STABLE_VERSION stable"
+        git push -u origin "$env:RELEASE_BRANCH"
+
+    - name: Trigger release workflow on new release branch
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+        gh workflow run release.yml --ref "$env:RELEASE_BRANCH"
+        if ($LASTEXITCODE -ne 0) {
+          throw "Failed to trigger release.yml on $env:RELEASE_BRANCH (exit $LASTEXITCODE). The release branch has been pushed but won't publish automatically (GITHUB_TOKEN pushes don't fire push triggers). Manually run release.yml against $env:RELEASE_BRANCH from the Actions tab."
+        }
+        Write-Host "OK: release.yml dispatched for $env:RELEASE_BRANCH."
 
     - name: Summary
       shell: pwsh
@@ -146,7 +213,7 @@ jobs:
         $summary = @"
         ## Major release cut
 
-        - **New release branch**: ``$env:RELEASE_BRANCH`` (will publish ``$env:STABLE_VERSION.0`` stable on push).
+        - **New release branch**: ``$env:RELEASE_BRANCH`` (publishes the first ``$env:STABLE_VERSION.x`` stable build via release.yml, dispatched automatically).
         - **Main bump PR** (merge to advance main to next preview): $env:BUMP_PR_URL
         "@
         Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summary

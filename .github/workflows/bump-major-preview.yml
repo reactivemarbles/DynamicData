@@ -12,9 +12,15 @@ permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: bump-major-preview-${{ inputs.next_major }}
+  cancel-in-progress: false
+
 jobs:
   bump:
     runs-on: ubuntu-latest
+    env:
+      NEXT_MAJOR_INPUT: ${{ inputs.next_major }}
     steps:
     - name: Checkout
       uses: actions/checkout@v6
@@ -30,15 +36,19 @@ jobs:
     - name: Validate inputs
       shell: pwsh
       run: |
-        $next = '${{ inputs.next_major }}'
-        if ($next -notmatch '^\d+$') {
-          throw "next_major must be a single integer (got: '$next')"
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+
+        $next = $env:NEXT_MAJOR_INPUT
+        if ($next -notmatch '^(0|[1-9]\d*)$') {
+          throw "next_major must be a positive integer with no leading zeros (got: '$next')"
         }
         $nextInt = [int]$next
+        $next = [string]$nextInt
 
         $versionJson = Get-Content version.json -Raw | ConvertFrom-Json
         $ver = $versionJson.version
-        if ($ver -notmatch '^(\d+)\.\d+-preview') {
+        if ($ver -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)-preview') {
           throw "main's version is '$ver' but should be '<major>.<minor>-preview.{height}'"
         }
         $currentMajor = [int]$matches[1]
@@ -46,10 +56,13 @@ jobs:
           throw "next_major ($nextInt) must be greater than current major ($currentMajor)"
         }
 
-        git fetch --tags --force 2>$null
+        git fetch --tags --force origin
+        if ($LASTEXITCODE -ne 0) { throw "git fetch --tags failed (exit $LASTEXITCODE); cannot validate sequential-major rule." }
+
         $latestStable = git tag --list --sort=-v:refname |
-            Where-Object { $_ -match '^(\d+)\.\d+\.\d+$' } |
+            Where-Object { $_ -match '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$' } |
             Select-Object -First 1
+
         if ($latestStable) {
           if ($latestStable -notmatch '^(\d+)\.') {
             throw "Could not parse latest stable tag: '$latestStable'"
@@ -61,13 +74,20 @@ jobs:
           }
           Write-Host "OK: next_major ($nextInt) is exactly one greater than latest stable major ($latestStableMajor)."
         } else {
-          Write-Host "No stable tags found; skipping sequential-major check."
+          # Fail closed: if no stable tags exist, require next_major == currentMajor + 1 against version.json,
+          # so we still preserve the no-skipping invariant for fresh repos.
+          $expectedMajor = $currentMajor + 1
+          if ($nextInt -ne $expectedMajor) {
+            throw "No stable tags found; falling back to comparing against main's current major ($currentMajor). next_major ($nextInt) must be exactly $expectedMajor."
+          }
+          Write-Host "No stable tags found; next_major ($nextInt) matches currentMajor+1 ($expectedMajor)."
         }
 
         $newVersion = "$next.0-preview.{height}"
+        $runId = $env:GITHUB_RUN_ID
         Add-Content -Path $env:GITHUB_ENV -Value "NEW_VERSION=$newVersion"
         Add-Content -Path $env:GITHUB_ENV -Value "NEXT_MAJOR=$next"
-        Add-Content -Path $env:GITHUB_ENV -Value "BUMP_BRANCH=bot/bump-major-$next"
+        Add-Content -Path $env:GITHUB_ENV -Value "BUMP_BRANCH=bot/bump-major-$next-$runId"
 
     - name: Create bump branch
       run: git checkout -b "$BUMP_BRANCH"
@@ -75,32 +95,44 @@ jobs:
     - name: Bump version.json
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
         $path = 'version.json'
         $content = [System.IO.File]::ReadAllText($path)
-        $new = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:NEW_VERSION`"")
-        [System.IO.File]::WriteAllText($path, $new)
+        $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:NEW_VERSION`"")
+        $content = [regex]::Replace($content, '(?m)^\s*"versionHeightOffset"\s*:\s*-?\d+\s*,?\s*(\r?\n|$)', '')
+        $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
+        [System.IO.File]::WriteAllText($path, $content)
 
     - name: Commit and push
+      shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
         git add version.json
-        git commit -m "Bump main to $NEW_VERSION (next major preview line)"
-        git push -u origin "$BUMP_BRANCH"
+        git commit -m "Bump main to $env:NEW_VERSION (next major preview line)"
+        git push --force-with-lease -u origin "$env:BUMP_BRANCH"
 
     - name: Open PR
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
+        $PSNativeCommandUseErrorActionPreference = $true
+        $nextMajor = $env:NEXT_MAJOR
         $body = @"
-        Bumps ``main`` from its current preview to ``$env:NEW_VERSION`` ahead of upcoming breaking changes for ``$env:NEXT_MAJOR.0``.
+        Bumps ``main`` from its current preview to ``$env:NEW_VERSION`` ahead of upcoming breaking changes for ``${nextMajor}.0``.
 
-        Merge this **before** any PR labeled ``breaking-change`` so the prereleases are correctly versioned as ``$env:NEXT_MAJOR.0.0-preview.N``.
+        Merge this **before** any PR labeled ``breaking-change`` so the prereleases are correctly versioned as ``${nextMajor}.0.0-preview.N``.
         "@
-        $url = gh pr create `
+        $url = (gh pr create `
           --base main `
           --head "$env:BUMP_BRANCH" `
           --title "Bump main to $env:NEW_VERSION (next major preview)" `
-          --body $body
+          --body $body | Select-Object -Last 1).Trim()
+        if ($LASTEXITCODE -ne 0 -or -not $url -or $url -notmatch '^https?://') {
+          throw "gh pr create did not return a valid URL (exit $LASTEXITCODE; got: '$url')"
+        }
         Add-Content -Path $env:GITHUB_ENV -Value "PR_URL=$url"
 
     - name: Summary
