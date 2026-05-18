@@ -24,11 +24,23 @@ jobs:
       env:
         BASE_REF: ${{ github.base_ref }}
         LABELS_JSON: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        HEAD_REF: ${{ github.event.pull_request.head.ref }}
       run: |
         $ErrorActionPreference = 'Stop'
 
         if ($env:BASE_REF -ne 'main') {
           Write-Host "PR targets '$env:BASE_REF' (not main); breaking-change check only applies to PRs targeting main. Skipping."
+          exit 0
+        }
+
+        # The version-bump bot PRs (opened by GITHUB_TOKEN from the automation workflows)
+        # legitimately change the major in version.json. Don't trip the unconditional
+        # major-change check on them; their content is reviewed in the workflow that
+        # opened them.
+        $isBotBumpPr = ($env:PR_AUTHOR -eq 'github-actions[bot]') -and ($env:HEAD_REF -like 'bot/bump-*')
+        if ($isBotBumpPr) {
+          Write-Host "PR is an automation-authored version-bump branch ('$env:HEAD_REF'); skipping check."
           exit 0
         }
 
@@ -74,13 +86,14 @@ jobs:
             Select-Object -First 1
 
         if (-not $latestStable) {
-          # No prior stable releases. Use main's current major as the floor, so a brand-new
-          # project's first breaking PR is allowed when it advances main by exactly one.
-          if ($headMajor -eq $baseMajor + 1) {
-            Write-Host "No stable tags found; PR head major ($headMajor) is exactly one greater than main ($baseMajor). OK."
+          # No prior stable releases. Accept either the post-bump steady state
+          # (head == base, both already at the new major) or the rare case where
+          # the breaking PR itself does the bump (head == base + 1).
+          if ($headMajor -eq $baseMajor -or $headMajor -eq $baseMajor + 1) {
+            Write-Host "No stable tags found; PR head major ($headMajor) is consistent with main ($baseMajor). OK."
             exit 0
           }
-          throw "No stable tags found; PR head major ($headMajor) must be exactly one greater than main's current major ($baseMajor) for a breaking-change PR with no prior stable history."
+          throw "No stable tags found; PR head major ($headMajor) must equal or be exactly one greater than main's current major ($baseMajor) for a breaking-change PR with no prior stable history."
         }
 
         if ($latestStable -notmatch '^(\d+)\.') {

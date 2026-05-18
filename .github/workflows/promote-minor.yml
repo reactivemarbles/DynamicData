@@ -128,6 +128,10 @@ jobs:
         $mergeExit = $LASTEXITCODE
         if ($mergeExit -ne 0) {
           $conflicts = (git diff --name-only --diff-filter=U) -split "`r?`n" | Where-Object { $_ }
+          if (-not $conflicts) {
+            git merge --abort 2>$null
+            throw "git merge failed (exit $mergeExit) with no conflicted files. Likely a transport or object error; check the runner log above."
+          }
           $unexpected = $conflicts | Where-Object { $_ -ne 'version.json' }
           if ($unexpected) {
             $list = $unexpected -join ', '
@@ -177,7 +181,9 @@ jobs:
         git fetch origin --quiet
         if ($LASTEXITCODE -ne 0) { throw "git fetch failed (exit $LASTEXITCODE)." }
         $currentMainSha = (git rev-parse origin/main).Trim()
+        if ($LASTEXITCODE -ne 0 -or -not $currentMainSha) { throw "git rev-parse origin/main failed (exit $LASTEXITCODE)." }
         $currentBranchSha = (git rev-parse "origin/$env:TARGET_RELEASE_BRANCH").Trim()
+        if ($LASTEXITCODE -ne 0 -or -not $currentBranchSha) { throw "git rev-parse origin/$env:TARGET_RELEASE_BRANCH failed (exit $LASTEXITCODE)." }
         if ($currentMainSha -ne $env:MAIN_HEAD_SHA) {
           throw "main moved during promotion (was $env:MAIN_HEAD_SHA, now $currentMainSha). The promotion branch was pushed but no PRs were created. Delete the promotion branch and re-run."
         }
