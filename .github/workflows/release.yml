@@ -62,7 +62,7 @@ jobs:
       with:
         setAllVars: true
 
-    - name: Verify prerelease does not regress past stable
+    - name: Verify version matches branch policy
       shell: pwsh
       env:
         SEMVER2: ${{ steps.nbgv.outputs.SemVer2 }}
@@ -70,7 +70,10 @@ jobs:
         REF_NAME: ${{ github.ref_name }}
       run: |
         $ErrorActionPreference = 'Stop'
-        $PSNativeCommandUseErrorActionPreference = $true
+
+        if ($env:REF_NAME -eq 'main' -and -not $env:PRERELEASE) {
+          throw "Refusing to publish stable '$env:SEMVER2' from main. main must always publish prereleases. Check version.json for an accidental switch to a non-prerelease form."
+        }
 
         if ($env:PRERELEASE -and $env:REF_NAME -match '^release/(0|[1-9]\d*)\.x$') {
           throw "Refusing to publish prerelease '$env:SEMVER2' from a release branch ('$env:REF_NAME'). Release branches must only publish stable versions."
@@ -80,7 +83,7 @@ jobs:
           Write-Host "Stable release ($env:SEMVER2); skipping prerelease regression check."
           exit 0
         }
-        if ($env:SEMVER2 -notmatch '^(\d+)\.(\d+)\.\d+-') {
+        if ($env:SEMVER2 -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-') {
           throw "Could not parse SemVer2 '$env:SEMVER2'"
         }
         $major = $matches[1]
@@ -93,29 +96,38 @@ jobs:
         $stableTags = git tag --list "$major.$minor.*" | Where-Object { $_ -match "^${majorEsc}\.${minorEsc}\.\d+$" }
         if ($stableTags) {
           $list = $stableTags -join ', '
-          $msg = "Stable for $major.$minor has already shipped (tags: $list); cannot publish prerelease '$env:SEMVER2'. Bump main's version.json to the next minor or major preview line."
-          Write-Error "::error::$msg"
-          exit 1
+          throw "Stable for $major.$minor has already shipped (tags: $list); cannot publish prerelease '$env:SEMVER2'. Bump main's version.json to the next minor or major preview line."
         }
         Write-Host "OK: no stable $major.$minor.* tag exists; '$env:SEMVER2' is safe to publish."
 
     - name: NuGet Restore
       run: dotnet restore DynamicData.sln
       working-directory: src
-      
+
+    - name: Run Tests
+      run: dotnet test --no-restore --configuration Release DynamicData.sln
+      working-directory: src
+
     - name: Pack
-      run: dotnet pack --no-restore --configuration Release DynamicData.sln
+      run: dotnet pack --no-restore --no-build --configuration Release DynamicData.sln
       working-directory: src
 
     - name: NuGet Push
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
         SOURCE_URL: https://api.nuget.org/v3/index.json
+      shell: pwsh
       run: |
-        dotnet nuget push -s ${{ env.SOURCE_URL }} -k ${{ env.NUGET_AUTH_TOKEN }} --skip-duplicate src/**/bin/Release/*.nupkg
+        $ErrorActionPreference = 'Stop'
+        $packages = Get-ChildItem -Path src -Recurse -Filter '*.nupkg' | Where-Object { $_.FullName -like '*\bin\Release\*' }
+        if (-not $packages) { throw "No .nupkg files found under src/**/bin/Release/." }
+        foreach ($pkg in $packages) {
+          dotnet nuget push -s $env:SOURCE_URL -k $env:NUGET_AUTH_TOKEN --skip-duplicate $pkg.FullName
+          if ($LASTEXITCODE -ne 0) { throw "dotnet nuget push failed for $($pkg.Name) (exit $LASTEXITCODE)." }
+        }
 
     - name: Changelog
-      uses: glennawatson/ChangeLog@v1
+      uses: glennawatson/ChangeLog@0464dd89b26f61fecf24b41d675f8ffdb11c4c3f # v1
       id: changelog
 
     - name: Create GitHub Release

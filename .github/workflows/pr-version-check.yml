@@ -26,7 +26,6 @@ jobs:
         LABELS_JSON: ${{ toJSON(github.event.pull_request.labels.*.name) }}
       run: |
         $ErrorActionPreference = 'Stop'
-        $PSNativeCommandUseErrorActionPreference = $true
 
         if ($env:BASE_REF -ne 'main') {
           Write-Host "PR targets '$env:BASE_REF' (not main); breaking-change check only applies to PRs targeting main. Skipping."
@@ -36,22 +35,36 @@ jobs:
         $labels = $env:LABELS_JSON | ConvertFrom-Json
         $isBreaking = $labels -contains 'breaking-change'
 
+        $headVersionJson = Get-Content version.json -Raw | ConvertFrom-Json
+        $headVer = $headVersionJson.version
+        if ($headVer -notmatch '^(0|[1-9]\d*)\.') {
+          throw "Could not parse major version from PR head version.json: '$headVer'"
+        }
+        $headMajor = [int]$matches[1]
+
+        git fetch origin main --quiet
+        if ($LASTEXITCODE -ne 0) { throw "git fetch origin main failed (exit $LASTEXITCODE)." }
+
+        $baseVersionJson = git show "origin/main:version.json" | ConvertFrom-Json
+        if ($LASTEXITCODE -ne 0) { throw "Failed to read version.json from origin/main." }
+        $baseVer = $baseVersionJson.version
+        if ($baseVer -notmatch '^(0|[1-9]\d*)\.') {
+          throw "Could not parse major version from main's version.json: '$baseVer'"
+        }
+        $baseMajor = [int]$matches[1]
+
+        # Unconditional check: if this PR changes the major in version.json, it MUST be
+        # labeled breaking-change. Catches unlabeled major-version edits.
+        if ($headMajor -ne $baseMajor -and -not $isBreaking) {
+          throw "This PR changes version.json's major from $baseMajor to $headMajor but is not labeled 'breaking-change'. Major-version changes must be tagged."
+        }
+
         if (-not $isBreaking) {
-          Write-Host "PR is not labeled 'breaking-change'; no major-bump check needed."
+          Write-Host "PR is not labeled 'breaking-change' and does not change the major; no further checks."
           exit 0
         }
 
         Write-Host "PR is labeled as breaking. Verifying the PR's version.json reflects a newer major than the latest stable release."
-
-        # Validate against the PR HEAD's version.json (which is the checked-out tree),
-        # not the base branch, so a PR that reverts main's version is also caught.
-        $headVersionJson = Get-Content version.json -Raw | ConvertFrom-Json
-        $headVer = $headVersionJson.version
-        if ($headVer -notmatch '^(0|[1-9]\d*)\.') {
-          Write-Error "::error file=version.json::Could not parse major version from PR head version.json: '$headVer'"
-          exit 1
-        }
-        $headMajor = [int]$matches[1]
 
         git fetch --tags --force origin
         if ($LASTEXITCODE -ne 0) { throw "git fetch --tags failed (exit $LASTEXITCODE); cannot safely validate breaking-change label." }
@@ -61,15 +74,17 @@ jobs:
             Select-Object -First 1
 
         if (-not $latestStable) {
-          # Fail closed: a breaking-change PR with no known stable history is suspicious.
-          # Don't silently allow it; require the label to be removed for genuinely new repos.
-          Write-Error "::error::No stable tags found; cannot validate sequential-major rule for a breaking-change PR. Either remove the 'breaking-change' label or verify git tag history is intact."
-          exit 1
+          # No prior stable releases. Use main's current major as the floor, so a brand-new
+          # project's first breaking PR is allowed when it advances main by exactly one.
+          if ($headMajor -eq $baseMajor + 1) {
+            Write-Host "No stable tags found; PR head major ($headMajor) is exactly one greater than main ($baseMajor). OK."
+            exit 0
+          }
+          throw "No stable tags found; PR head major ($headMajor) must be exactly one greater than main's current major ($baseMajor) for a breaking-change PR with no prior stable history."
         }
 
         if ($latestStable -notmatch '^(\d+)\.') {
-          Write-Error "Could not parse latest stable tag: '$latestStable'"
-          exit 1
+          throw "Could not parse latest stable tag: '$latestStable'"
         }
         $latestMajor = [int]$matches[1]
 
@@ -78,12 +93,11 @@ jobs:
         $expectedMajor = $latestMajor + 1
         if ($headMajor -ne $expectedMajor) {
           if ($headMajor -le $latestMajor) {
-            $msg = "PR is labeled breaking-change but its version.json major ($headMajor) is not greater than the latest stable release major ($latestMajor; tag '$latestStable'). Run the 'Bump main to next major preview' workflow with next_major=$expectedMajor first, then re-target this PR. After the bump PR merges, push a new commit (or close+reopen this PR) to re-run this check."
+            $msg = "PR is labeled breaking-change but its version.json major ($headMajor) is not greater than the latest stable release major ($latestMajor; tag '$latestStable'). Run the 'Bump main to next major preview' workflow with next_major=$expectedMajor first, then rebase this PR onto the updated main."
           } else {
-            $msg = "PR is labeled breaking-change but its version.json major ($headMajor) skips past major $expectedMajor. Main must be at exactly one greater than the latest stable major ($latestMajor + 1 = $expectedMajor). Major versions must be incremented sequentially. Reset main to $expectedMajor.0-preview.{height} before merging this PR."
+            $msg = "PR is labeled breaking-change but its version.json major ($headMajor) skips past major $expectedMajor. Main must be at exactly latest_stable_major + 1 ($latestMajor + 1 = $expectedMajor). Reset main to $expectedMajor.0-preview.{height} before merging this PR."
           }
-          Write-Error "::error file=version.json::$msg"
-          exit 1
+          throw $msg
         }
 
         Write-Host "OK: PR head major ($headMajor) is exactly one greater than latest stable major ($latestMajor)."

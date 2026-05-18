@@ -51,18 +51,18 @@ Open a PR targeting `main`. Merge. `release.yml` publishes `9.5.0-preview.N`. Th
 ### Promoting `main` → next stable minor (e.g. shipping the first `9.5.x` stable)
 1. Run the **Promote main to stable minor** workflow from the GitHub Actions tab. Inputs: `target_release_branch=release/9.x`, `stable_version=9.5`.
 2. Review and merge the two PRs it creates. **The promotion PR is NOT mechanical**: it contains the full diff of `main` since the last promotion. Review it carefully.
-3. Merge the promotion PR first, then the main-bump PR.
-4. `release.yml` ships the first `9.5.x` patch (i.e. `9.5.1`) on the release branch; `main` continues at `9.6-preview.{height}`.
+3. Merge the promotion PR first, then **immediately** merge the main-bump PR. Don't leave the bump PR sitting: every push to `main` between the stable ship and the bump merge fails the prerelease-regression guard.
+4. `release.yml` ships the first `9.5.x` patch (i.e. `9.5.1`) on the release branch; `main` resumes at `9.6-preview.{height}`.
 
 ### Breaking change landing on `main`
 1. Run the **Bump main to next major preview** workflow before merging the first breaking change. Inputs: `next_major=10` (must be exactly one greater than the latest stable major; the workflow refuses skips like `next_major=11` when stable is `9.x`).
 2. Merge the PR it creates. `main` now publishes `10.0.0-preview.N`.
-3. Label the breaking-change PR with `breaking-change`. The **PR version check** workflow will block it until step 2 has merged. After step 2 merges, push an empty commit to the breaking-change PR (or close+reopen it) to re-trigger the check.
+3. Label the breaking-change PR with `breaking-change`. The **PR version check** workflow will block it until step 2 has merged. After step 2 merges, rebase the breaking-change PR onto the updated `main` (or merge `main` into it) so the PR head includes the bumped `version.json`. Pushing an empty commit alone is not enough: the check reads `version.json` from the PR head, which is unchanged until the bump lands in the PR's branch.
 
 ### Cutting a new major release (e.g. shipping the first `10.x` stable)
-1. Run the **Cut major release** workflow. Inputs: `major_version=10`. Optional: `next_main_version=11.0` if more breaking changes are queued.
-2. The workflow opens a main-bump PR, creates `release/10.x` directly, and dispatches `release.yml` against `release/10.x` to publish the first `10.0.x` patch.
-3. Merge the main-bump PR.
+1. Run the **Cut major release** workflow. Inputs: `major_version=10`. Optional: `next_main_version=11.0` if more breaking changes are queued (the workflow refuses values that aren't `10.<minor>` or exactly `11.0`).
+2. The workflow opens a main-bump PR, creates `release/10.x`, and dispatches `release.yml` against the new branch to publish the first `10.0.x` patch. The dispatched run URL is in the workflow summary.
+3. Merge the main-bump PR. Don't wait: every push to `main` after the new stable ships will fail the prerelease-regression guard until this PR merges.
 
 ### Manual escape hatch
 The automation workflows are thin wrappers around `version.json` edits. If something goes wrong, you can always perform the equivalent edits by hand. See the workflow YAML files for the exact operations. Recovery scenarios:
