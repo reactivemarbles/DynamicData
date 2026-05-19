@@ -49,7 +49,7 @@ public class SumFixture
         [InlineData("A", 50)]
         [InlineData("B", 40)]
         [InlineData("C", 30)]
-        public void ItemIsRemoved_SumDecreases(string keyToRemove, int expectedSum)
+        public void ItemIsRemoved_SumReflectsRemoval(string keyToRemove, int expectedSum)
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -133,7 +133,7 @@ public class SumFixture
         }
 
         [Fact]
-        public void NoItemsAdded_NoSumEmitted()
+        public void SourceIsEmpty_NoSumEmitted()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -482,7 +482,7 @@ public class SumFixture
         [InlineData(0, 50)]
         [InlineData(1, 40)]
         [InlineData(2, 30)]
-        public void ItemIsRemoved_SumDecreases(int removalIndex, int expectedSum)
+        public void ItemIsRemoved_SumReflectsRemoval(int removalIndex, int expectedSum)
         {
             using var source = new TestSourceList<int>();
 
@@ -559,7 +559,7 @@ public class SumFixture
         }
 
         [Fact]
-        public void NoItemsAdded_NoSumEmitted()
+        public void SourceIsEmpty_NoSumEmitted()
         {
             using var source = new TestSourceList<int>();
 
