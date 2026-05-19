@@ -323,12 +323,12 @@ namespace DynamicData.Binding
     public static class BindingListEx
     {
         public static System.IObservable<System.Reactive.EventPattern<System.ComponentModel.ListChangedEventArgs>> ObserveCollectionChanges(this System.ComponentModel.IBindingList source) { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.ComponentModel.BindingList<T> source)
+        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  T>(this System.ComponentModel.BindingList<T> source)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
             where TCollection : System.ComponentModel.IBindingList, System.Collections.Generic.IEnumerable<T>
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this System.ComponentModel.BindingList<TObject> source, System.Func<TObject, TKey> keySelector)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ToObservableChangeSet<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.ComponentModel.BindingList<TObject> source, System.Func<TObject, TKey> keySelector)
             where TObject :  notnull
             where TKey :  notnull { }
     }
