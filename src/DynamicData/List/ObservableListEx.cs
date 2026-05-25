@@ -37,12 +37,6 @@ public static class ObservableListEx
     /// This is the primary extension point for custom UI binding adaptors (e.g., <see cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
     /// delegates to this operator). If the adaptor throws, the exception propagates downstream as <c>OnError</c>.
     /// </para>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Add/AddRange/Replace/Remove/RemoveRange/Moved/Refresh/Clear</term><description>The adaptor's <c>Adapt</c> method is called with the full changeset, then it is forwarded downstream unchanged.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer. If the adaptor throws, the exception propagates as OnError.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
-    /// </list>
     /// </remarks>
     /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
     public static IObservable<IChangeSet<T>> Adapt<T>(this IObservable<IChangeSet<T>> source, IChangeSetAdaptor<T> adaptor)
@@ -111,8 +105,6 @@ public static class ObservableListEx
     /// <item><term>Remove/RemoveRange/Clear</term><description>The item's reference count is decremented. If it was in the result and is no longer in all sources, a <b>Remove</b> is emitted.</description></item>
     /// <item><term>Refresh</term><description>Forwarded as <b>Refresh</b> if the item is currently in the result.</description></item>
     /// <item><term>Moved</term><description>Ignored (set operations are position-independent).</description></item>
-    /// <item><term>OnError</term><description>Forwarded from any source.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded when all sources complete.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> Item identity uses object equality, not position. Duplicate items in a single source are reference-counted independently.</para>
     /// </remarks>
@@ -227,8 +219,6 @@ public static class ObservableListEx
     /// <item><term>Remove/RemoveRange/Clear</term><description>Unsubscribes from removed items. The original change is forwarded.</description></item>
     /// <item><term>Moved/Refresh</term><description>Forwarded unchanged.</description></item>
     /// <item><term>Property changes</term><description>A <b>Refresh</b> change is emitted for the item whose property changed.</description></item>
-    /// <item><term>OnError</term><description>Forwarded from the source or from the property change observable.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded when the source completes.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> Each item generates a subscription. For large lists with frequent property changes, use <paramref name="changeSetBuffer"/> and <paramref name="propertyChangeThrottle"/> to reduce churn.</para>
     /// </remarks>
@@ -305,8 +295,6 @@ public static class ObservableListEx
     /// <item><term>Remove/RemoveRange/Clear</term><description>Unsubscribes from removed items. The original change is forwarded.</description></item>
     /// <item><term>Moved/Refresh</term><description>Forwarded unchanged.</description></item>
     /// <item><term>Re-evaluator fires</term><description>The item's current index is looked up and a <b>Refresh</b> change is emitted.</description></item>
-    /// <item><term>OnError</term><description>Forwarded from source or from any re-evaluator observable.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded when the source completes.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
@@ -345,8 +333,6 @@ public static class ObservableListEx
     /// <item><term>RemoveRange/Clear</term><description>Items removed from the collection.</description></item>
     /// <item><term>Moved</term><description>Item is moved between positions in the collection.</description></item>
     /// <item><term>Refresh</term><description>Depends on the adaptor implementation.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
@@ -645,13 +631,6 @@ public static class ObservableListEx
     /// Subscribes to the source immediately but buffers internally until the first changeset arrives, at which point it emits
     /// the initial data and all subsequent changesets. This is useful when downstream consumers should not receive an empty initial state.
     /// </para>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>First changeset</term><description>Delivered downstream, unlocking the stream for all future emissions.</description></item>
-    /// <item><term>Subsequent changesets</term><description>Forwarded immediately.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
-    /// </list>
     /// </remarks>
     /// <seealso cref="SkipInitial{T}(IObservable{IChangeSet{T}})"/>
     /// <seealso cref="StartWithEmpty{T}(IObservable{IChangeSet{T}})"/>
@@ -732,8 +711,6 @@ public static class ObservableListEx
     /// <item><term><b>Remove</b>/<b>RemoveRange</b></term><description>Reference count decremented. If the count reaches zero, a <b>Remove</b> is emitted for that distinct value.</description></item>
     /// <item><term><b>Refresh</b></term><description>Value is re-extracted. If changed, old value decremented and new value incremented (same as Replace logic).</description></item>
     /// <item><term><b>Clear</b></term><description>All reference counts cleared. <b>Remove</b> emitted for every tracked distinct value.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="ObservableCacheEx.DistinctValues{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TValue})"/>
@@ -772,8 +749,6 @@ public static class ObservableListEx
     /// <item><term><b>Replace</b></term><description>Treated as a Remove of the old item plus an Add of the new item, with set logic re-evaluated.</description></item>
     /// <item><term><b>Moved</b></term><description>Ignored by the set logic (no positional semantics).</description></item>
     /// <item><term><b>Refresh</b></term><description>Forwarded if the item is currently in the result set.</description></item>
-    /// <item><term>OnError</term><description>Forwarded from any source.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded when all sources have completed.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> Unlike <see cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>, the first source is asymmetric: only its items can appear in the result.</para>
     /// </remarks>
@@ -882,8 +857,6 @@ public static class ObservableListEx
     /// <item><term>RemoveRange</term><description>Included items in the range are emitted as individual <b>Remove</b> changes.</description></item>
     /// <item><term>Refresh</term><description>The predicate is re-evaluated. If the item now passes but previously did not, an <b>Add</b> is emitted. If it previously passed but no longer does, a <b>Remove</b> is emitted. If still passes, the <b>Refresh</b> is forwarded. If still fails, dropped.</description></item>
     /// <item><term>Clear</term><description>All downstream items are cleared.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> Refresh events trigger re-evaluation, which can promote or demote items (turning a Refresh into an Add or Remove). Pair with <see cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/> for property-change-driven filtering.</para>
     /// </remarks>
@@ -922,8 +895,7 @@ public static class ObservableListEx
     /// <item><term>Refresh</term><description>Re-evaluated. If inclusion status changed, an <b>Add</b> or <b>Remove</b> is emitted. If unchanged, <b>Refresh</b> forwarded or dropped.</description></item>
     /// <item><term>Clear</term><description>All downstream items are cleared.</description></item>
     /// <item><term>Predicate changed</term><description>All items are re-evaluated against the new predicate. The output is shaped by <paramref name="filterPolicy"/>.</description></item>
-    /// <item><term>OnError</term><description>Forwarded from the source or from <paramref name="predicate"/>.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded when the source completes. Independent completion of <paramref name="predicate"/> does not terminate the filter.</description></item>
+    /// <item><term>OnCompleted</term><description>Independent completion of <paramref name="predicate"/> does not terminate the filter.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> No items are included until <paramref name="predicate"/> emits its first function.</para>
     /// </remarks>
@@ -966,8 +938,6 @@ public static class ObservableListEx
     /// <item><term><b>Refresh</b></term><description>Re-evaluated against current state. Inclusion status may change.</description></item>
     /// <item><term><b>Clear</b></term><description>All downstream items are cleared.</description></item>
     /// <item><term>State changed</term><description>All items are re-evaluated with the new state value. The output is shaped by <paramref name="filterPolicy"/>.</description></item>
-    /// <item><term>OnError</term><description>Forwarded from the source or from <paramref name="predicateState"/>.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded when the source completes.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/>
@@ -1008,8 +978,6 @@ public static class ObservableListEx
     /// <item><term><b>Replace</b></term><description>Old subscription disposed, new subscription created for the replacement item.</description></item>
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Subscription disposed. If the item was downstream, a <b>Remove</b> is emitted.</description></item>
     /// <item><term><b>Refresh</b></term><description>Forwarded if the item is currently included.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// <list type="table">
     /// <listheader><term>Event (per-item observable)</term><description>Behavior</description></listheader>
@@ -1089,8 +1057,7 @@ public static class ObservableListEx
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
     /// <item><term>Add/Replace/Remove/Moved/Refresh</term><description>Callback invoked with the <see cref="Change{T}"/> (single-item change). Changeset forwarded.</description></item>
     /// <item><term>AddRange/RemoveRange/Clear</term><description>Callback invoked once with the <see cref="Change{T}"/> containing the range (accessible via <c>Range</c> property). Changeset forwarded.</description></item>
-    /// <item><term>OnError</term><description>Forwarded. If callback throws, propagates as OnError.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded.</description></item>
+    /// <item><term>OnError</term><description>If the callback throws, the exception propagates as OnError.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="ForEachItemChange{TObject}(IObservable{IChangeSet{TObject}}, Action{ItemChange{TObject}})"/>
@@ -1156,8 +1123,6 @@ public static class ObservableListEx
     /// <item><term><b>Refresh</b></term><description>Group key re-evaluated. If changed, the item moves between groups.</description></item>
     /// <item><term><b>Moved</b></term><description>Not handled by group logic.</description></item>
     /// <item><term>Regrouper fires</term><description>All items re-evaluated. Items that changed group key are moved between groups. Empty groups removed, new groups added.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="GroupOnProperty{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TGroup}}, TimeSpan?, IScheduler?)"/>
@@ -1329,7 +1294,6 @@ public static class ObservableListEx
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Subscription disposed.</description></item>
     /// <item><term><b>Refresh</b>/<b>Moved</b></term><description>No effect on subscriptions.</description></item>
     /// <item><term>OnCompleted (source)</term><description>Completes only after the source and all active inner observables have completed.</description></item>
-    /// <item><term>OnError</term><description>Forwarded from the source or from any per-item observable.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="SubscribeMany{T}(IObservable{IChangeSet{T}}, Func{T, IDisposable})"/>
@@ -1368,8 +1332,6 @@ public static class ObservableListEx
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Forwarded to the merged output.</description></item>
     /// <item><term><b>Refresh</b></term><description>Forwarded to the merged output.</description></item>
     /// <item><term><b>Moved</b></term><description>Ignored.</description></item>
-    /// <item><term>OnError</term><description>Forwarded from any inner source.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded when all inner sources have completed.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> There is no key-based deduplication. If the same item appears in multiple inner streams, it will appear multiple times in the merged output.</para>
     /// </remarks>
@@ -1565,8 +1527,6 @@ public static class ObservableListEx
     /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the child stream. Child emissions are merged into the output.</description></item>
     /// <item><term><b>Replace</b></term><description>Old child subscription disposed (and its items removed from output). New child subscription created.</description></item>
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Child subscription disposed. All child items from that parent are removed.</description></item>
-    /// <item><term>OnError</term><description>Forwarded from the source or any child stream.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded when the source completes.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="MergeChangeSets{TObject}(IEnumerable{IObservable{IChangeSet{TObject}}}, IEqualityComparer{TObject}?, IScheduler?, bool)"/>
@@ -1644,8 +1604,6 @@ public static class ObservableListEx
     /// <item><term><b>Replace</b></term><description>Old child subscription disposed (and its keys removed from output). New child subscription created.</description></item>
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Child subscription disposed. All keys originating from that child are removed from the output.</description></item>
     /// <item><term><b>Moved</b>/<b>Refresh</b></term><description>Ignored; this operator emits a cache changeset and source ordering/refresh does not affect key membership.</description></item>
-    /// <item><term>OnError</term><description>Forwarded from the source or any child stream.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded when the source completes.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="MergeManyChangeSets{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination}?)"/>
@@ -1696,8 +1654,7 @@ public static class ObservableListEx
     /// <item><term>Replace</term><description>Callback invoked for the <b>new</b> (replacement) item. Changeset forwarded.</description></item>
     /// <item><term>Remove/RemoveRange/Clear</term><description>No callback. Changeset forwarded.</description></item>
     /// <item><term>Moved/Refresh</term><description>No callback. Changeset forwarded.</description></item>
-    /// <item><term>OnError</term><description>Forwarded. If callback throws, propagates as OnError.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded.</description></item>
+    /// <item><term>OnError</term><description>If the callback throws, the exception propagates as OnError.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="OnItemRemoved{T}(IObservable{IChangeSet{T}}, Action{T}, bool)"/>
@@ -1802,8 +1759,6 @@ public static class ObservableListEx
     /// <item><term><b>Replace</b></term><description>Old item reference count decremented, new item reference count incremented. Add/Remove emitted as needed.</description></item>
     /// <item><term><b>Refresh</b></term><description>Forwarded if the item is in the result set.</description></item>
     /// <item><term><b>Moved</b></term><description>Ignored.</description></item>
-    /// <item><term>OnError</term><description>Forwarded from any source.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded when all sources have completed.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
@@ -1925,12 +1880,6 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>This is a non-changeset operator. It emits the entire collection state on each change, not incremental diffs.</para>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Add/AddRange/Replace/Remove/RemoveRange/Moved/Refresh/Clear</term><description>The internal list is updated, then the full <see cref="IReadOnlyCollection{T}"/> snapshot is emitted.</description></item>
-    /// <item><term>OnError</term><description>Forwarded.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded.</description></item>
-    /// </list>
     /// <para><b>Worth noting:</b> A new snapshot is emitted on every changeset, which can be chatty. The collection is rebuilt by cloning each changeset into an internal list. For sorted output, use <see cref="ToSortedCollection{TObject, TSortKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TSortKey}, SortDirection)"/>.</para>
     /// </remarks>
     /// <seealso cref="QueryWhenChanged{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{IReadOnlyCollection{TObject}, TDestination})"/>
@@ -2046,8 +1995,6 @@ public static class ObservableListEx
     /// <item><term><b>Refresh</b></term><description>Sort position re-evaluated. If position changed, a <b>Moved</b> is emitted.</description></item>
     /// <item><term>Comparer changed</term><description>Full re-sort of all items.</description></item>
     /// <item><term>Resort signal</term><description>Full re-sort using the current comparer.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> <see cref="SortOptions.UseBinarySearch"/> is faster but requires that the values being sorted on never mutate. If they do, use the <paramref name="resort"/> signal or <see cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>.</para>
     /// </remarks>
@@ -2438,8 +2385,7 @@ public static class ObservableListEx
     /// <item><term>Moved</term><description>A <b>Moved</b> is emitted with updated indices (no factory call). Throws <see cref="UnspecifiedIndexException"/> if the source change has no index information.</description></item>
     /// <item><term>Refresh</term><description>If <paramref name="transformOnRefresh"/> is <see langword="false"/> (default), the <b>Refresh</b> is forwarded without re-transforming. If <see langword="true"/>, the factory is re-invoked and the result replaces the current value.</description></item>
     /// <item><term>Clear</term><description>A <b>Clear</b> is emitted and the internal list is emptied.</description></item>
-    /// <item><term>OnError</term><description>Forwarded. If the factory throws, the exception propagates as OnError.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
+    /// <item><term>OnError</term><description>If the factory throws, the exception propagates as OnError.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> By default, Refresh does NOT re-transform the item (it just forwards the signal). Set <paramref name="transformOnRefresh"/> to <see langword="true"/> if you need the factory re-invoked on Refresh. Add operations with out-of-bounds indices silently append to the end.</para>
     /// </remarks>
@@ -2532,7 +2478,7 @@ public static class ObservableListEx
     /// <item><term>Moved</term><description>Emitted with updated indices (no factory call).</description></item>
     /// <item><term>Refresh</term><description>If <paramref name="transformOnRefresh"/> is <see langword="false"/> (default), forwarded without re-transforming. If <see langword="true"/>, the factory is re-awaited.</description></item>
     /// <item><term>Clear</term><description>Emitted and internal list cleared.</description></item>
-    /// <item><term>OnError</term><description>Forwarded. If the async factory throws, the exception propagates as OnError.</description></item>
+    /// <item><term>OnError</term><description>If the async factory throws, the exception propagates as OnError.</description></item>
     /// <item><term>OnCompleted</term><description>Forwarded after the last changeset is processed.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> All async transforms within a single changeset are serialized (not parallel). Each changeset is fully processed before the next begins. By default, Refresh does NOT re-transform.</para>
@@ -2625,8 +2571,6 @@ public static class ObservableListEx
     /// <item><term><b>Replace</b></term><description>Old children diffed against new children (using <paramref name="equalityComparer"/>). Removed, added, or kept as appropriate.</description></item>
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>All children of the removed parents are removed from the output.</description></item>
     /// <item><term><b>Refresh</b></term><description>Children re-expanded and diffed.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/>
@@ -2783,13 +2727,6 @@ public static class ObservableListEx
     /// <exception cref="ArgumentException"><paramref name="reasons"/> is empty.</exception>
     /// <remarks>
     /// <para>Filters individual changes within each changeset. If filtering removes all changes from a changeset, the empty changeset is suppressed via <see cref="NotEmpty{T}(IObservable{IChangeSet{T}})"/>.</para>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Any matching reason</term><description>The change is included in the output. Index information is stripped.</description></item>
-    /// <item><term>Any non-matching reason</term><description>The change is dropped from the output.</description></item>
-    /// <item><term>OnError</term><description>Forwarded.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded.</description></item>
-    /// </list>
     /// <para><b>Worth noting:</b> Filtering out <b>Remove</b> changes can cause downstream operators to accumulate items indefinitely (memory leak). Index information is stripped because removing some changes invalidates the original index positions.</para>
     /// </remarks>
     /// <seealso cref="WhereReasonsAreNot{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
@@ -2885,8 +2822,6 @@ public static class ObservableListEx
     /// <item><term><b>Replace</b></term><description>Old item reference count decremented, new item incremented, with Xor logic applied.</description></item>
     /// <item><term><b>Refresh</b></term><description>Forwarded if item is in the result set.</description></item>
     /// <item><term><b>Moved</b></term><description>Ignored.</description></item>
-    /// <item><term>OnError</term><description>Forwarded from any source.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded when all sources have completed.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>

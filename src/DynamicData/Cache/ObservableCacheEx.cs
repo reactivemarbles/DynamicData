@@ -41,15 +41,6 @@ public static partial class ObservableCacheEx
     /// This is a thin wrapper around Rx's <c>Do</c> operator. The adaptor receives each changeset
     /// as a side effect; the changeset itself is forwarded downstream unmodified.
     /// </para>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Add</term><description>Passed to the adaptor, then forwarded.</description></item>
-    /// <item><term>Update</term><description>Passed to the adaptor, then forwarded.</description></item>
-    /// <item><term>Remove</term><description>Passed to the adaptor, then forwarded.</description></item>
-    /// <item><term>Refresh</term><description>Passed to the adaptor, then forwarded.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer. The adaptor is not called.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
-    /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="adaptor"/> is <see langword="null"/>.</exception>
     /// <seealso cref="Adapt{TObject, TKey}(IObservable{ISortedChangeSet{TObject, TKey}}, ISortedChangeSetAdaptor{TObject, TKey})"/>
@@ -488,7 +479,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Buffered and included in the merged changeset.</description></item>
     /// <item><term>Remove</term><description>Buffered and included in the merged changeset.</description></item>
     /// <item><term>Refresh</term><description>Buffered and included in the merged changeset.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
     /// <item><term>OnCompleted</term><description>Any remaining buffered changes are flushed, then completion is forwarded.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> The merged changeset may contain contradictory changes (e.g., Add then Remove for the same key). Downstream operators handle this correctly, but raw inspection of the changeset may be surprising.</para>
@@ -546,8 +536,8 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Buffered while paused; forwarded immediately while active.</description></item>
     /// <item><term>Remove</term><description>Buffered while paused; forwarded immediately while active.</description></item>
     /// <item><term>Refresh</term><description>Buffered while paused; forwarded immediately while active.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer. Buffered data is lost.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded. Any remaining buffered data is flushed before completion.</description></item>
+    /// <item><term>OnError</term><description>Buffered data is lost.</description></item>
+    /// <item><term>OnCompleted</term><description>Any remaining buffered data is flushed before completion.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> If the source completes while paused, buffered data IS flushed before OnCompleted. However, if the source errors while paused, buffered data is lost.</para>
     /// </remarks>
@@ -935,8 +925,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Calls <paramref name="converter"/> on the new value and emits an <b>Update</b>.</description></item>
     /// <item><term>Remove</term><description>Emits a <b>Remove</b>. The converter is not called.</description></item>
     /// <item><term>Refresh</term><description>Forwarded as <b>Refresh</b>. The converter is not called.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="OfType{TObject, TKey, TDestination}"/>
@@ -967,8 +955,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description><paramref name="keySelector"/> is called on the current item. An <b>Update</b> is emitted with the destination key. If the key selector produces a different destination key for the updated value than it did for the original value, downstream consumers will see an <b>Update</b> for a key that may not match the original <b>Add</b>.</description></item>
     /// <item><term>Remove</term><description><paramref name="keySelector"/> is called on the item. A <b>Remove</b> is emitted with the destination key.</description></item>
     /// <item><term>Refresh</term><description><paramref name="keySelector"/> is called on the item. A <b>Refresh</b> is emitted with the destination key.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="Transform{TDestination, TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TDestination}, bool)"/>
@@ -1069,8 +1055,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>The previous item is removed from <paramref name="target"/> and the current item is added. Forwarded as <b>Update</b>.</description></item>
     /// <item><term>Remove</term><description>The item is removed from <paramref name="target"/>. Forwarded as <b>Remove</b>.</description></item>
     /// <item><term>Refresh</term><description>Ignored (<see cref="ICollection{T}"/> has no concept of refresh). Forwarded as <b>Refresh</b>.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ICollection<TObject> target)
@@ -1145,15 +1129,6 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to defer until the first changeset arrives.</param>
     /// <returns>An observable that begins emitting changesets once the first non-empty changeset is received.</returns>
     /// <remarks>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Add</term><description>Forwarded as <b>Add</b> once the initial non-empty changeset has been received.</description></item>
-    /// <item><term>Update</term><description>Forwarded as <b>Update</b> once loaded.</description></item>
-    /// <item><term>Remove</term><description>Forwarded as <b>Remove</b> once loaded.</description></item>
-    /// <item><term>Refresh</term><description>Forwarded as <b>Refresh</b> once loaded.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
-    /// </list>
     /// <para><b>Worth noting:</b> Blocks indefinitely if the cache or stream never receives any data. Ensure the source will eventually emit at least one changeset.</para>
     /// </remarks>
     /// <seealso cref="SkipInitial{TObject, TKey}"/>
@@ -1314,8 +1289,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Items present in both snapshots that differ (per <paramref name="equalityComparer"/>) produce an <b>Update</b>.</description></item>
     /// <item><term>Remove</term><description>Items in the previous snapshot whose key is absent from the new snapshot produce a <b>Remove</b>.</description></item>
     /// <item><term>Refresh</term><description>Not produced by this operator.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
@@ -1347,8 +1320,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Emitted when the source produces <c>Some(value)</c> and an item was already tracked with a different value (per <paramref name="equalityComparer"/>).</description></item>
     /// <item><term>Remove</term><description>Emitted when the source produces <c>None</c> and an item was previously tracked.</description></item>
     /// <item><term>Refresh</term><description>Not produced by this operator.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
@@ -1377,8 +1348,7 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Forwarded as <b>Update</b> if the key is unique within the changeset.</description></item>
     /// <item><term>Remove</term><description>Forwarded as <b>Remove</b> if the key is unique within the changeset.</description></item>
     /// <item><term>Refresh</term><description>Forwarded as <b>Refresh</b> if the key is unique within the changeset.</description></item>
-    /// <item><term>OnError</term><description>Forwarded. Also emitted with <see cref="InvalidOperationException"/> if duplicate keys are detected in a changeset.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
+    /// <item><term>OnError</term><description>Also emitted with <see cref="InvalidOperationException"/> if duplicate keys are detected in a changeset.</description></item>
     /// </list>
     /// </remarks>
     public static IObservable<IChangeSet<TObject, TKey>> EnsureUniqueKeys<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
@@ -1509,8 +1479,8 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Resets the removal timer for the item. Forwarded as <b>Update</b>.</description></item>
     /// <item><term>Remove</term><description>Cancels the removal timer. Forwarded as <b>Remove</b>.</description></item>
     /// <item><term>Refresh</term><description>Forwarded as <b>Refresh</b>. No timer change.</description></item>
-    /// <item><term>OnError</term><description>Forwarded. All pending timers are cancelled.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded. All pending timers are cancelled.</description></item>
+    /// <item><term>OnError</term><description>All pending timers are cancelled.</description></item>
+    /// <item><term>OnCompleted</term><description>All pending timers are cancelled.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> A <see langword="null"/> return from <paramref name="timeSelector"/> means "never expire". <b>Update</b> changes reset the expiration timer.</para>
     /// </remarks>
@@ -1623,8 +1593,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Four outcomes: if both old and new values pass, an <b>Update</b> is emitted. If only the new value passes, an <b>Add</b> is emitted. If only the old value passed, a <b>Remove</b> is emitted. If neither passes, the change is dropped.</description></item>
     /// <item><term>Remove</term><description>If the item was included downstream, a <b>Remove</b> is emitted. Otherwise dropped.</description></item>
     /// <item><term>Refresh</term><description>The predicate is re-evaluated. If the item now passes but previously did not, an <b>Add</b> is emitted. If it still passes, a <b>Refresh</b> is forwarded. If it no longer passes, a <b>Remove</b> is emitted. If it still fails, the change is dropped.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> <b>Refresh</b> events trigger re-evaluation, which can promote or demote items. Pair with <see cref="AutoRefresh{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TimeSpan?, TimeSpan?, IScheduler?)"/> for property-change-driven filtering.</para>
     /// </remarks>
@@ -1683,8 +1651,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Re-evaluated. Four outcomes as with the static <see cref="Filter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, bool}, bool)"/> overload.</description></item>
     /// <item><term>Remove</term><description>If the item was included downstream, a <b>Remove</b> is emitted. Otherwise dropped.</description></item>
     /// <item><term>Refresh</term><description>Re-evaluated against the current state. May produce <b>Add</b>, <b>Refresh</b>, <b>Remove</b>, or be dropped.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> <paramref name="predicateState"/> should emit an initial value immediately. Each emission triggers a full re-evaluation of all items, which can be expensive for large collections.</para>
     /// </remarks>
@@ -1754,8 +1720,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Four outcomes: if both old and new values pass, an <b>Update</b> is emitted. If only the new value passes, an <b>Add</b> is emitted. If only the old value passed, a <b>Remove</b> is emitted. If neither passes, the change is dropped.</description></item>
     /// <item><term>Remove</term><description>If the item was included downstream, a <b>Remove</b> is emitted. Otherwise dropped.</description></item>
     /// <item><term>Refresh</term><description><b>Dropped.</b> Because items are assumed immutable, there is nothing to re-evaluate.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
     public static IObservable<IChangeSet<TObject, TKey>> FilterImmutable<TObject, TKey>(
@@ -2137,8 +2101,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>The group key is re-evaluated. If unchanged, an <b>Update</b> is emitted within the same group. If the key changed, the item is removed from the old group (emitting <b>Remove</b>) and added to the new group (emitting <b>Add</b>). An empty old group is removed.</description></item>
     /// <item><term>Remove</term><description>The item is removed from its group. If the group becomes empty, the group itself is removed from the output.</description></item>
     /// <item><term>Refresh</term><description>The group key is re-evaluated. If unchanged, a <b>Refresh</b> is forwarded within the group. If the key changed, the item moves between groups (Remove from old, Add to new).</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// <para>
     /// <b>Worth noting:</b> Each group is a live sub-cache that can be subscribed to independently. Subscribers
@@ -2201,8 +2163,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Group key re-evaluated. Item may move between groups if the key changed.</description></item>
     /// <item><term>Remove</term><description>Item removed from its group. Empty groups are removed.</description></item>
     /// <item><term>Refresh</term><description>Group key re-evaluated. Item may move between groups.</description></item>
-    /// <item><term>OnError</term><description>Forwarded from source or from <paramref name="groupSelectorKeyObservable"/>.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded when the source completes.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="Group{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TGroupKey})"/>
@@ -2380,8 +2340,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>If group key unchanged, group snapshot re-emitted. If changed, item moves between groups; both affected groups emit new snapshots.</description></item>
     /// <item><term>Remove</term><description>Item removed from group. Updated snapshot emitted. Empty groups are removed.</description></item>
     /// <item><term>Refresh</term><description>Group key re-evaluated. If changed, item moves; affected group snapshots emitted.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="Group{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TGroupKey})"/>
@@ -2632,8 +2590,6 @@ public static partial class ObservableCacheEx
     ///   <item><term><b>Update</b></term><description>Forwarded unchanged.</description></item>
     ///   <item><term><b>Remove</b></term><description>Forwarded unchanged.</description></item>
     ///   <item><term><b>Refresh</b></term><description>Calls <c>Evaluate()</c> on the item, then forwards the change.</description></item>
-    ///   <item><term>OnError</term><description>Forwarded to subscribers.</description></item>
-    ///   <item><term>OnCompleted</term><description>Forwarded to subscribers.</description></item>
     /// </list>
     /// </remarks>
     public static IObservable<IChangeSet<TObject, TKey>> InvokeEvaluate<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
@@ -2814,8 +2770,6 @@ public static partial class ObservableCacheEx
     ///   <item><term><b>Update</b></term><description>Forwarded unchanged.</description></item>
     ///   <item><term><b>Remove</b></term><description>Forwarded unchanged.</description></item>
     ///   <item><term><b>Refresh</b></term><description>Forwarded unchanged.</description></item>
-    ///   <item><term>OnError</term><description>Forwarded to subscribers.</description></item>
-    ///   <item><term>OnCompleted</term><description>Forwarded to subscribers.</description></item>
     /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
@@ -2904,7 +2858,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Remove</term><description>Disposes the child subscription for the removed item.</description></item>
     /// <item><term>Refresh</term><description>No effect on subscriptions. The child observable continues unchanged.</description></item>
     /// <item><term>OnError</term><description>Errors from child observables are silently swallowed (the child is unsubscribed). Errors from the source changeset stream terminate the merged output.</description></item>
-    /// <item><term>OnCompleted</term><description>The output completes only when the source completes <b>and</b> all active child observables have also completed.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> The output is a plain <see cref="IObservable{TDestination}"/>, not a changeset stream. If you need merged changesets, use <see cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IComparer{TDestination}, IEqualityComparer{TDestination})"/> instead.</para>
     /// </remarks>
@@ -2970,7 +2923,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>If the updating source currently owns the downstream value for this key, an <b>Update</b> is emitted. If a comparer is provided and the update causes a different source's value to become the best candidate, an <b>Update</b> is emitted with that other source's value.</description></item>
     /// <item><term>Remove</term><description>If the removed value was the one published downstream, the operator scans all remaining sources for the same key. If another source still holds that key, an <b>Update</b> is emitted with the replacement value (selected by comparer if provided, otherwise the next available). If no other source holds the key, a <b>Remove</b> is emitted.</description></item>
     /// <item><term>Refresh</term><description>If the refreshed item matches the currently published value, the <b>Refresh</b> is forwarded. With a comparer, all sources are re-evaluated first; if a different value now wins, an <b>Update</b> is emitted instead of the Refresh.</description></item>
-    /// <item><term>OnError</term><description>An error from any source (outer or inner) terminates the entire merged output.</description></item>
     /// <item><term>OnCompleted</term><description>For dynamic overloads, the output completes when the outer observable completes and all subscribed inner observables have also completed. For static overloads, completion depends on the <c>completable</c> parameter (default <see langword="true"/>).</description></item>
     /// </list>
     /// <para>
@@ -3468,7 +3420,6 @@ public static partial class ObservableCacheEx
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
     /// <item><term>OnError</term><description>An error from the source (parent) stream or from any child changeset stream terminates the entire output. Unlike <see cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>, child errors are NOT swallowed.</description></item>
-    /// <item><term>OnCompleted</term><description>The output completes when the source (parent) stream completes <b>and</b> all active child changeset streams have also completed.</description></item>
     /// </list>
     /// <para>
     /// <b>Worth noting:</b> When multiple parents contribute children with the same destination key, only one value is published
@@ -3834,8 +3785,6 @@ public static partial class ObservableCacheEx
     ///   <item><term><b>Update</b></term><description>Re-evaluated. If the new item is <typeparamref name="TDestination"/>, emit accordingly. If the old item was downstream but the new one is not, emit <b>Remove</b>.</description></item>
     ///   <item><term><b>Remove</b></term><description>If the item was downstream, emit <b>Remove</b>.</description></item>
     ///   <item><term><b>Refresh</b></term><description>If the item is downstream, forwarded as <b>Refresh</b>.</description></item>
-    ///   <item><term>OnError</term><description>Forwarded to subscribers.</description></item>
-    ///   <item><term>OnCompleted</term><description>Forwarded to subscribers.</description></item>
     /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
@@ -4071,8 +4020,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>If the item is currently downstream, an <b>Update</b> is emitted.</description></item>
     /// <item><term>Remove</term><description>Reference count decremented. If the count reaches zero (no source holds the key), a <b>Remove</b> is emitted. Otherwise no emission.</description></item>
     /// <item><term>Refresh</term><description>If the item is downstream, a <b>Refresh</b> is forwarded.</description></item>
-    /// <item><term>OnError</term><description>An error from any source terminates the combined output.</description></item>
-    /// <item><term>OnCompleted</term><description>The output completes when all sources have completed.</description></item>
     /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="others"/> is <see langword="null"/>.</exception>
@@ -4274,15 +4221,6 @@ public static partial class ObservableCacheEx
     /// <param name="resultSelector">A function that projects the current <see cref="IQuery{TObject, TKey}"/> snapshot to a result value.</param>
     /// <returns>An observable that emits a projected value after each changeset.</returns>
     /// <remarks>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Add</term><description>Cache updated, then <paramref name="resultSelector"/> invoked and result emitted.</description></item>
-    /// <item><term>Update</term><description>Cache updated, then <paramref name="resultSelector"/> invoked and result emitted.</description></item>
-    /// <item><term>Remove</term><description>Cache updated, then <paramref name="resultSelector"/> invoked and result emitted.</description></item>
-    /// <item><term>Refresh</term><description>Cache updated, then <paramref name="resultSelector"/> invoked and result emitted.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
-    /// </list>
     /// <para><b>Worth noting:</b> The selector is called on every changeset, which can be chatty. The <see cref="IQuery{TObject, TKey}"/> exposes the full cache state for LINQ-style queries.</para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="resultSelector"/> is <see langword="null"/>.</exception>
@@ -4363,11 +4301,6 @@ public static partial class ObservableCacheEx
     /// <param name="item">The <typeparamref name="TObject"/> item to refresh.</param>
     /// <remarks>
     /// <para>Convenience method that wraps a Refresh inside <see cref="ISourceCache{TObject,TKey}.Edit"/>. A Refresh does not change data in the cache; it signals downstream operators (such as <see cref="Filter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, bool}, bool)"/> or <see cref="Sort{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IComparer{TObject}, SortOptimisations, int)"/>) to re-evaluate the item.</para>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Refresh</term><description>Produced for the specified item. Downstream operators re-evaluate this item against their current logic (filter predicate, sort comparer, group key selector, etc.).</description></item>
-    /// <item><term>Other</term><description>No Add, Update, or Remove events are produced by this method.</description></item>
-    /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="AutoRefresh{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
@@ -4423,11 +4356,6 @@ public static partial class ObservableCacheEx
     /// <param name="item">The <typeparamref name="TObject"/> item to remove.</param>
     /// <remarks>
     /// <para>Convenience method that wraps a single-item removal inside <see cref="ISourceCache{TObject,TKey}.Edit"/>. The key is extracted from the item using the cache's key selector.</para>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Remove</term><description>Produced if the key exists in the cache. The removed value is included in the changeset.</description></item>
-    /// <item><term>Other</term><description>No Add, Update, or Refresh events are produced by this method.</description></item>
-    /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, TObject)"/>
@@ -5076,15 +5004,6 @@ public static partial class ObservableCacheEx
     /// <param name="sources">An <see cref="IObservable{T}"/> of <see cref="IObservable{T}"/> changeset streams. The operator subscribes to the latest inner stream.</param>
     /// <returns>A changeset stream reflecting the items from the most recently emitted inner source.</returns>
     /// <remarks>
-    /// <list type="table">
-    ///   <listheader><term>Event</term><description>Behavior</description></listheader>
-    ///   <item><term><b>Add</b></term><description>Forwarded from the active inner source.</description></item>
-    ///   <item><term><b>Update</b></term><description>Forwarded from the active inner source.</description></item>
-    ///   <item><term><b>Remove</b></term><description>Forwarded from the active inner source.</description></item>
-    ///   <item><term><b>Refresh</b></term><description>Forwarded from the active inner source.</description></item>
-    ///   <item><term>OnError</term><description>An error from any inner source or the outer source terminates the stream.</description></item>
-    ///   <item><term>OnCompleted</term><description>Completes when the outer source and the current inner source have both completed.</description></item>
-    /// </list>
     /// <para>On switch: <b>Remove</b> is emitted for all items from the previous source, then <b>Add</b> for all items from the new source.</para>
     /// <para><b>Worth noting:</b> Each switch clears the entire downstream cache before populating from the new source. Subscribers see a full remove-then-add reset on every switch.</para>
     /// </remarks>
@@ -5198,8 +5117,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Emits <c>Optional.Some(newValue)</c> if the new value differs from the previous per <paramref name="equalityComparer"/>. Otherwise suppressed.</description></item>
     /// <item><term>Remove</term><description>Emits <see cref="Optional.None{T}"/>.</description></item>
     /// <item><term>Refresh</term><description>Emits <c>Optional.Some(value)</c> if the value differs from the last emission per <paramref name="equalityComparer"/>. Otherwise suppressed.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> No emission occurs if the key is not present at subscription time. To get an initial <c>None</c> when the key is absent, use the overload with <c>initialOptionalWhenMissing: true</c>.</para>
     /// </remarks>
@@ -6283,8 +6200,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>The item is replaced in the collection snapshot. Condition recalculated.</description></item>
     /// <item><term>Remove</term><description>Per-item subscription disposed. Condition recalculated over remaining items.</description></item>
     /// <item><term>Refresh</term><description>No effect on per-item subscriptions. Condition not recalculated unless the per-item observable emits.</description></item>
-    /// <item><term>OnError</term><description>An error from any per-item observable terminates the entire stream. Source errors also terminate.</description></item>
-    /// <item><term>OnCompleted</term><description>Completes when the source and all per-item observables have completed.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> Items whose per-item observable has not yet emitted are treated as not satisfying the condition. An empty cache is vacuously <see langword="true"/>. The result uses <c>DistinctUntilChanged</c>, so duplicate <c>bool</c> values are suppressed.</para>
     /// </remarks>
@@ -6336,8 +6251,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>The item is replaced in the collection snapshot. Condition recalculated.</description></item>
     /// <item><term>Remove</term><description>Per-item subscription disposed. Condition recalculated over remaining items.</description></item>
     /// <item><term>Refresh</term><description>No effect on per-item subscriptions. Condition not recalculated unless the per-item observable emits.</description></item>
-    /// <item><term>OnError</term><description>An error from any per-item observable terminates the entire stream. Source errors also terminate.</description></item>
-    /// <item><term>OnCompleted</term><description>Completes when the source and all per-item observables have completed.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> Items whose per-item observable has not yet emitted are treated as not satisfying the condition. An empty cache yields <see langword="false"/>. The result uses <c>DistinctUntilChanged</c>, so duplicate <c>bool</c> values are suppressed.</para>
     /// </remarks>
@@ -6425,8 +6338,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Emits the new value.</description></item>
     /// <item><term>Remove</term><description>Emits the removed item's value (not <c>None</c>; use <see cref="ToObservableOptional{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey, IEqualityComparer{TObject}?)"/> if you need removal detection).</description></item>
     /// <item><term>Refresh</term><description>Emits the current value.</description></item>
-    /// <item><term>OnError</term><description>Forwarded to the downstream observer.</description></item>
-    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> No emission occurs if the key is not present at subscription time. Changes to other keys are ignored entirely.</para>
     /// </remarks>
@@ -6477,7 +6388,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Remove</term><description>Disposes the item's PropertyChanged subscription.</description></item>
     /// <item><term>Refresh</term><description>No effect on subscriptions.</description></item>
     /// <item><term>OnError</term><description>Errors from individual property subscriptions are silently ignored. Source errors terminate the stream.</description></item>
-    /// <item><term>OnCompleted</term><description>Completes when the source changeset stream completes.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="WhenPropertyChanged{TObject, TKey, TValue}"/>
@@ -6517,7 +6427,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Remove</term><description>Disposes the item's property subscription. No further emissions for this item.</description></item>
     /// <item><term>Refresh</term><description>No effect on subscriptions. The existing property subscription continues.</description></item>
     /// <item><term>OnError</term><description>Per-item property subscription errors are silently ignored. Source errors terminate the stream.</description></item>
-    /// <item><term>OnCompleted</term><description>Completes when the source changeset stream completes.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="ObservableListEx.WhenPropertyChanged"/>
@@ -6555,7 +6464,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Remove</term><description>Disposes the property subscription.</description></item>
     /// <item><term>Refresh</term><description>No effect on subscriptions.</description></item>
     /// <item><term>OnError</term><description>Per-item errors silently ignored. Source errors terminate the stream.</description></item>
-    /// <item><term>OnCompleted</term><description>Completes when the source completes.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="WhenPropertyChanged{TObject, TKey, TValue}"/>
@@ -6652,8 +6560,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>If the item is currently downstream (count is 1), an <b>Update</b> is emitted.</description></item>
     /// <item><term>Remove</term><description>Reference count decremented. If the count drops to exactly 1, an <b>Add</b> is emitted (the item is now exclusive to one source). If it drops to 0, a <b>Remove</b> is emitted.</description></item>
     /// <item><term>Refresh</term><description>If the item is downstream, a <b>Refresh</b> is forwarded.</description></item>
-    /// <item><term>OnError</term><description>An error from any source terminates the combined output.</description></item>
-    /// <item><term>OnCompleted</term><description>The output completes when all sources have completed.</description></item>
     /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="others"/> is <see langword="null"/>.</exception>
