@@ -1605,6 +1605,14 @@ public static class ObservableListEx
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Child subscription disposed. All keys originating from that child are removed from the output.</description></item>
     /// <item><term><b>Moved</b>/<b>Refresh</b></term><description>Ignored; this operator emits a cache changeset and source ordering/refresh does not affect key membership.</description></item>
     /// </list>
+    /// <para>
+    /// <b>Error and completion:</b>
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>OnError</term><description>An error from the source (parent) stream or from any child changeset stream terminates the entire output. Unlike <see cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>, child errors are NOT swallowed.</description></item>
+    /// <item><term>OnCompleted</term><description>The output completes when the source (parent) stream completes <b>and</b> all active child changeset streams have also completed.</description></item>
+    /// </list>
     /// </remarks>
     /// <seealso cref="MergeManyChangeSets{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination}?)"/>
     /// <seealso cref="MergeChangeSets{TObject, TKey}(IObservableList{IObservable{IChangeSet{TObject, TKey}}}, IComparer{TObject})"/>
