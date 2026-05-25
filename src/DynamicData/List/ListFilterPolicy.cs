@@ -10,14 +10,20 @@ namespace DynamicData;
 public enum ListFilterPolicy
 {
     /// <summary>
-    /// <para>Clear all items and replace with matches - optimised for large data sets.</para>
-    /// <para>This option preserves order.</para>
+    /// <para>Clears all items and replaces with the new matches. Preserves order.</para>
+    /// <para>
+    /// Useful when downstream consumers (such as UI bindings) handle full resets more efficiently than individual
+    /// Add/Remove changes, or when the change set is expected to be very large relative to the source.
+    /// </para>
     /// </summary>
     ClearAndReplace,
 
     /// <summary>
-    /// <para>Calculate diff set - optimised for general filtering.</para>
-    /// <para>This option does not preserve order.</para>
+    /// <para>Calculates the minimal diff between the previous and new result sets. Does not preserve order.</para>
+    /// <para>
+    /// Generally preferred for performance: only items whose inclusion status actually changed produce an Add or Remove.
+    /// Recommended for most scenarios.
+    /// </para>
     /// </summary>
     CalculateDiff
 }
