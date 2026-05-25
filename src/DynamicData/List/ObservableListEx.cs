@@ -1603,6 +1603,7 @@ public static class ObservableListEx
     /// <returns>A single cache changeset stream with key-based deduplication.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="observableSelector"/>, or <paramref name="comparer"/> is <see langword="null"/>.</exception>
     /// <remarks>
+    /// <inheritdoc cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
     /// <para>Delegates to <see cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/> with a <see langword="null"/> equality comparer.</para>
     /// </remarks>
     /// <seealso cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
@@ -1637,6 +1638,15 @@ public static class ObservableListEx
     /// When a parent item is removed, all its child items are removed from the merged output.
     /// When the same key appears from multiple children, <paramref name="comparer"/> determines which value wins.
     /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event (source)</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the child cache stream. Child key/value pairs are merged into the output cache.</description></item>
+    /// <item><term><b>Replace</b></term><description>Old child subscription disposed (and its keys removed from output). New child subscription created.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Child subscription disposed. All keys originating from that child are removed from the output.</description></item>
+    /// <item><term><b>Moved</b>/<b>Refresh</b></term><description>Ignored; this operator emits a cache changeset and source ordering/refresh does not affect key membership.</description></item>
+    /// <item><term>OnError</term><description>Forwarded from the source or any child stream.</description></item>
+    /// <item><term>OnCompleted</term><description>Forwarded when the source completes.</description></item>
+    /// </list>
     /// </remarks>
     /// <seealso cref="MergeManyChangeSets{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination}?)"/>
     /// <seealso cref="MergeChangeSets{TObject, TKey}(IObservableList{IObservable{IChangeSet{TObject, TKey}}}, IComparer{TObject})"/>
