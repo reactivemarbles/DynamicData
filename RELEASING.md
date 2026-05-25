@@ -23,17 +23,31 @@ NBGV walks the first-parent history from `HEAD` back to the commit where `versio
 
 All `version.json` edits and release-branch creation are scripted via `workflow_dispatch` actions in the GitHub Actions UI. Maintainers should not edit `version.json` by hand.
 
-| Workflow | When to run | What it does |
-|---|---|---|
-| **Promote main to stable minor** (`promote-minor.yml`) | Ready to ship the next minor (first published patch is `X.Y.0`) from `main` to an existing release branch. | Opens two PRs: (1) merges `main` into `release/<major>.x` and sets stable version (contains the full diff, NOT mechanical); (2) bumps `main` to the next preview minor (mechanical). |
-| **Cut major release** (`cut-major.yml`) | Ready to ship a new major as stable from `main` (first published patch is `X.0.0`). | Opens a main-bump PR first, then creates `release/<major>.x` with the stable version, then dispatches `release.yml` to publish the first patch. |
-| **Bump main to next major preview** (`bump-major-preview.yml`) | First breaking change is about to land on `main`. | Opens a PR bumping `main` from `<X>.Y-preview.{height}` to `<X+1>.0-preview.{height}`. |
+### Which workflow do I run?
+
+| Situation | Run |
+|---|---|
+| Ship a stable patch (e.g. `9.4.42`) | No workflow. Just PR to `release/<major>.x` and merge. |
+| Cherry-pick a fix from main to a release branch | No workflow. Cherry-pick locally and PR to `release/<major>.x`. |
+| Ship a preview | No workflow. Just PR to `main` and merge. |
+| Next minor stable on an existing release branch (e.g. `9.5` after `9.4` line) | **Promote main to stable minor** |
+| First stable of a new major (main has been parked on `X.0-preview`) | **Cut major release** |
+| First breaking change for the next major is about to land | **Bump main to next major preview** |
+| Hand-edit `version.json` (rare; recovery, manual cutover) | No workflow. Add the `manual-version-edit` label to your PR. |
+
+### Workflow reference
+
+| Workflow | Inputs | Prereq on main | Prereq on release branch | What it produces |
+|---|---|---|---|---|
+| **Promote main to stable minor** (`promote-minor.yml`) | `target_release_branch` (e.g. `release/9.x`); `stable_version` (e.g. `9.5`) | Main is on `<X>.<Y>-preview` where X.Y matches `stable_version` | Branch must EXIST; current `version` must be stable `<major>.<minor>` form; `stable_version` major must match; minor must be greater | Two PRs: (1) promotion PR with the full diff of main, sets version to `stable_version` + `versionHeightOffset: -1`; (2) companion main-bump PR moving main to `<X>.<Y+1>-preview`. **Merge promotion first, then bump immediately.** |
+| **Cut major release** (`cut-major.yml`) | `major_version` (required); `next_main_version` (optional; default `<major>.1`, may also be `<major+1>.0`) | Main is on `<major_version>.0-preview` **strictly** (the `.0`, not `.5`) | `release/<major>.x` must NOT exist | Two artifacts: (1) main-bump PR to `<next_main_version>-preview`; (2) new `release/<major>.x` at `<major>.0` + `versionHeightOffset: -1`, with `release.yml` dispatched to publish `<major>.0.0`. |
+| **Bump main to next major preview** (`bump-major-preview.yml`) | `next_major` (required); `discard_current_preview` (optional, default false) | Main is on `<X>.<Y>-preview`. `next_major` must equal `latest_stable_major + 1` (no skipping). Pre-flight orphan check: refuses to run if any current `<X>` preview work hasn't been cut/promoted to stable, unless `discard_current_preview` is checked | n/a | One PR: bumps main to `<next_major>.0-preview.{height}`. **Merge before landing the first breaking-change PR.** |
 
 Two passive guards run on every PR / release:
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| **PR version check** (`pr-version-check.yml`) | Pull request to `main` / `release/*.x`. | For PRs to `main` labeled `breaking-change`, fails the check unless the PR's `version.json` major is **exactly one greater** than the latest stable tag's major (no skipping). For PRs to `release/*.x`, the check is skipped (breaking changes are a main-only concern). |
+| **PR version check** (`pr-version-check.yml`) | Pull request to `main` / `release/*.x`. | Rejects any human-authored PR that modifies `version.json` unless labeled `manual-version-edit` (bot PRs from `bot/bump-*` and `bot/promote-*` are exempt). For PRs to `main` labeled `breaking-change`, also enforces that main's major is exactly one greater than the latest stable tag's major (no skipping). Any PR (labeled or not) that changes the major must carry the `breaking-change` label. |
 | **Prerelease regression guard** (in `release.yml`) | Every push to `main` and dispatched run on `release/*.x`. | Refuses to publish a prerelease from a `release/*.x` branch (those must be stable only). Refuses to publish a prerelease for `X.Y` if a stable `X.Y.*` tag already exists. |
 
 ## Day-to-day flows

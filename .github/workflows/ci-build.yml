@@ -54,13 +54,3 @@ jobs:
     - name: Run Tests
       run: dotnet test --no-restore --configuration Release DynamicData.sln
       working-directory: src
-
-    - name: Pack
-      run: dotnet pack --no-restore --configuration Release DynamicData.sln
-      working-directory: src
-
-    - name: Create NuGet Artifacts
-      uses: actions/upload-artifact@v7
-      with:
-        name: nuget
-        path: 'src/**/bin/Release/*.nupkg'

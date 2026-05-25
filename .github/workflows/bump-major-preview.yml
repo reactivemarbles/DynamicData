@@ -7,6 +7,11 @@ on:
         description: 'Next major version (e.g., 10) for the new preview line on main'
         required: true
         type: string
+      discard_current_preview:
+        description: 'Allow orphaning the current major''s preview work (no release branch will ever ship for it). Check this only when intentionally abandoning the current X.Y-preview line.'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -21,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NEXT_MAJOR_INPUT: ${{ inputs.next_major }}
+      DISCARD_PREVIEW_INPUT: ${{ inputs.discard_current_preview }}
     steps:
     - name: Checkout
       uses: actions/checkout@v6
@@ -57,8 +63,40 @@ jobs:
           throw "main's version is '$ver' but should be '<major>.<minor>-preview.{height}'"
         }
         $currentMajor = [int]$matches[1]
+        $currentMinor = [int]$matches[2]
         if ($nextInt -le $currentMajor) {
           throw "next_major ($nextInt) must be greater than current major ($currentMajor)"
+        }
+
+        # Pre-flight: detect whether the current major's preview work would be orphaned.
+        # The only workflow that creates release branches is cut-major.yml, and it requires
+        # main to be on <major>.0-preview. If main has moved past .0-preview without the
+        # major ever being cut (or has accumulated minor work past the existing release
+        # branch's stable minor), bumping to the next major silently loses that work.
+        $discardOverride = $env:DISCARD_PREVIEW_INPUT -eq 'true'
+        $releaseBranch = "release/$currentMajor.x"
+        $releaseExists = git ls-remote --heads origin "refs/heads/$releaseBranch"
+        if ($LASTEXITCODE -ne 0) { throw "git ls-remote for $releaseBranch failed (exit $LASTEXITCODE); cannot verify orphan state." }
+
+        if (-not $releaseExists) {
+          $msg = "main is on $currentMajor.$currentMinor-preview but '$releaseBranch' does not exist. Bumping main to $nextInt would orphan ALL '$currentMajor.x' work (no stable '$currentMajor.*' would ever ship). To ship $currentMajor.0 stable first, run 'Cut major release' with major_version=$currentMajor and next_main_version=$nextInt.0. To intentionally discard the $currentMajor preview line, re-run this workflow with 'discard_current_preview' checked."
+          if (-not $discardOverride) { throw $msg }
+          Write-Host "WARNING (discard_current_preview=true): release/$currentMajor.x does not exist. All $currentMajor.x work is being orphaned."
+        } else {
+          $releaseVerJson = git show "origin/${releaseBranch}:version.json" | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw "Failed to read version.json from origin/$releaseBranch." }
+          $releaseVer = $releaseVerJson.version
+          if ($releaseVer -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+            throw "'$releaseBranch' version is '$releaseVer'; expected stable '<major>.<minor>' form. Cannot verify orphan state."
+          }
+          $releaseMinor = [int]$matches[2]
+          if ($currentMinor -gt $releaseMinor) {
+            $msg = "main is on $currentMajor.$currentMinor-preview but '$releaseBranch' is at $currentMajor.$releaseMinor stable. Bumping main to $nextInt would orphan the $currentMajor.$currentMinor preview work (never shipped as stable). To ship $currentMajor.$currentMinor stable first, run 'Promote main to stable minor' with target_release_branch=$releaseBranch and stable_version=$currentMajor.$currentMinor. To intentionally discard $currentMajor.$currentMinor preview, re-run this workflow with 'discard_current_preview' checked."
+            if (-not $discardOverride) { throw $msg }
+            Write-Host "WARNING (discard_current_preview=true): orphaning $currentMajor.$currentMinor preview work (release/$currentMajor.x is at $currentMajor.$releaseMinor)."
+          } else {
+            Write-Host "OK: $releaseBranch is at $currentMajor.$releaseMinor stable and main is on $currentMajor.$currentMinor-preview ($currentMinor <= $releaseMinor); no orphaning."
+          }
         }
 
         $latestStable = git tag --list --sort=-v:refname |
