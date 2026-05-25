@@ -60,7 +60,7 @@ jobs:
       working-directory: src
 
     - name: Create NuGet Artifacts
-      uses: actions/upload-artifact@v6.0.0
+      uses: actions/upload-artifact@v4.6.2
       with:
         name: nuget
         path: 'src/**/bin/Release/*.nupkg'
