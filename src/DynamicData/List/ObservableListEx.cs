@@ -37,6 +37,12 @@ public static class ObservableListEx
     /// This is the primary extension point for custom UI binding adaptors (e.g., <see cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
     /// delegates to this operator). If the adaptor throws, the exception propagates downstream as <c>OnError</c>.
     /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add/AddRange/Replace/Remove/RemoveRange/Moved/Refresh/Clear</term><description>The adaptor's <c>Adapt</c> method is called with the full changeset, then it is forwarded downstream unchanged.</description></item>
+    /// <item><term>OnError</term><description>Forwarded to the downstream observer. If the adaptor throws, the exception propagates as OnError.</description></item>
+    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
+    /// </list>
     /// </remarks>
     /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
     public static IObservable<IChangeSet<T>> Adapt<T>(this IObservable<IChangeSet<T>> source, IChangeSetAdaptor<T> adaptor)
