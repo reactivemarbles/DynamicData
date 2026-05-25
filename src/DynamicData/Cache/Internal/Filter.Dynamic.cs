@@ -378,7 +378,11 @@ internal static partial class Filter
 
             private void ReFilter(TState predicateState)
             {
+                #if SUPPORTS_DICTIONARY_MUTATION_DURING_ENUMERATION
                 foreach (var key in _itemStatesByKey.Keys)
+                #else
+                foreach (var key in _itemStatesByKey.Keys.ToArray())
+                #endif
                 {
                     var itemState = _itemStatesByKey[key];
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -24,17 +24,21 @@ namespace DynamicData;
 public static class ObservableListEx
 {
     /// <summary>
-    /// Injects a side effect into a change set observable.
+    /// Injects a side effect into a changeset stream via an <see cref="IChangeSetAdaptor{T}"/>.
+    /// The adaptor's <c>Adapt</c> method is invoked for each changeset before it is forwarded downstream unchanged.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="adaptor">The adaptor.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// adaptor.
-    /// </exception>
+    /// <typeparam name="T">The type of items in the list.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to observe and adapt.</param>
+    /// <param name="adaptor">The <see cref="IChangeSetAdaptor{T}"/> adaptor whose <c>Adapt</c> method is invoked for each changeset.</param>
+    /// <returns>A list changeset stream identical to the source, with the adaptor side effect applied.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="adaptor"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// This is the primary extension point for custom UI binding adaptors (e.g., <see cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
+    /// delegates to this operator). If the adaptor throws, the exception propagates downstream as <c>OnError</c>.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
     public static IObservable<IChangeSet<T>> Adapt<T>(this IObservable<IChangeSet<T>> source, IChangeSetAdaptor<T> adaptor)
         where T : notnull
     {
@@ -55,16 +59,21 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Adds a key to the change set result which enables all observable cache features of dynamic data.
+    /// Adds a key to each item in a list changeset, converting it to a cache changeset that supports all keyed DynamicData operators.
     /// </summary>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to add keys to, converting to a cache changeset.</param>
+    /// <param name="keySelector">A <see cref="Func{T, TResult}"/> function to extract a unique key from each item.</param>
+    /// <returns>A cache <see cref="IObservable{IChangeSet{TObject, TKey}}"/> changeset stream with keyed items.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
-    /// All indexed changes are dropped i.e. sorting is not supported by this function.
+    /// <para>
+    /// All index information is dropped during conversion because cache changesets are unordered by default.
+    /// Use this when you need to transition from list-based pipelines to cache-based operators (Filter by key, Join, Group, etc.).
+    /// </para>
     /// </remarks>
-    /// <typeparam name="TObject">The type of  object.</typeparam>
-    /// <typeparam name="TKey">The type of  key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="keySelector">The key selector.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <seealso cref="ObservableCacheEx.RemoveKey{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
     public static IObservable<IChangeSet<TObject, TKey>> AddKey<TObject, TKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TKey> keySelector)
         where TObject : notnull
         where TKey : notnull
@@ -76,13 +85,33 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Apply a logical And operator between the collections.
-    /// Items which are in all of the sources are included in the result.
+    /// Applies a logical AND (intersection) between multiple list changeset streams.
+    /// Only items present in ALL sources appear in the result.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="others">The others.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <typeparam name="T">The type of items in the lists.</typeparam>
+    /// <param name="source">The first source <see cref="IObservable{IChangeSet{T}}"/> to intersect.</param>
+    /// <param name="others">The additional <see cref="IObservable{IChangeSet{T}}"/> changeset streams to intersect with.</param>
+    /// <returns>A list changeset stream containing items that exist in every source.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="others"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Uses reference counting per item across all sources. An item appears downstream only when
+    /// its reference count is non-zero in ALL sources. Item identity is determined by the default equality comparer.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add/AddRange</term><description>The item's reference count is incremented in its source tracker. If the item is now present in all sources, an <b>Add</b> is emitted.</description></item>
+    /// <item><term>Replace</term><description>The old item's reference count is decremented and the new item's is incremented. Depending on whether each is present in ALL sources, this emits an <b>Add</b>, <b>Remove</b>, <b>Replace</b>, or nothing.</description></item>
+    /// <item><term>Remove/RemoveRange/Clear</term><description>The item's reference count is decremented. If it was in the result and is no longer in all sources, a <b>Remove</b> is emitted.</description></item>
+    /// <item><term>Refresh</term><description>Forwarded as <b>Refresh</b> if the item is currently in the result.</description></item>
+    /// <item><term>Moved</term><description>Ignored (set operations are position-independent).</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> Item identity uses object equality, not position. Duplicate items in a single source are reference-counted independently.</para>
+    /// </remarks>
+    /// <seealso cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="ObservableCacheEx.And{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
     public static IObservable<IChangeSet<T>> And<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
         where T : notnull
     {
@@ -91,53 +120,49 @@ public static class ObservableListEx
         return source.Combine(CombineOperator.And, others);
     }
 
-    /// <summary>
-    /// Apply a logical And operator between the collections.
-    /// Items which are in all of the sources are included in the result.
-    /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The sources.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <param name="sources">A <see cref="ICollection{T}"/> of changeset streams to intersect.</param>
+    /// <remarks>
+    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload accepts a pre-built collection of sources instead of a params array.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> And<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.And);
 
-    /// <summary>
-    /// Dynamically apply a logical And operator between the items in the outer observable list.
-    /// Items which are in any of the sources are included in the result.
-    /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <param name="sources">An <see cref="IObservableList{T}"/> of changeset streams. Sources can be added or removed dynamically.</param>
+    /// <remarks>
+    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload supports dynamic source management: adding or removing changeset streams from the observable list triggers re-evaluation.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> And<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.And);
 
-    /// <summary>
-    /// Dynamically apply a logical And operator between the items in the outer observable list.
-    /// Items which are in any of the sources are included in the result.
-    /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <param name="sources">An <see cref="IObservableList{IObservableList{T}}"/> of <see cref="IObservableList{IObservableList{T}}"/>. Each inner list's changes are connected automatically.</param>
+    /// <remarks>
+    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload accepts <see cref="IObservableList{T}"/> instances directly, calling <c>Connect()</c> internally.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> And<T>(this IObservableList<IObservableList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.And);
 
-    /// <summary>
-    /// Dynamically apply a logical And operator between the items in the outer observable list.
-    /// Items which are in any of the sources are included in the result.
-    /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <param name="sources">An <see cref="IObservableList{ISourceList{T}}"/> of <see cref="ISourceList{T}"/>. Each inner list's changes are connected automatically.</param>
+    /// <remarks>
+    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload accepts <see cref="ISourceList{T}"/> instances directly, calling <c>Connect()</c> internally.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> And<T>(this IObservableList<ISourceList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.And);
 
     /// <summary>
-    /// Converts the source list to an read only observable list.
+    /// Wraps a <see cref="ISourceList{T}"/> as a read-only <see cref="IObservableList{T}"/>, hiding mutation methods.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable list.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <typeparam name="T">The type of items in the list.</typeparam>
+    /// <param name="source">The <see cref="ISourceList{T}"/> mutable source list to wrap.</param>
+    /// <returns>A read-only observable list that mirrors the source.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static IObservableList<T> AsObservableList<T>(this ISourceList<T> source)
         where T : notnull
     {
@@ -147,12 +172,21 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Converts the source observable to an read only observable list.
+    /// Materializes a changeset stream into a read-only <see cref="IObservableList{T}"/>.
+    /// The list is kept in sync with the source stream for the lifetime of the subscription.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable list.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <typeparam name="T">The type of items in the list.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to materialize into a read-only list.</param>
+    /// <returns>A read-only observable list reflecting the current state of the stream.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// This is the primary way to <b>multicast</b> a changeset pipeline. Materializing once into an <see cref="IObservableList{T}"/>,
+    /// then calling <c>Connect()</c> on the result for each downstream consumer, ensures the upstream operators are evaluated only once
+    /// regardless of how many subscribers consume the result.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="AsObservableList{T}(ISourceList{T})"/>
     public static IObservableList<T> AsObservableList<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -162,14 +196,36 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Automatically refresh downstream operators when any property changes.
+    /// Monitors all properties on each item (via <see cref="INotifyPropertyChanged"/>) and emits <b>Refresh</b>
+    /// changes when any property changes, causing downstream operators to re-evaluate.
     /// </summary>
-    /// <typeparam name="TObject">The type of object.</typeparam>
-    /// <param name="source">The source observable.</param>
-    /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have successive property changes.</param>
-    /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refresh invocations.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <returns>An observable change set with additional refresh changes.</returns>
+    /// <typeparam name="TObject">The type of items, which must implement <see cref="INotifyPropertyChanged"/>.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to monitor for property-driven refresh signals.</param>
+    /// <param name="changeSetBuffer">An optional <see cref="TimeSpan"/> buffer duration to batch multiple refresh signals into a single changeset.</param>
+    /// <param name="propertyChangeThrottle">An optional <see cref="TimeSpan"/> throttle applied to each item's property change notifications.</param>
+    /// <param name="scheduler">The scheduler for throttle and buffer timing. Defaults to <see cref="GlobalConfig.DefaultScheduler"/>.</param>
+    /// <returns>A list changeset stream with additional <b>Refresh</b> changes injected when properties change.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Wraps <see cref="AutoRefreshOnObservable{TObject, TAny}"/> using <c>WhenAnyPropertyChanged()</c> as the re-evaluator.
+    /// Pair with <see cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/> or <see cref="Sort{T}(IObservable{IChangeSet{T}}, IComparer{T}, SortOptions, IObservable{Unit}?, IObservable{IComparer{T}}?, int)"/>
+    /// to get reactive re-evaluation on property changes.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add/AddRange</term><description>Subscribes to <c>PropertyChanged</c> on each new item. The original change is forwarded.</description></item>
+    /// <item><term>Replace</term><description>Unsubscribes from the old item, subscribes to the new. The original change is forwarded.</description></item>
+    /// <item><term>Remove/RemoveRange/Clear</term><description>Unsubscribes from removed items. The original change is forwarded.</description></item>
+    /// <item><term>Moved/Refresh</term><description>Forwarded unchanged.</description></item>
+    /// <item><term>Property changes</term><description>A <b>Refresh</b> change is emitted for the item whose property changed.</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> Each item generates a subscription. For large lists with frequent property changes, use <paramref name="changeSetBuffer"/> and <paramref name="propertyChangeThrottle"/> to reduce churn.</para>
+    /// </remarks>
+    /// <seealso cref="AutoRefresh{TObject, TProperty}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TProperty}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="AutoRefreshOnObservable{TObject, TAny}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{TAny}}, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="ObservableCacheEx.AutoRefresh{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
     public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject>(this IObservable<IChangeSet<TObject>> source, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
     {
@@ -190,16 +246,11 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Automatically refresh downstream operators when properties change.
+    /// Monitors a single property (selected by <paramref name="propertyAccessor"/>) on each item via <see cref="INotifyPropertyChanged"/>
+    /// and emits <b>Refresh</b> changes when that property changes, causing downstream operators to re-evaluate. More efficient than
+    /// the all-properties overload when only one property (of type <typeparamref name="TProperty"/>) affects downstream behavior.
     /// </summary>
-    /// <typeparam name="TObject">The type of object.</typeparam>
-    /// <typeparam name="TProperty">The type of property.</typeparam>
-    /// <param name="source">The source observable.</param>
-    /// <param name="propertyAccessor">Specify a property to observe changes. When it changes a Refresh is invoked.</param>
-    /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have successive property changes.</param>
-    /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refresh invocations.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <returns>An observable change set with additional refresh changes.</returns>
+    /// <inheritdoc cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
     public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TProperty>> propertyAccessor, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
     {
@@ -221,15 +272,34 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Automatically refresh downstream operator. The refresh is triggered when the observable receives a notification.
+    /// Monitors each item with a custom observable and emits <b>Refresh</b> changes whenever that observable fires,
+    /// causing downstream operators (Filter, Sort, Group) to re-evaluate.
     /// </summary>
-    /// <typeparam name="TObject">The type of object.</typeparam>
-    /// <typeparam name="TAny">A ignored type used for specifying what to auto refresh on.</typeparam>
-    /// <param name="source">The source observable change set.</param>
-    /// <param name="reevaluator">An observable which acts on items within the collection and produces a value when the item should be refreshed.</param>
-    /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements require a refresh.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <returns>An observable change set with additional refresh changes.</returns>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <typeparam name="TAny">The type emitted by the re-evaluator observable (value is ignored).</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to monitor for observable-driven refresh signals.</param>
+    /// <param name="reevaluator">A <see cref="Func{T, TResult}"/> factory that, given an item, returns an observable whose emissions trigger a <b>Refresh</b> for that item.</param>
+    /// <param name="changeSetBuffer">An optional <see cref="TimeSpan"/> buffer duration to batch refresh signals into a single changeset.</param>
+    /// <param name="scheduler">The <see cref="IScheduler"/> for buffering.</param>
+    /// <returns>A list changeset stream with additional <b>Refresh</b> changes injected when per-item observables fire.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="reevaluator"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// This is the general-purpose refresh mechanism. <see cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// is a convenience wrapper that uses <c>WhenAnyPropertyChanged()</c> as the re-evaluator.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add/AddRange</term><description>Subscribes to the re-evaluator observable for each new item. The original change is forwarded.</description></item>
+    /// <item><term>Replace</term><description>Unsubscribes from the old item's observable, subscribes to the new. The original change is forwarded.</description></item>
+    /// <item><term>Remove/RemoveRange/Clear</term><description>Unsubscribes from removed items. The original change is forwarded.</description></item>
+    /// <item><term>Moved/Refresh</term><description>Forwarded unchanged.</description></item>
+    /// <item><term>Re-evaluator fires</term><description>The item's current index is looked up and a <b>Refresh</b> change is emitted.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="ObservableCacheEx.AutoRefreshOnObservable{TObject, TKey, TAny}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TAny}}, TimeSpan?, IScheduler?)"/>
     public static IObservable<IChangeSet<TObject>> AutoRefreshOnObservable<TObject, TAny>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
         where TObject : notnull
     {
@@ -240,18 +310,36 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Binds a clone of the observable change set to the target observable collection.
+    /// Applies changeset mutations to a target <see cref="IObservableCollection{T}"/> for UI data binding.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="targetCollection">The target collection.</param>
-    /// <param name="resetThreshold">The reset threshold.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// targetCollection.
-    /// </exception>
+    /// <typeparam name="T">The type of items in the list.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to bind to a collection.</param>
+    /// <param name="targetCollection">The <see cref="IObservableCollection{T}"/> target collection to keep in sync.</param>
+    /// <param name="resetThreshold">When a changeset exceeds this many changes, the collection is reset instead of applying individual changes.</param>
+    /// <returns>A continuation of the source changeset stream (allows further chaining).</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="targetCollection"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Delegates to <see cref="Adapt{T}(IObservable{IChangeSet{T}}, IChangeSetAdaptor{T})"/> with an internal collection adaptor.
+    /// Each changeset is applied to the target collection on the calling thread. For UI binding, ensure the source is
+    /// observed on the UI thread (e.g., via <c>ObserveOn</c>).
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add</term><description>Item inserted at the specified index in the target collection.</description></item>
+    /// <item><term>AddRange</term><description>Items inserted as a range. If the count exceeds <paramref name="resetThreshold"/>, the collection is cleared and repopulated.</description></item>
+    /// <item><term>Replace</term><description>Item at the specified index is replaced.</description></item>
+    /// <item><term>Remove</term><description>Item at the specified index is removed.</description></item>
+    /// <item><term>RemoveRange/Clear</term><description>Items removed from the collection.</description></item>
+    /// <item><term>Moved</term><description>Item is moved between positions in the collection.</description></item>
+    /// <item><term>Refresh</term><description>Depends on the adaptor implementation.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
+    /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, out ReadOnlyObservableCollection{T}, int)"/>
+    /// <seealso cref="Clone{T}(IObservable{IChangeSet{T}}, IList{T})"/>
+    /// <seealso cref="Adapt{T}(IObservable{IChangeSet{T}}, IChangeSetAdaptor{T})"/>
+    /// <seealso cref="ObservableCacheEx.Bind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservableCollection{TObject}, int)"/>
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, IObservableCollection<T> targetCollection, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where T : notnull
     {
@@ -270,18 +358,9 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Binds a clone of the observable change set to the target observable collection.
+    /// Binds the source changeset stream to <paramref name="targetCollection"/>, with fine-grained <see cref="BindingOptions"/> control over reset threshold and other behaviors.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="targetCollection">The target collection.</param>
-    /// <param name="options">The binding options.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
-    /// source
-    /// or
-    /// targetCollection.
-    /// </exception>
+    /// <inheritdoc cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, IObservableCollection<T> targetCollection, BindingOptions options)
         where T : notnull
     {
@@ -293,13 +372,15 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Creates a binding to a readonly observable collection which is specified as an 'out' parameter.
+    /// Constructs a <see cref="ReadOnlyObservableCollection{T}"/> and binds the changeset stream to it.
+    /// Use this overload when you need a read-only view (typically for UI binding) without managing the backing collection yourself.
+    /// The created collection is returned via the <paramref name="readOnlyObservableCollection"/> output parameter.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
-    /// <param name="resetThreshold">The reset threshold.</param>
-    /// <returns>A continuation of the source stream.</returns>
+    /// <inheritdoc cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>
+    /// <remarks>
+    /// <inheritdoc cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>
+    /// <para>The created collection is backed by an internal <c>ObservableCollectionExtended&lt;T&gt;</c>. Callers receive only the read-only wrapper.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, out ReadOnlyObservableCollection<T> readOnlyObservableCollection, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where T : notnull
     {
@@ -316,13 +397,15 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Creates a binding to a readonly observable collection which is specified as an 'out' parameter.
+    /// Constructs a <see cref="ReadOnlyObservableCollection{T}"/> and binds the changeset stream to it,
+    /// with fine-grained <see cref="BindingOptions"/> control over reset threshold and other behaviors.
+    /// The created collection is returned via the <paramref name="readOnlyObservableCollection"/> output parameter.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
-    /// <param name="options">The binding options.</param>
-    /// <returns>A continuation of the source stream.</returns>
+    /// <inheritdoc cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>
+    /// <remarks>
+    /// <inheritdoc cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>
+    /// <para>The created collection is backed by an internal <c>ObservableCollectionExtended&lt;T&gt;</c>. Callers receive only the read-only wrapper.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, out ReadOnlyObservableCollection<T> readOnlyObservableCollection, BindingOptions options)
         where T : notnull
     {
@@ -338,18 +421,9 @@ public static class ObservableListEx
 #if SUPPORTS_BINDINGLIST
 
     /// <summary>
-    /// Binds a clone of the observable change set to the target observable collection.
+    /// Binds the source changeset stream to a WinForms <see cref="BindingList{T}"/>, keeping <paramref name="bindingList"/> in sync.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="bindingList">The target binding list.</param>
-    /// <param name="resetThreshold">The reset threshold.</param>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// targetCollection.
-    /// </exception>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <inheritdoc cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>
     public static IObservable<IChangeSet<T>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this IObservable<IChangeSet<T>> source, BindingList<T> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where T : notnull
     {
@@ -361,30 +435,19 @@ public static class ObservableListEx
 
 #endif
 
-    /// <summary>
-    /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
-    /// When a resume signal has been received the batched updates will  be fired.
-    /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <inheritdoc cref="BufferIf{T}(IObservable{IChangeSet{T}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
+    /// <remarks>
+    /// <inheritdoc cref="BufferIf{T}(IObservable{IChangeSet{T}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
+    /// <para>This overload starts unpaused and has no timeout.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, IScheduler? scheduler = null)
         where T : notnull => BufferIf(source, pauseIfTrueSelector, false, scheduler);
 
-    /// <summary>
-    /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
-    /// When a resume signal has been received the batched updates will  be fired.
-    /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified.</param>
-    /// <param name="initialPauseState">if set to <c>true</c> [initial pause state].</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <inheritdoc cref="BufferIf{T}(IObservable{IChangeSet{T}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
+    /// <remarks>
+    /// <inheritdoc cref="BufferIf{T}(IObservable{IChangeSet{T}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
+    /// <para>This overload allows setting the initial pause state but has no timeout.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, IScheduler? scheduler = null)
         where T : notnull
     {
@@ -394,32 +457,42 @@ public static class ObservableListEx
         return BufferIf(source, pauseIfTrueSelector, initialPauseState, null, scheduler);
     }
 
-    /// <summary>
-    /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
-    /// When a resume signal has been received the batched updates will  be fired.
-    /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified.</param>
-    /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <inheritdoc cref="BufferIf{T}(IObservable{IChangeSet{T}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
+    /// <remarks>
+    /// <inheritdoc cref="BufferIf{T}(IObservable{IChangeSet{T}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
+    /// <para>This overload starts unpaused and accepts a timeout but not an explicit initial pause state.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, TimeSpan? timeOut, IScheduler? scheduler = null)
         where T : notnull => BufferIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
 
     /// <summary>
-    /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
-    /// When a resume signal has been received the batched updates will  be fired.
+    /// Buffers changeset notifications while a pause signal is active, then flushes all buffered changes when resumed.
     /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified.</param>
-    /// <param name="initialPauseState">if set to <c>true</c> [initial pause state].</param>
-    /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <typeparam name="T">The type of items in the list.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to conditionally buffer.</param>
+    /// <param name="pauseIfTrueSelector">An <see cref="IObservable{bool}"/> of <see cref="bool"/> that controls buffering: <see langword="true"/> pauses (buffers), <see langword="false"/> resumes (flushes).</param>
+    /// <param name="initialPauseState">The initial pause state. When <see langword="true"/>, buffering starts immediately.</param>
+    /// <param name="timeOut">An optional <see cref="TimeSpan"/> maximum duration to keep the buffer open. After this time, the buffer is flushed regardless of pause state.</param>
+    /// <param name="scheduler">The <see cref="IScheduler"/> for timeout scheduling.</param>
+    /// <returns>A list changeset stream that buffers during pause and emits combined changesets on resume.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="pauseIfTrueSelector"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// All changeset events are buffered at the changeset level (not individual changes) while paused.
+    /// On resume, all buffered changesets are emitted as a single combined changeset. If the buffer is empty on resume,
+    /// no emission occurs.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Any (while paused)</term><description>Accumulated in an internal buffer. Not emitted downstream.</description></item>
+    /// <item><term>Any (while active)</term><description>Passed through immediately.</description></item>
+    /// <item><term>Pause selector emits false</term><description>All buffered changesets are flushed downstream as one combined changeset.</description></item>
+    /// <item><term>Timeout fires</term><description>Automatically resumes and flushes the buffer.</description></item>
+    /// <item><term>OnError</term><description>Forwarded immediately (not buffered).</description></item>
+    /// <item><term>OnCompleted</term><description>Forwarded immediately.</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> Each pause/resume cycle re-arms the timeout. Rapid toggling can create many small buffer windows.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, TimeSpan? timeOut, IScheduler? scheduler = null)
         where T : notnull
     {
@@ -430,13 +503,21 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Buffers changes for an initial period only. After the period has elapsed, not further buffering occurs.
+    /// Buffers changesets during an initial time window, then emits a single combined changeset and passes through subsequent changes.
     /// </summary>
-    /// <typeparam name="TObject">The type of object.</typeparam>
-    /// <param name="source">The source change set.</param>
-    /// <param name="initialBuffer">The period to buffer, measure from the time that the first item arrives.</param>
-    /// <param name="scheduler">The scheduler to buffer on.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to buffer during the initial loading period.</param>
+    /// <param name="initialBuffer">The <see cref="TimeSpan"/> time period (measured from first emission) during which changes are buffered.</param>
+    /// <param name="scheduler">The <see cref="IScheduler"/> for timing the buffer window.</param>
+    /// <returns>A list changeset stream where the initial burst is combined into one changeset.</returns>
+    /// <remarks>
+    /// <para>
+    /// For a configured duration after the first emission, all changesets are buffered and combined into a single emission.
+    /// After this initial window, subsequent changesets pass through immediately.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="DeferUntilLoaded{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="FlattenBufferResult{T}(IObservable{IList{IChangeSet{T}}})"/>
     public static IObservable<IChangeSet<TObject>> BufferInitial<TObject>(this IObservable<IChangeSet<TObject>> source, TimeSpan initialBuffer, IScheduler? scheduler = null)
         where TObject : notnull => source.DeferUntilLoaded().Publish(
             shared =>
@@ -447,11 +528,14 @@ public static class ObservableListEx
             });
 
     /// <summary>
-    /// Cast the changes to another form.
+    /// Casts each item in the changeset from <c>object</c> to <typeparamref name="TDestination"/> using a direct cast.
     /// </summary>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <typeparam name="TDestination">The target type to cast to.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{object}}"/> of <c>object</c> items.</param>
+    /// <returns>A list changeset stream of cast items.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <seealso cref="Cast{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination})"/>
+    /// <seealso cref="CastToObject{T}(IObservable{IChangeSet{T}})"/>
     public static IObservable<IChangeSet<TDestination>> Cast<TDestination>(this IObservable<IChangeSet<object>> source)
         where TDestination : notnull
     {
@@ -461,14 +545,17 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// <para>Cast the changes to another form.</para>
-    /// <para>Alas, I had to add the converter due to type inference issues. The converter can be avoided by CastToObject() first.</para>
+    /// Transforms each item in the changeset using a conversion function.
     /// </summary>
-    /// <typeparam name="TSource">The type of the object.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="conversionFactory">The conversion factory.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <typeparam name="TSource">The source item type.</typeparam>
+    /// <typeparam name="TDestination">The destination item type.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TSource}}"/> to cast.</param>
+    /// <param name="conversionFactory">A <see cref="Func{T, TResult}"/> function to convert each item from <typeparamref name="TSource"/> to <typeparamref name="TDestination"/>.</param>
+    /// <returns>A list changeset stream of converted items.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="conversionFactory"/> is <see langword="null"/>.</exception>
+    /// <remarks>Use this overload when type inference requires explicit specification of both source and destination types. Alternatively, call <see cref="CastToObject{T}"/> first, then the single-type-parameter <see cref="Cast{TDestination}"/> overload.</remarks>
+    /// <seealso cref="Cast{TDestination}(IObservable{IChangeSet{object}})"/>
+    /// <seealso cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/>
     public static IObservable<IChangeSet<TDestination>> Cast<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, TDestination> conversionFactory)
         where TSource : notnull
         where TDestination : notnull
@@ -481,22 +568,28 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Cast the underlying type of an object. Use before a Cast function.
+    /// Casts each item in the changeset to <c>object</c>. Typically used before <see cref="Cast{TDestination}(IObservable{IChangeSet{object}})"/> to work around type inference limitations.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <typeparam name="T">The source item type (must be a reference type).</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to cast to object.</param>
+    /// <returns>A list changeset stream of <c>object</c> items.</returns>
+    /// <seealso cref="Cast{TDestination}(IObservable{IChangeSet{object}})"/>
     public static IObservable<IChangeSet<object>> CastToObject<T>(this IObservable<IChangeSet<T>> source)
         where T : class => source.Select(changes => changes.Transform(t => (object)t));
 
     /// <summary>
-    /// Clones the target list as a side effect of the stream.
+    /// Applies each changeset to the target list as a side effect, keeping it synchronized with the source.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="target">The target of the clone.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <typeparam name="T">The type of items in the list.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to clone.</param>
+    /// <param name="target">The <see cref="IList{T}"/> target list to clone changes into.</param>
+    /// <returns>A continuation of the source changeset stream.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>Lower-level than <see cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>. Uses <see cref="IList{T}"/>.Clone() to apply all changeset operations directly.</para>
+    /// </remarks>
+    /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>
+    /// <seealso cref="PopulateInto{T}(IObservable{IChangeSet{T}}, ISourceList{T})"/>
     public static IObservable<IChangeSet<T>> Clone<T>(this IObservable<IChangeSet<T>> source, IList<T> target)
         where T : notnull
     {
@@ -509,10 +602,10 @@ public static class ObservableListEx
     /// <para>Convert the object using the specified conversion function.</para>
     /// <para>This is a lighter equivalent of Transform and is designed to be used with non-disposable objects.</para>
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="conversionFactory">The conversion factory.</param>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination items.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to convert.</param>
+    /// <param name="conversionFactory">The <see cref="Func{T, TResult}"/> conversion factory.</param>
     /// <returns>An observable which emits the change set.</returns>
     [Obsolete("Prefer Cast as it is does the same thing but is semantically correct")]
     public static IObservable<IChangeSet<TDestination>> Convert<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TDestination> conversionFactory)
@@ -527,11 +620,20 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Defer the subscription until the stream has been inflated with data.
+    /// Defers downstream delivery until the source emits its first changeset, then forwards all subsequent changesets.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to defer until the first changeset arrives.</param>
+    /// <returns>A list changeset stream that begins emitting only after the source has produced its first changeset.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Subscribes to the source immediately but buffers internally until the first changeset arrives, at which point it emits
+    /// the initial data and all subsequent changesets. This is useful when downstream consumers should not receive an empty initial state.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="SkipInitial{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="StartWithEmpty{T}(IObservable{IChangeSet{T}})"/>
     public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -540,12 +642,11 @@ public static class ObservableListEx
         return new DeferUntilLoaded<T>(source).Run();
     }
 
-    /// <summary>
-    /// Defer the subscription until the cache has been inflated with data.
-    /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <inheritdoc cref="DeferUntilLoaded{T}(IObservable{IChangeSet{T}})"/>
+    /// <remarks>
+    /// <inheritdoc cref="DeferUntilLoaded{T}(IObservable{IChangeSet{T}})"/>
+    /// <para>Convenience overload that calls <c>source.Connect().DeferUntilLoaded()</c>.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservableList<T> source)
         where T : notnull
     {
@@ -555,16 +656,32 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// <para>Disposes each item when no longer required.</para>
-    /// <para>
-    /// Individual items are disposed after removal or replacement changes have been sent downstream.
-    /// All items previously-published on the stream are disposed after the stream finalizes.
-    /// </para>
+    /// Disposes items that implement <see cref="IDisposable"/> when they are removed, replaced, or cleared from the stream.
+    /// All remaining tracked items are disposed when the stream finalizes (OnCompleted, OnError, or subscription disposal).
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>A continuation of the original stream.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to track for disposal on removal.</param>
+    /// <returns>A continuation of the source changeset stream with disposal side effects applied.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Items are cast to <see cref="IDisposable"/> and disposed after the changeset has been forwarded downstream.
+    /// Items that do not implement <see cref="IDisposable"/> are silently ignored.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Items are tracked for future disposal. Changeset forwarded.</description></item>
+    /// <item><term><b>Replace</b></term><description>The previous (replaced) item is disposed after the changeset is forwarded. The new item is tracked.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b></term><description>Removed items are disposed after the changeset is forwarded.</description></item>
+    /// <item><term><b>Clear</b></term><description>All tracked items are disposed after the changeset is forwarded.</description></item>
+    /// <item><term><b>Moved</b>/<b>Refresh</b></term><description>Forwarded. No disposal occurs.</description></item>
+    /// <item><term>OnError/OnCompleted/Disposal</term><description>All remaining tracked items are disposed during finalization.</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> Disposal happens after the changeset is delivered downstream, so subscribers see the change before items are disposed.</para>
+    /// </remarks>
+    /// <seealso cref="OnItemRemoved{T}(IObservable{IChangeSet{T}}, Action{T}, bool)"/>
+    /// <seealso cref="SubscribeMany{T}(IObservable{IChangeSet{T}}, Func{T, IDisposable})"/>
+    /// <seealso cref="ObservableCacheEx.DisposeMany{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
     public static IObservable<IChangeSet<T>> DisposeMany<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -574,18 +691,29 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Selects distinct values from the source, using the specified value selector.
+    /// Extracts distinct values from source items using <paramref name="valueSelector"/>, with reference counting to track when values enter and leave the result set.
     /// </summary>
-    /// <typeparam name="TObject">The type of the source.</typeparam>
-    /// <typeparam name="TValue">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="valueSelector">The transform factory.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// valueSelector.
-    /// </exception>
+    /// <typeparam name="TObject">The type of items in the source list.</typeparam>
+    /// <typeparam name="TValue">The type of distinct values produced.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to extract distinct values.</param>
+    /// <param name="valueSelector">A <see cref="Func{T, TResult}"/> function that extracts the value to track from each source item.</param>
+    /// <returns>A list changeset stream of distinct values.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="valueSelector"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Maintains an internal reference count per distinct value. A value is included when its count first exceeds zero
+    /// and removed when its count drops back to zero.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Value extracted. If first occurrence, an <b>Add</b> is emitted. Otherwise the reference count is incremented silently.</description></item>
+    /// <item><term><b>Replace</b></term><description>Old value's reference count decremented (removed if zero), new value's count incremented (added if first). If the value did not change, no emission.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b></term><description>Reference count decremented. If the count reaches zero, a <b>Remove</b> is emitted for that distinct value.</description></item>
+    /// <item><term><b>Refresh</b></term><description>Value is re-extracted. If changed, old value decremented and new value incremented (same as Replace logic).</description></item>
+    /// <item><term><b>Clear</b></term><description>All reference counts cleared. <b>Remove</b> emitted for every tracked distinct value.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="ObservableCacheEx.DistinctValues{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TValue})"/>
     public static IObservable<IChangeSet<TValue>> DistinctValues<TObject, TValue>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TValue> valueSelector)
         where TObject : notnull
         where TValue : notnull
@@ -598,13 +726,36 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Apply a logical Except operator between the collections.
-    /// Items which are in the source and not in the others are included in the result.
+    /// Applies a logical set-difference (Except) between the source and other streams.
+    /// Items present in the first source but not in any of the <paramref name="others"/> are included in the result.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="others">The others.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <param name="source">The primary <see cref="IObservable{IChangeSet{T}}"/> from which other streams are subtracted.</param>
+    /// <param name="others">The other <see cref="IObservable{IChangeSet{T}}"/> changeset streams to exclude from the result.</param>
+    /// <returns>A list changeset stream containing items from <paramref name="source"/> that are not in any of <paramref name="others"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="others"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Item identity is determined by the default equality comparer for <typeparamref name="T"/>. Across all sources, items are tracked
+    /// by reference-counted equality (not by index position).
+    /// The first source has a special role: only items from it can appear in the result, and only if they do not exist in any other source.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b> (first source)</term><description>If the item does not exist in any other source, an <b>Add</b> is emitted.</description></item>
+    /// <item><term><b>Add</b>/<b>AddRange</b> (other source)</term><description>If the item was in the result (from first source), a <b>Remove</b> is emitted.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b> (first source)</term><description>If the item was in the result, a <b>Remove</b> is emitted.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b> (other source)</term><description>If the item exists in the first source and no longer in any other, an <b>Add</b> is emitted.</description></item>
+    /// <item><term><b>Replace</b></term><description>Treated as a Remove of the old item plus an Add of the new item, with set logic re-evaluated.</description></item>
+    /// <item><term><b>Moved</b></term><description>Ignored by the set logic (no positional semantics).</description></item>
+    /// <item><term><b>Refresh</b></term><description>Forwarded if the item is currently in the result set.</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> Unlike <see cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>, the first source is asymmetric: only its items can appear in the result.</para>
+    /// </remarks>
+    /// <seealso cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="ObservableCacheEx.Except{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
         where T : notnull
     {
@@ -613,52 +764,61 @@ public static class ObservableListEx
         return source.Combine(CombineOperator.Except, others);
     }
 
-    /// <summary>
-    /// Apply a logical Except operator between the collections.
-    /// Items which are in the source and not in the others are included in the result.
-    /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The sources.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <inheritdoc cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <remarks>
+    /// <inheritdoc cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>Static overload accepting a pre-built collection of sources. The first item in the collection is the primary source.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> Except<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.Except);
 
-    /// <summary>
-    /// Dynamically apply a logical Except operator. Items from the first observable list are included when an equivalent item does not exist in the other sources.
-    /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <inheritdoc cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <remarks>
+    /// <inheritdoc cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>Dynamic overload: sources can be added or removed from the <see cref="IObservableList{T}"/> at runtime. The first source in the list acts as the primary.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.Except);
 
-    /// <summary>
-    /// Dynamically apply a logical Except operator. Items from the first observable list are included when an equivalent item does not exist in the other sources.
-    /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <inheritdoc cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <remarks>
+    /// <inheritdoc cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>Dynamic overload accepting <see cref="IObservableList{T}"/> of <see cref="IObservableList{T}"/>. Each inner list's <c>Connect()</c> is used as a source.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservableList<IObservableList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.Except);
 
-    /// <summary>
-    /// Dynamically apply a logical Except operator. Items from the first observable list are included when an equivalent item does not exist in the other sources.
-    /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <inheritdoc cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <remarks>
+    /// <inheritdoc cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>Dynamic overload accepting <see cref="IObservableList{T}"/> of <see cref="ISourceList{T}"/>. Each inner list's <c>Connect()</c> is used as a source.</para>
+    /// </remarks>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservableList<ISourceList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.Except);
 
     /// <summary>
-    /// Removes items from the cache according to the value specified by the time selector function.
+    /// Automatically removes items from the <paramref name="source"/> list after the duration returned by <paramref name="timeSelector"/>.
+    /// Returns an observable of the items that were expired and removed.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="timeSelector">Selector returning when to expire the item. Return null for non-expiring item.</param>
-    /// <param name="pollingInterval">Enter the polling interval to optimise expiry timers, if omitted 1 timer is created for each unique expiry time.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <returns>An observable which emits the enumerable of items.</returns>
+    /// <param name="source">The <see cref="ISourceList{T}"/> source list to apply time-based expiration to.</param>
+    /// <param name="timeSelector">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <see langword="null"/> for items that should never expire.</param>
+    /// <param name="pollingInterval">An optional <see cref="TimeSpan"/> polling interval to batch expiry checks. If omitted, a separate timer is created for each unique expiry time.</param>
+    /// <param name="scheduler">The scheduler for scheduling expiry timers. Defaults to <see cref="GlobalConfig.DefaultScheduler"/>.</param>
+    /// <returns>An observable that emits collections of items each time expired items are removed from the source list.</returns>
+    /// <remarks>
+    /// <para>
+    /// This operator acts directly on an <see cref="ISourceList{T}"/>, not on a changeset stream. It monitors items as they are added,
+    /// schedules their removal, and physically removes them from the source list when their time expires.
+    /// </para>
+    /// <para>
+    /// When <paramref name="pollingInterval"/> is specified, all items due for removal are batched into a single removal at each polling tick,
+    /// which can improve performance when many items expire around the same time.
+    /// </para>
+    /// <para><b>Worth noting:</b> The returned observable emits the expired items (not changesets). Subscribe to this observable to trigger the expiry mechanism; if not subscribed, no items will be removed.</para>
+    /// </remarks>
+    /// <seealso cref="LimitSizeTo{T}(ISourceList{T}, int, IScheduler?)"/>
+    /// <seealso cref="ToObservableChangeSet{T}(IObservable{T}, Func{T, TimeSpan?}, IScheduler?)"/>
     public static IObservable<IEnumerable<T>> ExpireAfter<T>(
                 this ISourceList<T> source,
                 Func<T, TimeSpan?> timeSelector,
@@ -672,14 +832,38 @@ public static class ObservableListEx
             scheduler: scheduler);
 
     /// <summary>
-    /// Filters items, statically, in a list stream, based on a given predicate.
+    /// Filters items from the source list changeset stream using a static predicate.
+    /// Only items satisfying <paramref name="predicate"/> are included downstream.
     /// </summary>
     /// <typeparam name="T">The type of items in the list.</typeparam>
-    /// <param name="source">The list stream whose items are to be filtered.</param>
-    /// <param name="predicate">A static predicate to be used to determine which items should be included or excluded by the filter.</param>
-    /// <returns>A list stream, containing only the items matched by <paramref name="predicate"/>.</returns>
-    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="predicate"/>.</exception>
-    /// <remarks>Note that, unlike some other overloads of this operator, ordering of items is preserved.</remarks>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to filter.</param>
+    /// <param name="predicate">A <see cref="Func{T, TResult}"/> predicate that determines which items are included. Items returning <see langword="true"/> appear downstream; items returning <see langword="false"/> are excluded.</param>
+    /// <returns>A list changeset stream containing only items that satisfy <paramref name="predicate"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="source"/> or <paramref name="predicate"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Use this overload when you need only a single predicate function for the lifetime of the subscription;
+    /// unlike the dynamic-predicate and state-driven overloads, the predicate function itself never changes.
+    /// Note that this does not mean an item's inclusion is fixed: Refresh events can re-evaluate each item against the predicate
+    /// and promote a previously-excluded item to included (or vice versa).
+    /// Item ordering is preserved.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add</term><description>The predicate is evaluated. If the item passes, an <b>Add</b> is emitted at the calculated downstream index. Otherwise dropped.</description></item>
+    /// <item><term>AddRange</term><description>Each item in the range is evaluated. Matching items are emitted as an <b>AddRange</b>.</description></item>
+    /// <item><term>Replace</term><description>The predicate is re-evaluated. Four outcomes: both pass produces <b>Replace</b>; new passes but old didn't produces <b>Add</b>; old passed but new doesn't produces <b>Remove</b>; neither passes is dropped.</description></item>
+    /// <item><term>Remove</term><description>If the item was included downstream, a <b>Remove</b> is emitted. Otherwise dropped.</description></item>
+    /// <item><term>RemoveRange</term><description>Included items in the range are emitted as individual <b>Remove</b> changes.</description></item>
+    /// <item><term>Refresh</term><description>The predicate is re-evaluated. If the item now passes but previously did not, an <b>Add</b> is emitted. If it previously passed but no longer does, a <b>Remove</b> is emitted. If still passes, the <b>Refresh</b> is forwarded. If still fails, dropped.</description></item>
+    /// <item><term>Clear</term><description>All downstream items are cleared.</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> Refresh events trigger re-evaluation, which can promote or demote items (turning a Refresh into an Add or Remove). Pair with <see cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/> for property-change-driven filtering.</para>
+    /// </remarks>
+    /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, IObservable{Func{T, bool}}, ListFilterPolicy)"/>
+    /// <seealso cref="FilterOnObservable{TObject}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="ObservableCacheEx.Filter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, bool}, bool)"/>
     public static IObservable<IChangeSet<T>> Filter<T>(
                 this IObservable<IChangeSet<T>> source,
                 Func<T, bool> predicate)
@@ -690,16 +874,34 @@ public static class ObservableListEx
             suppressEmptyChangesets: true);
 
     /// <summary>
-    /// Filters source using the specified filter observable predicate.
+    /// Filters items using a dynamically changing predicate.
+    /// When <paramref name="predicate"/> emits a new function, all items are re-evaluated.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="predicate">The predicate which indicates which items should be included.</param>
-    /// <param name="filterPolicy">Should the filter clear and replace, or calculate a diff-set.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// filterController.</exception>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to filter.</param>
+    /// <param name="predicate">An <see cref="IObservable{Func{T, bool}}"/> that emits new predicate functions. Each emission triggers a full re-evaluation of all items.</param>
+    /// <param name="filterPolicy">The <see cref="ListFilterPolicy"/> that controls re-filtering behavior when the predicate changes.</param>
+    /// <returns>A list changeset stream containing only items that satisfy the most recent predicate.</returns>
+    /// <remarks>
+    /// <para>
+    /// Each time <paramref name="predicate"/> emits, every item is re-evaluated against the new predicate.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add</term><description>The current predicate is evaluated. If the item passes, an <b>Add</b> is emitted. Otherwise dropped.</description></item>
+    /// <item><term>AddRange</term><description>Each item is evaluated. Matching items are emitted as <b>AddRange</b>.</description></item>
+    /// <item><term>Replace</term><description>Re-evaluated. Same four-outcome logic as the static overload (Replace, Add, Remove, or dropped).</description></item>
+    /// <item><term>Remove</term><description>If the item was downstream, a <b>Remove</b> is emitted. Otherwise dropped.</description></item>
+    /// <item><term>Refresh</term><description>Re-evaluated. If inclusion status changed, an <b>Add</b> or <b>Remove</b> is emitted. If unchanged, <b>Refresh</b> forwarded or dropped.</description></item>
+    /// <item><term>Clear</term><description>All downstream items are cleared.</description></item>
+    /// <item><term>Predicate changed</term><description>All items are re-evaluated against the new predicate. The output is shaped by <paramref name="filterPolicy"/>.</description></item>
+    /// <item><term>OnCompleted</term><description>Independent completion of <paramref name="predicate"/> does not terminate the filter.</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> No items are included until <paramref name="predicate"/> emits its first function.</para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="predicate"/> is <see langword="null"/>.</exception>
+    /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/>
+    /// <seealso cref="FilterOnObservable{TObject}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
     public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate, ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff)
         where T : notnull
     {
@@ -711,20 +913,35 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Creates a filtered stream which can be dynamically filtered, based on state values passed through to a static filtering predicate.
+    /// Filters items using a predicate that receives external state. When <paramref name="predicateState"/> emits a new state value,
+    /// all items are re-evaluated against <paramref name="predicate"/> using the updated state.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <typeparam name="TState">The type of state value required by <paramref name="predicate"/>.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="predicateState">A stream of state values to be passed to <paramref name="predicate"/>.</param>
-    /// <param name="predicate">A static predicate to be used to determine which items should be included or excluded by the filter.</param>
-    /// <param name="filterPolicy">The policy that the operator should use when performing re-filtering operations.</param>
-    /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status.</param>
-    /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>, <paramref name="predicateState"/>, and <paramref name="predicate"/>.</exception>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to filter.</param>
+    /// <param name="predicateState">An <see cref="IObservable{TState}"/> stream of state values to be passed to <paramref name="predicate"/>.</param>
+    /// <param name="predicate">A static <see cref="Func{T, TResult}"/> predicate receiving the current state and an item, returning <see langword="true"/> to include or <see langword="false"/> to exclude. The function itself does not change; only the state value passed to it changes.</param>
+    /// <param name="filterPolicy">The <see cref="ListFilterPolicy"/> that controls re-filtering behavior when the state changes.</param>
+    /// <param name="suppressEmptyChangeSets">When <see langword="true"/> (default), empty changesets are suppressed. Set to <see langword="false"/> to publish empty changesets (useful for monitoring loading status).</param>
+    /// <returns>A list changeset stream containing only items satisfying <paramref name="predicate"/> with the current state.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="predicateState"/>, or <paramref name="predicate"/> is <see langword="null"/>.</exception>
     /// <remarks>
-    /// Usually, <paramref name="predicateState"/> should emit an initial value, immediately upon subscription. This is because <paramref name="predicate"/> cannot be invoked until the first state value is received, and accordingly, the operator will treat all items as excluded until then. Each value emitted by <paramref name="predicateState"/> will trigger a full re-filtering of the entire collection, according to <paramref name="filterPolicy"/>.
+    /// <para>
+    /// The predicate cannot be invoked until the first state value is received. Until then, all items are treated as excluded.
+    /// Each subsequent state emission triggers a full re-evaluation of all items according to <paramref name="filterPolicy"/>.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Evaluated using current state. Matching items emitted as <b>Add</b>/<b>AddRange</b>.</description></item>
+    /// <item><term><b>Replace</b></term><description>Re-evaluated. Same four-outcome logic as the static filter (Replace, Add, Remove, or dropped).</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b></term><description>If the item was downstream, a <b>Remove</b> is emitted.</description></item>
+    /// <item><term><b>Refresh</b></term><description>Re-evaluated against current state. Inclusion status may change.</description></item>
+    /// <item><term><b>Clear</b></term><description>All downstream items are cleared.</description></item>
+    /// <item><term>State changed</term><description>All items are re-evaluated with the new state value. The output is shaped by <paramref name="filterPolicy"/>.</description></item>
+    /// </list>
     /// </remarks>
+    /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/>
+    /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, IObservable{Func{T, bool}}, ListFilterPolicy)"/>
     public static IObservable<IChangeSet<T>> Filter<T, TState>(
                 this IObservable<IChangeSet<T>> source,
                 IObservable<TState> predicateState,
@@ -740,15 +957,38 @@ public static class ObservableListEx
             suppressEmptyChangeSets: suppressEmptyChangeSets);
 
     /// <summary>
-    /// <para>Filters source on the specified observable property using the specified predicate.</para>
-    /// <para>The filter will automatically reapply when a property changes.</para>
+    /// Filters each item using a per-item <see cref="IObservable{T}"/> of <see cref="bool"/> that dynamically controls inclusion.
+    /// When an item's observable emits <see langword="true"/> the item enters the result; when it emits <see langword="false"/> the item is removed.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="objectFilterObservable">The filter property selector. When the observable changes the filter will be re-evaluated.</param>
-    /// <param name="propertyChangedThrottle">The property changed throttle.</param>
-    /// <param name="scheduler">The scheduler used when throttling.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to filter by property value.</param>
+    /// <param name="objectFilterObservable">A function that returns an observable of <see cref="bool"/> for each item, controlling its inclusion.</param>
+    /// <param name="propertyChangedThrottle">An optional <see cref="TimeSpan"/> throttle duration applied to each per-item observable to reduce re-evaluation frequency.</param>
+    /// <param name="scheduler">The <see cref="IScheduler"/> used when throttling. Defaults to the system default scheduler.</param>
+    /// <returns>A list changeset stream containing only items whose per-item observable most recently emitted <see langword="true"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="objectFilterObservable"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Each item in the source gets its own subscription to the observable returned by <paramref name="objectFilterObservable"/>.
+    /// The item's inclusion is determined by the most recent boolean value emitted by that observable.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event (source)</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the per-item observable. Item is included when it first emits <see langword="true"/>.</description></item>
+    /// <item><term><b>Replace</b></term><description>Old subscription disposed, new subscription created for the replacement item.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Subscription disposed. If the item was downstream, a <b>Remove</b> is emitted.</description></item>
+    /// <item><term><b>Refresh</b></term><description>Forwarded if the item is currently included.</description></item>
+    /// </list>
+    /// <list type="table">
+    /// <listheader><term>Event (per-item observable)</term><description>Behavior</description></listheader>
+    /// <item><term>Emits <see langword="true"/></term><description>If not already included, an <b>Add</b> is emitted downstream.</description></item>
+    /// <item><term>Emits <see langword="false"/></term><description>If currently included, a <b>Remove</b> is emitted downstream.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/>
+    /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, IObservable{Func{T, bool}}, ListFilterPolicy)"/>
+    /// <seealso cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="ObservableCacheEx.FilterOnObservable{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
     public static IObservable<IChangeSet<TObject>> FilterOnObservable<TObject>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<bool>> objectFilterObservable, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
         where TObject : notnull
     {
@@ -758,17 +998,21 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// <para>Filters source on the specified property using the specified predicate.</para>
-    /// <para>The filter will automatically reapply when a property changes.</para>
+    /// Filters items based on a property value, automatically re-evaluating when the specified property changes on any item.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TObject">The type of the object. Must implement <see cref="INotifyPropertyChanged"/>.</typeparam>
     /// <typeparam name="TProperty">The type of the property.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="propertySelector">The property selector. When the property changes the filter specified will be re-evaluated.</param>
-    /// <param name="predicate">A predicate based on the object which contains the changed property.</param>
-    /// <param name="propertyChangedThrottle">The property changed throttle.</param>
-    /// <param name="scheduler">The scheduler used when throttling.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to filter by property value.</param>
+    /// <param name="propertySelector"><see cref="Expression{TDelegate}"/> selecting the property to monitor for changes.</param>
+    /// <param name="predicate">A <see cref="Func{T, TResult}"/> predicate evaluated against the item to determine inclusion.</param>
+    /// <param name="propertyChangedThrottle">An optional <see cref="TimeSpan"/> throttle duration for property change notifications.</param>
+    /// <param name="scheduler">The <see cref="IScheduler"/> used when throttling.</param>
+    /// <returns>A list changeset stream of items satisfying the predicate, re-evaluated on property changes.</returns>
+    /// <remarks>
+    /// <para>Deprecated. Use <see cref="AutoRefresh{TObject, TProperty}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TProperty}}, TimeSpan?, TimeSpan?, IScheduler?)"/> followed by <see cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/> instead.</para>
+    /// </remarks>
+    /// <seealso cref="AutoRefresh{TObject, TProperty}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TProperty}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/>
     [Obsolete("Use AutoRefresh(), followed by Filter() instead")]
     public static IObservable<IChangeSet<TObject>> FilterOnProperty<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TProperty>> propertySelector, Func<TObject, bool> predicate, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
@@ -783,21 +1027,43 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Convert the result of a buffer operation to a change set.
+    /// Flattens buffered changesets (e.g. from <see cref="System.Reactive.Linq.Observable.Buffer{TSource}(IObservable{TSource}, TimeSpan)"/>) back into single changesets.
+    /// Empty buffers are dropped.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <param name="source">The <see cref="IObservable{T}"/> of buffered changeset lists.</param>
+    /// <returns>A list changeset stream with all buffered changes concatenated into single changesets.</returns>
+    /// <remarks>
+    /// <para>Use this after applying <c>Observable.Buffer()</c> to a changeset stream to re-merge the batched changesets into a single stream.</para>
+    /// </remarks>
+    /// <seealso cref="BufferIf{T}(IObservable{IChangeSet{T}}, IObservable{bool}, IScheduler?)"/>
+    /// <seealso cref="BufferInitial{T}(IObservable{IChangeSet{T}}, TimeSpan, IScheduler?)"/>
     public static IObservable<IChangeSet<T>> FlattenBufferResult<T>(this IObservable<IList<IChangeSet<T>>> source)
         where T : notnull => source.Where(x => x.Count != 0).Select(updates => new ChangeSet<T>(updates.SelectMany(u => u)));
 
     /// <summary>
-    /// Provides a call back for each item change.
+    /// Invokes <paramref name="action"/> once for every <see cref="Change{T}"/> in each changeset. Range changes
+    /// (AddRange, RemoveRange, Clear) are delivered as a single <see cref="Change{T}"/>; they are not flattened into per-item changes.
+    /// The changeset is forwarded downstream unchanged.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="action">The action.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to observe each change in.</param>
+    /// <param name="action">The action invoked for each <see cref="Change{T}"/>.</param>
+    /// <returns>A continuation of the source changeset stream.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>This is a side-effect operator. It does not modify the changeset. If you need each individual item from range operations flattened out, use <see cref="ForEachItemChange{TObject}(IObservable{IChangeSet{TObject}}, Action{ItemChange{TObject}})"/> instead.</para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add/Replace/Remove/Moved/Refresh</term><description>Callback invoked with the <see cref="Change{T}"/> (single-item change). Changeset forwarded.</description></item>
+    /// <item><term>AddRange/RemoveRange/Clear</term><description>Callback invoked once with the <see cref="Change{T}"/> containing the range (accessible via <c>Range</c> property). Changeset forwarded.</description></item>
+    /// <item><term>OnError</term><description>If the callback throws, the exception propagates as OnError.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="ForEachItemChange{TObject}(IObservable{IChangeSet{TObject}}, Action{ItemChange{TObject}})"/>
+    /// <seealso cref="OnItemAdded{T}(IObservable{IChangeSet{T}}, Action{T})"/>
+    /// <seealso cref="OnItemRemoved{T}(IObservable{IChangeSet{T}}, Action{T}, bool)"/>
+    /// <seealso cref="ObservableCacheEx.ForEachChange{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{Change{TObject, TKey}})"/>
     public static IObservable<IChangeSet<TObject>> ForEachChange<TObject>(this IObservable<IChangeSet<TObject>> source, Action<Change<TObject>> action)
         where TObject : notnull
     {
@@ -809,13 +1075,21 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// <para>Provides a call back for each item change.</para>
-    /// <para>Range changes are flattened, so there is only need to check for Add, Replace, Remove and Clear.</para>
+    /// Invokes <paramref name="action"/> for every individual <see cref="ItemChange{TObject}"/> in each changeset.
+    /// Range changes are flattened into individual item changes first, so the callback only receives Add, Replace, Remove, and Refresh.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="action">The action.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to observe each item-level change in.</param>
+    /// <param name="action">The <see cref="Action{ItemChange{TObject}}"/> action invoked for each individual item change.</param>
+    /// <returns>A continuation of the source changeset stream.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="action"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Unlike <see cref="ForEachChange{TObject}(IObservable{IChangeSet{TObject}}, Action{Change{TObject}})"/>, this operator flattens
+    /// <b>AddRange</b>, <b>RemoveRange</b>, and <b>Clear</b> into individual <see cref="ItemChange{TObject}"/> entries before invoking the callback.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="ForEachChange{TObject}(IObservable{IChangeSet{TObject}}, Action{Change{TObject}})"/>
     public static IObservable<IChangeSet<TObject>> ForEachItemChange<TObject>(this IObservable<IChangeSet<TObject>> source, Action<ItemChange<TObject>> action)
         where TObject : notnull
     {
@@ -827,20 +1101,33 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    ///  Groups the source on the value returned by group selector factory.  The groupings contains an inner observable list.
+    /// Groups source items by the value returned by <paramref name="groupSelector"/>. Each group is an <see cref="IGroup{TObject, TGroup}"/>
+    /// containing an inner observable list of its members.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TGroup">The type of the group.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="groupSelector">The group selector.</param>
-    /// <param name="regrouper">Force the grouping function to recalculate the group value.
-    /// For example if you have a time based grouping with values like `Last Minute', 'Last Hour', 'Today' etc regrouper is used to refresh these groupings.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// groupSelector.
-    /// </exception>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <typeparam name="TGroup">The type of the group key.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to group.</param>
+    /// <param name="groupSelector">A <see cref="Func{T, TResult}"/> function that returns the group key for each item.</param>
+    /// <param name="regrouper">An optional <see cref="IObservable{Unit}"/> of <see cref="Unit"/> that forces all items to be re-evaluated against <paramref name="groupSelector"/> when it fires. Useful for time-based groupings (e.g., "Last Hour", "Today").</param>
+    /// <returns>A list changeset stream of <see cref="IGroup{TObject, TGroup}"/> objects, each containing the items belonging to that group.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="groupSelector"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Groups are created lazily and removed when empty. Each group exposes an inner observable list that receives incremental updates.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Group key evaluated. Item added to its group. If the group is new, an <b>Add</b> of the group is emitted.</description></item>
+    /// <item><term><b>Replace</b></term><description>Group key re-evaluated. If the group changed, the item is removed from the old group and added to the new one. Empty old groups are removed.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Item removed from its group. Empty groups are removed from the result.</description></item>
+    /// <item><term><b>Refresh</b></term><description>Group key re-evaluated. If changed, the item moves between groups.</description></item>
+    /// <item><term><b>Moved</b></term><description>Not handled by group logic.</description></item>
+    /// <item><term>Regrouper fires</term><description>All items re-evaluated. Items that changed group key are moved between groups. Empty groups removed, new groups added.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="GroupOnProperty{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TGroup}}, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="GroupWithImmutableState{TObject, TGroupKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TGroupKey}, IObservable{Unit}?)"/>
+    /// <seealso cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/>
     public static IObservable<IChangeSet<IGroup<TObject, TGroup>>> GroupOn<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TGroup> groupSelector, IObservable<Unit>? regrouper = null)
         where TObject : notnull
         where TGroup : notnull
@@ -853,17 +1140,26 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Groups the source using the property specified by the property selector.  The resulting groupings contains an inner observable list.
-    /// Groups are re-applied when the property value changed.
-    /// When there are likely to be a large number of group property changes specify a throttle to improve performance.
+    /// Groups items by a property value, automatically re-grouping when the specified property changes on any item.
+    /// Each group contains an inner observable list.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TGroup">The type of the group.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="propertySelector">The property selector used to group the items.</param>
-    /// <param name="propertyChangedThrottle">The property changed throttle.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <typeparam name="TObject">The type of the object. Must implement <see cref="INotifyPropertyChanged"/>.</typeparam>
+    /// <typeparam name="TGroup">The type of the group key.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to group by property value.</param>
+    /// <param name="propertySelector"><see cref="Expression{TDelegate}"/> selecting the property whose value determines the group key.</param>
+    /// <param name="propertyChangedThrottle">An optional <see cref="TimeSpan"/> throttle duration for property change notifications.</param>
+    /// <param name="scheduler">The <see cref="IScheduler"/> used when throttling.</param>
+    /// <returns>A list changeset stream of <see cref="IGroup{TObject, TGroup}"/> objects.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertySelector"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Convenience operator equivalent to <c>.AutoRefresh(propertySelector).GroupOn(item => property)</c>.
+    /// Property changes trigger re-evaluation of the group key, potentially moving items between groups.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="GroupOn{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Func{TObject, TGroup}, IObservable{Unit}?)"/>
+    /// <seealso cref="GroupOnPropertyWithImmutableState{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TGroup}}, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="AutoRefresh{TObject, TProperty}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TProperty}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
     public static IObservable<IChangeSet<IGroup<TObject, TGroup>>> GroupOnProperty<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TGroup>> propertySelector, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
         where TGroup : notnull
@@ -876,17 +1172,27 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Groups the source using the property specified by the property selector.  The resulting groupings are immutable.
-    /// Groups are re-applied when the property value changed.
-    /// When there are likely to be a large number of group property changes specify a throttle to improve performance.
+    /// Groups items by a property value, automatically re-grouping when the specified property changes.
+    /// Each group emits immutable snapshots (not live observable lists).
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TGroup">The type of the group.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="propertySelector">The property selector used to group the items.</param>
-    /// <param name="propertyChangedThrottle">The property changed throttle.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <typeparam name="TObject">The type of the object. Must implement <see cref="INotifyPropertyChanged"/>.</typeparam>
+    /// <typeparam name="TGroup">The type of the group key.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to group by property value with immutable snapshots.</param>
+    /// <param name="propertySelector"><see cref="Expression{TDelegate}"/> selecting the property whose value determines the group key.</param>
+    /// <param name="propertyChangedThrottle">An optional <see cref="TimeSpan"/> throttle duration for property change notifications.</param>
+    /// <param name="scheduler">The <see cref="IScheduler"/> used when throttling.</param>
+    /// <returns>A list changeset stream of <see cref="List.IGrouping{TObject, TGroup}"/> immutable group snapshots.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertySelector"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Combines <see cref="AutoRefresh{TObject, TProperty}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TProperty}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// with <see cref="GroupWithImmutableState{TObject, TGroupKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TGroupKey}, IObservable{Unit}?)"/>.
+    /// Unlike <see cref="GroupOnProperty{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TGroup}}, TimeSpan?, IScheduler?)"/>,
+    /// this produces immutable snapshots per group rather than live inner observable lists.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="GroupOnProperty{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TGroup}}, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="GroupWithImmutableState{TObject, TGroupKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TGroupKey}, IObservable{Unit}?)"/>
     public static IObservable<IChangeSet<List.IGrouping<TObject, TGroup>>> GroupOnPropertyWithImmutableState<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TGroup>> propertySelector, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
         where TGroup : notnull
@@ -899,20 +1205,25 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    ///  Groups the source on the value returned by group selector factory. Each update produces immutable grouping.
+    /// Groups source items by the value returned by <paramref name="groupSelectorKey"/>. Each update produces immutable grouping snapshots
+    /// rather than live inner observable lists.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
     /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="groupSelectorKey">The group selector key.</param>
-    /// <param name="regrouper">Force the grouping function to recalculate the group value.
-    /// For example if you have a time based grouping with values like `Last Minute', 'Last Hour', 'Today' etc regrouper is used to refresh these groupings.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// groupSelectorKey.
-    /// </exception>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to group with immutable snapshots.</param>
+    /// <param name="groupSelectorKey">A <see cref="Func{T, TResult}"/> function that returns the group key for each item.</param>
+    /// <param name="regrouper">An optional <see cref="IObservable{Unit}"/> of <see cref="Unit"/> that forces all items to be re-evaluated when it fires.</param>
+    /// <returns>A list changeset stream of <see cref="List.IGrouping{TObject, TGroupKey}"/> immutable snapshots.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="groupSelectorKey"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Works like <see cref="GroupOn{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Func{TObject, TGroup}, IObservable{Unit}?)"/>
+    /// but each affected group emits a new immutable snapshot on every change rather than updating a live inner list.
+    /// This is useful when consumers need thread-safe, point-in-time snapshots of each group.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="GroupOn{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Func{TObject, TGroup}, IObservable{Unit}?)"/>
+    /// <seealso cref="GroupOnPropertyWithImmutableState{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TGroup}}, TimeSpan?, IScheduler?)"/>
     public static IObservable<IChangeSet<List.IGrouping<TObject, TGroupKey>>> GroupWithImmutableState<TObject, TGroupKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit>? regrouper = null)
         where TObject : notnull
         where TGroupKey : notnull
@@ -925,16 +1236,26 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Limits the size of the source cache to the specified limit.
-    /// Notifies which items have been removed from the source list.
+    /// Limits the source list to a maximum number of items using FIFO eviction.
+    /// When the list exceeds <paramref name="sizeLimit"/>, the oldest items are removed.
+    /// Returns an observable of the items that were removed.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="sizeLimit">The size limit.</param>
-    /// <param name="scheduler">The scheduler.</param>
-    /// <returns>An observable which emits a enumerable of items.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
-    /// <exception cref="ArgumentException">sizeLimit cannot be zero.</exception>
+    /// <param name="source">The <see cref="ISourceList{T}"/> source list to apply size limits to.</param>
+    /// <param name="sizeLimit">The maximum number of items allowed. Must be greater than zero.</param>
+    /// <param name="scheduler">The scheduler for scheduling size checks. Defaults to <see cref="GlobalConfig.DefaultScheduler"/>.</param>
+    /// <returns>An observable that emits collections of items each time excess items are removed from the source list.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="sizeLimit"/> is zero or negative.</exception>
+    /// <remarks>
+    /// <para>
+    /// This operator acts directly on an <see cref="ISourceList{T}"/>. It subscribes to the source's changes,
+    /// tracks insertion order using an internal Transform, and removes the oldest items when the size limit is exceeded.
+    /// </para>
+    /// <para><b>Worth noting:</b> The returned observable emits the removed items (not changesets). Subscribe to this observable to activate the size-limiting mechanism. Removal is performed synchronously under a lock shared with the change tracking.</para>
+    /// </remarks>
+    /// <seealso cref="ExpireAfter{T}(ISourceList{T}, Func{T, TimeSpan?}, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="Top{T}(IObservable{IChangeSet{T}}, int)"/>
     public static IObservable<IEnumerable<T>> LimitSizeTo<T>(this ISourceList<T> source, int sizeLimit, IScheduler? scheduler = null)
         where T : notnull
     {
@@ -952,17 +1273,29 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Dynamically merges the observable which is selected from each item in the stream, and un-merges the item
-    /// when it is no longer part of the stream.
+    /// Subscribes to a per-item observable for each item in the source and merges all emissions into a single <see cref="IObservable{TDestination}"/> stream.
+    /// This is NOT a changeset operator: it returns a flat observable of values.
     /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="observableSelector">The observable selector.</param>
-    /// <returns>An observable which emits the destination value.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// observableSelector.</exception>
+    /// <typeparam name="T">The type of items in the source list.</typeparam>
+    /// <typeparam name="TDestination">The type of values emitted by per-item observables.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> whose items each produce an observable.</param>
+    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns an observable for each source item.</param>
+    /// <returns>An observable that emits values from all per-item observables, merged together.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <list type="table">
+    /// <listheader><term>Event (source)</term><description>Subscription behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the per-item observable. Emissions are merged into the output.</description></item>
+    /// <item><term><b>Replace</b></term><description>Old subscription disposed, new subscription created for the replacement item.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Subscription disposed.</description></item>
+    /// <item><term><b>Refresh</b>/<b>Moved</b></term><description>No effect on subscriptions.</description></item>
+    /// <item><term>OnCompleted (source)</term><description>Completes only after the source and all active inner observables have completed.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="SubscribeMany{T}(IObservable{IChangeSet{T}}, Func{T, IDisposable})"/>
+    /// <seealso cref="MergeManyChangeSets{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination}?)"/>
+    /// <seealso cref="WhenPropertyChanged{TObject, TValue}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TValue}}, bool)"/>
+    /// <seealso cref="ObservableCacheEx.MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>
     public static IObservable<TDestination> MergeMany<T, TDestination>(this IObservable<IChangeSet<T>> source, Func<T, IObservable<TDestination>> observableSelector)
         where T : notnull
     {
@@ -973,14 +1306,13 @@ public static class ObservableListEx
         return new MergeMany<T, TDestination>(source, observableSelector).Run();
     }
 
+    /// <inheritdoc cref="MergeChangeSets{TObject}(IEnumerable{IObservable{IChangeSet{TObject}}}, IEqualityComparer{TObject}?, IScheduler?, bool)"/>
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events.
+    /// Merges multiple list changeset streams from an observable-of-observables into a single unified changeset stream.
+    /// Unlike <see cref="ObservableCacheEx.MergeChangeSets{TObject, TKey}(IObservable{IObservable{IChangeSet{TObject, TKey}}}, IEqualityComparer{TObject})"/>, list merging performs no key-based deduplication.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The Source Observable ChangeSet.</param>
-    /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
-    /// <returns>The result from merging the changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    /// <param name="source">The source <see cref="IObservable{T}"/> of nested changeset observables.</param>
+    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TObject}"/> used by the merge tracker to compare items.</param>
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IObservable<IObservable<IChangeSet<TObject>>> source, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
     {
@@ -989,17 +1321,15 @@ public static class ObservableListEx
         return new MergeChangeSets<TObject>(source, equalityComparer).Run();
     }
 
+    /// <inheritdoc cref="MergeChangeSets{TObject}(IEnumerable{IObservable{IChangeSet{TObject}}}, IEqualityComparer{TObject}?, IScheduler?, bool)"/>
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events.
+    /// Merges two list changeset streams into a single unified stream.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The Source Observable ChangeSet.</param>
-    /// <param name="other">The Other Observable ChangeSet.</param>
-    /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
-    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
-    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
-    /// <returns>The result from merging the changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    /// <param name="source">The first <see cref="IObservable{IChangeSet{TObject}}"/> to merge.</param>
+    /// <param name="other">The second <see cref="IObservable{IChangeSet{TObject}}"/> to merge with.</param>
+    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TObject}"/> used to compare items.</param>
+    /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling enumeration.</param>
+    /// <param name="completable">When <see langword="true"/> (default), the result completes when all sources complete.</param>
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IObservable<IChangeSet<TObject>> source, IObservable<IChangeSet<TObject>> other, IEqualityComparer<TObject>? equalityComparer = null, IScheduler? scheduler = null, bool completable = true)
         where TObject : notnull
     {
@@ -1009,17 +1339,15 @@ public static class ObservableListEx
         return new[] { source, other }.MergeChangeSets(equalityComparer, scheduler, completable);
     }
 
+    /// <inheritdoc cref="MergeChangeSets{TObject}(IEnumerable{IObservable{IChangeSet{TObject}}}, IEqualityComparer{TObject}?, IScheduler?, bool)"/>
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events.
+    /// Merges the source list changeset stream with additional changeset streams into a single unified stream.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The Source Observable ChangeSet.</param>
-    /// <param name="others">The Other Observable ChangeSets.</param>
-    /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
-    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
-    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
-    /// <returns>The result from merging the changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    /// <param name="source">The primary source <see cref="IObservable{IChangeSet{TObject}}"/> to merge.</param>
+    /// <param name="others">The additional <see cref="IEnumerable{T}"/> of list changeset streams to merge with.</param>
+    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TObject}"/> used to compare items.</param>
+    /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling enumeration.</param>
+    /// <param name="completable">When <see langword="true"/> (default), the result completes when all sources complete.</param>
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IObservable<IChangeSet<TObject>> source, IEnumerable<IObservable<IChangeSet<TObject>>> others, IEqualityComparer<TObject>? equalityComparer = null, IScheduler? scheduler = null, bool completable = true)
         where TObject : notnull
     {
@@ -1030,15 +1358,33 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events.
+    /// Merges a collection of list changeset streams into a single unified changeset stream.
+    /// This is the canonical list MergeChangeSets overload: other overloads accepting <see cref="IObservable{T}"/>, <see cref="IObservableList{T}"/>, or pair/params variants ultimately produce equivalent behavior.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The Source Observable ChangeSet.</param>
-    /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
-    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
-    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
-    /// <returns>The result from merging the changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <param name="source">The <see cref="IEnumerable{T}"/> collection of list changeset streams to merge.</param>
+    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TObject}"/> used by the merge tracker to compare items. Defaults to <see cref="EqualityComparer{T}.Default"/> when <see langword="null"/>.</param>
+    /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling enumeration.</param>
+    /// <param name="completable">When <see langword="true"/> (default), the result completes when all sources complete.</param>
+    /// <returns>A single list changeset stream containing all changes from all sources.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// All changes from inner streams are forwarded to the output. There is no key-based deduplication (unlike <see cref="ObservableCacheEx.MergeChangeSets{TObject, TKey}(IObservable{IObservable{IChangeSet{TObject, TKey}}}, IEqualityComparer{TObject})"/>): if the same item appears in multiple inner streams, it will appear multiple times in the merged output.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Forwarded to the merged output.</description></item>
+    /// <item><term><b>Replace</b></term><description>The old value is replaced by the new value in the merged output. If the old value is not found (by <paramref name="equalityComparer"/>), the new value is added instead.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Forwarded to the merged output.</description></item>
+    /// <item><term><b>Refresh</b></term><description>Forwarded to the merged output.</description></item>
+    /// <item><term><b>Moved</b></term><description>Ignored.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="MergeChangeSets{TObject}(IObservable{IObservable{IChangeSet{TObject}}}, IEqualityComparer{TObject}?)"/>
+    /// <seealso cref="MergeManyChangeSets{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination}?)"/>
+    /// <seealso cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="ObservableCacheEx.MergeChangeSets{TObject, TKey}(IObservable{IObservable{IChangeSet{TObject, TKey}}}, IEqualityComparer{TObject})"/>
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IEnumerable<IObservable<IChangeSet<TObject>>> source, IEqualityComparer<TObject>? equalityComparer = null, IScheduler? scheduler = null, bool completable = true)
         where TObject : notnull
     {
@@ -1047,14 +1393,10 @@ public static class ObservableListEx
         return new MergeChangeSets<TObject>(source, equalityComparer, completable, scheduler).Run();
     }
 
+    /// <inheritdoc cref="MergeChangeSets{TObject}(IObservable{IObservable{IChangeSet{TObject}}}, IEqualityComparer{TObject}?)"/>
     /// <summary>
-    /// Merges all of the Cache Observable ChangeSets into a single ChangeSets that correctly handles removal of the parent items.
+    /// Merges list changeset streams from an <see cref="IObservableList{T}"/> into a single stream. Sources can be added or removed dynamically.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The SourceList of Observable Cache ChangeSets.</param>
-    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
-    /// <returns>The result from merging the child changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IObservableList<IObservable<IChangeSet<TObject>>> source, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
     {
@@ -1063,14 +1405,11 @@ public static class ObservableListEx
         return source.Connect().MergeChangeSets(equalityComparer);
     }
 
+    /// <inheritdoc cref="MergeChangeSets{TObject}(IObservable{IObservable{IChangeSet{TObject}}}, IEqualityComparer{TObject}?)"/>
     /// <summary>
-    /// Merges each Observable ChangeSet in the ObservableList into a single stream of ChangeSets that correctly handles removal of the parent items.
+    /// Merges list changeset streams from a list-of-list-changeset-observables into a single stream.
+    /// Each inner list changeset observable in the source list is merged, and parent item removal triggers child cleanup.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The List Observable ChangeSet of Cache Observable ChangeSets.</param>
-    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
-    /// <returns>The result from merging the child changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IObservable<IChangeSet<IObservable<IChangeSet<TObject>>>> source, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
     {
@@ -1080,14 +1419,29 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Merges each Observable ChangeSet in the ObservableList into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Merges cache changeset streams from an <see cref="IObservableList{T}"/> into a single cache changeset stream.
+    /// Uses <paramref name="comparer"/> to resolve conflicts when the same key appears in multiple child streams.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
     /// <typeparam name="TKey">The type of the object key.</typeparam>
-    /// <param name="source">The SourceList of Observable Cache ChangeSets.</param>
-    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
-    /// <returns>The result from merging the child changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    /// <param name="source">The <see cref="IObservableList{T}"/> of cache changeset observables.</param>
+    /// <param name="comparer"><see cref="IComparer{TObject}"/> to resolve which value wins when the same key appears in multiple sources.</param>
+    /// <returns>A single cache changeset stream with key-based deduplication.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>Sources can be added or removed dynamically from the observable list. Parent item removal triggers cleanup of all child items from that source.</para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b> (child)</term><description>If the destination key is new, an <b>Add</b> is emitted. If another source already contributed a child with the same key, <paramref name="comparer"/> resolves the conflict (lowest-ordered value wins). The losing value is tracked internally but not emitted.</description></item>
+    /// <item><term><b>Update</b> (child)</term><description>If this source currently owns the destination key downstream, an <b>Update</b> is emitted. Otherwise <paramref name="comparer"/> re-evaluates all sources; a different source's value may win, producing an <b>Update</b> to that value instead.</description></item>
+    /// <item><term><b>Remove</b> (child)</term><description>If this source's value was the one published downstream for that destination key, the operator scans other sources for the same key. If found, an <b>Update</b> is emitted with the replacement (per <paramref name="comparer"/>). Otherwise a <b>Remove</b> is emitted.</description></item>
+    /// <item><term><b>Refresh</b> (child)</term><description>If the child item is the one currently published downstream, the <b>Refresh</b> is forwarded. Otherwise <paramref name="comparer"/> re-evaluates all sources; if a different value now wins, an <b>Update</b> is emitted instead.</description></item>
+    /// <item><term>Source list <b>Add</b></term><description>Subscribes to the new child changeset stream and merges its keys into the output.</description></item>
+    /// <item><term>Source list <b>Remove</b></term><description>Disposes that source's subscription. All keys it contributed are removed. For keys also contributed by other sources, the next-best value (per <paramref name="comparer"/>) is promoted as an <b>Update</b>, not an Add.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="MergeChangeSets{TObject, TKey}(IObservableList{IObservable{IChangeSet{TObject, TKey}}}, IEqualityComparer{TObject}?, IComparer{TObject}?)"/>
+    /// <seealso cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, IComparer<TObject> comparer)
         where TObject : notnull
         where TKey : notnull
@@ -1097,16 +1451,13 @@ public static class ObservableListEx
         return source.Connect().MergeChangeSets(comparer);
     }
 
+    /// <inheritdoc cref="MergeChangeSets{TObject, TKey}(IObservableList{IObservable{IChangeSet{TObject, TKey}}}, IComparer{TObject})"/>
     /// <summary>
-    /// Merges all of the Cache Observable ChangeSets into a single ChangeSets while correctly handling multiple Keys and removal of the parent items.
+    /// Merges cache changeset streams from an <see cref="IObservableList{T}"/> into a single cache changeset stream, with optional equality and ordering comparers.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the object key.</typeparam>
-    /// <param name="source">The SourceList of Observable Cache ChangeSets.</param>
-    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
-    /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
-    /// <returns>The result from merging the child changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    /// <param name="source">The <see cref="IObservableList{T}"/> of cache changeset observables.</param>
+    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TObject}"/> to determine if two elements are the same.</param>
+    /// <param name="comparer">An optional <see cref="IComparer{TObject}"/> to resolve conflicts when the same key appears in multiple sources.</param>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject>? equalityComparer = null, IComparer<TObject>? comparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -1116,15 +1467,12 @@ public static class ObservableListEx
         return source.Connect().MergeChangeSets(equalityComparer, comparer);
     }
 
+    /// <inheritdoc cref="MergeChangeSets{TObject, TKey}(IObservableList{IObservable{IChangeSet{TObject, TKey}}}, IComparer{TObject})"/>
     /// <summary>
-    /// Merges all of the Cache Observable ChangeSets into a single ChangeSets while correctly handling multiple Keys and removal of the parent items.
+    /// Merges cache changeset streams from a list changeset of cache changeset observables, using a comparer for conflict resolution.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the object key.</typeparam>
-    /// <param name="source">The List Observable ChangeSet of Cache Observable ChangeSets.</param>
-    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
-    /// <returns>The result from merging the child changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    /// <param name="source">The source <see cref="IObservable{T}"/> whose items are cache changeset observables.</param>
+    /// <param name="comparer"><see cref="IComparer{TObject}"/> to resolve which value wins when the same key appears in multiple sources.</param>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<IObservable<IChangeSet<TObject, TKey>>>> source, IComparer<TObject> comparer)
         where TObject : notnull
         where TKey : notnull
@@ -1134,16 +1482,13 @@ public static class ObservableListEx
         return source.MergeChangeSets(comparer);
     }
 
+    /// <inheritdoc cref="MergeChangeSets{TObject, TKey}(IObservableList{IObservable{IChangeSet{TObject, TKey}}}, IComparer{TObject})"/>
     /// <summary>
-    /// Merges each Observable ChangeSet in the ObservableList into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Merges cache changeset streams from a list changeset of cache changeset observables, with optional equality and ordering comparers.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the object key.</typeparam>
-    /// <param name="source">The List Observable ChangeSet of Cache Observable ChangeSets.</param>
-    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
-    /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
-    /// <returns>The result from merging the child changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    /// <param name="source">The source <see cref="IObservable{T}"/> whose items are cache changeset observables.</param>
+    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TObject}"/> to determine if two elements are the same.</param>
+    /// <param name="comparer">An optional <see cref="IComparer{TObject}"/> to resolve conflicts when the same key appears in multiple sources.</param>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<IObservable<IChangeSet<TObject, TKey>>>> source, IEqualityComparer<TObject>? equalityComparer = null, IComparer<TObject>? comparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -1154,15 +1499,32 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is List ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TDestination}"/> and merges the result children together into a single stream of ChangeSets that correctly handles removal of the parent items and other changes to the source list.
+    /// Transforms each source item into a child list changeset stream using <paramref name="observableSelector"/>,
+    /// then merges all child streams into a single flat list changeset stream. Parent item removal cleans up all associated children.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The Source Observable ChangeSet.</param>
-    /// <param name="observableSelector">Factory Function used to create child changesets.</param>
-    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
-    /// <returns>The result from merging the children list changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    /// <typeparam name="TObject">The type of items in the source list.</typeparam>
+    /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns a child list changeset stream for each source item.</param>
+    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TDestination}"/> used to compare child items.</param>
+    /// <returns>A single list changeset stream containing all items from all child streams.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Internally subscribes to each child stream when a source item is added and disposes the subscription when it is removed.
+    /// All child items from a removed parent are removed from the merged output.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event (source)</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the child stream. Child emissions are merged into the output.</description></item>
+    /// <item><term><b>Replace</b></term><description>Old child subscription disposed (and its items removed from output). New child subscription created.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Child subscription disposed. All child items from that parent are removed.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="MergeChangeSets{TObject}(IEnumerable{IObservable{IChangeSet{TObject}}}, IEqualityComparer{TObject}?, IScheduler?, bool)"/>
+    /// <seealso cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
+    /// <seealso cref="TransformMany{TDestination, TSource}(IObservable{IChangeSet{TSource}}, Func{TSource, IEnumerable{TDestination}}, IEqualityComparer{TDestination}?)"/>
+    /// <seealso cref="ObservableCacheEx.MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}, IComparer{TDestination})"/>
     public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TObject : notnull
         where TDestination : notnull
@@ -1181,16 +1543,22 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is Cache ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TDestination, TDestinationKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Transforms each source item into a child cache changeset stream and merges all children into a single cache changeset stream.
+    /// Uses <paramref name="comparer"/> to resolve key conflicts when the same key appears in multiple child streams.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
-    /// <param name="source">The Source Observable ChangeSet.</param>
-    /// <param name="observableSelector">Factory Function used to create child changesets.</param>
-    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
-    /// <returns>The result from merging the child changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    /// <typeparam name="TObject">The type of items in the source list.</typeparam>
+    /// <typeparam name="TDestination">The type of items in the child cache changeset streams.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the key in the child cache changesets.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns a child cache changeset stream for each source item.</param>
+    /// <param name="comparer"><see cref="IComparer{TDestination}"/> to resolve which value wins when the same key appears from multiple children.</param>
+    /// <returns>A single cache changeset stream with key-based deduplication.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="observableSelector"/>, or <paramref name="comparer"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <inheritdoc cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
+    /// <para>Delegates to <see cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/> with a <see langword="null"/> equality comparer.</para>
+    /// </remarks>
+    /// <seealso cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TDestination> comparer)
         where TObject : notnull
         where TDestination : notnull
@@ -1204,17 +1572,42 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is Cache ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TDestination, TDestinationKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Transforms each source item into a child cache changeset stream and merges all children into a single cache changeset stream.
+    /// This is the primary list-to-cache MergeManyChangeSets overload.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
-    /// <param name="source">The Source Observable ChangeSet.</param>
-    /// <param name="observableSelector">Factory Function used to create child changesets.</param>
-    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
-    /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
-    /// <returns>The result from merging the child changesets together.</returns>
-    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    /// <typeparam name="TObject">The type of items in the source list.</typeparam>
+    /// <typeparam name="TDestination">The type of items in the child cache changeset streams.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the key in the child cache changesets.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns a child cache changeset stream for each source item.</param>
+    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TDestination}"/> to determine if two elements are the same.</param>
+    /// <param name="comparer">An optional <see cref="IComparer{TDestination}"/> to resolve conflicts when the same key appears from multiple children.</param>
+    /// <returns>A single cache changeset stream with key-based deduplication.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Each source item produces a keyed child stream via <paramref name="observableSelector"/>. All child items are tracked by key.
+    /// When a parent item is removed, all its child items are removed from the merged output.
+    /// When the same key appears from multiple children, <paramref name="comparer"/> determines which value wins.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event (source)</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the child cache stream. Child key/value pairs are merged into the output cache.</description></item>
+    /// <item><term><b>Replace</b></term><description>Old child subscription disposed (and its keys removed from output). New child subscription created.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Child subscription disposed. All keys originating from that child are removed from the output.</description></item>
+    /// <item><term><b>Moved</b>/<b>Refresh</b></term><description>Ignored; this operator emits a cache changeset and source ordering/refresh does not affect key membership.</description></item>
+    /// </list>
+    /// <para>
+    /// <b>Error and completion:</b>
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>OnError</term><description>An error from the source (parent) stream or from any child changeset stream terminates the entire output. Unlike <see cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>, child errors are NOT swallowed.</description></item>
+    /// <item><term>OnCompleted</term><description>The output completes when the source (parent) stream completes <b>and</b> all active child changeset streams have also completed.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="MergeManyChangeSets{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination}?)"/>
+    /// <seealso cref="MergeChangeSets{TObject, TKey}(IObservableList{IObservable{IChangeSet{TObject, TKey}}}, IComparer{TObject})"/>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
         where TObject : notnull
         where TDestination : notnull
@@ -1227,12 +1620,14 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Prevents an empty notification.
+    /// Suppresses empty changesets from the stream. Only changesets with at least one change are forwarded.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to suppress empty changesets.</param>
+    /// <returns>A list changeset stream with empty changesets filtered out.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <seealso cref="StartWithEmpty{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="WhereReasonsAre{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
     public static IObservable<IChangeSet<T>> NotEmpty<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -1242,14 +1637,30 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Invokes a given action for every item added to the source list stream.
+    /// Invokes <paramref name="addAction"/> for every item added to the source list stream.
+    /// Triggers on <see cref="ListChangeReason.Add"/>, <see cref="ListChangeReason.AddRange"/>, and the new item of <see cref="ListChangeReason.Replace"/>.
     /// </summary>
     /// <typeparam name="T">The type of items in the list.</typeparam>
-    /// <param name="source">The list stream whose items are to be passed to <paramref name="addAction"/>.</param>
-    /// <param name="addAction">The action to invoke upon each added item.</param>
-    /// <returns>A list stream, containing all items in <paramref name="source"/>, with changes published after <paramref name="addAction"/> has been invoked.</returns>
-    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="addAction"/>.</exception>
-    /// <remarks>Note that "added" items includes items from <see cref="ListChangeReason.Add"/>, <see cref="ListChangeReason.AddRange"/>, and <see cref="ListChangeReason.Replace"/> changes.</remarks>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to observe item additions in.</param>
+    /// <param name="addAction">The <see cref="Action{T}"/> action to invoke for each added item.</param>
+    /// <returns>A continuation of the source changeset stream, with the side effect applied before forwarding.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="addAction"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>The action fires before the changeset is forwarded downstream.</para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add</term><description>Callback invoked with the added item. Changeset forwarded.</description></item>
+    /// <item><term>AddRange</term><description>Callback invoked for each item in the range. Changeset forwarded.</description></item>
+    /// <item><term>Replace</term><description>Callback invoked for the <b>new</b> (replacement) item. Changeset forwarded.</description></item>
+    /// <item><term>Remove/RemoveRange/Clear</term><description>No callback. Changeset forwarded.</description></item>
+    /// <item><term>Moved/Refresh</term><description>No callback. Changeset forwarded.</description></item>
+    /// <item><term>OnError</term><description>If the callback throws, the exception propagates as OnError.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="OnItemRemoved{T}(IObservable{IChangeSet{T}}, Action{T}, bool)"/>
+    /// <seealso cref="OnItemRefreshed{T}(IObservable{IChangeSet{T}}, Action{T})"/>
+    /// <seealso cref="ForEachItemChange{TObject}(IObservable{IChangeSet{TObject}}, Action{ItemChange{TObject}})"/>
+    /// <seealso cref="ObservableCacheEx.OnItemAdded{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject})"/>
     public static IObservable<IChangeSet<T>> OnItemAdded<T>(
                 this IObservable<IChangeSet<T>> source,
                 Action<T> addAction)
@@ -1259,14 +1670,17 @@ public static class ObservableListEx
             addAction: addAction);
 
     /// <summary>
-    /// Invokes a given action for every item refreshed within the source list stream.
+    /// Invokes <paramref name="refreshAction"/> for every item with a <see cref="ListChangeReason.Refresh"/> change in the source stream.
     /// </summary>
     /// <typeparam name="T">The type of items in the list.</typeparam>
-    /// <param name="source">The list stream whose items are to be passed to <paramref name="refreshAction"/>.</param>
-    /// <param name="refreshAction">The action to invoke upon each refreshed item.</param>
-    /// <returns>A list stream, containing all items in <paramref name="source"/>, with changes published after <paramref name="refreshAction"/> has been invoked.</returns>
-    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="refreshAction"/>.</exception>
-    /// <remarks>Note that "refreshed" items refers to items from <see cref="ListChangeReason.Refresh"/> changes.</remarks>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to observe item refresh events in.</param>
+    /// <param name="refreshAction">The <see cref="Action{T}"/> action to invoke for each refreshed item.</param>
+    /// <returns>A continuation of the source changeset stream, with the side effect applied before forwarding.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="refreshAction"/> is <see langword="null"/>.</exception>
+    /// <seealso cref="OnItemAdded{T}(IObservable{IChangeSet{T}}, Action{T})"/>
+    /// <seealso cref="OnItemRemoved{T}(IObservable{IChangeSet{T}}, Action{T}, bool)"/>
+    /// <seealso cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="ObservableCacheEx.OnItemRefreshed{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject})"/>
     public static IObservable<IChangeSet<T>> OnItemRefreshed<T>(
                 this IObservable<IChangeSet<T>> source,
                 Action<T> refreshAction)
@@ -1276,15 +1690,36 @@ public static class ObservableListEx
             refreshAction: refreshAction);
 
     /// <summary>
-    /// Invokes a given action for every item removed from the source list stream.
+    /// Invokes <paramref name="removeAction"/> for every item removed from the source list stream.
+    /// Triggers on <see cref="ListChangeReason.Remove"/>, <see cref="ListChangeReason.RemoveRange"/>, <see cref="ListChangeReason.Clear"/>, and the old item of <see cref="ListChangeReason.Replace"/>.
     /// </summary>
     /// <typeparam name="T">The type of items in the list.</typeparam>
-    /// <param name="source">The list stream whose items are to be passed to <paramref name="removeAction"/>.</param>
-    /// <param name="removeAction">The action to invoke upon each removed item.</param>
-    /// <param name="invokeOnUnsubscribe">A flag indicating whether <paramref name="removeAction"/> should be invoked upon teardown of the stream. This includes disposal of subscriptions, completion notifications, and error notifications.</param>
-    /// <returns>A list stream, containing all items in <paramref name="source"/>, with changes published after <paramref name="removeAction"/> has been invoked.</returns>
-    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="removeAction"/>.</exception>
-    /// <remarks>Note that "removed" items includes items from <see cref="ListChangeReason.Remove"/>, <see cref="ListChangeReason.RemoveRange"/>, <see cref="ListChangeReason.Replace"/>, and <see cref="ListChangeReason.Clear"/> changes.</remarks>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to observe item removals in.</param>
+    /// <param name="removeAction">The <see cref="Action{T}"/> action to invoke for each removed item.</param>
+    /// <param name="invokeOnUnsubscribe">When <see langword="true"/> (default), <paramref name="removeAction"/> is also invoked for all remaining tracked items upon stream disposal, completion, or error.</param>
+    /// <returns>A continuation of the source changeset stream, with the side effect applied before forwarding.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="removeAction"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// When <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>, the operator tracks all items that have been added but not yet removed,
+    /// and fires <paramref name="removeAction"/> for each of them during finalization. This is useful for resource cleanup patterns.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add/AddRange</term><description>Tracked internally (when <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>). No callback invoked. Changeset forwarded.</description></item>
+    /// <item><term>Replace</term><description>Callback invoked for the <b>previous</b> (replaced) item. New item tracked. Changeset forwarded.</description></item>
+    /// <item><term>Remove</term><description>Callback invoked for the removed item. Changeset forwarded.</description></item>
+    /// <item><term>RemoveRange/Clear</term><description>Callback invoked for each removed item. Changeset forwarded.</description></item>
+    /// <item><term>Moved/Refresh</term><description>No callback. Changeset forwarded.</description></item>
+    /// <item><term>OnError</term><description>If <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>, callback is invoked for all tracked items before the error propagates.</description></item>
+    /// <item><term>OnCompleted</term><description>If <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>, callback is invoked for all tracked items before completion propagates.</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> When <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/> (the default), disposing the subscription also invokes the callback for every item still in the list, not just items that were explicitly removed during the subscription. Exceptions in <paramref name="removeAction"/> are not caught.</para>
+    /// </remarks>
+    /// <seealso cref="OnItemAdded{T}(IObservable{IChangeSet{T}}, Action{T})"/>
+    /// <seealso cref="DisposeMany{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="SubscribeMany{T}(IObservable{IChangeSet{T}}, Func{T, IDisposable})"/>
+    /// <seealso cref="ObservableCacheEx.OnItemRemoved{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject}, bool)"/>
     public static IObservable<IChangeSet<T>> OnItemRemoved<T>(
                 this IObservable<IChangeSet<T>> source,
                 Action<T> removeAction,
@@ -1295,24 +1730,41 @@ public static class ObservableListEx
             removeAction: removeAction,
             invokeOnUnsubscribe: invokeOnUnsubscribe);
 
+    /// <inheritdoc cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
     /// <summary>
-    /// Apply a logical Or operator between the collections.
-    /// Items which are in any of the sources are included in the result.
+    /// Applies a logical OR (union) between a pre-built collection of list changeset sources. Items present in any source are included.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <seealso cref="ObservableCacheEx.Or{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
     public static IObservable<IChangeSet<T>> Or<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.Or);
 
     /// <summary>
-    /// Apply a logical Or operator between the collections.
-    /// Items which are in any of the sources are included in the result.
+    /// Applies a logical OR (union) between the source and other list changeset streams.
+    /// Items present in any of the sources are included in the result, using reference-counted equality.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="others">The others.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <param name="source">The primary source <see cref="IObservable{IChangeSet{T}}"/> to union.</param>
+    /// <param name="others">The other <see cref="IObservable{IChangeSet{T}}"/> changeset streams to combine with.</param>
+    /// <returns>A list changeset stream containing items that exist in at least one source.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="others"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Item identity is determined by the default equality comparer for <typeparamref name="T"/>. Uses reference-counted equality: an item is included when it first appears in any source and removed when it no longer exists in any source.
+    /// <b>Moved</b> changes are ignored by the set logic.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b> (any source)</term><description>If the item is new to the result, an <b>Add</b> is emitted. Otherwise the reference count is incremented.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b> (any source)</term><description>Reference count decremented. If count reaches zero, a <b>Remove</b> is emitted.</description></item>
+    /// <item><term><b>Replace</b></term><description>Old item reference count decremented, new item reference count incremented. Add/Remove emitted as needed.</description></item>
+    /// <item><term><b>Refresh</b></term><description>Forwarded if the item is in the result set.</description></item>
+    /// <item><term><b>Moved</b></term><description>Ignored.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="MergeChangeSets{TObject}(IEnumerable{IObservable{IChangeSet{TObject}}}, IEqualityComparer{TObject}?, IScheduler?, bool)"/>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
         where T : notnull
     {
@@ -1321,43 +1773,46 @@ public static class ObservableListEx
         return source.Combine(CombineOperator.Or, others);
     }
 
+    /// <inheritdoc cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
     /// <summary>
-    /// Dynamically apply a logical Or operator between the items in the outer observable list.
-    /// Items which are in any of the sources are included in the result.
+    /// Dynamic OR: sources can be added or removed from the <see cref="IObservableList{T}"/> at runtime.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.Or);
 
+    /// <inheritdoc cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
     /// <summary>
-    /// Dynamically apply a logical Or operator between the items in the outer observable list.
-    /// Items which are in any of the sources are included in the result.
+    /// Dynamic OR accepting <see cref="IObservableList{T}"/> of <see cref="IObservableList{T}"/>. Each inner list's <c>Connect()</c> is used as a source.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservableList<IObservableList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.Or);
 
+    /// <inheritdoc cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
     /// <summary>
-    /// Dynamically apply a logical Or operator between the items in the outer observable list.
-    /// Items which are in any of the sources are included in the result.
+    /// Dynamic OR accepting <see cref="IObservableList{T}"/> of <see cref="ISourceList{T}"/>. Each inner list's <c>Connect()</c> is used as a source.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservableList<ISourceList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.Or);
 
     /// <summary>
-    /// Applies paging to the data source.
+    /// Applies page-based windowing to the source list. Only items within the current page (determined by page number and page size from <paramref name="requests"/>) are included downstream.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="requests">Observable to control page requests.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to page.</param>
+    /// <param name="requests">An observable of <see cref="IPageRequest"/> controlling which page to display (page number and page size).</param>
+    /// <returns>An <see cref="IPageChangeSet{T}"/> stream containing only items within the current page window.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="requests"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Maintains the full source list internally and calculates the page window on each change or page request.
+    /// Items entering the page window produce <b>Add</b>; items leaving produce <b>Remove</b>. A new page request triggers
+    /// a full recalculation of the page contents.
+    /// </para>
+    /// <para><b>Worth noting:</b> Duplicate items are removed from the result via <c>Distinct()</c> using the default equality comparer for <typeparamref name="T"/>, regardless of source order. The source should ideally be sorted before paging, since list order determines which items fall within each page window.</para>
+    /// </remarks>
+    /// <seealso cref="Virtualise{T}(IObservable{IChangeSet{T}}, IObservable{IVirtualRequest})"/>
+    /// <seealso cref="Top{T}(IObservable{IChangeSet{T}}, int)"/>
+    /// <seealso cref="Sort{T}(IObservable{IChangeSet{T}}, IComparer{T}, SortOptions, IObservable{Unit}?, IObservable{IComparer{T}}?, int)"/>
     public static IObservable<IPageChangeSet<T>> Page<T>(this IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
         where T : notnull
     {
@@ -1368,17 +1823,19 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// list.
+    /// Subscribes to the source changeset stream and pipes all changes into the <paramref name="destination"/> <see cref="ISourceList{T}"/>.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="destination">The destination.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// destination.
-    /// </exception>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to pipe into a target list.</param>
+    /// <param name="destination">The destination <see cref="ISourceList{T}"/> to receive all changes.</param>
+    /// <returns>An <see cref="IDisposable"/> representing the subscription. Dispose to stop piping changes.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="destination"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>Each changeset is applied to the destination using <c>Clone()</c> inside an <c>Edit()</c> call, producing a single batch update per changeset.</para>
+    /// </remarks>
+    /// <seealso cref="Clone{T}(IObservable{IChangeSet{T}}, IList{T})"/>
+    /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
+    /// <seealso cref="ObservableCacheEx.PopulateInto{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, ISourceCache{TObject, TKey})"/>
     public static IDisposable PopulateInto<T>(this IObservable<IChangeSet<T>> source, ISourceList<T> destination)
         where T : notnull
     {
@@ -1389,18 +1846,21 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    ///  The latest copy of the cache is exposed for querying after each modification to the underlying data.
+    /// Emits a projected value from the current list snapshot after every changeset.
+    /// The <paramref name="resultSelector"/> receives an <see cref="IReadOnlyCollection{T}"/> representing the current state.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="resultSelector">The result selector.</param>
-    /// <returns>An observable which emits the destination value.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// resultSelector.
-    /// </exception>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <typeparam name="TDestination">The type of the projected result.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to project on each change.</param>
+    /// <param name="resultSelector">A <see cref="Func{T, TResult}"/> function projecting the current list snapshot to a result value.</param>
+    /// <returns>An observable emitting the projected value after each changeset.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="resultSelector"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>Delegates to <see cref="QueryWhenChanged{T}(IObservable{IChangeSet{T}})"/> and applies <paramref name="resultSelector"/> via <c>Select</c>.</para>
+    /// </remarks>
+    /// <seealso cref="QueryWhenChanged{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="ToCollection{TObject}(IObservable{IChangeSet{TObject}})"/>
+    /// <seealso cref="ObservableCacheEx.QueryWhenChanged{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{IQuery{TObject, TKey}, TDestination})"/>
     public static IObservable<TDestination> QueryWhenChanged<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source, Func<IReadOnlyCollection<TObject>, TDestination> resultSelector)
         where TObject : notnull
     {
@@ -1411,12 +1871,20 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// The latest copy of the cache is exposed for querying i)  after each modification to the underlying data ii) upon subscription.
+    /// Emits an <see cref="IReadOnlyCollection{T}"/> snapshot of the current list state after every changeset.
+    /// Maintains an internal list updated by cloning each changeset.
     /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable which emits the read only collection.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <typeparam name="T">The type of items in the list.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to project on each change.</param>
+    /// <returns>An observable emitting the full list snapshot as <see cref="IReadOnlyCollection{T}"/> after each change.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>This is a non-changeset operator. It emits the entire collection state on each change, not incremental diffs.</para>
+    /// <para><b>Worth noting:</b> A new snapshot is emitted on every changeset, which can be chatty. The collection is rebuilt by cloning each changeset into an internal list. For sorted output, use <see cref="ToSortedCollection{TObject, TSortKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TSortKey}, SortDirection)"/>.</para>
+    /// </remarks>
+    /// <seealso cref="QueryWhenChanged{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{IReadOnlyCollection{TObject}, TDestination})"/>
+    /// <seealso cref="ToCollection{TObject}(IObservable{IChangeSet{TObject}})"/>
+    /// <seealso cref="ToSortedCollection{TObject, TSortKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TSortKey}, SortDirection)"/>
     public static IObservable<IReadOnlyCollection<T>> QueryWhenChanged<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -1426,11 +1894,17 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// List equivalent to Publish().RefCount().  The source is cached so long as there is at least 1 subscriber.
+    /// Reference-counted materialization of the source changeset stream into an <see cref="IObservableList{T}"/>.
+    /// The shared list is created on the first subscriber and disposed when the last subscriber unsubscribes.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to share via reference counting.</param>
+    /// <returns>A list changeset stream backed by a shared, reference-counted <see cref="IObservableList{T}"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>Equivalent to <c>Publish().RefCount()</c> for changeset streams. The underlying list is created lazily on first subscription.</para>
+    /// </remarks>
+    /// <seealso cref="AsObservableList{T}(IObservable{IChangeSet{T}})"/>
     public static IObservable<IChangeSet<T>> RefCount<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -1440,12 +1914,16 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// <para>Removes the index from all changes.</para>
-    /// <para>NB: This operator has been introduced as a temporary fix for creating an Or operator using merge many.</para>
+    /// Strips index information from all changes in the stream.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to strip index information.</param>
+    /// <returns>A list changeset stream with all index values removed from changes.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>Removes index positions from every change in each changeset. This is useful when downstream operators do not require or support index-based operations.</para>
+    /// </remarks>
+    /// <seealso cref="ChangeSetEx.YieldWithoutIndex{T}(IEnumerable{Change{T}})"/>
     public static IObservable<IChangeSet<T>> RemoveIndex<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -1455,16 +1933,16 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Reverse sort of the change set.
+    /// Reverses the order of items in the changeset stream by transforming all indices: <c>new_index = length - old_index - 1</c>.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// comparer.
-    /// </exception>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to reverse.</param>
+    /// <returns>A list changeset stream with all index positions reversed.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>This is a pure index transformation. The items themselves are unchanged; only their positional indices are inverted.</para>
+    /// </remarks>
+    /// <seealso cref="Sort{T}(IObservable{IChangeSet{T}}, IComparer{T}, SortOptions, IObservable{Unit}?, IObservable{IComparer{T}}?, int)"/>
     public static IObservable<IChangeSet<T>> Reverse<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -1475,12 +1953,24 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Defer the subscription until loaded and skip initial change set.
+    /// Skips the initial changeset (the snapshot emitted on subscription) and forwards all subsequent changesets.
+    /// Internally defers until loaded, then skips the first emission.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to skip the initial changeset.</param>
+    /// <returns>A list changeset stream that omits the initial snapshot.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// <b>Warning:</b> This operator assumes the initial changeset is empty. If the source emits a non-empty
+    /// initial snapshot, those items are silently dropped while downstream consumers remain unaware of them.
+    /// Any later <b>Refresh</b>, <b>Replace</b>, <b>Remove</b>, or <b>Moved</b> change targeting one of those
+    /// dropped items will throw because the downstream collection has no record of them. Only use this against
+    /// a source you know starts empty (for example, a <see cref="ISourceList{T}"/> that has not yet been populated).
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="DeferUntilLoaded{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="StartWithEmpty{T}(IObservable{IChangeSet{T}})"/>
     public static IObservable<IChangeSet<T>> SkipInitial<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -1490,19 +1980,37 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Sorts the sequence using the specified comparer.
+    /// Sorts the list using the specified comparer, maintaining a sorted output that incrementally updates as items change.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparer">The comparer used for sorting.</param>
-    /// <param name="options">For improved performance, specify SortOptions.UseBinarySearch. This can only be used when the values which are sorted on are immutable.</param>
-    /// <param name="resort">OnNext of this observable causes data to resort. This is required when the value which is sorted on mutable.</param>
-    /// <param name="comparerChanged">An observable comparer used to change the comparer on which the sorted list i.</param>
-    /// <param name="resetThreshold">Since sorting can be slow for large record sets, the reset threshold is used to force the list re-ordered. </param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// comparer.</exception>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to sort.</param>
+    /// <param name="comparer">The <see cref="IComparer{T}"/> used for sorting.</param>
+    /// <param name="options">The <see cref="SortOptions.UseBinarySearch"/> for improved performance when sorted values are immutable.</param>
+    /// <param name="resort">An optional <see cref="IObservable{Unit}"/> of <see cref="Unit"/> that forces a full re-sort when it fires. Required when sorted property values are mutable.</param>
+    /// <param name="comparerChanged">An optional <see cref="IObservable{IComparer{T}}"/> of <see cref="IComparer{T}"/> that replaces the comparer, triggering a full re-sort.</param>
+    /// <param name="resetThreshold">When the number of changes exceeds this threshold, a full reset is performed instead of incremental updates. Default is 50.</param>
+    /// <returns>A list changeset stream with items in sorted order.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="comparer"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Maintains an internal sorted list. Each incoming change is applied incrementally: adds are inserted at the correct sorted position,
+    /// removes are removed by index, and refreshes re-evaluate position (emitting <b>Moved</b> if changed).
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Inserted at the correct sorted position. May trigger a full reset if the count exceeds <paramref name="resetThreshold"/>.</description></item>
+    /// <item><term><b>Replace</b></term><description>Old item removed, new item inserted at sorted position.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Removed from sorted list.</description></item>
+    /// <item><term><b>Refresh</b></term><description>Sort position re-evaluated. If position changed, a <b>Moved</b> is emitted.</description></item>
+    /// <item><term>Comparer changed</term><description>Full re-sort of all items.</description></item>
+    /// <item><term>Re-sort signal</term><description>Full re-sort using the current comparer.</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> <see cref="SortOptions.UseBinarySearch"/> is faster but requires that the values being sorted on never mutate. If they do, use the <paramref name="resort"/> signal or <see cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>.</para>
+    /// </remarks>
+    /// <seealso cref="Sort{T}(IObservable{IChangeSet{T}}, IObservable{IComparer{T}}, SortOptions, IObservable{Unit}?, int)"/>
+    /// <seealso cref="Page{T}(IObservable{IChangeSet{T}}, IObservable{IPageRequest})"/>
+    /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
+    /// <seealso cref="ObservableCacheEx.Sort{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IComparer{TObject}, SortOptimisations, int)"/>
     public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions options = SortOptions.None, IObservable<Unit>? resort = null, IObservable<IComparer<T>>? comparerChanged = null, int resetThreshold = 50)
         where T : notnull
     {
@@ -1512,19 +2020,18 @@ public static class ObservableListEx
         return new Sort<T>(source, comparer, options, resort, comparerChanged, resetThreshold).Run();
     }
 
+    /// <inheritdoc cref="Sort{T}(IObservable{IChangeSet{T}}, IComparer{T}, SortOptions, IObservable{Unit}?, IObservable{IComparer{T}}?, int)"/>
     /// <summary>
-    /// Sorts the sequence using the specified observable comparer.
+    /// Sorts the list using an observable comparer. The initial comparer is taken from the first emission; subsequent emissions trigger a full re-sort.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparerChanged">An observable comparer used to change the comparer on which the sorted list i.</param>
-    /// <param name="options">For improved performance, specify SortOptions.UseBinarySearch. This can only be used when the values which are sorted on are immutable.</param>
-    /// <param name="resort">OnNext of this observable causes data to resort. This is required when the value which is sorted on mutable.</param>
-    /// <param name="resetThreshold">Since sorting can be slow for large record sets, the reset threshold is used to force the list re-ordered. </param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// comparer.</exception>
+    /// <remarks>
+    /// <para>Until <paramref name="comparerChanged"/> emits its first comparer, items are sorted using <see cref="Comparer{T}.Default"/>. Downstream still receives changesets immediately; the initial ordering is whatever <see cref="Comparer{T}.Default"/> produces, then a full re-sort happens once the first comparer arrives.</para>
+    /// </remarks>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to sort.</param>
+    /// <param name="comparerChanged">An <see cref="IObservable{IComparer{T}}"/> of <see cref="IComparer{T}"/> that emits comparers. The first emission provides the initial sort order; subsequent emissions trigger re-sorts.</param>
+    /// <param name="options"><see cref="SortOptions"/> for controlling sort behavior.</param>
+    /// <param name="resort">An optional <see cref="IObservable{Unit}"/> of <see cref="Unit"/> to force a re-sort with the current comparer.</param>
+    /// <param name="resetThreshold">The threshold for triggering a full reset instead of incremental updates.</param>
     public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, IObservable<IComparer<T>> comparerChanged, SortOptions options = SortOptions.None, IObservable<Unit>? resort = null, int resetThreshold = 50)
         where T : notnull
     {
@@ -1535,27 +2042,41 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Prepends an empty change set to the source.
+    /// Prepends an empty changeset to the source stream. Useful for initializing downstream consumers that expect an initial emission.
     /// </summary>
     /// <typeparam name="T">The type of item.</typeparam>
-    /// <param name="source">The source observable of change set values.</param>
-    /// <returns>An observable which emits a change set.</returns>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to prepend an empty changeset to.</param>
+    /// <returns>A list changeset stream that begins with an empty changeset.</returns>
+    /// <seealso cref="DeferUntilLoaded{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="SkipInitial{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="ObservableCacheEx.StartWithEmpty{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
     public static IObservable<IChangeSet<T>> StartWithEmpty<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull => source.StartWith(ChangeSet<T>.Empty);
 
     /// <summary>
-    /// Subscribes to each item when it is added to the stream and unsubscribes when it is removed.  All items will be unsubscribed when the stream is disposed.
+    /// Creates an <see cref="IDisposable"/> subscription for each item via <paramref name="subscriptionFactory"/> when it is added.
+    /// The subscription is disposed when the item is removed or replaced. All subscriptions are disposed when the stream terminates.
+    /// The changeset is forwarded downstream unmodified.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="subscriptionFactory">The subscription function.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// subscriptionFactory.</exception>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to create a subscription for each item in.</param>
+    /// <param name="subscriptionFactory">A function that creates an <see cref="IDisposable"/> for each item.</param>
+    /// <returns>A continuation of the source changeset stream with per-item subscriptions managed as a side effect.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="subscriptionFactory"/> is <see langword="null"/>.</exception>
     /// <remarks>
-    /// Subscribes to each item when it is added or updates and unsubscribes when it is removed.
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscription created for each item via the factory. Changeset forwarded.</description></item>
+    /// <item><term><b>Replace</b></term><description>Old item's subscription disposed, new subscription created. Changeset forwarded.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Subscriptions for removed items are disposed. Changeset forwarded.</description></item>
+    /// <item><term><b>Moved</b>/<b>Refresh</b></term><description>Forwarded. No subscription changes.</description></item>
+    /// <item><term>OnError/OnCompleted/Disposal</term><description>All active subscriptions are disposed.</description></item>
+    /// </list>
     /// </remarks>
+    /// <seealso cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>
+    /// <seealso cref="DisposeMany{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="OnItemRemoved{T}(IObservable{IChangeSet{T}}, Action{T}, bool)"/>
+    /// <seealso cref="ObservableCacheEx.SubscribeMany{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IDisposable})"/>
     public static IObservable<IChangeSet<T>> SubscribeMany<T>(this IObservable<IChangeSet<T>> source, Func<T, IDisposable> subscriptionFactory)
         where T : notnull
     {
@@ -1566,26 +2087,28 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Suppress  refresh notifications.
+    /// Suppresses all <see cref="ListChangeReason.Refresh"/> changes from the stream. All other change reasons pass through.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source observable change set.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to strip refresh events.</param>
+    /// <returns>A list changeset stream with Refresh changes removed.</returns>
+    /// <seealso cref="WhereReasonsAreNot{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
+    /// <seealso cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
     public static IObservable<IChangeSet<T>> SuppressRefresh<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull => source.WhereReasonsAreNot(ListChangeReason.Refresh);
 
     /// <summary>
-    /// Transforms an observable sequence of observable lists into a single sequence
-    /// producing values only from the most recent observable sequence.
-    /// Each time a new inner observable sequence is received, unsubscribe from the
-    /// previous inner observable sequence and clear the existing result set.
+    /// Subscribes to the latest inner <see cref="IObservableList{T}"/>, switching to each new source and clearing the result when switching.
+    /// This is the changeset-aware equivalent of Rx's <see cref="Observable.Switch{TSource}(IObservable{IObservable{TSource}})"/>, which cannot be applied directly to changeset streams.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>
-    /// The observable sequence that at any point in time produces the elements of the most recent inner observable sequence that has been received.
-    /// </returns>
-    /// <exception cref="ArgumentNullException"><paramref name="sources" /> is null.</exception>
+    /// <param name="sources">An observable that emits <see cref="IObservableList{T}"/> instances. Each emission triggers a switch to the new list.</param>
+    /// <returns>A list changeset stream reflecting the most recently received inner list.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sources"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>Convenience overload that calls <c>Connect()</c> on each inner list, then delegates to <see cref="Switch{T}(IObservable{IObservable{IChangeSet{T}}})"/>.</para>
+    /// </remarks>
+    /// <seealso cref="Switch{T}(IObservable{IObservable{IChangeSet{T}}})"/>
     public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservableList<T>> sources)
         where T : notnull
     {
@@ -1595,17 +2118,20 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Transforms an observable sequence of observable changes sets into an observable sequence
-    /// producing values only from the most recent observable sequence.
-    /// Each time a new inner observable sequence is received, unsubscribe from the
-    /// previous inner observable sequence and clear the existing result set.
+    /// Subscribes to the latest inner changeset stream, switching to each new source and clearing the destination when switching.
+    /// Previous subscriptions are disposed and the result set is emptied before subscribing to the new inner stream.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>
-    /// The observable sequence that at any point in time produces the elements of the most recent inner observable sequence that has been received.
-    /// </returns>
-    /// <exception cref="ArgumentNullException"><paramref name="sources" /> is null.</exception>
+    /// <param name="sources">An <see cref="IObservable{T}"/> of <see cref="IObservable{T}"/> changeset streams. The operator subscribes to the latest inner stream.</param>
+    /// <returns>A list changeset stream reflecting the most recently received inner changeset stream.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sources"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// On each new inner stream, the operator clears the destination, disposes the previous subscription, and subscribes to the new stream.
+    /// This is the changeset-aware equivalent of Rx's <c>Switch()</c>.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="Switch{T}(IObservable{IObservableList{T}})"/>
     public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservable<IChangeSet<T>>> sources)
         where T : notnull
     {
@@ -1615,23 +2141,36 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Converts the change set into a fully formed collection. Each change in the source results in a new collection.
+    /// Emits the full collection as an <see cref="IReadOnlyCollection{T}"/> after every changeset. Equivalent to <c>QueryWhenChanged(items => items)</c>.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>An observable which emits the read only collection.</returns>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to materialize into a collection on each change.</param>
+    /// <returns>An observable emitting the full collection snapshot after each change.</returns>
+    /// <seealso cref="QueryWhenChanged{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="ToSortedCollection{TObject, TSortKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TSortKey}, SortDirection)"/>
+    /// <seealso cref="ObservableCacheEx.ToCollection{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
     public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject>(this IObservable<IChangeSet<TObject>> source)
         where TObject : notnull => source.QueryWhenChanged(items => items);
 
     /// <summary>
-    /// Converts the observable to an observable change set.
-    /// Change set observes observable change events.
+    /// Bridges an <see cref="IObservable{T}"/> into the DynamicData world by converting each emitted item into a list changeset.
+    /// Each emission becomes an <b>Add</b> operation in the resulting changeset stream.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="scheduler">The scheduler (only used for time expiry).</param>
-    /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <param name="source">The source <see cref="IObservable{T}"/> to convert into a changeset stream.</param>
+    /// <param name="scheduler">An optional <see cref="IScheduler"/> for time-based operations (expiry, size limiting).</param>
+    /// <returns>A list changeset stream where each source emission is an <b>Add</b>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// This is the primary bridge from standard Rx into DynamicData's list changeset model. Each item emitted by <paramref name="source"/>
+    /// is added to an internal list and an <b>Add</b> changeset is emitted. The list grows unboundedly unless size or time limits
+    /// are specified via other overloads.
+    /// </para>
+    /// <para><b>Worth noting:</b> Source completion and errors are propagated. The internal list is disposed on unsubscribe.</para>
+    /// </remarks>
+    /// <seealso cref="ToObservableChangeSet{T}(IObservable{T}, Func{T, TimeSpan?}, int, IScheduler?)"/>
+    /// <seealso cref="ToObservableChangeSet{T}(IObservable{IEnumerable{T}}, IScheduler?)"/>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
                 this IObservable<T> source,
                 IScheduler? scheduler = null)
@@ -1642,16 +2181,14 @@ public static class ObservableListEx
             limitSizeTo: -1,
             scheduler: scheduler);
 
+    /// <inheritdoc cref="ToObservableChangeSet{T}(IObservable{T}, IScheduler?)"/>
     /// <summary>
-    /// Converts the observable to an observable change set, allowing time expiry to be specified.
-    /// Change set observes observable change events.
+    /// Bridges an <see cref="IObservable{T}"/> into a list changeset stream with per-item time-based expiry.
+    /// Expired items are automatically removed.
     /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache.</param>
-    /// <param name="scheduler">The scheduler (only used for time expiry).</param>
-    /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <param name="source">The source <see cref="IObservable{T}"/> to convert into a changeset stream.</param>
+    /// <param name="expireAfter">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <see langword="null"/> for non-expiring items.</param>
+    /// <param name="scheduler">An optional <see cref="IScheduler"/> for expiry timers.</param>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
                 this IObservable<T> source,
                 Func<T, TimeSpan?> expireAfter,
@@ -1663,16 +2200,14 @@ public static class ObservableListEx
             limitSizeTo: -1,
             scheduler: scheduler);
 
+    /// <inheritdoc cref="ToObservableChangeSet{T}(IObservable{T}, IScheduler?)"/>
     /// <summary>
-    /// Converts the observable to an observable change set, with a specified limit of how large the list can be.
-    /// Change set observes observable change events.
+    /// Bridges an <see cref="IObservable{T}"/> into a list changeset stream with FIFO size limiting.
+    /// When the list exceeds <paramref name="limitSizeTo"/>, the oldest items are removed.
     /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit. Supply -1 to disable size limiting.</param>
-    /// <param name="scheduler">The scheduler (only used for time expiry).</param>
-    /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <param name="source">The source <see cref="IObservable{T}"/> to convert into a changeset stream.</param>
+    /// <param name="limitSizeTo">The maximum list size. Supply -1 to disable size limiting.</param>
+    /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling removals.</param>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
                 this IObservable<T> source,
                 int limitSizeTo,
@@ -1684,17 +2219,14 @@ public static class ObservableListEx
             limitSizeTo: limitSizeTo,
             scheduler: scheduler);
 
+    /// <inheritdoc cref="ToObservableChangeSet{T}(IObservable{T}, IScheduler?)"/>
     /// <summary>
-    /// Converts the observable to an observable change set, allowing size and time limit to be specified.
-    /// Change set observes observable change events.
+    /// Bridges an <see cref="IObservable{T}"/> into a list changeset stream with both time-based expiry and FIFO size limiting.
     /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache.</param>
-    /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit. Supply -1 to disable size limiting.</param>
-    /// <param name="scheduler">The scheduler (only used for time expiry).</param>
-    /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <param name="source">The source <see cref="IObservable{T}"/> to convert into a changeset stream.</param>
+    /// <param name="expireAfter">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <see langword="null"/> for non-expiring items.</param>
+    /// <param name="limitSizeTo">The maximum list size. Supply -1 to disable size limiting.</param>
+    /// <param name="scheduler">An optional <see cref="IScheduler"/> for expiry timers and size-limit checks.</param>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
                 this IObservable<T> source,
                 Func<T, TimeSpan?>? expireAfter,
@@ -1707,15 +2239,13 @@ public static class ObservableListEx
             limitSizeTo: limitSizeTo,
             scheduler: scheduler);
 
+    /// <inheritdoc cref="ToObservableChangeSet{T}(IObservable{T}, IScheduler?)"/>
     /// <summary>
-    /// Converts the observable to an observable change set.
-    /// Change set observes observable change events.
+    /// Bridges an <see cref="IObservable{T}"/> of <see cref="IEnumerable{T}"/> batches into a list changeset stream.
+    /// Each emitted batch becomes an <b>AddRange</b>.
     /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="scheduler">The scheduler (only used for time expiry).</param>
-    /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <param name="source">The source <see cref="IObservable{IEnumerable{T}}"/> of <see cref="IEnumerable{T}"/> to convert into a changeset stream.</param>
+    /// <param name="scheduler">An optional <see cref="IScheduler"/> for time-based operations.</param>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
                 this IObservable<IEnumerable<T>> source,
                 IScheduler? scheduler = null)
@@ -1726,16 +2256,13 @@ public static class ObservableListEx
             limitSizeTo: -1,
             scheduler: scheduler);
 
+    /// <inheritdoc cref="ToObservableChangeSet{T}(IObservable{T}, IScheduler?)"/>
     /// <summary>
-    /// Converts the observable to an observable change set, allowing size and time limit to be specified.
-    /// Change set observes observable change events.
+    /// Bridges an <see cref="IObservable{T}"/> of <see cref="IEnumerable{T}"/> batches into a list changeset stream with FIFO size limiting.
     /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit.</param>
-    /// <param name="scheduler">The scheduler (only used for time expiry).</param>
-    /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <param name="source">The source <see cref="IObservable{IEnumerable{T}}"/> of <see cref="IEnumerable{T}"/> to convert into a changeset stream.</param>
+    /// <param name="limitSizeTo">The maximum list size. Oldest items are removed when the limit is exceeded.</param>
+    /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling removals.</param>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
                 this IObservable<IEnumerable<T>> source,
                 int limitSizeTo,
@@ -1747,16 +2274,13 @@ public static class ObservableListEx
             limitSizeTo: limitSizeTo,
             scheduler: scheduler);
 
+    /// <inheritdoc cref="ToObservableChangeSet{T}(IObservable{T}, IScheduler?)"/>
     /// <summary>
-    /// Converts the observable to an observable change set, allowing size to be specified.
-    /// Change set observes observable change events.
+    /// Bridges an <see cref="IObservable{T}"/> of <see cref="IEnumerable{T}"/> batches into a list changeset stream with time-based expiry.
     /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache.</param>
-    /// <param name="scheduler">The scheduler (only used for time expiry).</param>
-    /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <param name="source">The source <see cref="IObservable{IEnumerable{T}}"/> of <see cref="IEnumerable{T}"/> to convert into a changeset stream.</param>
+    /// <param name="expireAfter">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <see langword="null"/> for non-expiring items.</param>
+    /// <param name="scheduler">An optional <see cref="IScheduler"/> for expiry timers.</param>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
                 this IObservable<IEnumerable<T>> source,
                 Func<T, TimeSpan?> expireAfter,
@@ -1768,19 +2292,14 @@ public static class ObservableListEx
             limitSizeTo: -1,
             scheduler: scheduler);
 
+    /// <inheritdoc cref="ToObservableChangeSet{T}(IObservable{T}, IScheduler?)"/>
     /// <summary>
-    /// Converts the observable to an observable change set, allowing size and time limit to be specified.
-    /// Change set observes observable change events.
+    /// Bridges an <see cref="IObservable{T}"/> of <see cref="IEnumerable{T}"/> batches into a list changeset stream with both time-based expiry and FIFO size limiting.
     /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache.</param>
-    /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit.</param>
-    /// <param name="scheduler">The scheduler (only used for time expiry).</param>
-    /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="ArgumentNullException">source
-    /// or
-    /// keySelector.</exception>
+    /// <param name="source">The source <see cref="IObservable{IEnumerable{T}}"/> of <see cref="IEnumerable{T}"/> to convert into a changeset stream.</param>
+    /// <param name="expireAfter">A <see cref="Func{T, TResult}"/> function returning the time-to-live for each item. Return <see langword="null"/> for non-expiring items.</param>
+    /// <param name="limitSizeTo">The maximum list size. Oldest items removed when exceeded.</param>
+    /// <param name="scheduler">An optional <see cref="IScheduler"/> for expiry timers and size-limit checks.</param>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(
                 this IObservable<IEnumerable<T>> source,
                 Func<T, TimeSpan?>? expireAfter,
@@ -1794,12 +2313,20 @@ public static class ObservableListEx
             scheduler: scheduler);
 
     /// <summary>
-    /// Limits the size of the result set to the specified number of items.
+    /// Takes the first <paramref name="numberOfItems"/> items from the source list. Implemented as <c>Virtualise</c> with a fixed window starting at index 0.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="numberOfItems">The number of items.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to take the top items.</param>
+    /// <param name="numberOfItems">The maximum number of items to include. Must be greater than zero.</param>
+    /// <returns>A virtual changeset stream containing at most <paramref name="numberOfItems"/> items from the beginning of the source.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="numberOfItems"/> is zero or negative.</exception>
+    /// <remarks>
+    /// <para>The source should ideally be sorted before applying Top, since list order determines which items appear.</para>
+    /// </remarks>
+    /// <seealso cref="Virtualise{T}(IObservable{IChangeSet{T}}, IObservable{IVirtualRequest})"/>
+    /// <seealso cref="Page{T}(IObservable{IChangeSet{T}}, IObservable{IPageRequest})"/>
+    /// <seealso cref="Sort{T}(IObservable{IChangeSet{T}}, IComparer{T}, SortOptions, IObservable{Unit}?, IObservable{IComparer{T}}?, int)"/>
     public static IObservable<IChangeSet<T>> Top<T>(this IObservable<IChangeSet<T>> source, int numberOfItems)
         where T : notnull
     {
@@ -1814,24 +2341,30 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Converts the change set into a fully formed sorted collection. Each change in the source results in a new sorted collection.
+    /// Emits a sorted <see cref="IReadOnlyCollection{T}"/> after every changeset, sorted by the value returned by <paramref name="sort"/>.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TSortKey">The sort key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="sort">The sort function.</param>
-    /// <param name="sortOrder">The sort order. Defaults to ascending.</param>
-    /// <returns>An observable which emits the read only collection.</returns>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <typeparam name="TSortKey">The type of the sort key.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to materialize into a sorted collection on each change.</param>
+    /// <param name="sort">A <see cref="Func{T, TResult}"/> function extracting the sort key from each item.</param>
+    /// <param name="sortOrder">The <see cref="SortDirection"/> sort direction. Defaults to ascending.</param>
+    /// <returns>An observable emitting a sorted collection snapshot after each change.</returns>
+    /// <seealso cref="ToCollection{TObject}(IObservable{IChangeSet{TObject}})"/>
+    /// <seealso cref="ToSortedCollection{TObject}(IObservable{IChangeSet{TObject}}, IComparer{TObject})"/>
+    /// <seealso cref="QueryWhenChanged{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="ObservableCacheEx.ToSortedCollection{TObject, TKey}"/>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TSortKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TSortKey> sort, SortDirection sortOrder = SortDirection.Ascending)
         where TObject : notnull => source.QueryWhenChanged(query => sortOrder == SortDirection.Ascending ? new ReadOnlyCollectionLight<TObject>(query.OrderBy(sort)) : new ReadOnlyCollectionLight<TObject>(query.OrderByDescending(sort)));
 
     /// <summary>
-    /// Converts the change set into a fully formed sorted collection. Each change in the source results in a new sorted collection.
+    /// Emits a sorted <see cref="IReadOnlyCollection{T}"/> after every changeset, sorted using the specified <paramref name="comparer"/>.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="comparer">The sort comparer.</param>
-    /// <returns>An observable which emits the read only collection.</returns>
+    /// <typeparam name="TObject">The type of items in the list.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to materialize into a sorted collection on each change.</param>
+    /// <param name="comparer">The <see cref="IComparer{TObject}"/> used for sorting.</param>
+    /// <returns>An observable emitting a sorted collection snapshot after each change.</returns>
+    /// <seealso cref="ToSortedCollection{TObject, TSortKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TSortKey}, SortDirection)"/>
+    /// <seealso cref="ToCollection{TObject}(IObservable{IChangeSet{TObject}})"/>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject>(this IObservable<IChangeSet<TObject>> source, IComparer<TObject> comparer)
         where TObject : notnull => source.QueryWhenChanged(
             query =>
@@ -1842,19 +2375,38 @@ public static class ObservableListEx
             });
 
     /// <summary>
-    /// Projects each update item to a new form using the specified transform function.
+    /// Projects each item to a new form using a synchronous transform function.
     /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="transformFactory">The transform factory.</param>
-    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// valueSelector.
-    /// </exception>
+    /// <typeparam name="TSource">The type of the source items.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination items.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TSource}}"/> to transform.</param>
+    /// <param name="transformFactory">The <see cref="Func{T, TResult}"/> transform function applied to each item.</param>
+    /// <param name="transformOnRefresh">When <see langword="true"/>, Refresh events re-invoke the factory and emit an update. When <see langword="false"/> (the default), Refresh is forwarded without re-transforming.</param>
+    /// <returns>A list changeset stream of transformed items.</returns>
+    /// <remarks>
+    /// <para>
+    /// Maintains an internal list of transformed items. Each source changeset is
+    /// processed and a corresponding output changeset is produced with the transformed items.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add</term><description>The factory is called and an <b>Add</b> is emitted at the same index.</description></item>
+    /// <item><term>AddRange</term><description>The factory is called for each item. An <b>AddRange</b> is emitted at the same start index.</description></item>
+    /// <item><term>Replace</term><description>The factory is called for the new item. A <b>Replace</b> is emitted at the same index. The previous transformed value is available to overloads that accept <see cref="Optional{TDestination}"/>.</description></item>
+    /// <item><term>Remove</term><description>A <b>Remove</b> is emitted (no factory call).</description></item>
+    /// <item><term>RemoveRange</term><description>A <b>RemoveRange</b> is emitted.</description></item>
+    /// <item><term>Moved</term><description>A <b>Moved</b> is emitted with updated indices (no factory call). Throws <see cref="UnspecifiedIndexException"/> if the source change has no index information.</description></item>
+    /// <item><term>Refresh</term><description>If <paramref name="transformOnRefresh"/> is <see langword="false"/> (default), the <b>Refresh</b> is forwarded without re-transforming. If <see langword="true"/>, the factory is re-invoked and the result replaces the current value.</description></item>
+    /// <item><term>Clear</term><description>A <b>Clear</b> is emitted and the internal list is emptied.</description></item>
+    /// <item><term>OnError</term><description>If the factory throws, the exception propagates as OnError.</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> By default, Refresh does NOT re-transform the item (it just forwards the signal). Set <paramref name="transformOnRefresh"/> to <see langword="true"/> if you need the factory re-invoked on Refresh. Add operations with out-of-bounds indices silently append to the end.</para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <see langword="null"/>.</exception>
+    /// <seealso cref="TransformAsync{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, Task{TDestination}}, bool)"/>
+    /// <seealso cref="TransformMany{TDestination, TSource}(IObservable{IChangeSet{TSource}}, Func{TSource, IEnumerable{TDestination}}, IEqualityComparer{TDestination}?)"/>
+    /// <seealso cref="Convert{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination})"/>
+    /// <seealso cref="ObservableCacheEx.Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, TDestination}, bool)"/>
     public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, TDestination> transformFactory, bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
@@ -1866,20 +2418,10 @@ public static class ObservableListEx
         return source.Transform<TSource, TDestination>((t, _, _) => transformFactory(t), transformOnRefresh);
     }
 
+    /// <inheritdoc cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/>
     /// <summary>
-    /// Projects each update item to a new form using the specified transform function.
+    /// Projects each item using a transform function that also receives the item's index.
     /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="transformFactory">The transform function.</param>
-    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
-    /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// valueSelector.
-    /// </exception>
     public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, int, TDestination> transformFactory, bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
@@ -1890,21 +2432,11 @@ public static class ObservableListEx
         return source.Transform<TSource, TDestination>((t, _, idx) => transformFactory(t, idx), transformOnRefresh);
     }
 
+    /// <inheritdoc cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/>
     /// <summary>
-    /// <para>Projects each update item to a new form using the specified transform function.</para>
-    /// <para>*** Annoyingly when using this overload you will have to explicitly specify the generic type arguments as type inference fails.</para>
+    /// Projects each item using a transform function that also receives the previously transformed value (if any).
+    /// Type arguments must be specified explicitly as type inference fails for this overload.
     /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="transformFactory">The transform function.</param>
-    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
-    /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// valueSelector.
-    /// </exception>
     public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, TDestination> transformFactory, bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
@@ -1915,21 +2447,11 @@ public static class ObservableListEx
         return source.Transform<TSource, TDestination>((t, previous, _) => transformFactory(t, previous), transformOnRefresh);
     }
 
+    /// <inheritdoc cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/>
     /// <summary>
-    /// <para>Projects each update item to a new form using the specified transform function.</para>
-    /// <para>*** Annoyingly when using this overload you will have to explicitly specify the generic type arguments as type inference fails.</para>
+    /// Projects each item using a transform function that receives the source item, the previously transformed value, and the index.
+    /// Type arguments must be specified explicitly as type inference fails for this overload.
     /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="transformFactory">The transform factory.</param>
-    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
-    /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// valueSelector.
-    /// </exception>
     public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> transformFactory, bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
@@ -1941,19 +2463,32 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Projects each update item to a new form using the specified transform function.
+    /// Projects each item to a new form using an async transform function. Behaves like <see cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/> but the factory returns a <see cref="Task{T}"/>.
     /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="transformFactory">The transform factory.</param>
-    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
-    /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// valueSelector.
-    /// </exception>
+    /// <typeparam name="TSource">The type of the source items.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination items.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TSource}}"/> to transform asynchronously.</param>
+    /// <param name="transformFactory">An <see cref="Func{T, TResult}"/> async function that transforms each source item.</param>
+    /// <param name="transformOnRefresh">When <see langword="true"/>, Refresh events re-invoke the factory.</param>
+    /// <returns>A list changeset stream of asynchronously transformed items.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>Change handling is identical to the synchronous <see cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/> except the factory is awaited. Operations are serialized per changeset via a semaphore.</para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add/AddRange</term><description>The async factory is awaited for each item. An <b>Add</b>/<b>AddRange</b> is emitted with the transformed results.</description></item>
+    /// <item><term>Replace</term><description>The async factory is awaited for the new item. A <b>Replace</b> is emitted.</description></item>
+    /// <item><term>Remove/RemoveRange</term><description>Emitted without invoking the factory.</description></item>
+    /// <item><term>Moved</term><description>Emitted with updated indices (no factory call).</description></item>
+    /// <item><term>Refresh</term><description>If <paramref name="transformOnRefresh"/> is <see langword="false"/> (default), forwarded without re-transforming. If <see langword="true"/>, the factory is re-awaited.</description></item>
+    /// <item><term>Clear</term><description>Emitted and internal list cleared.</description></item>
+    /// <item><term>OnError</term><description>If the async factory throws, the exception propagates as OnError.</description></item>
+    /// <item><term>OnCompleted</term><description>Forwarded after the last changeset is processed.</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> All async transforms within a single changeset are serialized (not parallel). Each changeset is fully processed before the next begins. By default, Refresh does NOT re-transform.</para>
+    /// </remarks>
+    /// <seealso cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/>
+    /// <seealso cref="ObservableCacheEx.TransformAsync{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Task{TDestination}}, IObservable{Func{TSource, TKey, bool}})"/>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
@@ -1968,20 +2503,10 @@ public static class ObservableListEx
         return source.TransformAsync<TSource, TDestination>((t, _, _) => transformFactory(t), transformOnRefresh);
     }
 
+    /// <inheritdoc cref="TransformAsync{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, Task{TDestination}}, bool)"/>
     /// <summary>
-    /// Projects each update item to a new form using the specified transform function.
+    /// Async transform overload receiving the source item and its index.
     /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="transformFactory">The transform factory.</param>
-    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
-    /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// valueSelector.
-    /// </exception>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
@@ -1996,20 +2521,10 @@ public static class ObservableListEx
         return source.TransformAsync<TSource, TDestination>((t, _, i) => transformFactory(t, i), transformOnRefresh);
     }
 
+    /// <inheritdoc cref="TransformAsync{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, Task{TDestination}}, bool)"/>
     /// <summary>
-    /// Projects each update item to a new form using the specified transform function.
+    /// Async transform overload receiving the source item and the previously transformed value.
     /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="transformFactory">The transform factory.</param>
-    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
-    /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// valueSelector.
-    /// </exception>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
@@ -2024,20 +2539,10 @@ public static class ObservableListEx
         return source.TransformAsync<TSource, TDestination>((t, d, _) => transformFactory(t, d), transformOnRefresh);
     }
 
+    /// <inheritdoc cref="TransformAsync{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, Task{TDestination}}, bool)"/>
     /// <summary>
-    /// Projects each update item to a new form using the specified transform function.
+    /// Async transform overload receiving the source item, previously transformed value, and index. This is the terminal overload that all other TransformAsync overloads delegate to.
     /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="transformFactory">The transform factory.</param>
-    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
-    /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// valueSelector.
-    /// </exception>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
@@ -2053,19 +2558,28 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Equivalent to a select many transform. To work, the key must individually identify each child.
+    /// Flattens each source item into multiple destination items using <paramref name="manySelector"/>. Each source item produces zero or more children,
+    /// all of which are merged into a single flat list changeset stream.
     /// </summary>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="manySelector">The selector function which selects the enumerable.</param>
-    /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// source
-    /// or
-    /// manySelector.
-    /// </exception>
+    /// <typeparam name="TDestination">The type of the destination items.</typeparam>
+    /// <typeparam name="TSource">The type of the source items.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TSource}}"/> to expand each item into multiple children.</param>
+    /// <param name="manySelector">A <see cref="Func{T, TResult}"/> function that returns the child items for each source item.</param>
+    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TDestination}"/> used during Replace to determine which child items changed between old and new parent values.</param>
+    /// <returns>A list changeset stream of all child items from all source items.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="manySelector"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Children expanded and added to the output.</description></item>
+    /// <item><term><b>Replace</b></term><description>Old children diffed against new children (using <paramref name="equalityComparer"/>). Removed, added, or kept as appropriate.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>All children of the removed parents are removed from the output.</description></item>
+    /// <item><term><b>Refresh</b></term><description>Children re-expanded and diffed.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/>
+    /// <seealso cref="MergeManyChangeSets{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination}?)"/>
+    /// <seealso cref="ObservableCacheEx.TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, IEnumerable{TDestination}}, Func{TDestination, TDestinationKey})"/>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, IEnumerable<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TDestination : notnull
         where TSource : notnull
@@ -2076,52 +2590,47 @@ public static class ObservableListEx
         return new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
     }
 
+    /// <inheritdoc cref="TransformMany{TDestination, TSource}(IObservable{IChangeSet{TSource}}, Func{TSource, IEnumerable{TDestination}}, IEqualityComparer{TDestination}?)"/>
     /// <summary>
-    /// Flatten the nested observable collection, and  observe subsequently observable collection changes.
+    /// Flattens each source item into children from an <see cref="ObservableCollection{T}"/>. The collection is observed for subsequent changes.
     /// </summary>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="manySelector">The selector function which selects the enumerable.</param>
-    /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children.</param>
-    /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, ObservableCollection<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TDestination : notnull
         where TSource : notnull => new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
 
+    /// <inheritdoc cref="TransformMany{TDestination, TSource}(IObservable{IChangeSet{TSource}}, Func{TSource, IEnumerable{TDestination}}, IEqualityComparer{TDestination}?)"/>
     /// <summary>
-    /// Flatten the nested observable collection, and  observe subsequently observable collection changes.
+    /// Flattens each source item into children from a <see cref="ReadOnlyObservableCollection{T}"/>. The collection is observed for subsequent changes.
     /// </summary>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="manySelector">The selector function which selects the enumerable.</param>
-    /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children.</param>
-    /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, ReadOnlyObservableCollection<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TDestination : notnull
         where TSource : notnull => new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
 
+    /// <inheritdoc cref="TransformMany{TDestination, TSource}(IObservable{IChangeSet{TSource}}, Func{TSource, IEnumerable{TDestination}}, IEqualityComparer{TDestination}?)"/>
     /// <summary>
-    /// Flatten the nested observable list, and observe subsequent observable collection changes.
+    /// Flattens each source item into children from an <see cref="IObservableList{T}"/>. The inner list is observed for subsequent changes.
     /// </summary>
-    /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="manySelector">The selector function which selects the enumerable.</param>
-    /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children.</param>
-    /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, IObservableList<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TDestination : notnull
         where TSource : notnull => new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
 
     /// <summary>
-    /// Virtualises the source using parameters provided via the requests observable.
+    /// Applies a sliding window to the source list using start index and size from <paramref name="requests"/>.
+    /// Only items within the window are included downstream.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="requests">The requests.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to virtualize.</param>
+    /// <param name="requests">An observable of <see cref="IVirtualRequest"/> specifying the start index and size of the window.</param>
+    /// <returns>An <see cref="IVirtualChangeSet{T}"/> stream containing only items within the current virtual window.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="requests"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Like <see cref="Page{T}(IObservable{IChangeSet{T}}, IObservable{IPageRequest})"/> but uses absolute start index and size instead of page number and page size.
+    /// Internally maintains the full source list and recalculates the window on each change or request.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="Page{T}(IObservable{IChangeSet{T}}, IObservable{IPageRequest})"/>
+    /// <seealso cref="Top{T}(IObservable{IChangeSet{T}}, int)"/>
     public static IObservable<IVirtualChangeSet<T>> Virtualise<T>(this IObservable<IChangeSet<T>> source, IObservable<IVirtualRequest> requests)
         where T : notnull
     {
@@ -2133,12 +2642,22 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Watches each item in the collection and notifies when any of them has changed.
+    /// Watches all items in the source list and emits the item when any of its properties change.
+    /// Requires <typeparamref name="TObject"/> to implement <see cref="INotifyPropertyChanged"/>.
+    /// This is NOT a changeset operator: it returns a flat <see cref="IObservable{T}"/>.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="propertiesToMonitor">specify properties to Monitor, or omit to monitor all property changes.</param>
-    /// <returns>An observable which emits the object.</returns>
+    /// <typeparam name="TObject">The type of the object. Must implement <see cref="INotifyPropertyChanged"/>.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to observe property changes on items in.</param>
+    /// <param name="propertiesToMonitor">An optional list of property names to monitor. If empty, all property changes are observed.</param>
+    /// <returns>An observable emitting the item whenever any monitored property changes.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>Implemented via <see cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>. Subscriptions are managed per item: created on add, disposed on remove.</para>
+    /// </remarks>
+    /// <seealso cref="WhenPropertyChanged{TObject, TValue}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TValue}}, bool)"/>
+    /// <seealso cref="WhenValueChanged{TObject, TValue}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TValue}}, bool)"/>
+    /// <seealso cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <seealso cref="ObservableCacheEx.WhenAnyPropertyChanged{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, string[])"/>
     public static IObservable<TObject?> WhenAnyPropertyChanged<TObject>(this IObservable<IChangeSet<TObject>> source, params string[] propertiesToMonitor)
         where TObject : INotifyPropertyChanged
     {
@@ -2148,14 +2667,23 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Watches each item in the collection and notifies when any of them has changed.
+    /// Watches a specific property on all items in the source list and emits a <see cref="PropertyValue{TObject, TValue}"/> (item + value pair) when it changes.
+    /// Requires <typeparamref name="TObject"/> to implement <see cref="INotifyPropertyChanged"/>.
+    /// This is NOT a changeset operator: it returns a flat <see cref="IObservable{T}"/>.
     /// </summary>
-    /// <typeparam name="TObject">The type of object.</typeparam>
-    /// <typeparam name="TValue">The type of the value.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="propertyAccessor">The property accessor.</param>
-    /// <param name="notifyOnInitialValue">If true the resulting observable includes the initial value.</param>
-    /// <returns>An observable which emits the property value.</returns>
+    /// <typeparam name="TObject">The type of item. Must implement <see cref="INotifyPropertyChanged"/>.</typeparam>
+    /// <typeparam name="TValue">The type of the property value.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to observe a specific property on items in.</param>
+    /// <param name="propertyAccessor">An <see cref="Expression{TDelegate}"/> expression selecting the property to observe.</param>
+    /// <param name="notifyOnInitialValue">When <see langword="true"/> (default), the current value is emitted immediately upon subscribing to each item.</param>
+    /// <returns>An observable emitting <see cref="PropertyValue{TObject, TValue}"/> whenever the property changes on any tracked item.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertyAccessor"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>Implemented via <see cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>.</para>
+    /// </remarks>
+    /// <seealso cref="WhenValueChanged{TObject, TValue}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TValue}}, bool)"/>
+    /// <seealso cref="WhenAnyPropertyChanged{TObject}(IObservable{IChangeSet{TObject}}, string[])"/>
+    /// <seealso cref="ObservableCacheEx.WhenPropertyChanged{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Expression{Func{TObject, TValue}}, bool)"/>
     public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TValue>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
         where TObject : INotifyPropertyChanged
     {
@@ -2167,14 +2695,20 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Watches each item in the collection and notifies when any of them has changed.
+    /// Watches a specific property on all items and emits just the property value (without the sender) when it changes.
+    /// Requires <typeparamref name="TObject"/> to implement <see cref="INotifyPropertyChanged"/>.
+    /// This is NOT a changeset operator: it returns a flat <see cref="IObservable{T}"/>.
     /// </summary>
-    /// <typeparam name="TObject">The type of object.</typeparam>
-    /// <typeparam name="TValue">The type of the value.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="propertyAccessor">The property accessor.</param>
-    /// <param name="notifyOnInitialValue">If true the resulting observable includes the initial value.</param>
-    /// <returns>An observable which emits the value.</returns>
+    /// <typeparam name="TObject">The type of item. Must implement <see cref="INotifyPropertyChanged"/>.</typeparam>
+    /// <typeparam name="TValue">The type of the property value.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to observe a specific property value on items in.</param>
+    /// <param name="propertyAccessor">An <see cref="Expression{TDelegate}"/> expression selecting the property to observe.</param>
+    /// <param name="notifyOnInitialValue">When <see langword="true"/> (default), the current value is emitted immediately upon subscribing to each item.</param>
+    /// <returns>An observable emitting the property value whenever it changes on any tracked item.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertyAccessor"/> is <see langword="null"/>.</exception>
+    /// <seealso cref="WhenPropertyChanged{TObject, TValue}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TValue}}, bool)"/>
+    /// <seealso cref="WhenAnyPropertyChanged{TObject}(IObservable{IChangeSet{TObject}}, string[])"/>
+    /// <seealso cref="ObservableCacheEx.WhenValueChanged{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Expression{Func{TObject, TValue}}, bool)"/>
     public static IObservable<TValue?> WhenValueChanged<TObject, TValue>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
         where TObject : INotifyPropertyChanged
     {
@@ -2186,13 +2720,22 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Includes changes for the specified reasons only.
+    /// Filters the changeset stream to include only changes with the specified <see cref="ListChangeReason"/> values.
+    /// Index information is stripped from the output because removing some changes invalidates the original index positions.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="reasons">The reasons.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentException">Must enter at least 1 reason.</exception>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to filter by change reason.</param>
+    /// <param name="reasons">The <see cref="ListChangeReason"/> change reasons to include. Must specify at least one.</param>
+    /// <returns>A list changeset stream containing only changes with the specified reasons.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="reasons"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="reasons"/> is empty.</exception>
+    /// <remarks>
+    /// <para>Filters individual changes within each changeset. If filtering removes all changes from a changeset, the empty changeset is suppressed via <see cref="NotEmpty{T}(IObservable{IChangeSet{T}})"/>.</para>
+    /// <para><b>Worth noting:</b> Filtering out <b>Remove</b> changes can cause downstream operators to accumulate items indefinitely (memory leak). Index information is stripped because removing some changes invalidates the original index positions.</para>
+    /// </remarks>
+    /// <seealso cref="WhereReasonsAreNot{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
+    /// <seealso cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="ChangeSetEx.YieldWithoutIndex{T}(IEnumerable{Change{T}})"/>
     public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
         where T : notnull
     {
@@ -2213,13 +2756,25 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Excludes updates for the specified reasons.
+    /// Filters the changeset stream to exclude changes with the specified <see cref="ListChangeReason"/> values.
+    /// Index information is stripped from the output because removing some changes invalidates the original index positions.
+    /// The exception is when only <see cref="ListChangeReason.Refresh"/> is excluded, since removing Refresh does not affect index calculations.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="reasons">The reasons.</param>
-    /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="ArgumentException">Must enter at least 1 reason.</exception>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to filter by excluding change reasons.</param>
+    /// <param name="reasons">The <see cref="ListChangeReason"/> change reasons to exclude. Must specify at least one.</param>
+    /// <returns>A list changeset stream with the specified change reasons removed.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="reasons"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="reasons"/> is empty.</exception>
+    /// <remarks>
+    /// <para>
+    /// Empty changesets (after filtering) are automatically suppressed. When only <see cref="ListChangeReason.Refresh"/> is excluded,
+    /// indices are preserved, since removing Refresh does not affect index calculations.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="WhereReasonsAre{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
+    /// <seealso cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso cref="ChangeSetEx.YieldWithoutIndex{T}(IEnumerable{Change{T}})"/>
     public static IObservable<IChangeSet<T>> WhereReasonsAreNot<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
         where T : notnull
     {
@@ -2250,13 +2805,33 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Apply a logical Xor operator between the collections.
-    /// Items which are only in one of the sources are included in the result.
+    /// Applies a logical XOR (symmetric difference) between the source and other streams.
+    /// Items present in exactly one source are included in the result.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="others">The others.</param>
-    /// <returns>An observable which emits the change set.</returns>
+    /// <param name="source">The primary source <see cref="IObservable{IChangeSet{T}}"/> to exclusively combine.</param>
+    /// <param name="others">The other <see cref="IObservable{IChangeSet{T}}"/> changeset streams to combine with.</param>
+    /// <returns>A list changeset stream containing items that exist in exactly one source.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="others"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <para>
+    /// Item identity is determined by the default equality comparer for <typeparamref name="T"/>. Uses reference-counted equality: an item is included when it exists in exactly one source.
+    /// If it appears in a second source, it is removed from the result. If it then leaves one source,
+    /// it re-enters the result. <b>Moved</b> changes are ignored.
+    /// </para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Reference count updated. If the item is now in exactly one source, an <b>Add</b> is emitted. If now in two or more, a <b>Remove</b> is emitted.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Reference count decremented. If now in exactly one source, an <b>Add</b> is emitted. If now in zero, a <b>Remove</b> is emitted.</description></item>
+    /// <item><term><b>Replace</b></term><description>Old item reference count decremented, new item incremented, with Xor logic applied.</description></item>
+    /// <item><term><b>Refresh</b></term><description>Forwarded if item is in the result set.</description></item>
+    /// <item><term><b>Moved</b></term><description>Ignored.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <seealso cref="ObservableCacheEx.Xor{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
         where T : notnull
     {
@@ -2265,43 +2840,31 @@ public static class ObservableListEx
         return source.Combine(CombineOperator.Xor, others);
     }
 
+    /// <inheritdoc cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
     /// <summary>
-    /// Apply a logical Xor operator between the collections.
-    /// Items which are only in one of the sources are included in the result.
+    /// Applies a logical XOR between a pre-built collection of list changeset sources.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The sources.</param>
-    /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.Xor);
 
+    /// <inheritdoc cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
     /// <summary>
-    /// Dynamically apply a logical Xor operator between the items in the outer observable list.
-    /// Items which are in any of the sources are included in the result.
+    /// Dynamic XOR: sources can be added or removed from the <see cref="IObservableList{T}"/> at runtime.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.Xor);
 
+    /// <inheritdoc cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
     /// <summary>
-    /// Dynamically apply a logical Xor operator between the items in the outer observable list.
-    /// Items which are in any of the sources are included in the result.
+    /// Dynamic XOR accepting <see cref="IObservableList{T}"/> of <see cref="IObservableList{T}"/>. Each inner list's <c>Connect()</c> is used as a source.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservableList<IObservableList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.Xor);
 
+    /// <inheritdoc cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
     /// <summary>
-    /// Dynamically apply a logical Xor operator between the items in the outer observable list.
-    /// Items which are in any of the sources are included in the result.
+    /// Dynamic XOR accepting <see cref="IObservableList{T}"/> of <see cref="ISourceList{T}"/>. Each inner list's <c>Connect()</c> is used as a source.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="sources">The source.</param>
-    /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservableList<ISourceList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.Xor);
 

@@ -1,0 +1,132 @@
+name: PR version check
+
+on:
+  pull_request:
+    branches: [main, 'release/*.x']
+    types: [opened, edited, labeled, unlabeled, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout PR head
+      uses: actions/checkout@v6
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+
+    - name: Validate version.json against PR labels and history
+      shell: pwsh
+      env:
+        BASE_REF: ${{ github.base_ref }}
+        LABELS_JSON: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        HEAD_REF: ${{ github.event.pull_request.head.ref }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+
+        # The version-bump bot PRs (opened by GITHUB_TOKEN from the automation workflows)
+        # legitimately change version.json. Don't trip the manual-edit guard on them;
+        # their content is reviewed in the workflow that opened them.
+        $isBotBumpPr = ($env:PR_AUTHOR -eq 'github-actions[bot]') -and ($env:HEAD_REF -like 'bot/bump-*' -or $env:HEAD_REF -like 'bot/promote-*')
+
+        $labels = $env:LABELS_JSON | ConvertFrom-Json
+        $isBreaking = $labels -contains 'breaking-change'
+        $isManualEdit = $labels -contains 'manual-version-edit'
+
+        # Reject any human-authored PR that touches version.json unless explicitly
+        # labeled 'manual-version-edit'. version.json is owned by the automation
+        # workflows (cut-major, promote-minor, bump-major-preview); manual edits
+        # bypass the regression guards and should be a deliberate, labeled exception.
+        if (-not $isBotBumpPr) {
+          $base = "origin/$env:BASE_REF"
+          git fetch origin $env:BASE_REF --quiet
+          if ($LASTEXITCODE -ne 0) { throw "git fetch origin $env:BASE_REF failed (exit $LASTEXITCODE)." }
+          $diff = git diff --name-only "$base...HEAD"
+          if ($LASTEXITCODE -ne 0) { throw "git diff against $base failed (exit $LASTEXITCODE)." }
+          if (($diff -split "`r?`n") -contains 'version.json' -and -not $isManualEdit) {
+            throw "This PR modifies version.json but is not authored by the automation bot and is not labeled 'manual-version-edit'. version.json is managed by the workflows in .github/workflows/ (cut-major, promote-minor, bump-major-preview). To override (e.g. for the one-time cutover or a recovery operation), add the 'manual-version-edit' label."
+          }
+        }
+
+        if ($env:BASE_REF -ne 'main') {
+          Write-Host "PR targets '$env:BASE_REF' (not main); breaking-change check only applies to PRs targeting main. Skipping."
+          exit 0
+        }
+
+        if ($isBotBumpPr) {
+          Write-Host "PR is an automation-authored version-bump branch ('$env:HEAD_REF'); skipping breaking-change check."
+          exit 0
+        }
+
+        $headVersionJson = Get-Content version.json -Raw | ConvertFrom-Json
+        $headVer = $headVersionJson.version
+        if ($headVer -notmatch '^(0|[1-9]\d*)\.') {
+          throw "Could not parse major version from PR head version.json: '$headVer'"
+        }
+        $headMajor = [int]$matches[1]
+
+        git fetch origin main --quiet
+        if ($LASTEXITCODE -ne 0) { throw "git fetch origin main failed (exit $LASTEXITCODE)." }
+
+        $baseVersionJson = git show "origin/main:version.json" | ConvertFrom-Json
+        if ($LASTEXITCODE -ne 0) { throw "Failed to read version.json from origin/main." }
+        $baseVer = $baseVersionJson.version
+        if ($baseVer -notmatch '^(0|[1-9]\d*)\.') {
+          throw "Could not parse major version from main's version.json: '$baseVer'"
+        }
+        $baseMajor = [int]$matches[1]
+
+        # Unconditional check: if this PR changes the major in version.json, it MUST be
+        # labeled breaking-change. Catches unlabeled major-version edits.
+        if ($headMajor -ne $baseMajor -and -not $isBreaking) {
+          throw "This PR changes version.json's major from $baseMajor to $headMajor but is not labeled 'breaking-change'. Major-version changes must be tagged."
+        }
+
+        if (-not $isBreaking) {
+          Write-Host "PR is not labeled 'breaking-change' and does not change the major; no further checks."
+          exit 0
+        }
+
+        Write-Host "PR is labeled as breaking. Verifying the PR's version.json reflects a newer major than the latest stable release."
+
+        git fetch --tags --force origin
+        if ($LASTEXITCODE -ne 0) { throw "git fetch --tags failed (exit $LASTEXITCODE); cannot safely validate breaking-change label." }
+
+        $latestStable = git tag --list --sort=-v:refname |
+            Where-Object { $_ -match '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$' } |
+            Select-Object -First 1
+
+        if (-not $latestStable) {
+          # No prior stable releases. Accept either the post-bump steady state
+          # (head == base, both already at the new major) or the rare case where
+          # the breaking PR itself does the bump (head == base + 1).
+          if ($headMajor -eq $baseMajor -or $headMajor -eq $baseMajor + 1) {
+            Write-Host "No stable tags found; PR head major ($headMajor) is consistent with main ($baseMajor). OK."
+            exit 0
+          }
+          throw "No stable tags found; PR head major ($headMajor) must equal or be exactly one greater than main's current major ($baseMajor) for a breaking-change PR with no prior stable history."
+        }
+
+        if ($latestStable -notmatch '^(\d+)\.') {
+          throw "Could not parse latest stable tag: '$latestStable'"
+        }
+        $latestMajor = [int]$matches[1]
+
+        Write-Host "Latest stable major: $latestMajor; PR head major: $headMajor"
+
+        $expectedMajor = $latestMajor + 1
+        if ($headMajor -ne $expectedMajor) {
+          if ($headMajor -le $latestMajor) {
+            $msg = "PR is labeled breaking-change but its version.json major ($headMajor) is not greater than the latest stable release major ($latestMajor; tag '$latestStable'). Run the 'Bump main to next major preview' workflow with next_major=$expectedMajor first, then rebase this PR onto the updated main."
+          } else {
+            $msg = "PR is labeled breaking-change but its version.json major ($headMajor) skips past major $expectedMajor. Main must be at exactly latest_stable_major + 1 ($latestMajor + 1 = $expectedMajor). Reset main to $expectedMajor.0-preview.{height} before merging this PR."
+          }
+          throw $msg
+        }
+
+        Write-Host "OK: PR head major ($headMajor) is exactly one greater than latest stable major ($latestMajor)."

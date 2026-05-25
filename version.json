@@ -1,9 +1,8 @@
 {
-    "version": "9.4",
+    "version": "9.5-preview.{height}",
     "publicReleaseRefSpec": [
-        "^refs/heads/main$", // we release out of master
-        "^refs/heads/preview/.*", // we release previews
-        "^refs/heads/rel/\\d+\\.\\d+\\.\\d+" // we also release branches starting with rel/N.N.N
+        "^refs/heads/main$", // main publishes pre-release packages
+        "^refs/heads/release/\\d+\\.x$" // release/<major>.x branches publish stable packages
     ],
     "nugetPackageVersion": {
         "semVer": 2

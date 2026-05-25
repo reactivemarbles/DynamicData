@@ -4,6 +4,7 @@
 
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive;
 using System.Reactive.Linq;
 
@@ -30,7 +31,7 @@ public static class BindingListEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits change set values.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this BindingList<T> source)
+    public static IObservable<IChangeSet<T>> ToObservableChangeSet<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this BindingList<T> source)
         where T : notnull
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
@@ -50,7 +51,7 @@ public static class BindingListEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this BindingList<TObject> source, Func<TObject, TKey> keySelector)
+    public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(this BindingList<TObject> source, Func<TObject, TKey> keySelector)
         where TObject : notnull
         where TKey : notnull
     {
@@ -132,7 +133,7 @@ public static class BindingListEx
             });
     }
 
-    internal static void Clone<T>(this BindingList<T> source, IEnumerable<Change<T>> changes)
+    internal static void Clone<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this BindingList<T> source, IEnumerable<Change<T>> changes)
         where T : notnull
     {
         // ** Copied from ListEx for binding list specific changes
@@ -145,7 +146,7 @@ public static class BindingListEx
         }
     }
 
-    private static void Clone<T>(this BindingList<T> source, Change<T> item, IEqualityComparer<T> equalityComparer)
+    private static void Clone<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this BindingList<T> source, Change<T> item, IEqualityComparer<T> equalityComparer)
         where T : notnull
     {
         switch (item.Reason)

@@ -1,0 +1,214 @@
+name: Bump main to next major preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      next_major:
+        description: 'Next major version (e.g., 10) for the new preview line on main'
+        required: true
+        type: string
+      discard_current_preview:
+        description: 'Allow orphaning the current major''s preview work (no release branch will ever ship for it). Check this only when intentionally abandoning the current X.Y-preview line.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: main-version-mutator
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_MAJOR_INPUT: ${{ inputs.next_major }}
+      DISCARD_PREVIEW_INPUT: ${{ inputs.discard_current_preview }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        ref: main
+        fetch-depth: 0
+
+    - name: Configure git
+      run: |
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+
+    - name: Validate inputs
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+
+        $next = $env:NEXT_MAJOR_INPUT
+        if ($next -notmatch '^(0|[1-9]\d*)$') {
+          throw "next_major must be a positive integer with no leading zeros (got: '$next')"
+        }
+        $nextInt = [int]$next
+
+        git fetch --tags --force origin
+        if ($LASTEXITCODE -ne 0) { throw "git fetch --tags failed (exit $LASTEXITCODE); cannot validate sequential-major rule." }
+
+        $mainHeadSha = (git rev-parse origin/main).Trim()
+        if ($LASTEXITCODE -ne 0 -or -not $mainHeadSha) { throw "git rev-parse origin/main failed (exit $LASTEXITCODE)." }
+
+        $versionJson = git show "${mainHeadSha}:version.json" | ConvertFrom-Json
+        if ($LASTEXITCODE -ne 0) { throw "Failed to read version.json from origin/main." }
+        $ver = $versionJson.version
+        if ($ver -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)-preview') {
+          throw "main's version is '$ver' but should be '<major>.<minor>-preview.{height}'"
+        }
+        $currentMajor = [int]$matches[1]
+        $currentMinor = [int]$matches[2]
+        if ($nextInt -le $currentMajor) {
+          throw "next_major ($nextInt) must be greater than current major ($currentMajor)"
+        }
+
+        # Pre-flight: detect whether the current major's preview work would be orphaned.
+        # The only workflow that creates release branches is cut-major.yml, and it requires
+        # main to be on <major>.0-preview. If main has moved past .0-preview without the
+        # major ever being cut (or has accumulated minor work past the existing release
+        # branch's stable minor), bumping to the next major silently loses that work.
+        $discardOverride = $env:DISCARD_PREVIEW_INPUT -eq 'true'
+        $releaseBranch = "release/$currentMajor.x"
+        $releaseExists = git ls-remote --heads origin "refs/heads/$releaseBranch"
+        if ($LASTEXITCODE -ne 0) { throw "git ls-remote for $releaseBranch failed (exit $LASTEXITCODE); cannot verify orphan state." }
+
+        if (-not $releaseExists) {
+          $msg = "main is on $currentMajor.$currentMinor-preview but '$releaseBranch' does not exist. Bumping main to $nextInt would orphan ALL '$currentMajor.x' work (no stable '$currentMajor.*' would ever ship). To ship $currentMajor.0 stable first, run 'Cut major release' with major_version=$currentMajor and next_main_version=$nextInt.0. To intentionally discard the $currentMajor preview line, re-run this workflow with 'discard_current_preview' checked."
+          if (-not $discardOverride) { throw $msg }
+          Write-Host "WARNING (discard_current_preview=true): release/$currentMajor.x does not exist. All $currentMajor.x work is being orphaned."
+        } else {
+          $releaseVerJson = git show "origin/${releaseBranch}:version.json" | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw "Failed to read version.json from origin/$releaseBranch." }
+          $releaseVer = $releaseVerJson.version
+          if ($releaseVer -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+            throw "'$releaseBranch' version is '$releaseVer'; expected stable '<major>.<minor>' form. Cannot verify orphan state."
+          }
+          $releaseMinor = [int]$matches[2]
+          if ($currentMinor -gt $releaseMinor) {
+            $msg = "main is on $currentMajor.$currentMinor-preview but '$releaseBranch' is at $currentMajor.$releaseMinor stable. Bumping main to $nextInt would orphan the $currentMajor.$currentMinor preview work (never shipped as stable). To ship $currentMajor.$currentMinor stable first, run 'Promote main to stable minor' with target_release_branch=$releaseBranch and stable_version=$currentMajor.$currentMinor. To intentionally discard $currentMajor.$currentMinor preview, re-run this workflow with 'discard_current_preview' checked."
+            if (-not $discardOverride) { throw $msg }
+            Write-Host "WARNING (discard_current_preview=true): orphaning $currentMajor.$currentMinor preview work (release/$currentMajor.x is at $currentMajor.$releaseMinor)."
+          } else {
+            Write-Host "OK: $releaseBranch is at $currentMajor.$releaseMinor stable and main is on $currentMajor.$currentMinor-preview ($currentMinor <= $releaseMinor); no orphaning."
+          }
+        }
+
+        $latestStable = git tag --list --sort=-v:refname |
+            Where-Object { $_ -match '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$' } |
+            Select-Object -First 1
+
+        if ($latestStable) {
+          if ($latestStable -notmatch '^(\d+)\.') {
+            throw "Could not parse latest stable tag: '$latestStable'"
+          }
+          $latestStableMajor = [int]$matches[1]
+          $expectedMajor = $latestStableMajor + 1
+          if ($nextInt -ne $expectedMajor) {
+            throw "next_major ($nextInt) must be exactly one greater than the latest stable major ($latestStableMajor; tag '$latestStable'). Expected: $expectedMajor. Major versions must be incremented sequentially."
+          }
+          Write-Host "OK: next_major ($nextInt) is exactly one greater than latest stable major ($latestStableMajor)."
+        } else {
+          $expectedMajor = $currentMajor + 1
+          if ($nextInt -ne $expectedMajor) {
+            throw "No stable tags found; falling back to comparing against main's current major ($currentMajor). next_major ($nextInt) must be exactly $expectedMajor."
+          }
+          Write-Host "No stable tags found; next_major ($nextInt) matches currentMajor+1 ($expectedMajor)."
+        }
+
+        $newVersion = "$next.0-preview.{height}"
+        $runId = $env:GITHUB_RUN_ID
+        $runAttempt = $env:GITHUB_RUN_ATTEMPT
+        Add-Content -Path $env:GITHUB_ENV -Value "NEW_VERSION=$newVersion"
+        Add-Content -Path $env:GITHUB_ENV -Value "NEXT_MAJOR=$next"
+        Add-Content -Path $env:GITHUB_ENV -Value "BUMP_BRANCH=bot/bump-major-$next-$runId-$runAttempt"
+        Add-Content -Path $env:GITHUB_ENV -Value "MAIN_HEAD_SHA=$mainHeadSha"
+
+    - name: Create bump branch (from validated main SHA)
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        git checkout "$env:MAIN_HEAD_SHA"
+        if ($LASTEXITCODE -ne 0) { throw "git checkout failed (exit $LASTEXITCODE)." }
+        git checkout -b "$env:BUMP_BRANCH"
+        if ($LASTEXITCODE -ne 0) { throw "git checkout -b failed (exit $LASTEXITCODE)." }
+
+    - name: Bump version.json
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $path = 'version.json'
+        $content = [System.IO.File]::ReadAllText($path)
+        $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:NEW_VERSION`"")
+        $content = [regex]::Replace($content, '(?m)^\s*"versionHeightOffset"\s*:\s*-?\d+\s*,?\s*(//[^\r\n]*)?\s*(\r?\n|$)', '')
+        $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
+        [System.IO.File]::WriteAllText($path, $content)
+        $obj = $content | ConvertFrom-Json
+        if ($obj.PSObject.Properties.Name -contains 'versionHeightOffset') {
+          throw "Failed to strip versionHeightOffset from version.json. Manual edit required."
+        }
+
+    - name: Commit and push
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        git add version.json
+        if ($LASTEXITCODE -ne 0) { throw "git add failed (exit $LASTEXITCODE)." }
+        git commit -m "Bump main to $env:NEW_VERSION (next major preview line)"
+        if ($LASTEXITCODE -ne 0) { throw "git commit failed (exit $LASTEXITCODE)." }
+        git push --force-with-lease -u origin "$env:BUMP_BRANCH"
+        if ($LASTEXITCODE -ne 0) { throw "git push failed (exit $LASTEXITCODE)." }
+
+    - name: Verify main hasn't moved since validation
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        git fetch origin main --quiet
+        if ($LASTEXITCODE -ne 0) { throw "git fetch failed (exit $LASTEXITCODE)." }
+        $currentMainSha = (git rev-parse origin/main).Trim()
+        if ($currentMainSha -ne $env:MAIN_HEAD_SHA) {
+          throw "main moved during bump-major-preview (was $env:MAIN_HEAD_SHA, now $currentMainSha). The bump branch was pushed but no PR was created. Delete the bump branch and re-run."
+        }
+        Write-Host "OK: main is still at $env:MAIN_HEAD_SHA."
+
+    - name: Open PR
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $nextMajor = $env:NEXT_MAJOR
+        $body = @"
+        Bumps ``main`` from its current preview to ``$env:NEW_VERSION`` ahead of upcoming breaking changes for ``${nextMajor}.0``.
+
+        Merge this **before** any PR labeled ``breaking-change`` so the prereleases are correctly versioned as ``${nextMajor}.0.0-preview.N``.
+        "@
+        try {
+          $url = (gh pr create `
+            --base main `
+            --head "$env:BUMP_BRANCH" `
+            --title "Bump main to $env:NEW_VERSION (next major preview)" `
+            --body $body | Select-Object -Last 1).Trim()
+        } catch {
+          throw "gh pr create failed: $($_.Exception.Message)"
+        }
+        if ($LASTEXITCODE -ne 0 -or -not $url -or $url -notmatch '^https?://') {
+          throw "gh pr create did not return a valid URL (exit $LASTEXITCODE; got: '$url')"
+        }
+        Add-Content -Path $env:GITHUB_ENV -Value "PR_URL=$url"
+
+    - name: Summary
+      shell: pwsh
+      run: |
+        $summary = @"
+        ## Major preview bump
+
+        - **PR**: $env:PR_URL
+        - Merge this before landing the first breaking-change PR.
+        "@
+        Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summary

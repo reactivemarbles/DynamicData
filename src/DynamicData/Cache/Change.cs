@@ -28,7 +28,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Change{TObject, TKey}"/> struct.
-    /// Constructor for ChangeReason.Move.
+    /// Constructor for <see cref="ChangeReason.Moved"/>.
     /// </summary>
     /// <param name="key">The key.</param>
     /// <param name="current">The current.</param>
@@ -70,9 +70,9 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// <param name="currentIndex">Value of the current.</param>
     /// <param name="previousIndex">Value of the previous.</param>
     /// <exception cref="ArgumentException">
-    /// For ChangeReason.Add, a previous value cannot be specified
+    /// For <see cref="ChangeReason.Add"/>, a previous value cannot be specified
     /// or
-    /// For ChangeReason.Change, must supply previous value.
+    /// For <see cref="ChangeReason.Update"/>, must supply previous value.
     /// </exception>
     public Change(ChangeReason reason, TKey key, TObject current, in Optional<TObject> previous, int currentIndex = -1, int previousIndex = -1)
         : this()
@@ -91,7 +91,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
 
         if (reason == ChangeReason.Update && !previous.HasValue)
         {
-            throw new ArgumentException("For ChangeReason.Change, must supply previous value");
+            throw new ArgumentException("For ChangeReason.Update, must supply previous value");
         }
     }
 
@@ -101,7 +101,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     public TKey Key { get; }
 
     /// <summary>
-    /// Gets the  reason for the change.
+    /// Gets the reason for the change.
     /// </summary>
     public ChangeReason Reason { get; }
 
@@ -116,14 +116,14 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     public int CurrentIndex { get; }
 
     /// <summary>
-    /// <para>Gets the previous change.</para>
-    /// <para>This is only when Reason==ChangeReason.Replace.</para>
+    /// <para>Gets the item from before the change.</para>
+    /// <para>This is only when <see cref="Reason"/> is <see cref="ChangeReason.Update"/>.</para>
     /// </summary>
     public Optional<TObject> Previous { get; }
 
     /// <summary>
-    /// <para>Gets the previous change.</para>
-    /// <para>This is only when Reason==ChangeReason.Update or ChangeReason.Move.</para>
+    /// <para>Gets the previous index.</para>
+    /// <para>This is only when <see cref="Reason"/> is <see cref="ChangeReason.Update"/> or <see cref="ChangeReason.Moved"/>.</para>
     /// </summary>
     public int PreviousIndex { get; }
 
