@@ -43,7 +43,6 @@ jobs:
           throw "next_major must be a positive integer with no leading zeros (got: '$next')"
         }
         $nextInt = [int]$next
-        $next = [string]$nextInt
 
         git fetch --tags --force origin
         if ($LASTEXITCODE -ne 0) { throw "git fetch --tags failed (exit $LASTEXITCODE); cannot validate sequential-major rule." }

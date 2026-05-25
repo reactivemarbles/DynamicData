@@ -16,7 +16,7 @@ Every PR merged to either branch publishes a NuGet package automatically via `.g
 NBGV walks the first-parent history from `HEAD` back to the commit where `version.json`'s `version` field last changed. The count of commits is the "height". `{height}` in `version.json` is replaced with that count.
 
 - Two PRs merging the same day get distinct heights, no collisions.
-- A `version.json` change resets height to 1 (so the commit that sets the version is published as `X.Y.1`, not `X.Y.0`).
+- A `version.json` change resets height to 1. Combined with `"versionHeightOffset": -1` (written by the automation workflows on stable branches), the commit that sets a new stable version publishes as `X.Y.0` (per semver convention; previews stay at `X.Y.0-preview.1` because main does not use the offset).
 - `fetch-depth: 0` in CI is required for height to be correct.
 
 ## Automation workflows
@@ -25,8 +25,8 @@ All `version.json` edits and release-branch creation are scripted via `workflow_
 
 | Workflow | When to run | What it does |
 |---|---|---|
-| **Promote main to stable minor** (`promote-minor.yml`) | Ready to ship the next minor (first published patch is `X.Y.1`) from `main` to an existing release branch. | Opens two PRs: (1) merges `main` into `release/<major>.x` and sets stable version (contains the full diff, NOT mechanical); (2) bumps `main` to the next preview minor (mechanical). |
-| **Cut major release** (`cut-major.yml`) | Ready to ship a new major as stable from `main` (first published patch is `X.0.1`). | Opens a main-bump PR first, then creates `release/<major>.x` with the stable version, then dispatches `release.yml` to publish the first patch. |
+| **Promote main to stable minor** (`promote-minor.yml`) | Ready to ship the next minor (first published patch is `X.Y.0`) from `main` to an existing release branch. | Opens two PRs: (1) merges `main` into `release/<major>.x` and sets stable version (contains the full diff, NOT mechanical); (2) bumps `main` to the next preview minor (mechanical). |
+| **Cut major release** (`cut-major.yml`) | Ready to ship a new major as stable from `main` (first published patch is `X.0.0`). | Opens a main-bump PR first, then creates `release/<major>.x` with the stable version, then dispatches `release.yml` to publish the first patch. |
 | **Bump main to next major preview** (`bump-major-preview.yml`) | First breaking change is about to land on `main`. | Opens a PR bumping `main` from `<X>.Y-preview.{height}` to `<X+1>.0-preview.{height}`. |
 
 Two passive guards run on every PR / release:
@@ -36,10 +36,6 @@ Two passive guards run on every PR / release:
 | **PR version check** (`pr-version-check.yml`) | Pull request to `main` / `release/*.x`. | For PRs to `main` labeled `breaking-change`, fails the check unless the PR's `version.json` major is **exactly one greater** than the latest stable tag's major (no skipping). For PRs to `release/*.x`, the check is skipped (breaking changes are a main-only concern). |
 | **Prerelease regression guard** (in `release.yml`) | Every push to `main` and dispatched run on `release/*.x`. | Refuses to publish a prerelease from a `release/*.x` branch (those must be stable only). Refuses to publish a prerelease for `X.Y` if a stable `X.Y.*` tag already exists. |
 
-### Recommended branch protection
-
-To make the **PR version check** binding (not advisory), add `PR version check / check` as a required status check on `main` in branch protection settings.
-
 ## Day-to-day flows
 
 ### Patch on the current stable line (e.g. `9.4.38`)
@@ -47,6 +43,13 @@ Open a PR targeting `release/9.x`. Merge. `release.yml` publishes `9.4.N` to NuG
 
 ### Preview of the next minor (e.g. `9.5.0-preview.42`)
 Open a PR targeting `main`. Merge. `release.yml` publishes `9.5.0-preview.N`. The GitHub Release is automatically marked as a pre-release. **No manual version edits.**
+
+### Cherry-picking a fix from `main` to a release branch
+The promote workflow merges all of `main` into the release branch. For backporting just one (or a few) commits without promoting everything:
+1. `git checkout release/9.x && git pull`
+2. `git checkout -b fix/backport-XYZ release/9.x`
+3. `git cherry-pick <sha-on-main>` (repeat for each commit)
+4. Push and open a PR targeting `release/9.x`. Merging publishes the next patch via `release.yml`. **No manual version edits.**
 
 ### Promoting `main` → next stable minor (e.g. shipping the first `9.5.x` stable)
 1. Run the **Promote main to stable minor** workflow from the GitHub Actions tab. Inputs: `target_release_branch=release/9.x`, `stable_version=9.5`.
@@ -69,35 +72,6 @@ The automation workflows are thin wrappers around `version.json` edits. If somet
 
 - **`cut-major` failed after pushing the release branch but before dispatching `release.yml`**: manually run `release.yml` against the new `release/<major>.x` branch from the Actions tab.
 - **`promote-minor` failed mid-flight**: the bot branches `bot/promote-<version>-<run_id>` and `bot/bump-main-after-<version>-<run_id>` carry the run ID, so a retry produces fresh branches. Delete any stale bot branches or PRs from the failed run before re-running.
-
-## Initial cutover (one-time, when introducing this infrastructure)
-
-This is **the only time manual steps are required**, because `release/9.x` does not yet exist when this PR merges.
-
-After this PR merges to `main`:
-
-1. `main` will start publishing `9.5.0-preview.N` (the version bump in this PR took effect).
-2. Cut `release/9.x` from `main` HEAD:
-    ```sh
-    git fetch origin
-    git checkout -b release/9.x origin/main
-    ```
-3. On `release/9.x`, edit `version.json`:
-    - Change `"version"` from `"9.5-preview.{height}"` back to `"9.4"`.
-    - Add `"versionHeightOffset": <N>` where `<N>` is the patch number of the latest stable `9.4.x` tag at cutover time. Verify with `git tag --list '9.4.*' | sort -V | tail -1`. The next stable build will be `9.4.<N+1>`. (At PR author time this was `37`; verify before pushing.)
-    - The full file should look like:
-        ```jsonc
-        {
-            "version": "9.4",
-            "versionHeightOffset": 37,
-            "publicReleaseRefSpec": [ /* unchanged */ ],
-            "nugetPackageVersion": { /* unchanged */ },
-            "cloudBuild": { /* unchanged */ }
-        }
-        ```
-4. Commit and push `release/9.x`. The next build produces `9.4.<N+1>` stable.
-
-From this point on, all subsequent releases use the automation workflows above. No more manual `version.json` edits.
 
 ## Known limitation: bot PRs and downstream CI
 

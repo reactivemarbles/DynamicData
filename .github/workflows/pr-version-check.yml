@@ -29,23 +29,39 @@ jobs:
       run: |
         $ErrorActionPreference = 'Stop'
 
+        # The version-bump bot PRs (opened by GITHUB_TOKEN from the automation workflows)
+        # legitimately change version.json. Don't trip the manual-edit guard on them;
+        # their content is reviewed in the workflow that opened them.
+        $isBotBumpPr = ($env:PR_AUTHOR -eq 'github-actions[bot]') -and ($env:HEAD_REF -like 'bot/bump-*' -or $env:HEAD_REF -like 'bot/promote-*')
+
+        $labels = $env:LABELS_JSON | ConvertFrom-Json
+        $isBreaking = $labels -contains 'breaking-change'
+        $isManualEdit = $labels -contains 'manual-version-edit'
+
+        # Reject any human-authored PR that touches version.json unless explicitly
+        # labeled 'manual-version-edit'. version.json is owned by the automation
+        # workflows (cut-major, promote-minor, bump-major-preview); manual edits
+        # bypass the regression guards and should be a deliberate, labeled exception.
+        if (-not $isBotBumpPr) {
+          $base = "origin/$env:BASE_REF"
+          git fetch origin $env:BASE_REF --quiet
+          if ($LASTEXITCODE -ne 0) { throw "git fetch origin $env:BASE_REF failed (exit $LASTEXITCODE)." }
+          $diff = git diff --name-only "$base...HEAD"
+          if ($LASTEXITCODE -ne 0) { throw "git diff against $base failed (exit $LASTEXITCODE)." }
+          if (($diff -split "`r?`n") -contains 'version.json' -and -not $isManualEdit) {
+            throw "This PR modifies version.json but is not authored by the automation bot and is not labeled 'manual-version-edit'. version.json is managed by the workflows in .github/workflows/ (cut-major, promote-minor, bump-major-preview). To override (e.g. for the one-time cutover or a recovery operation), add the 'manual-version-edit' label."
+          }
+        }
+
         if ($env:BASE_REF -ne 'main') {
           Write-Host "PR targets '$env:BASE_REF' (not main); breaking-change check only applies to PRs targeting main. Skipping."
           exit 0
         }
 
-        # The version-bump bot PRs (opened by GITHUB_TOKEN from the automation workflows)
-        # legitimately change the major in version.json. Don't trip the unconditional
-        # major-change check on them; their content is reviewed in the workflow that
-        # opened them.
-        $isBotBumpPr = ($env:PR_AUTHOR -eq 'github-actions[bot]') -and ($env:HEAD_REF -like 'bot/bump-*')
         if ($isBotBumpPr) {
-          Write-Host "PR is an automation-authored version-bump branch ('$env:HEAD_REF'); skipping check."
+          Write-Host "PR is an automation-authored version-bump branch ('$env:HEAD_REF'); skipping breaking-change check."
           exit 0
         }
-
-        $labels = $env:LABELS_JSON | ConvertFrom-Json
-        $isBreaking = $labels -contains 'breaking-change'
 
         $headVersionJson = Get-Content version.json -Raw | ConvertFrom-Json
         $headVer = $headVersionJson.version

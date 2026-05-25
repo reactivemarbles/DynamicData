@@ -155,12 +155,16 @@ jobs:
         $path = 'version.json'
         $content = [System.IO.File]::ReadAllText($path)
         $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:STABLE_VERSION`"")
-        $content = [regex]::Replace($content, '(?m)^\s*"versionHeightOffset"\s*:\s*-?\d+\s*,?\s*(//[^\r\n]*)?\s*(\r?\n|$)', '')
+        if ($content -match '"versionHeightOffset"') {
+          $content = [regex]::Replace($content, '"versionHeightOffset"\s*:\s*-?\d+', '"versionHeightOffset": -1')
+        } else {
+          $content = [regex]::Replace($content, '(?m)^(\s*)"version":\s*"[^"]+"\s*,?', "`$0`r`n`$1`"versionHeightOffset`": -1,", 1)
+        }
         $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
         [System.IO.File]::WriteAllText($path, $content)
         $obj = $content | ConvertFrom-Json
-        if ($obj.PSObject.Properties.Name -contains 'versionHeightOffset') {
-          throw "Failed to strip versionHeightOffset from version.json. Manual edit required."
+        if ($obj.versionHeightOffset -ne -1) {
+          throw "Failed to set versionHeightOffset to -1 (got: $($obj.versionHeightOffset)). Manual edit required."
         }
 
     - name: Commit and push promotion branch
