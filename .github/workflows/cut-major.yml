@@ -202,11 +202,11 @@ jobs:
         $ErrorActionPreference = 'Stop'
         $path = 'version.json'
         $content = [System.IO.File]::ReadAllText($path)
-        $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:STABLE_VERSION`"")
         if ($content -match '"versionHeightOffset"') {
           $content = [regex]::Replace($content, '"versionHeightOffset"\s*:\s*-?\d+', '"versionHeightOffset": -1')
+          $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:STABLE_VERSION`"")
         } else {
-          $content = [regex]::Replace($content, '(?m)^(\s*)"version":\s*"[^"]+"\s*,?', "`$0`r`n`$1`"versionHeightOffset`": -1,", 1)
+          $content = [regex]::Replace($content, '(?m)^(\s*)"version":\s*"[^"]+"\s*,?', "`$1`"version`": `"$env:STABLE_VERSION`",`r`n`$1`"versionHeightOffset`": -1,", 1)
         }
         $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
         [System.IO.File]::WriteAllText($path, $content)
