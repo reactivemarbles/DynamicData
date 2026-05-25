@@ -2,11 +2,10 @@ name: Build
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main, 'release/*.x' ]
 
 env:
   configuration: Release
-  productNamespacePrefix: "DynamicData"
 
 jobs:
   build:
@@ -40,7 +39,7 @@ jobs:
 
     - name: NBGV
       id: nbgv
-      uses: dotnet/nbgv@master
+      uses: dotnet/nbgv@v0.5.1
       with:
         setAllVars: true
         
@@ -61,7 +60,7 @@ jobs:
       working-directory: src
 
     - name: Create NuGet Artifacts
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@v4.6.2
       with:
         name: nuget
-        path: '**/*.nupkg'
+        path: 'src/**/bin/Release/*.nupkg'

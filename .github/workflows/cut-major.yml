@@ -1,0 +1,273 @@
+name: Cut major release
+
+on:
+  workflow_dispatch:
+    inputs:
+      major_version:
+        description: 'Major version to ship as stable (e.g., 10). Main must currently be on this major''s preview line.'
+        required: true
+        type: string
+      next_main_version:
+        description: 'Next preview version for main as major.minor (default: <major>.1). Use the next major if more breaking changes are queued.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: main-version-mutator
+  cancel-in-progress: false
+
+jobs:
+  cut:
+    runs-on: ubuntu-latest
+    env:
+      MAJOR_VERSION_INPUT: ${{ inputs.major_version }}
+      NEXT_MAIN_VERSION_INPUT: ${{ inputs.next_main_version }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        ref: main
+        fetch-depth: 0
+
+    - name: Configure git
+      run: |
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+
+    - name: Validate inputs
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+
+        $major = $env:MAJOR_VERSION_INPUT
+        if ($major -notmatch '^(0|[1-9]\d*)$') {
+          throw "major_version must be a positive integer with no leading zeros (got: '$major')"
+        }
+        $cutMajor = [int]$major
+
+        $releaseBranch = "release/$major.x"
+        $stableVersion = "$major.0"
+
+        git fetch --tags --force origin
+        if ($LASTEXITCODE -ne 0) { throw "git fetch failed (exit $LASTEXITCODE); cannot proceed." }
+
+        $mainHeadSha = (git rev-parse origin/main).Trim()
+        if ($LASTEXITCODE -ne 0 -or -not $mainHeadSha) { throw "git rev-parse origin/main failed (exit $LASTEXITCODE)." }
+
+        $mainVersionJson = git show "${mainHeadSha}:version.json" | ConvertFrom-Json
+        if ($LASTEXITCODE -ne 0) { throw "Failed to read version.json from origin/main." }
+        $mainVer = $mainVersionJson.version
+        if ($mainVer -notmatch "^$major\.0-preview") {
+          throw "main's version is '$mainVer' but should be '$major.0-preview.{height}' to cut $major.0 stable. Run 'Bump main to next major preview' first if needed."
+        }
+
+        # Test branch existence without --exit-code (which throws on no-match under strict mode).
+        $existing = git ls-remote --heads origin "refs/heads/$releaseBranch"
+        if ($LASTEXITCODE -ne 0) { throw "git ls-remote failed (exit $LASTEXITCODE); cannot verify branch state." }
+        if ($existing) {
+          throw "Branch '$releaseBranch' already exists. Cannot cut a new major release branch that exists."
+        }
+
+        $nextMain = $env:NEXT_MAIN_VERSION_INPUT
+        if (-not $nextMain) { $nextMain = "$major.1" }
+        if ($nextMain -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+          throw "next_main_version must be 'major.minor' with no leading zeros (got: '$nextMain')"
+        }
+        $nextMainMajor = [int]$matches[1]
+        $nextMainMinor = [int]$matches[2]
+        $nextMain = "$nextMainMajor.$nextMainMinor"
+
+        if ($nextMainMajor -eq $cutMajor) {
+          if ($nextMainMinor -lt 1) {
+            throw "next_main_version ($nextMain) for the same major as the cut release must have minor >= 1. After cutting $major.0, the next main version should be $major.1 or later."
+          }
+        } elseif ($nextMainMajor -eq $cutMajor + 1) {
+          if ($nextMainMinor -ne 0) {
+            throw "next_main_version ($nextMain) for the next major must be $($cutMajor + 1).0. Use sequential major bumps (no skipping)."
+          }
+          # When advancing to the next major, verify no stable tags already exist for it.
+          $existingNextStable = git tag --list "$nextMainMajor.*" | Where-Object { $_ -match "^$nextMainMajor\.\d+\.\d+$" }
+          if ($existingNextStable) {
+            $list = $existingNextStable -join ', '
+            throw "next_main_version ($nextMain) targets major $nextMainMajor, but stable tags already exist for it: $list. Advancing main to ${nextMain}-preview would conflict with already-shipped stables. Pick a higher version or investigate."
+          }
+        } else {
+          throw "next_main_version ($nextMain) must be either '$major.<minor>' (continued minors of the cut major) or '$($cutMajor + 1).0' (next sequential major). To skip a major, edit version.json by hand."
+        }
+
+        $nextPreview = "$nextMain-preview.{height}"
+        $runId = $env:GITHUB_RUN_ID
+        $runAttempt = $env:GITHUB_RUN_ATTEMPT
+
+        Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_BRANCH=$releaseBranch"
+        Add-Content -Path $env:GITHUB_ENV -Value "STABLE_VERSION=$stableVersion"
+        Add-Content -Path $env:GITHUB_ENV -Value "NEXT_PREVIEW=$nextPreview"
+        Add-Content -Path $env:GITHUB_ENV -Value "NEXT_MAIN_VERSION=$nextMain"
+        Add-Content -Path $env:GITHUB_ENV -Value "BUMP_BRANCH=bot/bump-main-after-$stableVersion-$runId-$runAttempt"
+        Add-Content -Path $env:GITHUB_ENV -Value "MAIN_HEAD_SHA=$mainHeadSha"
+
+    - name: Create main bump branch (from validated main SHA)
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        git checkout "$env:MAIN_HEAD_SHA"
+        if ($LASTEXITCODE -ne 0) { throw "git checkout failed (exit $LASTEXITCODE)." }
+        git checkout -b "$env:BUMP_BRANCH"
+        if ($LASTEXITCODE -ne 0) { throw "git checkout -b failed (exit $LASTEXITCODE)." }
+
+    - name: Bump main to next preview
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $path = 'version.json'
+        $content = [System.IO.File]::ReadAllText($path)
+        $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:NEXT_PREVIEW`"")
+        $content = [regex]::Replace($content, '(?m)^\s*"versionHeightOffset"\s*:\s*-?\d+\s*,?\s*(//[^\r\n]*)?\s*(\r?\n|$)', '')
+        $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
+        [System.IO.File]::WriteAllText($path, $content)
+        # Verify removal worked (defends against regex misses on unusual formatting).
+        $obj = $content | ConvertFrom-Json
+        if ($obj.PSObject.Properties.Name -contains 'versionHeightOffset') {
+          throw "Failed to strip versionHeightOffset from version.json. Manual edit required."
+        }
+
+    - name: Commit and push main bump branch
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        git add version.json
+        if ($LASTEXITCODE -ne 0) { throw "git add failed (exit $LASTEXITCODE)." }
+        git commit -m "Bump main to $env:NEXT_PREVIEW after cutting $env:RELEASE_BRANCH"
+        if ($LASTEXITCODE -ne 0) { throw "git commit failed (exit $LASTEXITCODE)." }
+        git push --force-with-lease -u origin "$env:BUMP_BRANCH"
+        if ($LASTEXITCODE -ne 0) { throw "git push failed (exit $LASTEXITCODE)." }
+
+    - name: Verify main hasn't moved since validation
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        git fetch origin main --quiet
+        if ($LASTEXITCODE -ne 0) { throw "git fetch origin main failed (exit $LASTEXITCODE)." }
+        $currentMainSha = (git rev-parse origin/main).Trim()
+        if ($LASTEXITCODE -ne 0) { throw "git rev-parse failed (exit $LASTEXITCODE)." }
+        if ($currentMainSha -ne $env:MAIN_HEAD_SHA) {
+          throw "main moved during cut-major run (was $env:MAIN_HEAD_SHA, now $currentMainSha). The bump branch was pushed but no PR was created and the release branch was NOT pushed. Delete the bump branch and re-run the workflow."
+        }
+        Write-Host "OK: main is still at $env:MAIN_HEAD_SHA."
+
+    - name: Open main bump PR
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $body = @"
+        Companion PR to cutting ``$env:RELEASE_BRANCH``.
+
+        Once ``$env:RELEASE_BRANCH`` is pushed it will publish the first ``$env:STABLE_VERSION.x`` stable build (first patch is ``$env:STABLE_VERSION.1``).
+
+        This PR advances ``main`` to ``$env:NEXT_PREVIEW`` so subsequent PRs publish that preview line.
+        "@
+        try {
+          $url = (gh pr create `
+            --base main `
+            --head "$env:BUMP_BRANCH" `
+            --title "Bump main to $env:NEXT_PREVIEW after $env:RELEASE_BRANCH cut" `
+            --body $body | Select-Object -Last 1).Trim()
+        } catch {
+          throw "gh pr create failed: $($_.Exception.Message)"
+        }
+        if ($LASTEXITCODE -ne 0 -or -not $url -or $url -notmatch '^https?://') {
+          throw "gh pr create did not return a valid URL (exit $LASTEXITCODE; got: '$url')"
+        }
+        Add-Content -Path $env:GITHUB_ENV -Value "BUMP_PR_URL=$url"
+
+    - name: Create release branch from validated main SHA
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        git checkout "$env:MAIN_HEAD_SHA"
+        if ($LASTEXITCODE -ne 0) { throw "git checkout failed (exit $LASTEXITCODE)." }
+        git checkout -b "$env:RELEASE_BRANCH"
+        if ($LASTEXITCODE -ne 0) { throw "git checkout -b failed (exit $LASTEXITCODE)." }
+
+    - name: Set stable version on release branch
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $path = 'version.json'
+        $content = [System.IO.File]::ReadAllText($path)
+        if ($content -match '"versionHeightOffset"') {
+          $content = [regex]::Replace($content, '"versionHeightOffset"\s*:\s*-?\d+', '"versionHeightOffset": -1')
+          $content = [regex]::Replace($content, '"version":\s*"[^"]+"', "`"version`": `"$env:STABLE_VERSION`"")
+        } else {
+          $content = [regex]::Replace($content, '(?m)^(\s*)"version":\s*"[^"]+"\s*,?', "`$1`"version`": `"$env:STABLE_VERSION`",`r`n`$1`"versionHeightOffset`": -1,", 1)
+        }
+        $content = [regex]::Replace($content, ',(\s*[}\]])', '$1')
+        [System.IO.File]::WriteAllText($path, $content)
+        $obj = $content | ConvertFrom-Json
+        if ($obj.versionHeightOffset -ne -1) {
+          throw "Failed to set versionHeightOffset to -1 (got: $($obj.versionHeightOffset)). Manual edit required."
+        }
+
+    - name: Commit and push release branch
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        git add version.json
+        if ($LASTEXITCODE -ne 0) { throw "git add failed (exit $LASTEXITCODE)." }
+        git commit -m "Cut $env:RELEASE_BRANCH at $env:STABLE_VERSION stable"
+        if ($LASTEXITCODE -ne 0) { throw "git commit failed (exit $LASTEXITCODE)." }
+        git push -u origin "$env:RELEASE_BRANCH"
+        if ($LASTEXITCODE -ne 0) { throw "git push failed (exit $LASTEXITCODE)." }
+
+    - name: Trigger release workflow on new release branch
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        # Wait briefly for GitHub to index the newly pushed branch so workflow_dispatch can find it.
+        $maxAttempts = 6
+        for ($i = 1; $i -le $maxAttempts; $i++) {
+          try {
+            gh workflow run release.yml --ref "$env:RELEASE_BRANCH" 2>$null
+          } catch {
+            # swallow; we check LASTEXITCODE
+          }
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "release.yml dispatched for $env:RELEASE_BRANCH on attempt $i."
+            break
+          }
+          if ($i -eq $maxAttempts) {
+            throw "Failed to trigger release.yml on $env:RELEASE_BRANCH after $maxAttempts attempts. The release branch is pushed but won't publish automatically. Manually run release.yml against $env:RELEASE_BRANCH from the Actions tab."
+          }
+          Start-Sleep -Seconds 5
+        }
+        # Verify a run actually queued.
+        Start-Sleep -Seconds 5
+        $runs = gh run list --workflow=release.yml --branch="$env:RELEASE_BRANCH" --limit 1 --json databaseId,status,url 2>$null | ConvertFrom-Json
+        if (-not $runs -or $runs.Count -eq 0) {
+          Write-Warning "Dispatched release.yml but no run is visible yet. Check the Actions tab and verify a run starts; if not, dispatch manually."
+        } else {
+          $runUrl = $runs[0].url
+          Write-Host "Triggered run: $runUrl"
+          Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_RUN_URL=$runUrl"
+        }
+
+    - name: Summary
+      shell: pwsh
+      run: |
+        $runLink = if ($env:RELEASE_RUN_URL) { "[release run]($env:RELEASE_RUN_URL)" } else { "the Actions tab (run not yet visible; check manually)" }
+        $summary = @"
+        ## Major release cut
+
+        - **New release branch**: ``$env:RELEASE_BRANCH`` publishing the first ``$env:STABLE_VERSION.x`` stable build (first patch is ``$env:STABLE_VERSION.1``). See $runLink.
+        - **Main bump PR** (merge to advance main to next preview): $env:BUMP_PR_URL
+        "@
+        Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $summary
