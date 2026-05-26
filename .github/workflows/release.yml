@@ -131,10 +131,16 @@ jobs:
       id: changelog
 
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2.6.2
-      with:
-          tag_name: ${{ steps.nbgv.outputs.SemVer2 }}
-          name: ${{ steps.nbgv.outputs.SemVer2 }}
-          prerelease: ${{ steps.nbgv.outputs.PrereleaseVersion != '' }}
-          body: |
-            ${{ steps.changelog.outputs.commitLog }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG: ${{ steps.nbgv.outputs.SemVer2 }}
+        IS_PRERELEASE: ${{ steps.nbgv.outputs.PrereleaseVersion != '' }}
+        BODY: ${{ steps.changelog.outputs.commitLog }}
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $notesPath = Join-Path $env:RUNNER_TEMP 'release-notes.md'
+        Set-Content -Path $notesPath -Value $env:BODY -Encoding utf8 -NoNewline
+        $cmd = @('release', 'create', $env:TAG, '--title', $env:TAG, '--notes-file', $notesPath, '--target', $env:GITHUB_SHA)
+        if ($env:IS_PRERELEASE -eq 'true') { $cmd += '--prerelease' }
+        gh @cmd
