@@ -25,6 +25,12 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
+    // TODO: Apply the Adapter to more places
+    private static Func<TObject, TKey, TResult> AdaptSelector<TObject, TKey, TResult>(Func<TObject, TResult> other)
+        where TObject : notnull
+        where TKey : notnull
+        where TResult : notnull => (obj, _) => other(obj);
+
     /// <summary>
     /// Groups items from the source changeset, producing groups only for group keys present in <paramref name="resultGroupSource"/>.
     /// Useful for parent-child relationships where parents and children come from different streams.
@@ -325,10 +331,4 @@ public static partial class ObservableCacheEx
 
         return new GroupOnImmutable<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
     }
-
-    // TODO: Apply the Adapter to more places
-    private static Func<TObject, TKey, TResult> AdaptSelector<TObject, TKey, TResult>(Func<TObject, TResult> other)
-        where TObject : notnull
-        where TKey : notnull
-        where TResult : notnull => (obj, _) => other(obj);
 }

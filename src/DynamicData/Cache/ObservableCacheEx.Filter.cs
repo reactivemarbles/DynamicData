@@ -283,6 +283,22 @@ public static partial class ObservableCacheEx
         return source.FilterOnObservable((obj, _) => filterFactory(obj), buffer, scheduler);
     }
 
+    private static IObservable<Func<TSource, TKey, bool>>? ForForced<TSource, TKey>(this IObservable<Unit>? source)
+        where TKey : notnull => source?.Select(
+            _ =>
+            {
+                static bool Transformer(TSource item, TKey key) => true;
+                return (Func<TSource, TKey, bool>)Transformer;
+            });
+
+    private static IObservable<Func<TSource, TKey, bool>>? ForForced<TSource, TKey>(this IObservable<Func<TSource, bool>>? source)
+        where TKey : notnull => source?.Select(
+            condition =>
+            {
+                bool Transformer(TSource item, TKey key) => condition(item);
+                return (Func<TSource, TKey, bool>)Transformer;
+            });
+
     /// <summary>
     /// Ignores updates when the update is the same reference.
     /// </summary>
@@ -432,20 +448,4 @@ public static partial class ObservableCacheEx
 
         return source.Select(updates => new ChangeSet<TObject, TKey>(updates.Where(u => !hashed.Contains(u.Reason)))).NotEmpty();
     }
-
-    private static IObservable<Func<TSource, TKey, bool>>? ForForced<TSource, TKey>(this IObservable<Unit>? source)
-        where TKey : notnull => source?.Select(
-            _ =>
-            {
-                static bool Transformer(TSource item, TKey key) => true;
-                return (Func<TSource, TKey, bool>)Transformer;
-            });
-
-    private static IObservable<Func<TSource, TKey, bool>>? ForForced<TSource, TKey>(this IObservable<Func<TSource, bool>>? source)
-        where TKey : notnull => source?.Select(
-            condition =>
-            {
-                bool Transformer(TSource item, TKey key) => condition(item);
-                return (Func<TSource, TKey, bool>)Transformer;
-            });
 }

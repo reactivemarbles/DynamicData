@@ -299,6 +299,11 @@ public static partial class ObservableCacheEx
                 return new ReadOnlyCollectionLight<TObject>(items);
             });
 
+    private static IObservable<bool> TrueFor<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<IEnumerable<ObservableWithValue<TObject, TValue>>, bool> collectionMatcher)
+        where TObject : notnull
+        where TKey : notnull
+        where TValue : notnull => new TrueFor<TObject, TKey, TValue>(source, observableSelector, collectionMatcher).Run();
+
     /// <summary>
     /// Emits <see langword="true"/> when all items in the cache satisfy a condition based on their per-item observable,
     /// and <see langword="false"/> otherwise. Re-evaluates whenever the cache changes or any per-item observable emits.
@@ -394,9 +399,4 @@ public static partial class ObservableCacheEx
 
         return source.TrueFor(observableSelector, items => items.Any(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value)));
     }
-
-    private static IObservable<bool> TrueFor<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<IEnumerable<ObservableWithValue<TObject, TValue>>, bool> collectionMatcher)
-        where TObject : notnull
-        where TKey : notnull
-        where TValue : notnull => new TrueFor<TObject, TKey, TValue>(source, observableSelector, collectionMatcher).Run();
 }
