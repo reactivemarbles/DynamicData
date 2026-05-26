@@ -131,7 +131,7 @@ jobs:
       id: changelog
 
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2.6.2
+      uses: softprops/action-gh-release@v3.0.0
       with:
           tag_name: ${{ steps.nbgv.outputs.SemVer2 }}
           name: ${{ steps.nbgv.outputs.SemVer2 }}
