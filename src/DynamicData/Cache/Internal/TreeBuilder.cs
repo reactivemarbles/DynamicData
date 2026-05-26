@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -24,16 +24,16 @@ internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject,
     public IObservable<IChangeSet<Node<TObject, TKey>, TKey>> Run() => Observable.Create<IChangeSet<Node<TObject, TKey>, TKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue();
                 var reFilterObservable = new BehaviorSubject<Unit>(Unit.Default);
 
-                var allData = _source.Synchronize(locker).AsObservableCache();
+                var allData = _source.SynchronizeSafe(queue).AsObservableCache();
 
                 // for each object we need a node which provides
                 // a structure to set the parent and children
-                var allNodes = allData.Connect().Synchronize(locker).Transform((t, v) => new Node<TObject, TKey>(t, v)).AsObservableCache();
+                var allNodes = allData.Connect().SynchronizeSafe(queue).Transform((t, v) => new Node<TObject, TKey>(t, v)).AsObservableCache();
 
-                var groupedByPivot = allNodes.Connect().Synchronize(locker).Group(x => _pivotOn(x.Item)).AsObservableCache();
+                var groupedByPivot = allNodes.Connect().SynchronizeSafe(queue).Group(x => _pivotOn(x.Item)).AsObservableCache();
 
                 void UpdateChildren(Node<TObject, TKey> parentNode)
                 {
@@ -197,18 +197,9 @@ internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject,
                         reFilterObservable.OnNext(Unit.Default);
                     }).DisposeMany().Subscribe();
 
-                var filter = _predicateChanged.Synchronize(locker).CombineLatest(reFilterObservable, (predicate, _) => predicate);
+                var filter = _predicateChanged.SynchronizeSafe(queue).CombineLatest(reFilterObservable, (predicate, _) => predicate);
                 var result = allNodes.Connect().Filter(filter).SubscribeSafe(observer);
 
-                return Disposable.Create(
-                    () =>
-                    {
-                        result.Dispose();
-                        parentSetter.Dispose();
-                        allData.Dispose();
-                        allNodes.Dispose();
-                        groupedByPivot.Dispose();
-                        reFilterObservable.OnCompleted();
-                    });
+                return new CompositeDisposable(result, parentSetter, allData, allNodes, groupedByPivot, Disposable.Create(() => reFilterObservable.OnCompleted()), queue);
             });
 }

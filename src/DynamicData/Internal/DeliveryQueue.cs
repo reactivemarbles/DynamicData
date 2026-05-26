@@ -1,0 +1,281 @@
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+namespace DynamicData.Internal;
+
+/// <summary>
+/// A queue that serializes item delivery outside a caller-owned lock.
+/// Internally stores <see cref="Notification{T}"/> values. Delivery
+/// is dispatched to an <see cref="IObserver{T}"/> outside the lock.
+/// </summary>
+/// <typeparam name="T">The value type delivered via OnNext.</typeparam>
+internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
+{
+    private readonly Queue<Notification<T>> _queue = new(1);
+
+#if NET9_0_OR_GREATER
+    private readonly Lock _gate;
+#else
+    private readonly object _gate;
+#endif
+
+    private readonly IObserver<T> _observer;
+    private int _drainThreadId = -1;
+    private volatile bool _isTerminated;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class with its own internal lock.
+    /// </summary>
+    /// <param name="observer">The observer that receives delivered items.</param>
+    public DeliveryQueue(IObserver<T> observer)
+    {
+#if NET9_0_OR_GREATER
+        _gate = new Lock();
+#else
+        _gate = new object();
+#endif
+        _observer = observer;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeliveryQueue{T}"/> class.
+    /// </summary>
+    /// <param name="gate">The lock shared with the caller.</param>
+    /// <param name="observer">The observer that receives delivered items.</param>
+#if NET9_0_OR_GREATER
+    public DeliveryQueue(Lock gate, IObserver<T> observer)
+#else
+    public DeliveryQueue(object gate, IObserver<T> observer)
+#endif
+    {
+        _gate = gate;
+        _observer = observer;
+    }
+
+    /// <summary>
+    /// Gets whether this queue has been terminated. Safe to read from any thread.
+    /// </summary>
+    public bool IsTerminated => _isTerminated;
+
+    /// <summary>
+    /// Terminates the queue (rejecting further enqueues) and blocks until
+    /// any in-flight delivery has completed. After this returns, no more
+    /// observer callbacks will fire. Safe to call from within a delivery
+    /// callback (skips the spin-wait if the calling thread is the deliverer).
+    /// </summary>
+    private void EnsureDeliveryComplete()
+    {
+        using (AcquireReadLock())
+        {
+            _isTerminated = true;
+            _queue.Clear();
+
+            // If we're being called from within the drain loop (e.g., downstream
+            // disposed during OnNext), the current thread IS the deliverer.
+            // The drain loop will see _isTerminated and exit after we return.
+            if (_drainThreadId == Environment.CurrentManagedThreadId)
+                return;
+        }
+
+        SpinWait spinner = default;
+        while (Volatile.Read(ref _drainThreadId) != -1)
+            spinner.SpinOnce();
+    }
+
+    /// <inheritdoc/>
+    public void Dispose() => EnsureDeliveryComplete();
+
+    /// <summary>
+    /// Acquires the gate and returns a scoped access for enqueueing notifications.
+    /// Disposing releases the gate and triggers delivery if needed.
+    /// </summary>
+    public ScopedAccess AcquireLock() => new(this);
+
+    /// <summary>
+    /// Acquires the gate for read-only inspection. Does not trigger delivery on dispose.
+    /// </summary>
+    public ReadOnlyScopedAccess AcquireReadLock() => new(this);
+
+    /// <summary>Enqueues an OnNext notification via the lock, then drains.</summary>
+    public void OnNext(T value)
+    {
+        using var scope = AcquireLock();
+        scope.EnqueueNext(value);
+    }
+
+    /// <summary>Enqueues an OnError notification via the lock, then drains.</summary>
+    public void OnError(Exception error)
+    {
+        using var scope = AcquireLock();
+        scope.EnqueueError(error);
+    }
+
+    /// <summary>Enqueues an OnCompleted notification via the lock, then drains.</summary>
+    public void OnCompleted()
+    {
+        using var scope = AcquireLock();
+        scope.EnqueueCompleted();
+    }
+
+#if NET9_0_OR_GREATER
+    private void EnterLock() => _gate.Enter();
+
+    private void ExitLock() => _gate.Exit();
+#else
+    private void EnterLock() => Monitor.Enter(_gate);
+
+    private void ExitLock() => Monitor.Exit(_gate);
+#endif
+
+    private void EnqueueNotification(Notification<T> item)
+    {
+        if (_isTerminated)
+        {
+            return;
+        }
+
+        _queue.Enqueue(item);
+    }
+
+    private void ExitLockAndDeliver()
+    {
+        var shouldDeliver = TryStartDelivery();
+        ExitLock();
+
+        if (shouldDeliver)
+        {
+            DeliverAll();
+        }
+
+        bool TryStartDelivery()
+        {
+            if (_drainThreadId != -1 || _queue.Count == 0)
+            {
+                return false;
+            }
+
+            _drainThreadId = Environment.CurrentManagedThreadId;
+            return true;
+        }
+
+        void DeliverAll()
+        {
+            try
+            {
+                while (true)
+                {
+                    Notification<T> notification;
+
+                    using (AcquireReadLock())
+                    {
+                        if (_queue.Count == 0 || _isTerminated)
+                        {
+                            _drainThreadId = -1;
+                            return;
+                        }
+
+                        notification = _queue.Dequeue();
+
+                        // Mark terminated BEFORE delivery so concurrent code
+                        // (e.g., InvokePreview) sees the terminal state immediately.
+                        if (notification.IsTerminal)
+                        {
+                            _isTerminated = true;
+                            _queue.Clear();
+                        }
+                    }
+
+                    // Deliver outside the lock
+                    notification.Accept(_observer);
+
+                    if (notification.IsTerminal)
+                    {
+                        using (AcquireReadLock())
+                        {
+                            _drainThreadId = -1;
+                        }
+
+                        return;
+                    }
+                }
+            }
+            catch
+            {
+                using (AcquireReadLock())
+                {
+                    _drainThreadId = -1;
+                }
+
+                throw;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Scoped access for enqueueing notifications under the gate lock.
+    /// </summary>
+    public ref struct ScopedAccess
+    {
+        private DeliveryQueue<T>? _owner;
+
+        internal ScopedAccess(DeliveryQueue<T> owner)
+        {
+            _owner = owner;
+            owner.EnterLock();
+        }
+
+        /// <summary>Enqueues an OnNext notification.</summary>
+        public readonly void EnqueueNext(T value) => _owner?.EnqueueNotification(Notification<T>.CreateNext(value));
+
+        /// <summary>Enqueues an OnError notification (terminal).</summary>
+        public readonly void EnqueueError(Exception error) => _owner?.EnqueueNotification(Notification<T>.CreateError(error));
+
+        /// <summary>Enqueues an OnCompleted notification (terminal).</summary>
+        public readonly void EnqueueCompleted() => _owner?.EnqueueNotification(Notification<T>.CreateCompleted());
+
+        /// <summary>Releases the gate lock and delivers pending items.</summary>
+        public void Dispose()
+        {
+            var owner = _owner;
+            if (owner is null)
+            {
+                return;
+            }
+
+            _owner = null;
+            owner.ExitLockAndDeliver();
+        }
+    }
+
+    /// <summary>
+    /// Read-only scoped access. Disposing releases the gate without triggering delivery.
+    /// </summary>
+    public ref struct ReadOnlyScopedAccess
+    {
+        private DeliveryQueue<T>? _owner;
+
+        internal ReadOnlyScopedAccess(DeliveryQueue<T> owner)
+        {
+            _owner = owner;
+            owner.EnterLock();
+        }
+
+        /// <summary>Gets whether there are notifications pending delivery.</summary>
+        public readonly bool HasPending =>
+            _owner is not null && (_owner._queue.Count > 0 || _owner._drainThreadId != -1);
+
+        /// <summary>Releases the gate lock.</summary>
+        public void Dispose()
+        {
+            var owner = _owner;
+            if (owner is null)
+            {
+                return;
+            }
+
+            _owner = null;
+            owner.ExitLock();
+        }
+    }
+}

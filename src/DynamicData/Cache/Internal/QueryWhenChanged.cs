@@ -1,7 +1,8 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
@@ -31,23 +32,24 @@ internal sealed class QueryWhenChanged<TObject, TKey, TValue>(IObservable<IChang
                 .Select(cache => new AnonymousQuery<TObject, TKey>(cache!));
         }
 
-        return _source.Publish(
-            shared =>
-            {
-                var locker = InternalEx.NewLock();
-                var state = new Cache<TObject, TKey>();
+        return Observable.Create<IQuery<TObject, TKey>>(observer =>
+        {
+            var queue = new SharedDeliveryQueue();
+            var state = new Cache<TObject, TKey>();
 
-                var inlineChange = shared.MergeMany(itemChangedTrigger).Synchronize(locker).Select(_ => new AnonymousQuery<TObject, TKey>(state));
+            var shared = _source.Publish();
 
-                var sourceChanged = shared.Synchronize(locker).Scan(
-                    state,
-                    (cache, changes) =>
-                    {
-                        cache.Clone(changes);
-                        return cache;
-                    }).Select(list => new AnonymousQuery<TObject, TKey>(list));
+            var inlineChange = shared.MergeMany(itemChangedTrigger).SynchronizeSafe(queue).Select(_ => new AnonymousQuery<TObject, TKey>(state));
 
-                return sourceChanged.Merge(inlineChange);
-            });
+            var sourceChanged = shared.SynchronizeSafe(queue).Scan(
+                state,
+                (cache, changes) =>
+                {
+                    cache.Clone(changes);
+                    return cache;
+                }).Select(list => new AnonymousQuery<TObject, TKey>(list));
+
+            return new CompositeDisposable(sourceChanged.Merge(inlineChange).SubscribeSafe(observer), shared.Connect(), queue);
+        });
     }
 }

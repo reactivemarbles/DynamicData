@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -15,22 +15,22 @@ internal sealed class TransformWithForcedTransform<TDestination, TSource, TKey>(
     public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Create<IChangeSet<TDestination, TKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
-                var shared = source.Synchronize(locker).Publish();
+                var queue = new SharedDeliveryQueue();
+                var shared = source.SynchronizeSafe(queue).Publish();
 
                 // capture all items so we can apply a forced transform
                 var cache = new Cache<TSource, TKey>();
                 var cacheLoader = shared.Subscribe(changes => cache.Clone(changes));
 
                 // create change set of items where force refresh is applied
-                var refresher = forceTransform.Synchronize(locker).Select(selector => CaptureChanges(cache, selector)).Select(changes => new ChangeSet<TSource, TKey>(changes)).NotEmpty();
+                var refresher = forceTransform.SynchronizeSafe(queue).Select(selector => CaptureChanges(cache, selector)).Select(changes => new ChangeSet<TSource, TKey>(changes)).NotEmpty();
 
                 var sourceAndRefreshes = shared.Merge(refresher);
 
                 // do raw transform
                 var transform = new Transform<TDestination, TSource, TKey>(sourceAndRefreshes, transformFactory, exceptionCallback, true).Run();
 
-                return new CompositeDisposable(cacheLoader, transform.SubscribeSafe(observer), shared.Connect());
+                return new CompositeDisposable(cacheLoader, transform.SubscribeSafe(observer), shared.Connect(), queue);
             });
 
     private static IEnumerable<Change<TSource, TKey>> CaptureChanges(Cache<TSource, TKey> cache, Func<TSource, TKey, bool> shouldTransform) =>

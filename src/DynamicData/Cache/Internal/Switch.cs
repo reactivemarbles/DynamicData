@@ -17,7 +17,7 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue();
 
                 var destination = new LockFreeObservableCache<TObject, TKey>();
 
@@ -25,10 +25,10 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
 
                 var populator = Observable.Switch(
                         _sources
-                            .Synchronize(locker)
+                            .SynchronizeSafe(queue)
                             .Do(onNext: _ => destination.Clear(),
                                 onError: error => errors.OnError(error)))
-                    .Synchronize(locker)
+                    .SynchronizeSafe(queue)
                     .Do(onNext: static _ => { },
                         onError: error => errors.OnError(error))
                     .PopulateInto(destination);
@@ -40,6 +40,7 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
                     destination
                         .Connect()
                         .Merge(errors)
-                        .SubscribeSafe(observer));
+                        .SubscribeSafe(observer),
+                    queue);
             });
 }
