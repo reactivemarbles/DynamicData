@@ -19,7 +19,7 @@ using DynamicData.List.Linq;
 namespace DynamicData;
 
 /// <summary>
-/// ObservableList extensions for Page and Virtualise.
+/// ObservableList extensions for Virtualise and Page.
 /// </summary>
 public static partial class ObservableListEx
 {

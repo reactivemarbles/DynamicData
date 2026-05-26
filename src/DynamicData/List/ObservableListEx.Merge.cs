@@ -23,40 +23,6 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableListEx
 {
-    /// <summary>
-    /// Subscribes to a per-item observable for each item in the source and merges all emissions into a single <see cref="IObservable{TDestination}"/> stream.
-    /// This is NOT a changeset operator: it returns a flat observable of values.
-    /// </summary>
-    /// <typeparam name="T">The type of items in the source list.</typeparam>
-    /// <typeparam name="TDestination">The type of values emitted by per-item observables.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> whose items each produce an observable.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns an observable for each source item.</param>
-    /// <returns>An observable that emits values from all per-item observables, merged together.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
-    /// <remarks>
-    /// <list type="table">
-    /// <listheader><term>Event (source)</term><description>Subscription behavior</description></listheader>
-    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the per-item observable. Emissions are merged into the output.</description></item>
-    /// <item><term><b>Replace</b></term><description>Old subscription disposed, new subscription created for the replacement item.</description></item>
-    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Subscription disposed.</description></item>
-    /// <item><term><b>Refresh</b>/<b>Moved</b></term><description>No effect on subscriptions.</description></item>
-    /// <item><term>OnCompleted (source)</term><description>Completes only after the source and all active inner observables have completed.</description></item>
-    /// </list>
-    /// </remarks>
-    /// <seealso cref="SubscribeMany{T}(IObservable{IChangeSet{T}}, Func{T, IDisposable})"/>
-    /// <seealso cref="MergeManyChangeSets{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination}?)"/>
-    /// <seealso cref="WhenPropertyChanged{TObject, TValue}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TValue}}, bool)"/>
-    /// <seealso cref="ObservableCacheEx.MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>
-    public static IObservable<TDestination> MergeMany<T, TDestination>(this IObservable<IChangeSet<T>> source, Func<T, IObservable<TDestination>> observableSelector)
-        where T : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
-
-        return new MergeMany<T, TDestination>(source, observableSelector).Run();
-    }
-
     /// <inheritdoc cref="MergeChangeSets{TObject}(IEnumerable{IObservable{IChangeSet{TObject}}}, IEqualityComparer{TObject}?, IScheduler?, bool)"/>
     /// <summary>
     /// Merges multiple list changeset streams from an observable-of-observables into a single unified changeset stream.
@@ -247,6 +213,40 @@ public static partial class ObservableListEx
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.MergeManyChangeSets(static src => src, equalityComparer, comparer);
+    }
+
+    /// <summary>
+    /// Subscribes to a per-item observable for each item in the source and merges all emissions into a single <see cref="IObservable{TDestination}"/> stream.
+    /// This is NOT a changeset operator: it returns a flat observable of values.
+    /// </summary>
+    /// <typeparam name="T">The type of items in the source list.</typeparam>
+    /// <typeparam name="TDestination">The type of values emitted by per-item observables.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> whose items each produce an observable.</param>
+    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns an observable for each source item.</param>
+    /// <returns>An observable that emits values from all per-item observables, merged together.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
+    /// <remarks>
+    /// <list type="table">
+    /// <listheader><term>Event (source)</term><description>Subscription behavior</description></listheader>
+    /// <item><term><b>Add</b>/<b>AddRange</b></term><description>Subscribes to the per-item observable. Emissions are merged into the output.</description></item>
+    /// <item><term><b>Replace</b></term><description>Old subscription disposed, new subscription created for the replacement item.</description></item>
+    /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Subscription disposed.</description></item>
+    /// <item><term><b>Refresh</b>/<b>Moved</b></term><description>No effect on subscriptions.</description></item>
+    /// <item><term>OnCompleted (source)</term><description>Completes only after the source and all active inner observables have completed.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <seealso cref="SubscribeMany{T}(IObservable{IChangeSet{T}}, Func{T, IDisposable})"/>
+    /// <seealso cref="MergeManyChangeSets{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination}?)"/>
+    /// <seealso cref="WhenPropertyChanged{TObject, TValue}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TValue}}, bool)"/>
+    /// <seealso cref="ObservableCacheEx.MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>
+    public static IObservable<TDestination> MergeMany<T, TDestination>(this IObservable<IChangeSet<T>> source, Func<T, IObservable<TDestination>> observableSelector)
+        where T : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+
+        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+
+        return new MergeMany<T, TDestination>(source, observableSelector).Run();
     }
 
     /// <summary>
