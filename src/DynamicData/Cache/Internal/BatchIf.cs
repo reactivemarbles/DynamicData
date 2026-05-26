@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -23,7 +23,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
             observer =>
             {
                 var batchedChanges = new List<IChangeSet<TObject, TKey>>();
-                var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue();
                 var paused = initialPauseState;
                 var timeoutDisposer = new SerialDisposable();
                 var intervalTimerDisposer = new SerialDisposable();
@@ -46,7 +46,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                 }
 
                 IDisposable IntervalFunction() =>
-                    intervalTimer.Synchronize(locker).Finally(() => paused = false).Subscribe(
+                    intervalTimer.SynchronizeSafe(queue).Finally(() => paused = false).Subscribe(
                         _ =>
                         {
                             paused = false;
@@ -62,7 +62,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                     intervalTimerDisposer.Disposable = IntervalFunction();
                 }
 
-                var pausedHandler = _pauseIfTrueSelector.Synchronize(locker).Subscribe(
+                var pausedHandler = _pauseIfTrueSelector.SynchronizeSafe(queue).Subscribe(
                     p =>
                     {
                         paused = p;
@@ -78,7 +78,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                         }
                         else if (timeOut.HasValue)
                         {
-                            timeoutDisposer.Disposable = Observable.Timer(timeOut.Value, _scheduler).Synchronize(locker).Subscribe(
+                            timeoutDisposer.Disposable = Observable.Timer(timeOut.Value, _scheduler).SynchronizeSafe(queue).Subscribe(
                                 _ =>
                                 {
                                     paused = false;
@@ -87,7 +87,7 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                         }
                     });
 
-                var publisher = _source.Synchronize(locker).Subscribe(
+                var publisher = _source.SynchronizeSafe(queue).Subscribe(
                     changes =>
                     {
                         batchedChanges.Add(changes);
@@ -99,6 +99,6 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                         }
                     });
 
-                return new CompositeDisposable(publisher, pausedHandler, timeoutDisposer, intervalTimerDisposer);
+                return new CompositeDisposable(publisher, pausedHandler, timeoutDisposer, intervalTimerDisposer, queue);
             });
 }

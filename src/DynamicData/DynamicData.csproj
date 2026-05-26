@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <Using Include="DynamicData.Kernel" />
+    <Using Include="DynamicData.Internal" />
   </ItemGroup>
 
   <PropertyGroup>

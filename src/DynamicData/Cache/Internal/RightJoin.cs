@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -26,17 +26,18 @@ internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
             observer =>
             {
                 var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue(locker);
 
                 // create local backing stores
-                var leftCache = _left.Synchronize(locker).AsObservableCache(false);
+                var leftCache = _left.SynchronizeSafe(queue).AsObservableCache();
 
-                var rightShare = _right.Synchronize(locker).Publish();
+                var rightShare = _right.SynchronizeSafe(queue).Publish();
 
-                var rightCache = rightShare.AsObservableCache(false);
+                var rightCache = rightShare.AsObservableCache();
                 var rightForeignCache = rightShare
                     .Transform(static (item, key) => (item, key))
                     .ChangeKey(pair => _rightKeySelector.Invoke(pair.item))
-                    .AsObservableCache(false);
+                    .AsObservableCache();
 
                 var rightForeignKeysByKey = new Dictionary<TRightKey, TLeftKey>();
 
@@ -139,7 +140,7 @@ internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
 
                     hasInitialized = true;
 
-                    return new CompositeDisposable(observerSubscription, leftCache, rightCache, rightShare.Connect());
+                    return new CompositeDisposable(observerSubscription, leftCache, rightCache, rightShare.Connect(), queue);
                 }
             });
 }
