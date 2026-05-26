@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -16,19 +16,19 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue();
 
                 // this is the resulting cache which produces all notifications
                 var resultCache = new ChangeAwareCache<TObject, TKey>();
 
                 // Transform to a merge container.
                 // This populates a RefTracker when the original source is subscribed to
-                var sourceLists = _source.Connect().Synchronize(locker).Transform(changeSet => new MergeContainer(changeSet)).AsObservableList();
+                var sourceLists = _source.Connect().SynchronizeSafe(queue).Transform(changeSet => new MergeContainer(changeSet)).AsObservableList();
 
                 var sharedLists = sourceLists.Connect().Publish();
 
                 // merge the items back together
-                var allChanges = sharedLists.MergeMany(mc => mc.Source).Synchronize(locker).Subscribe(
+                var allChanges = sharedLists.MergeMany(mc => mc.Source).SynchronizeSafe(queue).Subscribe(
                     changes =>
                     {
                         // Populate result list and check for changes
@@ -79,7 +79,7 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
                         }
                     }).Subscribe();
 
-                return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged, sharedLists.Connect());
+                return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged, sharedLists.Connect(), queue);
             });
 
     private bool MatchesConstraint(MergeContainer[] sources, TKey key)

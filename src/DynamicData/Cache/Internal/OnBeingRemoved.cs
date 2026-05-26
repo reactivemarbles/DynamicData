@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -17,20 +17,17 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
                 var cache = new Cache<TObject, TKey>();
-                var subscriber = _source.Synchronize(locker).Do(changes => RegisterForRemoval(changes, cache), observer.OnError).SubscribeSafe(observer);
+                var subscriber = _source.SynchronizeSafe()
+                    .Do(changes => RegisterForRemoval(changes, cache))
+                    .SubscribeSafe(observer);
 
                 return Disposable.Create(
                     () =>
                     {
                         subscriber.Dispose();
-
-                        lock (locker)
-                        {
-                            cache.KeyValues.ForEach(kvp => _removeAction(kvp.Value, kvp.Key));
-                            cache.Clear();
-                        }
+                        cache.KeyValues.ForEach(kvp => _removeAction(kvp.Value, kvp.Key));
+                        cache.Clear();
                     });
             });
 
@@ -39,12 +36,9 @@ internal sealed class OnBeingRemoved<TObject, TKey>(IObservable<IChangeSet<TObje
         changes.ForEach(
             change =>
             {
-                switch (change.Reason)
+                if (change.Reason is ChangeReason.Remove)
                 {
-                    case ChangeReason.Remove:
-                        // ReSharper disable once InconsistentlySynchronizedField
-                        _removeAction(change.Current, change.Key);
-                        break;
+                    _removeAction(change.Current, change.Key);
                 }
             });
         cache.Clone(changes);

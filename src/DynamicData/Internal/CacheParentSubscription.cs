@@ -11,32 +11,41 @@ namespace DynamicData.Internal;
 /// <summary>
 /// Base class for subscriptions that need to manage child subscriptions and emit updates
 /// when either the parent or child gets a new value.
+/// Uses a <see cref="SharedDeliveryQueue"/> for serialization and lock-free delivery.
+/// Same-thread reentrant delivery preserves child-during-parent ordering.
+/// OnDrainComplete calls EmitChanges after the outermost delivery, outside the lock.
 /// </summary>
 /// <typeparam name="TParent">Type of the Parent ChangeSet.</typeparam>
 /// <typeparam name="TKey">Type for the Parent ChangeSet Key.</typeparam>
 /// <typeparam name="TChild">Type for the Child Subscriptions.</typeparam>
 /// <typeparam name="TObserver">Type for the Final Observable.</typeparam>
-/// <param name="observer">Observer to use for emitting events.</param>
-internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver>(IObserver<TObserver> observer) : IDisposable
+internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver> : IDisposable
     where TParent : notnull
     where TKey : notnull
     where TChild : notnull
 {
-#if NET9_0_OR_GREATER
-    private readonly Lock _synchronize = new();
-#else
-    private readonly object _synchronize = new();
-#endif
     private readonly KeyedDisposable<TKey> _childSubscriptions = new();
     private readonly SingleAssignmentDisposable _parentSubscription = new();
-    private readonly IObserver<TObserver> _observer = observer;
-    private int _subscriptionCounter = 1;
-    private int _updateCounter;
+    private readonly SharedDeliveryQueue _queue;
+    private readonly IObserver<TObserver> _observer;
+    private int _subscriptionCounter = 1; // Starts at 1 for the parent subscription
+    private bool _isCompleted;
+    private bool _hasTerminated;
     private bool _disposedValue;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CacheParentSubscription{TParent, TKey, TChild, TObserver}"/> class.
+    /// </summary>
+    /// <param name="observer">Observer to use for emitting events.</param>
+    protected CacheParentSubscription(IObserver<TObserver> observer)
+    {
+        _observer = observer;
+        _queue = new SharedDeliveryQueue(onDrainComplete: OnDrainComplete);
+    }
+
+    /// <inheritdoc/>
     public void Dispose()
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
@@ -49,7 +58,7 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
 
     protected void AddChildSubscription(IObservable<TChild> observable, TKey parentKey)
     {
-        // Add a new subscription.  Do first so cleanup of existing subs doesn't trigger OnCompleted.
+        // Add a new subscription. Do first so cleanup of existing subs doesn't trigger OnCompleted.
         Interlocked.Increment(ref _subscriptionCounter);
 
         // Create a container for the Disposable and add to the KeyedDisposable
@@ -58,16 +67,18 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         // Create the subscription
         // Will Dispose immediately if OnCompleted fires upon subscription because OnCompleted disposes the container
         // Remove the child subscription if it completes because its not needed anymore
+        //
+        // THREADING INVARIANT: Finally(CheckCompleted) fires on completion, error, AND disposal,
+        // ensuring the subscription counter always decrements. The onCompleted callback only fires
+        // on normal completion (not disposal), so RemoveChildSubscription is NOT called when the
+        // parent disposes child subscriptions during Dispose(). This asymmetry is intentional:
+        // disposal cleanup is handled by KeyedDisposable, not by individual completion callbacks.
         disposableContainer.Disposable = observable
             .Finally(CheckCompleted)
             .SubscribeSafe(
-                val =>
-                {
-                    ChildOnNext(val, parentKey);
-                    ExitUpdate();
-                },
-                _observer.OnError,
-                () => RemoveChildSubscription(parentKey));
+                onNext: val => ChildOnNext(val, parentKey),
+                onError: TerminalError,
+                onCompleted: () => RemoveChildSubscription(parentKey));
     }
 
     protected void RemoveChildSubscription(TKey parentKey) => _childSubscriptions.Remove(parentKey);
@@ -75,16 +86,11 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     protected void CreateParentSubscription(IObservable<IChangeSet<TParent, TKey>> source) =>
         _parentSubscription.Disposable =
             source
-                .Synchronize(_synchronize)
-                .Do(_ => EnterUpdate())
+                .SynchronizeSafe(_queue)
                 .SubscribeSafe(
-                    changes =>
-                    {
-                        ParentOnNext(changes);
-                        ExitUpdate();
-                    },
-                    _observer.OnError,
-                    CheckCompleted);
+                    onNext: ParentOnNext,
+                    onError: TerminalError,
+                    onCompleted: CheckCompleted);
 
     protected virtual void Dispose(bool disposing)
     {
@@ -92,41 +98,46 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         {
             if (disposing)
             {
-                lock (_synchronize)
-                {
-                    _parentSubscription.Dispose();
-                    _childSubscriptions.Dispose();
-                }
+                _queue.Dispose();
+                _parentSubscription.Dispose();
+                _childSubscriptions.Dispose();
             }
+
             _disposedValue = true;
         }
     }
 
-    // This must be called by the derived class on anything passed to AddChildSubscription
-    // Manual step so that the derived class has full control on where it is called
+    /// <summary>
+    /// Wraps a child observable through the shared delivery queue for serialization.
+    /// Must be called by derived classes on observables passed to <see cref="AddChildSubscription"/>.
+    /// Same-thread reentrant delivery ensures child items are delivered inline during
+    /// parent processing, preserving the original Synchronize(lock) ordering semantics.
+    /// </summary>
     protected IObservable<T> MakeChildObservable<T>(IObservable<T> observable) =>
-        observable
-            .Synchronize(_synchronize)
-            .Do(_ => EnterUpdate())
-        ;
+        observable.SynchronizeSafe(_queue);
 
-    private void EnterUpdate() => Interlocked.Increment(ref _updateCounter);
-
-    private void ExitUpdate()
+    private void OnDrainComplete()
     {
-        if (Interlocked.Decrement(ref _updateCounter) == 0)
-        {
-            EmitChanges(_observer);
-        }
+        EmitChanges(_observer);
 
-        Debug.Assert(_updateCounter >= 0, "Should never be negative");
+        if (Volatile.Read(ref _isCompleted) && !_hasTerminated)
+        {
+            _hasTerminated = true;
+            _observer.OnCompleted();
+        }
+    }
+
+    private void TerminalError(Exception error)
+    {
+        _hasTerminated = true;
+        _observer.OnError(error);
     }
 
     private void CheckCompleted()
     {
         if (Interlocked.Decrement(ref _subscriptionCounter) == 0)
         {
-            _observer.OnCompleted();
+            Volatile.Write(ref _isCompleted, true);
         }
 
         Debug.Assert(_subscriptionCounter >= 0, "Should never be negative");

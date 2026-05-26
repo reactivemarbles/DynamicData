@@ -22,12 +22,12 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue();
                 var grouper = new Grouper(_groupSelectorKey);
 
-                var groups = _source.Finally(observer.OnCompleted).Synchronize(locker).Select(grouper.Update).Where(changes => changes.Count != 0);
+                var groups = _source.SynchronizeSafe(queue).Finally(observer.OnCompleted).Select(grouper.Update).Where(changes => changes.Count != 0);
 
-                var regroup = _regrouper.Synchronize(locker).Select(_ => grouper.Regroup()).Where(changes => changes.Count != 0);
+                var regroup = _regrouper.SynchronizeSafe(queue).Select(_ => grouper.Regroup()).Where(changes => changes.Count != 0);
 
                 var published = groups.Merge(regroup).Publish();
                 var subscriber = published.SubscribeSafe(observer);
@@ -35,13 +35,7 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
 
                 var connected = published.Connect();
 
-                return Disposable.Create(
-                    () =>
-                    {
-                        connected.Dispose();
-                        disposer.Dispose();
-                        subscriber.Dispose();
-                    });
+                return new CompositeDisposable(connected, disposer, subscriber, queue);
             });
 
     private sealed class Grouper(Func<TObject, TGroupKey> groupSelectorKey)

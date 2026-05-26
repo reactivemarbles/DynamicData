@@ -1,8 +1,9 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
@@ -42,7 +43,7 @@ internal sealed class Sort<TObject, TKey>
             observer =>
             {
                 var sorter = new Sorter(_sortOptimisations, _comparer, _resetThreshold);
-                var locker = InternalEx.NewLock();
+                var queue = new SharedDeliveryQueue();
 
                 // check for nulls so we can prevent a lock when not required
                 if (_comparerChangedObservable is null && _resorter is null)
@@ -50,13 +51,13 @@ internal sealed class Sort<TObject, TKey>
                     return _source.Select(sorter.Sort).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer);
                 }
 
-                var comparerChanged = (_comparerChangedObservable ?? Observable.Never<IComparer<TObject>>()).Synchronize(locker).Select(sorter.Sort);
+                var comparerChanged = (_comparerChangedObservable ?? Observable.Never<IComparer<TObject>>()).SynchronizeSafe(queue).Select(sorter.Sort);
 
-                var sortAgain = (_resorter ?? Observable.Never<Unit>()).Synchronize(locker).Select(_ => sorter.Sort());
+                var sortAgain = (_resorter ?? Observable.Never<Unit>()).SynchronizeSafe(queue).Select(_ => sorter.Sort());
 
-                var dataChanged = _source.Synchronize(locker).Select(sorter.Sort);
+                var dataChanged = _source.SynchronizeSafe(queue).Select(sorter.Sort);
 
-                return comparerChanged.Merge(dataChanged).Merge(sortAgain).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer);
+                return new CompositeDisposable(comparerChanged.Merge(dataChanged).Merge(sortAgain).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer), queue);
             });
 
     private sealed class Sorter(SortOptimisations optimisations, IComparer<TObject>? comparer = null, int resetThreshold = -1)
