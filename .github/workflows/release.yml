@@ -139,6 +139,8 @@ jobs:
       shell: pwsh
       run: |
         $ErrorActionPreference = 'Stop'
-        $cmd = @('release', 'create', $env:TAG, '--title', $env:TAG, '--notes', $env:BODY, '--target', $env:GITHUB_SHA)
+        $notesPath = Join-Path $env:RUNNER_TEMP 'release-notes.md'
+        Set-Content -Path $notesPath -Value $env:BODY -Encoding utf8 -NoNewline
+        $cmd = @('release', 'create', $env:TAG, '--title', $env:TAG, '--notes-file', $notesPath, '--target', $env:GITHUB_SHA)
         if ($env:IS_PRERELEASE -eq 'true') { $cmd += '--prerelease' }
         gh @cmd
