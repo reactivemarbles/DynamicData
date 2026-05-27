@@ -45,8 +45,6 @@ internal static class DeliveryQueueMergeExtensions
                 othersSync[i] = others[i].SynchronizeSafe(queue);
             }
 
-            return new CompositeDisposable(
-                firstSync.UnsynchronizedMerge(othersSync).SubscribeSafe(observer),
-                queue);
+            return new CompositeDisposable(firstSync.UnsynchronizedMerge(othersSync).SubscribeSafe(observer), queue);
         });
 }

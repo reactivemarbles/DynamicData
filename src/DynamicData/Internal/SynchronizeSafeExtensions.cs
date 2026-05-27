@@ -133,8 +133,7 @@ internal static class SynchronizeSafeExtensions
 
             void OnCompletedSafe()
             {
-                if (Interlocked.Decrement(ref pending) == 0 &&
-                    Interlocked.Exchange(ref terminated, 1) == 0)
+                if (Interlocked.Decrement(ref pending) == 0 && Interlocked.Exchange(ref terminated, 1) == 0)
                 {
                     observer.OnCompleted();
                 }
