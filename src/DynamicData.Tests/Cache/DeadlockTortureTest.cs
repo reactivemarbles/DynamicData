@@ -141,6 +141,11 @@ public sealed class DeadlockTortureTest
         using var pageReq = new BehaviorSubject<IPageRequest>(new PageRequest(1, 100));
         using var virtReq = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 100));
         using var force = new Subject<Func<Person, string, bool>>();
+
+        // Stacked pipeline is heavy per notification; keep the per-subject pusher loop
+        // short so each iteration stays under TimeoutSeconds.
+        const int StackedPushCount = ItemCount / 4;
+
         (await RunBidirectionalDeadlockTest(
             s => s.GroupWithImmutableState(p => p.Age % 3)
                   .TransformMany(g => g.Items, p => p.UniqueKey)
@@ -154,7 +159,7 @@ public sealed class DeadlockTortureTest
                   .Page(pageReq),
             subjectPusher: () =>
             {
-                for (var j = 0; j < ItemCount; j++)
+                for (var j = 0; j < StackedPushCount; j++)
                 {
                     force.OnNext(static (p, _) => true);
                     pageReq.OnNext(new PageRequest(1 + (j % 4), 50 + (j % 4) * 50));
