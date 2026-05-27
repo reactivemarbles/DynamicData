@@ -22,14 +22,12 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
     public IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>>(
             observer =>
             {
-                var queue = new SharedDeliveryQueue();
                 var grouper = new Grouper(_groupSelectorKey);
-
-                var groups = _source.SynchronizeSafe(queue).Select(grouper.Update).Where(changes => changes.Count != 0);
-
-                var regroup = _regrouper.SynchronizeSafe(queue).Select(_ => grouper.Regroup()).Where(changes => changes.Count != 0);
-
-                return new CompositeDisposable(groups.UnsynchronizedMerge(regroup).SubscribeSafe(observer), queue);
+                return DeliveryQueueMergeExtensions.DeliveryQueueMerge<IChangeSet<TObject, TKey>, Unit, IImmutableGroupChangeSet<TObject, TKey, TGroupKey>>(
+                        _source, grouper.Update,
+                        _regrouper, _ => grouper.Regroup())
+                    .Where(changes => changes.Count != 0)
+                    .SubscribeSafe(observer);
             });
 
     private sealed class Grouper(Func<TObject, TGroupKey> groupSelectorKey)

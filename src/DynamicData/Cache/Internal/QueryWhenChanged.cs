@@ -34,22 +34,21 @@ internal sealed class QueryWhenChanged<TObject, TKey, TValue>(IObservable<IChang
 
         return Observable.Create<IQuery<TObject, TKey>>(observer =>
         {
-            var queue = new SharedDeliveryQueue();
             var state = new Cache<TObject, TKey>();
 
             var shared = _source.Publish();
 
-            var inlineChange = shared.MergeMany(itemChangedTrigger).SynchronizeSafe(queue).Select(_ => new AnonymousQuery<TObject, TKey>(state));
-
-            var sourceChanged = shared.SynchronizeSafe(queue).Scan(
-                state,
-                (cache, changes) =>
+            var merged = DeliveryQueueMergeExtensions.DeliveryQueueMerge<IChangeSet<TObject, TKey>, TValue, IQuery<TObject, TKey>>(
+                shared,
+                changes =>
                 {
-                    cache.Clone(changes);
-                    return cache;
-                }).Select(list => new AnonymousQuery<TObject, TKey>(list));
+                    state.Clone(changes);
+                    return new AnonymousQuery<TObject, TKey>(state);
+                },
+                shared.MergeMany(itemChangedTrigger),
+                _ => new AnonymousQuery<TObject, TKey>(state));
 
-            return new CompositeDisposable(sourceChanged.UnsynchronizedMerge(inlineChange).SubscribeSafe(observer), shared.Connect(), queue);
+            return new CompositeDisposable(merged.SubscribeSafe(observer), shared.Connect());
         });
     }
 }

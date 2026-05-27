@@ -14,15 +14,13 @@ internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, 
     public IObservable<IPagedChangeSet<TObject, TKey>> Run() => Observable.Create<IPagedChangeSet<TObject, TKey>>(
             observer =>
             {
-                var queue = new SharedDeliveryQueue();
                 var paginator = new Paginator();
-                var request = pageRequests.SynchronizeSafe(queue).Select(paginator.Paginate);
-                var dataChange = source.SynchronizeSafe(queue).Select(paginator.Update);
-
-                return new CompositeDisposable(request.UnsynchronizedMerge(dataChange)
+                return DeliveryQueueMergeExtensions.DeliveryQueueMerge<IPageRequest, ISortedChangeSet<TObject, TKey>, IPagedChangeSet<TObject, TKey>?>(
+                        pageRequests, paginator.Paginate,
+                        source, paginator.Update)
                     .Where(updates => updates is not null)
                     .Select(x => x!)
-                    .SubscribeSafe(observer), queue);
+                    .SubscribeSafe(observer);
             });
 
     private sealed class Paginator
