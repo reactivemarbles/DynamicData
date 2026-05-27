@@ -64,6 +64,9 @@ public sealed class DeadlockTortureTest
     [Fact] public async Task GroupOn_DoesNotDeadlock() =>
         (await RunBidirectionalDeadlockTest(s => s.Group(p => p.Age % 3).MergeMany(g => g.Cache.Connect()))).Should().BeTrue();
 
+    [Fact] public async Task GroupWithImmutableState_DoesNotDeadlock() =>
+        (await RunBidirectionalDeadlockTest(s => s.GroupWithImmutableState(p => p.Age % 3).TransformMany(g => g.Items, p => p.UniqueKey))).Should().BeTrue();
+
     [Fact] public async Task Page_DoesNotDeadlock()
     {
         using var req = new BehaviorSubject<IPageRequest>(new PageRequest(1, 50));
@@ -74,6 +77,34 @@ public sealed class DeadlockTortureTest
     {
         using var req = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 50));
         (await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Virtualise(req))).Should().BeTrue();
+    }
+
+    [Fact] public async Task QueryWhenChanged_DoesNotDeadlock()
+    {
+        for (var iter = 0; iter < Iterations; iter++)
+        {
+            using var sourceA = new SourceCache<Person, string>(p => p.UniqueKey);
+            using var sourceB = new SourceCache<Person, string>(p => p.UniqueKey);
+
+            // QueryWhenChanged with an itemChangedTrigger exercises the Merge branch.
+            // A side-channel write into the other cache closes the same ABBA cycle that
+            // PopulateInto would close for changeset-shaped operators.
+            using var aToB = sourceA.Connect()
+                .Filter(p => p.Name.StartsWith("A"))
+                .QueryWhenChanged(p => p.WhenPropertyChanged(x => x.Age))
+                .Subscribe(_ => sourceB.AddOrUpdate(new Person("A-marker", 0)));
+            using var bToA = sourceB.Connect()
+                .Filter(p => p.Name.StartsWith("B"))
+                .QueryWhenChanged(p => p.WhenPropertyChanged(x => x.Age))
+                .Subscribe(_ => sourceA.AddOrUpdate(new Person("B-marker", 0)));
+
+            using var barrier = new Barrier(2);
+            var taskA = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceA.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); });
+            var taskB = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceB.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); });
+
+            var completed = Task.WhenAll(taskA, taskB);
+            (await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds)))).Should().BeSameAs(completed, "iteration " + iter);
+        }
     }
 
     [Fact] public async Task TransformWithForce_DoesNotDeadlock()
@@ -94,14 +125,18 @@ public sealed class DeadlockTortureTest
     [Fact] public async Task AllDangerous_Stacked_DoNotDeadlock()
     {
         using var pageReq = new BehaviorSubject<IPageRequest>(new PageRequest(1, 100));
+        using var virtReq = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 100));
         using var force = new Subject<Func<Person, string, bool>>();
         (await RunBidirectionalDeadlockTest(
-            s => s.AutoRefresh(p => p.Age)
+            s => s.GroupWithImmutableState(p => p.Age % 3)
+                  .TransformMany(g => g.Items, p => p.UniqueKey)
+                  .AutoRefresh(p => p.Age)
                   .Filter(p => p.Age >= 0)
                   .Transform((p, k) => new Person("X-" + p.Name, p.Age), force)
                   .OnItemRemoved(_ => { })
                   .DisposeMany()
                   .Sort(SortExpressionComparer<Person>.Ascending(p => p.Age))
+                  .Virtualise(virtReq)
                   .Page(pageReq),
             iterations: Iterations * 2)).Should().BeTrue();
     }
@@ -114,6 +149,7 @@ public sealed class DeadlockTortureTest
             RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)), 30),
             RunBidirectionalDeadlockTest(s => s.AutoRefresh(p => p.Age), 30),
             RunBidirectionalDeadlockTest(s => s.Group(p => p.Age % 3).MergeMany(g => g.Cache.Connect()), 30),
+            RunBidirectionalDeadlockTest(s => s.GroupWithImmutableState(p => p.Age % 3).TransformMany(g => g.Items, p => p.UniqueKey), 30),
             RunBidirectionalDeadlockTest(s => s.OnItemRemoved(_ => { }), 30),
             RunBidirectionalDeadlockTest(s => s.DisposeMany(), 30),
             RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Page(pageReq), 30),

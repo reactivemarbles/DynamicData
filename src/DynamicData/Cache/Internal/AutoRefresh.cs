@@ -33,7 +33,7 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(IObservable<IChangeSet<TO
 
                 // publish refreshes and underlying changes
                 var queue = new SharedDeliveryQueue();
-                var publisher = shared.SynchronizeSafe(queue).Merge(refreshChanges.SynchronizeSafe(queue)).SubscribeSafe(observer);
+                var publisher = shared.SynchronizeSafe(queue).UnsynchronizedMerge(refreshChanges.SynchronizeSafe(queue)).SubscribeSafe(observer);
 
                 return new CompositeDisposable(publisher, shared.Connect(), queue);
             });

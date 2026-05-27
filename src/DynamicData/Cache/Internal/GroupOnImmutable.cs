@@ -29,7 +29,7 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
 
                 var regroup = _regrouper.SynchronizeSafe(queue).Select(_ => grouper.Regroup()).Where(changes => changes.Count != 0);
 
-                return new CompositeDisposable(groups.Merge(regroup).SubscribeSafe(observer), queue);
+                return new CompositeDisposable(groups.UnsynchronizedMerge(regroup).SubscribeSafe(observer), queue);
             });
 
     private sealed class Grouper(Func<TObject, TGroupKey> groupSelectorKey)
