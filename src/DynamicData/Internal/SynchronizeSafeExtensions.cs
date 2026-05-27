@@ -98,6 +98,11 @@ internal static class SynchronizeSafeExtensions
     /// holds its private <c>_gate</c> for the entire duration of downstream delivery, and
     /// when downstream delivery walks into another cache's writer lock, two such gates on
     /// two operators form an ABBA cycle that the queue-drain design is meant to prevent.</para>
+    /// <para>Each source is subscribed through its own <see cref="Observer.Create{T}(Action{T}, Action{Exception}, Action)"/>
+    /// instance. The actions close over shared <c>pending</c> and <c>terminated</c> counters, but
+    /// the observer instances must be distinct because Rx's <c>ObserverBase</c> sets a one-shot
+    /// stopped flag on the first <c>OnCompleted</c>/<c>OnError</c>; a single shared observer
+    /// would silently drop terminal notifications from every source after the first.</para>
     /// <para>Without the external serialization precondition, concurrent <c>OnNext</c>
     /// calls into the shared observer will race. Do not use as a general-purpose
     /// <c>Observable.Merge</c> replacement.</para>
@@ -135,11 +140,12 @@ internal static class SynchronizeSafeExtensions
                 }
             }
 
-            var fanOut = Observer.Create<T>(OnNextSafe, OnErrorSafe, OnCompletedSafe);
-            subscriptions.Add(first.SubscribeSafe(fanOut));
+            IObserver<T> CreateInner() => Observer.Create<T>(OnNextSafe, OnErrorSafe, OnCompletedSafe);
+
+            subscriptions.Add(first.SubscribeSafe(CreateInner()));
             foreach (var source in others)
             {
-                subscriptions.Add(source.SubscribeSafe(fanOut));
+                subscriptions.Add(source.SubscribeSafe(CreateInner()));
             }
 
             return subscriptions;
