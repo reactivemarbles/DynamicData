@@ -43,6 +43,7 @@ internal sealed class Sort<TObject, TKey>
             observer =>
             {
                 var sorter = new Sorter(_sortOptimisations, _comparer, _resetThreshold);
+                var queue = new SharedDeliveryQueue();
 
                 // check for nulls so we can prevent a lock when not required
                 if (_comparerChangedObservable is null && _resorter is null)
@@ -50,15 +51,13 @@ internal sealed class Sort<TObject, TKey>
                     return _source.Select(sorter.Sort).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer);
                 }
 
-                var comparerSource = _comparerChangedObservable ?? Observable.Never<IComparer<TObject>>();
-                var resorterSource = _resorter ?? Observable.Never<Unit>();
-                return DeliveryQueueMergeExtensions.DeliveryQueueMerge<IComparer<TObject>, IChangeSet<TObject, TKey>, Unit, ISortedChangeSet<TObject, TKey>?>(
-                        comparerSource, sorter.Sort,
-                        _source, sorter.Sort,
-                        resorterSource, _ => sorter.Sort())
-                    .Where(result => result is not null)
-                    .Select(x => x!)
-                    .SubscribeSafe(observer);
+                var comparerChanged = (_comparerChangedObservable ?? Observable.Never<IComparer<TObject>>()).SynchronizeSafe(queue).Select(sorter.Sort);
+
+                var sortAgain = (_resorter ?? Observable.Never<Unit>()).SynchronizeSafe(queue).Select(_ => sorter.Sort());
+
+                var dataChanged = _source.SynchronizeSafe(queue).Select(sorter.Sort);
+
+                return new CompositeDisposable(comparerChanged.UnsynchronizedMerge(dataChanged, sortAgain).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer), queue);
             });
 
     private sealed class Sorter(SortOptimisations optimisations, IComparer<TObject>? comparer = null, int resetThreshold = -1)
