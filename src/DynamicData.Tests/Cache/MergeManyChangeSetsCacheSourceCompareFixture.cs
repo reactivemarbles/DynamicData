@@ -45,7 +45,7 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
 
     public MergeManyChangeSetsCacheSourceCompareFixture()
     {
-        _randomizer = new SynchronizedRandomizer(0x10012022);
+        _randomizer = new(0x10012022);
         _marketFaker = Fakers.Market.RuleFor(m => m.Rating, faker => faker.Random.Double(0, 5)).WithSeed(_randomizer);
         _marketCacheResults = _marketCache.Connect().AsAggregator();
     }
