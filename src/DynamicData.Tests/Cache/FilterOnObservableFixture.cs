@@ -161,6 +161,27 @@ public class FilterOnObservableFixture : IDisposable
     }
 
     [Fact]
+    public void FilterObservableError_PropagatesDownstream()
+    {
+        // arrange: a filter observable that errors on the second emission
+        var filterSubject = new Subject<bool>();
+        var error = new InvalidOperationException("filter exploded");
+        Exception? observed = null;
+
+        using var sub = _source.Connect()
+            .FilterOnObservable(_ => filterSubject)
+            .Subscribe(_ => { }, ex => observed = ex);
+
+        AddPeople(MagicNumber);
+
+        // act: trigger the error
+        filterSubject.OnError(error);
+
+        // assert
+        observed.Should().BeSameAs(error, "errors from per-item filter observables must terminate the downstream stream");
+    }
+
+    [Fact]
     public void ObservableFilterChangesCanBeBuffered()
     {
         // having

@@ -2,86 +2,149 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Internal;
 
 /// <summary>
-/// Provides the <see cref="AggregateMany{TParent, TKey, TChild, TResult}"/> operator, a delegate-driven entry point to the
-/// <see cref="CacheParentSubscription{TParent, TKey, TChild, TObserver}"/> batching machinery that manages per-key
-/// child subscriptions and coalesces parent and child notifications into a single downstream emission per drain cycle.
+/// Provides the <see cref="AggregateMany{TSource, TKey, TInner, TResult}"/> operator: a delegate-driven entry point
+/// that subscribes to a keyed source changeset, manages per-key inner subscriptions, and coalesces source and inner
+/// notifications into a single downstream emission per drain cycle of an internal <see cref="SharedDeliveryQueue"/>.
 /// </summary>
 internal static class AggregateManyExtensions
 {
     /// <summary>
-    /// Subscribes to a parent changeset and manages per-key child subscriptions, aggregating parent
-    /// and child notifications into a single downstream emission per drain cycle via <paramref name="tryEmit"/>.
+    /// Aggregates a keyed source changeset and a dynamic set of per-key inner observables into a single result stream.
     /// </summary>
-    /// <typeparam name="TParent">Type of the parent changeset items.</typeparam>
-    /// <typeparam name="TKey">Type of the parent changeset key.</typeparam>
-    /// <typeparam name="TChild">Type of the per-key child observable values.</typeparam>
-    /// <typeparam name="TResult">Type of the downstream observer notifications.</typeparam>
-    /// <param name="source">The parent changeset source.</param>
-    /// <param name="onParent">
-    /// Receives each parent changeset and a <c>setChild</c> callback that adds, replaces,
-    /// or removes the child subscription for a key. Pass a non-<see langword="null"/> observable
-    /// to add or replace; pass <see langword="null"/> to remove. The callback automatically
-    /// routes the child observable through the shared delivery queue so callers do not
-    /// need to synchronize it themselves.
+    /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
+    /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
+    /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
+    /// <typeparam name="TResult">Type delivered downstream by <paramref name="emit"/>.</typeparam>
+    /// <param name="source">The keyed source changeset stream.</param>
+    /// <param name="onSource">
+    /// Invoked for each source changeset, paired with a <c>track</c> callback that registers,
+    /// replaces, or removes the inner observable for a key. Pass a non-<see langword="null"/>
+    /// observable to register or replace; pass <see langword="null"/> to remove. The callback
+    /// routes the inner observable through the shared delivery queue so callers do not need
+    /// to synchronize it themselves.
     /// </param>
-    /// <param name="onChild">Receives each value emitted by a child observable, paired with its parent key.</param>
-    /// <param name="tryEmit">Invoked once per drain cycle to flush accumulated state to the observer.</param>
-    /// <returns>The aggregated observable stream.</returns>
-    public static IObservable<TResult> AggregateMany<TParent, TKey, TChild, TResult>(
-            this IObservable<IChangeSet<TParent, TKey>> source,
-            Action<IChangeSet<TParent, TKey>, Action<TKey, IObservable<TChild>?>> onParent,
-            Action<TChild, TKey> onChild,
-            Action<IObserver<TResult>> tryEmit)
-        where TParent : notnull
+    /// <param name="onInner">Invoked for each value emitted by a tracked inner observable, paired with its key.</param>
+    /// <param name="emit">Invoked once per drain cycle to flush the aggregated state to the observer.</param>
+    /// <returns>An observable that aggregates source and inner activity into a single result stream.</returns>
+    public static IObservable<TResult> AggregateMany<TSource, TKey, TInner, TResult>(
+            this IObservable<IChangeSet<TSource, TKey>> source,
+            Action<IChangeSet<TSource, TKey>, Action<TKey, IObservable<TInner>?>> onSource,
+            Action<TInner, TKey> onInner,
+            Action<IObserver<TResult>> emit)
+        where TSource : notnull
         where TKey : notnull
-        where TChild : notnull =>
-        Observable.Create<TResult>(observer => new DelegatedAggregator<TParent, TKey, TChild, TResult>(source, observer, onParent, onChild, tryEmit));
+        where TInner : notnull =>
+        Observable.Create<TResult>(observer => new Subscription<TSource, TKey, TInner, TResult>(source, observer, onSource, onInner, emit));
 
-    private sealed class DelegatedAggregator<TParent, TKey, TChild, TResult>
-        : CacheParentSubscription<TParent, TKey, TChild, TResult>
-        where TParent : notnull
+    private sealed class Subscription<TSource, TKey, TInner, TResult> : IDisposable
+        where TSource : notnull
         where TKey : notnull
-        where TChild : notnull
+        where TInner : notnull
     {
-        private readonly Action<IChangeSet<TParent, TKey>, Action<TKey, IObservable<TChild>?>> _onParent;
-        private readonly Action<TChild, TKey> _onChild;
-        private readonly Action<IObserver<TResult>> _tryEmit;
+        private readonly KeyedDisposable<TKey> _innerSubscriptions = new();
+        private readonly SingleAssignmentDisposable _sourceSubscription = new();
+        private readonly SharedDeliveryQueue _queue;
+        private readonly IObserver<TResult> _observer;
+        private readonly Action<IChangeSet<TSource, TKey>, Action<TKey, IObservable<TInner>?>> _onSource;
+        private readonly Action<TInner, TKey> _onInner;
+        private readonly Action<IObserver<TResult>> _emit;
+        private int _subscriptionCounter = 1;
+        private bool _isCompleted;
+        private bool _hasTerminated;
+        private bool _disposed;
 
-        public DelegatedAggregator(
-                IObservable<IChangeSet<TParent, TKey>> source,
+        public Subscription(
+                IObservable<IChangeSet<TSource, TKey>> source,
                 IObserver<TResult> observer,
-                Action<IChangeSet<TParent, TKey>, Action<TKey, IObservable<TChild>?>> onParent,
-                Action<TChild, TKey> onChild,
-                Action<IObserver<TResult>> tryEmit)
-            : base(observer)
+                Action<IChangeSet<TSource, TKey>, Action<TKey, IObservable<TInner>?>> onSource,
+                Action<TInner, TKey> onInner,
+                Action<IObserver<TResult>> emit)
         {
-            _onParent = onParent;
-            _onChild = onChild;
-            _tryEmit = tryEmit;
-            CreateParentSubscription(source);
+            _observer = observer;
+            _onSource = onSource;
+            _onInner = onInner;
+            _emit = emit;
+            _queue = new SharedDeliveryQueue(onDrainComplete: OnDrainComplete);
+
+            _sourceSubscription.Disposable = source
+                .SynchronizeSafe(_queue)
+                .SubscribeSafe(
+                    onNext: changes => _onSource(changes, Track),
+                    onError: TerminalError,
+                    onCompleted: DecrementSubscriptionCount);
         }
 
-        protected override void ParentOnNext(IChangeSet<TParent, TKey> changes) => _onParent(changes, SetChild);
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
 
-        protected override void ChildOnNext(TChild child, TKey parentKey) => _onChild(child, parentKey);
+            _disposed = true;
+            _queue.Dispose();
+            _sourceSubscription.Dispose();
+            _innerSubscriptions.Dispose();
+        }
 
-        protected override void EmitChanges(IObserver<TResult> observer) => _tryEmit(observer);
-
-        private void SetChild(TKey key, IObservable<TChild>? observable)
+        private void Track(TKey key, IObservable<TInner>? observable)
         {
             if (observable is null)
             {
-                RemoveChildSubscription(key);
+                _innerSubscriptions.Remove(key);
+                return;
             }
-            else
+
+            // Increment before adding so the OnCompleted callback that fires when the previous subscription
+            // for this key is disposed does not race the counter down to zero and signal premature termination.
+            Interlocked.Increment(ref _subscriptionCounter);
+
+            var container = _innerSubscriptions.Add(key, new SingleAssignmentDisposable());
+
+            // Finally(DecrementSubscriptionCount) fires on completion, error, AND disposal, so the counter
+            // always decrements. The onCompleted callback only fires on normal completion, so an inner
+            // subscription disposed by Track replacing it (or by Dispose) does not trigger Remove from inside.
+            container.Disposable = observable
+                .SynchronizeSafe(_queue)
+                .Finally(DecrementSubscriptionCount)
+                .SubscribeSafe(
+                    onNext: value => _onInner(value, key),
+                    onError: TerminalError,
+                    onCompleted: () => _innerSubscriptions.Remove(key));
+        }
+
+        private void OnDrainComplete()
+        {
+            _emit(_observer);
+
+            if (Volatile.Read(ref _isCompleted) && !_hasTerminated)
             {
-                AddChildSubscription(MakeChildObservable(observable), key);
+                _hasTerminated = true;
+                _observer.OnCompleted();
             }
+        }
+
+        private void TerminalError(Exception error)
+        {
+            _hasTerminated = true;
+            _observer.OnError(error);
+        }
+
+        private void DecrementSubscriptionCount()
+        {
+            if (Interlocked.Decrement(ref _subscriptionCounter) == 0)
+            {
+                Volatile.Write(ref _isCompleted, true);
+            }
+
+            Debug.Assert(_subscriptionCounter >= 0, "Should never be negative");
         }
     }
 }

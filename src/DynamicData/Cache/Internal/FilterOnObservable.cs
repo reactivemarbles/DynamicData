@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -11,22 +11,63 @@ internal sealed class FilterOnObservable<TObject, TKey>(IObservable<IChangeSet<T
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly Func<TObject, TKey, IObservable<bool>> _filterFactory = filterFactory ?? throw new ArgumentNullException(nameof(filterFactory));
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
-
-    public IObservable<IChangeSet<TObject, TKey>> Run() =>
-        _source
-            .Transform((val, key) => new FilterProxy(val, _filterFactory(val, key)))
-            .AutoRefreshOnObservable(proxy => proxy.FilterObservable, buffer, scheduler)
-            .Filter(proxy => proxy.PassesFilter)
-            .TransformImmutable(proxy => proxy.Value);
-
-    private sealed class FilterProxy(TObject obj, IObservable<bool> observable)
+    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
     {
-        public TObject Value { get; } = obj;
+        var cache = new ChangeAwareCache<TObject, TKey>();
 
-        public bool PassesFilter { get; private set; }
+        var changes = source.AggregateMany<TObject, TKey, (TObject Item, bool Passes), IChangeSet<TObject, TKey>>(
+            onSource: (parentChanges, track) =>
+            {
+                foreach (var change in parentChanges.ToConcreteType())
+                {
+                    switch (change.Reason)
+                    {
+                        // Drop any cached value upfront. Synchronous emissions from the new inner observable
+                        // collapse with this Remove inside the same captured changeset.
+                        case ChangeReason.Add or ChangeReason.Update:
+                            cache.Remove(change.Key);
+                            var item = change.Current;
+                            track(change.Key, filterFactory(item, change.Key).DistinctUntilChanged().Select(passes => (item, passes)));
+                            break;
 
-        public IObservable<bool> FilterObservable => observable.DistinctUntilChanged().Do(filterValue => PassesFilter = filterValue);
-    }
+                        case ChangeReason.Remove:
+                            cache.Remove(change.Key);
+                            track(change.Key, null);
+                            break;
+
+                        case ChangeReason.Refresh:
+                            cache.Refresh(change.Key);
+                            break;
+                    }
+                }
+            },
+            onInner: (value, key) =>
+            {
+                if (value.Passes)
+                {
+                    cache.AddOrUpdate(value.Item, key);
+                }
+                else
+                {
+                    cache.Remove(key);
+                }
+            },
+            emit: o =>
+            {
+                var captured = cache.CaptureChanges();
+                if (captured.Count > 0)
+                {
+                    o.OnNext(captured);
+                }
+            });
+
+        if (buffer is { } window)
+        {
+            changes = changes.Buffer(window, scheduler ?? GlobalConfig.DefaultScheduler)
+                             .Where(static batches => batches.Count > 0)
+                             .Select(static batches => new ChangeSet<TObject, TKey>(batches.SelectMany(static cs => cs)));
+        }
+
+        return changes.SubscribeSafe(observer);
+    });
 }
