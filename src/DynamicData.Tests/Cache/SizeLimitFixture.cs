@@ -72,8 +72,13 @@ public class SizeLimitFixture : IDisposable
     [Fact]
     public void AddMoreThanLimitInBatched()
     {
-        _source.AddOrUpdate(_generator.Take(10).ToArray());
-        _source.AddOrUpdate(_generator.Take(10).ToArray());
+        // _generator.Take(N) draws random Person rows from a finite name pool; a second
+        // Take(10) call can produce keys that collide with the first batch, turning an
+        // Add into an Update and breaking the per-message Adds count. Draw a larger pool
+        // up front, dedupe by Key, then split into two non-overlapping batches of 10.
+        var people = _generator.Take(60).DistinctBy(p => p.Key).Take(20).ToArray();
+        _source.AddOrUpdate(people.Take(10).ToArray());
+        _source.AddOrUpdate(people.Skip(10).Take(10).ToArray());
 
         _scheduler.Start();
 
@@ -96,12 +101,17 @@ public class SizeLimitFixture : IDisposable
         var removesTriggered = false;
         var subscriber = _source.LimitSizeTo(10, _scheduler).Subscribe(removes => { removesTriggered = true; });
 
-        _source.AddOrUpdate(_generator.Take(10).ToArray());
+        // _generator.Take(N) draws random Person rows from a finite name pool; a second
+        // Take(10) call can produce keys that collide with the first batch, turning an
+        // Add into an Update and breaking the per-message Adds count. Draw a larger pool
+        // up front, dedupe by Key, then split into two non-overlapping batches of 10.
+        var people = _generator.Take(60).DistinctBy(p => p.Key).Take(20).ToArray();
+        _source.AddOrUpdate(people.Take(10).ToArray());
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
 
         removesTriggered.Should().BeFalse();
 
-        _source.AddOrUpdate(_generator.Take(10).ToArray());
+        _source.AddOrUpdate(people.Skip(10).Take(10).ToArray());
 
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
 
