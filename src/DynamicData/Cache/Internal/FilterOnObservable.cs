@@ -16,7 +16,7 @@ internal sealed class FilterOnObservable<TObject, TKey>(IObservable<IChangeSet<T
         var cache = new ChangeAwareCache<TObject, TKey>();
 
         var changes = source.AggregateMany<TObject, TKey, (TObject Item, bool Passes), IChangeSet<TObject, TKey>>(
-            onSource: (parentChanges, track) =>
+            onSourceChangeSet: (parentChanges, track) =>
             {
                 foreach (var change in parentChanges.ToConcreteType())
                 {

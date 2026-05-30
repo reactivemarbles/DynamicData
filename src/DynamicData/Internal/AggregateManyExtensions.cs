@@ -23,7 +23,7 @@ internal static class AggregateManyExtensions
     /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
     /// <typeparam name="TResult">Type delivered downstream by <paramref name="emit"/>.</typeparam>
     /// <param name="source">The keyed source changeset stream.</param>
-    /// <param name="onSource">
+    /// <param name="onSourceChangeSet">
     /// Invoked for each source changeset, paired with a <c>track</c> callback that registers,
     /// replaces, or removes the inner observable for a key. Pass a non-<see langword="null"/>
     /// observable to register or replace; pass <see langword="null"/> to remove. The callback
@@ -35,13 +35,13 @@ internal static class AggregateManyExtensions
     /// <returns>An observable that aggregates source and inner activity into a single result stream.</returns>
     public static IObservable<TResult> AggregateMany<TSource, TKey, TInner, TResult>(
             this IObservable<IChangeSet<TSource, TKey>> source,
-            Action<IChangeSet<TSource, TKey>, Action<TKey, IObservable<TInner>?>> onSource,
+            Action<IChangeSet<TSource, TKey>, Action<TKey, IObservable<TInner>?>> onSourceChangeSet,
             Action<TInner, TKey> onInner,
             Action<IObserver<TResult>> emit)
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull =>
-        Observable.Create<TResult>(observer => new Subscription<TSource, TKey, TInner, TResult>(source, observer, onSource, onInner, emit));
+        Observable.Create<TResult>(observer => new Subscription<TSource, TKey, TInner, TResult>(source, observer, onSourceChangeSet, onInner, emit));
 
     private sealed class Subscription<TSource, TKey, TInner, TResult> : IDisposable
         where TSource : notnull
