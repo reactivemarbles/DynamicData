@@ -8,50 +8,39 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Internal;
 
-/// <summary>
-/// Provides SynchronizeSafe extension methods, drop-in replacements
-/// for <c>Synchronize(lock)</c> that release the lock before downstream delivery.
-/// </summary>
-/// <remarks>
-/// <para><strong>Disposal ordering matters.</strong> <c>CompositeDisposable</c> disposes in
-/// declaration order. The queue and the source subscription have different roles:</para>
-/// <list type="bullet">
-///   <item>
-///     <term>Subscription-first (gate and SDQ overloads)</term>
-///     <description>The queue is the <c>IObserver</c> that the source sends notifications to.
-///     Disposing the subscription first allows any final terminal notification (OnCompleted/OnError
-///     triggered by Rx's disposal cascade or a <c>Finally</c> operator) to flow through the
-///     still-active queue. The queue is disposed last as cleanup.</description>
-///   </item>
-///   <item>
-///     <term>Queue-first (parameterless overload)</term>
-///     <description>Used by operators with teardown side effects (DisposeMany, OnBeingRemoved).
-///     The queue is terminated first via <see cref="DeliveryQueue{T}.Dispose"/>, which ensures
-///     all in-flight deliveries complete before the subscription is disposed and teardown logic
-///     (e.g., disposing removed items) runs. Terminal notifications are not needed because
-///     the subscriber is explicitly tearing down.</description>
-///   </item>
-/// </list>
-/// </remarks>
+// Drop-in replacements for Observable.Synchronize(lock) that release the lock before
+// downstream delivery, plus UnsynchronizedMerge for combining streams whose inputs are
+// already serialized through the same queue.
+//
+// Disposal ordering matters. CompositeDisposable disposes in declaration order, and the
+// queue and the source subscription have different roles:
+//
+//   Subscription-first (gate and SDQ overloads): the queue is the IObserver that the
+//   source sends notifications to. Disposing the subscription first allows any final
+//   terminal notification (OnCompleted or OnError triggered by Rx's disposal cascade
+//   or a Finally operator) to flow through the still-active queue. The queue is
+//   disposed last as cleanup.
+//
+//   Queue-first (parameterless overload): used by operators with teardown side effects
+//   (DisposeMany, OnBeingRemoved). The queue is terminated first via DeliveryQueue.Dispose,
+//   which ensures all in-flight deliveries complete before the subscription is disposed
+//   and teardown logic (e.g. disposing removed items) runs. Terminal notifications are
+//   not needed because the subscriber is explicitly tearing down.
 internal static class SynchronizeSafeExtensions
 {
-    /// <summary>
-    /// Synchronizes the source observable through a <see cref="SharedDeliveryQueue"/>.
-    /// Use when multiple sources of different types share a gate.
-    /// </summary>
+    // Routes the source through a SharedDeliveryQueue. Use when multiple sources of
+    // different types share a gate.
     public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, SharedDeliveryQueue queue) =>
         Observable.Create<T>(observer =>
         {
             var subQueue = queue.CreateQueue(observer);
 
-            // Subscription first: terminal notifications flow through the still-active sub-queue
+            // Subscription first: terminal notifications flow through the still-active sub-queue.
             return new CompositeDisposable(source.SubscribeSafe(subQueue), subQueue);
         });
 
-    /// <summary>
-    /// Synchronizes the source observable through an implicitly created <see cref="DeliveryQueue{T}"/>.
-    /// Drop-in replacement for <c>Synchronize(locker)</c>.
-    /// </summary>
+    // Routes the source through an implicitly created DeliveryQueue<T>. Drop-in replacement
+    // for Observable.Synchronize(locker).
 #if NET9_0_OR_GREATER
     public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, Lock gate) =>
 #else
@@ -61,59 +50,61 @@ internal static class SynchronizeSafeExtensions
         {
             var queue = new DeliveryQueue<T>(gate, observer);
 
-            // Subscription first: terminal notifications flow through the still-active queue
+            // Subscription first: terminal notifications flow through the still-active queue.
             return new CompositeDisposable(source.SubscribeSafe(queue), queue);
         });
 
-    /// <summary>
-    /// Synchronizes the source observable through an implicitly created <see cref="DeliveryQueue{T}"/>
-    /// with automatic delivery completion on dispose. The queue is terminated and drained
-    /// before the source subscription is disposed, ensuring all in-flight notifications
-    /// are delivered before teardown.
-    /// </summary>
+    // Routes the source through an implicitly created DeliveryQueue<T> with automatic
+    // delivery completion on dispose. The queue is terminated and drained before the
+    // source subscription is disposed, ensuring all in-flight notifications are delivered
+    // before teardown.
     public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source) =>
         Observable.Create<T>(observer =>
         {
             var queue = new DeliveryQueue<T>(observer);
 
-            // Queue first: ensures in-flight deliveries complete before teardown side effects run
+            // Queue first: ensures in-flight deliveries complete before teardown side effects run.
             return new CompositeDisposable(queue, source.SubscribeSafe(queue));
         });
 
-    /// <summary>
-    /// Merges <paramref name="first"/> with <paramref name="others"/> into a single observable
-    /// without taking any synchronization gate. Functionally equivalent to
-    /// <see cref="Observable.Merge{TSource}(IObservable{TSource}[])"/>: completes only after
-    /// every source completes; the first error terminates; subscription occurs in argument order.
-    /// </summary>
-    /// <remarks>
-    /// <para>The caller MUST ensure that delivery from every source is already serialized.
-    /// In this library the precondition is satisfied by routing every source through the
-    /// same <see cref="SharedDeliveryQueue"/> via
-    /// <see cref="SynchronizeSafe{T}(IObservable{T}, SharedDeliveryQueue)"/>. The shared
-    /// queue's drain loop guarantees that at most one notification is in flight to the
-    /// downstream observer at a time, so the additional gate that <c>Observable.Merge</c>
-    /// would install is redundant.</para>
-    /// <para>Removing that gate matters in cross-cache pipelines: <c>Observable.Merge</c>
-    /// holds its private <c>_gate</c> for the entire duration of downstream delivery, and
-    /// when downstream delivery walks into another cache's writer lock, two such gates on
-    /// two operators form an ABBA cycle that the queue-drain design is meant to prevent.</para>
-    /// <para>Each source is subscribed through its own <see cref="Observer.Create{T}(Action{T}, Action{Exception}, Action)"/>
-    /// instance. The actions close over shared <c>pending</c> and <c>terminated</c> counters, but
-    /// the observer instances must be distinct because Rx's <c>ObserverBase</c> sets a one-shot
-    /// stopped flag on the first <c>OnCompleted</c>/<c>OnError</c>; a single shared observer
-    /// would silently drop terminal notifications from every source after the first.</para>
-    /// <para>Without the external serialization precondition, concurrent <c>OnNext</c>
-    /// calls into the shared observer will race. Do not use as a general-purpose
-    /// <c>Observable.Merge</c> replacement.</para>
-    /// </remarks>
+    // Merges every input into a single observable without taking any synchronization gate.
+    // Functionally equivalent to Observable.Merge: completes only after every source completes,
+    // the first error terminates, subscription occurs in argument order.
+    //
+    // The caller MUST ensure that delivery from every source is already serialized. In this
+    // library the precondition is satisfied by routing every source through the same
+    // SharedDeliveryQueue via SynchronizeSafe(queue). The shared queue's drain loop guarantees
+    // that at most one notification is in flight to the downstream observer at a time, so the
+    // additional gate that Observable.Merge would install is redundant.
+    //
+    // Removing that gate matters in cross-cache pipelines: Observable.Merge holds its private
+    // _gate for the entire duration of downstream delivery, and when downstream delivery walks
+    // into another cache's writer lock, two such gates on two operators form an ABBA cycle that
+    // the queue-drain design is meant to prevent.
+    //
+    // Without the external serialization precondition, concurrent OnNext calls into the shared
+    // observer will race. Do not use as a general-purpose Observable.Merge replacement.
     public static IObservable<T> UnsynchronizedMerge<T>(this IObservable<T> first, params IObservable<T>[] others) =>
         Observable.Create<T>(observer =>
         {
-            var totalSources = others.Length + 1;
-            var subscriptions = new CompositeDisposable(totalSources);
-            var pending = totalSources;
+            var remainingSources = others.Length + 1;
+            var subscriptions = new CompositeDisposable(remainingSources);
             var terminated = 0;
+
+            subscriptions.Add(first.SubscribeSafe(CreateInner()));
+            foreach (var source in others)
+            {
+                subscriptions.Add(source.SubscribeSafe(CreateInner()));
+            }
+
+            return subscriptions;
+
+            // Each source needs its own inner observer instance because Rx's ObserverBase sets
+            // a one-shot stopped flag on the first OnCompleted or OnError. A single shared
+            // observer would silently drop terminal notifications from every source after the
+            // first. The OnNext/OnError/OnCompleted actions close over the shared remainingSources
+            // and terminated counters so cross-source coordination still works.
+            IObserver<T> CreateInner() => Observer.Create<T>(OnNextSafe, OnErrorSafe, OnCompletedSafe);
 
             void OnNextSafe(T value)
             {
@@ -133,20 +124,10 @@ internal static class SynchronizeSafeExtensions
 
             void OnCompletedSafe()
             {
-                if (Interlocked.Decrement(ref pending) == 0 && Interlocked.Exchange(ref terminated, 1) == 0)
+                if (Interlocked.Decrement(ref remainingSources) == 0 && Interlocked.Exchange(ref terminated, 1) == 0)
                 {
                     observer.OnCompleted();
                 }
             }
-
-            IObserver<T> CreateInner() => Observer.Create<T>(OnNextSafe, OnErrorSafe, OnCompletedSafe);
-
-            subscriptions.Add(first.SubscribeSafe(CreateInner()));
-            foreach (var source in others)
-            {
-                subscriptions.Add(source.SubscribeSafe(CreateInner()));
-            }
-
-            return subscriptions;
         });
 }
