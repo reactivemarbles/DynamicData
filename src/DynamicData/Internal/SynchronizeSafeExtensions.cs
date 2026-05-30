@@ -130,4 +130,86 @@ internal static class SynchronizeSafeExtensions
                 }
             }
         });
+
+    // Two-input CombineLatest variant that does NOT install a gate. Functionally equivalent
+    // to Observable.CombineLatest: holds the most-recent value from each source, emits a
+    // resultSelector output whenever either source fires (provided the other has also fired
+    // at least once), the first error terminates, completes when both sources complete.
+    //
+    // Same precondition as UnsynchronizedMerge: delivery from BOTH sources must already be
+    // serialized through the same external gate before reaching this operator. In this library
+    // that is satisfied by routing both inputs through the same SharedDeliveryQueue via
+    // SynchronizeSafe(queue). Under that precondition no two OnNext calls overlap, so the
+    // latest-value state needs no internal locking, and the gate that
+    // Observable.CombineLatest installs becomes redundant.
+    //
+    // The Rx gate matters here for the same reason as Merge: Observable.CombineLatest holds
+    // its private _gate for the entire downstream delivery, and any operator-level lock held
+    // across a cross-cache write reconstructs the ABBA cycle the queue-drain design eliminated.
+    //
+    // Without the external serialization precondition, concurrent OnNext calls would race the
+    // latest-value state and could produce torn reads. Do not use as a general-purpose
+    // Observable.CombineLatest replacement.
+    public static IObservable<TResult> UnsynchronizedCombineLatest<TFirst, TSecond, TResult>(
+        this IObservable<TFirst> first,
+        IObservable<TSecond> second,
+        Func<TFirst, TSecond, TResult> resultSelector)
+        where TFirst : notnull
+        where TSecond : notnull =>
+        Observable.Create<TResult>(observer =>
+        {
+            var firstLatest = Optional.None<TFirst>();
+            var secondLatest = Optional.None<TSecond>();
+            var remainingSources = 2;
+            var terminated = 0;
+
+            var subscriptions = new CompositeDisposable(2);
+            subscriptions.Add(first.SubscribeSafe(Observer.Create<TFirst>(OnFirstNext, OnErrorSafe, OnCompletedSafe)));
+            subscriptions.Add(second.SubscribeSafe(Observer.Create<TSecond>(OnSecondNext, OnErrorSafe, OnCompletedSafe)));
+            return subscriptions;
+
+            void OnFirstNext(TFirst value)
+            {
+                if (Volatile.Read(ref terminated) != 0)
+                {
+                    return;
+                }
+
+                firstLatest = value;
+                if (secondLatest.HasValue)
+                {
+                    observer.OnNext(resultSelector(value, secondLatest.Value));
+                }
+            }
+
+            void OnSecondNext(TSecond value)
+            {
+                if (Volatile.Read(ref terminated) != 0)
+                {
+                    return;
+                }
+
+                secondLatest = value;
+                if (firstLatest.HasValue)
+                {
+                    observer.OnNext(resultSelector(firstLatest.Value, value));
+                }
+            }
+
+            void OnErrorSafe(Exception error)
+            {
+                if (Interlocked.Exchange(ref terminated, 1) == 0)
+                {
+                    observer.OnError(error);
+                }
+            }
+
+            void OnCompletedSafe()
+            {
+                if (Interlocked.Decrement(ref remainingSources) == 0 && Interlocked.Exchange(ref terminated, 1) == 0)
+                {
+                    observer.OnCompleted();
+                }
+            }
+        });
 }

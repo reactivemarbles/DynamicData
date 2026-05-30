@@ -70,6 +70,38 @@ public sealed class DeadlockTortureTest
     [Fact] public async Task GroupWithImmutableState_DoesNotDeadlock() =>
         (await RunBidirectionalDeadlockTest(s => s.GroupWithImmutableState(p => p.Age % 3).TransformMany(g => g.Items, p => p.UniqueKey))).Should().BeTrue();
 
+    [Fact] public async Task GroupOnWithRegrouper_DoesNotDeadlock()
+    {
+        using var regrouper = new System.Reactive.Subjects.Subject<System.Reactive.Unit>();
+        (await RunBidirectionalDeadlockTest(
+            s => s.Group(p => p.Age % 3, regrouper).MergeMany(g => g.Cache.Connect()),
+            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) regrouper.OnNext(System.Reactive.Unit.Default); })).Should().BeTrue();
+    }
+
+    [Fact] public async Task GroupOnDynamicSelector_DoesNotDeadlock()
+    {
+        using var selector = new BehaviorSubject<Func<Person, string, int>>((p, _) => p.Age % 3);
+        using var regrouper = new System.Reactive.Subjects.Subject<System.Reactive.Unit>();
+        (await RunBidirectionalDeadlockTest(
+            s => s.Group(selector, regrouper).MergeMany(g => g.Cache.Connect()),
+            subjectPusher: () =>
+            {
+                for (var j = 0; j < ItemCount; j++)
+                {
+                    selector.OnNext((p, _) => p.Age % (2 + (j % 4)));
+                    regrouper.OnNext(System.Reactive.Unit.Default);
+                }
+            })).Should().BeTrue();
+    }
+
+    [Fact] public async Task TransformAsyncWithForce_DoesNotDeadlock()
+    {
+        using var force = new System.Reactive.Subjects.Subject<Func<Person, string, bool>>();
+        (await RunBidirectionalDeadlockTest(
+            s => s.TransformAsync(p => Task.FromResult(new Person("T-" + p.Name, p.Age)), force),
+            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) force.OnNext(static (_, _) => true); })).Should().BeTrue();
+    }
+
     [Fact] public async Task Page_DoesNotDeadlock()
     {
         using var req = new BehaviorSubject<IPageRequest>(new PageRequest(1, 50));
@@ -240,4 +272,38 @@ public sealed class DeadlockTortureTest
             (await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds)))).Should().BeSameAs(completed, "iteration " + iter);
         }
     }
+
+    [Fact] public async Task TransformToTree_DoesNotDeadlock()
+    {
+        // Exercises TreeBuilder.cs:200 (_predicateChanged.SynchronizeSafe(queue).UnsynchronizedCombineLatest
+        // (reFilterObservable.SynchronizeSafe(queue), ...)). Cross-cache cycle is closed via a side-channel
+        // Subscribe that writes a marker into the other cache for every tree changeset.
+        for (var iter = 0; iter < Iterations; iter++)
+        {
+            using var sourceA = new SourceCache<Person, string>(p => p.UniqueKey);
+            using var sourceB = new SourceCache<Person, string>(p => p.UniqueKey);
+
+            // The pivotOn function returns the parent's key (or the item's own key for roots). Half the
+            // items become children of "A-{iter}-0" / "B-{iter}-0", populating the inner tree structure.
+            using var aToB = sourceA.Connect()
+                .TransformToTree(p => p.Age == 0 ? p.UniqueKey : "A-" + iter + "-0")
+                .Subscribe(_ => sourceB.AddOrUpdate(new Person("from-a-tree-" + iter, 0)));
+            using var bToA = sourceB.Connect()
+                .TransformToTree(p => p.Age == 0 ? p.UniqueKey : "B-" + iter + "-0")
+                .Subscribe(_ => sourceA.AddOrUpdate(new Person("from-b-tree-" + iter, 0)));
+
+            using var barrier = new Barrier(2);
+            var taskA = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceA.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); });
+            var taskB = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceB.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); });
+
+            var completed = Task.WhenAll(taskA, taskB);
+            (await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds)))).Should().BeSameAs(completed, "iteration " + iter);
+        }
+    }
+
+    [Fact] public async Task Switch_DoesNotDeadlock() =>
+        // Exercises the refactored Switch.cs (SerialDisposable + UnsynchronizedMerge of destination.Connect()
+        // and the errors subject). Observable.Return(s).Switch() drives exactly one outer notification, which
+        // is enough to wire up the destination cache and exercise the gate-free merge on every inner change.
+        (await RunBidirectionalDeadlockTest(s => System.Reactive.Linq.Observable.Return(s).Switch())).Should().BeTrue();
 }

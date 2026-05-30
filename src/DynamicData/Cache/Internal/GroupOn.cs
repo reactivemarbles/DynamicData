@@ -6,6 +6,8 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit>? regrouper)
@@ -29,7 +31,7 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
 
                 var regroup = _regrouper.SynchronizeSafe(queue).Select(_ => grouper.Regroup()).Where(changes => changes.Count != 0);
 
-                var published = groups.Merge(regroup).Publish();
+                var published = groups.UnsynchronizedMerge(regroup).Publish();
                 var subscriber = published.SubscribeSafe(observer);
                 var disposer = published.DisposeMany().Subscribe();
 
