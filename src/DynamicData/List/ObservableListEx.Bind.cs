@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -19,7 +19,7 @@ using DynamicData.List.Linq;
 namespace DynamicData;
 
 /// <summary>
-/// ObservableList extensions for Bind.
+/// Extensions for ObservableList.
 /// </summary>
 public static partial class ObservableListEx
 {
@@ -133,7 +133,6 @@ public static partial class ObservableListEx
     }
 
 #if SUPPORTS_BINDINGLIST
-
     /// <summary>
     /// Binds the source changeset stream to a WinForms <see cref="BindingList{T}"/>, keeping <paramref name="bindingList"/> in sync.
     /// </summary>
@@ -146,6 +145,5 @@ public static partial class ObservableListEx
 
         return source.Adapt(new BindingListAdaptor<T>(bindingList, resetThreshold));
     }
-
 #endif
 }
