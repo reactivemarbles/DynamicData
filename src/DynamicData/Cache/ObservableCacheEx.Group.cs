@@ -21,16 +21,10 @@ using DynamicData.Cache.Internal;
 namespace DynamicData;
 
 /// <summary>
-/// ObservableCache extensions for grouping operators.
+/// Extensions for dynamic data.
 /// </summary>
 public static partial class ObservableCacheEx
 {
-    // TODO: Apply the Adapter to more places
-    private static Func<TObject, TKey, TResult> AdaptSelector<TObject, TKey, TResult>(Func<TObject, TResult> other)
-        where TObject : notnull
-        where TKey : notnull
-        where TResult : notnull => (obj, _) => other(obj);
-
     /// <summary>
     /// Groups items from the source changeset, producing groups only for group keys present in <paramref name="resultGroupSource"/>.
     /// Useful for parent-child relationships where parents and children come from different streams.
@@ -170,165 +164,9 @@ public static partial class ObservableCacheEx
         return source.Group(groupSelectorKeyObservable.Select(AdaptSelector<TObject, TKey, TGroupKey>), regrouper);
     }
 
-    /// <summary>
-    /// Groups items where each item's group key is determined by a per-item observable.
-    /// The observable is created by <paramref name="groupObservableSelector"/> for each item.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to group using per-item observables.</param>
-    /// <param name="groupObservableSelector">A <see cref="Func{T, TResult}"/> factory that creates a group key observable for each item and its key.</param>
-    /// <returns>An observable that emits group changesets. Each group is a live sub-cache of its members.</returns>
-    /// <remarks>
-    /// <para>
-    /// Unlike <see cref="Group{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TGroupKey})"/> which evaluates
-    /// the group key synchronously, this operator defers group assignment until the per-item observable emits.
-    /// </para>
-    /// <para>
-    /// <b>Source changeset handling (parent events):</b>
-    /// </para>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Add</term><description>Subscribes to the per-item group key observable. The item is <b>not placed in any group until the observable emits its first group key</b>.</description></item>
-    /// <item><term>Update</term><description>Disposes the old item's group key subscription and subscribes to the new item's observable. The item is removed from its current group until the new observable emits.</description></item>
-    /// <item><term>Remove</term><description>Disposes the item's group key subscription. The item is removed from its current group. Empty groups are removed.</description></item>
-    /// <item><term>Refresh</term><description>No effect on subscriptions. The item remains in its current group.</description></item>
-    /// </list>
-    /// <para>
-    /// <b>Per-item observable handling (group key observable events):</b>
-    /// </para>
-    /// <list type="table">
-    /// <listheader><term>Emission</term><description>Behavior</description></listheader>
-    /// <item><term>First value</term><description>The item is placed into the group matching the emitted key. An <b>Add</b> appears in that group's sub-cache. If the group is new, the group itself is added to the output.</description></item>
-    /// <item><term>New value (different key)</term><description>The item moves: <b>Remove</b> from the old group, <b>Add</b> to the new group. If the old group becomes empty, it is removed from the output.</description></item>
-    /// <item><term>Same value (unchanged key)</term><description>No effect (filtered by <c>DistinctUntilChanged</c>).</description></item>
-    /// <item><term>Error</term><description>Terminates the entire output stream.</description></item>
-    /// <item><term>Completed</term><description>The item remains in its current group. No further group key changes are possible for this item.</description></item>
-    /// </list>
-    /// <para>
-    /// <b>Worth noting:</b> Items are invisible (not in any group) until their per-item observable emits at least one
-    /// group key. If an item's observable never emits, the item never appears in any group. Per-item observable errors
-    /// terminate the entire stream. The output completes when the source completes and all per-item observables have
-    /// also completed.
-    /// </para>
-    /// </remarks>
-    /// <seealso cref="Group{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TGroupKey})"/>
-    /// <seealso cref="GroupOnProperty{TObject, TKey, TGroupKey}"/>
-    /// <seealso cref="FilterOnObservable{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
-    /// <seealso cref="TransformOnObservable{TSource, TKey, TDestination}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, TKey, IObservable{TDestination}})"/>
-    public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnObservable<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TGroupKey>> groupObservableSelector)
+    // TODO: Apply the Adapter to more places
+    private static Func<TObject, TKey, TResult> AdaptSelector<TObject, TKey, TResult>(Func<TObject, TResult> other)
         where TObject : notnull
         where TKey : notnull
-        where TGroupKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        groupObservableSelector.ThrowArgumentNullExceptionIfNull(nameof(groupObservableSelector));
-
-        return new GroupOnObservable<TObject, TKey, TGroupKey>(source, groupObservableSelector).Run();
-    }
-
-    /// <summary>
-    /// Groups the source by the latest value from their observable created by the given factory.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to group using per-item observables.</param>
-    /// <param name="groupObservableSelector">The <see cref="Func{TObject, IObservable{TGroupKey}}"/> group selector key.</param>
-    /// <returns>An observable which will emit group change sets.</returns>
-    public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnObservable<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TGroupKey>> groupObservableSelector)
-        where TObject : notnull
-        where TKey : notnull
-        where TGroupKey : notnull
-    {
-        groupObservableSelector.ThrowArgumentNullExceptionIfNull(nameof(groupObservableSelector));
-
-        return source.GroupOnObservable(AdaptSelector<TObject, TKey, IObservable<TGroupKey>>(groupObservableSelector));
-    }
-
-    /// <summary>
-    /// <para>Groups the source using the property specified by the property selector. Groups are re-applied when the property value changed.</para>
-    /// <para>When there are likely to be a large number of group property changes specify a throttle to improve performance.</para>
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to group by a property value.</param>
-    /// <param name="propertySelector">The <see cref="Expression{Func{TObject, TGroupKey}}"/> property selector used to group the items.</param>
-    /// <param name="propertyChangedThrottle">An optional <see cref="TimeSpan"/> a time span that indicates the throttle to wait for property change events.</param>
-    /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
-    /// <returns>An observable which will emit immutable group change sets.</returns>
-    public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnProperty<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TGroupKey>> propertySelector, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
-        where TObject : INotifyPropertyChanged
-        where TKey : notnull
-        where TGroupKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        propertySelector.ThrowArgumentNullExceptionIfNull(nameof(propertySelector));
-
-        return new GroupOnProperty<TObject, TKey, TGroupKey>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
-    }
-
-    /// <summary>
-    /// <para>Groups the source using the property specified by the property selector. Each update produces immutable grouping. Groups are re-applied when the property value changed.</para>
-    /// <para>When there are likely to be a large number of group property changes specify a throttle to improve performance.</para>
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to group by a property value with immutable snapshots.</param>
-    /// <param name="propertySelector">The <see cref="Expression{Func{TObject, TGroupKey}}"/> property selector used to group the items.</param>
-    /// <param name="propertyChangedThrottle">An optional <see cref="TimeSpan"/> a time span that indicates the throttle to wait for property change events.</param>
-    /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
-    /// <returns>An observable which will emit immutable group change sets.</returns>
-    public static IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnPropertyWithImmutableState<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TGroupKey>> propertySelector, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
-        where TObject : INotifyPropertyChanged
-        where TKey : notnull
-        where TGroupKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        propertySelector.ThrowArgumentNullExceptionIfNull(nameof(propertySelector));
-
-        return new GroupOnPropertyWithImmutableState<TObject, TKey, TGroupKey>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
-    }
-
-    /// <summary>
-    /// Groups items by <paramref name="groupSelectorKey"/>, emitting immutable group snapshots instead of mutable sub-caches.
-    /// Each group change contains a frozen copy of the group's state at that point in time.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to group with immutable snapshots.</param>
-    /// <param name="groupSelectorKey">A <see cref="Func{T, TResult}"/> that extracts the group key from each item.</param>
-    /// <param name="regrouper">An <see cref="IObservable{Unit}"/> that optional signal to force re-evaluation of all items against the group selector.</param>
-    /// <returns>An observable that emits immutable group changesets.</returns>
-    /// <remarks>
-    /// <para>
-    /// Behaves identically to <see cref="Group{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TGroupKey})"/>
-    /// in terms of how items are assigned to groups, but each group emission is an immutable snapshot.
-    /// This makes it safe for parallel processing and eliminates race conditions on group state.
-    /// The tradeoff is higher memory usage, since each change produces a new snapshot of the affected group.
-    /// </para>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>Add</term><description>Item added to its group. An immutable snapshot of the group is emitted.</description></item>
-    /// <item><term>Update</term><description>If group key unchanged, group snapshot re-emitted. If changed, item moves between groups; both affected groups emit new snapshots.</description></item>
-    /// <item><term>Remove</term><description>Item removed from group. Updated snapshot emitted. Empty groups are removed.</description></item>
-    /// <item><term>Refresh</term><description>Group key re-evaluated. If changed, item moves; affected group snapshots emitted.</description></item>
-    /// </list>
-    /// </remarks>
-    /// <seealso cref="Group{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TGroupKey})"/>
-    /// <seealso cref="GroupOnPropertyWithImmutableState{TObject, TKey, TGroupKey}"/>
-    public static IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> GroupWithImmutableState<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit>? regrouper = null)
-        where TObject : notnull
-        where TKey : notnull
-        where TGroupKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        groupSelectorKey.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKey));
-
-        return new GroupOnImmutable<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
-    }
+        where TResult : notnull => (obj, _) => other(obj);
 }

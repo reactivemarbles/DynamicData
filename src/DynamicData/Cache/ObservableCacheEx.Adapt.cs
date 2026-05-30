@@ -21,7 +21,7 @@ using DynamicData.Cache.Internal;
 namespace DynamicData;
 
 /// <summary>
-/// ObservableCache extensions for Adapt.
+/// Extensions for dynamic data.
 /// </summary>
 public static partial class ObservableCacheEx
 {
