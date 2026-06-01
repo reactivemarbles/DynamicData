@@ -420,46 +420,6 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Automatically refresh downstream operator. The refresh is triggered when the observable receives a notification.
-    /// </summary>
-    /// <typeparam name="TObject">The object of the change set.</typeparam>
-    /// <typeparam name="TKey">The key of the change set.</typeparam>
-    /// <typeparam name="TAny">The type of evaluation.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to monitor for observable-driven refresh signals.</param>
-    /// <param name="reevaluator">The <see cref="Func{TObject, IObservable{TAny}}"/> observable which acts on items within the collection and produces a value when the item should be refreshed.</param>
-    /// <param name="changeSetBuffer">An optional <see cref="TimeSpan"/> buffer duration. Batches multiple refresh signals into a single changeset, improving performance when many elements change in quick succession. This greatly increases performance when many elements require a refresh.</param>
-    /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
-    /// <returns>An observable change set with additional refresh changes.</returns>
-    /// <seealso cref="ObservableListEx.AutoRefreshOnObservable"/>
-    public static IObservable<IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
-        where TObject : notnull
-        where TKey : notnull => source.AutoRefreshOnObservable((t, _) => reevaluator(t), changeSetBuffer, scheduler);
-
-    /// <summary>
-    /// Automatically refresh downstream operator. The refresh is triggered when the observable receives a notification.
-    /// </summary>
-    /// <typeparam name="TObject">The object of the change set.</typeparam>
-    /// <typeparam name="TKey">The key of the change set.</typeparam>
-    /// <typeparam name="TAny">The type of evaluation.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to monitor for observable-driven refresh signals.</param>
-    /// <param name="reevaluator">The <see cref="Func{TObject, TKey, IObservable{TAny}}"/> observable which acts on items within the collection and produces a value when the item should be refreshed.</param>
-    /// <param name="changeSetBuffer">An optional <see cref="TimeSpan"/> buffer duration. Batches multiple refresh signals into a single changeset, improving performance when many elements change in quick succession. This greatly increases performance when many elements require a refresh.</param>
-    /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
-    /// <returns>An observable change set with additional refresh changes.</returns>
-    /// <remarks>
-    /// <para><b>Worth noting:</b> Per-item observable errors are silently ignored (not forwarded to the downstream observer). Only source stream errors propagate.</para>
-    /// </remarks>
-    public static IObservable<IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        reevaluator.ThrowArgumentNullExceptionIfNull(nameof(reevaluator));
-
-        return new AutoRefresh<TObject, TKey, TAny>(source, reevaluator, changeSetBuffer, scheduler).Run();
-    }
-
-    /// <summary>
     /// Collects changesets emitted within a time window and merges them into a single changeset.
     /// Uses Rx's <c>Buffer</c> operator followed by <see cref="FlattenBufferResult{TObject, TKey}"/>.
     /// </summary>

@@ -7,9 +7,6 @@ using DynamicData.Cache.Internal;
 
 namespace DynamicData;
 
-/// <summary>
-/// ObservableCache extensions for the virtualised group of operators.
-/// </summary>
 public static partial class ObservableCacheEx
 {
     /// <inheritdoc cref="SortAndVirtualize{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IComparer{TObject}, IObservable{IVirtualRequest}, SortAndVirtualizeOptions)"/>
