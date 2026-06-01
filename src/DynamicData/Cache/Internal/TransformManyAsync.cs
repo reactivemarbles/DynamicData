@@ -1,94 +1,95 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Linq;
-using DynamicData.Internal;
+using DynamicData.Cache;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinationKey>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> transformer, IEqualityComparer<TDestination>? equalityComparer, IComparer<TDestination>? comparer, Action<Error<TSource, TKey>>? errorHandler = null)
+internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinationKey>(
+        IObservable<IChangeSet<TSource, TKey>> source,
+        Func<TSource, TKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> transformer,
+        IEqualityComparer<TDestination>? equalityComparer,
+        IComparer<TDestination>? comparer,
+        Action<Error<TSource, TKey>>? errorHandler = null)
     where TSource : notnull
     where TKey : notnull
     where TDestination : notnull
     where TDestinationKey : notnull
 {
-    public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => Observable.Create<IChangeSet<TDestination, TDestinationKey>>(
-        observer => new Subscription(source, transformer, observer, equalityComparer, comparer, errorHandler));
+    public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => Observable.Create<IChangeSet<TDestination, TDestinationKey>>(observer =>
+        source.OrchestrateMany(new Orchestrator(transformer, equalityComparer, comparer, errorHandler))
+              .SubscribeSafe(observer));
 
-    // Maintains state for a single subscription
-    private sealed class Subscription : CacheParentSubscription<ChangeSetCache<TDestination, TDestinationKey>, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
+    private sealed class Orchestrator : ICacheOrchestrator<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
     {
         private readonly Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey> _cache = new();
-        private readonly ChangeSetMergeTracker<TDestination, TDestinationKey> _changeSetMergeTracker;
+        private readonly ChangeSetMergeTracker<TDestination, TDestinationKey> _tracker;
+        private readonly Func<TSource, TKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> _transformer;
+        private readonly Action<Error<TSource, TKey>>? _errorHandler;
+        private ICacheOrchestratorContext<TKey, IChangeSet<TDestination, TDestinationKey>> _context = null!;
 
-        public Subscription(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> transform, IObserver<IChangeSet<TDestination, TDestinationKey>> observer, IEqualityComparer<TDestination>? equalityComparer, IComparer<TDestination>? comparer, Action<Error<TSource, TKey>>? errorHandler = null)
-            : base(observer)
+        public Orchestrator(
+                Func<TSource, TKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> transformer,
+                IEqualityComparer<TDestination>? equalityComparer,
+                IComparer<TDestination>? comparer,
+                Action<Error<TSource, TKey>>? errorHandler)
         {
-            // Transform Helper
-            async Task<IObservable<IChangeSet<TDestination, TDestinationKey>>> ErrorHandlingTransform(TSource obj, TKey key)
-            {
-                try
-                {
-                    return await transform(obj, key).ConfigureAwait(false);
-                }
-                catch (Exception e)
-                {
-                    errorHandler.Invoke(new Error<TSource, TKey>(e, obj, key));
-                    return Observable.Empty<IChangeSet<TDestination, TDestinationKey>>();
-                }
-            }
-
-            ChangeSetCache<TDestination, TDestinationKey> Transformer(TSource obj, TKey key) =>
-                new(MakeChildObservable(Observable.Defer(() => transform(obj, key))));
-
-            ChangeSetCache<TDestination, TDestinationKey> SafeTransformer(TSource obj, TKey key) =>
-                new(MakeChildObservable(Observable.Defer(() => ErrorHandlingTransform(obj, key))));
-
-            _changeSetMergeTracker = new(() => _cache.Items, comparer, equalityComparer);
-
-            if (errorHandler is null)
-            {
-                CreateParentSubscription(source.Transform(Transformer));
-            }
-            else
-            {
-                CreateParentSubscription(source.Transform(SafeTransformer));
-            }
+            _transformer = transformer;
+            _errorHandler = errorHandler;
+            _tracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => _cache.Items, comparer, equalityComparer);
         }
 
-        protected override void ParentOnNext(IChangeSet<ChangeSetCache<TDestination, TDestinationKey>, TKey> changes)
+        public void Initialize(ICacheOrchestratorContext<TKey, IChangeSet<TDestination, TDestinationKey>> context) => _context = context;
+
+        public void OnSourceChangeSet(IChangeSet<TSource, TKey> changes)
         {
-            // Process all the changes at once to preserve the changeset order
             foreach (var change in changes.ToConcreteType())
             {
                 switch (change.Reason)
                 {
-                    // Shutdown existing sub (if any) and create a new one that
-                    // Will update the cache and emit the changes
                     case ChangeReason.Add or ChangeReason.Update:
-                        _cache.AddOrUpdate(change.Current, change.Key);
-                        AddChildSubscription(change.Current.Source, change.Key);
-                        if (change.Previous.HasValue)
+                        var previous = _cache.Lookup(change.Key);
+                        var entry = new ChangeSetCache<TDestination, TDestinationKey>(_context.Serialize(BuildInner(change.Current, change.Key)));
+                        _cache.AddOrUpdate(entry, change.Key);
+                        _context.Track(change.Key, entry.Source);
+                        if (previous.HasValue)
                         {
-                            _changeSetMergeTracker.RemoveItems(change.Previous.Value.Cache.KeyValues);
+                            _tracker.RemoveItems(previous.Value.Cache.KeyValues);
                         }
                         break;
 
-                    // Shutdown the existing subscription and remove from the cache
                     case ChangeReason.Remove:
-                        _cache.Remove(change.Key);
-                        RemoveChildSubscription(change.Key);
-                        _changeSetMergeTracker.RemoveItems(change.Current.Cache.KeyValues);
+                        if (_cache.Lookup(change.Key) is { HasValue: true } removed)
+                        {
+                            _cache.Remove(change.Key);
+                            _tracker.RemoveItems(removed.Value.Cache.KeyValues);
+                        }
+
+                        _context.Track(change.Key, null);
                         break;
                 }
             }
         }
 
-        protected override void ChildOnNext(IChangeSet<TDestination, TDestinationKey> child, TKey parentKey) =>
-            _changeSetMergeTracker.ProcessChangeSet(child);
+        public void OnInner(IChangeSet<TDestination, TDestinationKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
 
-        protected override void EmitChanges(IObserver<IChangeSet<TDestination, TDestinationKey>> observer) =>
-            _changeSetMergeTracker.EmitChanges(observer);
+        public void Emit(IObserver<IChangeSet<TDestination, TDestinationKey>> observer) => _tracker.EmitChanges(observer);
+
+        private IObservable<IChangeSet<TDestination, TDestinationKey>> BuildInner(TSource obj, TKey key) => _errorHandler is null
+            ? Observable.Defer(() => _transformer(obj, key))
+            : Observable.Defer(async () =>
+            {
+                try
+                {
+                    return await _transformer(obj, key).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    _errorHandler(new Error<TSource, TKey>(e, obj, key));
+                    return Observable.Empty<IChangeSet<TDestination, TDestinationKey>>();
+                }
+            });
     }
 }

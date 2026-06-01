@@ -2,8 +2,10 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -11,63 +13,55 @@ internal sealed class FilterOnObservable<TObject, TKey>(IObservable<IChangeSet<T
     where TObject : notnull
     where TKey : notnull
 {
-    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Defer(() =>
     {
-        var cache = new ChangeAwareCache<TObject, TKey>();
-
-        var changes = source.AggregateMany<TObject, TKey, (TObject Item, bool Passes), IChangeSet<TObject, TKey>>(
-            onSourceChangeSet: (parentChanges, track) =>
+        var changes = source.OrchestrateManyChanges<TObject, TKey, bool, TObject>(
+            innerFactory: (item, key) => filterFactory(item, key).DistinctUntilChanged(),
+            onSourceChange: static (cache, change) =>
             {
-                foreach (var change in parentChanges.ToConcreteType())
+                // Drop the entry upfront on Add/Update/Remove. Synchronous emissions from the new inner
+                // observable collapse with this Remove inside the same drain cycle, so a passing item
+                // immediately re-adds. Refresh is propagated as-is.
+                if (change.Reason is ChangeReason.Add or ChangeReason.Update or ChangeReason.Remove)
                 {
-                    switch (change.Reason)
-                    {
-                        // Drop any cached value upfront. Synchronous emissions from the new inner observable
-                        // collapse with this Remove inside the same captured changeset.
-                        case ChangeReason.Add or ChangeReason.Update:
-                            cache.Remove(change.Key);
-                            var item = change.Current;
-                            track(change.Key, filterFactory(item, change.Key).DistinctUntilChanged().Select(passes => (item, passes)));
-                            break;
-
-                        case ChangeReason.Remove:
-                            cache.Remove(change.Key);
-                            track(change.Key, null);
-                            break;
-
-                        case ChangeReason.Refresh:
-                            cache.Refresh(change.Key);
-                            break;
-                    }
+                    cache.Remove(change.Key);
+                }
+                else if (change.Reason is ChangeReason.Refresh)
+                {
+                    cache.Refresh(change.Key);
                 }
             },
-            onInner: (value, key) =>
+            onInner: static (cache, key, item, passes) =>
             {
-                if (value.Passes)
+                if (passes)
                 {
-                    cache.AddOrUpdate(value.Item, key);
+                    cache.AddOrUpdate(item, key);
                 }
                 else
                 {
                     cache.Remove(key);
                 }
-            },
-            emit: o =>
-            {
-                var captured = cache.CaptureChanges();
-                if (captured.Count > 0)
-                {
-                    o.OnNext(captured);
-                }
             });
 
         if (buffer is { } window)
         {
-            changes = changes.Buffer(window, scheduler ?? GlobalConfig.DefaultScheduler)
+            var sched = scheduler ?? GlobalConfig.DefaultScheduler;
+            var quiet = TimeSpan.FromTicks(window.Ticks / 2);
+
+            // Quiescence-based buffering with a hard latency cap:
+            //   - Throttle(window/2): close the buffer after window/2 of source quiet (let bursts settle)
+            //   - Timer(window):       cap at the full window so sustained streams cannot starve the boundary
+            //   - Amb picks whichever fires first
+            // Single-changeset windows are forwarded as-is to avoid an extra ChangeSet allocation.
+            changes = changes.Publish(published => published.Buffer(() =>
+                                           published.Throttle(quiet, sched).Select(static _ => Unit.Default)
+                                                    .Amb(Observable.Timer(window, sched).Select(static _ => Unit.Default))))
                              .Where(static batches => batches.Count > 0)
-                             .Select(static batches => new ChangeSet<TObject, TKey>(batches.SelectMany(static cs => cs)));
+                             .Select(static batches => batches.Count == 1
+                                 ? batches[0]
+                                 : new ChangeSet<TObject, TKey>(batches.SelectMany(static cs => cs)));
         }
 
-        return changes.SubscribeSafe(observer);
+        return changes;
     });
 }

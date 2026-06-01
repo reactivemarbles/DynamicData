@@ -495,7 +495,7 @@ public static partial class AutoRefreshOnObservableFixture
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
           
-        [Fact(Skip = "Existing defect, #1099")]
+        [Fact]
         public void ReevaluatorEmitsImmediately_ItemDoesNotRefresh()
         {
             // Setup
@@ -523,7 +523,7 @@ public static partial class AutoRefreshOnObservableFixture
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
             
-        [Theory(Skip = "Existing defect. Docs say that ignoring reevaluator exceptions is intentional, but it shouldn't be. Basic RX philosophy is that exceptions should basically always propagate.")]
+        [Theory]
         [InlineData(NotificationStrategy.Immediate)]
         [InlineData(NotificationStrategy.Asynchronous)]
         public void ReevaluatorFails_ErrorPropagates(NotificationStrategy notificationStrategy)
@@ -564,7 +564,7 @@ public static partial class AutoRefreshOnObservableFixture
             }
         }
             
-        [Fact(Skip = "Existing defect. Docs say that ignoring reevaluator exceptions is intentional, but it shouldn't be. Basic RX philosophy is that exceptions should basically always propagate.")]
+        [Fact]
         public void ReevaluatorThrows_ExceptionPropagates()
         {
             // Setup 

@@ -15,7 +15,7 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() =>
         Observable.Using(
             resourceFactory: () => new DynamicGrouper<TObject, TKey, TGroupKey>(),
-            observableFactory: grouper => source.AggregateMany<TObject, TKey, (TGroupKey GroupKey, TObject Item), IGroupChangeSet<TObject, TKey, TGroupKey>>(
+            observableFactory: grouper => source.OrchestrateMany<TObject, TKey, (TGroupKey GroupKey, TObject Item), IGroupChangeSet<TObject, TKey, TGroupKey>>(
                 onSourceChangeSet: (changes, track) =>
                 {
                     foreach (var change in changes.ToConcreteType())

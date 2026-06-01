@@ -404,6 +404,7 @@ public static partial class ObservableCacheEx
         where TKey : notnull
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        propertyAccessor.ThrowArgumentNullExceptionIfNull(nameof(propertyAccessor));
 
         return source.AutoRefreshOnObservable(
             (t, _) =>
@@ -433,7 +434,13 @@ public static partial class ObservableCacheEx
     /// <seealso cref="ObservableListEx.AutoRefreshOnObservable"/>
     public static IObservable<IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
         where TObject : notnull
-        where TKey : notnull => source.AutoRefreshOnObservable((t, _) => reevaluator(t), changeSetBuffer, scheduler);
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        reevaluator.ThrowArgumentNullExceptionIfNull(nameof(reevaluator));
+
+        return source.AutoRefreshOnObservable((t, _) => reevaluator(t), changeSetBuffer, scheduler);
+    }
 
     /// <summary>
     /// Automatically refresh downstream operator. The refresh is triggered when the observable receives a notification.

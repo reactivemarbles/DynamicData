@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 using Bogus;
 
-using DynamicData.Internal;
+using DynamicData.Cache.Internal;
 using DynamicData.Tests.Utilities;
 
 using FluentAssertions;
@@ -21,10 +21,12 @@ using Xunit;
 namespace DynamicData.Tests.Internal;
 
 /// <summary>
-/// Tests for <see cref="CacheParentSubscription{TParent, TKey, TChild, TObserver}"/>
-/// behavioral contracts using a minimal concrete subclass.
+/// Tests for the <c>OrchestrateMany</c> primitive's behavioral contracts: source/inner serialization,
+/// per-drain coalesced emission, completion counting, error propagation, and cross-cache safety.
+/// Exercised via the <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> overload because it
+/// maps 1:1 to the legacy CacheParentSubscription subclass shape these tests originally targeted.
 /// </summary>
-public sealed class CacheParentSubscriptionFixture
+public sealed class OrchestrateManyFixture
 {
     private const int SeedMin = 1;
     private const int SeedMax = 10000;
@@ -33,7 +35,7 @@ public sealed class CacheParentSubscriptionFixture
 
     private readonly Randomizer _rand = new(55);
 
-    /// <summary>Test item with a typed key — no string parsing.</summary>
+    /// <summary>Test item with a typed key.</summary>
     private sealed record TestItem(int Key, string Value);
 
     [Fact]
@@ -42,8 +44,8 @@ public sealed class CacheParentSubscriptionFixture
         var itemCount = _rand.Number(BatchSizeMin, BatchSizeMax);
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
-        using var sub = new TestSubscription(observer);
-        sub.ExposeCreateParent(source.Connect());
+        var orchestrator = new TestOrchestrator();
+        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
 
         var items = Enumerable.Range(0, itemCount)
             .Select(i => new TestItem(_rand.Number(SeedMin, SeedMax) + i * 100, _rand.String2(_rand.Number(3, 10))))
@@ -52,8 +54,8 @@ public sealed class CacheParentSubscriptionFixture
         foreach (var item in items)
             source.AddOrUpdate(item);
 
-        sub.ParentCallCount.Should().Be(items.Count, "ParentOnNext should fire once per changeset");
-        observer.EmitCount.Should().Be(items.Count, "EmitChanges should fire after each parent update");
+        orchestrator.ParentCallCount.Should().Be(items.Count, "OnSourceChangeSet should fire once per changeset");
+        observer.EmitCount.Should().Be(items.Count, "Emit should fire after each parent update");
     }
 
     [Fact]
@@ -62,13 +64,13 @@ public sealed class CacheParentSubscriptionFixture
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var childSubjects = new List<Subject<string>>();
         var observer = new TestObserver();
-        using var sub = new TestSubscription(observer, key =>
+        var orchestrator = new TestOrchestrator(key =>
         {
             var subj = new Subject<string>();
             childSubjects.Add(subj);
             return subj;
         });
-        sub.ExposeCreateParent(source.Connect());
+        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
 
         var key = _rand.Number(SeedMin, SeedMax);
         source.AddOrUpdate(new TestItem(key, "parent"));
@@ -77,7 +79,7 @@ public sealed class CacheParentSubscriptionFixture
         var childValue = _rand.String2(_rand.Number(5, 15));
         childSubjects[0].OnNext(childValue);
 
-        sub.ChildCalls.Should().ContainSingle()
+        orchestrator.ChildCalls.Should().ContainSingle()
             .Which.Should().Be((childValue, key));
     }
 
@@ -87,8 +89,8 @@ public sealed class CacheParentSubscriptionFixture
         var batchSize = _rand.Number(BatchSizeMin, BatchSizeMax);
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
-        using var sub = new TestSubscription(observer);
-        sub.ExposeCreateParent(source.Connect());
+        var orchestrator = new TestOrchestrator();
+        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
 
         source.Edit(updater =>
         {
@@ -96,8 +98,8 @@ public sealed class CacheParentSubscriptionFixture
                 updater.AddOrUpdate(new TestItem(i + 1, _rand.String2(_rand.Number(3, 8))));
         });
 
-        sub.ParentCallCount.Should().Be(1, "single batch = single ParentOnNext");
-        sub.EmitCallCount.Should().Be(1, "single batch = single EmitChanges");
+        orchestrator.ParentCallCount.Should().Be(1, "single batch = single OnSourceChangeSet");
+        orchestrator.EmitCallCount.Should().Be(1, "single batch = single Emit");
     }
 
     [Fact]
@@ -107,12 +109,12 @@ public sealed class CacheParentSubscriptionFixture
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
         var childCount = 0;
-        using var sub = new TestSubscription(observer, key =>
+        var orchestrator = new TestOrchestrator(key =>
         {
             Interlocked.Increment(ref childCount);
             return new BehaviorSubject<string>($"sync-{key}");
         });
-        sub.ExposeCreateParent(source.Connect());
+        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
 
         source.Edit(updater =>
         {
@@ -121,8 +123,8 @@ public sealed class CacheParentSubscriptionFixture
         });
 
         childCount.Should().Be(batchSize, "each item should create a child");
-        sub.EmitCallCount.Should().BeGreaterThanOrEqualTo(1,
-            "EmitChanges fires after parent + children settle");
+        orchestrator.EmitCallCount.Should().BeGreaterThanOrEqualTo(1,
+            "Emit fires after parent + children settle");
     }
 
     [Fact]
@@ -131,13 +133,13 @@ public sealed class CacheParentSubscriptionFixture
         using var source = new TestSourceCache<TestItem, int>(x => x.Key);
         var childSubjects = new List<Subject<string>>();
         var observer = new TestObserver();
-        using var sub = new TestSubscription(observer, key =>
+        var orchestrator = new TestOrchestrator(key =>
         {
             var subj = new Subject<string>();
             childSubjects.Add(subj);
             return subj;
         });
-        sub.ExposeCreateParent(source.Connect());
+        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
 
         source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
         childSubjects.Should().HaveCount(1);
@@ -154,8 +156,8 @@ public sealed class CacheParentSubscriptionFixture
     {
         using var source = new TestSourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
-        using var sub = new TestSubscription(observer);
-        sub.ExposeCreateParent(source.Connect());
+        var orchestrator = new TestOrchestrator();
+        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
 
         source.Complete();
         observer.IsCompleted.Should().BeTrue("immediate OnCompleted when no children");
@@ -167,13 +169,13 @@ public sealed class CacheParentSubscriptionFixture
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var childSubjects = new List<Subject<string>>();
         var observer = new TestObserver();
-        var sub = new TestSubscription(observer, key =>
+        var orchestrator = new TestOrchestrator(key =>
         {
             var subj = new Subject<string>();
             childSubjects.Add(subj);
             return subj;
         });
-        sub.ExposeCreateParent(source.Connect());
+        var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
 
         source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
         var emitsBefore = observer.EmitCount;
@@ -192,8 +194,8 @@ public sealed class CacheParentSubscriptionFixture
     {
         using var source = new TestSourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
-        using var sub = new TestSubscription(observer);
-        sub.ExposeCreateParent(source.Connect());
+        var orchestrator = new TestOrchestrator();
+        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
 
         var error = new InvalidOperationException("test error");
         source.SetError(error);
@@ -207,16 +209,11 @@ public sealed class CacheParentSubscriptionFixture
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var callLog = new List<string>();
         var observer = new TestObserver();
-        using var sub = new TestSubscription(
-            observer,
-            key =>
-            {
-                var subj = new Subject<string>();
-                return subj;
-            },
+        var orchestrator = new TestOrchestrator(
+            key => new Subject<string>(),
             onParent: () => { lock (callLog) callLog.Add("P-start"); Thread.Sleep(1); lock (callLog) callLog.Add("P-end"); },
             onChild: () => { lock (callLog) callLog.Add("C-start"); Thread.Sleep(1); lock (callLog) callLog.Add("C-end"); });
-        sub.ExposeCreateParent(source.Connect());
+        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
 
         source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
 
@@ -229,9 +226,10 @@ public sealed class CacheParentSubscriptionFixture
     }
 
     /// <summary>
-    /// Proves CPS delivery runs without holding the lock. Two TestSubscription instances
-    /// whose EmitChanges callbacks write into each other's source cache — creating a
-    /// cross-cache cycle. Deadlocks on unfixed code, passes after the fix.
+    /// Proves OrchestrateMany delivery runs without holding the lock. Two orchestrator instances
+    /// whose Emit callbacks write into each other's source cache, creating a cross-cache cycle.
+    /// Deadlocks if downstream delivery is held under the queue lock; passes when the queue is
+    /// drained before invoking Emit.
     /// </summary>
     [Trait("Category", "ExplicitDeadlock")]
     [Fact]
@@ -242,14 +240,13 @@ public sealed class CacheParentSubscriptionFixture
         using var sourceA = new SourceCache<TestItem, int>(x => x.Key);
         using var sourceB = new SourceCache<TestItem, int>(x => x.Key);
 
-        // Each TestSubscription's EmitChanges writes into the OTHER source (limited to prevent infinite loops)
         var observerA = new CrossFeedObserver(sourceB, 100_001, iterations);
-        using var subA = new TestSubscription(observerA);
-        subA.ExposeCreateParent(sourceA.Connect());
+        var orchestratorA = new TestOrchestrator();
+        using var subA = sourceA.Connect().OrchestrateMany(orchestratorA).Subscribe(observerA);
 
         var observerB = new CrossFeedObserver(sourceA, 200_001, iterations);
-        using var subB = new TestSubscription(observerB);
-        subB.ExposeCreateParent(sourceB.Connect());
+        var orchestratorB = new TestOrchestrator();
+        using var subB = sourceB.Connect().OrchestrateMany(orchestratorB).Subscribe(observerB);
 
         using var barrier = new Barrier(2);
 
@@ -272,7 +269,7 @@ public sealed class CacheParentSubscriptionFixture
         var completed = Task.WhenAll(taskA, taskB);
         var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(30)));
         finished.Should().BeSameAs(completed,
-            "cross-feeding CacheParentSubscriptions should not deadlock");
+            "cross-feeding OrchestrateMany subscriptions should not deadlock");
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -286,7 +283,6 @@ public sealed class CacheParentSubscriptionFixture
 
         public void OnNext(IChangeSet<TestItem, int> value)
         {
-            // Limit cross-writes to prevent infinite feedback loops
             if (Interlocked.Increment(ref _counter) <= maxCrossWrites)
             {
                 target.AddOrUpdate(new TestItem(idBase + _counter, "cross"));
@@ -299,9 +295,9 @@ public sealed class CacheParentSubscriptionFixture
     }
 
     /// <summary>
-    /// Minimal concrete CacheParentSubscription for testing.
+    /// Minimal ICacheOrchestrator implementation that mirrors the legacy CPS-subclass shape.
     /// </summary>
-    private sealed class TestSubscription : CacheParentSubscription<TestItem, int, string, IChangeSet<TestItem, int>>
+    private sealed class TestOrchestrator : ICacheOrchestrator<TestItem, int, string, IChangeSet<TestItem, int>>
     {
         private readonly Func<int, IObservable<string>>? _childFactory;
         private readonly Action? _onParent;
@@ -311,23 +307,21 @@ public sealed class CacheParentSubscriptionFixture
         public int ParentCallCount;
         public int EmitCallCount;
         public readonly List<(string Value, int Key)> ChildCalls = [];
+        private ICacheOrchestratorContext<int, string> _context = null!;
 
-        public TestSubscription(
-            IObserver<IChangeSet<TestItem, int>> observer,
+        public TestOrchestrator(
             Func<int, IObservable<string>>? childFactory = null,
             Action? onParent = null,
             Action? onChild = null)
-            : base(observer)
         {
             _childFactory = childFactory;
             _onParent = onParent;
             _onChild = onChild;
         }
 
-        public void ExposeCreateParent(IObservable<IChangeSet<TestItem, int>> source)
-            => CreateParentSubscription(source);
+        public void Initialize(ICacheOrchestratorContext<int, string> context) => _context = context;
 
-        protected override void ParentOnNext(IChangeSet<TestItem, int> changes)
+        public void OnSourceChangeSet(IChangeSet<TestItem, int> changes)
         {
             Interlocked.Increment(ref ParentCallCount);
             _onParent?.Invoke();
@@ -338,21 +332,21 @@ public sealed class CacheParentSubscriptionFixture
                 foreach (var change in (ChangeSet<TestItem, int>)changes)
                 {
                     if (change.Reason is ChangeReason.Add or ChangeReason.Update)
-                        AddChildSubscription(MakeChildObservable(_childFactory(change.Key)), change.Key);
+                        _context.Track(change.Key, _childFactory(change.Key));
                     else if (change.Reason is ChangeReason.Remove)
-                        RemoveChildSubscription(change.Key);
+                        _context.Track(change.Key, null);
                 }
             }
         }
 
-        protected override void ChildOnNext(string child, int parentKey)
+        public void OnInner(string child, int parentKey)
         {
             _onChild?.Invoke();
             ChildCalls.Add((child, parentKey));
             _cache.AddOrUpdate(new TestItem(parentKey, child), parentKey);
         }
 
-        protected override void EmitChanges(IObserver<IChangeSet<TestItem, int>> observer)
+        public void Emit(IObserver<IChangeSet<TestItem, int>> observer)
         {
             Interlocked.Increment(ref EmitCallCount);
             var changes = _cache.CaptureChanges();

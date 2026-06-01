@@ -125,7 +125,7 @@ public class SizeLimitFixture : IDisposable
         subscriber.Dispose();
     }
 
-    [Fact(Skip = "Need to re-examine and fix failure")]
+    [Fact]
     public void OnCompleteIsInvokedWhenSourceIsDisposed()
     {
         var completed = false;
