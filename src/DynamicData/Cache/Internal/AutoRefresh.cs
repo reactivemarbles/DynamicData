@@ -4,6 +4,7 @@
 
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace DynamicData.Cache.Internal;
 
@@ -16,97 +17,167 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
     where TKey : notnull
 {
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-        source.OrchestrateMany(new Orchestrator(reEvaluator, buffer, scheduler ?? GlobalConfig.DefaultScheduler))
-              .SubscribeSafe(observer));
+    {
+        var orchestrator = buffer is { } window
+            ? (CacheChangeHandlerBase<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>)new BufferedOrchestrator(reEvaluator, window, scheduler ?? GlobalConfig.DefaultScheduler)
+            : new UnbufferedOrchestrator(reEvaluator);
+        return source.OrchestrateMany(orchestrator).SubscribeSafe(observer);
+    });
 
-    private sealed class Orchestrator(
-            Func<TObject, TKey, IObservable<TAny>> reEvaluator,
-            TimeSpan? buffer,
-            IScheduler scheduler)
-        : ICacheOrchestrator<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>
+    /// <summary>
+    /// Unbuffered AutoRefresh: forwards source changes verbatim and emits each refresh notification
+    /// individually as a single-change <see cref="ChangeSet{TObject, TKey}"/>. Refreshes for keys the
+    /// source has touched within the same drain cycle are suppressed (fixes #1099: the sync
+    /// Add+Refresh scenario where a reevaluator fires synchronously during item subscription would
+    /// otherwise emit both Add and Refresh for the same key).
+    /// </summary>
+    private sealed class UnbufferedOrchestrator(Func<TObject, TKey, IObservable<TAny>> reEvaluator)
+        : CacheChangeHandlerBase<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>
     {
         private readonly HashSet<TKey> _sourceTouched = [];
-        private ICacheOrchestratorContext<TKey, Change<TObject, TKey>> _context = null!;
         private IChangeSet<TObject, TKey>? _pendingSource;
         private List<Change<TObject, TKey>>? _pendingRefreshes;
-        private IDisposable? _bufferTimer;
-        private bool _bufferTimerFired;
 
-        public void Initialize(ICacheOrchestratorContext<TKey, Change<TObject, TKey>> context) => _context = context;
-
-        public void OnSourceChangeSet(IChangeSet<TObject, TKey> changes)
+        public override void OnInner(Change<TObject, TKey> refresh, TKey key)
         {
-            _pendingSource = _pendingSource is null
-                ? changes
-                : new ChangeSet<TObject, TKey>(_pendingSource.Concat(changes));
-
-            foreach (var change in changes.ToConcreteType())
-            {
-                _sourceTouched.Add(change.Key);
-
-                switch (change.Reason)
-                {
-                    case ChangeReason.Add or ChangeReason.Update:
-                        var item = change.Current;
-                        var key = change.Key;
-                        _context.Track(key, reEvaluator(item, key).Select(_ => new Change<TObject, TKey>(ChangeReason.Refresh, key, item)));
-                        break;
-
-                    case ChangeReason.Remove:
-                        _context.Track(change.Key, null);
-                        break;
-                }
-            }
-        }
-
-        public void OnInner(Change<TObject, TKey> refresh, TKey key)
-        {
-            // Suppress refresh for any key the source has touched in the same drain.
-            // Covers Add+Refresh redundancy (the new value was just delivered) and the
-            // Add+Remove+Refresh sequence (item no longer exists, refresh would be invalid).
             if (_sourceTouched.Contains(key))
             {
                 return;
             }
 
             (_pendingRefreshes ??= []).Add(refresh);
-
-            // Buffered mode: defer the flush to a scheduled drain so refreshes accumulate across
-            // drains until the window elapses. Bufferless mode flushes on every drain via Emit.
-            if (buffer is { } window && _bufferTimer is null)
-            {
-                _bufferTimer = _context.ScheduleEmit(window, scheduler, MarkBufferFired);
-            }
         }
 
-        public void Emit(IObserver<IChangeSet<TObject, TKey>> observer)
+        public override void Emit(IObserver<IChangeSet<TObject, TKey>> observer)
         {
             _sourceTouched.Clear();
 
-            var source = _pendingSource;
+            var pending = _pendingSource;
             _pendingSource = null;
-            if (source is { Count: > 0 })
+            if (pending is { Count: > 0 })
             {
-                observer.OnNext(source);
-            }
-
-            var shouldFlush = buffer is null || _bufferTimerFired;
-            if (!shouldFlush)
-            {
-                return;
+                observer.OnNext(pending);
             }
 
             var refreshes = _pendingRefreshes;
             _pendingRefreshes = null;
-            _bufferTimer = null;
-            _bufferTimerFired = false;
-
             if (refreshes is { Count: > 0 })
             {
                 observer.OnNext(new ChangeSet<TObject, TKey>(refreshes));
             }
         }
 
-        private void MarkBufferFired() => _bufferTimerFired = true;
+        protected override void OnItemAdded(TObject item, TKey key)
+        {
+            _sourceTouched.Add(key);
+            Context.Track(key, reEvaluator(item, key).Select(_ => new Change<TObject, TKey>(ChangeReason.Refresh, key, item)));
+        }
+
+        protected override void OnItemUpdated(TObject current, TObject previous, TKey key) => OnItemAdded(current, key);
+
+        protected override void OnItemRemoved(TObject item, TKey key)
+        {
+            _sourceTouched.Add(key);
+            Context.Track(key, null);
+        }
+
+        protected override void OnItemRefreshed(TObject item, TKey key) => _sourceTouched.Add(key);
+
+        protected override void OnChangeSetProcessed(IChangeSet<TObject, TKey> changes) =>
+            _pendingSource = _pendingSource is null
+                ? changes
+                : new ChangeSet<TObject, TKey>(_pendingSource.Concat(changes));
+    }
+
+    /// <summary>
+    /// Buffered AutoRefresh: source changes flow through immediately; refreshes are collected into a
+    /// time-bounded buffer and emitted as a single <see cref="ChangeSet{TObject, TKey}"/> per window,
+    /// deduplicated by key within the window. The buffered stream is routed through
+    /// <see cref="ICacheOrchestratorContext{TKey, TInner}.Serialize"/> so the per-window flush runs
+    /// under the same serialization gate as source and inner events.
+    /// </summary>
+    private sealed class BufferedOrchestrator : CacheChangeHandlerBase<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>, IDisposable
+    {
+        private readonly Subject<Change<TObject, TKey>> _refreshes = new();
+        private readonly HashSet<TKey> _dedupBuffer = [];
+        private readonly Func<TObject, TKey, IObservable<TAny>> _reEvaluator;
+        private readonly TimeSpan _window;
+        private readonly IScheduler _scheduler;
+        private IChangeSet<TObject, TKey>? _pendingSource;
+        private List<Change<TObject, TKey>>? _bufferedRefreshes;
+        private IDisposable? _bufferSubscription;
+        private bool _shouldFlushBuffered;
+
+        public BufferedOrchestrator(Func<TObject, TKey, IObservable<TAny>> reEvaluator, TimeSpan window, IScheduler scheduler)
+        {
+            _reEvaluator = reEvaluator;
+            _window = window;
+            _scheduler = scheduler;
+        }
+
+        public void Dispose()
+        {
+            _bufferSubscription?.Dispose();
+            _refreshes.Dispose();
+        }
+
+        public override void OnInner(Change<TObject, TKey> refresh, TKey key)
+        {
+            _bufferSubscription ??= Context.Serialize(_refreshes.Buffer(_window, _scheduler)).Subscribe(OnRefreshBatch);
+            _refreshes.OnNext(refresh);
+        }
+
+        public override void Emit(IObserver<IChangeSet<TObject, TKey>> observer)
+        {
+            var pending = _pendingSource;
+            _pendingSource = null;
+            if (pending is { Count: > 0 })
+            {
+                observer.OnNext(pending);
+            }
+
+            if (!_shouldFlushBuffered)
+            {
+                return;
+            }
+
+            _shouldFlushBuffered = false;
+            var refreshes = _bufferedRefreshes;
+            _bufferedRefreshes = null;
+            if (refreshes is { Count: > 0 })
+            {
+                observer.OnNext(new ChangeSet<TObject, TKey>(refreshes));
+            }
+        }
+
+        protected override void OnItemAdded(TObject item, TKey key) =>
+            Context.Track(key, _reEvaluator(item, key).Select(_ => new Change<TObject, TKey>(ChangeReason.Refresh, key, item)));
+
+        protected override void OnItemRemoved(TObject item, TKey key) => Context.Track(key, null);
+
+        protected override void OnChangeSetProcessed(IChangeSet<TObject, TKey> changes) =>
+            _pendingSource = _pendingSource is null
+                ? changes
+                : new ChangeSet<TObject, TKey>(_pendingSource.Concat(changes));
+
+        private void OnRefreshBatch(IList<Change<TObject, TKey>> batch)
+        {
+            if (batch.Count == 0)
+            {
+                return;
+            }
+
+            var batched = _bufferedRefreshes ??= [];
+            foreach (var change in batch)
+            {
+                if (_dedupBuffer.Add(change.Key))
+                {
+                    batched.Add(change);
+                }
+            }
+
+            _dedupBuffer.Clear();
+            _shouldFlushBuffered = true;
+        }
     }
 }

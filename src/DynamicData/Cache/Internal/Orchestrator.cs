@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Internal;
@@ -94,11 +93,6 @@ internal sealed class Orchestrator<TSource, TKey, TInner, TResult>(
         }
 
         public IObservable<T> Serialize<T>(IObservable<T> observable) => observable.SynchronizeSafe(_queue);
-
-        public IDisposable ScheduleEmit(TimeSpan dueTime, IScheduler scheduler, Action? onFire = null) =>
-            Observable.Timer(dueTime, scheduler)
-                .SynchronizeSafe(_queue)
-                .Subscribe(_ => onFire?.Invoke());
 
         private void SubscribeToSource(IObservable<IChangeSet<TSource, TKey>> source) =>
             _sourceSubscription.Disposable = source

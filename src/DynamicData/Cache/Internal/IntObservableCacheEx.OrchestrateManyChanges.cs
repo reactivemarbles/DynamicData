@@ -50,40 +50,17 @@ internal static partial class IntObservableCacheEx
             Func<TSource, TKey, IObservable<TInner>> innerFactory,
             Action<ChangeAwareCache<TOutput, TKey>, Change<TSource, TKey>> onSourceChange,
             Action<ChangeAwareCache<TOutput, TKey>, TKey, TSource, TInner> onInner)
-        : ICacheOrchestrator<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>>
+        : CacheChangeHandlerBase<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>>
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull
         where TOutput : notnull
     {
         private readonly ChangeAwareCache<TOutput, TKey> _cache = new();
-        private ICacheOrchestratorContext<TKey, (TSource Item, TInner Value)> _context = null!;
 
-        public void Initialize(ICacheOrchestratorContext<TKey, (TSource Item, TInner Value)> context) => _context = context;
+        public override void OnInner((TSource Item, TInner Value) value, TKey key) => onInner(_cache, key, value.Item, value.Value);
 
-        public void OnSourceChangeSet(IChangeSet<TSource, TKey> changes)
-        {
-            foreach (var change in changes.ToConcreteType())
-            {
-                onSourceChange(_cache, change);
-
-                switch (change.Reason)
-                {
-                    case ChangeReason.Add or ChangeReason.Update:
-                        var item = change.Current;
-                        _context.Track(change.Key, innerFactory(item, change.Key).Select(value => (Item: item, Value: value)));
-                        break;
-
-                    case ChangeReason.Remove:
-                        _context.Track(change.Key, null);
-                        break;
-                }
-            }
-        }
-
-        public void OnInner((TSource Item, TInner Value) value, TKey key) => onInner(_cache, key, value.Item, value.Value);
-
-        public void Emit(IObserver<IChangeSet<TOutput, TKey>> observer)
+        public override void Emit(IObserver<IChangeSet<TOutput, TKey>> observer)
         {
             var captured = _cache.CaptureChanges();
             if (captured.Count > 0)
@@ -91,5 +68,26 @@ internal static partial class IntObservableCacheEx
                 observer.OnNext(captured);
             }
         }
+
+        protected override void OnItemAdded(TSource item, TKey key)
+        {
+            onSourceChange(_cache, new Change<TSource, TKey>(ChangeReason.Add, key, item));
+            Context.Track(key, innerFactory(item, key).Select(value => (Item: item, Value: value)));
+        }
+
+        protected override void OnItemUpdated(TSource current, TSource previous, TKey key)
+        {
+            onSourceChange(_cache, new Change<TSource, TKey>(ChangeReason.Update, key, current, previous));
+            Context.Track(key, innerFactory(current, key).Select(value => (Item: current, Value: value)));
+        }
+
+        protected override void OnItemRemoved(TSource item, TKey key)
+        {
+            onSourceChange(_cache, new Change<TSource, TKey>(ChangeReason.Remove, key, item));
+            Context.Track(key, null);
+        }
+
+        protected override void OnItemRefreshed(TSource item, TKey key) =>
+            onSourceChange(_cache, new Change<TSource, TKey>(ChangeReason.Refresh, key, item));
     }
 }

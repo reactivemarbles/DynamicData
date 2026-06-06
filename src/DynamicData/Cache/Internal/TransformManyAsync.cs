@@ -22,13 +22,12 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
         source.OrchestrateMany(new Orchestrator(transformer, equalityComparer, comparer, errorHandler))
               .SubscribeSafe(observer));
 
-    private sealed class Orchestrator : ICacheOrchestrator<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
+    private sealed class Orchestrator : CacheChangeHandlerBase<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
     {
         private readonly Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey> _cache = new();
         private readonly ChangeSetMergeTracker<TDestination, TDestinationKey> _tracker;
         private readonly Func<TSource, TKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> _transformer;
         private readonly Action<Error<TSource, TKey>>? _errorHandler;
-        private ICacheOrchestratorContext<TKey, IChangeSet<TDestination, TDestinationKey>> _context = null!;
 
         public Orchestrator(
                 Func<TSource, TKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> transformer,
@@ -41,41 +40,39 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
             _tracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => _cache.Items, comparer, equalityComparer);
         }
 
-        public void Initialize(ICacheOrchestratorContext<TKey, IChangeSet<TDestination, TDestinationKey>> context) => _context = context;
+        public override void OnInner(IChangeSet<TDestination, TDestinationKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
 
-        public void OnSourceChangeSet(IChangeSet<TSource, TKey> changes)
+        public override void Emit(IObserver<IChangeSet<TDestination, TDestinationKey>> observer) => _tracker.EmitChanges(observer);
+
+        protected override void OnItemAdded(TSource item, TKey key) => SubscribeChild(item, key);
+
+        protected override void OnItemUpdated(TSource current, TSource previous, TKey key)
         {
-            foreach (var change in changes.ToConcreteType())
+            var prior = _cache.Lookup(key);
+            SubscribeChild(current, key);
+            if (prior.HasValue)
             {
-                switch (change.Reason)
-                {
-                    case ChangeReason.Add or ChangeReason.Update:
-                        var previous = _cache.Lookup(change.Key);
-                        var entry = new ChangeSetCache<TDestination, TDestinationKey>(_context.Serialize(BuildInner(change.Current, change.Key)));
-                        _cache.AddOrUpdate(entry, change.Key);
-                        _context.Track(change.Key, entry.Source);
-                        if (previous.HasValue)
-                        {
-                            _tracker.RemoveItems(previous.Value.Cache.KeyValues);
-                        }
-                        break;
-
-                    case ChangeReason.Remove:
-                        if (_cache.Lookup(change.Key) is { HasValue: true } removed)
-                        {
-                            _cache.Remove(change.Key);
-                            _tracker.RemoveItems(removed.Value.Cache.KeyValues);
-                        }
-
-                        _context.Track(change.Key, null);
-                        break;
-                }
+                _tracker.RemoveItems(prior.Value.Cache.KeyValues);
             }
         }
 
-        public void OnInner(IChangeSet<TDestination, TDestinationKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
+        protected override void OnItemRemoved(TSource item, TKey key)
+        {
+            if (_cache.Lookup(key) is { HasValue: true } removed)
+            {
+                _cache.Remove(key);
+                _tracker.RemoveItems(removed.Value.Cache.KeyValues);
+            }
 
-        public void Emit(IObserver<IChangeSet<TDestination, TDestinationKey>> observer) => _tracker.EmitChanges(observer);
+            Context.Track(key, null);
+        }
+
+        private void SubscribeChild(TSource item, TKey key)
+        {
+            var entry = new ChangeSetCache<TDestination, TDestinationKey>(Context.Serialize(BuildInner(item, key)));
+            _cache.AddOrUpdate(entry, key);
+            Context.Track(key, entry.Source);
+        }
 
         private IObservable<IChangeSet<TDestination, TDestinationKey>> BuildInner(TSource obj, TKey key) => _errorHandler is null
             ? Observable.Defer(() => _transformer(obj, key))

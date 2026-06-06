@@ -39,7 +39,7 @@ internal static partial class IntObservableCacheEx
             source.OrchestrateMany(new MergedOrchestrator<TSource, TKey, TDest, TDestKey>(changeSetSelector, equalityComparer, comparer, reevalOnRefresh))
                   .SubscribeSafe(observer));
 
-    private sealed class MergedOrchestrator<TSource, TKey, TDest, TDestKey> : ICacheOrchestrator<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>>
+    private sealed class MergedOrchestrator<TSource, TKey, TDest, TDestKey> : CacheChangeHandlerBase<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>>
         where TSource : notnull
         where TKey : notnull
         where TDest : notnull
@@ -49,7 +49,6 @@ internal static partial class IntObservableCacheEx
         private readonly ChangeSetMergeTracker<TDest, TDestKey> _tracker;
         private readonly Func<TSource, TKey, IObservable<IChangeSet<TDest, TDestKey>>> _changeSetSelector;
         private readonly bool _reevalOnRefresh;
-        private ICacheOrchestratorContext<TKey, IChangeSet<TDest, TDestKey>> _context = null!;
 
         public MergedOrchestrator(
                 Func<TSource, TKey, IObservable<IChangeSet<TDest, TDestKey>>> changeSetSelector,
@@ -62,49 +61,48 @@ internal static partial class IntObservableCacheEx
             _tracker = new ChangeSetMergeTracker<TDest, TDestKey>(() => _cache.Items, comparer, equalityComparer);
         }
 
-        public void Initialize(ICacheOrchestratorContext<TKey, IChangeSet<TDest, TDestKey>> context) => _context = context;
+        public override void OnInner(IChangeSet<TDest, TDestKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
 
-        public void OnSourceChangeSet(IChangeSet<TSource, TKey> changes)
+        public override void Emit(IObserver<IChangeSet<TDest, TDestKey>> observer) => _tracker.EmitChanges(observer);
+
+        protected override void OnItemAdded(TSource item, TKey key) => SubscribeChild(item, key);
+
+        protected override void OnItemUpdated(TSource current, TSource previous, TKey key)
         {
-            foreach (var change in changes.ToConcreteType())
+            var prior = _cache.Lookup(key);
+            SubscribeChild(current, key);
+            if (prior.HasValue)
             {
-                switch (change.Reason)
-                {
-                    case ChangeReason.Add or ChangeReason.Update:
-                        var previous = _cache.Lookup(change.Key);
-                        var entry = new ChangeSetCache<TDest, TDestKey>(_context.Serialize(_changeSetSelector(change.Current, change.Key).IgnoreSameReferenceUpdate()));
-                        _cache.AddOrUpdate(entry, change.Key);
-                        _context.Track(change.Key, entry.Source);
-                        if (previous.HasValue)
-                        {
-                            _tracker.RemoveItems(previous.Value.Cache.KeyValues);
-                        }
-                        break;
-
-                    case ChangeReason.Remove:
-                        if (_cache.Lookup(change.Key) is { HasValue: true } removed)
-                        {
-                            // Remove from _cache BEFORE telling the tracker, so the tracker's re-evaluation
-                            // does not consider this entry's items as candidates for "best value" selection.
-                            _cache.Remove(change.Key);
-                            _tracker.RemoveItems(removed.Value.Cache.KeyValues);
-                        }
-
-                        _context.Track(change.Key, null);
-                        break;
-
-                    case ChangeReason.Refresh when _reevalOnRefresh:
-                        if (_cache.Lookup(change.Key) is { HasValue: true } current)
-                        {
-                            _tracker.RefreshItems(current.Value.Cache.Keys);
-                        }
-                        break;
-                }
+                _tracker.RemoveItems(prior.Value.Cache.KeyValues);
             }
         }
 
-        public void OnInner(IChangeSet<TDest, TDestKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
+        protected override void OnItemRemoved(TSource item, TKey key)
+        {
+            if (_cache.Lookup(key) is { HasValue: true } removed)
+            {
+                // Remove from _cache BEFORE telling the tracker, so the tracker's re-evaluation
+                // does not consider this entry's items as candidates for "best value" selection.
+                _cache.Remove(key);
+                _tracker.RemoveItems(removed.Value.Cache.KeyValues);
+            }
 
-        public void Emit(IObserver<IChangeSet<TDest, TDestKey>> observer) => _tracker.EmitChanges(observer);
+            Context.Track(key, null);
+        }
+
+        protected override void OnItemRefreshed(TSource item, TKey key)
+        {
+            if (_reevalOnRefresh && _cache.Lookup(key) is { HasValue: true } current)
+            {
+                _tracker.RefreshItems(current.Value.Cache.Keys);
+            }
+        }
+
+        private void SubscribeChild(TSource item, TKey key)
+        {
+            var entry = new ChangeSetCache<TDest, TDestKey>(Context.Serialize(_changeSetSelector(item, key).IgnoreSameReferenceUpdate()));
+            _cache.AddOrUpdate(entry, key);
+            Context.Track(key, entry.Source);
+        }
     }
 }
