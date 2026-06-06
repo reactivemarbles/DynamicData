@@ -25,5 +25,14 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
-    private const int DefaultSortResetThreshold = 100;
+    /// <summary>
+    /// Suppress refresh notifications.
+    /// </summary>
+    /// <typeparam name="TObject">The object of the change set.</typeparam>
+    /// <typeparam name="TKey">The key of the change set.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to strip refresh events.</param>
+    /// <returns>An observable which emits change sets.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> SuppressRefresh<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        where TObject : notnull
+        where TKey : notnull => source.WhereReasonsAreNot(ChangeReason.Refresh);
 }
