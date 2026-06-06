@@ -71,27 +71,4 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
         => source.OnItemAdded((obj, _) => addAction(obj));
-
-    private static IObservable<IChangeSet<TObject, TKey>> OnChangeAction<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Predicate<Change<TObject, TKey>> predicate, Action<Change<TObject, TKey>> changeAction)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        return source.Do(changes =>
-        {
-            foreach (var change in changes.ToConcreteType())
-            {
-                if (!predicate(change))
-                {
-                    continue;
-                }
-
-                changeAction(change);
-            }
-        });
-    }
-
-    private static IObservable<IChangeSet<TObject, TKey>> OnChangeAction<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ChangeReason reason, Action<TObject, TKey> action)
-        where TObject : notnull
-        where TKey : notnull
-        => source.OnChangeAction(change => change.Reason == reason, change => action(change.Current, change.Key));
 }

@@ -25,7 +25,6 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
-#if SUPPORTS_ASYNC_DISPOSABLE
     /// <summary>
     /// <para>
     /// Disposes items implementing <see cref="IDisposable"/> or <see cref="IAsyncDisposable"/> when they are removed or replaced,
@@ -78,5 +77,4 @@ public static partial class ObservableCacheEx
         => Cache.Internal.AsyncDisposeMany<TObject, TKey>.Create(
             source: source,
             disposalsCompletedAccessor: disposalsCompletedAccessor);
-#endif
 }

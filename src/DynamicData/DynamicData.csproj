@@ -35,4 +35,9 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
     </Compile>
   </ItemGroup>
 
+  <!-- AsyncDisposeMany is only supported on platforms that have IAsyncDisposable. -->
+  <ItemGroup Condition="!$(DefineConstants.Contains('SUPPORTS_ASYNC_DISPOSABLE'))">
+    <Compile Remove="Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
+  </ItemGroup>
+
 </Project>

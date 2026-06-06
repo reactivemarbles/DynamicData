@@ -116,6 +116,4 @@ public static partial class ObservableCacheEx
 
         return new Sort<TObject, TKey>(source, comparer, sortOptimisations, null, resorter, resetThreshold).Run();
     }
-
-    private const int DefaultSortResetThreshold = 100;
 }

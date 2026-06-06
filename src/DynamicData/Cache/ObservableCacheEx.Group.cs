@@ -163,10 +163,4 @@ public static partial class ObservableCacheEx
 
         return source.Group(groupSelectorKeyObservable.Select(AdaptSelector<TObject, TKey, TGroupKey>), regrouper);
     }
-
-    // TODO: Apply the Adapter to more places
-    private static Func<TObject, TKey, TResult> AdaptSelector<TObject, TKey, TResult>(Func<TObject, TResult> other)
-        where TObject : notnull
-        where TKey : notnull
-        where TResult : notnull => (obj, _) => other(obj);
 }

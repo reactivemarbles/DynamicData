@@ -178,20 +178,4 @@ public static partial class ObservableCacheEx
 
         return source.Transform(transformFactory, forceTransform.ForForced<TSource, TKey>());
     }
-
-    private static IObservable<Func<TSource, TKey, bool>>? ForForced<TSource, TKey>(this IObservable<Unit>? source)
-        where TKey : notnull => source?.Select(
-            _ =>
-            {
-                static bool Transformer(TSource item, TKey key) => true;
-                return (Func<TSource, TKey, bool>)Transformer;
-            });
-
-    private static IObservable<Func<TSource, TKey, bool>>? ForForced<TSource, TKey>(this IObservable<Func<TSource, bool>>? source)
-        where TKey : notnull => source?.Select(
-            condition =>
-            {
-                bool Transformer(TSource item, TKey key) => condition(item);
-                return (Func<TSource, TKey, bool>)Transformer;
-            });
 }
