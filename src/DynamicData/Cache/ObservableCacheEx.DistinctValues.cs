@@ -1,0 +1,53 @@
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
+using DynamicData.Binding;
+using DynamicData.Cache;
+using DynamicData.Cache.Internal;
+
+// ReSharper disable once CheckNamespace
+
+namespace DynamicData;
+
+/// <summary>
+/// Extensions for dynamic data.
+/// </summary>
+public static partial class ObservableCacheEx
+{
+    /// <summary>
+    ///     Selects distinct values from the source.
+    /// </summary>
+    /// <typeparam name="TObject">The type object from which the distinct values are selected.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to extract distinct values.</param>
+    /// <param name="valueSelector">The <see cref="Func{TObject, TValue}"/> value selector.</param>
+    /// <returns>An observable which will emit distinct change sets.</returns>
+    /// <remarks>
+    /// Due to it's nature only adds or removes can be returned.
+    /// <para><b>Worth noting:</b> Reference counting assumes value equality is transitive. Mutable value objects with inconsistent <c>Equals</c> implementations can corrupt ref counts.</para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <seealso cref="ObservableListEx.DistinctValues"/>
+    public static IObservable<IDistinctChangeSet<TValue>> DistinctValues<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
+        where TObject : notnull
+        where TKey : notnull
+        where TValue : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+
+        return Observable.Create<IDistinctChangeSet<TValue>>(observer => new DistinctCalculator<TObject, TKey, TValue>(source, valueSelector).Run().SubscribeSafe(observer));
+    }
+}
