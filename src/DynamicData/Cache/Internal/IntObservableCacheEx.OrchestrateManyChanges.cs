@@ -57,7 +57,7 @@ internal static partial class IntObservableCacheEx
 
         public override void OnInner((TSource Item, TInner Value) value, TKey key) => onInner(_cache, key, value.Item, value.Value);
 
-        public override void OnDrainComplete()
+        public override void OnDrainComplete(bool sourcesCompleted)
         {
             while (true)
             {

@@ -35,17 +35,4 @@ internal interface ICacheOrchestratorContext<TKey, TInner>
     /// <param name="observable">The observable to wrap.</param>
     /// <returns>A new observable whose <c>OnNext</c> delivery runs under the orchestrator's queue lock.</returns>
     IObservable<T> Serialize<T>(IObservable<T> observable);
-
-    /// <summary>
-    /// Subscribes to an auxiliary observable whose lifetime contributes to the orchestrator's
-    /// completion accounting. The downstream stream cannot complete until every auxiliary
-    /// subscription either completes or is disposed. Emissions are routed through the shared
-    /// delivery queue and dispatched to <paramref name="onNext"/>; errors propagate to the
-    /// downstream emitter.
-    /// </summary>
-    /// <typeparam name="T">Value type emitted by the auxiliary observable.</typeparam>
-    /// <param name="observable">The auxiliary observable.</param>
-    /// <param name="onNext">Callback invoked under the queue lock for each emission.</param>
-    /// <returns>A disposable that cancels the subscription. Disposing decrements completion accounting.</returns>
-    IDisposable TrackAuxiliary<T>(IObservable<T> observable, Action<T> onNext);
 }

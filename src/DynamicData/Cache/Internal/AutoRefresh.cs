@@ -6,6 +6,8 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class AutoRefresh<TObject, TKey, TAny>(
@@ -64,17 +66,20 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
 
             if (buffer is { } window)
             {
-                // TrackAuxiliary contributes to completion accounting so source/inner completion
-                // cannot terminate the stream while a buffered refresh is still pending.
-                _timerSubscription.Disposable ??= Context.TrackAuxiliary(Observable.Timer(window, scheduler!), _ => FlushPending());
+                _timerSubscription.Disposable ??= Context.Serialize(Observable.Timer(window, scheduler!))
+                    .SubscribeSafe(_ => FlushPending(), Emitter.OnError);
             }
         }
 
-        public override void OnDrainComplete()
+        public override void OnDrainComplete(bool sourcesCompleted)
         {
             _sourceTouched.Clear();
 
-            if (buffer is null)
+            // When sources have all completed, flush any pending refreshes synchronously here so they
+            // surface before the runtime fires OnCompleted downstream. This covers both the unbuffered
+            // path (which always flushes per drain) and the buffered path whose timer would otherwise
+            // be cancelled by the imminent stream termination.
+            if (sourcesCompleted || buffer is null)
             {
                 // Loop until pending is empty: each Emitter.OnNext triggers a reentrant drain that
                 // may add new refreshes via OnInner before the orchestrator regains control.

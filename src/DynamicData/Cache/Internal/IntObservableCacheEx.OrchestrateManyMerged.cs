@@ -63,7 +63,7 @@ internal static partial class IntObservableCacheEx
 
         public override void OnInner(IChangeSet<TDest, TDestKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
 
-        public override void OnDrainComplete()
+        public override void OnDrainComplete(bool sourcesCompleted)
         {
             // Loop until tracker is fully drained. Each Emitter.OnNext triggers a reentrant drain
             // that may deliver concurrent inner emissions into the tracker without firing

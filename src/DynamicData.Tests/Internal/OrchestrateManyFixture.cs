@@ -512,7 +512,7 @@ public sealed class OrchestrateManyFixture
             _cache.AddOrUpdate(new TestItem(parentKey, child), parentKey);
         }
 
-        public void OnDrainComplete()
+        public void OnDrainComplete(bool sourcesCompleted)
         {
             var changes = _cache.CaptureChanges();
             if (changes.Count > 0)

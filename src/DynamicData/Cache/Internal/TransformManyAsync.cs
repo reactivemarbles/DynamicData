@@ -42,7 +42,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
 
         public override void OnInner(IChangeSet<TDestination, TDestinationKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
 
-        public override void OnDrainComplete()
+        public override void OnDrainComplete(bool sourcesCompleted)
         {
             while (_tracker.EmitChanges(Emitter))
             {

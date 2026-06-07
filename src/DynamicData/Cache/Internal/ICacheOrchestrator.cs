@@ -49,5 +49,11 @@ internal interface ICacheOrchestrator<TSource, TKey, TInner, TResult>
     /// the emitter here. May be invoked multiple times per source event when the orchestrator's own
     /// emit triggers a reentrant drain; subsequent calls are no-ops when there is nothing to flush.
     /// </summary>
-    void OnDrainComplete();
+    /// <param name="sourcesCompleted">
+    /// <see langword="true"/> when the source changeset and every tracked inner observable have all
+    /// completed, signalling that this is the last opportunity to emit before the downstream
+    /// observer receives <c>OnCompleted</c>. Implementations holding deferred state (timer-armed
+    /// buffers, debounced batches) should flush synchronously when this is <see langword="true"/>.
+    /// </param>
+    void OnDrainComplete(bool sourcesCompleted);
 }

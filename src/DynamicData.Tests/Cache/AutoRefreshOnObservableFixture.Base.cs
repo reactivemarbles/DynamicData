@@ -325,18 +325,18 @@ public static partial class AutoRefreshOnObservableFixture
             source.Complete();
             item.Complete();
 
-            results.HasCompleted.Should().BeFalse(
-                "completion must wait for the in-flight buffer window to flush its pending refresh");
-
-
-            // UUT Action (advance the scheduler to the original window boundary)
-            scheduler.AdvanceTo(TimeSpan.FromSeconds(15).Ticks);
-
             results.Error.Should().BeNull();
             results.RecordedChangeSets.SelectMany(static cs => cs).Where(static c => c.Reason is ChangeReason.Refresh).Should().HaveCount(1,
                 "a pending buffered refresh must surface before completion, even when source and reevaluator have already completed");
             results.HasCompleted.Should().BeTrue(
-                "all upstream subscriptions and the buffer window have completed");
+                "completion of all upstream subscriptions triggers an immediate flush of pending refreshes");
+
+
+            // UUT Action (advance past the original window boundary; the timer was cancelled when sources completed)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(15).Ticks);
+
+            results.RecordedChangeSets.SelectMany(static cs => cs).Where(static c => c.Reason is ChangeReason.Refresh).Should().HaveCount(1,
+                "the pending timer was disposed when sources completed; no second refresh should fire at the window boundary");
         }
 
         [Fact]
