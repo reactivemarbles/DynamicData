@@ -93,6 +93,22 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult>(IObservable<
 
         public IObservable<T> Serialize<T>(IObservable<T> observable) => observable.SynchronizeSafe(_queue);
 
+        public IDisposable TrackAuxiliary<T>(IObservable<T> observable, Action<T> onNext)
+        {
+            // Auxiliary subscriptions participate in completion accounting: counter is incremented
+            // here and decremented by Finally when the subscription ends (completion, error, or
+            // disposal). This keeps the downstream stream alive until any in-flight auxiliary
+            // work (typically a Buffer/Timer-driven flush) has had a chance to emit.
+            Interlocked.Increment(ref _subscriptionCounter);
+
+            return observable
+                .SynchronizeSafe(_queue)
+                .Finally(DecrementSubscriptionCount)
+                .SubscribeSafe(
+                    onNext: onNext,
+                    onError: _emitter.OnError);
+        }
+
         private void SubscribeToSource(IObservable<IChangeSet<TSource, TKey>> source) =>
             _sourceSubscription.Disposable = source
                 .SynchronizeSafe(_queue)

@@ -272,6 +272,113 @@ public sealed class OrchestrateManyFixture
             "cross-feeding OrchestrateMany subscriptions should not deadlock");
     }
 
+    /// <summary>
+    /// Concurrent source/inner emissions during the orchestrator's per-drain emit must not be
+    /// lost: items delivered via the reentrant drain inside Emitter.OnNext settle into the
+    /// orchestrator's state and must be flushed before drain exits, otherwise downstream
+    /// observers miss them.
+    /// </summary>
+    [Fact]
+    public async Task ReentrantDrain_ConcurrentInnerEmissions_AllItemsReachDownstream()
+    {
+        var producerCount = 8;
+        var emissionsPerProducer = 200;
+        var totalEmissions = producerCount * emissionsPerProducer;
+
+        using var source = new SourceCache<TestItem, int>(x => x.Key);
+
+        // Per-source-item inner subject so each producer task has a stable inner stream to push into.
+        var innerSubjects = new Dictionary<int, Subject<string>>();
+        for (var i = 1; i <= producerCount; i++)
+        {
+            innerSubjects[i] = new Subject<string>();
+        }
+
+        var orchestrator = new TestOrchestrator(key => innerSubjects[key]);
+        var observer = new TestObserver();
+        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+
+        // Add a source item per producer to subscribe each inner subject.
+        for (var i = 1; i <= producerCount; i++)
+        {
+            source.AddOrUpdate(new TestItem(i, "init"));
+        }
+
+        // Reset child-call tracking captured during init so we count only the burst below.
+        lock (orchestrator.ChildCalls)
+        {
+            orchestrator.ChildCalls.Clear();
+        }
+
+        using var barrier = new Barrier(producerCount);
+        var producers = Enumerable.Range(1, producerCount).Select(producerId => Task.Run(() =>
+        {
+            barrier.SignalAndWait();
+            for (var i = 0; i < emissionsPerProducer; i++)
+            {
+                innerSubjects[producerId].OnNext($"{producerId}-{i}");
+            }
+        })).ToArray();
+
+        await Task.WhenAll(producers);
+
+        // Drain may finish on a producer thread after WhenAll observes the task completing, so
+        // settle briefly to let any in-flight delivery finish.
+        await Task.Delay(50);
+
+        lock (orchestrator.ChildCalls)
+        {
+            orchestrator.ChildCalls.Count.Should().Be(totalEmissions,
+                "every concurrent inner emission must reach OnInner; reentrant drain during emit must not drop items");
+        }
+
+        foreach (var subj in innerSubjects.Values)
+        {
+            subj.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// The lambda overload of OrchestrateMany must build a fresh orchestrator per subscription;
+    /// the orchestrator holds mutable per-subscription state and reuse across subscribers corrupts
+    /// the first subscriber's context.
+    /// </summary>
+    [Fact]
+    public void LambdaOverload_MultipleSubscriptions_DoNotShareOrchestrator()
+    {
+        using var source = new SourceCache<TestItem, int>(x => x.Key);
+
+        var emitCalls = 0;
+        var contexts = new List<int>();
+
+        // Build a chain that captures whichever context (via the track callback's identity) the
+        // orchestrator received in Initialize. Two subscribers should each see their own context.
+        var observable = source.Connect().OrchestrateMany<TestItem, int, string, int>(
+            onSourceChangeSet: (changes, track) =>
+            {
+                // Capture an identity-stable token for the track delegate, proving each subscription
+                // has its own context. Hash code of the bound delegate target reflects the underlying
+                // OrchestratorContext instance.
+                lock (contexts)
+                {
+                    contexts.Add(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(track.Target!));
+                }
+            },
+            onInner: (_, _) => { },
+            onDrainComplete: _ => Interlocked.Increment(ref emitCalls));
+
+        using var subA = observable.Subscribe();
+        using var subB = observable.Subscribe();
+
+        source.AddOrUpdate(new TestItem(1, "item"));
+
+        lock (contexts)
+        {
+            contexts.Distinct().Count().Should().Be(2,
+                "each subscription must receive its own orchestrator instance with its own context");
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // Test Infrastructure
     // ═══════════════════════════════════════════════════════════════

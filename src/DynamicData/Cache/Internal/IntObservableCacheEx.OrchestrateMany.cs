@@ -2,6 +2,8 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Linq;
+
 namespace DynamicData.Cache.Internal;
 
 /// <summary>
@@ -55,7 +57,10 @@ internal static partial class IntObservableCacheEx
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull =>
-        source.OrchestrateMany(new LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(onSourceChangeSet, onInner, onDrainComplete));
+        // Defer ensures a fresh LambdaCacheOrchestrator per subscription; the orchestrator holds
+        // mutable per-subscription state in _context/_emitter, so reusing one instance across
+        // subscribers would let later Initialize calls corrupt earlier subscribers' state.
+        Observable.Defer(() => source.OrchestrateMany(new LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(onSourceChangeSet, onInner, onDrainComplete)));
 
     private sealed class LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(
             Action<IChangeSet<TSource, TKey>, Action<TKey, IObservable<TInner>?>> onSourceChangeSet,

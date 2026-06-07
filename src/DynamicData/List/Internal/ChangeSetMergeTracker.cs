@@ -65,13 +65,16 @@ internal sealed class ChangeSetMergeTracker<TObject>
         }
     }
 
-    public void EmitChanges(IObserver<IChangeSet<TObject>> observer)
+    public bool EmitChanges(IObserver<IChangeSet<TObject>> observer)
     {
         var changeSet = _resultList.CaptureChanges();
         if (changeSet.Count != 0)
         {
             observer.OnNext(changeSet);
+            return true;
         }
+
+        return false;
     }
 
     private void OnClear(Change<TObject> change) => _resultList.ClearOrRemoveMany(change);

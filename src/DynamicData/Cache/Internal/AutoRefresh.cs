@@ -64,10 +64,9 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
 
             if (buffer is { } window)
             {
-                // Arm a single-shot Timer if no window is currently running. Serialize routes the
-                // tick back through the orchestrator's gate so FlushPending runs under the same
-                // lock as source/inner events.
-                _timerSubscription.Disposable ??= Context.Serialize(Observable.Timer(window, scheduler!)).Subscribe(_ => FlushPending());
+                // TrackAuxiliary contributes to completion accounting so source/inner completion
+                // cannot terminate the stream while a buffered refresh is still pending.
+                _timerSubscription.Disposable ??= Context.TrackAuxiliary(Observable.Timer(window, scheduler!), _ => FlushPending());
             }
         }
 
@@ -77,7 +76,12 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
 
             if (buffer is null)
             {
-                FlushPending();
+                // Loop until pending is empty: each Emitter.OnNext triggers a reentrant drain that
+                // may add new refreshes via OnInner before the orchestrator regains control.
+                while (_pendingRefreshes.Count > 0)
+                {
+                    FlushPending();
+                }
             }
         }
 

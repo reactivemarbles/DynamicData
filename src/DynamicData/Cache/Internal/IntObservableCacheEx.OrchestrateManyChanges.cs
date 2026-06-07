@@ -59,9 +59,14 @@ internal static partial class IntObservableCacheEx
 
         public override void OnDrainComplete()
         {
-            var captured = _cache.CaptureChanges();
-            if (captured.Count > 0)
+            while (true)
             {
+                var captured = _cache.CaptureChanges();
+                if (captured.Count == 0)
+                {
+                    break;
+                }
+
                 Emitter.OnNext(captured);
             }
         }

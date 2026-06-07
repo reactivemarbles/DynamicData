@@ -294,6 +294,52 @@ public static partial class AutoRefreshOnObservableFixture
         }
 
         [Fact]
+        public void ChangeSetBufferIsGiven_SourceCompletesBeforeWindowExpires_PendingRefreshIsEmittedBeforeCompletion()
+        {
+            // Setup
+            using var source = new TestSourceCache<Item, int>(Item.SelectId);
+
+            using var item = new Item() { Id = 1 };
+            source.AddOrUpdate(item);
+
+            var scheduler = new TestScheduler();
+
+
+            // UUT Initialization
+            using var subscription = BuildUut(
+                    source:             source.Connect(),
+                    reevaluator:        Item.ObserveValueChanged,
+                    changeSetBuffer:    TimeSpan.FromSeconds(10),
+                    scheduler:          scheduler)
+                .ValidateSynchronization()
+                .ValidateChangeSets(Item.SelectId)
+                .RecordCacheItems(out var results);
+
+
+            // UUT Action (reevaluator fires at T=5, arms the buffer window for T=15)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(5).Ticks);
+            ++item.Value;
+
+
+            // UUT Action (complete the source and the reevaluator while the buffer window is still open)
+            source.Complete();
+            item.Complete();
+
+            results.HasCompleted.Should().BeFalse(
+                "completion must wait for the in-flight buffer window to flush its pending refresh");
+
+
+            // UUT Action (advance the scheduler to the original window boundary)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(15).Ticks);
+
+            results.Error.Should().BeNull();
+            results.RecordedChangeSets.SelectMany(static cs => cs).Where(static c => c.Reason is ChangeReason.Refresh).Should().HaveCount(1,
+                "a pending buffered refresh must surface before completion, even when source and reevaluator have already completed");
+            results.HasCompleted.Should().BeTrue(
+                "all upstream subscriptions and the buffer window have completed");
+        }
+
+        [Fact]
         public void NoChangeSetBuffer_AddAndRemoveInSameChangeset_NoRefreshEmitted()
         {
             // Setup

@@ -53,7 +53,12 @@ internal static partial class IntObservableCacheEx
 
         public override void OnInner(IChangeSet<TDest> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
 
-        public override void OnDrainComplete() => _tracker.EmitChanges(Emitter);
+        public override void OnDrainComplete()
+        {
+            while (_tracker.EmitChanges(Emitter))
+            {
+            }
+        }
 
         protected override void OnItemAdded(TSource item, TKey key) => SubscribeChild(item, key);
 
