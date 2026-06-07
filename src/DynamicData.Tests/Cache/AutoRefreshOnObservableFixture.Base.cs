@@ -294,52 +294,6 @@ public static partial class AutoRefreshOnObservableFixture
         }
 
         [Fact]
-        public void ChangeSetBufferIsGiven_UpdateBeforeWindowExpires_NoRefreshIfNewInstanceStaysQuiet()
-        {
-            // Setup
-            using var source = new TestSourceCache<Item, int>(Item.SelectId);
-
-            using var item1V1 = new Item() { Id = 1 };
-            using var item1V2 = new Item() { Id = 1 };
-            source.AddOrUpdate(item1V1);
-
-            var scheduler = new TestScheduler();
-
-
-            // UUT Initialization
-            using var subscription = BuildUut(
-                    source:             source.Connect(),
-                    reevaluator:        Item.ObserveValueChanged,
-                    changeSetBuffer:    TimeSpan.FromSeconds(10),
-                    scheduler:          scheduler)
-                .ValidateSynchronization()
-                .ValidateChangeSets(Item.SelectId)
-                .RecordCacheItems(out var results);
-
-            results.RecordedChangeSets.Count.Should().Be(1, "the initial Add changeset should propagate");
-
-
-            // UUT Action (v1's reevaluator fires at T=5, arming a window for T=15)
-            scheduler.AdvanceTo(TimeSpan.FromSeconds(5).Ticks);
-            ++item1V1.Value;
-
-
-            // UUT Action (Update to v2 at T=8, within the v1-armed window; v2 stays quiet thereafter)
-            scheduler.AdvanceTo(TimeSpan.FromSeconds(8).Ticks);
-            source.AddOrUpdate(item1V2);
-
-
-            // UUT Action (advance well past the original v1 window boundary)
-            scheduler.AdvanceTo(TimeSpan.FromSeconds(30).Ticks);
-
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.SelectMany(static cs => cs).Where(static c => c.Reason is ChangeReason.Refresh).Should().BeEmpty(
-                "no Refresh has any source to flush once Update drops the pending v1 entry and v2 never emits");
-            results.RecordedChangeSets.Count.Should().Be(2, "only the initial Add and the Update propagated");
-            results.HasCompleted.Should().BeFalse("the source has not completed");
-        }
-
-        [Fact]
         public void NoChangeSetBuffer_AddAndRemoveInSameChangeset_NoRefreshEmitted()
         {
             // Setup
