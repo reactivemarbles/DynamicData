@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
@@ -201,6 +202,59 @@ public sealed class OrchestrateManyFixture
         source.SetError(error);
 
         observer.Error.Should().BeSameAs(error);
+    }
+
+    [Fact]
+    public void InnerError_PropagatesAndTerminatesStream()
+    {
+        using var source = new SourceCache<TestItem, int>(x => x.Key);
+        var childSubjects = new List<Subject<string>>();
+        var observer = new TestObserver();
+        var orchestrator = new TestOrchestrator(key =>
+        {
+            var subj = new Subject<string>();
+            childSubjects.Add(subj);
+            return subj;
+        });
+        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+
+        source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
+        childSubjects.Should().HaveCount(1);
+
+        var error = new InvalidOperationException("inner-error");
+        childSubjects[0].OnError(error);
+
+        observer.Error.Should().BeSameAs(error,
+            "an inner observable error terminates the merged stream with the same error");
+        observer.IsCompleted.Should().BeFalse(
+            "an errored stream must not also complete");
+    }
+
+    [Fact]
+    public void SourceAlreadyCompleted_PropagatesCompletion()
+    {
+        var observer = new TestObserver();
+        var orchestrator = new TestOrchestrator();
+        using var sub = Observable.Empty<IChangeSet<TestItem, int>>()
+            .OrchestrateMany(orchestrator)
+            .Subscribe(observer);
+
+        observer.IsCompleted.Should().BeTrue(
+            "a pre-completed source must propagate completion through the orchestrator on subscribe");
+    }
+
+    [Fact]
+    public void SourceAlreadyErrored_PropagatesError()
+    {
+        var observer = new TestObserver();
+        var orchestrator = new TestOrchestrator();
+        var error = new InvalidOperationException("sync-error");
+        using var sub = Observable.Throw<IChangeSet<TestItem, int>>(error)
+            .OrchestrateMany(orchestrator)
+            .Subscribe(observer);
+
+        observer.Error.Should().BeSameAs(error,
+            "a synchronously-erroring source must propagate the error through the orchestrator");
     }
 
     [Fact]
