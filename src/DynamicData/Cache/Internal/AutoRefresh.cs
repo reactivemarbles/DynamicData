@@ -125,7 +125,10 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
 
         public override void OnInner(Change<TObject, TKey> refresh, TKey key)
         {
-            _bufferSubscription ??= Context.Serialize(_refreshes.Buffer(_window, _scheduler)).Subscribe(OnRefreshBatch);
+            _bufferSubscription ??= Context
+                .Serialize(_refreshes.Buffer(() => _refreshes.Take(1).Delay(_window, _scheduler)))
+                .Subscribe(OnRefreshBatch);
+
             _refreshes.OnNext(refresh);
         }
 
