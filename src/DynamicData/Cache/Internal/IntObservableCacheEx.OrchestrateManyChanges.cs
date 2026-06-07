@@ -46,11 +46,8 @@ internal static partial class IntObservableCacheEx
             source.OrchestrateMany(new ChangesOrchestrator<TSource, TKey, TInner, TOutput>(innerFactory, onSourceChange, onInner))
                   .SubscribeSafe(observer));
 
-    private sealed class ChangesOrchestrator<TSource, TKey, TInner, TOutput>(
-            Func<TSource, TKey, IObservable<TInner>> innerFactory,
-            Action<ChangeAwareCache<TOutput, TKey>, Change<TSource, TKey>> onSourceChange,
-            Action<ChangeAwareCache<TOutput, TKey>, TKey, TSource, TInner> onInner)
-        : CacheChangeHandlerBase<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>>
+    private sealed class ChangesOrchestrator<TSource, TKey, TInner, TOutput>(Func<TSource, TKey, IObservable<TInner>> innerFactory, Action<ChangeAwareCache<TOutput, TKey>, Change<TSource, TKey>> onSourceChange, Action<ChangeAwareCache<TOutput, TKey>, TKey, TSource, TInner> onInner)
+        : OrchestratorCacheChangeBase<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>>
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull
@@ -60,12 +57,12 @@ internal static partial class IntObservableCacheEx
 
         public override void OnInner((TSource Item, TInner Value) value, TKey key) => onInner(_cache, key, value.Item, value.Value);
 
-        public override void Emit(IObserver<IChangeSet<TOutput, TKey>> observer)
+        public override void OnDrainComplete()
         {
             var captured = _cache.CaptureChanges();
             if (captured.Count > 0)
             {
-                observer.OnNext(captured);
+                Emitter.OnNext(captured);
             }
         }
 

@@ -12,44 +12,41 @@ namespace DynamicData.Cache.Internal;
 /// <summary>
 /// Drives an <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> against a source
 /// changeset. <see cref="Run"/> returns an <see cref="IObservable{TResult}"/> that constructs a
-/// fresh per-subscription <see cref="Subscription"/> on each subscribe, so all per-subscription
-/// state owned by the <see cref="Subscription"/> is recreated on every subscribe.
+/// fresh per-subscription <see cref="OrchestratorContext"/> on each subscribe, so all per-subscription
+/// state owned by the <see cref="OrchestratorContext"/> is recreated on every subscribe.
 /// </summary>
 /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
 /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
 /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
 /// <typeparam name="TResult">Type delivered downstream.</typeparam>
-internal sealed class Orchestrator<TSource, TKey, TInner, TResult>(
-        IObservable<IChangeSet<TSource, TKey>> source,
-        ICacheOrchestrator<TSource, TKey, TInner, TResult> orchestrator)
+internal sealed class Orchestration<TSource, TKey, TInner, TResult>(IObservable<IChangeSet<TSource, TKey>> source, ICacheOrchestrator<TSource, TKey, TInner, TResult> orchestrator)
     where TSource : notnull
     where TKey : notnull
     where TInner : notnull
 {
-    public IObservable<TResult> Run() =>
-        Observable.Create<TResult>(observer => new Subscription(source, observer, orchestrator));
+    public IObservable<TResult> Run() => Observable.Create<TResult>(observer => new OrchestratorContext(source, observer, orchestrator));
 
-    private sealed class Subscription : ICacheOrchestratorContext<TKey, TInner>, IDisposable
+    private sealed class OrchestratorContext : ICacheOrchestratorContext<TKey, TInner>, IDisposable
     {
         private readonly KeyedDisposable<TKey> _innerSubscriptions = new();
         private readonly SingleAssignmentDisposable _sourceSubscription = new();
         private readonly SharedDeliveryQueue _queue;
-        private readonly IObserver<TResult> _observer;
+        private readonly DeliverySubQueue<TResult> _emitter;
         private readonly ICacheOrchestrator<TSource, TKey, TInner, TResult> _orchestrator;
         private int _subscriptionCounter = 1;
         private bool _isCompleted;
-        private bool _hasTerminated;
         private bool _disposed;
 
-        public Subscription(
-                IObservable<IChangeSet<TSource, TKey>> source,
-                IObserver<TResult> observer,
-                ICacheOrchestrator<TSource, TKey, TInner, TResult> orchestrator)
+        public OrchestratorContext(IObservable<IChangeSet<TSource, TKey>> source, IObserver<TResult> observer, ICacheOrchestrator<TSource, TKey, TInner, TResult> orchestrator)
         {
-            _observer = observer;
             _orchestrator = orchestrator;
             _queue = new SharedDeliveryQueue(onDrainComplete: OnDrainComplete);
-            _orchestrator.Initialize(this);
+
+            // Create the emitter sub-queue first (lowest index, drains last LIFO) so source-triggered
+            // sync inner emissions (higher index) deliver first and any orchestrator emit lands on the
+            // emitter after that work has settled.
+            _emitter = _queue.CreateQueue(observer);
+            _orchestrator.Initialize(this, _emitter);
             SubscribeToSource(source);
         }
 
@@ -64,6 +61,7 @@ internal sealed class Orchestrator<TSource, TKey, TInner, TResult>(
             _queue.Dispose();
             _sourceSubscription.Dispose();
             _innerSubscriptions.Dispose();
+            _emitter.Dispose();
         }
 
         public void Track(TKey key, IObservable<TInner>? observable)
@@ -88,7 +86,7 @@ internal sealed class Orchestrator<TSource, TKey, TInner, TResult>(
                 .Finally(DecrementSubscriptionCount)
                 .SubscribeSafe(
                     onNext: value => OnInner(value, key),
-                    onError: TerminalError,
+                    onError: _emitter.OnError,
                     onCompleted: () => _innerSubscriptions.Remove(key));
         }
 
@@ -99,7 +97,7 @@ internal sealed class Orchestrator<TSource, TKey, TInner, TResult>(
                 .SynchronizeSafe(_queue)
                 .SubscribeSafe(
                     onNext: OnSourceChangeSet,
-                    onError: TerminalError,
+                    onError: _emitter.OnError,
                     onCompleted: DecrementSubscriptionCount);
 
         private void OnSourceChangeSet(IChangeSet<TSource, TKey> changes)
@@ -110,7 +108,7 @@ internal sealed class Orchestrator<TSource, TKey, TInner, TResult>(
             }
             catch (Exception error)
             {
-                TerminalError(error);
+                _emitter.OnError(error);
             }
         }
 
@@ -122,35 +120,29 @@ internal sealed class Orchestrator<TSource, TKey, TInner, TResult>(
             }
             catch (Exception error)
             {
-                TerminalError(error);
+                _emitter.OnError(error);
             }
         }
 
         private void OnDrainComplete()
         {
-            if (_hasTerminated)
+            try
             {
+                _orchestrator.OnDrainComplete();
+            }
+            catch (Exception error)
+            {
+                _emitter.OnError(error);
                 return;
             }
 
-            _orchestrator.Emit(_observer);
-
-            if (Volatile.Read(ref _isCompleted) && !_hasTerminated)
+            if (Volatile.Read(ref _isCompleted))
             {
-                _hasTerminated = true;
-                _observer.OnCompleted();
+                // Latch off so the inevitable reentrant drain (triggered by enqueueing OnCompleted on
+                // the emitter sub-queue) doesn't try to complete the stream twice.
+                Volatile.Write(ref _isCompleted, false);
+                _emitter.OnCompleted();
             }
-        }
-
-        private void TerminalError(Exception error)
-        {
-            if (_hasTerminated)
-            {
-                return;
-            }
-
-            _hasTerminated = true;
-            _observer.OnError(error);
         }
 
         private void DecrementSubscriptionCount()

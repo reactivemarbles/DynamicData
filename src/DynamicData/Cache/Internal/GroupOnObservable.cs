@@ -37,5 +37,5 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
                     }
                 },
                 onInner: (value, parentKey) => grouper.AddOrUpdate(parentKey, value.GroupKey, value.Item),
-                emit: observer => grouper.EmitChanges(observer)));
+                onDrainComplete: observer => grouper.EmitChanges(observer)));
 }

@@ -39,7 +39,7 @@ internal static partial class IntObservableCacheEx
             source.OrchestrateMany(new MergedOrchestrator<TSource, TKey, TDest, TDestKey>(changeSetSelector, equalityComparer, comparer, reevalOnRefresh))
                   .SubscribeSafe(observer));
 
-    private sealed class MergedOrchestrator<TSource, TKey, TDest, TDestKey> : CacheChangeHandlerBase<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>>
+    private sealed class MergedOrchestrator<TSource, TKey, TDest, TDestKey> : OrchestratorCacheChangeBase<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>>
         where TSource : notnull
         where TKey : notnull
         where TDest : notnull
@@ -63,7 +63,7 @@ internal static partial class IntObservableCacheEx
 
         public override void OnInner(IChangeSet<TDest, TDestKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
 
-        public override void Emit(IObserver<IChangeSet<TDest, TDestKey>> observer) => _tracker.EmitChanges(observer);
+        public override void OnDrainComplete() => _tracker.EmitChanges(Emitter);
 
         protected override void OnItemAdded(TSource item, TKey key) => SubscribeChild(item, key);
 

@@ -308,6 +308,7 @@ public sealed class OrchestrateManyFixture
         public int EmitCallCount;
         public readonly List<(string Value, int Key)> ChildCalls = [];
         private ICacheOrchestratorContext<int, string> _context = null!;
+        private IObserver<IChangeSet<TestItem, int>> _emitter = null!;
 
         public TestOrchestrator(
             Func<int, IObservable<string>>? childFactory = null,
@@ -319,7 +320,11 @@ public sealed class OrchestrateManyFixture
             _onChild = onChild;
         }
 
-        public void Initialize(ICacheOrchestratorContext<int, string> context) => _context = context;
+        public void Initialize(ICacheOrchestratorContext<int, string> context, IObserver<IChangeSet<TestItem, int>> emitter)
+        {
+            _context = context;
+            _emitter = emitter;
+        }
 
         public void OnSourceChangeSet(IChangeSet<TestItem, int> changes)
         {
@@ -346,12 +351,14 @@ public sealed class OrchestrateManyFixture
             _cache.AddOrUpdate(new TestItem(parentKey, child), parentKey);
         }
 
-        public void Emit(IObserver<IChangeSet<TestItem, int>> observer)
+        public void OnDrainComplete()
         {
-            Interlocked.Increment(ref EmitCallCount);
             var changes = _cache.CaptureChanges();
             if (changes.Count > 0)
-                observer.OnNext(changes);
+            {
+                Interlocked.Increment(ref EmitCallCount);
+                _emitter.OnNext(changes);
+            }
         }
     }
 

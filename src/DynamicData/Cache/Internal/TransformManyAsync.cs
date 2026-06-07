@@ -22,7 +22,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
         source.OrchestrateMany(new Orchestrator(transformer, equalityComparer, comparer, errorHandler))
               .SubscribeSafe(observer));
 
-    private sealed class Orchestrator : CacheChangeHandlerBase<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
+    private sealed class Orchestrator : OrchestratorCacheChangeBase<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
     {
         private readonly Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey> _cache = new();
         private readonly ChangeSetMergeTracker<TDestination, TDestinationKey> _tracker;
@@ -42,7 +42,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
 
         public override void OnInner(IChangeSet<TDestination, TDestinationKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
 
-        public override void Emit(IObserver<IChangeSet<TDestination, TDestinationKey>> observer) => _tracker.EmitChanges(observer);
+        public override void OnDrainComplete() => _tracker.EmitChanges(Emitter);
 
         protected override void OnItemAdded(TSource item, TKey key) => SubscribeChild(item, key);
 
