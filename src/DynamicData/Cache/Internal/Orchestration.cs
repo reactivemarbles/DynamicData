@@ -62,6 +62,7 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult>(IObservable<
             _sourceSubscription.Dispose();
             _innerSubscriptions.Dispose();
             _emitter.Dispose();
+            (_orchestrator as IDisposable)?.Dispose();
         }
 
         public void Track(TKey key, IObservable<TInner>? observable)
