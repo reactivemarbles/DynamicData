@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using DynamicData.Internal;
@@ -46,20 +45,8 @@ internal sealed class FilterOnObservable<TObject, TKey>(IObservable<IChangeSet<T
         if (buffer is { } window)
         {
             var sched = scheduler ?? GlobalConfig.DefaultScheduler;
-            var quiet = TimeSpan.FromTicks(window.Ticks / 2);
-
-            // Quiescence-based buffering with a hard latency cap:
-            //   - Throttle(window/2): close the buffer after window/2 of source quiet (let bursts settle)
-            //   - Timer(window):       cap at the full window so sustained streams cannot starve the boundary
-            //   - Amb picks whichever fires first
-            // Single-changeset windows are forwarded as-is to avoid an extra ChangeSet allocation.
-            changes = changes.Publish(published => published.Buffer(() =>
-                                           published.Throttle(quiet, sched).Select(static _ => Unit.Default)
-                                                    .Amb(Observable.Timer(window, sched).Select(static _ => Unit.Default))))
-                             .Where(static batches => batches.Count > 0)
-                             .Select(static batches => batches.Count == 1
-                                 ? batches[0]
-                                 : new ChangeSet<TObject, TKey>(batches.SelectMany(static cs => cs)));
+            changes = changes.Publish(published => published.Buffer(() => published.Take(1).Delay(window, sched)))
+                             .FlattenBufferResult();
         }
 
         return changes;
