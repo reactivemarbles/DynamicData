@@ -42,12 +42,16 @@ internal static partial class IntObservableCacheEx
         where TKey : notnull
         where TInner : notnull
         where TOutput : notnull =>
-        Observable.Create<IChangeSet<TOutput, TKey>>(observer =>
-            source.OrchestrateMany(new ChangesOrchestrator<TSource, TKey, TInner, TOutput>(innerFactory, onSourceChange, onInner))
-                  .SubscribeSafe(observer));
+        source.OrchestrateMany<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>>(
+            (context, emitter) => new ChangesOrchestrator<TSource, TKey, TInner, TOutput>(context, emitter, innerFactory, onSourceChange, onInner));
 
-    private sealed class ChangesOrchestrator<TSource, TKey, TInner, TOutput>(Func<TSource, TKey, IObservable<TInner>> innerFactory, Action<ChangeAwareCache<TOutput, TKey>, Change<TSource, TKey>> onSourceChange, Action<ChangeAwareCache<TOutput, TKey>, TKey, TSource, TInner> onInner)
-        : OrchestratorCacheChangeBase<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>>
+    private sealed class ChangesOrchestrator<TSource, TKey, TInner, TOutput>(
+            ICacheOrchestratorContext<TKey, (TSource Item, TInner Value)> context,
+            IObserver<IChangeSet<TOutput, TKey>> emitter,
+            Func<TSource, TKey, IObservable<TInner>> innerFactory,
+            Action<ChangeAwareCache<TOutput, TKey>, Change<TSource, TKey>> onSourceChange,
+            Action<ChangeAwareCache<TOutput, TKey>, TKey, TSource, TInner> onInner)
+        : OrchestratorCacheChangeBase<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>>(context, emitter)
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull

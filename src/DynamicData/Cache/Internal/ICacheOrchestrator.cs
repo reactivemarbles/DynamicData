@@ -7,8 +7,9 @@ namespace DynamicData.Cache.Internal;
 /// <summary>
 /// Orchestrator contract consumed by the <c>OrchestrateMany</c> primitive. Implementations hold
 /// per-subscription state as fields and receive their
-/// <see cref="ICacheOrchestratorContext{TKey, TInner}"/> and downstream emitter once via
-/// <see cref="Initialize"/> before any other method is called.
+/// <see cref="ICacheOrchestratorContext{TKey, TInner}"/> and downstream emitter as constructor
+/// arguments supplied by the factory passed to <c>OrchestrateMany</c>. A new orchestrator instance
+/// is constructed per subscription, so all state is naturally isolated.
 /// </summary>
 /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
 /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
@@ -19,17 +20,6 @@ internal interface ICacheOrchestrator<TSource, TKey, TInner, TResult>
     where TKey : notnull
     where TInner : notnull
 {
-    /// <summary>
-    /// Invoked exactly once by <c>OrchestrateMany</c> before subscribing to the source. Implementations
-    /// should capture <paramref name="context"/> and <paramref name="emitter"/> in private fields for
-    /// use by subsequent method calls. The supplied <paramref name="emitter"/> is a sub-queue of the
-    /// orchestrator's shared delivery queue: every <c>OnNext</c>/<c>OnError</c>/<c>OnCompleted</c> on
-    /// it is automatically serialized with source and inner notifications.
-    /// </summary>
-    /// <param name="context">The runtime context, scoped to this subscription's lifetime.</param>
-    /// <param name="emitter">The downstream observer, fronted by a serializing sub-queue.</param>
-    void Initialize(ICacheOrchestratorContext<TKey, TInner> context, IObserver<TResult> emitter);
-
     /// <summary>
     /// Invoked for each source changeset.
     /// </summary>

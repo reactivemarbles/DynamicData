@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
-
 namespace DynamicData.Cache.Internal;
 
 /// <summary>
@@ -15,28 +13,29 @@ internal static partial class IntObservableCacheEx
 {
     /// <summary>
     /// Orchestrates a keyed source changeset and a dynamic set of per-key inner observables into a
-    /// single result stream. The supplied <paramref name="orchestrator"/> owns the per-subscription
-    /// state and is wired to an <see cref="ICacheOrchestratorContext{TKey, TInner}"/> via
-    /// <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}.Initialize"/>.
+    /// single result stream. The supplied <paramref name="factory"/> is invoked on every subscription
+    /// with the per-subscription <see cref="ICacheOrchestratorContext{TKey, TInner}"/> and downstream
+    /// emitter; the orchestrator instance it returns owns its per-subscription state for the lifetime
+    /// of the subscription.
     /// </summary>
     /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
     /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
     /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
     /// <typeparam name="TResult">Type delivered downstream.</typeparam>
     /// <param name="source">The keyed source changeset stream.</param>
-    /// <param name="orchestrator">The orchestrator implementation.</param>
+    /// <param name="factory">Builds the per-subscription orchestrator from its runtime context and emitter.</param>
     /// <returns>An observable that orchestrates source and inner activity into a single result stream.</returns>
     public static IObservable<TResult> OrchestrateMany<TSource, TKey, TInner, TResult>(
             this IObservable<IChangeSet<TSource, TKey>> source,
-            ICacheOrchestrator<TSource, TKey, TInner, TResult> orchestrator)
+            Func<ICacheOrchestratorContext<TKey, TInner>, IObserver<TResult>, ICacheOrchestrator<TSource, TKey, TInner, TResult>> factory)
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull =>
-        new Orchestration<TSource, TKey, TInner, TResult>(source, orchestrator).Run();
+        new Orchestration<TSource, TKey, TInner, TResult>(source, factory).Run();
 
     /// <summary>
     /// Convenience overload that wraps three lambdas into an <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/>
-    /// and delegates to <see cref="OrchestrateMany{TSource, TKey, TInner, TResult}(IObservable{IChangeSet{TSource, TKey}}, ICacheOrchestrator{TSource, TKey, TInner, TResult})"/>.
+    /// and delegates to <see cref="OrchestrateMany{TSource, TKey, TInner, TResult}(IObservable{IChangeSet{TSource, TKey}}, Func{ICacheOrchestratorContext{TKey, TInner}, IObserver{TResult}, ICacheOrchestrator{TSource, TKey, TInner, TResult}})"/>.
     /// Does not expose <see cref="ICacheOrchestratorContext{TKey, TInner}.Serialize"/>; operators that
     /// need it must implement <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> directly.
     /// </summary>
@@ -57,12 +56,12 @@ internal static partial class IntObservableCacheEx
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull =>
-        // Defer ensures a fresh LambdaCacheOrchestrator per subscription; the orchestrator holds
-        // mutable per-subscription state in _context/_emitter, so reusing one instance across
-        // subscribers would let later Initialize calls corrupt earlier subscribers' state.
-        Observable.Defer(() => source.OrchestrateMany(new LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(onSourceChangeSet, onInner, onDrainComplete)));
+        source.OrchestrateMany<TSource, TKey, TInner, TResult>(
+            (context, emitter) => new LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(context, emitter, onSourceChangeSet, onInner, onDrainComplete));
 
     private sealed class LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(
+            ICacheOrchestratorContext<TKey, TInner> context,
+            IObserver<TResult> emitter,
             Action<IChangeSet<TSource, TKey>, Action<TKey, IObservable<TInner>?>> onSourceChangeSet,
             Action<TInner, TKey> onInner,
             Action<IObserver<TResult>> onDrainComplete)
@@ -71,19 +70,10 @@ internal static partial class IntObservableCacheEx
         where TKey : notnull
         where TInner : notnull
     {
-        private ICacheOrchestratorContext<TKey, TInner> _context = null!;
-        private IObserver<TResult> _emitter = null!;
-
-        public void Initialize(ICacheOrchestratorContext<TKey, TInner> context, IObserver<TResult> emitter)
-        {
-            _context = context;
-            _emitter = emitter;
-        }
-
-        public void OnSourceChangeSet(IChangeSet<TSource, TKey> changes) => onSourceChangeSet(changes, _context.Track);
+        public void OnSourceChangeSet(IChangeSet<TSource, TKey> changes) => onSourceChangeSet(changes, context.Track);
 
         public void OnInner(TInner value, TKey key) => onInner(value, key);
 
-        public void OnDrainComplete(bool sourcesCompleted) => onDrainComplete(_emitter);
+        public void OnDrainComplete(bool sourcesCompleted) => onDrainComplete(emitter);
     }
 }

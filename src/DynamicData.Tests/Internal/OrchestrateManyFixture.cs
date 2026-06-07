@@ -39,14 +39,32 @@ public sealed class OrchestrateManyFixture
     /// <summary>Test item with a typed key.</summary>
     private sealed record TestItem(int Key, string Value);
 
+    /// <summary>
+    /// Wires <paramref name="source"/> through <c>OrchestrateMany</c> with a fresh <see cref="TestOrchestrator"/>
+    /// constructed per subscription. Returns the observable plus a thunk that yields the constructed
+    /// orchestrator after subscribe. The factory pattern ensures per-subscription isolation and
+    /// matches the production OrchestrateMany contract.
+    /// </summary>
+    private static (IObservable<IChangeSet<TestItem, int>> Observable, Func<TestOrchestrator> Orchestrator) Wire(
+            IObservable<IChangeSet<TestItem, int>> source,
+            Func<int, IObservable<string>>? childFactory = null,
+            Action? onParent = null,
+            Action? onChild = null)
+    {
+        TestOrchestrator? captured = null;
+        var observable = source.OrchestrateMany<TestItem, int, string, IChangeSet<TestItem, int>>(
+            (ctx, em) => captured = new TestOrchestrator(ctx, em, childFactory, onParent, onChild));
+        return (observable, () => captured ?? throw new InvalidOperationException("Subscribe to the returned observable first."));
+    }
+
     [Fact]
     public void ParentOnNext_CalledForEachChangeSet()
     {
         var itemCount = _rand.Number(BatchSizeMin, BatchSizeMax);
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
-        var orchestrator = new TestOrchestrator();
-        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+        var (observable, getOrchestrator) = Wire(source.Connect());
+        using var sub = observable.Subscribe(observer);
 
         var items = Enumerable.Range(0, itemCount)
             .Select(i => new TestItem(_rand.Number(SeedMin, SeedMax) + i * 100, _rand.String2(_rand.Number(3, 10))))
@@ -55,7 +73,7 @@ public sealed class OrchestrateManyFixture
         foreach (var item in items)
             source.AddOrUpdate(item);
 
-        orchestrator.ParentCallCount.Should().Be(items.Count, "OnSourceChangeSet should fire once per changeset");
+        getOrchestrator().ParentCallCount.Should().Be(items.Count, "OnSourceChangeSet should fire once per changeset");
         observer.EmitCount.Should().Be(items.Count, "Emit should fire after each parent update");
     }
 
@@ -65,13 +83,13 @@ public sealed class OrchestrateManyFixture
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var childSubjects = new List<Subject<string>>();
         var observer = new TestObserver();
-        var orchestrator = new TestOrchestrator(key =>
+        var (observable, getOrchestrator) = Wire(source.Connect(), key =>
         {
             var subj = new Subject<string>();
             childSubjects.Add(subj);
             return subj;
         });
-        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+        using var sub = observable.Subscribe(observer);
 
         var key = _rand.Number(SeedMin, SeedMax);
         source.AddOrUpdate(new TestItem(key, "parent"));
@@ -80,7 +98,7 @@ public sealed class OrchestrateManyFixture
         var childValue = _rand.String2(_rand.Number(5, 15));
         childSubjects[0].OnNext(childValue);
 
-        orchestrator.ChildCalls.Should().ContainSingle()
+        getOrchestrator().ChildCalls.Should().ContainSingle()
             .Which.Should().Be((childValue, key));
     }
 
@@ -90,8 +108,8 @@ public sealed class OrchestrateManyFixture
         var batchSize = _rand.Number(BatchSizeMin, BatchSizeMax);
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
-        var orchestrator = new TestOrchestrator();
-        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+        var (observable, getOrchestrator) = Wire(source.Connect());
+        using var sub = observable.Subscribe(observer);
 
         source.Edit(updater =>
         {
@@ -99,6 +117,7 @@ public sealed class OrchestrateManyFixture
                 updater.AddOrUpdate(new TestItem(i + 1, _rand.String2(_rand.Number(3, 8))));
         });
 
+        var orchestrator = getOrchestrator();
         orchestrator.ParentCallCount.Should().Be(1, "single batch = single OnSourceChangeSet");
         orchestrator.EmitCallCount.Should().Be(1, "single batch = single Emit");
     }
@@ -110,12 +129,12 @@ public sealed class OrchestrateManyFixture
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
         var childCount = 0;
-        var orchestrator = new TestOrchestrator(key =>
+        var (observable, getOrchestrator) = Wire(source.Connect(), key =>
         {
             Interlocked.Increment(ref childCount);
             return new BehaviorSubject<string>($"sync-{key}");
         });
-        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+        using var sub = observable.Subscribe(observer);
 
         source.Edit(updater =>
         {
@@ -124,7 +143,7 @@ public sealed class OrchestrateManyFixture
         });
 
         childCount.Should().Be(batchSize, "each item should create a child");
-        orchestrator.EmitCallCount.Should().BeGreaterThanOrEqualTo(1,
+        getOrchestrator().EmitCallCount.Should().BeGreaterThanOrEqualTo(1,
             "Emit fires after parent + children settle");
     }
 
@@ -134,13 +153,13 @@ public sealed class OrchestrateManyFixture
         using var source = new TestSourceCache<TestItem, int>(x => x.Key);
         var childSubjects = new List<Subject<string>>();
         var observer = new TestObserver();
-        var orchestrator = new TestOrchestrator(key =>
+        var (observable, _) = Wire(source.Connect(), key =>
         {
             var subj = new Subject<string>();
             childSubjects.Add(subj);
             return subj;
         });
-        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+        using var sub = observable.Subscribe(observer);
 
         source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
         childSubjects.Should().HaveCount(1);
@@ -157,8 +176,8 @@ public sealed class OrchestrateManyFixture
     {
         using var source = new TestSourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
-        var orchestrator = new TestOrchestrator();
-        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+        var (observable, _) = Wire(source.Connect());
+        using var sub = observable.Subscribe(observer);
 
         source.Complete();
         observer.IsCompleted.Should().BeTrue("immediate OnCompleted when no children");
@@ -170,13 +189,13 @@ public sealed class OrchestrateManyFixture
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var childSubjects = new List<Subject<string>>();
         var observer = new TestObserver();
-        var orchestrator = new TestOrchestrator(key =>
+        var (observable, _) = Wire(source.Connect(), key =>
         {
             var subj = new Subject<string>();
             childSubjects.Add(subj);
             return subj;
         });
-        var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+        var sub = observable.Subscribe(observer);
 
         source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
         var emitsBefore = observer.EmitCount;
@@ -195,8 +214,8 @@ public sealed class OrchestrateManyFixture
     {
         using var source = new TestSourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
-        var orchestrator = new TestOrchestrator();
-        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+        var (observable, _) = Wire(source.Connect());
+        using var sub = observable.Subscribe(observer);
 
         var error = new InvalidOperationException("test error");
         source.SetError(error);
@@ -210,13 +229,13 @@ public sealed class OrchestrateManyFixture
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var childSubjects = new List<Subject<string>>();
         var observer = new TestObserver();
-        var orchestrator = new TestOrchestrator(key =>
+        var (observable, _) = Wire(source.Connect(), key =>
         {
             var subj = new Subject<string>();
             childSubjects.Add(subj);
             return subj;
         });
-        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+        using var sub = observable.Subscribe(observer);
 
         source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
         childSubjects.Should().HaveCount(1);
@@ -234,10 +253,8 @@ public sealed class OrchestrateManyFixture
     public void SourceAlreadyCompleted_PropagatesCompletion()
     {
         var observer = new TestObserver();
-        var orchestrator = new TestOrchestrator();
-        using var sub = Observable.Empty<IChangeSet<TestItem, int>>()
-            .OrchestrateMany(orchestrator)
-            .Subscribe(observer);
+        var (observable, _) = Wire(Observable.Empty<IChangeSet<TestItem, int>>());
+        using var sub = observable.Subscribe(observer);
 
         observer.IsCompleted.Should().BeTrue(
             "a pre-completed source must propagate completion through the orchestrator on subscribe");
@@ -247,11 +264,9 @@ public sealed class OrchestrateManyFixture
     public void SourceAlreadyErrored_PropagatesError()
     {
         var observer = new TestObserver();
-        var orchestrator = new TestOrchestrator();
         var error = new InvalidOperationException("sync-error");
-        using var sub = Observable.Throw<IChangeSet<TestItem, int>>(error)
-            .OrchestrateMany(orchestrator)
-            .Subscribe(observer);
+        var (observable, _) = Wire(Observable.Throw<IChangeSet<TestItem, int>>(error));
+        using var sub = observable.Subscribe(observer);
 
         observer.Error.Should().BeSameAs(error,
             "a synchronously-erroring source must propagate the error through the orchestrator");
@@ -263,11 +278,12 @@ public sealed class OrchestrateManyFixture
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var callLog = new List<string>();
         var observer = new TestObserver();
-        var orchestrator = new TestOrchestrator(
-            key => new Subject<string>(),
+        var (observable, _) = Wire(
+            source.Connect(),
+            childFactory: key => new Subject<string>(),
             onParent: () => { lock (callLog) callLog.Add("P-start"); Thread.Sleep(1); lock (callLog) callLog.Add("P-end"); },
             onChild: () => { lock (callLog) callLog.Add("C-start"); Thread.Sleep(1); lock (callLog) callLog.Add("C-end"); });
-        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+        using var sub = observable.Subscribe(observer);
 
         source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
 
@@ -295,12 +311,12 @@ public sealed class OrchestrateManyFixture
         using var sourceB = new SourceCache<TestItem, int>(x => x.Key);
 
         var observerA = new CrossFeedObserver(sourceB, 100_001, iterations);
-        var orchestratorA = new TestOrchestrator();
-        using var subA = sourceA.Connect().OrchestrateMany(orchestratorA).Subscribe(observerA);
+        var (observableA, _) = Wire(sourceA.Connect());
+        using var subA = observableA.Subscribe(observerA);
 
         var observerB = new CrossFeedObserver(sourceA, 200_001, iterations);
-        var orchestratorB = new TestOrchestrator();
-        using var subB = sourceB.Connect().OrchestrateMany(orchestratorB).Subscribe(observerB);
+        var (observableB, _) = Wire(sourceB.Connect());
+        using var subB = observableB.Subscribe(observerB);
 
         using var barrier = new Barrier(2);
 
@@ -348,15 +364,17 @@ public sealed class OrchestrateManyFixture
             innerSubjects[i] = new Subject<string>();
         }
 
-        var orchestrator = new TestOrchestrator(key => innerSubjects[key]);
+        var (observable, getOrchestrator) = Wire(source.Connect(), key => innerSubjects[key]);
         var observer = new TestObserver();
-        using var sub = source.Connect().OrchestrateMany(orchestrator).Subscribe(observer);
+        using var sub = observable.Subscribe(observer);
 
         // Add a source item per producer to subscribe each inner subject.
         for (var i = 1; i <= producerCount; i++)
         {
             source.AddOrUpdate(new TestItem(i, "init"));
         }
+
+        var orchestrator = getOrchestrator();
 
         // Reset child-call tracking captured during init so we count only the burst below.
         lock (orchestrator.ChildCalls)
@@ -458,56 +476,41 @@ public sealed class OrchestrateManyFixture
     /// <summary>
     /// Minimal ICacheOrchestrator implementation that mirrors the legacy CPS-subclass shape.
     /// </summary>
-    private sealed class TestOrchestrator : ICacheOrchestrator<TestItem, int, string, IChangeSet<TestItem, int>>
+    private sealed class TestOrchestrator(
+            ICacheOrchestratorContext<int, string> context,
+            IObserver<IChangeSet<TestItem, int>> emitter,
+            Func<int, IObservable<string>>? childFactory = null,
+            Action? onParent = null,
+            Action? onChild = null)
+        : ICacheOrchestrator<TestItem, int, string, IChangeSet<TestItem, int>>
     {
-        private readonly Func<int, IObservable<string>>? _childFactory;
-        private readonly Action? _onParent;
-        private readonly Action? _onChild;
         private readonly ChangeAwareCache<TestItem, int> _cache = new();
 
         public int ParentCallCount;
         public int EmitCallCount;
         public readonly List<(string Value, int Key)> ChildCalls = [];
-        private ICacheOrchestratorContext<int, string> _context = null!;
-        private IObserver<IChangeSet<TestItem, int>> _emitter = null!;
-
-        public TestOrchestrator(
-            Func<int, IObservable<string>>? childFactory = null,
-            Action? onParent = null,
-            Action? onChild = null)
-        {
-            _childFactory = childFactory;
-            _onParent = onParent;
-            _onChild = onChild;
-        }
-
-        public void Initialize(ICacheOrchestratorContext<int, string> context, IObserver<IChangeSet<TestItem, int>> emitter)
-        {
-            _context = context;
-            _emitter = emitter;
-        }
 
         public void OnSourceChangeSet(IChangeSet<TestItem, int> changes)
         {
             Interlocked.Increment(ref ParentCallCount);
-            _onParent?.Invoke();
+            onParent?.Invoke();
             _cache.Clone(changes);
 
-            if (_childFactory is not null)
+            if (childFactory is not null)
             {
                 foreach (var change in (ChangeSet<TestItem, int>)changes)
                 {
                     if (change.Reason is ChangeReason.Add or ChangeReason.Update)
-                        _context.Track(change.Key, _childFactory(change.Key));
+                        context.Track(change.Key, childFactory(change.Key));
                     else if (change.Reason is ChangeReason.Remove)
-                        _context.Track(change.Key, null);
+                        context.Track(change.Key, null);
                 }
             }
         }
 
         public void OnInner(string child, int parentKey)
         {
-            _onChild?.Invoke();
+            onChild?.Invoke();
             ChildCalls.Add((child, parentKey));
             _cache.AddOrUpdate(new TestItem(parentKey, child), parentKey);
         }
@@ -518,7 +521,7 @@ public sealed class OrchestrateManyFixture
             if (changes.Count > 0)
             {
                 Interlocked.Increment(ref EmitCallCount);
-                _emitter.OnNext(changes);
+                emitter.OnNext(changes);
             }
         }
     }

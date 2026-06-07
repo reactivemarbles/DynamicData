@@ -13,18 +13,25 @@ namespace DynamicData.Cache.Internal;
 /// Drives an <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> against a source
 /// changeset. <see cref="Run"/> returns an <see cref="IObservable{TResult}"/> that constructs a
 /// fresh per-subscription <see cref="OrchestratorContext"/> on each subscribe, so all per-subscription
-/// state owned by the <see cref="OrchestratorContext"/> is recreated on every subscribe.
+/// state owned by the <see cref="OrchestratorContext"/> is recreated on every subscribe. The
+/// orchestrator itself is constructed by the supplied <paramref name="factory"/>, which receives
+/// the per-subscription context and emitter; this guarantees a fresh orchestrator instance per
+/// subscriber and removes the need for a separate <c>Initialize</c> hook.
 /// </summary>
 /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
 /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
 /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
 /// <typeparam name="TResult">Type delivered downstream.</typeparam>
-internal sealed class Orchestration<TSource, TKey, TInner, TResult>(IObservable<IChangeSet<TSource, TKey>> source, ICacheOrchestrator<TSource, TKey, TInner, TResult> orchestrator)
+/// <param name="source">The keyed source changeset stream.</param>
+/// <param name="factory">Builds the per-subscription orchestrator from its runtime context and emitter.</param>
+internal sealed class Orchestration<TSource, TKey, TInner, TResult>(
+        IObservable<IChangeSet<TSource, TKey>> source,
+        Func<ICacheOrchestratorContext<TKey, TInner>, IObserver<TResult>, ICacheOrchestrator<TSource, TKey, TInner, TResult>> factory)
     where TSource : notnull
     where TKey : notnull
     where TInner : notnull
 {
-    public IObservable<TResult> Run() => Observable.Create<TResult>(observer => new OrchestratorContext(source, observer, orchestrator));
+    public IObservable<TResult> Run() => Observable.Create<TResult>(observer => new OrchestratorContext(source, observer, factory));
 
     private sealed class OrchestratorContext : ICacheOrchestratorContext<TKey, TInner>, IDisposable
     {
@@ -37,16 +44,18 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult>(IObservable<
         private bool _isCompleted;
         private bool _disposed;
 
-        public OrchestratorContext(IObservable<IChangeSet<TSource, TKey>> source, IObserver<TResult> observer, ICacheOrchestrator<TSource, TKey, TInner, TResult> orchestrator)
+        public OrchestratorContext(
+                IObservable<IChangeSet<TSource, TKey>> source,
+                IObserver<TResult> observer,
+                Func<ICacheOrchestratorContext<TKey, TInner>, IObserver<TResult>, ICacheOrchestrator<TSource, TKey, TInner, TResult>> factory)
         {
-            _orchestrator = orchestrator;
             _queue = new SharedDeliveryQueue(onDrainComplete: OnDrainComplete);
 
             // Create the emitter sub-queue first (lowest index, drains last LIFO) so source-triggered
             // sync inner emissions (higher index) deliver first and any orchestrator emit lands on the
             // emitter after that work has settled.
             _emitter = _queue.CreateQueue(observer);
-            _orchestrator.Initialize(this, _emitter);
+            _orchestrator = factory(this, _emitter);
 
             _sourceSubscription.Disposable = source
                 .SynchronizeSafe(_queue)

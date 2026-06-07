@@ -27,11 +27,15 @@ internal sealed class MergeManyItems<TObject, TKey, TDestination>
         _observableSelector = (t, _) => observableSelector(t);
     }
 
-    public IObservable<ItemWithValue<TObject, TDestination>> Run() => Observable.Create<ItemWithValue<TObject, TDestination>>(observer =>
-        _source.OrchestrateMany(new Orchestrator(_observableSelector)).SubscribeSafe(observer));
+    public IObservable<ItemWithValue<TObject, TDestination>> Run() =>
+        _source.OrchestrateMany<TObject, TKey, (TObject Item, TDestination Value), ItemWithValue<TObject, TDestination>>(
+            (context, emitter) => new Orchestrator(context, emitter, _observableSelector));
 
-    private sealed class Orchestrator(Func<TObject, TKey, IObservable<TDestination>> selector)
-        : OrchestratorCacheChangeBase<TObject, TKey, (TObject Item, TDestination Value), ItemWithValue<TObject, TDestination>>
+    private sealed class Orchestrator(
+            ICacheOrchestratorContext<TKey, (TObject Item, TDestination Value)> context,
+            IObserver<ItemWithValue<TObject, TDestination>> emitter,
+            Func<TObject, TKey, IObservable<TDestination>> selector)
+        : OrchestratorCacheChangeBase<TObject, TKey, (TObject Item, TDestination Value), ItemWithValue<TObject, TDestination>>(context, emitter)
     {
         public override void OnInner((TObject Item, TDestination Value) value, TKey key) =>
             Emitter.OnNext(new ItemWithValue<TObject, TDestination>(value.Item, value.Value));

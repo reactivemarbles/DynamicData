@@ -29,9 +29,8 @@ internal static partial class IntObservableCacheEx
         where TSource : notnull
         where TKey : notnull
         where TDest : notnull =>
-        Observable.Create<IChangeSet<TDest>>(observer =>
-            source.OrchestrateMany(new MergedListOrchestrator<TSource, TKey, TDest>(changeSetSelector, equalityComparer))
-                  .SubscribeSafe(observer));
+        source.OrchestrateMany<TSource, TKey, IChangeSet<TDest>, IChangeSet<TDest>>(
+            (context, emitter) => new MergedListOrchestrator<TSource, TKey, TDest>(context, emitter, changeSetSelector, equalityComparer));
 
     private sealed class MergedListOrchestrator<TSource, TKey, TDest> : OrchestratorCacheChangeBase<TSource, TKey, IChangeSet<TDest>, IChangeSet<TDest>>
         where TSource : notnull
@@ -44,8 +43,11 @@ internal static partial class IntObservableCacheEx
         private readonly IEqualityComparer<TDest>? _equalityComparer;
 
         public MergedListOrchestrator(
+                ICacheOrchestratorContext<TKey, IChangeSet<TDest>> context,
+                IObserver<IChangeSet<TDest>> emitter,
                 Func<TSource, TKey, IObservable<IChangeSet<TDest>>> changeSetSelector,
                 IEqualityComparer<TDest>? equalityComparer)
+            : base(context, emitter)
         {
             _changeSetSelector = changeSetSelector;
             _equalityComparer = equalityComparer;

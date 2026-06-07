@@ -18,9 +18,9 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
     where TDestination : notnull
     where TDestinationKey : notnull
 {
-    public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => Observable.Create<IChangeSet<TDestination, TDestinationKey>>(observer =>
-        source.OrchestrateMany(new Orchestrator(transformer, equalityComparer, comparer, errorHandler))
-              .SubscribeSafe(observer));
+    public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() =>
+        source.OrchestrateMany<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>(
+            (context, emitter) => new Orchestrator(context, emitter, transformer, equalityComparer, comparer, errorHandler));
 
     private sealed class Orchestrator : OrchestratorCacheChangeBase<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
     {
@@ -30,10 +30,13 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
         private readonly Action<Error<TSource, TKey>>? _errorHandler;
 
         public Orchestrator(
+                ICacheOrchestratorContext<TKey, IChangeSet<TDestination, TDestinationKey>> context,
+                IObserver<IChangeSet<TDestination, TDestinationKey>> emitter,
                 Func<TSource, TKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> transformer,
                 IEqualityComparer<TDestination>? equalityComparer,
                 IComparer<TDestination>? comparer,
                 Action<Error<TSource, TKey>>? errorHandler)
+            : base(context, emitter)
         {
             _transformer = transformer;
             _errorHandler = errorHandler;

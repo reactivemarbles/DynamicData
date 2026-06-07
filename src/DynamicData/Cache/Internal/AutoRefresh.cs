@@ -18,11 +18,12 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
     where TObject : notnull
     where TKey : notnull
 {
-    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+    public IObservable<IChangeSet<TObject, TKey>> Run()
     {
-        var orchestrator = new Orchestrator(reEvaluator, buffer, buffer is null ? null : scheduler ?? GlobalConfig.DefaultScheduler);
-        return source.OrchestrateMany(orchestrator).SubscribeSafe(observer);
-    });
+        var sched = buffer is null ? null : scheduler ?? GlobalConfig.DefaultScheduler;
+        return source.OrchestrateMany<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>(
+            (context, emitter) => new Orchestrator(context, emitter, reEvaluator, buffer, sched));
+    }
 
     /// <summary>
     /// Forwards each source changeset to the emitter immediately. Refresh notifications from
@@ -35,10 +36,12 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
     /// subscription does not produce a redundant Refresh paired with the Add.
     /// </summary>
     private sealed class Orchestrator(
+            ICacheOrchestratorContext<TKey, Change<TObject, TKey>> context,
+            IObserver<IChangeSet<TObject, TKey>> emitter,
             Func<TObject, TKey, IObservable<TAny>> reEvaluator,
             TimeSpan? buffer,
             IScheduler? scheduler)
-        : OrchestratorCacheChangeBase<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>, IDisposable
+        : OrchestratorCacheChangeBase<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>(context, emitter), IDisposable
     {
         private readonly Dictionary<TKey, Change<TObject, TKey>> _pendingRefreshes = new();
         private readonly HashSet<TKey> _sourceTouched = [];

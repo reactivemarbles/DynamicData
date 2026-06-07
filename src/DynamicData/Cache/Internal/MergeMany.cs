@@ -27,11 +27,15 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
         _observableSelector = (t, _) => observableSelector(t);
     }
 
-    public IObservable<TDestination> Run() => Observable.Create<TDestination>(observer =>
-        _source.OrchestrateMany(new Orchestrator(_observableSelector)).SubscribeSafe(observer));
+    public IObservable<TDestination> Run() =>
+        _source.OrchestrateMany<TObject, TKey, TDestination, TDestination>(
+            (context, emitter) => new Orchestrator(context, emitter, _observableSelector));
 
-    private sealed class Orchestrator(Func<TObject, TKey, IObservable<TDestination>> selector)
-        : OrchestratorCacheChangeBase<TObject, TKey, TDestination, TDestination>
+    private sealed class Orchestrator(
+            ICacheOrchestratorContext<TKey, TDestination> context,
+            IObserver<TDestination> emitter,
+            Func<TObject, TKey, IObservable<TDestination>> selector)
+        : OrchestratorCacheChangeBase<TObject, TKey, TDestination, TDestination>(context, emitter)
     {
         public override void OnInner(TDestination value, TKey key) => Emitter.OnNext(value);
 
