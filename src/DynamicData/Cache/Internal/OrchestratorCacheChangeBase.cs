@@ -61,7 +61,9 @@ internal abstract class OrchestratorCacheChangeBase<TSource, TKey, TInner, TResu
 
     public abstract void OnInner(TInner value, TKey key);
 
-    public abstract void OnDrainComplete();
+    public virtual void OnDrainComplete()
+    {
+    }
 
     protected virtual void OnItemAdded(TSource item, TKey key)
     {

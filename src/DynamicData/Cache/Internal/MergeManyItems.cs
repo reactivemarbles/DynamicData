@@ -11,7 +11,6 @@ internal sealed class MergeManyItems<TObject, TKey, TDestination>
     where TKey : notnull
 {
     private readonly Func<TObject, TKey, IObservable<TDestination>> _observableSelector;
-
     private readonly IObservable<IChangeSet<TObject, TKey>> _source;
 
     public MergeManyItems(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TDestination>> observableSelector)
@@ -22,14 +21,24 @@ internal sealed class MergeManyItems<TObject, TKey, TDestination>
 
     public MergeManyItems(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
     {
-        if (observableSelector is null)
-        {
-            throw new ArgumentNullException(nameof(observableSelector));
-        }
+        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _observableSelector = (t, _) => observableSelector(t);
     }
 
-    public IObservable<ItemWithValue<TObject, TDestination>> Run() => Observable.Create<ItemWithValue<TObject, TDestination>>(observer => _source.SubscribeMany((t, v) => _observableSelector(t, v).Select(z => new ItemWithValue<TObject, TDestination>(t, z)).SubscribeSafe(observer)).Subscribe());
+    public IObservable<ItemWithValue<TObject, TDestination>> Run() => Observable.Create<ItemWithValue<TObject, TDestination>>(observer =>
+        _source.OrchestrateMany(new Orchestrator(_observableSelector)).SubscribeSafe(observer));
+
+    private sealed class Orchestrator(Func<TObject, TKey, IObservable<TDestination>> selector)
+        : OrchestratorCacheChangeBase<TObject, TKey, (TObject Item, TDestination Value), ItemWithValue<TObject, TDestination>>
+    {
+        public override void OnInner((TObject Item, TDestination Value) value, TKey key) =>
+            Emitter.OnNext(new ItemWithValue<TObject, TDestination>(value.Item, value.Value));
+
+        protected override void OnItemAdded(TObject item, TKey key) =>
+            Context.Track(key, selector(item, key).Select(value => (Item: item, Value: value)));
+
+        protected override void OnItemRemoved(TObject item, TKey key) => Context.Track(key, null);
+    }
 }
