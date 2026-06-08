@@ -138,11 +138,11 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult>(
             // own emit can land here recursively, latch _isCompleted off, and complete the stream
             // synchronously. When control returns to the outer call, the snapshot still tells the
             // orchestrator that source and tracked inners are done.
-            var sourcesCompleted = Volatile.Read(ref _isCompleted);
+            var isFinal = Volatile.Read(ref _isCompleted);
 
             try
             {
-                _orchestrator.OnDrainComplete(sourcesCompleted);
+                _orchestrator.OnDrainComplete(isFinal);
             }
             catch (Exception error)
             {

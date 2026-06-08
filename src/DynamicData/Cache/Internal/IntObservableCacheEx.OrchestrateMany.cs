@@ -74,6 +74,6 @@ internal static partial class IntObservableCacheEx
 
         public void OnInner(TInner value, TKey key) => onInner(value, key);
 
-        public void OnDrainComplete(bool sourcesCompleted) => onDrainComplete(emitter);
+        public void OnDrainComplete(bool isFinal) => onDrainComplete(emitter);
     }
 }

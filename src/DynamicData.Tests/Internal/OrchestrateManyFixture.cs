@@ -184,6 +184,39 @@ public sealed class OrchestrateManyFixture
     }
 
     [Fact]
+    public void OnDrainComplete_IsFinalIsFalseUntilSourceAndAllInnersComplete()
+    {
+        using var source = new TestSourceCache<TestItem, int>(x => x.Key);
+        var childSubject = new Subject<string>();
+        var observer = new TestObserver();
+        var (observable, getOrchestrator) = Wire(source.Connect(), _ => childSubject);
+        using var sub = observable.Subscribe(observer);
+
+        // Activity while source + inner are alive
+        source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
+        childSubject.OnNext("v1");
+
+        var orchestrator = getOrchestrator();
+        orchestrator.IsFinalLog.Should().NotBeEmpty("OnDrainComplete should fire while source is active");
+        orchestrator.IsFinalLog.Should().AllBeEquivalentTo(false,
+            "isFinal must be false on every call while source and inners are still active");
+
+        // Source completes; inner still alive — isFinal must remain false
+        var preSourceCompleteCount = orchestrator.IsFinalLog.Count;
+        source.Complete();
+        orchestrator.IsFinalLog.Skip(preSourceCompleteCount).Should().AllBeEquivalentTo(false,
+            "isFinal must remain false while at least one inner subscription is still active");
+        observer.IsCompleted.Should().BeFalse("downstream must not complete while inners are active");
+
+        // Final inner completes — at least one subsequent OnDrainComplete must observe isFinal=true
+        var preInnerCompleteCount = orchestrator.IsFinalLog.Count;
+        childSubject.OnCompleted();
+        orchestrator.IsFinalLog.Skip(preInnerCompleteCount).Should().Contain(true,
+            "isFinal must be true on the OnDrainComplete fired after source and all tracked inners have completed");
+        observer.IsCompleted.Should().BeTrue("downstream completion must follow isFinal=true");
+    }
+
+    [Fact]
     public void Disposal_StopsAllEmissions()
     {
         using var source = new SourceCache<TestItem, int>(x => x.Key);
@@ -489,6 +522,7 @@ public sealed class OrchestrateManyFixture
         public int ParentCallCount;
         public int EmitCallCount;
         public readonly List<(string Value, int Key)> ChildCalls = [];
+        public readonly List<bool> IsFinalLog = [];
 
         public void OnSourceChangeSet(IChangeSet<TestItem, int> changes)
         {
@@ -515,8 +549,10 @@ public sealed class OrchestrateManyFixture
             _cache.AddOrUpdate(new TestItem(parentKey, child), parentKey);
         }
 
-        public void OnDrainComplete(bool sourcesCompleted)
+        public void OnDrainComplete(bool isFinal)
         {
+            IsFinalLog.Add(isFinal);
+
             var changes = _cache.CaptureChanges();
             if (changes.Count > 0)
             {

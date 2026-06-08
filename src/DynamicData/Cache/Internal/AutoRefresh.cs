@@ -74,15 +74,15 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
             }
         }
 
-        public override void OnDrainComplete(bool sourcesCompleted)
+        public override void OnDrainComplete(bool isFinal)
         {
             _sourceTouched.Clear();
 
             // Flush pending refreshes whenever there is no timer-based deferral active
-            // (unbuffered) or when sources have completed (so the timer would never fire
-            // before downstream completion). The queue re-fires OnDrainComplete after any
+            // (unbuffered) or when this is the final drain (the timer would otherwise be
+            // cancelled by stream termination). The queue re-fires OnDrainComplete after any
             // reentrant drain triggered by FlushPending, so a single emit per call suffices.
-            if (sourcesCompleted || buffer is null)
+            if (isFinal || buffer is null)
             {
                 FlushPending();
             }
