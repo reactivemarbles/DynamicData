@@ -100,22 +100,18 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
-    public bool EmitChanges(IObserver<IChangeSet<TObject, TKey>> observer)
+    public void EmitChanges(IObserver<IChangeSet<TObject, TKey>> observer)
     {
         var changeSet = _resultCache.CaptureChanges();
-        var emitted = false;
         if (changeSet.Count != 0)
         {
             observer.OnNext(changeSet);
-            emitted = true;
         }
 
         if (_hasCompleted)
         {
             observer.OnCompleted();
         }
-
-        return emitted;
     }
 
     private void OnItemAdded(TObject item, TKey key)

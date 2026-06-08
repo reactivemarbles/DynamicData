@@ -78,18 +78,13 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
         {
             _sourceTouched.Clear();
 
-            // When sources have all completed, flush any pending refreshes synchronously here so they
-            // surface before the runtime fires OnCompleted downstream. This covers both the unbuffered
-            // path (which always flushes per drain) and the buffered path whose timer would otherwise
-            // be cancelled by the imminent stream termination.
+            // Flush pending refreshes whenever there is no timer-based deferral active
+            // (unbuffered) or when sources have completed (so the timer would never fire
+            // before downstream completion). The queue re-fires OnDrainComplete after any
+            // reentrant drain triggered by FlushPending, so a single emit per call suffices.
             if (sourcesCompleted || buffer is null)
             {
-                // Loop until pending is empty: each Emitter.OnNext triggers a reentrant drain that
-                // may add new refreshes via OnInner before the orchestrator regains control.
-                while (_pendingRefreshes.Count > 0)
-                {
-                    FlushPending();
-                }
+                FlushPending();
             }
         }
 

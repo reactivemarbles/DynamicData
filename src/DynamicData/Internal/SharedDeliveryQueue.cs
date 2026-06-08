@@ -27,6 +27,7 @@ internal sealed class SharedDeliveryQueue : IDisposable
     private Bitset _activeBits = new();
     private int _deadCount;
     private int _drainThreadId = -1;
+    private bool _drainReentered;
     private volatile bool _isTerminated;
 
     /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with its own internal lock.</summary>
@@ -157,6 +158,9 @@ internal sealed class SharedDeliveryQueue : IDisposable
         if (_drainThreadId == currentThreadId)
         {
             ExitLock();
+            // Flag the reentrancy so the outer DrainAll re-fires _onDrainComplete
+            // for orchestrators that accumulate state during this reentrant drain.
+            _drainReentered = true;
             DrainPending();
             return;
         }
@@ -198,21 +202,22 @@ internal sealed class SharedDeliveryQueue : IDisposable
                     return;
                 }
 
+                // Reset before the callback so the flag exclusively reflects reentrant
+                // drains triggered by _onDrainComplete itself.
+                _drainReentered = false;
+
                 if (_onDrainComplete is not null)
                 {
                     _onDrainComplete();
                 }
 
-                // Atomically check for pending items and release drain ownership
-                // if empty. This closes the TOCTOU window: if we checked and released
-                // in separate lock scopes, Thread B could enqueue between them,
-                // see _drainThreadId != -1, and rely on us to drain, but we'd exit
-                // without draining Thread B's item.
+                // Loop back if items are pending OR if a reentrant drain ran during
+                // _onDrainComplete (items consumed by the reentrant drain may have
+                // updated orchestrator state that needs another flush pass).
                 EnterLock();
 
-                if (_activeBits.HasAny() && !_isTerminated)
+                if ((_activeBits.HasAny() || _drainReentered) && !_isTerminated)
                 {
-                    // Items arrived during _onDrainComplete. Loop back to drain them.
                     ExitLock();
                     continue;
                 }

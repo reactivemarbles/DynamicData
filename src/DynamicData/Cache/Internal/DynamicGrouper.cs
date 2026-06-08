@@ -143,7 +143,7 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         EmitChanges(observer);
     }
 
-    public bool EmitChanges(IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>> observer)
+    public void EmitChanges(IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>> observer)
     {
         // Verify logic doesn't capture any non-empty groups
         Debug.Assert(_emptyGroups.All(static group => group.Cache.Count == 0), "Non empty Group in Empty Group HashSet");
@@ -170,10 +170,7 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         if (changeSet.Count != 0)
         {
             observer.OnNext(new GroupChangeSet<TObject, TKey, TGroupKey>(changeSet));
-            return true;
         }
-
-        return false;
     }
 
     public void Dispose()

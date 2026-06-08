@@ -50,14 +50,9 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
             onInner: (value, key) => cache.AddOrUpdate(value, key),
             onDrainComplete: observer =>
             {
-                while (true)
+                var captured = cache.CaptureChanges();
+                if (captured.Count != 0)
                 {
-                    var captured = cache.CaptureChanges();
-                    if (captured.Count == 0)
-                    {
-                        break;
-                    }
-
                     observer.OnNext(captured);
                 }
             });
