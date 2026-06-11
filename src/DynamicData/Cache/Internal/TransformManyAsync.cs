@@ -22,7 +22,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
         source.OrchestrateMany<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>, Orchestrator>(
             (context, emitter) => new Orchestrator(context, emitter, transformer, equalityComparer, comparer, errorHandler));
 
-    private sealed class Orchestrator : OrchestratorCacheChangeBase<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
+    internal sealed class Orchestrator : OrchestratorCacheChangeBase<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
     {
         private readonly Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey> _cache = new();
         private readonly ChangeSetMergeTracker<TDestination, TDestinationKey> _tracker;

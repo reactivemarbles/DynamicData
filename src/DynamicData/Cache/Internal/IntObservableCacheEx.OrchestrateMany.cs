@@ -65,7 +65,7 @@ internal static partial class IntObservableCacheEx
         source.OrchestrateMany<TSource, TKey, TInner, TResult, LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>>(
             (context, emitter) => new LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(context, emitter, onSourceChangeSet, onInner, onDrainComplete));
 
-    private sealed class LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(
+    internal sealed class LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(
             ICacheOrchestratorContext<TKey, TInner> context,
             IObserver<TResult> emitter,
             Action<IChangeSet<TSource, TKey>, Action<TKey, IObservable<TInner>>, Action<TKey>> onSourceChangeSet,

@@ -38,7 +38,7 @@ internal static partial class IntObservableCacheEx
         source.OrchestrateMany<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>, MergedOrchestrator<TSource, TKey, TDest, TDestKey>>(
             (context, emitter) => new MergedOrchestrator<TSource, TKey, TDest, TDestKey>(context, emitter, changeSetSelector, equalityComparer, comparer, reevalOnRefresh));
 
-    private sealed class MergedOrchestrator<TSource, TKey, TDest, TDestKey> : OrchestratorCacheChangeBase<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>>
+    internal sealed class MergedOrchestrator<TSource, TKey, TDest, TDestKey> : OrchestratorCacheChangeBase<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>>
         where TSource : notnull
         where TKey : notnull
         where TDest : notnull

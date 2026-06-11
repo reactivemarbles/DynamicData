@@ -31,7 +31,7 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
         _source.OrchestrateMany<TObject, TKey, TDestination, TDestination, Orchestrator>(
             (context, emitter) => new Orchestrator(context, emitter, _observableSelector));
 
-    private sealed class Orchestrator(
+    internal sealed class Orchestrator(
             ICacheOrchestratorContext<TKey, TDestination> context,
             IObserver<TDestination> emitter,
             Func<TObject, TKey, IObservable<TDestination>> selector)

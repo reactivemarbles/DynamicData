@@ -45,7 +45,7 @@ internal static partial class IntObservableCacheEx
         source.OrchestrateMany<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>, ChangesOrchestrator<TSource, TKey, TInner, TOutput>>(
             (context, emitter) => new ChangesOrchestrator<TSource, TKey, TInner, TOutput>(context, emitter, innerFactory, onSourceChange, onInner));
 
-    private sealed class ChangesOrchestrator<TSource, TKey, TInner, TOutput>(
+    internal sealed class ChangesOrchestrator<TSource, TKey, TInner, TOutput>(
             ICacheOrchestratorContext<TKey, (TSource Item, TInner Value)> context,
             IObserver<IChangeSet<TOutput, TKey>> emitter,
             Func<TSource, TKey, IObservable<TInner>> innerFactory,

@@ -35,7 +35,7 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
     /// drain cycle are suppressed, so a reevaluator that fires synchronously during item
     /// subscription does not produce a redundant Refresh paired with the Add.
     /// </summary>
-    private sealed class Orchestrator(
+    internal sealed class Orchestrator(
             ICacheOrchestratorContext<TKey, Change<TObject, TKey>> context,
             IObserver<IChangeSet<TObject, TKey>> emitter,
             Func<TObject, TKey, IObservable<TAny>> reEvaluator,
