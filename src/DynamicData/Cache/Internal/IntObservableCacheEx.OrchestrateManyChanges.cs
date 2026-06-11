@@ -42,7 +42,7 @@ internal static partial class IntObservableCacheEx
         where TKey : notnull
         where TInner : notnull
         where TOutput : notnull =>
-        source.OrchestrateMany<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>>(
+        source.OrchestrateMany<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>, ChangesOrchestrator<TSource, TKey, TInner, TOutput>>(
             (context, emitter) => new ChangesOrchestrator<TSource, TKey, TInner, TOutput>(context, emitter, innerFactory, onSourceChange, onInner));
 
     private sealed class ChangesOrchestrator<TSource, TKey, TInner, TOutput>(
@@ -61,7 +61,7 @@ internal static partial class IntObservableCacheEx
 
         public override void OnInner((TSource Item, TInner Value) value, TKey key) => onInner(_cache, key, value.Item, value.Value);
 
-        public override void OnDrainComplete(bool isFinal)
+        public override void OnDrainComplete(bool isFinal, bool wasReentrant)
         {
             var captured = _cache.CaptureChanges();
             if (captured.Count != 0)
@@ -85,7 +85,7 @@ internal static partial class IntObservableCacheEx
         protected override void OnItemRemoved(TSource item, TKey key)
         {
             onSourceChange(_cache, new Change<TSource, TKey>(ChangeReason.Remove, key, item));
-            Context.Track(key, null);
+            Context.Untrack(key);
         }
 
         protected override void OnItemRefreshed(TSource item, TKey key) =>

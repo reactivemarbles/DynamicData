@@ -16,7 +16,7 @@ namespace DynamicData.Internal;
 internal sealed class SharedDeliveryQueue : IDisposable
 {
     private readonly List<DrainableBase> _sources = [];
-    private readonly Action? _onDrainComplete;
+    private readonly Action<bool>? _onDrainComplete;
 
 #if NET9_0_OR_GREATER
     private readonly Lock _gate;
@@ -38,9 +38,11 @@ internal sealed class SharedDeliveryQueue : IDisposable
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with its own internal lock
-    /// and a callback that fires outside the lock after each drain cycle completes.
+    /// and a callback that fires outside the lock after each drain cycle completes. The callback receives
+    /// a <see langword="bool"/> indicating whether a reentrant drain (same-thread re-entry via
+    /// <see cref="ExitLockAndDrain"/>) occurred during the prior delivery cycle.
     /// </summary>
-    public SharedDeliveryQueue(Action? onDrainComplete)
+    public SharedDeliveryQueue(Action<bool>? onDrainComplete)
     {
 #if NET9_0_OR_GREATER
         _gate = new Lock();
@@ -184,6 +186,12 @@ internal sealed class SharedDeliveryQueue : IDisposable
     {
         try
         {
+            // Tracks whether a reentrant drain ran during the prior delivery, surfaced to the
+            // callback so consumers can branch on the distinction. Reset to false at the start
+            // of each iteration (after consumption) so each callback invocation sees only the
+            // reentrancy that occurred during the immediately preceding delivery cycle.
+            var wasReentrant = false;
+
             while (true)
             {
                 if (!DrainPending())
@@ -202,13 +210,14 @@ internal sealed class SharedDeliveryQueue : IDisposable
                     return;
                 }
 
-                // Reset before the callback so the flag exclusively reflects reentrant
-                // drains triggered by _onDrainComplete itself.
+                // Capture and reset before the callback so the flag exclusively reflects reentrant
+                // drains triggered by _onDrainComplete itself on the next iteration.
+                wasReentrant = _drainReentered;
                 _drainReentered = false;
 
                 if (_onDrainComplete is not null)
                 {
-                    _onDrainComplete();
+                    _onDrainComplete(wasReentrant);
                 }
 
                 // Loop back if items are pending OR if a reentrant drain ran during

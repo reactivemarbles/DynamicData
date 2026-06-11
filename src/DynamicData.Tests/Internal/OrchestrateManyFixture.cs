@@ -52,7 +52,7 @@ public sealed class OrchestrateManyFixture
             Action? onChild = null)
     {
         TestOrchestrator? captured = null;
-        var observable = source.OrchestrateMany<TestItem, int, string, IChangeSet<TestItem, int>>(
+        var observable = source.OrchestrateMany<TestItem, int, string, IChangeSet<TestItem, int>, TestOrchestrator>(
             (ctx, em) => captured = new TestOrchestrator(ctx, em, childFactory, onParent, onChild));
         return (observable, () => captured ?? throw new InvalidOperationException("Subscribe to the returned observable first."));
     }
@@ -456,10 +456,10 @@ public sealed class OrchestrateManyFixture
         var emitCalls = 0;
         var contexts = new List<int>();
 
-        // Build a chain that captures whichever context (via the track callback's identity) the
-        // orchestrator received in Initialize. Two subscribers should each see their own context.
-        var observable = source.Connect().OrchestrateMany<TestItem, int, string, int>(
-            onSourceChangeSet: (changes, track) =>
+        // Build a chain that captures whichever context (via the track callback's identity) each
+        // orchestrator received. Two subscribers should each see their own context.
+        var observable = source.Connect().OrchestrateLambdas<TestItem, int, string, int>(
+            onSourceChangeSet: (changes, track, untrack) =>
             {
                 // Capture an identity-stable token for the track delegate, proving each subscription
                 // has its own context. Hash code of the bound delegate target reflects the underlying
@@ -523,6 +523,7 @@ public sealed class OrchestrateManyFixture
         public int EmitCallCount;
         public readonly List<(string Value, int Key)> ChildCalls = [];
         public readonly List<bool> IsFinalLog = [];
+        public readonly List<bool> WasReentrantLog = [];
 
         public void OnSourceChangeSet(IChangeSet<TestItem, int> changes)
         {
@@ -537,7 +538,7 @@ public sealed class OrchestrateManyFixture
                     if (change.Reason is ChangeReason.Add or ChangeReason.Update)
                         context.Track(change.Key, childFactory(change.Key));
                     else if (change.Reason is ChangeReason.Remove)
-                        context.Track(change.Key, null);
+                        context.Untrack(change.Key);
                 }
             }
         }
@@ -549,9 +550,10 @@ public sealed class OrchestrateManyFixture
             _cache.AddOrUpdate(new TestItem(parentKey, child), parentKey);
         }
 
-        public void OnDrainComplete(bool isFinal)
+        public void OnDrainComplete(bool isFinal, bool wasReentrant)
         {
             IsFinalLog.Add(isFinal);
+            WasReentrantLog.Add(wasReentrant);
 
             var changes = _cache.CaptureChanges();
             if (changes.Count > 0)

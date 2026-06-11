@@ -28,7 +28,7 @@ internal sealed class MergeManyItems<TObject, TKey, TDestination>
     }
 
     public IObservable<ItemWithValue<TObject, TDestination>> Run() =>
-        _source.OrchestrateMany<TObject, TKey, (TObject Item, TDestination Value), ItemWithValue<TObject, TDestination>>(
+        _source.OrchestrateMany<TObject, TKey, (TObject Item, TDestination Value), ItemWithValue<TObject, TDestination>, Orchestrator>(
             (context, emitter) => new Orchestrator(context, emitter, _observableSelector));
 
     private sealed class Orchestrator(
@@ -43,6 +43,6 @@ internal sealed class MergeManyItems<TObject, TKey, TDestination>
         protected override void OnItemAdded(TObject item, TKey key) =>
             Context.Track(key, selector(item, key).Select(value => (Item: item, Value: value)));
 
-        protected override void OnItemRemoved(TObject item, TKey key) => Context.Track(key, null);
+        protected override void OnItemRemoved(TObject item, TKey key) => Context.Untrack(key);
     }
 }

@@ -19,7 +19,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
     where TDestinationKey : notnull
 {
     public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() =>
-        source.OrchestrateMany<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>(
+        source.OrchestrateMany<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>, Orchestrator>(
             (context, emitter) => new Orchestrator(context, emitter, transformer, equalityComparer, comparer, errorHandler));
 
     private sealed class Orchestrator : OrchestratorCacheChangeBase<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
@@ -45,7 +45,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
 
         public override void OnInner(IChangeSet<TDestination, TDestinationKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
 
-        public override void OnDrainComplete(bool isFinal) => _tracker.EmitChanges(Emitter);
+        public override void OnDrainComplete(bool isFinal, bool wasReentrant) => _tracker.EmitChanges(Emitter);
 
         protected override void OnItemAdded(TSource item, TKey key) => SubscribeChild(item, key);
 
@@ -67,7 +67,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
                 _tracker.RemoveItems(removed.Value.Cache.KeyValues);
             }
 
-            Context.Track(key, null);
+            Context.Untrack(key);
         }
 
         private void SubscribeChild(TSource item, TKey key)

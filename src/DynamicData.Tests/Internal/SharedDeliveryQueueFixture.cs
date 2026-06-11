@@ -192,7 +192,7 @@ public class SharedDeliveryQueueFixture
         DeliverySubQueue<int>? sub = null;
 
         SharedDeliveryQueue queue = null!;
-        queue = new SharedDeliveryQueue(onDrainComplete: () =>
+        queue = new SharedDeliveryQueue(onDrainComplete: _ =>
         {
             // Emit one item on the first callback invocation only. The enqueue happens while we
             // are inside DrainAll on the drain thread, so ExitLockAndDrain takes the reentrant

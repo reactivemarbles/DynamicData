@@ -21,7 +21,7 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
     public IObservable<IChangeSet<TObject, TKey>> Run()
     {
         var sched = buffer is null ? null : scheduler ?? GlobalConfig.DefaultScheduler;
-        return source.OrchestrateMany<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>(
+        return source.OrchestrateMany<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>, Orchestrator>(
             (context, emitter) => new Orchestrator(context, emitter, reEvaluator, buffer, sched));
     }
 
@@ -74,7 +74,7 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
             }
         }
 
-        public override void OnDrainComplete(bool isFinal)
+        public override void OnDrainComplete(bool isFinal, bool wasReentrant)
         {
             _sourceTouched.Clear();
 
@@ -104,7 +104,7 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
         {
             _sourceTouched.Add(key);
             DropPending(key);
-            Context.Track(key, null);
+            Context.Untrack(key);
         }
 
         protected override void OnItemRefreshed(TObject item, TKey key) => _sourceTouched.Add(key);

@@ -35,7 +35,7 @@ internal static partial class IntObservableCacheEx
         where TKey : notnull
         where TDest : notnull
         where TDestKey : notnull =>
-        source.OrchestrateMany<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>>(
+        source.OrchestrateMany<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>, MergedOrchestrator<TSource, TKey, TDest, TDestKey>>(
             (context, emitter) => new MergedOrchestrator<TSource, TKey, TDest, TDestKey>(context, emitter, changeSetSelector, equalityComparer, comparer, reevalOnRefresh));
 
     private sealed class MergedOrchestrator<TSource, TKey, TDest, TDestKey> : OrchestratorCacheChangeBase<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>>
@@ -65,7 +65,7 @@ internal static partial class IntObservableCacheEx
 
         public override void OnInner(IChangeSet<TDest, TDestKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
 
-        public override void OnDrainComplete(bool isFinal) => _tracker.EmitChanges(Emitter);
+        public override void OnDrainComplete(bool isFinal, bool wasReentrant) => _tracker.EmitChanges(Emitter);
 
         protected override void OnItemAdded(TSource item, TKey key) => SubscribeChild(item, key);
 
@@ -89,7 +89,7 @@ internal static partial class IntObservableCacheEx
                 _tracker.RemoveItems(removed.Value.Cache.KeyValues);
             }
 
-            Context.Track(key, null);
+            Context.Untrack(key);
         }
 
         protected override void OnItemRefreshed(TSource item, TKey key)

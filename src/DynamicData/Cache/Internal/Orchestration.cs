@@ -22,32 +22,41 @@ namespace DynamicData.Cache.Internal;
 /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
 /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
 /// <typeparam name="TResult">Type delivered downstream.</typeparam>
+/// <typeparam name="TOrch">Concrete orchestrator type returned by the factory. Generic-typed so
+/// dispatch sites devirtualize.</typeparam>
 /// <param name="source">The keyed source changeset stream.</param>
 /// <param name="factory">Builds the per-subscription orchestrator from its runtime context and emitter.</param>
-internal sealed class Orchestration<TSource, TKey, TInner, TResult>(
+internal sealed class Orchestration<TSource, TKey, TInner, TResult, TOrch>(
         IObservable<IChangeSet<TSource, TKey>> source,
-        Func<ICacheOrchestratorContext<TKey, TInner>, IObserver<TResult>, ICacheOrchestrator<TSource, TKey, TInner, TResult>> factory)
+        Func<ICacheOrchestratorContext<TKey, TInner>, IObserver<TResult>, TOrch> factory)
     where TSource : notnull
     where TKey : notnull
     where TInner : notnull
+    where TOrch : ICacheOrchestrator<TSource, TKey, TInner, TResult>
 {
     public IObservable<TResult> Run() => Observable.Create<TResult>(observer => new OrchestratorContext(source, observer, factory));
 
     private sealed class OrchestratorContext : ICacheOrchestratorContext<TKey, TInner>, IDisposable
     {
+        /// <summary>
+        /// Initial counter value representing the source subscription itself. Source completion
+        /// decrements by this amount; tracked inner subscriptions add their own +1 each.
+        /// </summary>
+        private const int SourceSubscriptionWeight = 1;
+
         private readonly KeyedDisposable<TKey> _innerSubscriptions = new();
         private readonly SingleAssignmentDisposable _sourceSubscription = new();
         private readonly SharedDeliveryQueue _queue;
         private readonly DeliverySubQueue<TResult> _emitter;
-        private readonly ICacheOrchestrator<TSource, TKey, TInner, TResult> _orchestrator;
-        private int _subscriptionCounter = 1;
-        private bool _isCompleted;
+        private readonly TOrch _orchestrator = default!;
+        private int _subscriptionCounter = SourceSubscriptionWeight;
+        private int _completionEmitted;
         private bool _disposed;
 
         public OrchestratorContext(
                 IObservable<IChangeSet<TSource, TKey>> source,
                 IObserver<TResult> observer,
-                Func<ICacheOrchestratorContext<TKey, TInner>, IObserver<TResult>, ICacheOrchestrator<TSource, TKey, TInner, TResult>> factory)
+                Func<ICacheOrchestratorContext<TKey, TInner>, IObserver<TResult>, TOrch> factory)
         {
             _queue = new SharedDeliveryQueue(onDrainComplete: OnDrainComplete);
 
@@ -55,7 +64,20 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult>(
             // sync inner emissions (higher index) deliver first and any orchestrator emit lands on the
             // emitter after that work has settled.
             _emitter = _queue.CreateQueue(observer);
-            _orchestrator = factory(this, _emitter);
+
+            // Wrap the factory call so a throw is reported via the standard error channel and any
+            // queue/emitter we already allocated are released.
+            try
+            {
+                _orchestrator = factory(this, _emitter);
+                Debug.Assert(_orchestrator is not null, "Factory must not return null");
+            }
+            catch
+            {
+                _queue.Dispose();
+                _emitter.Dispose();
+                throw;
+            }
 
             _sourceSubscription.Disposable = source
                 .SynchronizeSafe(_queue)
@@ -73,20 +95,19 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult>(
             }
 
             _disposed = true;
-            _queue.Dispose();
+
+            // Stop incoming work first so source/inner pumps cannot keep firing into a terminating
+            // queue. The queue itself is disposed afterwards to drain (or terminate) cleanly.
             _sourceSubscription.Dispose();
             _innerSubscriptions.Dispose();
+            _queue.Dispose();
             _emitter.Dispose();
             (_orchestrator as IDisposable)?.Dispose();
         }
 
-        public void Track(TKey key, IObservable<TInner>? observable)
+        public void Track(TKey key, IObservable<TInner> observable)
         {
-            if (observable is null)
-            {
-                _innerSubscriptions.Remove(key);
-                return;
-            }
+            Debug.Assert(observable is not null, "Use Untrack(key) to remove a tracked subscription");
 
             // Increment before adding so the OnCompleted callback that fires when the previous subscription
             // for this key is disposed does not race the counter down to zero and signal premature termination.
@@ -97,7 +118,7 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult>(
             // Finally(DecrementSubscriptionCount) fires on completion, error, AND disposal, so the counter
             // always decrements. The onCompleted callback only fires on normal completion, so an inner
             // subscription disposed by Track replacing it (or by Dispose) does not trigger Remove from inside.
-            container.Disposable = observable
+            container.Disposable = observable!
                 .SynchronizeSafe(_queue)
                 .Finally(DecrementSubscriptionCount)
                 .SubscribeSafe(
@@ -105,6 +126,8 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult>(
                     onError: _emitter.OnError,
                     onCompleted: () => _innerSubscriptions.Remove(key));
         }
+
+        public void Untrack(TKey key) => _innerSubscriptions.Remove(key);
 
         public IObservable<T> Serialize<T>(IObservable<T> observable) => observable.SynchronizeSafe(_queue);
 
@@ -132,17 +155,18 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult>(
             }
         }
 
-        private void OnDrainComplete()
+        private void OnDrainComplete(bool wasReentrant)
         {
-            // Snapshot before calling the orchestrator: a reentrant drain triggered by the orchestrator's
-            // own emit can land here recursively, latch _isCompleted off, and complete the stream
-            // synchronously. When control returns to the outer call, the snapshot still tells the
-            // orchestrator that source and tracked inners are done.
-            var isFinal = Volatile.Read(ref _isCompleted);
+            // Counter == 0 means source and every tracked inner have terminated. This is the
+            // authoritative source of truth for "this is the last drain"; using a separate latched
+            // flag races when the orchestrator calls Track during the isFinal call (counter goes
+            // back to 1 but a latched flag would still say true, and we'd fire OnCompleted while
+            // a live inner exists).
+            var isFinal = Volatile.Read(ref _subscriptionCounter) == 0;
 
             try
             {
-                _orchestrator.OnDrainComplete(isFinal);
+                _orchestrator.OnDrainComplete(isFinal, wasReentrant);
             }
             catch (Exception error)
             {
@@ -150,23 +174,20 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult>(
                 return;
             }
 
-            if (Volatile.Read(ref _isCompleted))
+            // Re-check the counter: if the orchestrator added a tracked subscription during its
+            // OnDrainComplete (re-establishing liveness), do not complete. CAS-latch ensures
+            // exactly one OnCompleted across any number of repeated drains seeing counter == 0.
+            if (Volatile.Read(ref _subscriptionCounter) == 0 &&
+                Interlocked.CompareExchange(ref _completionEmitted, 1, 0) == 0)
             {
-                // Latch off so the inevitable reentrant drain (triggered by enqueueing OnCompleted on
-                // the emitter sub-queue) doesn't try to complete the stream twice.
-                Volatile.Write(ref _isCompleted, false);
                 _emitter.OnCompleted();
             }
         }
 
         private void DecrementSubscriptionCount()
         {
-            if (Interlocked.Decrement(ref _subscriptionCounter) == 0)
-            {
-                Volatile.Write(ref _isCompleted, true);
-            }
-
-            Debug.Assert(_subscriptionCounter >= 0, "Should never be negative");
+            var remaining = Interlocked.Decrement(ref _subscriptionCounter);
+            Debug.Assert(remaining >= 0, "Subscription counter should never go negative");
         }
     }
 }

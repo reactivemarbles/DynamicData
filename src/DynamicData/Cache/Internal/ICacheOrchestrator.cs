@@ -45,5 +45,11 @@ internal interface ICacheOrchestrator<TSource, TKey, TInner, TResult>
     /// completed). Implementations holding deferred state (timer-armed buffers, debounced batches)
     /// should flush synchronously when this is <see langword="true"/>.
     /// </param>
-    void OnDrainComplete(bool isFinal);
+    /// <param name="wasReentrant">
+    /// <see langword="true"/> when a reentrant drain occurred during the prior delivery cycle (an
+    /// orchestrator emit triggered same-thread re-entry into the queue's drain loop). Most
+    /// orchestrators can ignore this; it is exposed for advanced consumers that want to differentiate
+    /// the "I just emitted" path from a clean drain cycle.
+    /// </param>
+    void OnDrainComplete(bool isFinal, bool wasReentrant);
 }
