@@ -48,28 +48,28 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
     {
         private readonly IObserver<PropertyValue<TObject, TProperty>> _downstream;
         private int _initialClaimed;
-        private int _dedupArmed;
-        private PropertyValue<TObject, TProperty>? _seedValue;
+        private int _requiresDupCheck;
+        private PropertyValue<TObject, TProperty>? _initialValue;
 
         public Emitter(IObserver<PropertyValue<TObject, TProperty>> downstream, bool notifyInitial)
         {
             _downstream = downstream;
-            _dedupArmed = notifyInitial ? 0 : 1;
+            _requiresDupCheck = notifyInitial ? 0 : 1;
         }
 
         public void OnNext(PropertyValue<TObject, TProperty> value)
         {
             if (Interlocked.CompareExchange(ref _initialClaimed, 1, 0) == 0)
             {
-                Volatile.Write(ref _seedValue, value);
+                Volatile.Write(ref _initialValue, value);
                 _downstream.OnNext(value);
                 return;
             }
 
-            if (Interlocked.CompareExchange(ref _dedupArmed, 1, 0) == 0)
+            if (Interlocked.CompareExchange(ref _requiresDupCheck, 1, 0) == 0)
             {
-                var seed = Volatile.Read(ref _seedValue);
-                if (seed is not null && PropertyValuesEqual(seed, value))
+                var initial = Volatile.Read(ref _initialValue);
+                if (initial is not null && PropertyValuesEqual(initial, value))
                 {
                     return;
                 }
@@ -148,23 +148,21 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             }
         }
 
-        // Reads source via the compiled accessor with try/catch; routes failures to _emitter.OnError,
-        // otherwise forwards the PropertyValue through _emitter.OnNext. The original Rx pipeline
-        // (Select(...)) gave us this for free; we have to do it explicitly now.
+        // Reads source via the compiled accessor and forwards the PropertyValue through the
+        // shared Emitter. Wraps both the read AND the emission so that exceptions from either the
+        // user-supplied property getter or the downstream observer (raised synchronously via the
+        // DeliveryQueue drain) route to OnError instead of escaping into the PropertyChanged
+        // setter that fired the event.
         private void EmitCurrent()
         {
-            PropertyValue<TObject, TProperty> value;
             try
             {
-                value = new PropertyValue<TObject, TProperty>(_source, _accessor(_source));
+                _emitter.OnNext(new PropertyValue<TObject, TProperty>(_source, _accessor(_source)));
             }
             catch (Exception ex)
             {
                 _emitter.OnError(ex);
-                return;
             }
-
-            _emitter.OnNext(value);
         }
     }
 
