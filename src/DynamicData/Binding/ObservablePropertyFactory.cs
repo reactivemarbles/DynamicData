@@ -253,27 +253,21 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
 
         private void ProcessSignal(int level)
         {
-            // Drainer thread: any exception thrown by a user-provided invoker, notifier
-            // factory, or value accessor must be routed to OnError rather than escaping the
-            // drainer. The original Rx pipeline (Select(...)) gave us this for free; we have
-            // to do it explicitly now.
+            // Drainer thread: any exception thrown by a user-provided invoker, notifier factory,
+            // value accessor, or downstream observer must route to OnError rather than escape the
+            // drainer (the original Rx pipeline got this via Select; we do it explicitly).
+            //
+            // The two cases (initial setup vs level-fire) collapse to:
+            //   startLevel = (initial) ? 0 : level + 1
+            //   emit       = (level-fire) || _notifyInitial
             try
             {
-                if (level == InitialSetupSignal)
+                var isInitial = level == InitialSetupSignal;
+                ResubscribeFrom(isInitial ? 0 : level + 1);
+                if (!isInitial || _notifyInitial)
                 {
-                    // Initial chain setup runs on the drainer so it serializes against any
-                    // concurrent notifier fires that may arrive while we attach the notifiers.
-                    ResubscribeFrom(0);
-                    if (_notifyInitial)
-                    {
-                        _emitter.OnNext(ReadCurrent());
-                    }
-
-                    return;
+                    _emitter.OnNext(ReadCurrent());
                 }
-
-                ResubscribeFrom(level + 1);
-                _emitter.OnNext(ReadCurrent());
             }
             catch (Exception ex)
             {
