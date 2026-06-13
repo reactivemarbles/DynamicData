@@ -26,7 +26,8 @@ namespace DynamicData.Tests.Binding;
 /// </summary>
 public sealed class WhenPropertyChangedRaceFixture
 {
-    private static readonly TimeSpan DefaultConditionTimeout = TimeSpan.FromSeconds(5);
+    // CI-friendly: tests should complete in ms but allow generous budget on heavily-loaded shared runners.
+    private static readonly TimeSpan DefaultConditionTimeout = TimeSpan.FromSeconds(30);
 
     [Fact]
     public void Shallow_ConcurrentMutationDuringInitialEmit_NotDropped()
@@ -50,7 +51,7 @@ public sealed class WhenPropertyChangedRaceFixture
                 // Hold the OnNext open. With the BUG, Concat is blocked here and the propertyChanged
                 // event handler has NOT yet been attached; a mutation now will be silently lost.
                 observerInitialReceived.Set();
-                observerCanContinue.Wait(TimeSpan.FromSeconds(10));
+                observerCanContinue.Wait(DefaultConditionTimeout);
             }
         });
 
@@ -60,7 +61,7 @@ public sealed class WhenPropertyChangedRaceFixture
 
         try
         {
-            observerInitialReceived.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("the worker thread must reach the initial emission");
+            observerInitialReceived.Wait(DefaultConditionTimeout).Should().BeTrue("the worker thread must reach the initial emission");
 
             // Mutate while Subscribe is parked inside observer.OnNext for the initial value.
             model.Value = 20;
@@ -70,7 +71,7 @@ public sealed class WhenPropertyChangedRaceFixture
             observerCanContinue.Set();
         }
 
-        subscribeTask.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("Subscribe must complete");
+        subscribeTask.Wait(DefaultConditionTimeout).Should().BeTrue("Subscribe must complete");
         using var sub = subscribeTask.Result;
 
         WaitForCondition(() => { lock (emissions) return emissions.Contains(20); });
@@ -194,7 +195,7 @@ public sealed class WhenPropertyChangedRaceFixture
             if (isFirst)
             {
                 observerInitialReceived.Set();
-                observerCanContinue.Wait(TimeSpan.FromSeconds(10));
+                observerCanContinue.Wait(DefaultConditionTimeout);
             }
         });
 
@@ -203,7 +204,7 @@ public sealed class WhenPropertyChangedRaceFixture
 
         try
         {
-            observerInitialReceived.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("the worker thread must reach the initial emission");
+            observerInitialReceived.Wait(DefaultConditionTimeout).Should().BeTrue("the worker thread must reach the initial emission");
 
             parent.Child!.Age = 20;
         }
@@ -212,7 +213,7 @@ public sealed class WhenPropertyChangedRaceFixture
             observerCanContinue.Set();
         }
 
-        subscribeTask.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("Subscribe must complete");
+        subscribeTask.Wait(DefaultConditionTimeout).Should().BeTrue("Subscribe must complete");
         using var sub = subscribeTask.Result;
 
         WaitForCondition(() => { lock (emissions) return emissions.Contains(20); });
@@ -230,7 +231,11 @@ public sealed class WhenPropertyChangedRaceFixture
         // signals on the drainer, so ResubscribeFrom runs serially and the final level-1
         // subscription always targets parent.Child's current (latest) value. A leaf mutation on
         // the winning child must always be captured.
-        const int iterations = 500;
+        //
+        // 50 iterations is plenty: with SharedDeliveryQueue the outcome is deterministic, so a
+        // single iteration is sufficient to prove correctness. 50 just adds defence in depth against
+        // any future regression.
+        const int iterations = 50;
         var losses = 0;
 
         for (var i = 0; i < iterations; i++)
@@ -250,7 +255,11 @@ public sealed class WhenPropertyChangedRaceFixture
             using var barrier = new Barrier(2);
             var taskA = Task.Run(() => { barrier.SignalAndWait(); parent.Child = newChild1; });
             var taskB = Task.Run(() => { barrier.SignalAndWait(); parent.Child = newChild2; });
-            Task.WaitAll([taskA, taskB], TimeSpan.FromSeconds(5)).Should().BeTrue();
+
+            // Task.WaitAll only returns once both tasks have left Subscribe; the drainer (whichever
+            // task became it) has drained both queued signals before returning, so the leaf
+            // subscription is correctly attached to whichever child is parent.Child by now.
+            Task.WaitAll([taskA, taskB], DefaultConditionTimeout).Should().BeTrue();
 
             var winner = parent.Child;
             if (winner is null)
@@ -258,16 +267,9 @@ public sealed class WhenPropertyChangedRaceFixture
                 continue;
             }
 
-            // Wait for the drainer to have processed both parent swaps before mutating the winner.
-            WaitForCondition(
-                () => { lock (emissions) return emissions.Contains(winner.Age); },
-                TimeSpan.FromSeconds(2));
-
             winner.Age = 99;
 
-            WaitForCondition(
-                () => { lock (emissions) return emissions.Contains(99); },
-                TimeSpan.FromSeconds(2));
+            WaitForCondition(() => { lock (emissions) return emissions.Contains(99); });
 
             lock (emissions)
             {

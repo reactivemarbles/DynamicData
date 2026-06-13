@@ -163,7 +163,7 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             // synchronously, which attaches the chain and emits the initial value.
             signalSub.OnNext(InitialSetupSignal);
 
-            return new CompositeDisposable(new CompositeDisposable(levelSlots), signalSub, userSub, sharedQueue);
+            return new CompositeDisposable([..levelSlots, signalSub, userSub, sharedQueue]);
         });
     }
 
