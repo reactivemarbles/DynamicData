@@ -20,11 +20,14 @@ using Xunit;
 namespace DynamicData.Tests.Binding;
 
 /// <summary>
-/// Regression tests for the TOCTOU race in <c>WhenPropertyChanged</c> / <c>WhenValueChanged</c>.
-/// The bug: <c>ObservablePropertyFactory</c> uses <c>initial.Concat(events)</c>, which subscribes
-/// to the event source only AFTER the initial value is delivered. Any <c>PropertyChanged</c>
-/// notification fired during that gap is silently dropped.
+/// Concurrency and event-delivery tests for <see cref="NotifyPropertyChangedEx.WhenPropertyChanged{TObject, TProperty}"/>
+/// and <see cref="NotifyPropertyChangedEx.WhenValueChanged{TObject, TProperty}"/>.
 /// </summary>
+/// <remarks>
+/// Verifies that every <see cref="System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/> emission reaches the
+/// downstream observer, including events that fire while the operator's subscribe call is in flight, events on deep
+/// chains with concurrent mutation at multiple levels, and same-valued events that follow the initial emission.
+/// </remarks>
 public sealed class WhenPropertyChangedRaceFixture
 {
     // CI-friendly: tests should complete in ms but allow generous budget on heavily-loaded shared runners.
@@ -49,8 +52,8 @@ public sealed class WhenPropertyChangedRaceFixture
 
             if (isFirst)
             {
-                // Hold the OnNext open. With the BUG, Concat is blocked here and the propertyChanged
-                // event handler has NOT yet been attached; a mutation now will be silently lost.
+                // Hold the OnNext open. Any PropertyChanged event the test thread fires while the
+                // observer is blocked here must still reach the observer once it returns.
                 observerInitialReceived.Set();
                 observerCanContinue.Wait(DefaultConditionTimeout);
             }
@@ -109,37 +112,84 @@ public sealed class WhenPropertyChangedRaceFixture
     }
 
     [Fact]
-    public void NotifyInitialFalse_DoesNotDedupSameValuedEvents()
+    public void PropertyChangedEventsAreNeverDropped_RegardlessOfNotifyInitial()
     {
-        // Regression for the dedup-window bug: when notifyOnInitialValue is false, the one-shot
-        // equality guard must NOT be armed; two consecutive PropertyChanged events with the same
-        // value are both legitimate and both must reach the observer.
-        var model = new TestModel { Value = 10 };
-        var shallowEmissions = new List<int>();
-        using var shallowSub = model.WhenPropertyChanged(m => m.Value, notifyOnInitialValue: false)
-            .Subscribe(pv => { lock (shallowEmissions) shallowEmissions.Add(pv.Value); });
+        // Every PropertyChanged event must reach the observer, even when its value equals the
+        // most recently observed value. The same-valued case is the diagnostic: any equality
+        // dedup would silently drop one of these emissions and the test would see fewer values
+        // than were written. Covers both notifyOnInitialValue settings and both shallow and
+        // deep chains.
+        //
+        // Expected emissions per scenario:
+        //   Shallow + notifyInitial=true:  initial(10) + setter(10)*3 = 4 emissions.
+        //   Shallow + notifyInitial=false: setter(42)*2                = 2 emissions.
+        //   Deep    + notifyInitial=true:  initial(1)  + setter(7)*3   = 4 emissions.
+        //   Deep    + notifyInitial=false: setter(7)*2                 = 2 emissions.
 
-        model.Value = 42;
-        model.Value = 42;
-        WaitForCondition(() => { lock (shallowEmissions) return shallowEmissions.Count >= 2; });
-
-        lock (shallowEmissions)
+        // Shallow, notifyInitial=true: initial value matches every subsequent setter.
+        var modelT = new TestModel { Value = 10 };
+        var shallowTrueEmissions = new List<int>();
+        using (var sub = modelT.WhenPropertyChanged(m => m.Value, notifyOnInitialValue: true)
+                   .Subscribe(pv => { lock (shallowTrueEmissions) shallowTrueEmissions.Add(pv.Value); }))
         {
-            shallowEmissions.Should().Equal(new[] { 42, 42 }, "both same-valued events must be delivered when no initial value was requested");
+            modelT.Value = 10;
+            modelT.Value = 10;
+            modelT.Value = 10;
+            WaitForCondition(() => { lock (shallowTrueEmissions) return shallowTrueEmissions.Count >= 4; });
+        }
+        lock (shallowTrueEmissions)
+        {
+            shallowTrueEmissions.Should().Equal(new[] { 10, 10, 10, 10 },
+                "shallow notifyInitial=true must deliver the initial plus every same-valued setter without dedup");
         }
 
-        var parent = new ParentModel { Child = new ChildModel { Age = 1 } };
-        var deepEmissions = new List<int>();
-        using var deepSub = parent.WhenPropertyChanged(p => p.Child!.Age, notifyOnInitialValue: false)
-            .Subscribe(pv => { lock (deepEmissions) deepEmissions.Add(pv.Value); });
-
-        parent.Child!.Age = 7;
-        parent.Child!.Age = 7;
-        WaitForCondition(() => { lock (deepEmissions) return deepEmissions.Count >= 2; });
-
-        lock (deepEmissions)
+        // Shallow, notifyInitial=false: no initial, every setter delivered.
+        var modelF = new TestModel { Value = 10 };
+        var shallowFalseEmissions = new List<int>();
+        using (var sub = modelF.WhenPropertyChanged(m => m.Value, notifyOnInitialValue: false)
+                   .Subscribe(pv => { lock (shallowFalseEmissions) shallowFalseEmissions.Add(pv.Value); }))
         {
-            deepEmissions.Should().Equal(new[] { 7, 7 }, "deep chain must also not dedupe when no initial value was requested");
+            modelF.Value = 42;
+            modelF.Value = 42;
+            WaitForCondition(() => { lock (shallowFalseEmissions) return shallowFalseEmissions.Count >= 2; });
+        }
+        lock (shallowFalseEmissions)
+        {
+            shallowFalseEmissions.Should().Equal(new[] { 42, 42 },
+                "shallow notifyInitial=false must deliver both same-valued setters");
+        }
+
+        // Deep, notifyInitial=true: initial leaf value matches every subsequent setter.
+        var parentT = new ParentModel { Child = new ChildModel { Age = 1 } };
+        var deepTrueEmissions = new List<int>();
+        using (var sub = parentT.WhenPropertyChanged(p => p.Child!.Age, notifyOnInitialValue: true)
+                   .Subscribe(pv => { lock (deepTrueEmissions) deepTrueEmissions.Add(pv.Value); }))
+        {
+            parentT.Child!.Age = 1;
+            parentT.Child!.Age = 1;
+            parentT.Child!.Age = 1;
+            WaitForCondition(() => { lock (deepTrueEmissions) return deepTrueEmissions.Count >= 4; });
+        }
+        lock (deepTrueEmissions)
+        {
+            deepTrueEmissions.Should().Equal(new[] { 1, 1, 1, 1 },
+                "deep notifyInitial=true must deliver the initial plus every same-valued setter without dedup");
+        }
+
+        // Deep, notifyInitial=false: no initial, every setter delivered.
+        var parentF = new ParentModel { Child = new ChildModel { Age = 1 } };
+        var deepFalseEmissions = new List<int>();
+        using (var sub = parentF.WhenPropertyChanged(p => p.Child!.Age, notifyOnInitialValue: false)
+                   .Subscribe(pv => { lock (deepFalseEmissions) deepFalseEmissions.Add(pv.Value); }))
+        {
+            parentF.Child!.Age = 7;
+            parentF.Child!.Age = 7;
+            WaitForCondition(() => { lock (deepFalseEmissions) return deepFalseEmissions.Count >= 2; });
+        }
+        lock (deepFalseEmissions)
+        {
+            deepFalseEmissions.Should().Equal(new[] { 7, 7 },
+                "deep notifyInitial=false must deliver both same-valued setters");
         }
     }
 
@@ -175,10 +225,10 @@ public sealed class WhenPropertyChangedRaceFixture
     [Fact]
     public void DeepChain_ConcurrentLeafMutationDuringInitialEmit_NotDropped()
     {
-        // Deterministic forcing of the deep-chain TOCTOU: the worker thread blocks inside the
-        // initial-emit OnNext while the test thread mutates the leaf. With SharedDeliveryQueue the
-        // mutation enqueues onto the signal sub-queue and returns immediately; when the observer
-        // unblocks, the drainer processes the signal and delivers the resulting value.
+        // The worker thread blocks inside the initial-emit OnNext while the test thread mutates
+        // the leaf. SharedDeliveryQueue enqueues the leaf signal onto the signal sub-queue and
+        // returns immediately; when the observer unblocks, the drainer processes the signal and
+        // delivers the resulting value.
         var parent = new ParentModel { Child = new ChildModel { Age = 10 } };
         var emissions = new List<int>();
         var observerInitialReceived = new ManualResetEventSlim(false);
@@ -233,9 +283,8 @@ public sealed class WhenPropertyChangedRaceFixture
         // subscription always targets parent.Child's current (latest) value. A leaf mutation on
         // the winning child must always be captured.
         //
-        // 50 iterations is plenty: with SharedDeliveryQueue the outcome is deterministic, so a
-        // single iteration is sufficient to prove correctness. 50 just adds defence in depth against
-        // any future regression.
+        // The iteration count is defence in depth: one iteration is sufficient because the drainer
+        // serialization makes the outcome deterministic.
         const int iterations = 50;
         var losses = 0;
 
@@ -482,7 +531,7 @@ public sealed class WhenPropertyChangedRaceFixture
         //
         // Three invariants verified per iteration:
         //   (a) Rx contract: ValidateSynchronization on the subscription chain catches any
-        //       concurrent OnNext (SharedDeliveryQueue serialization bug).
+        //       concurrent OnNext (a SharedDeliveryQueue serialization failure).
         //   (b) Value legality: every emission must be a value that some thread legitimately
         //       wrote (catches torn reads or stale values from detached subtrees being mis-read).
         //   (c) Final consistency: after Task.WhenAll the drainer continues until the queue is
@@ -602,15 +651,15 @@ public sealed class WhenPropertyChangedRaceFixture
         // storm, every item that ends Activated=true must appear in the filter and every item
         // that ends Activated=false must not.
         //
-        // This exercises WhenPropertyChanged under multi-threaded contention: many concurrent
+        // Exercises WhenPropertyChanged under multi-threaded contention: many concurrent
         // PropertyChanged invocations per item, all wrapped through SinglePropertySubscription's
         // DeliveryQueue so the Rx contract is preserved end-to-end on the per-item path.
         //
-        // We DELIBERATELY do not interleave items being added with property mutations.
-        // ObservableCache.CreateConnectObservable uses the same initial.Concat(_changes) shape
-        // that we just fixed in WhenPropertyChanged, and has the same TOCTOU subscribe-window
-        // bug. That separate cache-side bug is out of scope for this PR; a "mutate while
-        // adding" test would detect it and add unrelated noise.
+        // Adds are NOT interleaved with property mutations. ObservableCache.CreateConnectObservable
+        // uses an initial.Concat(_changes) shape whose subscribe-window race can drop a
+        // concurrently-fired change before the AutoRefresh subscriber wires up; that is a
+        // cache-side concern and not what this test is targeting. Pre-populating ensures the
+        // signals observed here are produced solely by the per-item WhenPropertyChanged path.
         const int iterations = 30;
         const int itemCount = 200;
         const int mutatorThreads = 4;

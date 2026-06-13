@@ -39,78 +39,20 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
 
     public IObservable<PropertyValue<TObject, TProperty>> Create(TObject source, bool notifyInitial) => _factory(source, notifyInitial);
 
-    // Emits PropertyValues to the downstream observer with a one-shot equality guard at the
-    // subscribe-race boundary. notifyInitial controls only whether the caller will synthesize an
-    // initial emission: when true, a racing PropertyChanged firing in the subscribe window may
-    // produce the same value as the initial read; the one-shot dedup catches that duplicate.
-    // When false, every PropertyChanged is a legitimate emission and the dedup is never armed.
-    private sealed class Emitter : IObserver<PropertyValue<TObject, TProperty>>
-    {
-        private readonly IObserver<PropertyValue<TObject, TProperty>> _downstream;
-        private int _initialClaimed;
-        private int _requiresDupCheck;
-        private PropertyValue<TObject, TProperty>? _initialValue;
-
-        public Emitter(IObserver<PropertyValue<TObject, TProperty>> downstream, bool notifyInitial)
-        {
-            _downstream = downstream;
-            _requiresDupCheck = notifyInitial ? 0 : 1;
-        }
-
-        public void OnNext(PropertyValue<TObject, TProperty> value)
-        {
-            if (Interlocked.CompareExchange(ref _initialClaimed, 1, 0) == 0)
-            {
-                Volatile.Write(ref _initialValue, value);
-                _downstream.OnNext(value);
-                return;
-            }
-
-            if (Interlocked.CompareExchange(ref _requiresDupCheck, 1, 0) == 0)
-            {
-                var initial = Volatile.Read(ref _initialValue);
-                if (initial is not null && PropertyValuesEqual(initial, value))
-                {
-                    return;
-                }
-            }
-
-            _downstream.OnNext(value);
-        }
-
-        public void OnError(Exception error) => _downstream.OnError(error);
-
-        public void OnCompleted() => _downstream.OnCompleted();
-
-        // One-shot dedup comparison: equal when both have a value AND values are equal, OR both
-        // are unobtainable. Used exactly once per subscription, at the boundary between the
-        // initial value and the first handler-fired emission.
-        private static bool PropertyValuesEqual(PropertyValue<TObject, TProperty> a, PropertyValue<TObject, TProperty> b)
-        {
-            if (a.UnobtainableValue != b.UnobtainableValue)
-            {
-                return false;
-            }
-
-            if (a.UnobtainableValue)
-            {
-                return true;
-            }
-
-            return EqualityComparer<TProperty>.Default.Equals(a.Value!, b.Value!);
-        }
-    }
-
-    // Single-property subscription. Attaches a direct PropertyChanged handler and emits via the
-    // shared Emitter. Used for x => x.Prop (depth == 1) where SharedDeliveryQueue and
-    // Observable.FromEventPattern would be needless overhead on the hot path.
+    // Single-property subscription. Attaches a direct PropertyChanged handler and forwards every
+    // event through a DeliveryQueue. Used for x => x.Prop (depth == 1) where SharedDeliveryQueue
+    // and Observable.FromEventPattern would be needless overhead on the hot path.
+    //
+    // notifyInitial only controls whether the constructor synthesises an initial emission. There
+    // is no equality dedup at the subscribe seam: a same-valued PropertyChanged firing in the
+    // subscribe window is a legitimate event and must be delivered. The "never drop events"
+    // contract takes precedence over avoiding a benign duplicate.
     private sealed class SinglePropertySubscription : IDisposable
     {
         private readonly TObject _source;
         private readonly string _memberName;
         private readonly Func<TObject, TProperty> _accessor;
         private readonly DeliveryQueue<PropertyValue<TObject, TProperty>> _queue;
-        private readonly Emitter _emitter;
 
         public SinglePropertySubscription(
             IObserver<PropertyValue<TObject, TProperty>> observer,
@@ -123,7 +65,6 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             _memberName = memberName;
             _accessor = accessor;
             _queue = new DeliveryQueue<PropertyValue<TObject, TProperty>>(observer);
-            _emitter = new Emitter(_queue, notifyInitial);
 
             // Attach PropertyChanged handler FIRST so events during the initial read are not missed.
             _source.PropertyChanged += OnPropertyChanged;
@@ -148,20 +89,34 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             }
         }
 
-        // Reads source via the compiled accessor and forwards the PropertyValue through the
-        // shared Emitter. Wraps both the read AND the emission so that exceptions from either the
-        // user-supplied property getter or the downstream observer (raised synchronously via the
-        // DeliveryQueue drain) route to OnError instead of escaping into the PropertyChanged
-        // setter that fired the event.
+        // Wraps both the accessor read AND the queue OnNext (which may invoke the downstream
+        // observer synchronously via the DeliveryQueue drain) so that exceptions from either
+        // route to OnError instead of escaping into the PropertyChanged setter that fired the
+        // event. TryOnError catches any throw from the downstream OnError so a malformed
+        // observer cannot propagate a secondary exception back into the setter chain either.
         private void EmitCurrent()
         {
             try
             {
-                _emitter.OnNext(new PropertyValue<TObject, TProperty>(_source, _accessor(_source)));
+                _queue.OnNext(new PropertyValue<TObject, TProperty>(_source, _accessor(_source)));
             }
             catch (Exception ex)
             {
-                _emitter.OnError(ex);
+                TryOnError(ex);
+            }
+        }
+
+        private void TryOnError(Exception ex)
+        {
+            try
+            {
+                _queue.OnError(ex);
+            }
+            catch
+            {
+                // Downstream observer's OnError threw. Swallowing keeps the exception from
+                // escaping into the PropertyChanged setter that triggered this emission;
+                // there is no recovery path that does not violate that boundary.
             }
         }
     }
@@ -188,6 +143,10 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
     //      two threads racing to reassign the same intermediate property cannot leave a
     //      SerialDisposable slot subscribed to the loser; the drainer's loop processes
     //      every queued signal in order against the current chain state.
+    //
+    // notifyInitial only controls whether ProcessSignal emits the current chain value during
+    // the InitialSetupSignal pass. There is no equality dedup at the subscribe seam: every
+    // chain event is delivered.
     private sealed class DeepChainSubscription : IDisposable
     {
         // Sentinel signal value enqueued during subscribe to perform the initial chain setup
@@ -202,7 +161,10 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
         private readonly DeliverySubQueue<PropertyValue<TObject, TProperty>> _userSub;
         private readonly DeliverySubQueue<int> _signalSub;
         private readonly SerialDisposable[] _levelSlots;
-        private readonly Emitter _emitter;
+
+        // Pre-allocated per-level notifier callbacks. Indexed by level. ResubscribeFrom reuses
+        // these instead of allocating a fresh closure per re-walk.
+        private readonly Action<Unit>[] _levelCallbacks;
 
         public DeepChainSubscription(
             IObserver<PropertyValue<TObject, TProperty>> observer,
@@ -218,7 +180,6 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
 
             _sharedQueue = new SharedDeliveryQueue();
             _userSub = _sharedQueue.CreateQueue(observer);
-            _emitter = new Emitter(_userSub, notifyInitial);
 
             // ProcessSignal references _signalSub indirectly via ResubscribeFrom's notifier
             // subscriptions. Observer.Create stores the method group without invoking it, and
@@ -226,10 +187,14 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             // ProcessSignal the field is set.
             _signalSub = _sharedQueue.CreateQueue(Observer.Create<int>(ProcessSignal));
 
-            _levelSlots = new SerialDisposable[rootToLeaf.Length];
-            for (var i = 0; i < rootToLeaf.Length; i++)
+            var depth = rootToLeaf.Length;
+            _levelSlots = new SerialDisposable[depth];
+            _levelCallbacks = new Action<Unit>[depth];
+            for (var i = 0; i < depth; i++)
             {
                 _levelSlots[i] = new SerialDisposable();
+                var level = i;
+                _levelCallbacks[i] = _ => _signalSub.OnNext(level);
             }
 
             // Kick off initial chain setup via the drainer. The subscribe thread becomes the
@@ -253,9 +218,9 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
 
         private void ProcessSignal(int level)
         {
-            // Drainer thread: any exception thrown by a user-provided invoker, notifier factory,
-            // value accessor, or downstream observer must route to OnError rather than escape the
-            // drainer (the original Rx pipeline got this via Select; we do it explicitly).
+            // Drainer thread. Wraps the entire signal processing so that exceptions from any
+            // user-provided invoker, notifier factory, value accessor, or downstream observer
+            // route to OnError rather than escaping the drainer.
             //
             // The two cases (initial setup vs level-fire) collapse to:
             //   startLevel = (initial) ? 0 : level + 1
@@ -266,12 +231,25 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
                 ResubscribeFrom(isInitial ? 0 : level + 1);
                 if (!isInitial || _notifyInitial)
                 {
-                    _emitter.OnNext(ReadCurrent());
+                    _userSub.OnNext(ReadCurrent());
                 }
             }
             catch (Exception ex)
             {
-                _emitter.OnError(ex);
+                TryOnError(ex);
+            }
+        }
+
+        private void TryOnError(Exception ex)
+        {
+            try
+            {
+                _userSub.OnError(ex);
+            }
+            catch
+            {
+                // Downstream observer's OnError threw. Swallowing keeps the exception from
+                // escaping the drainer; the queue continues, and Dispose still cleans up.
             }
         }
 
@@ -306,9 +284,8 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
                     continue;
                 }
 
-                var levelIndex = i;
                 var notifier = _rootToLeaf[i].Factory(value);
-                _levelSlots[i].Disposable = notifier.Subscribe(_ => _signalSub.OnNext(levelIndex));
+                _levelSlots[i].Disposable = notifier.Subscribe(_levelCallbacks[i]);
 
                 value = _rootToLeaf[i].Invoker(value);
             }
