@@ -464,6 +464,314 @@ public sealed class WhenPropertyChangedRaceFixture
         }
     }
 
+    [Fact]
+    public async Task DeepChain_FiveLevels_AllLevelsMutatedConcurrently_FinalEmissionMatchesActual()
+    {
+        // Torture: a 5-level chain with FIVE worker threads each mutating at one level.
+        //   - Thread 0 swaps the entire subtree at root.Child (level 0)
+        //   - Thread 1 swaps the subtree at root.Child.Child (level 1)
+        //   - Thread 2 swaps the subtree at level 2
+        //   - Thread 3 swaps the Deep5 instance at level 3
+        //   - Thread 4 mutates the int Leaf on the current Deep5 (level 4)
+        //
+        // Many mutations land on detached objects (their subtree was swapped out by a higher-level
+        // mutation between the local-variable read and the property set). Those events are
+        // CORRECTLY ignored: their notifier subscription was disposed when ResubscribeFrom replaced
+        // the SerialDisposable at that level. Mutations on the live chain reach the drainer.
+        //
+        // After Task.WhenAll the drainer continues until the queue is empty. The LAST processed
+        // signal triggered a fresh ReadCurrent against whatever the chain looked like at that
+        // moment. Since no further mutations happen after Task.WhenAll, that moment's chain state
+        // equals the chain state right now. Therefore: emissions.Last() == ReadCurrent().
+        const int iterations = 50;
+        const int mutationsPerThread = 200;
+        var mismatches = 0;
+
+        for (var iter = 0; iter < iterations; iter++)
+        {
+            var root = NewDeepChain(0);
+            var emissions = new List<int>();
+
+            using var sub = root.WhenPropertyChanged(r => r.Child!.Child!.Child!.Child!.Leaf, notifyOnInitialValue: true)
+                .Subscribe(pv => { lock (emissions) emissions.Add(pv.Value); });
+
+            using var barrier = new Barrier(5);
+            var iterSeed = iter * 10_000;
+            var tasks = new[]
+            {
+                Task.Run(() =>
+                {
+                    barrier.SignalAndWait();
+                    for (var i = 0; i < mutationsPerThread; i++)
+                    {
+                        root.Child = NewDeep2(iterSeed + 40_000 + i);
+                    }
+                }),
+                Task.Run(() =>
+                {
+                    barrier.SignalAndWait();
+                    for (var i = 0; i < mutationsPerThread; i++)
+                    {
+                        var l2 = root.Child;
+                        if (l2 is not null) l2.Child = NewDeep3(iterSeed + 30_000 + i);
+                    }
+                }),
+                Task.Run(() =>
+                {
+                    barrier.SignalAndWait();
+                    for (var i = 0; i < mutationsPerThread; i++)
+                    {
+                        var l3 = root.Child?.Child;
+                        if (l3 is not null) l3.Child = NewDeep4(iterSeed + 20_000 + i);
+                    }
+                }),
+                Task.Run(() =>
+                {
+                    barrier.SignalAndWait();
+                    for (var i = 0; i < mutationsPerThread; i++)
+                    {
+                        var l4 = root.Child?.Child?.Child;
+                        if (l4 is not null) l4.Child = new Deep5 { Leaf = iterSeed + 10_000 + i };
+                    }
+                }),
+                Task.Run(() =>
+                {
+                    barrier.SignalAndWait();
+                    for (var i = 0; i < mutationsPerThread; i++)
+                    {
+                        var l5 = root.Child?.Child?.Child?.Child;
+                        if (l5 is not null) l5.Leaf = i;
+                    }
+                }),
+            };
+
+            await Task.WhenAll(tasks).WaitAsync(DefaultConditionTimeout);
+
+            var actualFinal = root.Child!.Child!.Child!.Child!.Leaf;
+
+            WaitForCondition(() => { lock (emissions) return emissions.Count > 0 && emissions[^1] == actualFinal; });
+
+            lock (emissions)
+            {
+                if (emissions.Count == 0 || emissions[^1] != actualFinal)
+                {
+                    mismatches++;
+                }
+            }
+        }
+
+        mismatches.Should().Be(0,
+            $"out of {iterations} iterations, {mismatches} ended with the last emission not matching the actual final chain leaf");
+    }
+
+    [Fact]
+    public async Task AutoRefreshThenFilter_ConcurrentPropertyMutationsOnAddedItems_AllFinalStatesObserved()
+    {
+        // Integration: SourceCache + AutoRefresh + Filter under concurrent post-add property
+        // mutation. The cache is pre-populated (Activated=false), and once AutoRefresh has fully
+        // subscribed per-item, multiple worker threads concurrently mutate Activated. After the
+        // storm, every item that ends Activated=true must appear in the filter and every item
+        // that ends Activated=false must not.
+        //
+        // This exercises WhenPropertyChanged under multi-threaded contention: many concurrent
+        // PropertyChanged invocations per item, all wrapped through SinglePropertySubscription's
+        // DeliveryQueue so the Rx contract is preserved end-to-end on the per-item path.
+        //
+        // We DELIBERATELY do not interleave items being added with property mutations.
+        // ObservableCache.CreateConnectObservable uses the same initial.Concat(_changes) shape
+        // that we just fixed in WhenPropertyChanged, and has the same TOCTOU subscribe-window
+        // bug. That separate cache-side bug is out of scope for this PR; a "mutate while
+        // adding" test would detect it and add unrelated noise.
+        const int iterations = 30;
+        const int itemCount = 200;
+        const int mutatorThreads = 4;
+
+        var randomizer = new Random(Seed: 1234);
+
+        for (var iter = 0; iter < iterations; iter++)
+        {
+            using var cache = new SourceCache<KeyedActivable, int>(x => x.Id);
+            var items = Enumerable.Range(0, itemCount).Select(i => new KeyedActivable(i)).ToList();
+
+            // Each item gets a final Activated value determined up front. All mutator threads
+            // write the SAME final value many times, so the eventual state is deterministic.
+            var finalActive = items.ToDictionary(x => x.Id, _ => randomizer.Next(2) == 1);
+
+            foreach (var item in items) cache.AddOrUpdate(item);
+
+            var observed = new HashSet<int>();
+            using var sub = cache.Connect()
+                .AutoRefresh(x => x.Activated)
+                .Filter(x => x.Activated)
+                .Subscribe(changes =>
+                {
+                    lock (observed)
+                    {
+                        foreach (var change in changes)
+                        {
+                            switch (change.Reason)
+                            {
+                                case ChangeReason.Add:
+                                    observed.Add(change.Current.Id);
+                                    break;
+                                case ChangeReason.Remove:
+                                    observed.Remove(change.Current.Id);
+                                    break;
+                            }
+                        }
+                    }
+                });
+
+            using var barrier = new Barrier(mutatorThreads);
+            var mutators = Enumerable.Range(0, mutatorThreads)
+                .Select(_ => Task.Run(() =>
+                {
+                    barrier.SignalAndWait();
+                    for (var pass = 0; pass < 3; pass++)
+                    {
+                        foreach (var item in items)
+                        {
+                            item.Activated = finalActive[item.Id];
+                        }
+                    }
+                }))
+                .ToArray();
+
+            await Task.WhenAll(mutators).WaitAsync(DefaultConditionTimeout);
+
+            var expected = items.Where(x => finalActive[x.Id]).Select(x => x.Id).ToHashSet();
+            WaitForCondition(() => { lock (observed) return observed.SetEquals(expected); });
+
+            lock (observed)
+            {
+                observed.Should().BeEquivalentTo(expected,
+                    $"iter {iter}: final filter contents should match the per-item finalActive map");
+            }
+        }
+    }
+
+
+    private static Deep1 NewDeepChain(int leaf) =>
+        new Deep1 { Child = NewDeep2(leaf) };
+
+    private static Deep2 NewDeep2(int leaf) =>
+        new Deep2 { Child = NewDeep3(leaf) };
+
+    private static Deep3 NewDeep3(int leaf) =>
+        new Deep3 { Child = NewDeep4(leaf) };
+
+    private static Deep4 NewDeep4(int leaf) =>
+        new Deep4 { Child = new Deep5 { Leaf = leaf } };
+
+    private sealed class Deep1 : INotifyPropertyChanged
+    {
+        private Deep2? _child;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public Deep2? Child
+        {
+            get => _child;
+            set
+            {
+                _child = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Child)));
+            }
+        }
+    }
+
+    private sealed class Deep2 : INotifyPropertyChanged
+    {
+        private Deep3? _child;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public Deep3? Child
+        {
+            get => _child;
+            set
+            {
+                _child = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Child)));
+            }
+        }
+    }
+
+    private sealed class Deep3 : INotifyPropertyChanged
+    {
+        private Deep4? _child;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public Deep4? Child
+        {
+            get => _child;
+            set
+            {
+                _child = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Child)));
+            }
+        }
+    }
+
+    private sealed class Deep4 : INotifyPropertyChanged
+    {
+        private Deep5? _child;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public Deep5? Child
+        {
+            get => _child;
+            set
+            {
+                _child = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Child)));
+            }
+        }
+    }
+
+    private sealed class Deep5 : INotifyPropertyChanged
+    {
+        private int _leaf;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public int Leaf
+        {
+            get => _leaf;
+            set
+            {
+                _leaf = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Leaf)));
+            }
+        }
+    }
+
+    private sealed class KeyedActivable : INotifyPropertyChanged
+    {
+        private bool _activated;
+
+        public KeyedActivable(int id)
+        {
+            Id = id;
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public int Id { get; }
+
+        public bool Activated
+        {
+            get => _activated;
+            set
+            {
+                _activated = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Activated)));
+            }
+        }
+    }
+
     private static void WaitForCondition(Func<bool> condition, TimeSpan? timeout = null) =>
         SpinWait.SpinUntil(condition, timeout ?? DefaultConditionTimeout);
 }
