@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using DynamicData.Binding;
+using DynamicData.Tests.Utilities;
 
 using FluentAssertions;
 
@@ -479,10 +480,20 @@ public sealed class WhenPropertyChangedRaceFixture
         // CORRECTLY ignored: their notifier subscription was disposed when ResubscribeFrom replaced
         // the SerialDisposable at that level. Mutations on the live chain reach the drainer.
         //
-        // After Task.WhenAll the drainer continues until the queue is empty. The LAST processed
-        // signal triggered a fresh ReadCurrent against whatever the chain looked like at that
-        // moment. Since no further mutations happen after Task.WhenAll, that moment's chain state
-        // equals the chain state right now. Therefore: emissions.Last() == ReadCurrent().
+        // Three invariants verified per iteration:
+        //   (a) Rx contract: ValidateSynchronization on the subscription chain catches any
+        //       concurrent OnNext (SharedDeliveryQueue serialization bug).
+        //   (b) Value legality: every emission must be a value that some thread legitimately
+        //       wrote (catches torn reads or stale values from detached subtrees being mis-read).
+        //   (c) Final consistency: after Task.WhenAll the drainer continues until the queue is
+        //       empty. The LAST processed signal triggered a ReadCurrent against whatever the
+        //       chain looked like at that moment; since no further mutations happen after
+        //       Task.WhenAll, that moment's state equals the chain state right now. Therefore
+        //       emissions.Last() == ReadCurrent().
+        //
+        // What this test does NOT verify: that every mutation which landed on the live chain
+        // produced an emission. That requires causal-history reconstruction which isn't tractable
+        // from outside the operator.
         const int iterations = 50;
         const int mutationsPerThread = 200;
         var mismatches = 0;
@@ -493,6 +504,7 @@ public sealed class WhenPropertyChangedRaceFixture
             var emissions = new List<int>();
 
             using var sub = root.WhenPropertyChanged(r => r.Child!.Child!.Child!.Child!.Leaf, notifyOnInitialValue: true)
+                .ValidateSynchronization()
                 .Subscribe(pv => { lock (emissions) emissions.Add(pv.Value); });
 
             using var barrier = new Barrier(5);
@@ -551,8 +563,25 @@ public sealed class WhenPropertyChangedRaceFixture
 
             WaitForCondition(() => { lock (emissions) return emissions.Count > 0 && emissions[^1] == actualFinal; });
 
+            // Build the set of values any thread could legitimately have written.
+            var legal = new HashSet<int> { 0 }; // initial leaf
+            for (var i = 0; i < mutationsPerThread; i++)
+            {
+                legal.Add(i);                              // thread 4 (leaf int)
+                legal.Add(iterSeed + 10_000 + i);          // thread 3 (Deep5 swap)
+                legal.Add(iterSeed + 20_000 + i);          // thread 2 (Deep4 subtree)
+                legal.Add(iterSeed + 30_000 + i);          // thread 1 (Deep3 subtree)
+                legal.Add(iterSeed + 40_000 + i);          // thread 0 (Deep2 subtree)
+            }
+
             lock (emissions)
             {
+                emissions.Should().NotBeEmpty($"iter {iter}: notifyOnInitialValue=true requires at least the initial emission");
+                emissions[0].Should().Be(0, $"iter {iter}: first emission must be the initial value");
+
+                var illegal = emissions.Where(v => !legal.Contains(v)).ToList();
+                illegal.Should().BeEmpty($"iter {iter}: every emission must be a value some thread wrote; saw {string.Join(",", illegal.Take(5))}");
+
                 if (emissions.Count == 0 || emissions[^1] != actualFinal)
                 {
                     mismatches++;
