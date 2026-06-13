@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -29,8 +30,11 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             // Race-free chain orchestration:
             //   - Per-level SerialDisposable means every chain level always has an active
             //     subscription. When a parent-level notifier fires, the deeper levels'
-            //     subscriptions are atomically swapped to point at the new parent's new
-            //     child (subscribe new BEFORE disposing old).
+            //     subscriptions are atomically swapped to point at the new parent's new child.
+            //   - A single-drainer pattern serializes re-walks: any thread can signal "level X
+            //     needs re-walking" via _minDirtyLevel; the winner of an Interlocked CAS on
+            //     _drainerActive runs the actual work. Other threads return immediately. This
+            //     ensures the FINAL slot state always reflects the LATEST chain state.
             //   - CAS-based first-emission-wins ensures the initial emission and the first
             //     handler-fired emission cannot both reach the observer.
             //   - One-shot equality guard on the first handler emission after the initial
@@ -45,6 +49,10 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             var initialClaimed = 0;
             var dedupArmed = 0;
             PropertyValue<TObject, TProperty>? seedValue = null;
+            var drainerActive = 0;
+            // _minDirtyLevel is the lowest level (inclusive) whose deeper-chain subscriptions
+            // need re-attaching. int.MaxValue means "nothing to do".
+            var minDirtyLevel = int.MaxValue;
 
             void Emit(PropertyValue<TObject, TProperty> value)
             {
@@ -54,9 +62,6 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
                     return;
                 }
 
-                // initial has been emitted (or another handler-fired value claimed the slot).
-                // Apply the one-shot dedup guard to the very first post-initial handler emission
-                // to catch the rare setter-update-then-notify race.
                 if (Interlocked.CompareExchange(ref dedupArmed, 1, 0) == 0)
                 {
                     var seed = Volatile.Read(ref seedValue);
@@ -69,20 +74,85 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
                 observer.OnNext(value);
             }
 
+            void UpdateMinDirty(int newLevel)
+            {
+                // CAS loop to atomically set _minDirtyLevel to min(current, newLevel).
+                while (true)
+                {
+                    var current = Volatile.Read(ref minDirtyLevel);
+                    if (current <= newLevel)
+                    {
+                        return;
+                    }
+
+                    if (Interlocked.CompareExchange(ref minDirtyLevel, newLevel, current) == current)
+                    {
+                        return;
+                    }
+                }
+            }
+
             void OnLevelChanged(int level)
             {
-                // A notifier at `level` fired: every deeper level's subscription must be
-                // re-targeted to the new value at that level. Re-attach from level + 1 onward.
-                ResubscribeFrom(level + 1);
-                Emit(GetPropertyValueRootToLeaf(t, rootToLeaf, valueAccessor));
+                // A notifier at `level` fired: deeper levels (level + 1 onward) must be re-attached.
+                UpdateMinDirty(level + 1);
+                Drain();
+            }
+
+            void Drain()
+            {
+                if (Interlocked.CompareExchange(ref drainerActive, 1, 0) != 0)
+                {
+                    return;
+                }
+
+                while (true)
+                {
+                    try
+                    {
+                        while (true)
+                        {
+                            var startLevel = Interlocked.Exchange(ref minDirtyLevel, int.MaxValue);
+                            if (startLevel == int.MaxValue)
+                            {
+                                break;
+                            }
+
+                            ResubscribeFrom(startLevel);
+                            Emit(GetPropertyValueRootToLeaf(t, rootToLeaf, valueAccessor));
+                        }
+                    }
+                    finally
+                    {
+                        Volatile.Write(ref drainerActive, 0);
+                    }
+
+                    // Re-check: signals may have arrived between Exchange-to-MaxValue and the
+                    // drainerActive release. If so, try to re-claim the drainer.
+                    if (Volatile.Read(ref minDirtyLevel) == int.MaxValue)
+                    {
+                        return;
+                    }
+
+                    if (Interlocked.CompareExchange(ref drainerActive, 1, 0) != 0)
+                    {
+                        // Someone else claimed the drainer; they will handle the signaled work.
+                        return;
+                    }
+                }
             }
 
             void ResubscribeFrom(int startLevel)
             {
-                // Walk root-to-leaf to the value at startLevel; then attach a notifier at each
-                // subsequent level and atomically swap each slot. SerialDisposable.Disposable
-                // assignment disposes the old subscription after the new one is in place, so
-                // no events are dropped: at all times, every live chain level has an active notifier.
+                // Called ONLY from inside Drain (single-drainer invariant). Walks root-to-leaf to
+                // the value at startLevel; then attaches a notifier at each subsequent level and
+                // atomically swaps each slot via SerialDisposable.Disposable=. At all times,
+                // every live chain level has an active notifier.
+                if (startLevel >= depth)
+                {
+                    return;
+                }
+
                 object? value = t;
                 for (var i = 0; i < startLevel; i++)
                 {
@@ -114,19 +184,37 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
                 }
             }
 
-            // Subscribe to all chain levels BEFORE reading the initial value: this closes the
-            // TOCTOU gap. Any PropertyChanged event that fires concurrently with the initial read
-            // is captured by an attached handler and competes for the first-emission slot via CAS.
-            ResubscribeFrom(0);
+            // Initial setup is serialized via the drainer-claim so any concurrent notifier-fired
+            // re-walk cannot run interleaved with our ResubscribeFrom(0). Notifier handlers fired
+            // during this window will signal _minDirtyLevel and return; the drain below picks them
+            // up. On a fresh subscription, no notifiers exist before ResubscribeFrom attaches them,
+            // so the claim is uncontended.
+            var priorDrainer = Interlocked.CompareExchange(ref drainerActive, 1, 0);
+            Debug.Assert(priorDrainer == 0, "drainer must be free on initial subscription");
 
-            if (notifyInitial)
+            try
             {
-                var initial = GetPropertyValueRootToLeaf(t, rootToLeaf, valueAccessor);
-                if (Interlocked.CompareExchange(ref initialClaimed, 1, 0) == 0)
+                ResubscribeFrom(0);
+
+                if (notifyInitial)
                 {
-                    Volatile.Write(ref seedValue, initial);
-                    observer.OnNext(initial);
+                    var initial = GetPropertyValueRootToLeaf(t, rootToLeaf, valueAccessor);
+                    if (Interlocked.CompareExchange(ref initialClaimed, 1, 0) == 0)
+                    {
+                        Volatile.Write(ref seedValue, initial);
+                        observer.OnNext(initial);
+                    }
                 }
+            }
+            finally
+            {
+                Volatile.Write(ref drainerActive, 0);
+            }
+
+            // Concurrent mutations during setup may have signaled _minDirtyLevel. Drain them now.
+            if (Volatile.Read(ref minDirtyLevel) != int.MaxValue)
+            {
+                Drain();
             }
 
             return new CompositeDisposable(levelSlots);

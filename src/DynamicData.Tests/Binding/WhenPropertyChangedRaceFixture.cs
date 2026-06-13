@@ -193,6 +193,195 @@ public sealed class WhenPropertyChangedRaceFixture
         }
     }
 
+    [Fact]
+    public void DeepChain_ConcurrentParentSwap_LeafEventOnWinnerNotDropped()
+    {
+        // Race condition: two threads concurrently swap parent.Child. The current implementation's
+        // per-level SerialDisposable swap can end up subscribed to the LOSER of the property setter
+        // race (the value that won the SerialDisposable.Disposable= swap last, which is not
+        // necessarily the value that won the field assignment last). When that happens, subsequent
+        // leaf events on the actual parent.Child are lost.
+        //
+        // This is a statistical test: run many iterations to surface the race. With the version-
+        // counter fix, this should NEVER drop events regardless of iteration count.
+        const int iterations = 500;
+        var losses = 0;
+
+        for (var i = 0; i < iterations; i++)
+        {
+            var parent = new ParentModel { Child = new ChildModel { Age = 0 } };
+            var emissions = new List<int>();
+
+            using var sub = parent.WhenPropertyChanged(p => p.Child!.Age, notifyOnInitialValue: false)
+                .Subscribe(pv =>
+                {
+                    lock (emissions) emissions.Add(pv.Value);
+                });
+
+            var newChild1 = new ChildModel { Age = 1 };
+            var newChild2 = new ChildModel { Age = 2 };
+
+            // Race the two parent.Child swaps from different threads. The setter that runs last
+            // wins; the slot subscription should target the winner.
+            using var barrier = new Barrier(2);
+            var taskA = Task.Run(() => { barrier.SignalAndWait(); parent.Child = newChild1; });
+            var taskB = Task.Run(() => { barrier.SignalAndWait(); parent.Child = newChild2; });
+            Task.WaitAll([taskA, taskB], TimeSpan.FromSeconds(5)).Should().BeTrue();
+            Thread.Sleep(5);
+
+            var winner = parent.Child;
+            if (winner is null)
+            {
+                continue;
+            }
+
+            // Mutate the leaf of the WINNING child. If the slot subscription targets the loser,
+            // this event is lost.
+            winner.Age = 99;
+            Thread.Sleep(5);
+
+            lock (emissions)
+            {
+                if (!emissions.Contains(99))
+                {
+                    losses++;
+                }
+            }
+        }
+
+        losses.Should().Be(0,
+            $"out of {iterations} iterations, {losses} dropped the leaf event on the post-swap winner");
+    }
+
+    [Fact]
+    public void DeepChain_FiveLevels_MidChainSwap_DeeperLevelsRetargetCorrectly()
+    {
+        // Verifies the per-level re-attach logic on a 5-level chain. When a mid-chain swap
+        // happens (the 3rd level out of 5 is reassigned), levels 4 and 5 must be re-attached
+        // against the new value's subtree. Subsequent leaf events through the new chain must be
+        // captured; events on the OLD subtree must be ignored (its subscriptions are disposed).
+        var l1 = new Level1
+        {
+            Child = new Level2
+            {
+                Child = new Level3
+                {
+                    Child = new Level4
+                    {
+                        Leaf = 10,
+                    },
+                },
+            },
+        };
+
+        var emissions = new List<int>();
+        using var sub = l1.WhenPropertyChanged(x => x.Child!.Child!.Child!.Leaf, notifyOnInitialValue: true)
+            .Subscribe(pv =>
+            {
+                lock (emissions) emissions.Add(pv.Value);
+            });
+
+        lock (emissions) emissions.Should().Equal(new[] { 10 }, "initial emission");
+
+        // Capture the original leaf for stale-event verification.
+        var originalLeaf = l1.Child!.Child!.Child!;
+
+        // Swap level 3 (l1.Child.Child.Child = new Level4 { Leaf = 20 }). This fires the notifier
+        // at level 3, which should cause level 4 (the leaf notifier) to be re-attached on the new
+        // Level4 instance.
+        var newL4 = new Level4 { Leaf = 20 };
+        l1.Child!.Child!.Child = newL4;
+
+        lock (emissions)
+        {
+            emissions.Should().HaveCount(2);
+            emissions[1].Should().Be(20, "swap of mid-level should emit the new leaf value");
+        }
+
+        // Mutate the leaf on the NEW subtree. Should be captured.
+        newL4.Leaf = 30;
+        lock (emissions)
+        {
+            emissions.Should().HaveCount(3);
+            emissions[2].Should().Be(30, "leaf event on new subtree must be captured");
+        }
+
+        // Mutate the leaf on the OLD subtree (should be ignored; its subscription was disposed).
+        originalLeaf.Leaf = 999;
+        lock (emissions)
+        {
+            emissions.Should().HaveCount(3, "leaf event on disposed old subtree must NOT be emitted");
+        }
+    }
+
+    private sealed class Level1 : INotifyPropertyChanged
+    {
+        private Level2? _child;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public Level2? Child
+        {
+            get => _child;
+            set
+            {
+                _child = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Child)));
+            }
+        }
+    }
+
+    private sealed class Level2 : INotifyPropertyChanged
+    {
+        private Level3? _child;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public Level3? Child
+        {
+            get => _child;
+            set
+            {
+                _child = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Child)));
+            }
+        }
+    }
+
+    private sealed class Level3 : INotifyPropertyChanged
+    {
+        private Level4? _child;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public Level4? Child
+        {
+            get => _child;
+            set
+            {
+                _child = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Child)));
+            }
+        }
+    }
+
+    private sealed class Level4 : INotifyPropertyChanged
+    {
+        private int _leaf;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public int Leaf
+        {
+            get => _leaf;
+            set
+            {
+                _leaf = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Leaf)));
+            }
+        }
+    }
+
     private sealed class TestModel : INotifyPropertyChanged
     {
         private int _value;
