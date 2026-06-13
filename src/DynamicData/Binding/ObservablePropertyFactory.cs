@@ -33,56 +33,11 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
         // the high-frequency single-property hot path.
         var memberName = expression.GetProperty().Name;
         var accessor = expression.Compile();
-
-        _factory = (source, notifyInitial) => Observable.Create<PropertyValue<TObject, TProperty>>(observer =>
-        {
-            // DeliveryQueue serializes emissions to the user observer so concurrent PropertyChanged
-            // invocations cannot violate Rx contract.
-            var queue = new DeliveryQueue<PropertyValue<TObject, TProperty>>(observer);
-            var emitter = new Emitter(queue, notifyInitial);
-
-            void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
-            {
-                if (args.PropertyName == memberName)
-                {
-                    EmitCurrent(source, accessor, emitter);
-                }
-            }
-
-            // Attach PropertyChanged handler FIRST so events during the initial read are not missed.
-            source.PropertyChanged += OnPropertyChanged;
-
-            if (notifyInitial)
-            {
-                EmitCurrent(source, accessor, emitter);
-            }
-
-            return new CompositeDisposable(
-                Disposable.Create(() => source.PropertyChanged -= OnPropertyChanged),
-                queue);
-        });
+        _factory = (source, notifyInitial) => Observable.Create<PropertyValue<TObject, TProperty>>(
+            observer => new SinglePropertySubscription(observer, source, memberName, accessor, notifyInitial));
     }
 
     public IObservable<PropertyValue<TObject, TProperty>> Create(TObject source, bool notifyInitial) => _factory(source, notifyInitial);
-
-    // Reads source via accessor with try/catch; routes failures to emitter.OnError, otherwise
-    // forwards the PropertyValue through emitter.OnNext. Used by the shallow form for both the
-    // PropertyChanged handler and the optional initial emission.
-    private static void EmitCurrent(TObject source, Func<TObject, TProperty> accessor, Emitter emitter)
-    {
-        PropertyValue<TObject, TProperty> value;
-        try
-        {
-            value = new PropertyValue<TObject, TProperty>(source, accessor(source));
-        }
-        catch (Exception ex)
-        {
-            emitter.OnError(ex);
-            return;
-        }
-
-        emitter.OnNext(value);
-    }
 
     // Emits PropertyValues to the downstream observer with a one-shot equality guard at the
     // subscribe-race boundary. notifyInitial controls only whether the caller will synthesize an
@@ -146,19 +101,86 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
         }
     }
 
+    // Single-property subscription. Attaches a direct PropertyChanged handler and emits via the
+    // shared Emitter. Used for x => x.Prop (depth == 1) where SharedDeliveryQueue and
+    // Observable.FromEventPattern would be needless overhead on the hot path.
+    private sealed class SinglePropertySubscription : IDisposable
+    {
+        private readonly TObject _source;
+        private readonly string _memberName;
+        private readonly Func<TObject, TProperty> _accessor;
+        private readonly DeliveryQueue<PropertyValue<TObject, TProperty>> _queue;
+        private readonly Emitter _emitter;
+
+        public SinglePropertySubscription(
+            IObserver<PropertyValue<TObject, TProperty>> observer,
+            TObject source,
+            string memberName,
+            Func<TObject, TProperty> accessor,
+            bool notifyInitial)
+        {
+            _source = source;
+            _memberName = memberName;
+            _accessor = accessor;
+            _queue = new DeliveryQueue<PropertyValue<TObject, TProperty>>(observer);
+            _emitter = new Emitter(_queue, notifyInitial);
+
+            // Attach PropertyChanged handler FIRST so events during the initial read are not missed.
+            _source.PropertyChanged += OnPropertyChanged;
+
+            if (notifyInitial)
+            {
+                EmitCurrent();
+            }
+        }
+
+        public void Dispose()
+        {
+            _source.PropertyChanged -= OnPropertyChanged;
+            _queue.Dispose();
+        }
+
+        private void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName == _memberName)
+            {
+                EmitCurrent();
+            }
+        }
+
+        // Reads source via the compiled accessor with try/catch; routes failures to _emitter.OnError,
+        // otherwise forwards the PropertyValue through _emitter.OnNext. The original Rx pipeline
+        // (Select(...)) gave us this for free; we have to do it explicitly now.
+        private void EmitCurrent()
+        {
+            PropertyValue<TObject, TProperty> value;
+            try
+            {
+                value = new PropertyValue<TObject, TProperty>(_source, _accessor(_source));
+            }
+            catch (Exception ex)
+            {
+                _emitter.OnError(ex);
+                return;
+            }
+
+            _emitter.OnNext(value);
+        }
+    }
+
     // Deep-chain subscription. Encapsulates the SharedDeliveryQueue + sub-queues + per-level
-    // SerialDisposable slots in a single object so fields can be assigned in well-defined order
-    // (no forward null bootstrap for the signal sub-queue).
+    // SerialDisposable slots so fields are assigned in well-defined order and the signal sub-queue
+    // never needs a forward null bootstrap.
     //
     // SharedDeliveryQueue funnels both chain-level signals and user emissions through a
     // single-drainer pattern. Two sub-queues:
     //   - userSub: receives PropertyValue emissions; drains to the user observer.
-    //   - signalSub: receives level-change signals (int); drains by running the level
-    //     processor synchronously, which performs the re-walk (ResubscribeFrom) and
-    //     enqueues the resulting value onto userSub.
-    // Drain order is LIFO (highest sub-queue index first), so signal processing runs
-    // before user delivery within each drain cycle, batching multiple signals before
-    // delivering the resulting values.
+    //   - signalSub: receives level-change signals (int); drains by running ProcessSignal
+    //     synchronously, which performs the re-walk (ResubscribeFrom) and enqueues the
+    //     resulting value onto userSub.
+    // Drain order is LIFO (highest sub-queue index first), so signal processing runs before
+    // user delivery within each drain cycle, batching multiple signals before delivering the
+    // resulting values.
     //
     // Three properties this gives us:
     //   1) Rx contract: user observer is never called concurrently (single drainer).
