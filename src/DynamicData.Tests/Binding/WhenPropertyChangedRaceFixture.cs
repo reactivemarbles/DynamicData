@@ -628,28 +628,10 @@ public sealed class WhenPropertyChangedRaceFixture
 
             foreach (var item in items) cache.AddOrUpdate(item);
 
-            var observed = new HashSet<int>();
-            using var sub = cache.Connect()
+            using var results = cache.Connect()
                 .AutoRefresh(x => x.Activated)
                 .Filter(x => x.Activated)
-                .Subscribe(changes =>
-                {
-                    lock (observed)
-                    {
-                        foreach (var change in changes)
-                        {
-                            switch (change.Reason)
-                            {
-                                case ChangeReason.Add:
-                                    observed.Add(change.Current.Id);
-                                    break;
-                                case ChangeReason.Remove:
-                                    observed.Remove(change.Current.Id);
-                                    break;
-                            }
-                        }
-                    }
-                });
+                .AsAggregator();
 
             using var barrier = new Barrier(mutatorThreads);
             var mutators = Enumerable.Range(0, mutatorThreads)
@@ -669,13 +651,11 @@ public sealed class WhenPropertyChangedRaceFixture
             await Task.WhenAll(mutators).WaitAsync(DefaultConditionTimeout);
 
             var expected = items.Where(x => finalActive[x.Id]).Select(x => x.Id).ToHashSet();
-            WaitForCondition(() => { lock (observed) return observed.SetEquals(expected); });
+            WaitForCondition(() => results.Data.Keys.ToHashSet().SetEquals(expected));
 
-            lock (observed)
-            {
-                observed.Should().BeEquivalentTo(expected,
-                    $"iter {iter}: final filter contents should match the per-item finalActive map");
-            }
+            results.Data.Keys.Should().BeEquivalentTo(expected,
+                $"iter {iter}: final filter contents should match the per-item finalActive map");
+            results.Error.Should().BeNull($"iter {iter}: pipeline must not error");
         }
     }
 
