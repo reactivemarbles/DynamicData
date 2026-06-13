@@ -129,6 +129,103 @@ public sealed class WhenPropertyChangedRaceFixture
     }
 
     [Fact]
+    public void DeepChain_ConcurrentLeafMutationDuringInitialEmit_NotDropped()
+    {
+        // Deterministic forcing of the deep-chain TOCTOU: the worker thread blocks inside the
+        // initial-emit OnNext while the test thread mutates the leaf. With SharedDeliveryQueue the
+        // mutation enqueues onto the signal sub-queue and returns immediately; when the observer
+        // unblocks, the drainer processes the signal and delivers the resulting value.
+        var parent = new ParentModel { Child = new ChildModel { Age = 10 } };
+        var emissions = new List<int>();
+        var observerInitialReceived = new ManualResetEventSlim(false);
+        var observerCanContinue = new ManualResetEventSlim(false);
+
+        var observer = Observer.Create<PropertyValue<ParentModel, int>>(pv =>
+        {
+            bool isFirst;
+            lock (emissions)
+            {
+                isFirst = emissions.Count == 0;
+                emissions.Add(pv.Value);
+            }
+
+            if (isFirst)
+            {
+                observerInitialReceived.Set();
+                observerCanContinue.Wait();
+            }
+        });
+
+        var subscribeTask = Task.Run(() =>
+            parent.WhenPropertyChanged(p => p.Child!.Age, notifyOnInitialValue: true).Subscribe(observer));
+
+        observerInitialReceived.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("the worker thread must reach the initial emission");
+
+        parent.Child!.Age = 20;
+
+        observerCanContinue.Set();
+        subscribeTask.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("Subscribe must complete");
+        Thread.Sleep(100);
+
+        lock (emissions)
+        {
+            emissions.Should().Contain(20, "a leaf PropertyChanged fired during the subscribe gap must not be dropped");
+        }
+    }
+
+    [Fact]
+    public void DeepChain_ConcurrentParentSwap_LeafEventOnWinnerNotDropped()
+    {
+        // Two threads concurrently swap parent.Child. SharedDeliveryQueue serializes the level-0
+        // signals on the drainer, so ResubscribeFrom runs serially and the final level-1
+        // subscription always targets parent.Child's current (latest) value. A leaf mutation on
+        // the winning child must always be captured.
+        const int iterations = 500;
+        var losses = 0;
+
+        for (var i = 0; i < iterations; i++)
+        {
+            var parent = new ParentModel { Child = new ChildModel { Age = 0 } };
+            var emissions = new List<int>();
+
+            using var sub = parent.WhenPropertyChanged(p => p.Child!.Age, notifyOnInitialValue: false)
+                .Subscribe(pv =>
+                {
+                    lock (emissions) emissions.Add(pv.Value);
+                });
+
+            var newChild1 = new ChildModel { Age = 1 };
+            var newChild2 = new ChildModel { Age = 2 };
+
+            using var barrier = new Barrier(2);
+            var taskA = Task.Run(() => { barrier.SignalAndWait(); parent.Child = newChild1; });
+            var taskB = Task.Run(() => { barrier.SignalAndWait(); parent.Child = newChild2; });
+            Task.WaitAll([taskA, taskB], TimeSpan.FromSeconds(5)).Should().BeTrue();
+            Thread.Sleep(5);
+
+            var winner = parent.Child;
+            if (winner is null)
+            {
+                continue;
+            }
+
+            winner.Age = 99;
+            Thread.Sleep(5);
+
+            lock (emissions)
+            {
+                if (!emissions.Contains(99))
+                {
+                    losses++;
+                }
+            }
+        }
+
+        losses.Should().Be(0,
+            $"out of {iterations} iterations, {losses} dropped the leaf event on the post-swap winner");
+    }
+
+    [Fact]
     public void DeepChain_FiveLevels_MidChainSwap_DeeperLevelsRetargetCorrectly()
     {
         // Verifies the per-level re-attach logic on a 5-level chain. When a mid-chain swap
