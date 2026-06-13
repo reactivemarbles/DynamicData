@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -59,7 +59,10 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             }
 
             var initialClaimed = 0;
-            var dedupArmed = 0;
+            // When notifyInitial is false, the dedup window does not apply: the user wants every
+            // PropertyChanged event, including same-valued ones. Arm dedup as already-fired so the
+            // dedup branch is never taken.
+            var dedupArmed = notifyInitial ? 0 : 1;
             PropertyValue<TObject, TProperty>? seedValue = null;
 
             void Emit(PropertyValue<TObject, TProperty> value)
@@ -125,21 +128,32 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
 
             void ProcessSignal(int level)
             {
-                if (level == InitialSetupSignal)
+                // Drainer thread: any exception thrown by a user-provided invoker, notifier
+                // factory, or value accessor must be routed to OnError rather than escaping the
+                // drainer. The original Rx pipeline (Select(...)) gave us this for free; we have
+                // to do it explicitly now.
+                try
                 {
-                    // Initial chain setup runs on the drainer so it serializes against any
-                    // concurrent notifier fires that may arrive while we attach the notifiers.
-                    ResubscribeFrom(0);
-                    if (notifyInitial)
+                    if (level == InitialSetupSignal)
                     {
-                        Emit(GetPropertyValueRootToLeaf(source, rootToLeaf, valueAccessor));
+                        // Initial chain setup runs on the drainer so it serializes against any
+                        // concurrent notifier fires that may arrive while we attach the notifiers.
+                        ResubscribeFrom(0);
+                        if (notifyInitial)
+                        {
+                            Emit(GetPropertyValueRootToLeaf(source, rootToLeaf, valueAccessor));
+                        }
+
+                        return;
                     }
 
-                    return;
+                    ResubscribeFrom(level + 1);
+                    Emit(GetPropertyValueRootToLeaf(source, rootToLeaf, valueAccessor));
                 }
-
-                ResubscribeFrom(level + 1);
-                Emit(GetPropertyValueRootToLeaf(source, rootToLeaf, valueAccessor));
+                catch (Exception ex)
+                {
+                    userSub.OnError(ex);
+                }
             }
 
             signalSub = sharedQueue.CreateQueue(Observer.Create<int>(ProcessSignal));
@@ -168,7 +182,10 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             var queue = new DeliveryQueue<PropertyValue<TObject, TProperty>>(observer);
 
             var initialClaimed = 0;
-            var dedupArmed = 0;
+            // When notifyInitial is false, the dedup window does not apply: the user wants every
+            // PropertyChanged event, including same-valued ones. Arm dedup as already-fired so the
+            // dedup branch is never taken.
+            var dedupArmed = notifyInitial ? 0 : 1;
             PropertyValue<TObject, TProperty>? seedValue = null;
 
             void Emit(PropertyValue<TObject, TProperty> value)
@@ -199,7 +216,20 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
                     return;
                 }
 
-                Emit(new PropertyValue<TObject, TProperty>(t, accessor(t)));
+                // accessor is user code via the compiled expression; an exception must be routed to
+                // OnError rather than escaping into INotifyPropertyChanged's event invocation.
+                PropertyValue<TObject, TProperty> value;
+                try
+                {
+                    value = new PropertyValue<TObject, TProperty>(t, accessor(t));
+                }
+                catch (Exception ex)
+                {
+                    queue.OnError(ex);
+                    return;
+                }
+
+                Emit(value);
             }
 
             // Attach PropertyChanged handler FIRST so events during the initial read are not missed.
@@ -207,7 +237,20 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
 
             if (notifyInitial)
             {
-                Emit(new PropertyValue<TObject, TProperty>(t, accessor(t)));
+                PropertyValue<TObject, TProperty> initialValue;
+                try
+                {
+                    initialValue = new PropertyValue<TObject, TProperty>(t, accessor(t));
+                }
+                catch (Exception ex)
+                {
+                    queue.OnError(ex);
+                    return new CompositeDisposable(
+                        Disposable.Create(() => t.PropertyChanged -= OnPropertyChanged),
+                        queue);
+                }
+
+                Emit(initialValue);
             }
 
             return new CompositeDisposable(

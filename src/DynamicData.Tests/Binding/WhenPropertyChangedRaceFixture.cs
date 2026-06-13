@@ -26,6 +26,8 @@ namespace DynamicData.Tests.Binding;
 /// </summary>
 public sealed class WhenPropertyChangedRaceFixture
 {
+    private static readonly TimeSpan DefaultConditionTimeout = TimeSpan.FromSeconds(5);
+
     [Fact]
     public void Shallow_ConcurrentMutationDuringInitialEmit_NotDropped()
     {
@@ -48,7 +50,7 @@ public sealed class WhenPropertyChangedRaceFixture
                 // Hold the OnNext open. With the BUG, Concat is blocked here and the propertyChanged
                 // event handler has NOT yet been attached; a mutation now will be silently lost.
                 observerInitialReceived.Set();
-                observerCanContinue.Wait();
+                observerCanContinue.Wait(TimeSpan.FromSeconds(10));
             }
         });
 
@@ -56,16 +58,22 @@ public sealed class WhenPropertyChangedRaceFixture
         var subscribeTask = Task.Run(() =>
             model.WhenPropertyChanged(m => m.Value, notifyOnInitialValue: true).Subscribe(observer));
 
-        observerInitialReceived.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("the worker thread must reach the initial emission");
+        try
+        {
+            observerInitialReceived.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("the worker thread must reach the initial emission");
 
-        // Mutate while Subscribe is parked inside observer.OnNext for the initial value.
-        model.Value = 20;
+            // Mutate while Subscribe is parked inside observer.OnNext for the initial value.
+            model.Value = 20;
+        }
+        finally
+        {
+            observerCanContinue.Set();
+        }
 
-        observerCanContinue.Set();
         subscribeTask.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("Subscribe must complete");
+        using var sub = subscribeTask.Result;
 
-        // Allow any concurrent OnNext delivery to settle (handler may fire on another thread).
-        Thread.Sleep(100);
+        WaitForCondition(() => { lock (emissions) return emissions.Contains(20); });
 
         lock (emissions)
         {
@@ -79,7 +87,6 @@ public sealed class WhenPropertyChangedRaceFixture
     {
         var model = new TestModel { Value = 10 };
         var emissions = new List<int>();
-        var subscribeCompleted = new ManualResetEventSlim(false);
 
         // Subscribe on this thread; with notifyOnInitialValue: false, Subscribe should not block.
         using var sub = model.WhenPropertyChanged(m => m.Value, notifyOnInitialValue: false)
@@ -91,11 +98,46 @@ public sealed class WhenPropertyChangedRaceFixture
         // The act of returning from Subscribe must mean the event handler is attached.
         model.Value = 20;
 
-        Thread.Sleep(50);
+        WaitForCondition(() => { lock (emissions) return emissions.Count >= 1; });
 
         lock (emissions)
         {
             emissions.Should().Equal(new[] { 20 }, "no initial value requested; first emission must be the mutation");
+        }
+    }
+
+    [Fact]
+    public void NotifyInitialFalse_DoesNotDedupSameValuedEvents()
+    {
+        // Regression for the dedup-window bug: when notifyOnInitialValue is false, the one-shot
+        // equality guard must NOT be armed; two consecutive PropertyChanged events with the same
+        // value are both legitimate and both must reach the observer.
+        var model = new TestModel { Value = 10 };
+        var shallowEmissions = new List<int>();
+        using var shallowSub = model.WhenPropertyChanged(m => m.Value, notifyOnInitialValue: false)
+            .Subscribe(pv => { lock (shallowEmissions) shallowEmissions.Add(pv.Value); });
+
+        model.Value = 42;
+        model.Value = 42;
+        WaitForCondition(() => { lock (shallowEmissions) return shallowEmissions.Count >= 2; });
+
+        lock (shallowEmissions)
+        {
+            shallowEmissions.Should().Equal(new[] { 42, 42 }, "both same-valued events must be delivered when no initial value was requested");
+        }
+
+        var parent = new ParentModel { Child = new ChildModel { Age = 1 } };
+        var deepEmissions = new List<int>();
+        using var deepSub = parent.WhenPropertyChanged(p => p.Child!.Age, notifyOnInitialValue: false)
+            .Subscribe(pv => { lock (deepEmissions) deepEmissions.Add(pv.Value); });
+
+        parent.Child!.Age = 7;
+        parent.Child!.Age = 7;
+        WaitForCondition(() => { lock (deepEmissions) return deepEmissions.Count >= 2; });
+
+        lock (deepEmissions)
+        {
+            deepEmissions.Should().Equal(new[] { 7, 7 }, "deep chain must also not dedupe when no initial value was requested");
         }
     }
 
@@ -118,7 +160,7 @@ public sealed class WhenPropertyChangedRaceFixture
         parent.Child = newChild;
         newChild.Age = 30;
 
-        Thread.Sleep(50);
+        WaitForCondition(() => { lock (emissions) return emissions.Contains(30); });
 
         lock (emissions)
         {
@@ -152,20 +194,28 @@ public sealed class WhenPropertyChangedRaceFixture
             if (isFirst)
             {
                 observerInitialReceived.Set();
-                observerCanContinue.Wait();
+                observerCanContinue.Wait(TimeSpan.FromSeconds(10));
             }
         });
 
         var subscribeTask = Task.Run(() =>
             parent.WhenPropertyChanged(p => p.Child!.Age, notifyOnInitialValue: true).Subscribe(observer));
 
-        observerInitialReceived.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("the worker thread must reach the initial emission");
+        try
+        {
+            observerInitialReceived.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("the worker thread must reach the initial emission");
 
-        parent.Child!.Age = 20;
+            parent.Child!.Age = 20;
+        }
+        finally
+        {
+            observerCanContinue.Set();
+        }
 
-        observerCanContinue.Set();
         subscribeTask.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("Subscribe must complete");
-        Thread.Sleep(100);
+        using var sub = subscribeTask.Result;
+
+        WaitForCondition(() => { lock (emissions) return emissions.Contains(20); });
 
         lock (emissions)
         {
@@ -201,7 +251,6 @@ public sealed class WhenPropertyChangedRaceFixture
             var taskA = Task.Run(() => { barrier.SignalAndWait(); parent.Child = newChild1; });
             var taskB = Task.Run(() => { barrier.SignalAndWait(); parent.Child = newChild2; });
             Task.WaitAll([taskA, taskB], TimeSpan.FromSeconds(5)).Should().BeTrue();
-            Thread.Sleep(5);
 
             var winner = parent.Child;
             if (winner is null)
@@ -209,8 +258,16 @@ public sealed class WhenPropertyChangedRaceFixture
                 continue;
             }
 
+            // Wait for the drainer to have processed both parent swaps before mutating the winner.
+            WaitForCondition(
+                () => { lock (emissions) return emissions.Contains(winner.Age); },
+                TimeSpan.FromSeconds(2));
+
             winner.Age = 99;
-            Thread.Sleep(5);
+
+            WaitForCondition(
+                () => { lock (emissions) return emissions.Contains(99); },
+                TimeSpan.FromSeconds(2));
 
             lock (emissions)
             {
@@ -404,4 +461,7 @@ public sealed class WhenPropertyChangedRaceFixture
             }
         }
     }
+
+    private static void WaitForCondition(Func<bool> condition, TimeSpan? timeout = null) =>
+        SpinWait.SpinUntil(condition, timeout ?? DefaultConditionTimeout);
 }
