@@ -277,10 +277,9 @@ public sealed class WhenPropertyChangedRaceFixture
         // final Activated value (the same final value from every thread, so the eventual state
         // is deterministic).
         //
-        // Adds are NOT interleaved with property mutations. ObservableCache.CreateConnectObservable
-        // uses an initial.Concat(_changes) shape whose subscribe-window race can drop a
-        // concurrently-fired change before the AutoRefresh subscriber wires up; that is a
-        // cache-side concern and not what this test targets.
+        // Pre-populating before mutations isolates this test to the per-item
+        // WhenPropertyChanged path so the AutoRefresh and Filter behaviour under multi-threaded
+        // property contention is what's being verified.
         const int iterations = 30;
         const int itemCount = 200;
         const int mutatorThreads = 4;
