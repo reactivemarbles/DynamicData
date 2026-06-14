@@ -39,7 +39,7 @@ When optimizing, measure allocation rates and lock contention, not just wall-clo
 
 DynamicData operators compose — the output of one is the input of the next. If any operator violates the Rx contract (e.g., concurrent `OnNext` calls, calls after `OnCompleted`), every downstream operator can corrupt its internal state. This is not a crash — it's silent data corruption that manifests as wrong results, missing items, or phantom entries. In a reactive UI, this means the user sees stale or incorrect data with no error message.
 
-See `.github/instructions/rx.instructions.md` for comprehensive Rx contract rules, scheduler usage, disposable patterns, and a complete standard Rx operator reference.
+See `.github/instructions/rx.instructions.md` for comprehensive Rx contract rules, scheduler usage, disposable patterns, and a complete standard Rx operator reference. See `.github/instructions/rx-contract.instructions.md` for the canonical rule reference using the original Microsoft Rx Design Guidelines numbering (cite by `§X.Y` in PRs and code reviews, e.g. "§6.6", "§5.2").
 
 ## Breaking Changes
 

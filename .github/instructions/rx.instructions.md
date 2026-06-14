@@ -5,6 +5,8 @@ applyTo: "**/*.cs"
 
 Reference: [ReactiveX Observable Contract](http://reactivex.io/documentation/contract.html) | [Rx.NET GitHub](https://github.com/dotnet/reactive) | [IntroToRx.com](http://introtorx.com/)
 
+**See also:** [`rx-contract.instructions.md`](./rx-contract.instructions.md) is the canonical rule reference using the original Microsoft Rx Design Guidelines numbering (`§X.Y` IDs like `§6.6`, `§5.2`). Cite those IDs in PR descriptions, code reviews, and commit messages.
+
 ## Core Concepts
 
 ### Observables are Composable
