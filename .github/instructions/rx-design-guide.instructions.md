@@ -188,7 +188,6 @@ var gate = new object();
 source1.Synchronize(gate).Subscribe(observer);
 source2.Synchronize(gate).Subscribe(observer);
 ```
-DynamicData's `CacheParentSubscription._synchronize` is the canonical example for cache operators.
 
 **When to ignore:**
 - Single-source operator (§6.8 applies)
