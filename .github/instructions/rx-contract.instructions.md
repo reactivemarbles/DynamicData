@@ -9,22 +9,14 @@ Distilled from **[Microsoft Rx Design Guidelines v1.0 (October 2010)](https://go
 
 Rules use the **original Microsoft document's `§X.Y` numbering** throughout so citations are unambiguous and traceable to the source spec. Cite rule IDs in code review comments, PR descriptions, and commit messages (e.g., "Fixes §6.6 violation in `BatchIf`").
 
-Sections preserve the original A/B/C ordering of this document (consumer contract first, then operator authors, then consumer-side usage), which is the order most useful for a contributor working in this repo:
-- **§4** is the Observable Contract from the consumer's perspective (what callers can rely on)
-- **§6** is rules for operator authors (what your operator must guarantee)
-- **§5** is rules for code that uses Rx (consumer-side correctness)
-
 ---
 
 ## Quick reference by consumer type
 
-**If you're a downstream subscriber relying on Rx outputs:** read §4. These are the guarantees you can count on from any well-behaved `IObservable`.
-
-**If you're writing code that uses Rx operators:** read §5. These are the rules about correct use of Rx in calling code (`ObserveOn` placement, when `Synchronize` is appropriate, subscribing with all three handlers, etc.).
-
-**If you're writing or modifying an operator:** read §6. Also apply §5 recursively inside the operator (per §6.20) because operator internals are themselves Rx-consuming code.
-
-**Reviewing a PR:** start with the "Common violation patterns" table at the bottom; it's organized by symptom.
+Sections preserve the original A/B/C ordering of this document (consumer contract first, then operator authors, then consumer-side usage), which is the order most useful for a contributor working in this repo:
+- **§4** is the Observable Contract from the consumer's perspective (what callers can rely on)
+- **§6** is rules for operator authors (what your operator must guarantee)
+- **§5** is rules for code that uses Rx (consumer-side correctness)
 
 ---
 
