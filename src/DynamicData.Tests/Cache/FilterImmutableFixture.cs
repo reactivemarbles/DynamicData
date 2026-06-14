@@ -364,6 +364,39 @@ public sealed class FilterImmutableFixture
         });
     }
 
+    [Fact]
+    public void Update_PreviousMatchedCurrentDoesNot_EmitsRemoveCarryingPreviousAsCurrent()
+    {
+        // Per Change<T,K> contract, a Remove change carries the item that was removed in Current.
+        // For an Update where Previous matched the predicate but Current does not, the item that
+        // leaves the filtered view is Previous (it was downstream; Current never reached downstream).
+        using var source = new Subject<IChangeSet<Item, int>>();
+
+        using var results = source
+            .FilterImmutable(predicate: Item.Predicate)
+            .AsAggregator();
+
+        var included = new Item() { Id = 1, IsIncluded = true };
+        var excluded = new Item() { Id = 1, IsIncluded = false };
+
+        source.OnNext(new ChangeSet<Item, int>()
+        {
+            new(reason: ChangeReason.Add, key: included.Id, current: included, index: 0)
+        });
+
+        source.OnNext(new ChangeSet<Item, int>()
+        {
+            new(reason: ChangeReason.Update, key: excluded.Id, current: excluded, previous: included, currentIndex: 0, previousIndex: 0)
+        });
+
+        var lastChangeSet = results.Messages.Last();
+        lastChangeSet.Count.Should().Be(1);
+
+        var removeChange = lastChangeSet.Single();
+        removeChange.Reason.Should().Be(ChangeReason.Remove);
+        removeChange.Current.Should().BeSameAs(included, "Remove.Current must carry the item that left downstream (the previously-matching value), not the new value that never reached downstream");
+    }
+
     private class Item
     {
         public static readonly Func<Item, int> KeySelector
