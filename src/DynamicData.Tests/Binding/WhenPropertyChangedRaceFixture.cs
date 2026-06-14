@@ -31,23 +31,27 @@ public sealed class WhenPropertyChangedRaceFixture
     [Fact]
     public async Task Shallow_ConcurrentMutationDuringInitialEmit_NotDropped()
     {
-        // The observer blocks inside its OnNext for the initial value. While it is blocked, a
-        // second thread mutates the property. The mutation's PropertyChanged event must reach
-        // the observer once it returns.
-        var model = new TestModel { Value = 10 };
+        var item = new Item()
+        {
+            Id = 1,
+            Value = 10
+        };
 
         var whenSubscribing = new ManualResetEventSlim();
         var whenValueChanged = new ManualResetEventSlim();
 
-        var emissions = new List<int>();
-        var observer = Observer.Create<PropertyValue<TestModel, int>>(pv =>
+        var source = item.WhenPropertyChanged(
+            propertyAccessor:       static item => item.Value,
+            notifyOnInitialValue:   true);
+
+        var observedValues = new List<int>();
+        var observer = Observer.Create<PropertyValue<Item, int>>(propertyValue =>
         {
-            emissions.Add(pv.Value);
+            observedValues.Add(propertyValue.Value);
+
             whenSubscribing.Set();
             whenValueChanged.Wait();
         });
-
-        var source = model.WhenPropertyChanged(static m => m.Value, notifyOnInitialValue: true);
 
         await Task.WhenAll(
             Task.Run(() =>
@@ -57,11 +61,16 @@ public sealed class WhenPropertyChangedRaceFixture
             Task.Run(() =>
             {
                 whenSubscribing.Wait();
-                model.Value = 20;
-                whenValueChanged.Set();
-            })).WaitAsync(ConditionTimeout);
 
-        emissions.Should().Equal(new[] { 10, 20 });
+                item.Value = 20;
+
+                whenValueChanged.Set();
+            }));
+
+        observedValues.Should().BeEquivalentTo(
+            expectation:    new [] { 10, 20 },
+            config:         options => options.WithStrictOrdering(),
+            because:        "All change events occurring after publication of the initial value should be captured and forwarded.");
     }
 
     [Fact]
@@ -332,11 +341,13 @@ public sealed class WhenPropertyChangedRaceFixture
     private static void WaitForCondition(Func<bool> condition, TimeSpan? timeout = null) =>
         SpinWait.SpinUntil(condition, timeout ?? ConditionTimeout);
 
-    private sealed class TestModel : INotifyPropertyChanged
+    private sealed class Item : INotifyPropertyChanged
     {
         private int _value;
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        public int Id { get; init; }
 
         public int Value
         {
