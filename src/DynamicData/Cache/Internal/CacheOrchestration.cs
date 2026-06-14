@@ -26,7 +26,7 @@ namespace DynamicData.Cache.Internal;
 /// dispatch sites devirtualize.</typeparam>
 /// <param name="source">The keyed source changeset stream.</param>
 /// <param name="factory">Builds the per-subscription orchestrator from its runtime context and emitter.</param>
-internal sealed class Orchestration<TSource, TKey, TInner, TResult, TOrch>(
+internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
         IObservable<IChangeSet<TSource, TKey>> source,
         Func<ICacheOrchestratorContext<TKey, TInner>, IObserver<TResult>, TOrch> factory)
     where TSource : notnull
@@ -38,18 +38,12 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult, TOrch>(
 
     private sealed class OrchestratorContext : ICacheOrchestratorContext<TKey, TInner>, IDisposable
     {
-        /// <summary>
-        /// Initial counter value representing the source subscription itself. Source completion
-        /// decrements by this amount; tracked inner subscriptions add their own +1 each.
-        /// </summary>
-        private const int SourceSubscriptionWeight = 1;
-
         private readonly KeyedDisposable<TKey> _innerSubscriptions = new();
         private readonly SingleAssignmentDisposable _sourceSubscription = new();
         private readonly SharedDeliveryQueue _queue;
         private readonly DeliverySubQueue<TResult> _emitter;
         private readonly TOrch _orchestrator = default!;
-        private int _subscriptionCounter = SourceSubscriptionWeight;
+        private int _subscriptionCounter = 1;   // Includes the source subscription, so starts at 1 and not 0.
         private int _completionEmitted;
         private bool _disposed;
 
@@ -182,8 +176,7 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult, TOrch>(
             // Re-check the counter: if the orchestrator added a tracked subscription during its
             // OnDrainComplete (re-establishing liveness), do not complete. CAS-latch ensures
             // exactly one OnCompleted across any number of repeated drains seeing counter == 0.
-            if (Volatile.Read(ref _subscriptionCounter) == 0 &&
-                Interlocked.CompareExchange(ref _completionEmitted, 1, 0) == 0)
+            if (Volatile.Read(ref _subscriptionCounter) == 0 && Interlocked.CompareExchange(ref _completionEmitted, 1, 0) == 0)
             {
                 _emitter.OnCompleted();
             }

@@ -5,10 +5,10 @@
 namespace DynamicData.Cache.Internal;
 
 /// <summary>
-/// Orchestrator contract consumed by the <c>OrchestrateMany</c> primitive. Implementations hold
+/// Orchestrator contract consumed by the <c>Orchestrate</c> primitive. Implementations hold
 /// per-subscription state as fields and receive their
 /// <see cref="ICacheOrchestratorContext{TKey, TInner}"/> and downstream emitter as constructor
-/// arguments supplied by the factory passed to <c>OrchestrateMany</c>. A new orchestrator instance
+/// arguments supplied by the factory passed to <c>Orchestrate</c>. A new orchestrator instance
 /// is constructed per subscription, so all state is naturally isolated.
 /// </summary>
 /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>

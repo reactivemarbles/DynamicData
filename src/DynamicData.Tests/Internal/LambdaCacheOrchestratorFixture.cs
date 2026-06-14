@@ -18,7 +18,7 @@ namespace DynamicData.Tests.Internal;
 /// In-isolation smoke tests for <see cref="IntObservableCacheEx.LambdaCacheOrchestrator{TSource, TKey, TInner, TResult}"/>.
 /// Verifies that calls forward to the captured lambdas and that the Track callback is wired to the
 /// supplied context. Most production behavior is covered through the lambda-overload tests in
-/// OrchestrateManyFixture; these tests confirm the forwarding contract in isolation.
+/// OrchestrateFixture; these tests confirm the forwarding contract in isolation.
 /// </summary>
 public sealed class LambdaCacheOrchestratorFixture
 {
@@ -39,7 +39,7 @@ public sealed class LambdaCacheOrchestratorFixture
                 receivedChanges.Add(changes);
                 receivedContext = ctx;
             },
-            onInner: (value, key) => { },
+            onInner: (value, key, _) => { },
             onDrainComplete: obs => { });
 
         var changeset = new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) };
@@ -51,21 +51,27 @@ public sealed class LambdaCacheOrchestratorFixture
     }
 
     [Fact]
-    public void OnInner_ForwardsToLambda()
+    public void OnInner_ForwardsToLambdaWithEmitter()
     {
         var context = new FakeOrchestratorContext<int, string>();
         var emitter = new CollectingObserver<int>();
         var received = new List<(string Value, int Key)>();
+        IObserver<int>? receivedEmitter = null;
 
         var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
             context, emitter,
             onSourceChangeSet: (_, _) => { },
-            onInner: (v, k) => received.Add((v, k)),
+            onInner: (v, k, em) =>
+            {
+                received.Add((v, k));
+                receivedEmitter = em;
+            },
             onDrainComplete: _ => { });
 
         orchestrator.OnInner("hello", 42);
 
         received.Should().Equal(new[] { ("hello", 42) });
+        receivedEmitter.Should().BeSameAs(emitter, "the lambda overload forwards the emitter as-is to onInner");
     }
 
     [Fact]
@@ -78,7 +84,7 @@ public sealed class LambdaCacheOrchestratorFixture
         var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
             context, emitter,
             onSourceChangeSet: (_, _) => { },
-            onInner: (_, _) => { },
+            onInner: (_, _, _) => { },
             onDrainComplete: obs => receivedObserver = obs);
 
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);

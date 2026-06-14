@@ -172,7 +172,7 @@ public static partial class ObservableCacheEx
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
 
-        return new MergeManyCacheChangeSets<TObject, TKey, TDestination, TDestinationKey>(source, observableSelector, equalityComparer, comparer).Run();
+        return source.OrchestrateManyChangeSets(observableSelector, equalityComparer, comparer);
     }
 
     /// <summary>
@@ -387,7 +387,23 @@ public static partial class ObservableCacheEx
         observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
         sourceComparer.ThrowArgumentNullExceptionIfNull(nameof(sourceComparer));
 
-        return new MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDestination, TDestinationKey>(source, observableSelector, sourceComparer, equalityComparer, childComparer, resortOnSourceRefresh).Run();
+        // Wrap each destination with its source parent so we can compare on the parent first, then
+        // unwrap back to plain destinations downstream. Supporting types are private nested types
+        // at the bottom of this file.
+        IComparer<ParentChildEntry<TObject, TDestination>> entryComparer = childComparer is null
+            ? new ParentOnlyCompare<TObject, TDestination>(sourceComparer)
+            : new ParentChildCompare<TObject, TDestination>(sourceComparer, childComparer);
+        IEqualityComparer<ParentChildEntry<TObject, TDestination>>? entryEqualityComparer = equalityComparer is null
+            ? null
+            : new ParentChildEqualityCompare<TObject, TDestination>(equalityComparer);
+
+        return source
+            .OrchestrateManyChangeSets<TObject, TKey, ParentChildEntry<TObject, TDestination>, TDestinationKey>(
+                changeSetSelector: (obj, key) => observableSelector(obj, key).Transform(dest => new ParentChildEntry<TObject, TDestination>(obj, dest)),
+                equalityComparer: entryEqualityComparer,
+                comparer: entryComparer,
+                reevalOnRefresh: resortOnSourceRefresh)
+            .TransformImmutable(entry => entry.Child);
     }
 
     /// <summary>
@@ -434,4 +450,54 @@ public static partial class ObservableCacheEx
     }
 
     private const bool DefaultResortOnSourceRefresh = true;
+
+    // Supporting types for the source-priority MergeManyChangeSets overload. Each destination is
+    // boxed with its source parent so that OrchestrateManyChangeSets can compare on the parent first.
+    private sealed record ParentChildEntry<TObject, TDestination>(TObject Parent, TDestination Child)
+        where TObject : notnull
+        where TDestination : notnull;
+
+    private sealed class ParentChildCompare<TObject, TDestination>(IComparer<TObject> comparerParent, IComparer<TDestination> comparerChild) : Comparer<ParentChildEntry<TObject, TDestination>>
+        where TObject : notnull
+        where TDestination : notnull
+    {
+        public override int Compare(ParentChildEntry<TObject, TDestination>? x, ParentChildEntry<TObject, TDestination>? y) => (x, y) switch
+        {
+            (not null, not null) => comparerParent.Compare(x.Parent, y.Parent) switch
+                                    {
+                                        0 => comparerChild.Compare(x.Child, y.Child),
+                                        int i => i,
+                                    },
+            (null, null) => 0,
+            (null, not null) => 1,
+            (not null, null) => -1,
+        };
+    }
+
+    private sealed class ParentOnlyCompare<TObject, TDestination>(IComparer<TObject> comparer) : Comparer<ParentChildEntry<TObject, TDestination>>
+        where TObject : notnull
+        where TDestination : notnull
+    {
+        public override int Compare(ParentChildEntry<TObject, TDestination>? x, ParentChildEntry<TObject, TDestination>? y) => (x, y) switch
+        {
+            (not null, not null) => comparer.Compare(x.Parent, y.Parent),
+            (null, null) => 0,
+            (null, not null) => 1,
+            (not null, null) => -1,
+        };
+    }
+
+    private sealed class ParentChildEqualityCompare<TObject, TDestination>(IEqualityComparer<TDestination> comparer) : EqualityComparer<ParentChildEntry<TObject, TDestination>>
+        where TObject : notnull
+        where TDestination : notnull
+    {
+        public override bool Equals(ParentChildEntry<TObject, TDestination>? x, ParentChildEntry<TObject, TDestination>? y) => (x, y) switch
+        {
+            (not null, not null) => comparer.Equals(x.Child, y.Child),
+            (null, null) => true,
+            _ => false,
+        };
+
+        public override int GetHashCode(ParentChildEntry<TObject, TDestination> obj) => comparer.GetHashCode(obj.Child);
+    }
 }

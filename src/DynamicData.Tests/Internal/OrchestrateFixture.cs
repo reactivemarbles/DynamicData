@@ -22,12 +22,12 @@ using Xunit;
 namespace DynamicData.Tests.Internal;
 
 /// <summary>
-/// Tests for the <c>OrchestrateMany</c> primitive's behavioral contracts: source/inner serialization,
+/// Tests for the <c>Orchestrate</c> primitive's behavioral contracts: source/inner serialization,
 /// per-drain coalesced emission, completion counting, error propagation, and cross-cache safety.
 /// Exercised via the <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> overload because it
 /// maps 1:1 to the legacy CacheParentSubscription subclass shape these tests originally targeted.
 /// </summary>
-public sealed class OrchestrateManyFixture
+public sealed class OrchestrateFixture
 {
     private const int SeedMin = 1;
     private const int SeedMax = 10000;
@@ -40,10 +40,10 @@ public sealed class OrchestrateManyFixture
     private sealed record TestItem(int Key, string Value);
 
     /// <summary>
-    /// Wires <paramref name="source"/> through <c>OrchestrateMany</c> with a fresh <see cref="TestOrchestrator"/>
+    /// Wires <paramref name="source"/> through <c>Orchestrate</c> with a fresh <see cref="TestOrchestrator"/>
     /// constructed per subscription. Returns the observable plus a thunk that yields the constructed
     /// orchestrator after subscribe. The factory pattern ensures per-subscription isolation and
-    /// matches the production OrchestrateMany contract.
+    /// matches the production Orchestrate contract.
     /// </summary>
     private static (IObservable<IChangeSet<TestItem, int>> Observable, Func<TestOrchestrator> Orchestrator) Wire(
             IObservable<IChangeSet<TestItem, int>> source,
@@ -52,7 +52,7 @@ public sealed class OrchestrateManyFixture
             Action? onChild = null)
     {
         TestOrchestrator? captured = null;
-        var observable = source.OrchestrateMany<TestItem, int, string, IChangeSet<TestItem, int>, TestOrchestrator>(
+        var observable = source.Orchestrate<TestItem, int, string, IChangeSet<TestItem, int>, TestOrchestrator>(
             (ctx, em) => captured = new TestOrchestrator(ctx, em, childFactory, onParent, onChild));
         return (observable, () => captured ?? throw new InvalidOperationException("Subscribe to the returned observable first."));
     }
@@ -329,7 +329,7 @@ public sealed class OrchestrateManyFixture
     }
 
     /// <summary>
-    /// Proves OrchestrateMany delivery runs without holding the lock. Two orchestrator instances
+    /// Proves Orchestrate delivery runs without holding the lock. Two orchestrator instances
     /// whose Emit callbacks write into each other's source cache, creating a cross-cache cycle.
     /// Deadlocks if downstream delivery is held under the queue lock; passes when the queue is
     /// drained before invoking Emit.
@@ -372,7 +372,7 @@ public sealed class OrchestrateManyFixture
         var completed = Task.WhenAll(taskA, taskB);
         var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(30)));
         finished.Should().BeSameAs(completed,
-            "cross-feeding OrchestrateMany subscriptions should not deadlock");
+            "cross-feeding Orchestrate subscriptions should not deadlock");
     }
 
     /// <summary>
@@ -444,7 +444,7 @@ public sealed class OrchestrateManyFixture
     }
 
     /// <summary>
-    /// The lambda overload of OrchestrateMany must build a fresh orchestrator per subscription;
+    /// The lambda overload of Orchestrate must build a fresh orchestrator per subscription;
     /// the orchestrator holds mutable per-subscription state and reuse across subscribers corrupts
     /// the first subscriber's context.
     /// </summary>
@@ -458,7 +458,7 @@ public sealed class OrchestrateManyFixture
 
         // Build a chain that captures whichever context each orchestrator received. Two subscribers
         // should each see their own context instance.
-        var observable = source.Connect().OrchestrateMany<TestItem, int, string, int>(
+        var observable = source.Connect().Orchestrate<TestItem, int, string, int>(
             onSourceChangeSet: (changes, context) =>
             {
                 // Hash code of the context instance proves each subscription has its own.
@@ -467,7 +467,7 @@ public sealed class OrchestrateManyFixture
                     contexts.Add(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(context));
                 }
             },
-            onInner: (_, _) => { },
+            onInner: (_, _, _) => { },
             onDrainComplete: _ => Interlocked.Increment(ref emitCalls));
 
         using var subA = observable.Subscribe();

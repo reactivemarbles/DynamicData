@@ -11,7 +11,7 @@ namespace DynamicData.Tests.Utilities;
 
 /// <summary>
 /// In-memory implementation of <see cref="ICacheOrchestratorContext{TKey, TInner}"/> for testing
-/// orchestrators in isolation, without spinning up the full SharedDeliveryQueue + Orchestration
+/// orchestrators in isolation, without spinning up the full SharedDeliveryQueue + CacheOrchestration
 /// runtime. Records every <see cref="Track"/> and <see cref="Untrack"/> call so tests can assert on
 /// the orchestrator's subscription lifecycle behavior, and exposes the currently tracked observables
 /// via <see cref="Tracked"/>.

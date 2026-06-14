@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class MergeMany<TObject, TKey, TDestination>
@@ -28,19 +26,20 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
     }
 
     public IObservable<TDestination> Run() =>
-        _source.OrchestrateMany<TObject, TKey, TDestination, TDestination, Orchestrator>(
-            (context, emitter) => new Orchestrator(context, emitter, _observableSelector));
-
-    internal sealed class Orchestrator(
-            ICacheOrchestratorContext<TKey, TDestination> context,
-            IObserver<TDestination> emitter,
-            Func<TObject, TKey, IObservable<TDestination>> selector)
-        : OrchestratorCacheChangeBase<TObject, TKey, TDestination, TDestination>(context, emitter)
-    {
-        public override void OnInner(TDestination value, TKey key) => Emitter.OnNext(value);
-
-        protected override void OnItemAdded(TObject item, TKey key) => Context.Track(key, selector(item, key));
-
-        protected override void OnItemRemoved(TObject item, TKey key) => Context.Untrack(key);
-    }
+        _source.Orchestrate<TObject, TKey, TDestination, TDestination>(
+            onSourceChangeSet: (changes, context) =>
+            {
+                foreach (var change in changes.ToConcreteType())
+                {
+                    if (change.Reason is ChangeReason.Add or ChangeReason.Update)
+                    {
+                        context.Track(change.Key, _observableSelector(change.Current, change.Key));
+                    }
+                    else if (change.Reason is ChangeReason.Remove)
+                    {
+                        context.Untrack(change.Key);
+                    }
+                }
+            },
+            onInner: (value, _, emitter) => emitter.OnNext(value));
 }

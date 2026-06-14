@@ -18,5 +18,5 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(
     where TDestination : notnull
 {
     public IObservable<IChangeSet<TDestination>> Run() =>
-        source.OrchestrateManyMergedList(selector, equalityComparer);
+        source.OrchestrateManyChangeSets(selector, equalityComparer);
 }

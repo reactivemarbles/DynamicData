@@ -15,7 +15,7 @@ namespace DynamicData.Tests.Internal;
 
 /// <summary>
 /// In-isolation tests for <see cref="IntObservableCacheEx.MergedOrchestrator{TSource, TKey, TDest, TDestKey}"/>,
-/// the orchestrator behind <c>OrchestrateManyMerged</c>. Verifies per-source-key tracking, update
+/// the orchestrator behind <c>OrchestrateManyChangeSets</c>. Verifies per-source-key tracking, update
 /// semantics (new tracked + prior items removed from tracker), and the reevalOnRefresh flag.
 /// </summary>
 public sealed class MergedOrchestratorFixture

@@ -14,7 +14,7 @@ internal sealed class FilterOnObservable<TObject, TKey>(IObservable<IChangeSet<T
 {
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Defer(() =>
     {
-        var changes = source.OrchestrateManyChanges<TObject, TKey, bool, TObject>(
+        var changes = source.OrchestrateChangeSets<TObject, TKey, bool, TObject>(
             innerFactory: (item, key) => filterFactory(item, key).DistinctUntilChanged(),
             onSourceChange: static (cache, change) =>
             {

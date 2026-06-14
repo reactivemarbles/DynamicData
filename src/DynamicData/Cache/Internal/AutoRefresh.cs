@@ -21,7 +21,7 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
     public IObservable<IChangeSet<TObject, TKey>> Run()
     {
         var sched = buffer is null ? null : scheduler ?? GlobalConfig.DefaultScheduler;
-        return source.OrchestrateMany<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>, Orchestrator>(
+        return source.Orchestrate<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>, Orchestrator>(
             (context, emitter) => new Orchestrator(context, emitter, reEvaluator, buffer, sched));
     }
 
@@ -41,7 +41,7 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
             Func<TObject, TKey, IObservable<TAny>> reEvaluator,
             TimeSpan? buffer,
             IScheduler? scheduler)
-        : OrchestratorCacheChangeBase<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>(context, emitter), IDisposable
+        : CacheOrchestratorBase<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>(context, emitter), IDisposable
     {
         private readonly Dictionary<TKey, Change<TObject, TKey>> _pendingRefreshes = new();
         private readonly HashSet<TKey> _sourceTouched = [];

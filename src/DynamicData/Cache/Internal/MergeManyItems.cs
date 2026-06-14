@@ -28,21 +28,21 @@ internal sealed class MergeManyItems<TObject, TKey, TDestination>
     }
 
     public IObservable<ItemWithValue<TObject, TDestination>> Run() =>
-        _source.OrchestrateMany<TObject, TKey, (TObject Item, TDestination Value), ItemWithValue<TObject, TDestination>, Orchestrator>(
-            (context, emitter) => new Orchestrator(context, emitter, _observableSelector));
-
-    internal sealed class Orchestrator(
-            ICacheOrchestratorContext<TKey, (TObject Item, TDestination Value)> context,
-            IObserver<ItemWithValue<TObject, TDestination>> emitter,
-            Func<TObject, TKey, IObservable<TDestination>> selector)
-        : OrchestratorCacheChangeBase<TObject, TKey, (TObject Item, TDestination Value), ItemWithValue<TObject, TDestination>>(context, emitter)
-    {
-        public override void OnInner((TObject Item, TDestination Value) value, TKey key) =>
-            Emitter.OnNext(new ItemWithValue<TObject, TDestination>(value.Item, value.Value));
-
-        protected override void OnItemAdded(TObject item, TKey key) =>
-            Context.Track(key, selector(item, key).Select(value => (Item: item, Value: value)));
-
-        protected override void OnItemRemoved(TObject item, TKey key) => Context.Untrack(key);
-    }
+        _source.Orchestrate<TObject, TKey, (TObject Item, TDestination Value), ItemWithValue<TObject, TDestination>>(
+            onSourceChangeSet: (changes, context) =>
+            {
+                foreach (var change in changes.ToConcreteType())
+                {
+                    if (change.Reason is ChangeReason.Add or ChangeReason.Update)
+                    {
+                        var item = change.Current;
+                        context.Track(change.Key, _observableSelector(item, change.Key).Select(value => (Item: item, Value: value)));
+                    }
+                    else if (change.Reason is ChangeReason.Remove)
+                    {
+                        context.Untrack(change.Key);
+                    }
+                }
+            },
+            onInner: (value, _, emitter) => emitter.OnNext(new ItemWithValue<TObject, TDestination>(value.Item, value.Value)));
 }

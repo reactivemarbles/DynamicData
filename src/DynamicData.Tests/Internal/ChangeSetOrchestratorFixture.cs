@@ -15,11 +15,11 @@ using Xunit;
 namespace DynamicData.Tests.Internal;
 
 /// <summary>
-/// In-isolation tests for <see cref="IntObservableCacheEx.ChangesOrchestrator{TSource, TKey, TInner, TOutput}"/>,
-/// the orchestrator behind <c>OrchestrateManyChanges</c>. Verifies that onSourceChange and onInner
+/// In-isolation tests for <see cref="IntObservableCacheEx.ChangeSetOrchestrator{TSource, TKey, TInner, TOutput}"/>,
+/// the orchestrator behind <c>OrchestrateChangeSets</c>. Verifies that onSourceChange and onInner
 /// callbacks fire for the right reasons and that drain-end captures and emits accumulated state.
 /// </summary>
-public sealed class ChangesOrchestratorFixture
+public sealed class ChangeSetOrchestratorFixture
 {
     private sealed record Source(int Id);
 
@@ -30,7 +30,7 @@ public sealed class ChangesOrchestratorFixture
         var emitter = new CollectingObserver<IChangeSet<string, int>>();
         var reasons = new System.Collections.Generic.List<ChangeReason>();
 
-        var orchestrator = new IntObservableCacheEx.ChangesOrchestrator<Source, int, string, string>(
+        var orchestrator = new IntObservableCacheEx.ChangeSetOrchestrator<Source, int, string, string>(
             context, emitter,
             innerFactory: (item, key) => Observable.Empty<string>(),
             onSourceChange: (cache, change) => reasons.Add(change.Reason),
@@ -52,7 +52,7 @@ public sealed class ChangesOrchestratorFixture
         var emitter = new CollectingObserver<IChangeSet<string, int>>();
         var source = new Source(1);
 
-        var orchestrator = new IntObservableCacheEx.ChangesOrchestrator<Source, int, string, string>(
+        var orchestrator = new IntObservableCacheEx.ChangeSetOrchestrator<Source, int, string, string>(
             context, emitter,
             innerFactory: (item, key) => Observable.Empty<string>(),
             onSourceChange: (cache, change) => { },
@@ -71,7 +71,7 @@ public sealed class ChangesOrchestratorFixture
     {
         var context = new FakeOrchestratorContext<int, (Source Item, string Value)>();
         var emitter = new CollectingObserver<IChangeSet<string, int>>();
-        var orchestrator = new IntObservableCacheEx.ChangesOrchestrator<Source, int, string, string>(
+        var orchestrator = new IntObservableCacheEx.ChangeSetOrchestrator<Source, int, string, string>(
             context, emitter,
             innerFactory: (item, key) => Observable.Empty<string>(),
             onSourceChange: (cache, change) => { },

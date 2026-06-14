@@ -16,7 +16,7 @@ namespace DynamicData.Cache.Internal;
 /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
 /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
 /// <typeparam name="TResult">Type delivered downstream via the emitter.</typeparam>
-internal abstract class OrchestratorCacheChangeBase<TSource, TKey, TInner, TResult>(
+internal abstract class CacheOrchestratorBase<TSource, TKey, TInner, TResult>(
         ICacheOrchestratorContext<TKey, TInner> context,
         IObserver<TResult> emitter)
     : ICacheOrchestrator<TSource, TKey, TInner, TResult>
