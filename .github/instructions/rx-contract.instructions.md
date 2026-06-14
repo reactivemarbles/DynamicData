@@ -13,10 +13,10 @@ Rules use the **original Microsoft document's `§X.Y` numbering** throughout so 
 
 ## Document structure
 
-Sections preserve the original A/B/C ordering of this document (consumer contract first, then operator authors, then consumer-side usage), which is the order most useful for a contributor working in this repo:
+The file follows the original Microsoft document's section order:
 - **§4** is the Observable Contract from the consumer's perspective (what callers can rely on)
-- **§6** is rules for operator authors (what your operator must guarantee)
 - **§5** is rules for code that uses Rx (consumer-side correctness)
+- **§6** is rules for operator authors (what your operator must guarantee)
 
 ---
 
@@ -72,6 +72,45 @@ OnNext* (OnCompleted | OnError)?
 - Messages MAY arrive during the `Dispose` call itself (Dispose can race with OnNext).
 - After `Dispose` returns control to the caller: **no more messages arrive**.
 - The unsubscription process MAY continue asynchronously on a different context after `Dispose` returns.
+
+---
+
+## §5: Using Rx (consumer-side rules)
+
+These rules apply recursively inside operator implementations too, per §6.20.
+
+### §5.2. Provide All Three Subscribe Arguments
+- Default `Subscribe(onNext)` overload rethrows OnError on the source thread, crashing the app.
+- Always provide onError and onCompleted handlers unless:
+  - The source is guaranteed not to complete
+  - The source is guaranteed not to error
+  - The default behavior is genuinely desired
+
+### §5.4. Pass Specific Scheduler to Concurrency-Introducing Operators
+- Prefer `source.Throttle(timeSpan, specificScheduler)` over `source.Throttle(timeSpan).ObserveOn(specificScheduler)`.
+- Creates the work on the right scheduler from the start; saves a scheduler hop.
+
+### §5.5. ObserveOn Late, Few
+- Each `ObserveOn` schedules per-message work and is expensive.
+- Apply filters first, then `ObserveOn`, to avoid scheduling work for messages that get filtered out.
+
+### §5.6. Limit Buffers
+- `Replay`, `Buffer`, etc. without size/time limits cause unbounded memory growth.
+- Always provide a limit: `Replay(10000, TimeSpan.FromHours(1))`.
+
+### §5.7. Make Side Effects Explicit via Do
+- Side effects (logging, mutation, etc.) buried in selector/predicate lambdas are unauditable.
+- Hoist them into `Do(...)` so the side-effect is visible in the pipeline.
+- Note: per Rx semantics, `Do` runs for each subscriber unless the pipeline is shared via `Publish`.
+
+### §5.8. Use Synchronize Only for Non-Conforming Sources
+- Operators created by Rx (and DynamicData) already follow the contract.
+- `Synchronize()` (consumer-facing, no gate) is for external non-conforming `IObservable` implementations only.
+- NOTE: the **gate-based** `Synchronize(gate)` inside multi-source operators (per §6.7) is a DIFFERENT pattern and IS valid.
+
+### §5.10. Share Side Effects via Publish
+- Cold observables re-run their side effects on every subscribe.
+- If sharing is needed, use `Publish(shared => ...)` or `Publish().RefCount()`.
 
 ---
 
@@ -173,45 +212,6 @@ OR equivalent gate-based pattern (DynamicData's `CacheParentSubscription._synchr
 ### §6.20. Operator Implementations MUST Follow Usage Guidelines
 - Operators internally compose other operators (per §6.1).
 - §5 ("Using Rx") rules apply recursively to operator internals.
-
----
-
-## §5: Using Rx (consumer-side rules)
-
-These rules apply recursively inside operator implementations too, per §6.20.
-
-### §5.2. Provide All Three Subscribe Arguments
-- Default `Subscribe(onNext)` overload rethrows OnError on the source thread, crashing the app.
-- Always provide onError and onCompleted handlers unless:
-  - The source is guaranteed not to complete
-  - The source is guaranteed not to error
-  - The default behavior is genuinely desired
-
-### §5.4. Pass Specific Scheduler to Concurrency-Introducing Operators
-- Prefer `source.Throttle(timeSpan, specificScheduler)` over `source.Throttle(timeSpan).ObserveOn(specificScheduler)`.
-- Creates the work on the right scheduler from the start; saves a scheduler hop.
-
-### §5.5. ObserveOn Late, Few
-- Each `ObserveOn` schedules per-message work and is expensive.
-- Apply filters first, then `ObserveOn`, to avoid scheduling work for messages that get filtered out.
-
-### §5.6. Limit Buffers
-- `Replay`, `Buffer`, etc. without size/time limits cause unbounded memory growth.
-- Always provide a limit: `Replay(10000, TimeSpan.FromHours(1))`.
-
-### §5.7. Make Side Effects Explicit via Do
-- Side effects (logging, mutation, etc.) buried in selector/predicate lambdas are unauditable.
-- Hoist them into `Do(...)` so the side-effect is visible in the pipeline.
-- Note: per Rx semantics, `Do` runs for each subscriber unless the pipeline is shared via `Publish`.
-
-### §5.8. Use Synchronize Only for Non-Conforming Sources
-- Operators created by Rx (and DynamicData) already follow the contract.
-- `Synchronize()` (consumer-facing, no gate) is for external non-conforming `IObservable` implementations only.
-- NOTE: the **gate-based** `Synchronize(gate)` inside multi-source operators (per §6.7) is a DIFFERENT pattern and IS valid.
-
-### §5.10. Share Side Effects via Publish
-- Cold observables re-run their side effects on every subscribe.
-- If sharing is needed, use `Publish(shared => ...)` or `Publish().RefCount()`.
 
 ---
 
