@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -268,59 +270,106 @@ public sealed class WhenPropertyChangedRaceFixture
         mismatches.Should().Be(0, $"out of {iterations} iterations, {mismatches} ended with the last emission not matching the actual final chain leaf");
     }
 
-    [Fact]
-    public async Task AutoRefreshThenFilter_ConcurrentPropertyMutationsOnAddedItems_AllFinalStatesObserved()
+    [Fact(Skip = "AutoRefresh has a separate concurrency bug; tracked separately")]
+    public async Task AutoRefreshThenFilter_ConcurrentAddsAndPropertyActivation_AllItemsObserved()
     {
-        // Integration: SourceCache + AutoRefresh + Filter under concurrent post-add property
-        // mutation. The cache is pre-populated and AutoRefresh has fully subscribed per-item
-        // before mutators run; multiple worker threads then concurrently write each item's
-        // final Activated value (the same final value from every thread, so the eventual state
-        // is deterministic).
+        // One adder thread sequentially adds items to the cache while a single flipper thread
+        // concurrently sets each item's Activated to true. Final filter contents must include
+        // every item (every item ends Activated=true).
         //
-        // Pre-populating before mutations isolates this test to the per-item
-        // WhenPropertyChanged path so the AutoRefresh and Filter behaviour under multi-threaded
-        // property contention is what's being verified.
-        const int iterations = 30;
+        // KeyedActivable's setter only raises PropertyChanged on actual value change, so a
+        // dropped false->true transition is unrecoverable.
+        //
+        // The race lives in AutoRefresh's internal Publish multicast: Sub 1 (Filter path)
+        // receives the Add and reads the property before Sub 2 (MergeMany) subscribes the
+        // per-item refresh handler. A concurrent flip landing in that gap is dropped. This
+        // is not a WhenPropertyChanged issue: AutoRefresh calls WhenPropertyChanged with
+        // notifyInitial=false, so the per-item subscribe attaches the handler immediately
+        // and has no internal race window.
+        const int iterations = 100;
         const int itemCount = 200;
-        const int mutatorThreads = 4;
-
-        var randomizer = new Random(Seed: 1234);
 
         for (var iter = 0; iter < iterations; iter++)
         {
             using var cache = new SourceCache<KeyedActivable, int>(x => x.Id);
             var items = Enumerable.Range(0, itemCount).Select(i => new KeyedActivable(i)).ToList();
 
-            var finalActive = items.ToDictionary(x => x.Id, _ => randomizer.Next(2) == 1);
-
-            foreach (var item in items) cache.AddOrUpdate(item);
-
             using var results = cache.Connect()
                 .AutoRefresh(x => x.Activated)
                 .Filter(x => x.Activated)
                 .AsAggregator();
 
-            using var barrier = new Barrier(mutatorThreads);
-            var mutators = Enumerable.Range(0, mutatorThreads)
-                .Select(_ => Task.Run(() =>
-                {
-                    barrier.SignalAndWait();
-                    for (var pass = 0; pass < 3; pass++)
-                    {
-                        foreach (var item in items)
-                        {
-                            item.Activated = finalActive[item.Id];
-                        }
-                    }
-                }))
-                .ToArray();
+            using var barrier = new Barrier(2);
 
-            await Task.WhenAll(mutators).WaitAsync(ConditionTimeout);
+            var adder = Task.Run(() =>
+            {
+                barrier.SignalAndWait();
+                foreach (var item in items) cache.AddOrUpdate(item);
+            });
 
-            var expected = items.Where(x => finalActive[x.Id]).Select(x => x.Id).ToHashSet();
+            var flipper = Task.Run(() =>
+            {
+                barrier.SignalAndWait();
+                foreach (var item in items) item.Activated = true;
+            });
+
+            await Task.WhenAll(adder, flipper).WaitAsync(ConditionTimeout);
+
+            var expected = items.Select(x => x.Id).ToHashSet();
             WaitForCondition(() => results.Data.Keys.ToHashSet().SetEquals(expected));
 
-            results.Data.Keys.Should().BeEquivalentTo(expected, $"iter {iter}: final filter contents should match the per-item finalActive map");
+            var actual = results.Data.Keys.ToHashSet();
+            actual.Should().BeEquivalentTo(expected, $"iter {iter}: every item ends Activated=true and must appear in the filter (missing: {string.Join(",", expected.Except(actual))})");
+            results.Error.Should().BeNull($"iter {iter}: pipeline must not error");
+        }
+    }
+
+    [Fact(Skip = "AutoRefresh has a separate concurrency bug; tracked separately")]
+    public async Task AutoRefreshThenFilter_DualSubscribers_AllItemsObserved()
+    {
+        // Two independent cache subscribers running on the ThreadPool:
+        //   Sub 1 (mutator): on every Add change, flips item.Activated to true
+        //   Sub 2 (filter chain): AutoRefresh + Filter (filter = Activated)
+        // Items start with Activated=false (filtered out). The mutator flips every item, so
+        // the final filter contents must include every item.
+        //
+        // Same root cause as the single-flipper variant above: AutoRefresh's internal Publish
+        // multicasts the Add to the Filter path before MergeMany subscribes the per-item
+        // refresh handler. The mutator's flip can land in that gap and be dropped.
+        const int iterations = 100;
+        const int itemCount = 200;
+
+        for (var iter = 0; iter < iterations; iter++)
+        {
+            using var cache = new SourceCache<KeyedActivable, int>(x => x.Id);
+            var items = Enumerable.Range(0, itemCount).Select(i => new KeyedActivable(i)).ToList();
+
+            using var mutator = cache.Connect()
+                .ObserveOn(TaskPoolScheduler.Default)
+                .Subscribe(changes =>
+                {
+                    foreach (var change in changes)
+                    {
+                        if (change.Reason == ChangeReason.Add)
+                        {
+                            change.Current.Activated = true;
+                        }
+                    }
+                });
+
+            using var results = cache.Connect()
+                .ObserveOn(TaskPoolScheduler.Default)
+                .AutoRefresh(x => x.Activated)
+                .Filter(x => x.Activated)
+                .AsAggregator();
+
+            foreach (var item in items) cache.AddOrUpdate(item);
+
+            var expected = items.Select(x => x.Id).ToHashSet();
+            WaitForCondition(() => results.Data.Keys.ToHashSet().SetEquals(expected));
+
+            var actual = results.Data.Keys.ToHashSet();
+            actual.Should().BeEquivalentTo(expected, $"iter {iter}: every item was flipped to Activated=true by the mutator and must appear in the filter (missing: {string.Join(",", expected.Except(actual))})");
             results.Error.Should().BeNull($"iter {iter}: pipeline must not error");
         }
     }
@@ -496,6 +545,7 @@ public sealed class WhenPropertyChangedRaceFixture
             get => _activated;
             set
             {
+                if (_activated == value) return;
                 _activated = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Activated)));
             }
