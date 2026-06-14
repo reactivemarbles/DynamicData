@@ -89,35 +89,25 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             }
         }
 
-        // Wraps both the accessor read AND the queue OnNext (which may invoke the downstream
-        // observer synchronously via the DeliveryQueue drain) so that exceptions from either
-        // route to OnError instead of escaping into the PropertyChanged setter that fired the
-        // event. TryOnError catches any throw from the downstream OnError so a malformed
-        // observer cannot propagate a secondary exception back into the setter chain either.
+        // Reads the current property value and forwards it through the queue. The accessor is
+        // user code and may throw; that exception routes to OnError. The downstream OnNext call
+        // is NOT wrapped: per the Rx contract, if the user observer throws, the exception
+        // propagates back to whoever invoked the PropertyChanged setter, matching what a plain
+        // Subject<T>.OnNext would do.
         private void EmitCurrent()
         {
+            PropertyValue<TObject, TProperty> value;
             try
             {
-                _queue.OnNext(new PropertyValue<TObject, TProperty>(_source, _accessor(_source)));
+                value = new PropertyValue<TObject, TProperty>(_source, _accessor(_source));
             }
             catch (Exception ex)
             {
-                TryOnError(ex);
-            }
-        }
-
-        private void TryOnError(Exception ex)
-        {
-            try
-            {
                 _queue.OnError(ex);
+                return;
             }
-            catch
-            {
-                // Downstream observer's OnError threw. Swallowing keeps the exception from
-                // escaping into the PropertyChanged setter that triggered this emission;
-                // there is no recovery path that does not violate that boundary.
-            }
+
+            _queue.OnNext(value);
         }
     }
 
@@ -218,39 +208,35 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
 
         private void ProcessSignal(int level)
         {
-            // Drainer thread. Wraps the entire signal processing so that exceptions from any
-            // user-provided invoker, notifier factory, value accessor, or downstream observer
-            // route to OnError rather than escaping the drainer.
+            // Drainer thread. The chain walk (Invoker / notifier Factory / ReadCurrent's accessor)
+            // is user code and may throw; those exceptions route to OnError. The downstream
+            // OnNext call is NOT wrapped: per the Rx contract, if the user observer throws, the
+            // exception propagates back through the drainer, matching what a plain Subject<T>
+            // would do.
             //
             // The two cases (initial setup vs level-fire) collapse to:
             //   startLevel = (initial) ? 0 : level + 1
             //   emit       = (level-fire) || _notifyInitial
+            var isInitial = level == InitialSetupSignal;
+            var shouldEmit = !isInitial || _notifyInitial;
+            PropertyValue<TObject, TProperty> value;
             try
             {
-                var isInitial = level == InitialSetupSignal;
                 ResubscribeFrom(isInitial ? 0 : level + 1);
-                if (!isInitial || _notifyInitial)
+                if (!shouldEmit)
                 {
-                    _userSub.OnNext(ReadCurrent());
+                    return;
                 }
+
+                value = ReadCurrent();
             }
             catch (Exception ex)
             {
-                TryOnError(ex);
-            }
-        }
-
-        private void TryOnError(Exception ex)
-        {
-            try
-            {
                 _userSub.OnError(ex);
+                return;
             }
-            catch
-            {
-                // Downstream observer's OnError threw. Swallowing keeps the exception from
-                // escaping the drainer; the queue continues, and Dispose still cleans up.
-            }
+
+            _userSub.OnNext(value);
         }
 
         private void ResubscribeFrom(int startLevel)
