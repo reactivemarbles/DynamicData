@@ -3,7 +3,7 @@ applyTo: "**/*.cs"
 ---
 # Rx Contract Canonical Rules
 
-Distilled from **Microsoft Rx Design Guidelines v1.0 (October 2010)** and supplemented by the codebase-specific guidance in `rx.instructions.md`. This is the authoritative reference for what is and is not an Rx contract violation in DynamicData operators.
+Distilled from **[Microsoft Rx Design Guidelines v1.0 (October 2010)](https://go.microsoft.com/fwlink/?LinkID=205219)** and supplemented by the codebase-specific guidance in `rx.instructions.md`. This is the authoritative reference for what is and is not an Rx contract violation in DynamicData operators.
 
 **Every operator added or modified must self-audit against these rules. Every bug fix must explicitly state which rules were verified.**
 
@@ -276,7 +276,7 @@ deliveries are not preceded by stale OnNext.
 
 ## Maintaining this document
 
-This file is a derivative of the Microsoft Rx Design Guidelines v1.0 (October 2010). The Microsoft document has not been republished since v1.0 and the underlying Rx contract is stable.
+This file is a derivative of the [Microsoft Rx Design Guidelines v1.0 (October 2010)](https://go.microsoft.com/fwlink/?LinkID=205219) (canonical fwlink; resolves to `download.microsoft.com/.../Rx Design Guidelines.pdf`). The Microsoft document has not been republished since v1.0 and the underlying Rx contract is stable. **Consult the PDF directly when revising rule text, adding new rules, or resolving disputes about intent.**
 
 **Do NOT modify rule IDs.** External code reviews, PR descriptions, and commit messages cite the `§X.Y` IDs; renumbering breaks those references. The IDs come from the original PDF and changing them severs traceability to the source spec.
 
