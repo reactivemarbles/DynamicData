@@ -11,7 +11,7 @@ Rules use the **original Microsoft document's `§X.Y` numbering** throughout so 
 
 ---
 
-## Quick reference by consumer type
+## Document structure
 
 Sections preserve the original A/B/C ordering of this document (consumer contract first, then operator authors, then consumer-side usage), which is the order most useful for a contributor working in this repo:
 - **§4** is the Observable Contract from the consumer's perspective (what callers can rely on)
