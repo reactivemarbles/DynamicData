@@ -60,31 +60,36 @@ internal sealed class Orchestration<TSource, TKey, TInner, TResult, TOrch>(
         {
             _queue = new SharedDeliveryQueue(onDrainComplete: OnDrainComplete);
 
-            // Create the emitter sub-queue first (lowest index, drains last LIFO) so source-triggered
-            // sync inner emissions (higher index) deliver first and any orchestrator emit lands on the
-            // emitter after that work has settled.
-            _emitter = _queue.CreateQueue(observer);
-
-            // Wrap the factory call so a throw is reported via the standard error channel and any
-            // queue/emitter we already allocated are released.
+            // Wrap construction from the emitter sub-queue allocation through the source subscription
+            // so any throw on the way up releases everything we've allocated so far. Without this, an
+            // exception from CreateQueue, the factory, or the source subscribe leaks the queue/emitter/
+            // orchestrator/source-subscription because the ctor never completes and Dispose never runs.
             try
             {
+                // Create the emitter sub-queue first (lowest index, drains last LIFO) so source-triggered
+                // sync inner emissions (higher index) deliver first and any orchestrator emit lands on the
+                // emitter after that work has settled.
+                _emitter = _queue.CreateQueue(observer);
+
                 _orchestrator = factory(this, _emitter);
                 Debug.Assert(_orchestrator is not null, "Factory must not return null");
+
+                _sourceSubscription.Disposable = source
+                    .SynchronizeSafe(_queue)
+                    .SubscribeSafe(
+                        onNext: OnSourceChangeSet,
+                        onError: _emitter.OnError,
+                        onCompleted: DecrementSubscriptionCount);
             }
             catch
             {
+                _sourceSubscription.Dispose();
+                _innerSubscriptions.Dispose();
                 _queue.Dispose();
-                _emitter.Dispose();
+                _emitter?.Dispose();
+                (_orchestrator as IDisposable)?.Dispose();
                 throw;
             }
-
-            _sourceSubscription.Disposable = source
-                .SynchronizeSafe(_queue)
-                .SubscribeSafe(
-                    onNext: OnSourceChangeSet,
-                    onError: _emitter.OnError,
-                    onCompleted: DecrementSubscriptionCount);
         }
 
         public void Dispose()

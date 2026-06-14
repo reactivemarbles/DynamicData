@@ -158,4 +158,41 @@ public sealed class AutoRefreshOrchestratorFixture
 
         refreshCount.Should().Be(0, "a Refresh whose value is obsoleted by a Remove must never emit");
     }
+
+    [Fact]
+    public void OnItemRefreshed_DropsPendingRefreshForKey()
+    {
+        var context = new FakeOrchestratorContext<int, Change<Item, int>>();
+        var emitter = new CollectingObserver<IChangeSet<Item, int>>();
+        var scheduler = new Microsoft.Reactive.Testing.TestScheduler();
+        var orchestrator = new AutoRefresh<Item, int, Unit>.Orchestrator(
+            context, emitter,
+            reEvaluator: (item, key) => new Subject<Unit>(),
+            buffer: TimeSpan.FromSeconds(10),
+            scheduler: scheduler);
+
+        var item = new Item(1);
+        // Establish the item and let sourceTouched clear so a subsequent inner emission counts as pending.
+        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
+        orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
+
+        // Queue a pending refresh from the inner, then drain with timer NOT advanced so it stays pending.
+        orchestrator.OnInner(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
+        orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
+
+        var preSourceRefreshCount = emitter.Values.Count;
+
+        // Source emits Refresh(K) in a new drain. The pending refresh from the inner is now redundant
+        // because the source's Refresh is forwarded immediately. Drop the pending so the consumer
+        // does not see two Refresh notifications for the same item.
+        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Refresh, 1, item) });
+        // isFinal=true forces a synchronous flush of any remaining pending entries.
+        orchestrator.OnDrainComplete(isFinal: true, wasReentrant: false);
+
+        // Expect exactly ONE additional emission (the source-forwarded Refresh). Without the
+        // DropPending in OnItemRefreshed, the buffered flush would emit a redundant second one.
+        emitter.Values.Count.Should().Be(preSourceRefreshCount + 1,
+            "the source's Refresh subsumes the pending one; flushing it would be redundant");
+        emitter.Values[preSourceRefreshCount].Should().ContainSingle(c => c.Reason == ChangeReason.Refresh && c.Key == 1);
+    }
 }

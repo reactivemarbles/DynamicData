@@ -456,17 +456,15 @@ public sealed class OrchestrateManyFixture
         var emitCalls = 0;
         var contexts = new List<int>();
 
-        // Build a chain that captures whichever context (via the track callback's identity) each
-        // orchestrator received. Two subscribers should each see their own context.
-        var observable = source.Connect().OrchestrateLambdas<TestItem, int, string, int>(
-            onSourceChangeSet: (changes, track, untrack) =>
+        // Build a chain that captures whichever context each orchestrator received. Two subscribers
+        // should each see their own context instance.
+        var observable = source.Connect().OrchestrateMany<TestItem, int, string, int>(
+            onSourceChangeSet: (changes, context) =>
             {
-                // Capture an identity-stable token for the track delegate, proving each subscription
-                // has its own context. Hash code of the bound delegate target reflects the underlying
-                // OrchestratorContext instance.
+                // Hash code of the context instance proves each subscription has its own.
                 lock (contexts)
                 {
-                    contexts.Add(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(track.Target!));
+                    contexts.Add(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(context));
                 }
             },
             onInner: (_, _) => { },

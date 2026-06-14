@@ -25,21 +25,19 @@ public sealed class LambdaCacheOrchestratorFixture
     private sealed record Item(int Id);
 
     [Fact]
-    public void OnSourceChangeSet_ForwardsToLambdaWithTrackAndUntrack()
+    public void OnSourceChangeSet_ForwardsToLambdaWithContext()
     {
         var context = new FakeOrchestratorContext<int, string>();
         var emitter = new CollectingObserver<int>();
         var receivedChanges = new List<IChangeSet<Item, int>>();
-        Action<int, IObservable<string>>? receivedTrack = null;
-        Action<int>? receivedUntrack = null;
+        ICacheOrchestratorContext<int, string>? receivedContext = null;
 
         var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
             context, emitter,
-            onSourceChangeSet: (changes, track, untrack) =>
+            onSourceChangeSet: (changes, ctx) =>
             {
                 receivedChanges.Add(changes);
-                receivedTrack = track;
-                receivedUntrack = untrack;
+                receivedContext = ctx;
             },
             onInner: (value, key) => { },
             onDrainComplete: obs => { });
@@ -49,8 +47,7 @@ public sealed class LambdaCacheOrchestratorFixture
 
         receivedChanges.Should().HaveCount(1);
         receivedChanges[0].Should().BeSameAs(changeset);
-        receivedTrack.Should().NotBeNull();
-        receivedUntrack.Should().NotBeNull();
+        receivedContext.Should().BeSameAs(context, "the lambda overload forwards the captured context as-is");
     }
 
     [Fact]
@@ -62,7 +59,7 @@ public sealed class LambdaCacheOrchestratorFixture
 
         var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
             context, emitter,
-            onSourceChangeSet: (_, _, _) => { },
+            onSourceChangeSet: (_, _) => { },
             onInner: (v, k) => received.Add((v, k)),
             onDrainComplete: _ => { });
 
@@ -80,7 +77,7 @@ public sealed class LambdaCacheOrchestratorFixture
 
         var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
             context, emitter,
-            onSourceChangeSet: (_, _, _) => { },
+            onSourceChangeSet: (_, _) => { },
             onInner: (_, _) => { },
             onDrainComplete: obs => receivedObserver = obs);
 

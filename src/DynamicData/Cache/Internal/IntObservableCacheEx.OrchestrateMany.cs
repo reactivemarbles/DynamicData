@@ -39,24 +39,25 @@ internal static partial class IntObservableCacheEx
         new Orchestration<TSource, TKey, TInner, TResult, TOrch>(source, factory).Run();
 
     /// <summary>
-    /// Convenience method that wraps three lambdas into an <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/>.
-    /// Does not expose <see cref="ICacheOrchestratorContext{TKey, TInner}.Serialize"/>; operators that
-    /// need it must implement <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> directly.
-    /// The lambdas may register inner subscriptions via the <c>track</c> callback (paired with
-    /// <c>untrack</c> for removal).
+    /// Convenience overload of <see cref="OrchestrateMany{TSource, TKey, TInner, TResult, TOrch}"/>
+    /// that wraps three lambdas into an <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/>.
+    /// The source-change lambda receives the full <see cref="ICacheOrchestratorContext{TKey, TInner}"/>
+    /// so it can call <see cref="ICacheOrchestratorContext{TKey, TInner}.Track"/>,
+    /// <see cref="ICacheOrchestratorContext{TKey, TInner}.Untrack"/>, or
+    /// <see cref="ICacheOrchestratorContext{TKey, TInner}.Serialize"/> as needed.
     /// </summary>
     /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
     /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
     /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
     /// <typeparam name="TResult">Type delivered downstream by <paramref name="onDrainComplete"/>.</typeparam>
     /// <param name="source">The keyed source changeset stream.</param>
-    /// <param name="onSourceChangeSet">Invoked for each source changeset, paired with <c>track</c> and <c>untrack</c> callbacks.</param>
+    /// <param name="onSourceChangeSet">Invoked for each source changeset, paired with the runtime context.</param>
     /// <param name="onInner">Invoked for each value emitted by a tracked inner observable, paired with its key.</param>
     /// <param name="onDrainComplete">Invoked once per drain cycle to flush the aggregated state to the emitter.</param>
     /// <returns>An observable that orchestrates source and inner activity into a single result stream.</returns>
-    public static IObservable<TResult> OrchestrateLambdas<TSource, TKey, TInner, TResult>(
+    public static IObservable<TResult> OrchestrateMany<TSource, TKey, TInner, TResult>(
             this IObservable<IChangeSet<TSource, TKey>> source,
-            Action<IChangeSet<TSource, TKey>, Action<TKey, IObservable<TInner>>, Action<TKey>> onSourceChangeSet,
+            Action<IChangeSet<TSource, TKey>, ICacheOrchestratorContext<TKey, TInner>> onSourceChangeSet,
             Action<TInner, TKey> onInner,
             Action<IObserver<TResult>> onDrainComplete)
         where TSource : notnull
@@ -68,7 +69,7 @@ internal static partial class IntObservableCacheEx
     internal sealed class LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(
             ICacheOrchestratorContext<TKey, TInner> context,
             IObserver<TResult> emitter,
-            Action<IChangeSet<TSource, TKey>, Action<TKey, IObservable<TInner>>, Action<TKey>> onSourceChangeSet,
+            Action<IChangeSet<TSource, TKey>, ICacheOrchestratorContext<TKey, TInner>> onSourceChangeSet,
             Action<TInner, TKey> onInner,
             Action<IObserver<TResult>> onDrainComplete)
         : ICacheOrchestrator<TSource, TKey, TInner, TResult>
@@ -76,7 +77,7 @@ internal static partial class IntObservableCacheEx
         where TKey : notnull
         where TInner : notnull
     {
-        public void OnSourceChangeSet(IChangeSet<TSource, TKey> changes) => onSourceChangeSet(changes, context.Track, context.Untrack);
+        public void OnSourceChangeSet(IChangeSet<TSource, TKey> changes) => onSourceChangeSet(changes, context);
 
         public void OnInner(TInner value, TKey key) => onInner(value, key);
 

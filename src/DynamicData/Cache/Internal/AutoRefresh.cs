@@ -107,7 +107,15 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
             Context.Untrack(key);
         }
 
-        protected override void OnItemRefreshed(TObject item, TKey key) => _sourceTouched.Add(key);
+        protected override void OnItemRefreshed(TObject item, TKey key)
+        {
+            _sourceTouched.Add(key);
+
+            // The source's Refresh is being forwarded synchronously in OnSourceChangeSet, so any
+            // pending refresh queued for this key from a prior drain is now redundant. Drop it so the
+            // consumer doesn't see two Refresh notifications for the same item in quick succession.
+            DropPending(key);
+        }
 
         private void DropPending(TKey key)
         {

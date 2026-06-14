@@ -15,8 +15,8 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() =>
         Observable.Using(
             resourceFactory: () => new DynamicGrouper<TObject, TKey, TGroupKey>(),
-            observableFactory: grouper => source.OrchestrateLambdas<TObject, TKey, (TGroupKey GroupKey, TObject Item), IGroupChangeSet<TObject, TKey, TGroupKey>>(
-                onSourceChangeSet: (changes, track, untrack) =>
+            observableFactory: grouper => source.OrchestrateMany<TObject, TKey, (TGroupKey GroupKey, TObject Item), IGroupChangeSet<TObject, TKey, TGroupKey>>(
+                onSourceChangeSet: (changes, context) =>
                 {
                     foreach (var change in changes.ToConcreteType())
                     {
@@ -27,11 +27,11 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
                             case ChangeReason.Add or ChangeReason.Update:
                                 var item = change.Current;
                                 var key = change.Key;
-                                track(key, selectGroup(item, key).DistinctUntilChanged().Select(groupKey => (groupKey, item)));
+                                context.Track(key, selectGroup(item, key).DistinctUntilChanged().Select(groupKey => (groupKey, item)));
                                 break;
 
                             case ChangeReason.Remove:
-                                untrack(change.Key);
+                                context.Untrack(change.Key);
                                 break;
                         }
                     }
