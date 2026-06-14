@@ -10,28 +10,19 @@ internal static partial class IntObservableCacheEx
 {
     /// <summary>
     /// Orchestrates per-key inner observables that drive mutations to a shared
-    /// <see cref="ChangeAwareCache{TOutput, TKey}"/>. Source changeset events and inner emissions
-    /// are coalesced into a single downstream changeset per drain cycle. Specialization of
-    /// <see cref="Orchestrate{TSource, TKey, TInner, TResult}(IObservable{IChangeSet{TSource, TKey}}, ICacheOrchestrator{TSource, TKey, TInner, TResult})"/>
-    /// for the "mirror manipulator" shape used by FilterOnObservable, TransformOnObservable, and
-    /// similar operators where each source key contributes 0 or 1 items to the output.
+    /// <see cref="ChangeAwareCache{TOutput, TKey}"/>. Source events and inner emissions are
+    /// coalesced into a single downstream changeset per drain cycle. For the mirror-manipulator
+    /// shape (filter, per-key transform) where each source key contributes 0 or 1 items to the
+    /// output. Used by FilterOnObservable, TransformOnObservable.
     /// </summary>
     /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
-    /// <typeparam name="TKey">Type of the source changeset key (also the key of the output changeset).</typeparam>
+    /// <typeparam name="TKey">Type of the source changeset key (also the output changeset key).</typeparam>
     /// <typeparam name="TInner">Value type emitted by the per-key inner observable.</typeparam>
     /// <typeparam name="TOutput">Type of items in the output changeset.</typeparam>
     /// <param name="source">The keyed source changeset stream.</param>
     /// <param name="innerFactory">Builds the per-key inner observable from the source item and its key.</param>
-    /// <param name="onSourceChange">
-    /// Invoked once per source change. Receives the output cache and the source change; the caller
-    /// decides how (and whether) the source event mutates the output cache. Always invoked before
-    /// the corresponding inner subscription is created or torn down.
-    /// </param>
-    /// <param name="onInner">
-    /// Invoked once per inner emission. Receives the output cache, the source key, the current source
-    /// item, and the value emitted by the inner observable. The caller decides how the inner emission
-    /// mutates the output cache.
-    /// </param>
+    /// <param name="onSourceChange">Invoked once per source change with the output cache. The caller decides how the source event mutates the cache. Invoked before the corresponding inner subscription is created or torn down.</param>
+    /// <param name="onInner">Invoked once per inner emission with the output cache, source key, source item, and emitted value.</param>
     /// <returns>An observable changeset where every emission is the captured changes from one drain cycle.</returns>
     public static IObservable<IChangeSet<TOutput, TKey>> OrchestrateChangeSets<TSource, TKey, TInner, TOutput>(
             this IObservable<IChangeSet<TSource, TKey>> source,

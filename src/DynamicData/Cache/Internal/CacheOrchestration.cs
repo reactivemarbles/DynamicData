@@ -11,19 +11,15 @@ namespace DynamicData.Cache.Internal;
 
 /// <summary>
 /// Drives an <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> against a source
-/// changeset. <see cref="Run"/> returns an <see cref="IObservable{TResult}"/> that constructs a
-/// fresh per-subscription <see cref="OrchestratorContext"/> on each subscribe, so all per-subscription
-/// state owned by the <see cref="OrchestratorContext"/> is recreated on every subscribe. The
-/// orchestrator itself is constructed by the supplied <paramref name="factory"/>, which receives
-/// the per-subscription context and emitter; this guarantees a fresh orchestrator instance per
-/// subscriber and removes the need for a separate <c>Initialize</c> hook.
+/// changeset. A fresh per-subscription <see cref="OrchestratorContext"/> is constructed by
+/// <see cref="Run"/> on each subscribe, with the orchestrator built by the supplied
+/// <paramref name="factory"/>, so all per-subscription state is naturally isolated.
 /// </summary>
 /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
 /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
 /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
 /// <typeparam name="TResult">Type delivered downstream.</typeparam>
-/// <typeparam name="TOrch">Concrete orchestrator type returned by the factory. Generic-typed so
-/// dispatch sites devirtualize.</typeparam>
+/// <typeparam name="TOrch">Concrete orchestrator type returned by the factory. Generic-typed so dispatch sites devirtualize.</typeparam>
 /// <param name="source">The keyed source changeset stream.</param>
 /// <param name="factory">Builds the per-subscription orchestrator from its runtime context and emitter.</param>
 internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
@@ -54,15 +50,10 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
         {
             _queue = new SharedDeliveryQueue(onDrainComplete: OnDrainComplete);
 
-            // Wrap construction from the emitter sub-queue allocation through the source subscription
-            // so any throw on the way up releases everything we've allocated so far. Without this, an
-            // exception from CreateQueue, the factory, or the source subscribe leaks the queue/emitter/
-            // orchestrator/source-subscription because the ctor never completes and Dispose never runs.
             try
             {
-                // Create the emitter sub-queue first (lowest index, drains last LIFO) so source-triggered
-                // sync inner emissions (higher index) deliver first and any orchestrator emit lands on the
-                // emitter after that work has settled.
+                // Emitter sub-queue is allocated first so it drains last (LIFO); source-triggered
+                // sync inner emissions land on later-indexed queues and deliver before it.
                 _emitter = _queue.CreateQueue(observer);
 
                 _orchestrator = factory(this, _emitter);
@@ -95,8 +86,8 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
 
             _disposed = true;
 
-            // Stop incoming work first so source/inner pumps cannot keep firing into a terminating
-            // queue. The queue itself is disposed afterwards to drain (or terminate) cleanly.
+            // Stop incoming work before disposing the queue so source/inner pumps can't fire into
+            // a terminating queue.
             _sourceSubscription.Dispose();
             _innerSubscriptions.Dispose();
             _queue.Dispose();
@@ -108,15 +99,15 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
         {
             Debug.Assert(observable is not null, "Use Untrack(key) to remove a tracked subscription");
 
-            // Increment before adding so the OnCompleted callback that fires when the previous subscription
-            // for this key is disposed does not race the counter down to zero and signal premature termination.
+            // Increment before installing the new subscription so disposing the prior one (which
+            // decrements via Finally) cannot race the counter to zero between Track calls.
             Interlocked.Increment(ref _subscriptionCounter);
 
             var container = _innerSubscriptions.Add(key, new SingleAssignmentDisposable());
 
-            // Finally(DecrementSubscriptionCount) fires on completion, error, AND disposal, so the counter
-            // always decrements. The onCompleted callback only fires on normal completion, so an inner
-            // subscription disposed by Track replacing it (or by Dispose) does not trigger Remove from inside.
+            // Finally fires on completion, error, AND disposal, so the counter always decrements.
+            // onCompleted only fires on normal completion, so a subscription disposed by Track
+            // replacing it (or by Dispose) does not trigger Remove from inside.
             container.Disposable = observable!
                 .SynchronizeSafe(_queue)
                 .Finally(DecrementSubscriptionCount)
@@ -156,11 +147,8 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
 
         private void OnDrainComplete(bool wasReentrant)
         {
-            // Counter == 0 means source and every tracked inner have terminated. This is the
-            // authoritative source of truth for "this is the last drain"; using a separate latched
-            // flag races when the orchestrator calls Track during the isFinal call (counter goes
-            // back to 1 but a latched flag would still say true, and we'd fire OnCompleted while
-            // a live inner exists).
+            // Counter == 0 means source and every tracked inner have terminated. A latched flag
+            // would race when the orchestrator calls Track during the isFinal call.
             var isFinal = Volatile.Read(ref _subscriptionCounter) == 0;
 
             try
@@ -173,9 +161,8 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
                 return;
             }
 
-            // Re-check the counter: if the orchestrator added a tracked subscription during its
-            // OnDrainComplete (re-establishing liveness), do not complete. CAS-latch ensures
-            // exactly one OnCompleted across any number of repeated drains seeing counter == 0.
+            // Re-check: if OnDrainComplete added a tracked subscription (re-establishing liveness),
+            // don't complete. CAS ensures exactly one OnCompleted across repeated drains seeing 0.
             if (Volatile.Read(ref _subscriptionCounter) == 0 && Interlocked.CompareExchange(ref _completionEmitted, 1, 0) == 0)
             {
                 _emitter.OnCompleted();

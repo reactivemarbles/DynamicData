@@ -186,10 +186,7 @@ internal sealed class SharedDeliveryQueue : IDisposable
     {
         try
         {
-            // Tracks whether a reentrant drain ran during the prior delivery, surfaced to the
-            // callback so consumers can branch on the distinction. Reset to false at the start
-            // of each iteration (after consumption) so each callback invocation sees only the
-            // reentrancy that occurred during the immediately preceding delivery cycle.
+            // Reentrancy flag for the prior delivery cycle, reset and re-captured each iteration.
             var wasReentrant = false;
 
             while (true)
@@ -210,8 +207,8 @@ internal sealed class SharedDeliveryQueue : IDisposable
                     return;
                 }
 
-                // Capture and reset before the callback so the flag exclusively reflects reentrant
-                // drains triggered by _onDrainComplete itself on the next iteration.
+                // Snapshot before the callback so the next iteration's flag reflects only what
+                // happened during _onDrainComplete itself.
                 wasReentrant = _drainReentered;
                 _drainReentered = false;
 
@@ -220,9 +217,8 @@ internal sealed class SharedDeliveryQueue : IDisposable
                     _onDrainComplete(wasReentrant);
                 }
 
-                // Loop back if items are pending OR if a reentrant drain ran during
-                // _onDrainComplete (items consumed by the reentrant drain may have
-                // updated orchestrator state that needs another flush pass).
+                // Loop back if items are pending OR a reentrant drain ran during _onDrainComplete
+                // (which may have updated orchestrator state that needs another flush).
                 EnterLock();
 
                 if ((_activeBits.HasAny() || _drainReentered) && !_isTerminated)

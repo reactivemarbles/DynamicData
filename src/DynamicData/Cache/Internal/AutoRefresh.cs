@@ -26,14 +26,10 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
     }
 
     /// <summary>
-    /// Forwards each source changeset to the emitter immediately. Refresh notifications from
-    /// per-key reevaluators are accumulated in a dictionary (latest value wins) and flushed at
-    /// drain end when <paramref name="buffer"/> is <see langword="null"/>, otherwise via a
-    /// single-shot Timer armed by the first pending refresh. Update and Remove on the source drop
-    /// any pending refresh for that key, so a Refresh whose value has been obsoleted by a later
-    /// source event is never emitted. Refreshes for keys the source has touched within the same
-    /// drain cycle are suppressed, so a reevaluator that fires synchronously during item
-    /// subscription does not produce a redundant Refresh paired with the Add.
+    /// Forwards each source changeset immediately. Refresh notifications from per-key reevaluators
+    /// are coalesced (latest wins) and flushed at drain end (unbuffered) or via a Timer armed by
+    /// the first pending refresh (buffered). Source events drop any pending refresh for the same
+    /// key; reevaluator emissions for source-touched keys in the same drain are suppressed.
     /// </summary>
     internal sealed class Orchestrator(
             ICacheOrchestratorContext<TKey, Change<TObject, TKey>> context,
@@ -78,10 +74,8 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
         {
             _sourceTouched.Clear();
 
-            // Flush pending refreshes whenever there is no timer-based deferral active
-            // (unbuffered) or when this is the final drain (the timer would otherwise be
-            // cancelled by stream termination). The queue re-fires OnDrainComplete after any
-            // reentrant drain triggered by FlushPending, so a single emit per call suffices.
+            // Flush when unbuffered, or on the final drain (the timer would otherwise be cancelled
+            // by stream termination).
             if (isFinal || buffer is null)
             {
                 FlushPending();
@@ -111,9 +105,8 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
         {
             _sourceTouched.Add(key);
 
-            // The source's Refresh is being forwarded synchronously in OnSourceChangeSet, so any
-            // pending refresh queued for this key from a prior drain is now redundant. Drop it so the
-            // consumer doesn't see two Refresh notifications for the same item in quick succession.
+            // Source is forwarding its own Refresh; drop any pending from a prior drain so the
+            // consumer doesn't see two Refresh notifications back-to-back.
             DropPending(key);
         }
 

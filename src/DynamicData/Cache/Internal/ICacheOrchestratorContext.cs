@@ -33,16 +33,13 @@ internal interface ICacheOrchestratorContext<TKey, TInner>
     void Untrack(TKey key);
 
     /// <summary>
-    /// Wraps <paramref name="observable"/> with the shared delivery queue's synchronization gate so
-    /// that any operators chained downstream (e.g. side-effecting <c>Do</c> calls, time-based
-    /// buffering of values that will be re-emitted) run under the same serialization that source
-    /// and inner notifications already enjoy.
+    /// Wraps <paramref name="observable"/> with the shared queue's synchronization gate so that
+    /// downstream operators (side-effecting <c>Do</c> calls, time-based buffering, etc.) run under
+    /// the same serialization as source and inner notifications.
     /// </summary>
     /// <remarks>
     /// Unlike <see cref="Track"/>, a Serialize-wrapped subscription does NOT participate in
-    /// completion accounting. The downstream stream can complete even while a Serialize-wrapped
-    /// subscription is still active. Use <see cref="Track"/> for subscriptions whose lifetime
-    /// should keep the stream alive.
+    /// completion accounting: downstream can complete while it is still active.
     /// </remarks>
     /// <typeparam name="T">Value type of the observable being serialized.</typeparam>
     /// <param name="observable">The observable to wrap.</param>

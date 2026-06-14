@@ -10,11 +10,8 @@ namespace DynamicData.Cache.Internal;
 internal static partial class IntObservableCacheEx
 {
     /// <summary>
-    /// Cache-shape overload. Orchestrates per-source-key inner observables that themselves emit
-    /// cache changesets, merging the live set of all such inner streams into a single output
-    /// cache changeset. Specialization of
-    /// <see cref="Orchestrate{TSource, TKey, TInner, TResult}(IObservable{IChangeSet{TSource, TKey}}, ICacheOrchestrator{TSource, TKey, TInner, TResult})"/>
-    /// for the cache-to-cache merged shape used by MergeManyChangeSets (cache) and TransformManyAsync.
+    /// Cache-shape overload. Per-source-key inner observables that emit cache changesets, merged
+    /// into a single output cache changeset. Used by MergeManyChangeSets (cache) and TransformManyAsync.
     /// </summary>
     /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
     /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
@@ -24,7 +21,7 @@ internal static partial class IntObservableCacheEx
     /// <param name="changeSetSelector">Builds the per-source-key child changeset stream from the source item and its key.</param>
     /// <param name="equalityComparer">Optional equality comparer for the destination items.</param>
     /// <param name="comparer">Optional ordering comparer for the destination items.</param>
-    /// <param name="reevalOnRefresh">When <see langword="true"/>, a <c>Refresh</c> on the source forces re-evaluation of the corresponding child entries via the tracker.</param>
+    /// <param name="reevalOnRefresh">When <see langword="true"/>, a source Refresh forces re-evaluation of the corresponding child entries via the tracker.</param>
     /// <returns>An observable changeset representing the merged union of all live inner changesets.</returns>
     public static IObservable<IChangeSet<TDest, TDestKey>> OrchestrateManyChangeSets<TSource, TKey, TDest, TDestKey>(
             this IObservable<IChangeSet<TSource, TKey>> source,
@@ -40,18 +37,15 @@ internal static partial class IntObservableCacheEx
             (context, emitter) => new MergedOrchestrator<TSource, TKey, TDest, TDestKey>(context, emitter, changeSetSelector, equalityComparer, comparer, reevalOnRefresh));
 
     /// <summary>
-    /// List-shape overload. Orchestrates per-source-key inner observables that themselves emit
-    /// list changesets, merging the live set of all such inner streams into a single output list
-    /// changeset. Specialization of
-    /// <see cref="Orchestrate{TSource, TKey, TInner, TResult}(IObservable{IChangeSet{TSource, TKey}}, ICacheOrchestrator{TSource, TKey, TInner, TResult})"/>
-    /// for the cache-source-to-list-merged shape used by MergeManyChangeSets (list) in Cache/Internal/.
+    /// List-shape overload. Per-source-key inner observables that emit list changesets, merged
+    /// into a single output list changeset. Used by MergeManyListChangeSets.
     /// </summary>
     /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
     /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
     /// <typeparam name="TDest">Type of items in the output (merged) list changeset.</typeparam>
     /// <param name="source">The keyed source changeset stream.</param>
     /// <param name="changeSetSelector">Builds the per-source-key child list changeset stream from the source item and its key.</param>
-    /// <param name="equalityComparer">Optional equality comparer used when storing per-source-key snapshots of inner contents.</param>
+    /// <param name="equalityComparer">Optional equality comparer for per-source-key snapshots of inner contents.</param>
     /// <returns>An observable list changeset representing the merged union of all live inner changesets.</returns>
     public static IObservable<IChangeSet<TDest>> OrchestrateManyChangeSets<TSource, TKey, TDest>(
             this IObservable<IChangeSet<TSource, TKey>> source,

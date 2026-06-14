@@ -5,11 +5,9 @@
 namespace DynamicData.Cache.Internal;
 
 /// <summary>
-/// Orchestrator contract consumed by the <c>Orchestrate</c> primitive. Implementations hold
-/// per-subscription state as fields and receive their
-/// <see cref="ICacheOrchestratorContext{TKey, TInner}"/> and downstream emitter as constructor
-/// arguments supplied by the factory passed to <c>Orchestrate</c>. A new orchestrator instance
-/// is constructed per subscription, so all state is naturally isolated.
+/// Contract for orchestrators driven by <c>Orchestrate</c>. A fresh instance is constructed
+/// per subscription (via the factory passed to <c>Orchestrate</c>), so per-subscription state
+/// can live as fields with no isolation concerns.
 /// </summary>
 /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
 /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
@@ -46,10 +44,9 @@ internal interface ICacheOrchestrator<TSource, TKey, TInner, TResult>
     /// should flush synchronously when this is <see langword="true"/>.
     /// </param>
     /// <param name="wasReentrant">
-    /// <see langword="true"/> when a reentrant drain occurred during the prior delivery cycle (an
-    /// orchestrator emit triggered same-thread re-entry into the queue's drain loop). Most
-    /// orchestrators can ignore this; it is exposed for advanced consumers that want to differentiate
-    /// the "I just emitted" path from a clean drain cycle.
+    /// <see langword="true"/> when a reentrant drain occurred during the prior delivery cycle
+    /// (an orchestrator emit triggered same-thread re-entry into the drain loop). Most
+    /// orchestrators ignore this.
     /// </param>
     void OnDrainComplete(bool isFinal, bool wasReentrant);
 }
