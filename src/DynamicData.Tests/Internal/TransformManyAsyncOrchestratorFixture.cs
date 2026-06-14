@@ -102,11 +102,10 @@ public sealed class TransformManyAsyncOrchestratorFixture
 
         orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
 
-        // The deferred transform subscribes when we drive the tracked observable; subscribe now and
-        // settle the asynchronous defer to surface the error to the handler.
+        // Subscribe and await the deferred inner to its terminal. The async lambda runs synchronously
+        // (sync throw -> catch -> handler -> return Empty), so the inner completes deterministically.
         var trackedObs = context.Tracked[1];
-        using var sub = trackedObs.Subscribe();
-        await Task.Delay(20);
+        await trackedObs.DefaultIfEmpty().LastOrDefaultAsync();
 
         capturedError.Should().NotBeNull();
         capturedError!.Exception!.Message.Should().Be("transformer-broke");

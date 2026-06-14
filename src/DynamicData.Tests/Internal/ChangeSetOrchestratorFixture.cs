@@ -82,4 +82,22 @@ public sealed class ChangeSetOrchestratorFixture
 
         context.UntrackCalls.Should().Equal(new[] { 1 });
     }
+
+    [Fact]
+    public void OnDrainComplete_EmptyChangeSet_NoEmission()
+    {
+        var context = new FakeOrchestratorContext<int, (Source Item, string Value)>();
+        var emitter = new CollectingObserver<IChangeSet<string, int>>();
+        var orchestrator = new IntObservableCacheEx.ChangeSetOrchestrator<Source, int, string, string>(
+            context, emitter,
+            innerFactory: (item, key) => Observable.Empty<string>(),
+            // Source-change callback intentionally does nothing, so the ChangeAwareCache stays empty.
+            onSourceChange: (cache, change) => { },
+            onInner: (cache, key, item, value) => { });
+
+        orchestrator.OnSourceChangeSet(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, new Source(1)) });
+        orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
+
+        emitter.Values.Should().BeEmpty("drain end with an empty ChangeAwareCache must not emit");
+    }
 }

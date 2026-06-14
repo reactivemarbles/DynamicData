@@ -12,6 +12,8 @@ using DynamicData.Tests.Utilities;
 
 using FluentAssertions;
 
+using Microsoft.Reactive.Testing;
+
 using Xunit;
 
 namespace DynamicData.Tests.Internal;
@@ -79,7 +81,7 @@ public sealed class AutoRefreshOrchestratorFixture
     {
         var context = new FakeOrchestratorContext<int, Change<Item, int>>();
         var emitter = new CollectingObserver<IChangeSet<Item, int>>();
-        var scheduler = new Microsoft.Reactive.Testing.TestScheduler();
+        var scheduler = new TestScheduler();
         var orchestrator = new AutoRefresh<Item, int, Unit>.Orchestrator(
             context, emitter,
             reEvaluator: (item, key) => new Subject<Unit>(),
@@ -103,7 +105,7 @@ public sealed class AutoRefreshOrchestratorFixture
     {
         var context = new FakeOrchestratorContext<int, Change<Item, int>>();
         var emitter = new CollectingObserver<IChangeSet<Item, int>>();
-        var scheduler = new Microsoft.Reactive.Testing.TestScheduler();
+        var scheduler = new TestScheduler();
         var orchestrator = new AutoRefresh<Item, int, Unit>.Orchestrator(
             context, emitter,
             reEvaluator: (item, key) => new Subject<Unit>(),
@@ -164,7 +166,7 @@ public sealed class AutoRefreshOrchestratorFixture
     {
         var context = new FakeOrchestratorContext<int, Change<Item, int>>();
         var emitter = new CollectingObserver<IChangeSet<Item, int>>();
-        var scheduler = new Microsoft.Reactive.Testing.TestScheduler();
+        var scheduler = new TestScheduler();
         var orchestrator = new AutoRefresh<Item, int, Unit>.Orchestrator(
             context, emitter,
             reEvaluator: (item, key) => new Subject<Unit>(),

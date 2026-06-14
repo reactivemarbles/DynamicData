@@ -306,25 +306,57 @@ public sealed class OrchestrateFixture
     }
 
     [Fact]
-    public void Serialization_ParentAndChildDoNotInterleave()
+    public async Task Serialization_ParentAndChildDoNotInterleave()
     {
+        const int iterations = 50;
+
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var callLog = new List<string>();
+        Subject<string>? childSubject = null;
         var observer = new TestObserver();
         var (observable, _) = Wire(
             source.Connect(),
-            childFactory: key => new Subject<string>(),
+            childFactory: _ =>
+            {
+                childSubject = new Subject<string>();
+                return childSubject;
+            },
             onParent: () => { lock (callLog) callLog.Add("P-start"); Thread.Sleep(1); lock (callLog) callLog.Add("P-end"); },
             onChild: () => { lock (callLog) callLog.Add("C-start"); Thread.Sleep(1); lock (callLog) callLog.Add("C-end"); });
         using var sub = observable.Subscribe(observer);
 
-        source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
+        // Bootstrap: one Add so the child subject is subscribed and stable for the race.
+        source.AddOrUpdate(new TestItem(1, "init"));
+        childSubject.Should().NotBeNull();
 
-        // Start/end pairs should not interleave
-        for (var i = 0; i + 1 < callLog.Count; i += 2)
+        // Race source-side Refresh and child-side OnNext from two threads.
+        using var barrier = new Barrier(2);
+        var parentTask = Task.Run(() =>
         {
-            var prefix = callLog[i].Split('-')[0];
-            callLog[i + 1].Should().StartWith(prefix, "operations should not interleave");
+            barrier.SignalAndWait();
+            for (var i = 0; i < iterations; i++)
+                source.Refresh(new TestItem(1, "v"));
+        });
+        var childTask = Task.Run(() =>
+        {
+            barrier.SignalAndWait();
+            for (var i = 0; i < iterations; i++)
+                childSubject!.OnNext($"c{i}");
+        });
+        await Task.WhenAll(parentTask, childTask);
+
+        // Every start/end pair must match. If parent and child callbacks ever interleaved, a P-start
+        // would be followed by C-start (or vice versa) instead of its own P-end.
+        lock (callLog)
+        {
+            callLog.Count.Should().BeGreaterThan(0);
+            (callLog.Count % 2).Should().Be(0, "every start must have a matching end");
+            for (var i = 0; i + 1 < callLog.Count; i += 2)
+            {
+                var prefix = callLog[i].Split('-')[0];
+                callLog[i].Should().EndWith("start");
+                callLog[i + 1].Should().Be($"{prefix}-end", "parent and child callbacks must not interleave");
+            }
         }
     }
 
@@ -427,9 +459,12 @@ public sealed class OrchestrateFixture
 
         await Task.WhenAll(producers);
 
-        // Drain may finish on a producer thread after WhenAll observes the task completing, so
-        // settle briefly to let any in-flight delivery finish.
-        await Task.Delay(50);
+        // Spin until every emission has reached OnInner. Deterministic upper bound guards against
+        // a real deadlock; under healthy conditions this returns quickly.
+        SpinWait.SpinUntil(
+            () => { lock (orchestrator.ChildCalls) return orchestrator.ChildCalls.Count >= totalEmissions; },
+            TimeSpan.FromSeconds(5))
+            .Should().BeTrue($"all {totalEmissions} emissions must reach OnInner within 5 seconds");
 
         lock (orchestrator.ChildCalls)
         {
