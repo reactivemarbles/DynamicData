@@ -260,6 +260,18 @@ These rules apply recursively inside operator implementations too, per §6.20.
 2. Add tests that exercise the contract boundary (use `Tests/Utilities/ValidateSynchronization` for §4.2, `TestSourceCache.SetError` for §4.4 / §6.6, etc.).
 3. Reference the rule ID in the fix commit message.
 
+### Citing rules
+
+Always use the literal `§` character when citing rule IDs (in commit messages, PR descriptions, code review comments, and code comments). Do NOT use ASCII substitutes (`S`, `SS`, `sec`, `§§`, etc.). Example commit subject:
+
+```
+Fix §6.6 violation in BatchIf
+
+BatchIf was flushing its buffered changeset on source OnError, which
+violates §6.6's abort semantic. Discard the buffer instead so error
+deliveries are not preceded by stale OnNext.
+```
+
 ---
 
 ## Maintaining this document
