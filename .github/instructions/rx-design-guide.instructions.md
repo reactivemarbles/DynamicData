@@ -3,7 +3,7 @@ applyTo: "**/*.cs"
 ---
 # Rx Design Guide
 
-Complete distillation of the **[Microsoft Rx Design Guidelines v1.0 (October 2010)](https://go.microsoft.com/fwlink/?LinkID=205219)**. This is the authoritative reference for the Rx contract and the rules for using Rx and implementing Rx operators in DynamicData.
+Complete distillation of the **[Microsoft Rx Design Guidelines v1.0 (October 2010)](https://go.microsoft.com/fwlink/?LinkID=205219)**. This is the authoritative reference for the Rx contract and the rules for using Rx and implementing Rx operators.
 
 **Code samples and API names have been updated to current Rx.NET (modernized from the 2010 spec).** Treat the conventions here as current.
 
@@ -101,7 +101,7 @@ xs.Where(x => x.Failed).Do(x => Log(x)).Subscribe(...);
 
 ### §5.8. Use the Synchronize operator only to "fix" custom IObservable implementations
 
-Rx and DynamicData operators already satisfy §4.1 / §4.2. Calling `Synchronize()` on one of them is redundant and counterproductive. Only use it on external sources that don't follow the contract.
+Operators created by Rx already satisfy §4.1 / §4.2. Calling `Synchronize()` on one of them is redundant and counterproductive. Only use it on external sources that don't follow the contract.
 
 > NOTE: this refers to the **single-argument `Synchronize()`** for non-conforming sources. The **gate-based `Synchronize(gate)`** in multi-source operators (§6.7) is a different pattern and is valid.
 
@@ -295,6 +295,6 @@ Derivative of the [Microsoft Rx Design Guidelines v1.0 (October 2010)](https://g
 
 **Do NOT modify rule IDs.** External code reviews, PRs, and commit messages cite `§X.Y` IDs; renumbering breaks references.
 
-**DO add new rules** in a new section if the codebase discovers patterns the Microsoft document doesn't cover. Use a non-numeric prefix (e.g., `DD-1`) to make clear they are not from the original spec.
+**DO add new rules** in a new section if the codebase discovers patterns the Microsoft document doesn't cover. Use a non-numeric prefix (e.g., `X-1`) to make clear they are not from the original spec.
 
-**See also:** `rx.instructions.md` for DynamicData-specific patterns and practical Rx.NET reference material (Defer pattern, disposable code samples, modern operator catalog, common pitfalls).
+**See also:** `rx.instructions.md` for practical Rx.NET reference material and codebase-specific patterns (Defer pattern, disposable code samples, modern operator catalog, common pitfalls).
