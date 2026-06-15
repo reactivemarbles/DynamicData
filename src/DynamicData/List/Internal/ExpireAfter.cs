@@ -168,18 +168,20 @@ internal sealed class ExpireAfter<T>
                 {
                     var removedItems = new List<T>(_expiringShadowIndexesBuffer.Count);
 
-                    // Pre-pass: how many entries before the first expiring index ALREADY differ
-                    // from the source? If the prefix matches, we can use shadow-position-based
-                    // removal which preserves correct occurrence identity even when duplicates
-                    // exist. If anything before the expiring entries differs, the shadow is
-                    // stale and we fall back to value-based IndexOf, which may remove a
-                    // different equal occurrence than originally scheduled but at least keeps
-                    // the source consistent with what subscribers see.
-                    var firstExpiringShadowIdx = _expiringShadowIndexesBuffer[0];
+                    // Validate the shadow against the live updater all the way up to (and including)
+                    // the LAST expiring index. The previous version of this code only checked the
+                    // prefix up to the FIRST expiring index, which can falsely declare the shadow
+                    // in sync when a concurrent external mutation has moved/replaced an item at a
+                    // position between the first and last expiring index. The subsequent reverse-
+                    // index removal would then remove an unrelated item. If the shadow is stale we
+                    // fall back to value-based IndexOf, which may remove a different equal
+                    // occurrence than originally scheduled but at least keeps the source consistent
+                    // with what subscribers see.
+                    var lastExpiringShadowIdx = _expiringShadowIndexesBuffer[_expiringShadowIndexesBuffer.Count - 1];
                     var shadowInSync = _shadow.Count == updater.Count;
                     if (shadowInSync)
                     {
-                        for (var i = 0; i <= firstExpiringShadowIdx && i < updater.Count; ++i)
+                        for (var i = 0; i <= lastExpiringShadowIdx && i < updater.Count; ++i)
                         {
                             if (!EqualityComparer<T>.Default.Equals(_shadow[i].Item, updater[i]))
                             {

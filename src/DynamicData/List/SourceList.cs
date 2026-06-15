@@ -22,10 +22,10 @@ namespace DynamicData;
 public sealed class SourceList<T> : ISourceList<T>
     where T : notnull
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Terminated via OnCompleted/OnError delivered through _notifications; explicit Dispose would race with in-flight queue drains.")]
     private readonly Subject<IChangeSet<T>> _changes = new();
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Terminated via OnCompleted/OnError delivered through _notifications; explicit Dispose would race with in-flight queue drains.")]
     private readonly Subject<IChangeSet<T>> _changesPreview = new();
 
     private readonly IDisposable _cleanUp;
@@ -193,13 +193,23 @@ public sealed class SourceList<T> : ISourceList<T>
         source.Subscribe(
             changeSet =>
             {
-                using var notifications = _notifications.AcquireLock();
-
-                var changes = _readerWriter.Write(changeSet);
-
-                if (changes.Count > 0)
+                IChangeSet<T>? changes = null;
+                try
                 {
-                    notifications.EnqueueNext(new ListUpdate(changes, _readerWriter.Count, ++_currentVersion));
+                    using var notifications = _notifications.AcquireLock();
+                    changes = _readerWriter.Write(changeSet);
+
+                    if (changes.Count > 0)
+                    {
+                        notifications.EnqueueNext(new ListUpdate(changes, _readerWriter.Count, ++_currentVersion));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Convert ReaderWriter / Write exceptions into a downstream OnError.
+                    // Without this, exceptions thrown by Write would escape the source's
+                    // observer callback and leave subscribers unterminated.
+                    NotifyError(ex);
                 }
             },
             NotifyError,
