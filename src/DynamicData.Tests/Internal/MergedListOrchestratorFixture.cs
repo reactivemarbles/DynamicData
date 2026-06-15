@@ -14,10 +14,6 @@ using Xunit;
 
 namespace DynamicData.Tests.Internal;
 
-/// <summary>
-/// In-isolation tests for <see cref="IntObservableCacheEx.MergedListOrchestrator{TSource, TKey, TDest}"/>,
-/// the cache-source-to-list-merged orchestrator.
-/// </summary>
 public sealed class MergedListOrchestratorFixture
 {
     private sealed record Item(int Id);

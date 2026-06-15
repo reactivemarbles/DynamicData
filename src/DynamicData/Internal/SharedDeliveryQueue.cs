@@ -160,8 +160,7 @@ internal sealed class SharedDeliveryQueue : IDisposable
         if (_drainThreadId == currentThreadId)
         {
             ExitLock();
-            // Flag the reentrancy so the outer DrainAll re-fires _onDrainComplete
-            // for orchestrators that accumulate state during this reentrant drain.
+            // Flag so the outer DrainAll re-fires _onDrainComplete after this reentrant drain.
             _drainReentered = true;
             DrainPending();
             return;
@@ -217,8 +216,7 @@ internal sealed class SharedDeliveryQueue : IDisposable
                     _onDrainComplete(wasReentrant);
                 }
 
-                // Loop back if items are pending OR a reentrant drain ran during _onDrainComplete
-                // (which may have updated orchestrator state that needs another flush).
+                // Loop back if items are pending OR a reentrant drain ran during _onDrainComplete.
                 EnterLock();
 
                 if ((_activeBits.HasAny() || _drainReentered) && !_isTerminated)

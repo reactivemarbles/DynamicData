@@ -22,10 +22,8 @@ using Xunit;
 namespace DynamicData.Tests.Internal;
 
 /// <summary>
-/// Tests for the <c>Orchestrate</c> primitive's behavioral contracts: source/inner serialization,
+/// Behavioral contract tests for the <c>Orchestrate</c> primitive: source/inner serialization,
 /// per-drain coalesced emission, completion counting, error propagation, and cross-cache safety.
-/// Exercised via the <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> overload because it
-/// maps 1:1 to the legacy CacheParentSubscription subclass shape these tests originally targeted.
 /// </summary>
 public sealed class OrchestrateFixture
 {
@@ -36,15 +34,8 @@ public sealed class OrchestrateFixture
 
     private readonly Randomizer _rand = new(55);
 
-    /// <summary>Test item with a typed key.</summary>
     private sealed record TestItem(int Key, string Value);
 
-    /// <summary>
-    /// Wires <paramref name="source"/> through <c>Orchestrate</c> with a fresh <see cref="TestOrchestrator"/>
-    /// constructed per subscription. Returns the observable plus a thunk that yields the constructed
-    /// orchestrator after subscribe. The factory pattern ensures per-subscription isolation and
-    /// matches the production Orchestrate contract.
-    /// </summary>
     private static (IObservable<IChangeSet<TestItem, int>> Observable, Func<TestOrchestrator> Orchestrator) Wire(
             IObservable<IChangeSet<TestItem, int>> source,
             Func<int, IObservable<string>>? childFactory = null,
@@ -192,7 +183,6 @@ public sealed class OrchestrateFixture
         var (observable, getOrchestrator) = Wire(source.Connect(), _ => childSubject);
         using var sub = observable.Subscribe(observer);
 
-        // Activity while source + inner are alive
         source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
         childSubject.OnNext("v1");
 
@@ -201,14 +191,12 @@ public sealed class OrchestrateFixture
         orchestrator.IsFinalLog.Should().AllBeEquivalentTo(false,
             "isFinal must be false on every call while source and inners are still active");
 
-        // Source completes; inner still alive — isFinal must remain false
         var preSourceCompleteCount = orchestrator.IsFinalLog.Count;
         source.Complete();
         orchestrator.IsFinalLog.Skip(preSourceCompleteCount).Should().AllBeEquivalentTo(false,
             "isFinal must remain false while at least one inner subscription is still active");
         observer.IsCompleted.Should().BeFalse("downstream must not complete while inners are active");
 
-        // Final inner completes — at least one subsequent OnDrainComplete must observe isFinal=true
         var preInnerCompleteCount = orchestrator.IsFinalLog.Count;
         childSubject.OnCompleted();
         orchestrator.IsFinalLog.Skip(preInnerCompleteCount).Should().Contain(true,
@@ -325,11 +313,9 @@ public sealed class OrchestrateFixture
             onChild: () => { lock (callLog) callLog.Add("C-start"); Thread.Sleep(1); lock (callLog) callLog.Add("C-end"); });
         using var sub = observable.Subscribe(observer);
 
-        // Bootstrap: one Add so the child subject is subscribed and stable for the race.
         source.AddOrUpdate(new TestItem(1, "init"));
         childSubject.Should().NotBeNull();
 
-        // Race source-side Refresh and child-side OnNext from two threads.
         using var barrier = new Barrier(2);
         var parentTask = Task.Run(() =>
         {
@@ -345,8 +331,6 @@ public sealed class OrchestrateFixture
         });
         await Task.WhenAll(parentTask, childTask);
 
-        // Every start/end pair must match. If parent and child callbacks ever interleaved, a P-start
-        // would be followed by C-start (or vice versa) instead of its own P-end.
         lock (callLog)
         {
             callLog.Count.Should().BeGreaterThan(0);
@@ -360,12 +344,6 @@ public sealed class OrchestrateFixture
         }
     }
 
-    /// <summary>
-    /// Proves Orchestrate delivery runs without holding the lock. Two orchestrator instances
-    /// whose Emit callbacks write into each other's source cache, creating a cross-cache cycle.
-    /// Deadlocks if downstream delivery is held under the queue lock; passes when the queue is
-    /// drained before invoking Emit.
-    /// </summary>
     [Trait("Category", "ExplicitDeadlock")]
     [Fact]
     public async Task DeadlockProof_CrossFeedingSubscriptions()
@@ -407,12 +385,6 @@ public sealed class OrchestrateFixture
             "cross-feeding Orchestrate subscriptions should not deadlock");
     }
 
-    /// <summary>
-    /// Concurrent source/inner emissions during the orchestrator's per-drain emit must not be
-    /// lost: items delivered via the reentrant drain inside Emitter.OnNext settle into the
-    /// orchestrator's state and must be flushed before drain exits, otherwise downstream
-    /// observers miss them.
-    /// </summary>
     [Fact]
     public async Task ReentrantDrain_ConcurrentInnerEmissions_AllItemsReachDownstream()
     {
@@ -422,7 +394,6 @@ public sealed class OrchestrateFixture
 
         using var source = new SourceCache<TestItem, int>(x => x.Key);
 
-        // Per-source-item inner subject so each producer task has a stable inner stream to push into.
         var innerSubjects = new Dictionary<int, Subject<string>>();
         for (var i = 1; i <= producerCount; i++)
         {
@@ -433,7 +404,6 @@ public sealed class OrchestrateFixture
         var observer = new TestObserver();
         using var sub = observable.Subscribe(observer);
 
-        // Add a source item per producer to subscribe each inner subject.
         for (var i = 1; i <= producerCount; i++)
         {
             source.AddOrUpdate(new TestItem(i, "init"));
@@ -441,7 +411,6 @@ public sealed class OrchestrateFixture
 
         var orchestrator = getOrchestrator();
 
-        // Reset child-call tracking captured during init so we count only the burst below.
         lock (orchestrator.ChildCalls)
         {
             orchestrator.ChildCalls.Clear();
@@ -459,8 +428,6 @@ public sealed class OrchestrateFixture
 
         await Task.WhenAll(producers);
 
-        // Spin until every emission has reached OnInner. Deterministic upper bound guards against
-        // a real deadlock; under healthy conditions this returns quickly.
         SpinWait.SpinUntil(
             () => { lock (orchestrator.ChildCalls) return orchestrator.ChildCalls.Count >= totalEmissions; },
             TimeSpan.FromSeconds(5))
@@ -478,11 +445,6 @@ public sealed class OrchestrateFixture
         }
     }
 
-    /// <summary>
-    /// The lambda overload of Orchestrate must build a fresh orchestrator per subscription;
-    /// the orchestrator holds mutable per-subscription state and reuse across subscribers corrupts
-    /// the first subscriber's context.
-    /// </summary>
     [Fact]
     public void LambdaOverload_MultipleSubscriptions_DoNotShareOrchestrator()
     {
@@ -491,12 +453,9 @@ public sealed class OrchestrateFixture
         var emitCalls = 0;
         var contexts = new List<int>();
 
-        // Build a chain that captures whichever context each orchestrator received. Two subscribers
-        // should each see their own context instance.
         var observable = source.Connect().Orchestrate<TestItem, int, string, int>(
             onSourceChangeSet: (changes, context) =>
             {
-                // Hash code of the context instance proves each subscription has its own.
                 lock (contexts)
                 {
                     contexts.Add(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(context));
@@ -517,11 +476,6 @@ public sealed class OrchestrateFixture
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // Test Infrastructure
-    // ═══════════════════════════════════════════════════════════════
-
-    /// <summary>Observer that writes into another cache on every emission — creates cross-cache cycle.</summary>
     private sealed class CrossFeedObserver(SourceCache<TestItem, int> target, int idBase, int maxCrossWrites) : IObserver<IChangeSet<TestItem, int>>
     {
         private int _counter;
@@ -539,9 +493,6 @@ public sealed class OrchestrateFixture
         public void OnCompleted() { }
     }
 
-    /// <summary>
-    /// Minimal ICacheOrchestrator implementation that mirrors the legacy CPS-subclass shape.
-    /// </summary>
     private sealed class TestOrchestrator(
             ICacheOrchestratorContext<int, string> context,
             IObserver<IChangeSet<TestItem, int>> emitter,
@@ -597,7 +548,6 @@ public sealed class OrchestrateFixture
         }
     }
 
-    /// <summary>Observer that records emissions, completion, and errors.</summary>
     private sealed class TestObserver : IObserver<IChangeSet<TestItem, int>>
     {
         public int EmitCount;

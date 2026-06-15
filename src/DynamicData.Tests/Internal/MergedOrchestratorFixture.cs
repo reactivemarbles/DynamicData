@@ -14,10 +14,6 @@ using Xunit;
 
 namespace DynamicData.Tests.Internal;
 
-/// <summary>
-/// In-isolation tests for <see cref="IntObservableCacheEx.MergedOrchestrator{TSource, TKey, TDest, TDestKey}"/>,
-/// the orchestrator behind <c>OrchestrateManyChangeSets</c>.
-/// </summary>
 public sealed class MergedOrchestratorFixture
 {
     private sealed record Item(int Id, string Tag);

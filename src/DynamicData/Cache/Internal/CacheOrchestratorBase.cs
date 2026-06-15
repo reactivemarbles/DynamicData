@@ -7,10 +7,6 @@ namespace DynamicData.Cache.Internal;
 /// <summary>
 /// Optional base for <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> implementations
 /// that prefer per-<see cref="ChangeReason"/> virtual hooks over decoding the changeset themselves.
-/// The base implementation of <see cref="OnSourceChangeSet"/> walks the changeset and dispatches each
-/// change to the corresponding protected virtual method. Captures the
-/// <see cref="ICacheOrchestratorContext{TKey, TInner}"/> and downstream emitter in <see cref="Context"/>
-/// and <see cref="Emitter"/> properties accessible to derived classes.
 /// </summary>
 /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
 /// <typeparam name="TKey">Type of the source changeset key.</typeparam>

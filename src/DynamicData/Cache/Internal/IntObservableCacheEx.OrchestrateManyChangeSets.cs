@@ -11,7 +11,7 @@ internal static partial class IntObservableCacheEx
 {
     /// <summary>
     /// Cache-shape overload. Per-source-key inner observables that emit cache changesets, merged
-    /// into a single output cache changeset. Used by MergeManyChangeSets (cache) and TransformManyAsync.
+    /// into a single output cache changeset.
     /// </summary>
     /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
     /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
@@ -38,7 +38,7 @@ internal static partial class IntObservableCacheEx
 
     /// <summary>
     /// List-shape overload. Per-source-key inner observables that emit list changesets, merged
-    /// into a single output list changeset. Used by MergeManyListChangeSets.
+    /// into a single output list changeset.
     /// </summary>
     /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
     /// <typeparam name="TKey">Type of the source changeset key.</typeparam>

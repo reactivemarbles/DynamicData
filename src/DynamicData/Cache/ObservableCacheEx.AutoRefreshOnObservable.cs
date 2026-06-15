@@ -59,7 +59,7 @@ public static partial class ObservableCacheEx
     /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
     /// <returns>An observable change set with additional refresh changes.</returns>
     /// <remarks>
-    /// <para><b>Worth noting:</b> Per-item observable errors terminate the output stream. Prior to v9 they were silently ignored; as of v9 they propagate, matching the change made to <see cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>.</para>
+    /// <para><b>Worth noting:</b> Per-item observable errors terminate the output stream.</para>
     /// </remarks>
     public static IObservable<IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
         where TObject : notnull

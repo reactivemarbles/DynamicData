@@ -35,9 +35,6 @@ public static partial class ObservableListEx
     /// <param name="notifyOnInitialValue">When <see langword="true"/> (default), the current value is emitted immediately upon subscribing to each item.</param>
     /// <returns>An observable emitting the property value whenever it changes on any tracked item.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertyAccessor"/> is <see langword="null"/>.</exception>
-    /// <remarks>
-    /// <para><b>Worth noting:</b> Prior to v9, per-item errors were silently ignored. As of v9 they propagate via the underlying <see cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>.</para>
-    /// </remarks>
     /// <seealso cref="WhenPropertyChanged{TObject, TValue}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TValue}}, bool)"/>
     /// <seealso cref="WhenAnyPropertyChanged{TObject}(IObservable{IChangeSet{TObject}}, string[])"/>
     /// <seealso cref="ObservableCacheEx.WhenValueChanged{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Expression{Func{TObject, TValue}}, bool)"/>

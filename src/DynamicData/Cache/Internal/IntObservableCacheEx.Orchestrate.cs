@@ -17,23 +17,23 @@ namespace DynamicData.Cache.Internal;
 ///   <listheader><term>Operator shape</term><description>Use</description></listheader>
 ///   <item>
 ///     <term>Single value type (TResult), needs explicit orchestrator class</term>
-///     <description><see cref="Orchestrate{TSource, TKey, TInner, TResult, TOrch}"/> + custom <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> (or subclass <see cref="CacheOrchestratorBase{TSource, TKey, TInner, TResult}"/>). Used by AutoRefresh, TransformManyAsync.</description>
+///     <description><see cref="Orchestrate{TSource, TKey, TInner, TResult, TOrch}"/> + custom <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> (or subclass <see cref="CacheOrchestratorBase{TSource, TKey, TInner, TResult}"/>).</description>
 ///   </item>
 ///   <item>
 ///     <term>Stateless, simple per-reason logic, value output</term>
-///     <description><see cref="Orchestrate{TSource, TKey, TInner, TResult}(IObservable{IChangeSet{TSource, TKey}}, Action{IChangeSet{TSource, TKey}, ICacheOrchestratorContext{TKey, TInner}}, Action{TInner, TKey, IObserver{TResult}}, Action{IObserver{TResult}}?)"/> lambda overload. Used by MergeMany, MergeManyItems.</description>
+///     <description><see cref="Orchestrate{TSource, TKey, TInner, TResult}(IObservable{IChangeSet{TSource, TKey}}, Action{IChangeSet{TSource, TKey}, ICacheOrchestratorContext{TKey, TInner}}, Action{TInner, TKey, IObserver{TResult}}, Action{IObserver{TResult}}?)"/> lambda overload.</description>
 ///   </item>
 ///   <item>
 ///     <term>Output is a cache changeset, you mutate a ChangeAwareCache per source/inner event</term>
-///     <description><see cref="OrchestrateChangeSets{TSource, TKey, TInner, TOutput}"/>. Used by FilterOnObservable, TransformOnObservable.</description>
+///     <description><see cref="OrchestrateChangeSets{TSource, TKey, TInner, TOutput}"/>.</description>
 ///   </item>
 ///   <item>
 ///     <term>Output is a merged cache changeset (inner observables themselves emit cache changesets)</term>
-///     <description><see cref="OrchestrateManyChangeSets{TSource, TKey, TDest, TDestKey}"/> (cache overload). Used by MergeManyChangeSets.</description>
+///     <description><see cref="OrchestrateManyChangeSets{TSource, TKey, TDest, TDestKey}"/> (cache overload).</description>
 ///   </item>
 ///   <item>
 ///     <term>Output is a merged list changeset (inner observables emit list changesets)</term>
-///     <description><see cref="OrchestrateManyChangeSets{TSource, TKey, TDest}"/> (list overload). Used by MergeManyListChangeSets.</description>
+///     <description><see cref="OrchestrateManyChangeSets{TSource, TKey, TDest}"/> (list overload).</description>
 ///   </item>
 /// </list>
 /// </remarks>

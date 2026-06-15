@@ -11,9 +11,8 @@ namespace DynamicData.Cache.Internal;
 
 /// <summary>
 /// Drives an <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> against a source
-/// changeset. A fresh per-subscription <see cref="OrchestratorContext"/> is constructed by
-/// <see cref="Run"/> on each subscribe, with the orchestrator built by the supplied
-/// <paramref name="factory"/>, so all per-subscription state is naturally isolated.
+/// changeset. <see cref="Run"/> builds a fresh per-subscription <see cref="OrchestratorContext"/>
+/// from the supplied <paramref name="factory"/>.
 /// </summary>
 /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
 /// <typeparam name="TKey">Type of the source changeset key.</typeparam>

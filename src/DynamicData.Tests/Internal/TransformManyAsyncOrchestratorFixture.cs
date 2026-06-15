@@ -16,12 +16,6 @@ using Xunit;
 
 namespace DynamicData.Tests.Internal;
 
-/// <summary>
-/// In-isolation tests for <see cref="TransformManyAsync{TSource, TKey, TDestination, TDestinationKey}.Orchestrator"/>.
-/// Verifies that async transformer results are tracked per key, that removals untrack and clean the
-/// merge tracker, that drain end flushes accumulated changes, and that a transformer exception is
-/// routed through the user-provided error handler.
-/// </summary>
 public sealed class TransformManyAsyncOrchestratorFixture
 {
     private sealed record Item(int Id);
@@ -102,8 +96,6 @@ public sealed class TransformManyAsyncOrchestratorFixture
 
         orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
 
-        // Subscribe and await the deferred inner to its terminal. The async lambda runs synchronously
-        // (sync throw -> catch -> handler -> return Empty), so the inner completes deterministically.
         var trackedObs = context.Tracked[1];
         await trackedObs.DefaultIfEmpty().LastOrDefaultAsync();
 

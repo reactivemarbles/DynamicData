@@ -8,9 +8,7 @@ using System.Collections.Generic;
 namespace DynamicData.Tests.Utilities;
 
 /// <summary>
-/// Minimal <see cref="IObserver{T}"/> that records every OnNext value and the terminal state.
-/// Intended for in-isolation orchestrator tests where the orchestrator's emitter side-effects
-/// need to be captured without involving an Rx pipeline.
+/// <see cref="IObserver{T}"/> that records every OnNext value and the terminal state.
 /// </summary>
 internal sealed class CollectingObserver<T> : IObserver<T>
 {

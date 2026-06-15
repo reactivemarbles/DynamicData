@@ -49,7 +49,6 @@ public static partial class ObservableListEx
     /// <item><term>Re-evaluator fires</term><description>The item's current index is looked up and a <b>Refresh</b> change is emitted.</description></item>
     /// <item><term>OnError</term><description>Errors from any per-item re-evaluator terminate the output. Source errors also terminate the output.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> Prior to v9, per-item re-evaluator errors were silently ignored. As of v9 they propagate via the underlying <see cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>.</para>
     /// </remarks>
     /// <seealso cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
     /// <seealso cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/>

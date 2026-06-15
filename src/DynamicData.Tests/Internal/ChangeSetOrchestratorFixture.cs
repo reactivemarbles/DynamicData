@@ -14,11 +14,6 @@ using Xunit;
 
 namespace DynamicData.Tests.Internal;
 
-/// <summary>
-/// In-isolation tests for <see cref="IntObservableCacheEx.ChangeSetOrchestrator{TSource, TKey, TInner, TOutput}"/>,
-/// the orchestrator behind <c>OrchestrateChangeSets</c>. Verifies that onSourceChange and onInner
-/// callbacks fire for the right reasons and that drain-end captures and emits accumulated state.
-/// </summary>
 public sealed class ChangeSetOrchestratorFixture
 {
     private sealed record Source(int Id);
@@ -91,7 +86,6 @@ public sealed class ChangeSetOrchestratorFixture
         var orchestrator = new IntObservableCacheEx.ChangeSetOrchestrator<Source, int, string, string>(
             context, emitter,
             innerFactory: (item, key) => Observable.Empty<string>(),
-            // Source-change callback intentionally does nothing, so the ChangeAwareCache stays empty.
             onSourceChange: (cache, change) => { },
             onInner: (cache, key, item, value) => { });
 

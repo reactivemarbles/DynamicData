@@ -13,7 +13,7 @@ internal static partial class IntObservableCacheEx
     /// <see cref="ChangeAwareCache{TOutput, TKey}"/>. Source events and inner emissions are
     /// coalesced into a single downstream changeset per drain cycle. For the mirror-manipulator
     /// shape (filter, per-key transform) where each source key contributes 0 or 1 items to the
-    /// output. Used by FilterOnObservable, TransformOnObservable.
+    /// output.
     /// </summary>
     /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
     /// <typeparam name="TKey">Type of the source changeset key (also the output changeset key).</typeparam>

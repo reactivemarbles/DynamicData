@@ -175,15 +175,6 @@ public class SharedDeliveryQueueFixture
         }
     }
 
-    /// <summary>
-    /// Regression test for the C1 fix: when <c>_onDrainComplete</c> enqueues an item onto a
-    /// sub-queue (modeling an orchestrator emitting accumulated state), the reentrant drain
-    /// inside <c>ExitLockAndDrain</c> processes the item but leaves <c>_activeBits</c> empty.
-    /// Without the fix, the outer <c>DrainAll</c> exits without re-firing <c>_onDrainComplete</c>;
-    /// any state the orchestrator accumulates during the reentrant drain is then stranded until
-    /// the next unrelated drain. The fix flags drain reentrancy and loops <c>_onDrainComplete</c>
-    /// when the flag is set, even when <c>_activeBits</c> shows nothing pending.
-    /// </summary>
     [Fact]
     public void OnDrainComplete_RefiresAfterReentrantDrainTriggeredByCallback()
     {
@@ -194,10 +185,6 @@ public class SharedDeliveryQueueFixture
         SharedDeliveryQueue queue = null!;
         queue = new SharedDeliveryQueue(onDrainComplete: _ =>
         {
-            // Emit one item on the first callback invocation only. The enqueue happens while we
-            // are inside DrainAll on the drain thread, so ExitLockAndDrain takes the reentrant
-            // path and consumes the item without setting _activeBits. The outer DrainAll must
-            // still re-fire OnDrainComplete because of the reentrancy flag.
             if (Interlocked.Increment(ref callCount) == 1)
             {
                 using var scope = sub!.AcquireLock();
@@ -208,7 +195,6 @@ public class SharedDeliveryQueueFixture
         var observer = new TestObserver<int>(delivered.Add);
         sub = queue.CreateQueue(observer);
 
-        // Prime the drain with an initial item so DrainAll fires onDrainComplete at least once.
         using (var scope = sub.AcquireLock())
         {
             scope.EnqueueNext(1);

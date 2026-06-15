@@ -49,7 +49,6 @@ public static partial class ObservableCacheEx
     /// <item><term>Refresh</term><description>No effect on subscriptions.</description></item>
     /// <item><term>OnError</term><description>Errors from any item's property subscription terminate the output stream. Source errors also terminate the stream.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> Prior to v9, per-item errors were silently ignored. As of v9 they propagate via the underlying <see cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>.</para>
     /// </remarks>
     /// <seealso cref="WhenPropertyChanged{TObject, TKey, TValue}"/>
     /// <seealso cref="WhenAnyPropertyChanged{TObject, TKey}"/>

@@ -35,7 +35,6 @@ public static partial class ObservableListEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Implemented via <see cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>. Subscriptions are managed per item: created on add, disposed on remove.</para>
-    /// <para><b>Worth noting:</b> Prior to v9, errors from individual property subscriptions were silently ignored. As of v9 they propagate via the underlying <see cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>.</para>
     /// </remarks>
     /// <seealso cref="WhenPropertyChanged{TObject, TValue}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TValue}}, bool)"/>
     /// <seealso cref="WhenValueChanged{TObject, TValue}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TValue}}, bool)"/>
