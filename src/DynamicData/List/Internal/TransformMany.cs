@@ -146,7 +146,7 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
                         return result.CaptureChanges();
                     });
 
-                var allChanges = init.Merge(subsequentSelection);
+                var allChanges = init.UnsynchronizedMerge(subsequentSelection);
 
                 return new CompositeDisposable(allChanges.SubscribeSafe(observer), transformed.Connect(), queue);
             });

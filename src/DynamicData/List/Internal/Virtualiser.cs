@@ -37,7 +37,7 @@ internal sealed class Virtualiser<T>(IObservable<IChangeSet<T>> source, IObserva
 
                 var dataChanged = _source.SynchronizeSafe(queue).Select(changes => Virtualise(all, virtualised, parameters, changes));
 
-                var publisher = requestStream.Merge(dataChanged).Where(changes => changes is not null && changes.Count != 0)
+                var publisher = requestStream.UnsynchronizedMerge(dataChanged).Where(changes => changes is not null && changes.Count != 0)
                     .Select(x => x!)
                     .Select(changes => new VirtualChangeSet<T>(changes, new VirtualResponse(virtualised.Count, parameters.StartIndex, all.Count))).SubscribeSafe(observer);
 

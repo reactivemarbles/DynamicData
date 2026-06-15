@@ -38,9 +38,9 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
 
                 var reGroupFunc = _reGrouper is null ?
                     Observable.Never<IChangeSet<IGrouping<TObject, TGroupKey>>>() :
-                    _reGrouper.SynchronizeSafe(queue).CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
+                    _reGrouper.SynchronizeSafe(queue).UnsynchronizedCombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
 
-                var publisher = grouper.Merge(reGroupFunc).NotEmpty().SubscribeSafe(observer);
+                var publisher = grouper.UnsynchronizedMerge(reGroupFunc).NotEmpty().SubscribeSafe(observer);
 
                 return new CompositeDisposable(publisher, shared.Connect(), queue);
             });

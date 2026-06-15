@@ -95,7 +95,7 @@ internal static partial class Filter
                             return Process(filtered, changes);
                         });
 
-                    var publisher = predicateChanged.Merge(filteredResult).NotEmpty()
+                    var publisher = predicateChanged.UnsynchronizedMerge(filteredResult).NotEmpty()
                         .Select(changes => changes.Transform(iwm => iwm.Item)) // use convert, not transform
                         .SubscribeSafe(observer);
 

@@ -41,7 +41,7 @@ internal sealed class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IP
                     .Select(changes => Page(all, paged, parameters, changes));
 
                 var publisher = requestStream
-                    .Merge(dataChanged)
+                    .UnsynchronizedMerge(dataChanged)
                     .Where(changes => changes is not null && changes.Count != 0)
                     .Select(x => x!)
                     .SubscribeSafe(observer);
