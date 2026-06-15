@@ -77,7 +77,7 @@ internal static class SynchronizeSafeExtensions
     // that at most one notification is in flight to the downstream observer at a time, so the
     // additional gate that Observable.Merge would install is redundant.
     //
-    // Removing that gate matters in cross-cache pipelines: Observable.Merge holds its private
+    // The gate omission matters in cross-cache pipelines: Observable.Merge holds its private
     // _gate for the entire duration of downstream delivery, and when downstream delivery walks
     // into another cache's writer lock, two such gates on two operators form an ABBA cycle that
     // the queue-drain design is meant to prevent.
@@ -145,7 +145,8 @@ internal static class SynchronizeSafeExtensions
     //
     // The Rx gate matters here for the same reason as Merge: Observable.CombineLatest holds
     // its private _gate for the entire downstream delivery, and any operator-level lock held
-    // across a cross-cache write reconstructs the ABBA cycle the queue-drain design eliminated.
+    // across a cross-cache write reconstructs the ABBA cycle the queue-drain design is meant
+    // to prevent.
     //
     // Without the external serialization precondition, concurrent OnNext calls would race the
     // latest-value state and could produce torn reads. Do not use as a general-purpose

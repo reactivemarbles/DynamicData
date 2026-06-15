@@ -275,9 +275,8 @@ public sealed class DeadlockTortureTest
 
     [Fact] public async Task TransformToTree_DoesNotDeadlock()
     {
-        // Exercises TreeBuilder.cs:200 (_predicateChanged.SynchronizeSafe(queue).UnsynchronizedCombineLatest
-        // (reFilterObservable.SynchronizeSafe(queue), ...)). Cross-cache cycle is closed via a side-channel
-        // Subscribe that writes a marker into the other cache for every tree changeset.
+        // Cross-cache cycle is closed via a side-channel Subscribe that writes a marker
+        // into the other cache for every tree changeset.
         for (var iter = 0; iter < Iterations; iter++)
         {
             using var sourceA = new SourceCache<Person, string>(p => p.UniqueKey);
@@ -302,8 +301,7 @@ public sealed class DeadlockTortureTest
     }
 
     [Fact] public async Task Switch_DoesNotDeadlock() =>
-        // Exercises the refactored Switch.cs (SerialDisposable + UnsynchronizedMerge of destination.Connect()
-        // and the errors subject). Observable.Return(s).Switch() drives exactly one outer notification, which
-        // is enough to wire up the destination cache and exercise the gate-free merge on every inner change.
+        // Observable.Return(s).Switch() drives exactly one outer notification, which is enough
+        // to wire up the destination cache and exercise its inner-change delivery path.
         (await RunBidirectionalDeadlockTest(s => System.Reactive.Linq.Observable.Return(s).Switch())).Should().BeTrue();
 }
