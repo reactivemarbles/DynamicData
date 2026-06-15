@@ -114,30 +114,23 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
             {
                 var result = new ChangeAwareList<TDestination>();
 
-                // Outer queue serializes the initial-state emissions from `transformed` with the
-                // fan-in from `transformed.MergeMany(x => x.Changes)`. Per-item child changes use
-                // a separate per-item queue so each child's notifications appear in order, but
-                // multiple children can deliver concurrently into the outer queue without holding
-                // a lock during downstream delivery.
-                var outerQueue = new SharedDeliveryQueue();
+                // One shared queue for the whole operator. Each per-child stream, the initial-state
+                // stream, and the merged-children stream all attach as sub-queues, so there is a
+                // single drain point and downstream observer.OnNext is never invoked concurrently
+                // from any path.
+                var queue = new SharedDeliveryQueue();
 
                 var transformed = _source.Transform(
                     t =>
                     {
                         var collection = manySelector(t);
-
-                        // Per-child delivery via parameterless SynchronizeSafe: each child gets
-                        // its own internally-allocated DeliveryQueue tied to the subscription
-                        // lifetime, with queue-first disposal so in-flight deliveries complete
-                        // before teardown. No reason to use a SharedDeliveryQueue here since
-                        // each child has exactly one source feeding it.
-                        var changes = childChanges(t).SynchronizeSafe().Skip(1);
+                        var changes = childChanges(t).SynchronizeSafe(queue).Skip(1);
                         return new ManyContainer(collection, changes);
                     }).Publish();
 
-                var initial = transformed.SynchronizeSafe(outerQueue).Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer)));
+                var initial = transformed.SynchronizeSafe(queue).Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer)));
 
-                var subsequent = transformed.MergeMany(x => x.Changes).SynchronizeSafe(outerQueue);
+                var subsequent = transformed.MergeMany(x => x.Changes).SynchronizeSafe(queue);
 
                 var init = initial.Select(
                     changes =>
@@ -155,7 +148,7 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
 
                 var allChanges = init.Merge(subsequentSelection);
 
-                return new CompositeDisposable(allChanges.SubscribeSafe(observer), transformed.Connect(), outerQueue);
+                return new CompositeDisposable(allChanges.SubscribeSafe(observer), transformed.Connect(), queue);
             });
     }
 
