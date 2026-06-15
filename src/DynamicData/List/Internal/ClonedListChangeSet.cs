@@ -5,10 +5,8 @@
 namespace DynamicData.List.Internal;
 
 /// <summary>
-/// Holds an observable list changeset together with an aggregated mirror of its content.
-/// Callers drive the mirror by invoking <see cref="Process"/> for each changeset they
-/// observe through <see cref="Source"/>. See <see cref="DynamicData.Cache.Internal.ChangeSetCache{TObject, TKey}"/>
-/// for the rationale.
+/// Holds an observable list changeset alongside an aggregated mirror list.
+/// <see cref="Process"/> applies a changeset to <see cref="List"/>.
 /// </summary>
 internal sealed class ClonedListChangeSet<TObject>(IObservable<IChangeSet<TObject>> source, IEqualityComparer<TObject>? equalityComparer)
     where TObject : notnull
@@ -17,6 +15,5 @@ internal sealed class ClonedListChangeSet<TObject>(IObservable<IChangeSet<TObjec
 
     public IObservable<IChangeSet<TObject>> Source { get; } = source;
 
-    /// <summary>Applies <paramref name="changes"/> to the aggregated <see cref="List"/>.</summary>
     public void Process(IChangeSet<TObject> changes) => List.Clone(changes, equalityComparer);
 }

@@ -80,7 +80,6 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
 
         private void SubscribeChild(TSource item, TKey key)
         {
-            // ChangeSetCache is passive; the mirror updates from OnInner on the queue thread.
             var entry = new ChangeSetCache<TDestination, TDestinationKey>(BuildInner(item, key));
             _cache.AddOrUpdate(entry, key);
             Context.Track(key, entry.Source);

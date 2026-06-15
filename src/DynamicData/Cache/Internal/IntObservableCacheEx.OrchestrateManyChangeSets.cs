@@ -129,8 +129,6 @@ internal static partial class IntObservableCacheEx
 
         private void SubscribeChild(TSource item, TKey key)
         {
-            // ChangeSetCache is passive; its Cache mirror is updated from OnInner on the queue
-            // thread. Track wraps the inner with the single SynchronizeSafe layer it needs.
             var entry = new ChangeSetCache<TDest, TDestKey>(_changeSetSelector(item, key).IgnoreSameReferenceUpdate());
             _cache.AddOrUpdate(entry, key);
             Context.Track(key, entry.Source);
@@ -196,7 +194,6 @@ internal static partial class IntObservableCacheEx
 
         private void SubscribeChild(TSource item, TKey key)
         {
-            // ClonedListChangeSet is passive; the mirror updates from OnInner on the queue thread.
             var entry = new ClonedListChangeSet<TDest>(_changeSetSelector(item, key).RemoveIndex(), _equalityComparer);
             _entries[key] = entry;
             Context.Track(key, entry.Source);
