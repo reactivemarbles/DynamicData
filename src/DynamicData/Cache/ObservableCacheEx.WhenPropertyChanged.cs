@@ -38,9 +38,8 @@ public static partial class ObservableCacheEx
     /// <returns>An observable of <see cref="PropertyValue{TObject, TValue}"/> containing both the item and its property value.</returns>
     /// <remarks>
     /// <para>
-    /// Per-item subscriptions are created on Add, replaced on Update, disposed on Remove. Errors from individual
-    /// property subscriptions are silently ignored. The output is not a changeset stream. If you only need
-    /// the value (not the owning item), use <see cref="WhenValueChanged{TObject, TKey, TValue}"/> instead.
+    /// Per-item subscriptions are created on Add, replaced on Update, disposed on Remove. The output is not a
+    /// changeset stream. If you only need the value (not the owning item), use <see cref="WhenValueChanged{TObject, TKey, TValue}"/> instead.
     /// </para>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
@@ -48,8 +47,9 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Disposes the old item's property subscription and subscribes to the new item.</description></item>
     /// <item><term>Remove</term><description>Disposes the item's property subscription. No further emissions for this item.</description></item>
     /// <item><term>Refresh</term><description>No effect on subscriptions. The existing property subscription continues.</description></item>
-    /// <item><term>OnError</term><description>Per-item property subscription errors are silently ignored. Source errors terminate the stream.</description></item>
+    /// <item><term>OnError</term><description>Errors from any item's property subscription terminate the output stream. Source errors also terminate the stream.</description></item>
     /// </list>
+    /// <para><b>Worth noting:</b> Prior to v9, per-item property subscription errors were silently ignored. As of v9 they propagate via the underlying <see cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>.</para>
     /// </remarks>
     /// <seealso cref="ObservableListEx.WhenPropertyChanged"/>
     public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)

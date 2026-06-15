@@ -121,7 +121,9 @@ internal static partial class IntObservableCacheEx
 
         private void SubscribeChild(TSource item, TKey key)
         {
-            var entry = new ChangeSetCache<TDest, TDestKey>(Context.Serialize(_changeSetSelector(item, key).IgnoreSameReferenceUpdate()));
+            // Track applies queue serialization to entry.Source, so the inner stream (including
+            // ChangeSetCache.Clone via Do) does not need to be wrapped in Context.Serialize first.
+            var entry = new ChangeSetCache<TDest, TDestKey>(_changeSetSelector(item, key).IgnoreSameReferenceUpdate());
             _cache.AddOrUpdate(entry, key);
             Context.Track(key, entry.Source);
         }
@@ -178,7 +180,7 @@ internal static partial class IntObservableCacheEx
 
         private void SubscribeChild(TSource item, TKey key)
         {
-            var entry = new ClonedListChangeSet<TDest>(Context.Serialize(_changeSetSelector(item, key).RemoveIndex()), _equalityComparer);
+            var entry = new ClonedListChangeSet<TDest>(_changeSetSelector(item, key).RemoveIndex(), _equalityComparer);
             _entries[key] = entry;
             Context.Track(key, entry.Source);
         }

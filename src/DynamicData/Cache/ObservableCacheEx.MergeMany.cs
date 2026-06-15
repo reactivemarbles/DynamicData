@@ -49,8 +49,9 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Disposes the previous child subscription and creates a new one for the updated item.</description></item>
     /// <item><term>Remove</term><description>Disposes the child subscription for the removed item.</description></item>
     /// <item><term>Refresh</term><description>No effect on subscriptions. The child observable continues unchanged.</description></item>
-    /// <item><term>OnError</term><description>Errors from child observables are silently swallowed (the child is unsubscribed). Errors from the source changeset stream terminate the merged output.</description></item>
+    /// <item><term>OnError</term><description>Errors from child observables terminate the merged output stream with that error. Errors from the source changeset stream also terminate the merged output.</description></item>
     /// </list>
+    /// <para><b>Worth noting:</b> Prior to v9, errors from child observables were silently swallowed and the offending child was unsubscribed while the merged stream continued. As of v9 child errors are forwarded, matching the semantics of standard <c>Observable.Merge</c>.</para>
     /// <para><b>Worth noting:</b> The output is a plain <see cref="IObservable{TDestination}"/>, not a changeset stream. If you need merged changesets, use <see cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IComparer{TDestination}, IEqualityComparer{TDestination})"/> instead.</para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>

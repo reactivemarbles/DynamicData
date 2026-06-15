@@ -72,7 +72,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
 
         private void SubscribeChild(TSource item, TKey key)
         {
-            var entry = new ChangeSetCache<TDestination, TDestinationKey>(Context.Serialize(BuildInner(item, key)));
+            var entry = new ChangeSetCache<TDestination, TDestinationKey>(BuildInner(item, key));
             _cache.AddOrUpdate(entry, key);
             Context.Track(key, entry.Source);
         }
