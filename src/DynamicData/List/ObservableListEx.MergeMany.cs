@@ -41,7 +41,9 @@ public static partial class ObservableListEx
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Subscription disposed.</description></item>
     /// <item><term><b>Refresh</b>/<b>Moved</b></term><description>No effect on subscriptions.</description></item>
     /// <item><term>OnCompleted (source)</term><description>Completes only after the source and all active inner observables have completed.</description></item>
+    /// <item><term>OnError</term><description>Errors from any per-item observable terminate the merged output. Source errors also terminate the output.</description></item>
     /// </list>
+    /// <para><b>Worth noting:</b> Prior to v9, errors from per-item observables were silently swallowed and the offending item was unsubscribed while the merged stream continued. As of v9 child errors propagate, matching the semantics of standard <c>Observable.Merge</c>.</para>
     /// </remarks>
     /// <seealso cref="SubscribeMany{T}(IObservable{IChangeSet{T}}, Func{T, IDisposable})"/>
     /// <seealso cref="MergeManyChangeSets{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination}?)"/>
