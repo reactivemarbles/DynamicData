@@ -8,6 +8,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 using DynamicData.Binding;
+using DynamicData.Internal;
 
 namespace DynamicData.List.Internal;
 
@@ -113,19 +114,25 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
             {
                 var result = new ChangeAwareList<TDestination>();
 
+                // Outer queue serializes the initial-state emissions from `transformed` with the
+                // fan-in from `transformed.MergeMany(x => x.Changes)`. Per-item child changes use
+                // a separate per-item queue so each child's notifications appear in order, but
+                // multiple children can deliver concurrently into the outer queue without holding
+                // a lock during downstream delivery.
+                var outerQueue = new SharedDeliveryQueue();
+
                 var transformed = _source.Transform(
                     t =>
                     {
-                        var locker = InternalEx.NewLock();
+                        var childQueue = new SharedDeliveryQueue();
                         var collection = manySelector(t);
-                        var changes = childChanges(t).Synchronize(locker).Skip(1);
+                        var changes = childChanges(t).SynchronizeSafe(childQueue).Skip(1);
                         return new ManyContainer(collection, changes);
                     }).Publish();
 
-                var outerLock = new object();
-                var initial = transformed.Synchronize(outerLock).Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer)));
+                var initial = transformed.SynchronizeSafe(outerQueue).Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer)));
 
-                var subsequent = transformed.MergeMany(x => x.Changes).Synchronize(outerLock);
+                var subsequent = transformed.MergeMany(x => x.Changes).SynchronizeSafe(outerQueue);
 
                 var init = initial.Select(
                     changes =>

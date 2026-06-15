@@ -12,6 +12,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Binding;
 using DynamicData.Cache.Internal;
+using DynamicData.Internal;
 using DynamicData.List.Internal;
 using DynamicData.List.Linq;
 
@@ -54,9 +55,9 @@ public static partial class ObservableListEx
             throw new ArgumentException("sizeLimit cannot be zero", nameof(sizeLimit));
         }
 
-        var locker = InternalEx.NewLock();
-        var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? GlobalConfig.DefaultScheduler, locker);
+        var queue = new SharedDeliveryQueue();
+        var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? GlobalConfig.DefaultScheduler, queue);
 
-        return limiter.Run().Synchronize(locker).Do(source.RemoveMany);
+        return limiter.Run().SynchronizeSafe(queue).Do(source.RemoveMany);
     }
 }

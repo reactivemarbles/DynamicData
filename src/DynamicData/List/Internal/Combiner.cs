@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,46 +6,42 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 using DynamicData.Cache.Internal;
+using DynamicData.Internal;
 
 namespace DynamicData.List.Internal;
 
 internal sealed class Combiner<T>(ICollection<IObservable<IChangeSet<T>>> source, CombineOperator type)
     where T : notnull
 {
-#if NET9_0_OR_GREATER
-    private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
-
     private readonly ICollection<IObservable<IChangeSet<T>>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
                 var disposable = new CompositeDisposable();
-
                 var resultList = new ChangeAwareListWithRefCounts<T>();
+                var sourceLists = Enumerable.Range(0, _source.Count).Select(_ => new ReferenceCountTracker<T>()).ToList();
 
-                lock (_locker)
+                // Shared queue serializes the multiple source streams so they appear as a
+                // single sequence to the combiner, but without holding a lock during the
+                // downstream observer.OnNext call.
+                var queue = new SharedDeliveryQueue();
+
+                foreach (var pair in _source.Zip(sourceLists, (item, list) => new { Item = item, List = list }))
                 {
-                    var sourceLists = Enumerable.Range(0, _source.Count).Select(_ => new ReferenceCountTracker<T>()).ToList();
+                    disposable.Add(
+                        pair.Item.SynchronizeSafe(queue).Subscribe(
+                            changes =>
+                            {
+                                CloneSourceList(pair.List, changes);
 
-                    foreach (var pair in _source.Zip(sourceLists, (item, list) => new { Item = item, List = list }))
-                    {
-                        disposable.Add(
-                            pair.Item.Synchronize(_locker).Subscribe(
-                                changes =>
+                                var notifications = UpdateResultList(changes, sourceLists, resultList);
+                                if (notifications.Count != 0)
                                 {
-                                    CloneSourceList(pair.List, changes);
-
-                                    var notifications = UpdateResultList(changes, sourceLists, resultList);
-                                    if (notifications.Count != 0)
-                                    {
-                                        observer.OnNext(notifications);
-                                    }
-                                }));
-                    }
+                                    observer.OnNext(notifications);
+                                }
+                            },
+                            observer.OnError));
                 }
 
                 return disposable;

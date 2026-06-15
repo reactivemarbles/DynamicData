@@ -6,6 +6,8 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.List.Internal;
 
 internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
@@ -14,11 +16,13 @@ internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
     public IObservable<IChangeSet<T>> Run()
         => Observable.Create<IChangeSet<T>>(observer =>
         {
-            // Will be locking on cachedItems directly, instead of using an anonymous gate object. This is acceptable, since it's a privately-held object, there's no risk of deadlock from other consumers locking on it.
             var cachedItems = new List<T>();
 
+            // SynchronizeSafe with queue-first disposal: the DeliveryQueue is terminated and
+            // drained before the source subscription is disposed, ensuring no notifications
+            // can fire while the teardown (per-item Dispose) is in progress.
             var sourceSubscription = source
-                .Synchronize(cachedItems)
+                .SynchronizeSafe()
                 .SubscribeSafe(Observer.Create<IChangeSet<T>>(
                     onNext: changeSet =>
                     {
@@ -76,11 +80,7 @@ internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
             return Disposable.Create(() =>
             {
                 sourceSubscription.Dispose();
-
-                lock (cachedItems)
-                {
-                    ProcessFinalization(cachedItems);
-                }
+                ProcessFinalization(cachedItems);
             });
         });
 
