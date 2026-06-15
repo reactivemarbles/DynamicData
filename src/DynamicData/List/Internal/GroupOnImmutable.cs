@@ -42,7 +42,7 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
 
                 var publisher = grouper.Merge(reGroupFunc).NotEmpty().SubscribeSafe(observer);
 
-                return new CompositeDisposable(publisher, shared.Connect());
+                return new CompositeDisposable(publisher, shared.Connect(), queue);
             });
 
     private static IChangeSet<IGrouping<TObject, TGroupKey>> CreateChangeSet(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IDictionary<TGroupKey, IGrouping<TObject, TGroupKey>> initialStateOfGroups)

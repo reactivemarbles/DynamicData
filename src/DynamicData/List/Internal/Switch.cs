@@ -31,6 +31,6 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
 
                 var publisher = destination.Connect().SubscribeSafe(observer);
 
-                return new CompositeDisposable(destination, populator, publisher);
+                return new CompositeDisposable(destination, populator, publisher, queue);
             });
 }

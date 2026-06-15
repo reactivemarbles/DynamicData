@@ -44,6 +44,9 @@ internal sealed class Combiner<T>(ICollection<IObservable<IChangeSet<T>>> source
                             observer.OnError));
                 }
 
+                // Dispose subscriptions first (stops further notifications from arriving),
+                // then drain/terminate the shared queue.
+                disposable.Add(queue);
                 return disposable;
             });
 

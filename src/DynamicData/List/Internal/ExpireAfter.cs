@@ -168,18 +168,56 @@ internal sealed class ExpireAfter<T>
                 {
                     var removedItems = new List<T>(_expiringShadowIndexesBuffer.Count);
 
-                    // Iterate in shadow order. For each expired shadow entry, find the first occurrence
-                    // of the item in updater that we haven't already removed in this batch, and remove it.
-                    // If the item is no longer in the source (removed externally before delivery reached
-                    // our shadow), skip it. Duplicates are matched in shadow-iteration order.
-                    for (var i = 0; i < _expiringShadowIndexesBuffer.Count; ++i)
+                    // Pre-pass: how many entries before the first expiring index ALREADY differ
+                    // from the source? If the prefix matches, we can use shadow-position-based
+                    // removal which preserves correct occurrence identity even when duplicates
+                    // exist. If anything before the expiring entries differs, the shadow is
+                    // stale and we fall back to value-based IndexOf, which may remove a
+                    // different equal occurrence than originally scheduled but at least keeps
+                    // the source consistent with what subscribers see.
+                    var firstExpiringShadowIdx = _expiringShadowIndexesBuffer[0];
+                    var shadowInSync = _shadow.Count == updater.Count;
+                    if (shadowInSync)
                     {
-                        var item = _shadow[_expiringShadowIndexesBuffer[i]].Item;
-                        var idx = updater.IndexOf(item);
-                        if (idx >= 0)
+                        for (var i = 0; i <= firstExpiringShadowIdx && i < updater.Count; ++i)
                         {
-                            updater.RemoveAt(idx);
-                            removedItems.Add(item);
+                            if (!EqualityComparer<T>.Default.Equals(_shadow[i].Item, updater[i]))
+                            {
+                                shadowInSync = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (shadowInSync)
+                    {
+                        // Index-based removal in REVERSE shadow order so earlier indices stay
+                        // valid as we remove later items. This matches the legacy behaviour and
+                        // correctly distinguishes between equal duplicate occurrences with
+                        // different expiration times.
+                        for (var i = _expiringShadowIndexesBuffer.Count - 1; i >= 0; --i)
+                        {
+                            var shadowIdx = _expiringShadowIndexesBuffer[i];
+                            removedItems.Add(updater[shadowIdx]);
+                            updater.RemoveAt(shadowIdx);
+                        }
+                    }
+                    else
+                    {
+                        // Shadow is stale (concurrent external mutation has been queued but not
+                        // yet delivered to OnSourceNext). Fall back to value-based search.
+                        // Iterate shadow forward; for each expiring entry remove the first
+                        // matching live occurrence. Silently skip items that have already been
+                        // removed externally; the pending OnSourceNext will reconcile the shadow.
+                        for (var i = 0; i < _expiringShadowIndexesBuffer.Count; ++i)
+                        {
+                            var item = _shadow[_expiringShadowIndexesBuffer[i]].Item;
+                            var idx = updater.IndexOf(item);
+                            if (idx >= 0)
+                            {
+                                updater.RemoveAt(idx);
+                                removedItems.Add(item);
+                            }
                         }
                     }
 

@@ -44,7 +44,7 @@ internal sealed class GroupOn<TObject, TGroupKey>(IObservable<IChangeSet<TObject
                 var publisher = grouper.Merge(regrouperFunc).DisposeMany() // dispose removes as the grouping is disposable
                     .NotEmpty().SubscribeSafe(observer);
 
-                return new CompositeDisposable(publisher, shared.Connect());
+                return new CompositeDisposable(publisher, shared.Connect(), queue);
             });
 
     private static GroupWithAddIndicator GetCache(IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCaches, TGroupKey key)

@@ -127,11 +127,7 @@ public sealed class SourceList<T> : ISourceList<T>
     }
 
     /// <inheritdoc />
-    public void Dispose()
-    {
-        _cleanUp.Dispose();
-        _changesPreview.Dispose();
-    }
+    public void Dispose() => _cleanUp.Dispose();
 
     /// <inheritdoc />
     public void Edit(Action<IExtendedList<T>> updateAction)
