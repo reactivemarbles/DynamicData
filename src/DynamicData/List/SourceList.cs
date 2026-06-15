@@ -121,7 +121,7 @@ public sealed class SourceList<T> : ISourceList<T>
                     result = changes;
                 }
 
-                return result.Finally(observer.OnCompleted).SubscribeSafe(observer);
+                return result.SubscribeSafe(observer);
             });
 
         if (predicate is not null)
@@ -146,16 +146,21 @@ public sealed class SourceList<T> : ISourceList<T>
 
         _editLevel++;
 
-        if (_editLevel == 1)
+        try
         {
-            changes = _changesPreview.HasObservers ? _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview) : _readerWriter.Write(updateAction);
+            if (_editLevel == 1)
+            {
+                changes = _changesPreview.HasObservers ? _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview) : _readerWriter.Write(updateAction);
+            }
+            else
+            {
+                _readerWriter.WriteNested(updateAction);
+            }
         }
-        else
+        finally
         {
-            _readerWriter.WriteNested(updateAction);
+            _editLevel--;
         }
-
-        _editLevel--;
 
         if (changes is not null && changes.Count > 0 && _editLevel == 0)
         {
