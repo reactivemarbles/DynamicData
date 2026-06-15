@@ -124,9 +124,14 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
                 var transformed = _source.Transform(
                     t =>
                     {
-                        var childQueue = new SharedDeliveryQueue();
                         var collection = manySelector(t);
-                        var changes = childChanges(t).SynchronizeSafe(childQueue).Skip(1);
+
+                        // Per-child delivery via parameterless SynchronizeSafe: each child gets
+                        // its own internally-allocated DeliveryQueue tied to the subscription
+                        // lifetime, with queue-first disposal so in-flight deliveries complete
+                        // before teardown. No reason to use a SharedDeliveryQueue here since
+                        // each child has exactly one source feeding it.
+                        var changes = childChanges(t).SynchronizeSafe().Skip(1);
                         return new ManyContainer(collection, changes);
                     }).Publish();
 
