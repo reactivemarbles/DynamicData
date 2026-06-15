@@ -4,6 +4,7 @@
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 using DynamicData.Internal;
 
@@ -17,20 +18,37 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var destination = new SourceList<T>();
-
-                // Shared queue serializes the source-of-sources signal (Clear on switch)
-                // with the inner changeset stream feeding the destination, without holding
-                // a lock during destination.Edit (which would otherwise nest with the
-                // destination's own queue and risk cross-cache deadlock).
                 var queue = new SharedDeliveryQueue();
+                var destination = new SourceList<T>();
+                var errors = new Subject<IChangeSet<T>>();
+                var innerSubscription = new SerialDisposable();
 
-                var populator = Observable.Switch(
-                    _sources.SynchronizeSafe(queue).Do(
-                        _ => destination.Clear())).SynchronizeSafe(queue).PopulateInto(destination);
+                // The outer (sources) and every inner are routed through the same SharedDeliveryQueue.
+                // Both the per-source clear and the per-changeset destination write happen on the drain
+                // thread, so destination.Connect() emissions and any errors.OnError calls also originate
+                // from inside the drain. The downstream merge therefore sees pre-serialized inputs and
+                // uses UnsynchronizedMerge to avoid the ABBA-prone Observable.Merge gate. Inlines what
+                // Observable.Switch would have done (whose own gate would itself be ABBA-prone).
+                var sourcesSubscription = _sources
+                    .SynchronizeSafe(queue)
+                    .SubscribeSafe(
+                        onNext: newSource =>
+                        {
+                            destination.Clear();
+                            innerSubscription.Disposable = newSource
+                                .SynchronizeSafe(queue)
+                                .SubscribeSafe(
+                                    onNext: changes => destination.Edit(updater => updater.Clone(changes)),
+                                    onError: errors.OnError);
+                        },
+                        onError: errors.OnError);
 
-                var publisher = destination.Connect().SubscribeSafe(observer);
-
-                return new CompositeDisposable(destination, populator, publisher, queue);
+                return new CompositeDisposable(
+                    destination,
+                    errors,
+                    sourcesSubscription,
+                    innerSubscription,
+                    destination.Connect().UnsynchronizedMerge(errors).SubscribeSafe(observer),
+                    queue);
             });
 }
