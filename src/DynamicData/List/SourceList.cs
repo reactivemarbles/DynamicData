@@ -49,6 +49,12 @@ public sealed class SourceList<T> : ISourceList<T>
 
     private long _currentDeliveryVersion;
 
+    // Set true (under the queue gate) the instant a terminal notification is enqueued, so any
+    // Edit that lands between enqueue and the drain dequeueing the terminal can suppress its
+    // preview emission. Without this, a preview subscriber would observe a change whose main
+    // delivery is cleared from the queue when the terminal item is staged.
+    private bool _terminalEnqueued;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SourceList{T}"/> class.
     /// </summary>
@@ -172,7 +178,7 @@ public sealed class SourceList<T> : ISourceList<T>
 
     private void InvokeNextPreview(IChangeSet<T> changes)
     {
-        if (changes.Count != 0 && !_notifications.IsTerminated)
+        if (changes.Count != 0 && !_terminalEnqueued && !_notifications.IsTerminated)
         {
             _changesPreview.OnNext(changes);
         }
@@ -197,12 +203,14 @@ public sealed class SourceList<T> : ISourceList<T>
     private void NotifyCompleted()
     {
         using var notifications = _notifications.AcquireLock();
+        _terminalEnqueued = true;
         notifications.EnqueueCompleted();
     }
 
     private void NotifyError(Exception exception)
     {
         using var notifications = _notifications.AcquireLock();
+        _terminalEnqueued = true;
         notifications.EnqueueError(exception);
     }
 
