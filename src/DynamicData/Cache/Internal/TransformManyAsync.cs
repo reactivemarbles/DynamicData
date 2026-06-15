@@ -43,7 +43,15 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
             _tracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => _cache.Items, comparer, equalityComparer);
         }
 
-        public override void OnInner(IChangeSet<TDestination, TDestinationKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
+        public override void OnInner(IChangeSet<TDestination, TDestinationKey> child, TKey parentKey)
+        {
+            if (_cache.Lookup(parentKey) is { HasValue: true } entry)
+            {
+                entry.Value.Process(child);
+            }
+
+            _tracker.ProcessChangeSet(child, null);
+        }
 
         public override void OnDrainComplete(bool isFinal, bool wasReentrant) => _tracker.EmitChanges(Emitter);
 
@@ -72,6 +80,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
 
         private void SubscribeChild(TSource item, TKey key)
         {
+            // ChangeSetCache is passive; the mirror updates from OnInner on the queue thread.
             var entry = new ChangeSetCache<TDestination, TDestinationKey>(BuildInner(item, key));
             _cache.AddOrUpdate(entry, key);
             Context.Track(key, entry.Source);

@@ -37,7 +37,7 @@ internal sealed class MergeManyCacheChangeSets<TObject, TDestination, TDestinati
 
             // Merge the child changeset changes together and apply to the tracker
             var subMergeMany = shared
-                .MergeMany(chanceSetCache => chanceSetCache.Source)
+                .MergeMany(chanceSetCache => chanceSetCache.Source.Do(chanceSetCache.Process))
                 .SubscribeSafe(
                     changes => changeTracker.ProcessChangeSet(changes, !parentUpdate ? observer : null),
                     observer.OnError,

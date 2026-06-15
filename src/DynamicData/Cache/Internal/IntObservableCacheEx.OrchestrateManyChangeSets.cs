@@ -82,7 +82,15 @@ internal static partial class IntObservableCacheEx
             _tracker = new ChangeSetMergeTracker<TDest, TDestKey>(() => _cache.Items, comparer, equalityComparer);
         }
 
-        public override void OnInner(IChangeSet<TDest, TDestKey> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
+        public override void OnInner(IChangeSet<TDest, TDestKey> child, TKey parentKey)
+        {
+            if (_cache.Lookup(parentKey) is { HasValue: true } entry)
+            {
+                entry.Value.Process(child);
+            }
+
+            _tracker.ProcessChangeSet(child, null);
+        }
 
         public override void OnDrainComplete(bool isFinal, bool wasReentrant) => _tracker.EmitChanges(Emitter);
 
@@ -121,8 +129,8 @@ internal static partial class IntObservableCacheEx
 
         private void SubscribeChild(TSource item, TKey key)
         {
-            // Track applies queue serialization to entry.Source, so the inner stream (including
-            // ChangeSetCache.Clone via Do) does not need to be wrapped in Context.Serialize first.
+            // ChangeSetCache is passive; its Cache mirror is updated from OnInner on the queue
+            // thread. Track wraps the inner with the single SynchronizeSafe layer it needs.
             var entry = new ChangeSetCache<TDest, TDestKey>(_changeSetSelector(item, key).IgnoreSameReferenceUpdate());
             _cache.AddOrUpdate(entry, key);
             Context.Track(key, entry.Source);
@@ -150,7 +158,15 @@ internal static partial class IntObservableCacheEx
             _equalityComparer = equalityComparer;
         }
 
-        public override void OnInner(IChangeSet<TDest> child, TKey parentKey) => _tracker.ProcessChangeSet(child, null);
+        public override void OnInner(IChangeSet<TDest> child, TKey parentKey)
+        {
+            if (_entries.TryGetValue(parentKey, out var entry))
+            {
+                entry.Process(child);
+            }
+
+            _tracker.ProcessChangeSet(child, null);
+        }
 
         public override void OnDrainComplete(bool isFinal, bool wasReentrant) => _tracker.EmitChanges(Emitter);
 
@@ -180,6 +196,7 @@ internal static partial class IntObservableCacheEx
 
         private void SubscribeChild(TSource item, TKey key)
         {
+            // ClonedListChangeSet is passive; the mirror updates from OnInner on the queue thread.
             var entry = new ClonedListChangeSet<TDest>(_changeSetSelector(item, key).RemoveIndex(), _equalityComparer);
             _entries[key] = entry;
             Context.Track(key, entry.Source);
