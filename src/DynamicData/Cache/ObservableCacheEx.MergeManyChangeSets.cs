@@ -426,7 +426,7 @@ public static partial class ObservableCacheEx
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
 
-        return new MergeManyListChangeSets<TObject, TKey, TDestination>(source, observableSelector, equalityComparer).Run();
+        return source.OrchestrateManyChangeSets(observableSelector, equalityComparer);
     }
 
     /// <summary>
