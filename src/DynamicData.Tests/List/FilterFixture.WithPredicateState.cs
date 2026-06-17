@@ -1,8 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -42,12 +40,10 @@ public partial class FilterFixture
                 .ValidateChangeSets()
                 .RecordListItems(out var results);
 
-
             // Set initial state
             predicateState.OnNext(new());
 
             results.RecordedChangeSets.Should().BeEmpty("no source operations have been performed");
-
 
             // Test Add, with an included item
             var item1 = new Item() { Id = 1, IsIncluded = true };
@@ -56,13 +52,11 @@ public partial class FilterFixture
             results.RecordedChangeSets.Count.Should().Be(1, "one source operation was performed, with one included item added");
             ShouldBeValid(results, EnumerateFilteredItems());
 
-
             // Test Add, with an excluded item
             var item2 = new Item() { Id = 2, IsIncluded = false };
             source.Add(item2);
 
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("one source operation was performed, but no included items were affected");
-
 
             // Test AddRange, with both included and excluded items
             var item3 = new Item() { Id = 3, IsIncluded = false };
@@ -76,7 +70,6 @@ public partial class FilterFixture
             results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "one source operation was performed, with 3 included items added");
             ShouldBeValid(results, EnumerateFilteredItems());
 
-
             // Test Refresh, with no item mutations.
             source.Refresh(Enumerable.Range(0, source.Count));
 
@@ -84,7 +77,6 @@ public partial class FilterFixture
             results.RecordedChangeSets.Skip(2).First().Select(static change => change.Reason).Should().AllBeEquivalentTo(ListChangeReason.Refresh, "all included items should have been refreshed");
             results.RecordedChangeSets.Skip(2).First().Select(static change => change.Item.Current).Should().BeEquivalentTo(EnumerateFilteredItems(), "all included items should have been refreshed");
             ShouldBeValid(results, EnumerateFilteredItems());
-
 
             // Test Refresh, with item mutations affecting filtering.
             item1.IsIncluded = !item1.IsIncluded;
@@ -96,27 +88,23 @@ public partial class FilterFixture
             results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "one source operation was performed, with items being included and excluded");
             ShouldBeValid(results, EnumerateFilteredItems());
 
-
             // Test Remove, with an included item
             source.RemoveAt(3);
 
             results.RecordedChangeSets.Skip(4).Count().Should().Be(1, "one source operation was performed, with one included item affected");
             ShouldBeValid(results, EnumerateFilteredItems());
 
-
             // Test Remove, with an excluded item
             source.RemoveAt(3);
 
             results.RecordedChangeSets.Skip(5).Should().BeEmpty("one source operation was performed, but no included items were affected");
 
-            
             // Test Remove, with both included and excluded items
             source.RemoveRange(index: 2, count: 2);
 
             results.RecordedChangeSets.Skip(5).Count().Should().Be(1, "one source operation was performed, with one included item affected");
             ShouldBeValid(results, EnumerateFilteredItems());
 
-            
             // Test Replace, not affecting filtering
             var item9 = new Item() { Id = 9, IsIncluded = false };
             var item10 = new Item() { Id = 10, IsIncluded = true };
@@ -129,7 +117,6 @@ public partial class FilterFixture
             results.RecordedChangeSets.Skip(6).Count().Should().Be(1, "one source operation was performed, with one included item affected");
             ShouldBeValid(results, EnumerateFilteredItems());
 
-
             // Test Replace, affecting filtering
             var item11 = new Item() { Id = 11, IsIncluded = true };
             var item12 = new Item() { Id = 12, IsIncluded = false };
@@ -141,7 +128,6 @@ public partial class FilterFixture
 
             results.RecordedChangeSets.Skip(7).Count().Should().Be(1, "one source operation was performed, with one included item affected");
             ShouldBeValid(results, EnumerateFilteredItems());
-
 
             // Test Move of an included item, relative to another included item
             var item13 = new Item() { Id = 13, IsIncluded = true };
@@ -160,7 +146,6 @@ public partial class FilterFixture
             }
             ShouldBeValid(results, EnumerateFilteredItems());
 
-
             // Test Move of an excluded item
             source.Move(4, 2);
 
@@ -174,7 +159,6 @@ public partial class FilterFixture
                     results.RecordedChangeSets.Skip(9).Should().BeEmpty("one source operation was performed, a move, which are not propagated, as ordering is not preserved");
                     break;
             }
-
 
             // Test Clear, with included items
             source.Clear();
@@ -191,7 +175,6 @@ public partial class FilterFixture
             }
             ShouldBeValid(results, EnumerateFilteredItems());
 
-
             // Test Clear, with only excluded items
             source.Add(new Item() { Id = 14, IsIncluded = false });
             source.Clear();
@@ -207,7 +190,6 @@ public partial class FilterFixture
                     break;
             }
             ShouldBeValid(results, EnumerateFilteredItems());
-
 
             IEnumerable<Item> EnumerateFilteredItems()
                 => source.Items.Where(static item => item.IsIncluded);
@@ -231,13 +213,11 @@ public partial class FilterFixture
                 .ValidateChangeSets()
                 .RecordListItems(out var results);
 
-
             // Publish multiple state changes
             predicateState.OnNext(2);
             predicateState.OnNext(3);
 
             results.RecordedChangeSets.Should().BeEmpty("no source operations have been performed");
-
 
             // Test filtering of items, by state
             source.AddRange(new[]
@@ -270,9 +250,7 @@ public partial class FilterFixture
                 .ValidateChangeSets()
                 .RecordListItems(out var results);
 
-
             results.RecordedChangeSets.Should().BeEmpty("no source operations have been performed");
-
 
             // Test Add, with an included item
             var item1 = new Item() { Id = 1, IsIncluded = true };
@@ -338,7 +316,6 @@ public partial class FilterFixture
 
             results.RecordedChangeSets.Should().BeEmpty("the predicate state has not initialized");
 
-
             // Set initial state
             predicateState.OnNext(new());
 
@@ -361,7 +338,6 @@ public partial class FilterFixture
                 .ValidateSynchronization()
                 .ValidateChangeSets()
                 .RecordListItems(out var results);
-
 
             // Test filtering of items, by state
             source.AddRange(new[]
@@ -416,7 +392,6 @@ public partial class FilterFixture
                 .ValidateChangeSets()
                 .RecordListItems(out var results);
 
-
             // Test filtering of items, by state
             source.AddRange(new[]
             {
@@ -429,13 +404,11 @@ public partial class FilterFixture
             results.RecordedChangeSets.Count.Should().Be(1, "one source operation was performed");
             ShouldBeValid(results, EnumerateFilteredItems());
 
-
             // Publish a state change, to change the filtering
             predicateState.OnNext(2);
 
             results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "one source operation was performed");
             ShouldBeValid(results, EnumerateFilteredItems());
-
 
             IEnumerable<Item> EnumerateFilteredItems()
                 => source.Items.Where(item => item.Id == predicateState.Value);
@@ -505,7 +478,6 @@ public partial class FilterFixture
                 .ValidateChangeSets()
                 .RecordListItems(out var results);
 
-
             var error = new Exception("This is a test.");
             predicateState.OnError(error);
 
@@ -565,7 +537,6 @@ public partial class FilterFixture
             var predicateStates = GenerateRandomPredicateStates(
                 valueCount: 5_000,
                 randomizer: randomizer);
-
 
             using var source = new Subject<IChangeSet<Item>>();
 
@@ -711,7 +682,6 @@ public partial class FilterFixture
                 .ValidateChangeSets()
                 .RecordListItems(out var results);
 
-
             var error = new Exception("This is a test.");
             source.OnError(error);
 
@@ -773,7 +743,6 @@ public partial class FilterFixture
                 .ValidateChangeSets()
                 .RecordListItems(out var results);
 
-
             subscription.Dispose();
 
             source.HasObservers.Should().BeFalse("subscription disposal should be propagated to all input streams");
@@ -800,7 +769,6 @@ public partial class FilterFixture
                 .ValidateChangeSets()
                 .RecordListItems(out var results);
 
-
             // Initialize the predicate
             predicateState.OnNext(new object());
 
@@ -808,14 +776,12 @@ public partial class FilterFixture
             results.RecordedChangeSets[0].Should().BeEmpty("there are no items in the collection");
             ShouldBeValid(results, Enumerable.Empty<Item>());
 
-
             // Publish an empty changeset
             source.OnNext(ChangeSet<Item>.Empty);
 
             results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "a source operation was performed");
             results.RecordedChangeSets.Skip(1).First().Should().BeEmpty("the source changeset was empty");
             ShouldBeValid(results, Enumerable.Empty<Item>());
-
 
             // Publish a changeset with only excluded items
             source.OnNext(new ChangeSet<Item>()

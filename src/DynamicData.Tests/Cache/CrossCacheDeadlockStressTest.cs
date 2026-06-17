@@ -1,15 +1,10 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -796,8 +791,6 @@ public sealed class CrossCacheDeadlockStressTest
         CountAll(treeCache.Items).Should().Be(treeCount, "Tree has all markets across depths");
         treeCache.Items.Any(n => n.Children.Count > 0).Should().BeTrue("Tree has child nodes");
         treeCache2.Count.Should().BeGreaterThan(0, "Tree2 produces results");
-
-        
 
         // Side chains
         lastQuery.Should().NotBeNull("QueryWhenChanged(B) fired");

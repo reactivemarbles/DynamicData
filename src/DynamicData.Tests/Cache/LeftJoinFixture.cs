@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using DynamicData.Kernel;
@@ -134,7 +134,6 @@ public class LeftJoinFixture : IDisposable
 
         var refreshItem = _right.Lookup(2).Value;
 
-
         // Change pairing
         refreshItem.Name = "Device3";
         _right.Refresh(refreshItem);
@@ -143,7 +142,6 @@ public class LeftJoinFixture : IDisposable
         _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().NotContain(("Device2", 2));
         _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().Contain(("Device3", 2));
 
-
         // Remove pairing
         refreshItem.Name = "Device4";
         _right.Refresh(refreshItem);
@@ -151,14 +149,12 @@ public class LeftJoinFixture : IDisposable
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().NotContain(pair => pair.Key == 2);
 
-
         // Restore pairing
         refreshItem.Name = "Device2";
         _right.Refresh(refreshItem);
 
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().Contain(("Device2", 2));
-
 
         // No change
         _right.Refresh(refreshItem);
@@ -238,7 +234,6 @@ public class LeftJoinFixture : IDisposable
                 innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
             });
 
-        
         // Change pairing
         _right.AddOrUpdate(new DeviceMetaData(2,"Device3"));
 
@@ -246,20 +241,17 @@ public class LeftJoinFixture : IDisposable
         _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().NotContain(("Device2", 2));
         _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().Contain(("Device3", 2));
 
-
         // Remove pairing
         _right.AddOrUpdate(new DeviceMetaData(2,"Device4"));
 
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().NotContain(pair => pair.Key == 2);
 
-
         // Restore pairing
         _right.AddOrUpdate(new DeviceMetaData(2,"Device2"));
 
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.Select(pair => (pair.Device.Name, pair.MetaData.ValueOrDefault()?.Key)).Should().Contain(("Device2", 2));
-
 
         // No change
         _right.AddOrUpdate(new DeviceMetaData(2,"Device2"));

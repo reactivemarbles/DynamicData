@@ -1,10 +1,6 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 
 using DynamicData.Internal;
 
@@ -234,7 +230,7 @@ internal static class ToObservableChangeSet<TObject>
                         var lifetime = _expireAfter?.Invoke(item);
                         if (lifetime is TimeSpan lifetimeValue)
                         {
-                            var expireAtTicks = (now + Scheduler.Normalize(lifetimeValue)).UtcTicks;
+                            var expireAtTicks = (now + Sequencer.Normalize(lifetimeValue)).UtcTicks;
                             var expireAt = new DateTimeOffset(ticks: expireAtTicks - (expireAtTicks % TimeSpan.TicksPerMillisecond), offset: TimeSpan.Zero);
 
                             var expiration = new Expiration()

@@ -5,5 +5,6 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("DynamicData.Tests")]
+[assembly: InternalsVisibleTo("DynamicData.Benchmarks")]
 [assembly: InternalsVisibleTo("DynamicData.ReactiveUI")]
 [assembly: InternalsVisibleTo("DynamicData.Profile")]

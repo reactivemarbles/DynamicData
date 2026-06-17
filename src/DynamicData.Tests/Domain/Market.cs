@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading;
 using DynamicData.Kernel;
 using DynamicData.Tests.Utilities;
@@ -127,7 +126,6 @@ internal sealed class Market : IMarket, IDisposable
             y.Rating.CompareTo(x.Rating);
     }
 }
-
 
 internal sealed class FixedMarket : IMarket
 {

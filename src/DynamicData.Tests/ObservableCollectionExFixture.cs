@@ -1,4 +1,4 @@
-﻿
+
 using System.Collections.ObjectModel;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
@@ -34,7 +34,6 @@ public class ObservableCollectionExFixture
         var one = changeSet.Lookup("One").Value;
         one.Should().BeEquivalentTo(_person1);
     }
-
 
     [Fact]
     public void ReplacingAnItemWithSameProducesUpdate()

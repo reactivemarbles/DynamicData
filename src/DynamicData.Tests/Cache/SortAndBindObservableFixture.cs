@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
 
 namespace DynamicData.Tests.Cache;
-
 
 // Bind to a readonly observable collection
 public sealed class SortAndBindObservableToReadOnlyObservableCollection : SortAndBindObservableFixture
@@ -37,7 +35,6 @@ public abstract class SortAndBindObservableFixture : IDisposable
 {
     protected readonly ISourceCache<Person, string> Cache  = new SourceCache<Person, string>(p => p.Name);
 
-
     private readonly RandomPersonGenerator _generator = new();
 
     private readonly ChangeSetAggregator<Person, string> _results;
@@ -45,10 +42,8 @@ public abstract class SortAndBindObservableFixture : IDisposable
     private readonly SortExpressionComparer<Person> _oldestComparer = SortExpressionComparer<Person>.Descending(p => p.Age).ThenByAscending(p => p.Name);
     private readonly SortExpressionComparer<Person> _defaultComparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 
-
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "By Design.")]
-    protected readonly BehaviorSubject<IComparer<Person>> ComparerObservable;
-
+    private protected readonly BehaviorSubject<IComparer<Person>> ComparerObservable;
 
     protected SortAndBindObservableFixture()
     {
@@ -69,7 +64,6 @@ public abstract class SortAndBindObservableFixture : IDisposable
 
     protected abstract (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests();
 
-
     [Fact]
     public void SortInitialBatch()
     {
@@ -80,7 +74,6 @@ public abstract class SortAndBindObservableFixture : IDisposable
         _boundList.SequenceEqual(defaultOrder).Should().BeTrue();
     }
 
-    
     [Fact]
     public void ChangeSort()
     {
@@ -99,7 +92,6 @@ public abstract class SortAndBindObservableFixture : IDisposable
         var defaultOrder = people.OrderBy(p => p, _defaultComparer).ToList();
         _boundList.SequenceEqual(defaultOrder).Should().BeTrue();
     }
-
 
     public void Dispose()
     {

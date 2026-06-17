@@ -1,7 +1,5 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Xunit.Abstractions;

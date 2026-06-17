@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -17,7 +17,6 @@ public class EnsureUniqueKeysFixture: IDisposable
         _source = new SourceCache<Person, string>(p => p.Name);
         _results = _source.Connect(suppressEmptyChangeSets: false).EnsureUniqueKeys().AsAggregator();
     }
-
 
     [Fact]
     public void UniqueForAdds()
@@ -66,7 +65,6 @@ public class EnsureUniqueKeysFixture: IDisposable
         message1.First().Reason.Should().Be(ChangeReason.Refresh);
 
     }
-
 
     [Fact]
     public void CompoundRefresh1()
@@ -121,7 +119,6 @@ public class EnsureUniqueKeysFixture: IDisposable
         message1.First().Reason.Should().Be(ChangeReason.Refresh);
 
     }
-
 
     public void Dispose()
     {

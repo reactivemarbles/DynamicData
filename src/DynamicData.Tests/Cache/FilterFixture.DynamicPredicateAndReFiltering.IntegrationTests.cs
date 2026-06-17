@@ -1,8 +1,5 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 using Bogus;
@@ -41,7 +38,6 @@ public static partial class FilterFixture
                 using var predicateChanged  = new Subject<Func<Item, bool>>();
                 using var reapplyFilter     = new Subject<Unit>();
 
-
                 // UUT Initialization
                 using var subscription = source
                     .Filter(
@@ -50,7 +46,6 @@ public static partial class FilterFixture
                     .ValidateSynchronization()
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results);
-
 
                 // UUT Action
                 await Task.WhenAll(
@@ -75,7 +70,6 @@ public static partial class FilterFixture
                 results.Error.Should().BeNull();
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(items.Items.Where(finalPredicate), "the source colleciton should be filtered to include only items matching the final predicate");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // Final verification
                 results.ShouldNotSupportSorting("sorting is not supported by filter operators");

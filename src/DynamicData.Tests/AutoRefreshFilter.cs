@@ -1,9 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using DynamicData.Binding;
 using FluentAssertions;
 
@@ -31,7 +29,6 @@ public class AutoRefreshFilter
                 ex => {Assert.Fail("There should be no error");}
             );
     }
-
 
     [Fact]
     public void Test()

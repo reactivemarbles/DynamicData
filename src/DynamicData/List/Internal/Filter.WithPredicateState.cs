@@ -1,8 +1,6 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-
-using System.Reactive.Linq;
 
 using DynamicData.Internal;
 
@@ -87,14 +85,19 @@ internal static partial class Filter
                 IObservable<IChangeSet<T>> source)
             {
                 var onError = OnError;
+                var predicateStateSubscription = new SingleAssignmentDisposable();
+                var sourceSubscription = new SingleAssignmentDisposable();
 
-                _predicateStateSubscription = predicateState
+                _predicateStateSubscription = predicateStateSubscription;
+                _sourceSubscription = sourceSubscription;
+
+                predicateStateSubscription.Disposable = predicateState
                     .SubscribeSafe(
                         onNext: OnPredicateStateNext,
                         onError: onError,
                         onCompleted: OnPredicateStateCompleted);
 
-                _sourceSubscription = source
+                sourceSubscription.Disposable = source
                     .SubscribeSafe(
                         onNext: OnSourceNext,
                         onError: onError,
@@ -208,6 +211,9 @@ internal static partial class Filter
                     // no matter how many items come through from source, so just go ahead and complete now.
                     if (_hasSourceCompleted || (!_isLatestPredicateStateValid && _suppressEmptyChangeSets))
                     {
+                        _predicateStateSubscription?.Dispose();
+                        _sourceSubscription?.Dispose();
+
                         Monitor.Enter(DownstreamSynchronizationGate, ref hasDownstreamLock);
 
                         if (hasUpstreamLock)
@@ -281,6 +287,9 @@ internal static partial class Filter
                     // and the source has reported that it'll never change, so go ahead and complete now.
                     if (_hasPredicateStateCompleted || ((_itemStates.Count is 0) && _suppressEmptyChangeSets))
                     {
+                        _predicateStateSubscription?.Dispose();
+                        _sourceSubscription?.Dispose();
+
                         Monitor.Enter(DownstreamSynchronizationGate, ref hasDownstreamLock);
 
                         if (hasUpstreamLock)

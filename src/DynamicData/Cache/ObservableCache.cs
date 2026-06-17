@@ -3,9 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading;
 using DynamicData.Binding;
 using DynamicData.Cache;
@@ -338,25 +335,20 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private void ResumeNotifications()
     {
-        bool emitResume;
-
         using (var notifications = _notifications.AcquireLock())
         {
             Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Notifications without Suspend Notifications instance");
 
-            (var changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
+            var (changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
             if (changes is not null)
             {
                 notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
             }
-        }
 
-        // Emit the resume signal after releasing the delivery scope so that
-        // accumulated changes are delivered first
-        if (emitResume)
-        {
-            using var readLock = _notifications.AcquireReadLock();
-            _suspensionTracker.Value.EmitResumeNotification();
+            if (emitResume)
+            {
+                _suspensionTracker.Value.EmitResumeNotification();
+            }
         }
     }
 

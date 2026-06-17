@@ -1,18 +1,13 @@
-﻿
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
 
 namespace DynamicData.Tests.Cache;
-
-
-
-
 
 public sealed class SortAndVirtualizeWithComparerChangesFixture : SortAndVirtualizeFixtureBase
 {
@@ -85,10 +80,9 @@ public abstract class SortAndVirtualizeFixtureBase : IDisposable
 
     protected readonly SourceCache<Person, string> Source = new(p => p.Name);
     protected readonly IComparer<Person> Comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
-    protected readonly ISubject<IVirtualRequest> VirtualRequests = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 25));
+    private protected readonly ISubject<IVirtualRequest> VirtualRequests = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 25));
 
     protected readonly ChangeSetAggregator<Person, string, VirtualContext<Person>> Aggregator;
-
 
     protected SortAndVirtualizeFixtureBase()
     {
@@ -100,9 +94,7 @@ public abstract class SortAndVirtualizeFixtureBase : IDisposable
 #pragma warning restore CA2214
     }
 
-
     protected abstract ChangeSetAggregator<Person, string, VirtualContext<Person>> SetUpTests();
-
 
     [Fact]
     public void InitialBatches()
@@ -115,15 +107,12 @@ public abstract class SortAndVirtualizeFixtureBase : IDisposable
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.Should().BeEquivalentTo(expectedResult);
 
-
         VirtualRequests.OnNext(new VirtualRequest(25,50));
 
         expectedResult = people.OrderBy(p => p, Comparer).Skip(25).Take(50).ToList();
          actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.Should().BeEquivalentTo(expectedResult);
     }
-
-
 
     [Fact]
     public void OverlappingShift()
@@ -170,7 +159,6 @@ public abstract class SortAndVirtualizeFixtureBase : IDisposable
         actualResult.SequenceEqual(expectedResult).Should().Be(true);
     }
 
-
     [Fact]
     public void AddOutsideOfRange()
     {
@@ -183,7 +171,6 @@ public abstract class SortAndVirtualizeFixtureBase : IDisposable
 
         // only the initials message should have been received
         Aggregator.Messages.Count.Should().Be(1);
-
 
         people.Add(person);
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
@@ -205,7 +192,6 @@ public abstract class SortAndVirtualizeFixtureBase : IDisposable
 
         var changes = Aggregator.Messages[1];
         changes.Count.Should().Be(2);
-
 
         var firstChange = changes.First();
         firstChange.Reason.Should().Be(ChangeReason.Remove);
@@ -252,8 +238,6 @@ public abstract class SortAndVirtualizeFixtureBase : IDisposable
         actualResult.SequenceEqual(expectedResult).Should().Be(true);
     }
 
-
-
     [Fact]
     public void UpdateOutOfRange()
     {
@@ -271,7 +255,6 @@ public abstract class SortAndVirtualizeFixtureBase : IDisposable
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.SequenceEqual(expectedResult).Should().Be(true);
     }
-
 
     [Fact]
     public void RemoveRange()
@@ -321,7 +304,6 @@ public abstract class SortAndVirtualizeFixtureBase : IDisposable
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.SequenceEqual(expectedResult).Should().Be(true);
     }
-
 
     [Fact]
     public void RefreshInRange()
@@ -390,7 +372,6 @@ public abstract class SortAndVirtualizeFixtureBase : IDisposable
         var secondChange = changes.Skip(1).First();
         secondChange.Reason.Should().Be(ChangeReason.Add);
         secondChange.Current.Should().Be(new Person("P026", 26));
-
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);

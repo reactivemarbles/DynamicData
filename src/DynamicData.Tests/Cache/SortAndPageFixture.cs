@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using DynamicData.Binding;
@@ -83,10 +82,9 @@ public abstract class SortAndPageFixtureBase : IDisposable
 
     protected readonly SourceCache<Person, string> Source = new(p => p.Name);
     protected readonly IComparer<Person> Comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
-    protected readonly ISubject<IPageRequest> PageRequests = new BehaviorSubject<IPageRequest>(new PageRequest(1, 25));
+    private protected readonly ISubject<IPageRequest> PageRequests = new BehaviorSubject<IPageRequest>(new PageRequest(1, 25));
 
     protected readonly ChangeSetAggregator<Person, string, PageContext<Person>> Aggregator;
-
 
     protected SortAndPageFixtureBase()
     {
@@ -98,9 +96,7 @@ public abstract class SortAndPageFixtureBase : IDisposable
 #pragma warning restore CA2214
     }
 
-
     protected abstract ChangeSetAggregator<Person, string, PageContext<Person>> SetUpTests();
-
 
     [Fact]
     public void InitialBatches()
@@ -112,7 +108,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.Should().BeEquivalentTo(expectedResult);
-
 
         PageRequests.OnNext(new PageRequest(3, 25));
 
@@ -127,8 +122,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
     [Fact]
     public void ThrowsForNegativeSizeParameters() => Assert.Throws<ArgumentException>(() => PageRequests.OnNext(new PageRequest(1, -1)));
 
-
-
     [Fact]
     public void PageGreaterThanNumberOfPagesAvailable()
     {
@@ -142,7 +135,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.Should().BeEquivalentTo(expectedResult);
     }
-
 
     [Fact]
     public void OverlappingShift()
@@ -189,7 +181,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         actualResult.SequenceEqual(expectedResult).Should().Be(true);
     }
 
-
     [Fact]
     public void AddOutsideOfRange()
     {
@@ -202,7 +193,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
 
         // only the initials message should have been received
         Aggregator.Messages.Count.Should().Be(1);
-
 
         people.Add(person);
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
@@ -224,7 +214,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
 
         var changes = Aggregator.Messages[1];
         changes.Count.Should().Be(2);
-
 
         var firstChange = changes.First();
         firstChange.Reason.Should().Be(ChangeReason.Remove);
@@ -271,8 +260,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         actualResult.SequenceEqual(expectedResult).Should().Be(true);
     }
 
-
-
     [Fact]
     public void UpdateOutOfRange()
     {
@@ -290,7 +277,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.SequenceEqual(expectedResult).Should().Be(true);
     }
-
 
     [Fact]
     public void RemoveRange()
@@ -340,7 +326,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.SequenceEqual(expectedResult).Should().Be(true);
     }
-
 
     [Fact]
     public void RefreshInRange()
@@ -409,7 +394,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         var secondChange = changes.Skip(1).First();
         secondChange.Reason.Should().Be(ChangeReason.Add);
         secondChange.Current.Should().Be(new Person("P026", 26));
-
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);

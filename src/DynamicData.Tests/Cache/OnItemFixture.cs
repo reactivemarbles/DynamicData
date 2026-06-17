@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -127,7 +127,6 @@ public class OnItemFixture
         public Item Item { get; set; }
 
         public bool? Active { get; set; }
-
 
     }
 

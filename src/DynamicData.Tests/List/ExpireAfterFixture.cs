@@ -2,11 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
-
-using Microsoft.Reactive.Testing;
 
 using Bogus;
 using FluentAssertions;
@@ -195,7 +191,6 @@ public sealed class ExpireAfterFixture
 
         // Not testing Refresh changes, since ISourceList<T> doesn't actually provide an API to generate them.
 
-
         // Verify initial state, after all emissions
         results.Error.Should().BeNull();
         results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
@@ -331,7 +326,6 @@ public sealed class ExpireAfterFixture
         source.Move(2, 3);
         scheduler.AdvanceBy(1);
 
-
         // Verify initial state, after all emissions
         results.Error.Should().BeNull();
         results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
@@ -414,7 +408,6 @@ public sealed class ExpireAfterFixture
 
         var item1 = new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(10) };
         source.Add(item1);
-
 
         results.Error.Should().BeNull();
         results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
@@ -554,7 +547,7 @@ public sealed class ExpireAfterFixture
     {
         using var source = new TestSourceList<StressItem>();
 
-        var scheduler = ThreadPoolScheduler.Instance;
+        var scheduler = ThreadPoolSequencer.Instance;
 
         using var subscription = source
             .ExpireAfter(
@@ -586,7 +579,7 @@ public sealed class ExpireAfterFixture
     {
         using var source = new TestSourceList<StressItem>();
 
-        var scheduler = ThreadPoolScheduler.Instance;
+        var scheduler = ThreadPoolSequencer.Instance;
 
         using var subscription = source
             .ExpireAfter(

@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Reactive.Subjects;
 
 namespace DynamicData.Tests.Domain;
 

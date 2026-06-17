@@ -1,7 +1,5 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Concurrency;
 using Bogus;
 
 namespace DynamicData.Tests.Utilities;
@@ -14,5 +12,5 @@ internal static class FakerExtensions
 
     public static IObservable<T> IntervalGenerate<T>(this Faker<T> faker, TimeSpan period, IScheduler? scheduler = null)
          where T : class =>
-            Observable.Interval(period, scheduler ?? DefaultScheduler.Instance).Select(_ => faker.Generate());
+            Observable.Interval(period, scheduler ?? Sequencer.Default).Select(_ => faker.Generate());
 }

@@ -1,11 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using Bogus;
 using DynamicData.Kernel;
@@ -98,7 +93,7 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         using var connect = merged.Connect();
 
         // Start asynchrononously modifying the parent list and the child lists
-        using var addingSub = AddRemoveStress(marketCount, priceCount, Environment.ProcessorCount, TaskPoolScheduler.Default)
+        using var addingSub = AddRemoveStress(marketCount, priceCount, Environment.ProcessorCount, TaskPoolSequencer.Default)
             .Finally(() => adding = false)
             .Subscribe();
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,9 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -345,7 +342,7 @@ public sealed class WhenPropertyChangedRaceFixture
             var items = Enumerable.Range(0, itemCount).Select(i => new KeyedActivable(i)).ToList();
 
             using var mutator = cache.Connect()
-                .ObserveOn(TaskPoolScheduler.Default)
+                .ObserveOn(TaskPoolSequencer.Default)
                 .Subscribe(changes =>
                 {
                     foreach (var change in changes)
@@ -358,7 +355,7 @@ public sealed class WhenPropertyChangedRaceFixture
                 });
 
             using var results = cache.Connect()
-                .ObserveOn(TaskPoolScheduler.Default)
+                .ObserveOn(TaskPoolSequencer.Default)
                 .AutoRefresh(x => x.Activated)
                 .Filter(x => x.Activated)
                 .AsAggregator();

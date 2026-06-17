@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Reactive.Linq;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -73,7 +72,6 @@ public class ReadonlyCollectionBindCacheFixture : IDisposable
     {
         RunTest(true);
         RunTest(false);
-
 
         void RunTest(bool useReplace)
         {

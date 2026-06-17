@@ -1,4 +1,4 @@
-﻿#if SUPPORTS_BINDINGLIST
+#if SUPPORTS_BINDINGLIST
 
 using System;
 using System.ComponentModel;
@@ -56,7 +56,6 @@ namespace DynamicData.Tests.Binding
             _source.Clear();
             _collection.Count.Should().Be(0, "Should be 100 items in the collection");
         }
-
 
         [Fact]
         public void RemoveSourceRemovesFromTheDestination()

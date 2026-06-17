@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Reactive.Concurrency;
+using System.Collections.Generic;
 
 namespace DynamicData.Tests.Utilities;
 

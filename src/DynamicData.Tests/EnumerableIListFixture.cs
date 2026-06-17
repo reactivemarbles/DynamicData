@@ -1,9 +1,6 @@
-﻿using System;
+using System;
 using DynamicData.Cache.Internal;
 using System.Collections.Generic;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using DynamicData.Kernel;
 using Xunit;
 
@@ -50,7 +47,7 @@ namespace DynamicData.Tests
             var exSubject = new Subject<Exception>();
 
             object exceptionRecived = default!;
-            exSubject.ObserveOn(ImmediateScheduler.Instance).Subscribe(ex => { exceptionRecived = ex; });
+            exSubject.ObserveOn(Sequencer.Immediate).Subscribe(ex => { exceptionRecived = ex; });
             exSubject.OnNext(new UnspecifiedIndexException());
 
             Assert.IsType<UnspecifiedIndexException>(exceptionRecived);

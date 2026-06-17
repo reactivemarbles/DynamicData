@@ -1,5 +1,4 @@
 using System;
-using System.Reactive.Linq;
 
 using DynamicData.Aggregation;
 using DynamicData.Kernel;

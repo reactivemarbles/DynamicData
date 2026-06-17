@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -17,14 +17,12 @@ internal sealed class NoOpEqualityComparer<T> : IEqualityComparer<T>
     public int GetHashCode([DisallowNull] T obj) => throw new NotImplementedException();
 }
 
-
 internal sealed class InvertedComparer<T>(IComparer<T> original) : IComparer<T>
 {
     private readonly IComparer<T> _original = original;
 
     public int Compare(T x, T y) => _original.Compare(x, y) * -1;
 }
-
 
 internal static class ComparerExtensions
 {

@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reactive.Subjects;
 
 using BenchmarkDotNet.Attributes;
 
@@ -98,7 +97,6 @@ public class Filter_Cache_WithPredicateState
             changeSets.Add(items.CaptureChanges());
         }
         _changeSets = changeSets.MoveToImmutable();
-
 
         var predicateStates = ImmutableArray.CreateBuilder<int>(initialCapacity: 5_000);
         while (predicateStates.Count < predicateStates.Capacity)

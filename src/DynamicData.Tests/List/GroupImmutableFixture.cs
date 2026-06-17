@@ -1,7 +1,5 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Subjects;
 
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;

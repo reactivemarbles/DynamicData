@@ -90,7 +90,6 @@ public class LeftJoinManyFixture : IDisposable
 
         var refreshPerson = _people.Lookup("Person #2").Value;
 
-
         // Change pairing
         refreshPerson.ParentName = "Person #3";
         _people.Refresh(refreshPerson);
@@ -99,7 +98,6 @@ public class LeftJoinManyFixture : IDisposable
         _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent.Name, child.Name))).Should().NotContain(("Person #1", "Person #2"));
         _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent.Name, child.Name))).Should().Contain(("Person #3", "Person #2"));
 
-
         // Remove pairing
         refreshPerson.ParentName = "Person #4";
         _people.Refresh(refreshPerson);
@@ -107,14 +105,12 @@ public class LeftJoinManyFixture : IDisposable
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.SelectMany(family => family.Children.Select(child => (parentName: family.Parent.Name, chilldName: child.Name))).Should().NotContain(pair => pair.chilldName == "Person #2");
 
-
         // Restore pairing
         refreshPerson.ParentName = "Person #1";
         _people.Refresh(refreshPerson);
 
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent.Name, child.Name))).Should().Contain(("Person #1", "Person #2"));
-
 
         // No change
         _people.Refresh(refreshPerson);
@@ -196,7 +192,6 @@ public class LeftJoinManyFixture : IDisposable
                 innerCache.AddOrUpdate(new Person() { Name = "Person #3", ParentName = "Person #2" } );
             });
 
-        
         // Change pairing
         _people.AddOrUpdate(new Person() { Name = "Person #2", ParentName = "Person #3" });
 
@@ -204,20 +199,17 @@ public class LeftJoinManyFixture : IDisposable
         _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent.Name, child.Name))).Should().NotContain(("Person #1", "Person #2"));
         _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent.Name, child.Name))).Should().Contain(("Person #3", "Person #2"));
 
-
         // Remove pairing
         _people.AddOrUpdate(new Person() { Name = "Person #2", ParentName = "Person #4" });
 
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.SelectMany(family => family.Children.Select(child => (parentName: family.Parent.Name, chilldName: child.Name))).Should().NotContain(pair => pair.chilldName == "Person #2");
 
-
         // Restore pairing
         _people.AddOrUpdate(new Person() { Name = "Person #2", ParentName = "Person #1" });
 
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent.Name, child.Name))).Should().Contain(("Person #1", "Person #2"));
-
 
         // No change
         _people.AddOrUpdate(new Person() { Name = "Person #2", ParentName = "Person #1" });

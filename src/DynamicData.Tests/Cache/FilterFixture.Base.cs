@@ -1,7 +1,5 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 using FluentAssertions;
 using Xunit;
@@ -32,7 +30,6 @@ public static partial class FilterFixture
                 new Item() { Id = 6, IsIncluded = false }
             });
 
-
             // UUT Initialization
             using var subscription = BuildUut(
                     source:                     source.Connect(),
@@ -46,7 +43,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset was published");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all matching items should have been added");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action
             source.Remove(source.Items.Where(static item => !item.IsIncluded).ToArray());
@@ -63,7 +59,6 @@ public static partial class FilterFixture
             }
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
             // Final verification
             results.ShouldNotSupportSorting("sorting is not supported by filter operators");
         }
@@ -75,7 +70,6 @@ public static partial class FilterFixture
         {
             // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
-
 
             // UUT Intialization
             using var subscription = BuildUut(
@@ -89,7 +83,6 @@ public static partial class FilterFixture
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Should().BeEmpty("no source operations were performed");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action
             source.AddOrUpdate(new[]
@@ -106,7 +99,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all matching items should have been added");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // Final verification
             results.ShouldNotSupportSorting("sorting is not supported by filter operators");
@@ -147,7 +139,6 @@ public static partial class FilterFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(items, "all matching items should have been added");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
             // UUT Action
             source.OnNext(new ChangeSet<Item, int>()
             {
@@ -166,7 +157,6 @@ public static partial class FilterFixture
                 results.RecordedChangeSets.Skip(1).Should().BeEmpty("empty changesets should be suppressed");
             }
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // Final verification
             results.ShouldNotSupportSorting("sorting is not supported by filter operators");
@@ -190,7 +180,6 @@ public static partial class FilterFixture
                 new Item() { Id = 6, IsIncluded = false }
             });
 
-
             // UUT Initialization
             using var subscription = BuildUut(
                     source:                     source.Connect(),
@@ -205,7 +194,6 @@ public static partial class FilterFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all matching items should have propagated");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
             // UUT Action (add items)
             foreach (var item in source.Items)
                 item.IsIncluded = true;
@@ -218,7 +206,6 @@ public static partial class FilterFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all newly-matching items should have been added");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
             // UUT Action (remove items)
             foreach (var item in source.Items.Take(3))
                 item.IsIncluded = false;
@@ -230,7 +217,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.ElementAt(2).ShouldHaveRefreshed(source.Items.Skip(3), "all unchanged items should have been refreshed");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all newly-excluded items should have been removed");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // Final verification
             results.ShouldNotSupportSorting("sorting is not supported by filter operators");
@@ -254,7 +240,6 @@ public static partial class FilterFixture
                 new Item() { Id = 6, IsIncluded = false }
             });
 
-
             // UUT Intialization
             using var subscription = BuildUut(
                     source:                     source.Connect(),
@@ -268,7 +253,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset was published");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all matching items should have propagated");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action (add and update items)
             source.AddOrUpdate(new[]
@@ -286,7 +270,6 @@ public static partial class FilterFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all newly-matching items should have been added");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
             // UUT Action (remove and update items)
             source.AddOrUpdate(new[]
             {
@@ -302,7 +285,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "1 source operation was performed");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all newly-excluded items should have been removed");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // Final verification
             results.ShouldNotSupportSorting("sorting is not supported by filter operators");
@@ -326,7 +308,6 @@ public static partial class FilterFixture
                 new Item() { Id = 6, IsIncluded = false }
             });
 
-
             // UUT Initialization
             using var subscription = BuildUut(
                     source:                     source.Connect(),
@@ -341,7 +322,6 @@ public static partial class FilterFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all matching items should have propagated");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
             // UUT Action
             source.Remove(source.Items.Where(Item.FilterByIsIncluded).ToArray());
 
@@ -349,7 +329,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 source operation was performed");
             results.RecordedItemsByKey.Values.Should().BeEmpty("all matching items were removed");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // Final verification
             results.ShouldNotSupportSorting("sorting is not supported by filter operators");

@@ -1,8 +1,6 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-
-using System.Reactive.Linq;
 
 namespace DynamicData.Kernel;
 
@@ -146,7 +144,12 @@ public static class OptionObservableExtensions
     /// <returns>An Observable with the Values.</returns>
     /// <remarks>Observable version of <seealso cref="OptionExtensions.SelectValues{T}(IEnumerable{Optional{T}})"/>.</remarks>
     public static IObservable<T> SelectValues<T>(this IObservable<Optional<T>> source)
-        where T : notnull => source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
+        where T : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+
+        return source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
+    }
 
     /// <summary>
     /// Converts an Observable of <see cref="Optional{T}"/> into an IObservable of <typeparamref name="T"/> by extracting the
@@ -162,6 +165,7 @@ public static class OptionObservableExtensions
         where T : notnull
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
 
         return source.Select(optional => optional.HasValue ? optional.Value : valueSelector());
     }

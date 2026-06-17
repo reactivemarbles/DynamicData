@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using DynamicData.Tests.Domain;
@@ -130,7 +130,6 @@ public class TransformFixture : IDisposable
         _results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
         _results.Messages[0].Replaced.Should().Be(0, "Should be 1 update");
     }
-
 
     [Fact]
     public void MultipleSubscribersShouldNotShareState()

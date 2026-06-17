@@ -2,7 +2,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Reactive.Linq;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 
@@ -43,7 +42,6 @@ public class IObservableListBindListFixture : IDisposable
         var test3 = Test(new BindingOptions(105, ResetOnFirstTimeLoad: false));
         var test4 = Test(BindingOptions.NeverFireReset());
 
-
         test1.action.Should().Be(NotifyCollectionChangedAction.Reset);
         test2.action.Should().Be(NotifyCollectionChangedAction.Reset);
         test3.action.Should().Be(NotifyCollectionChangedAction.Add);
@@ -65,7 +63,6 @@ public class IObservableListBindListFixture : IDisposable
                     result = events;
                 });
 
-
             var binder = options == null
                 ? _source.Connect().Bind(list).Subscribe()
                 : _source.Connect().Bind(list, options.Value).Subscribe();
@@ -82,13 +79,11 @@ public class IObservableListBindListFixture : IDisposable
     {
         var people = _generator.Take(100).ToArray();
 
-
         // check whether reset is fired with different params
         var test1 = Test();
         var test2 = Test(new BindingOptions(95));
         var test3 = Test(new BindingOptions(105, ResetOnFirstTimeLoad: false));
         var test4 = Test(BindingOptions.NeverFireReset());
-
 
         test1.action.Should().Be(NotifyCollectionChangedAction.Reset);
         test2.action.Should().Be(NotifyCollectionChangedAction.Reset);
@@ -121,8 +116,6 @@ public class IObservableListBindListFixture : IDisposable
             return (result!.Value, list);
         }
     }
-
-
 
     [Fact]
     public void AddRange()

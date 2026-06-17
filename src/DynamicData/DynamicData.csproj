@@ -8,12 +8,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="6.1.0" />
+    <PackageReference Include="ReactiveUI.Primitives" Version="5.3.0" />
+    <PackageReference Include="ReactiveUI.Primitives.Extensions" Version="5.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="DynamicData.Kernel" />
     <Using Include="DynamicData.Internal" />
+    <Using Include="ReactiveUI.Primitives.Core" />
+    <Using Include="ReactiveUI.Primitives.Concurrency" />
+    <Using Include="ReactiveUI.Primitives.Disposables" />
+    <Using Include="ReactiveUI.Primitives.Signals" />
+    <Using Include="ReactiveUI.Primitives.RxVoid" Alias="Unit" />
+    <Using Include="ReactiveUI.Primitives.Concurrency.ISequencer" Alias="IScheduler" />
   </ItemGroup>
 
   <PropertyGroup>

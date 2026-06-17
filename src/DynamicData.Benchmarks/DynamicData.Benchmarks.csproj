@@ -23,6 +23,12 @@
     <None Include="BenchmarkDotNet.Artifacts\**\*" />
   </ItemGroup>
   <ItemGroup>
+    <Using Include="DynamicData.Internal" />
+    <Using Include="ReactiveUI.Primitives.Concurrency" />
+    <Using Include="ReactiveUI.Primitives.RxVoid" Alias="Unit" />
+    <Using Include="ReactiveUI.Primitives.Concurrency.ISequencer" Alias="IScheduler" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="BenchmarkDotNet.Artifacts\" />
   </ItemGroup>
 </Project>

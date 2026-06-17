@@ -1,7 +1,7 @@
-﻿[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Profile")]
+﻿[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Benchmarks")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Profile")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.ReactiveUI")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Tests")]
-[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v9.0", FrameworkDisplayName=".NET 9.0")]
 namespace DynamicData.Aggregation
 {
     public readonly struct AggregateItem<TObject> : System.IEquatable<DynamicData.Aggregation.AggregateItem<TObject>>
@@ -27,7 +27,7 @@ namespace DynamicData.Aggregation
         public static System.IObservable<DynamicData.Aggregation.IAggregateChangeSet<TObject>> ForAggregation<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<T> InvalidateWhen<T>(this System.IObservable<T> source, System.IObservable<System.Reactive.Unit> invalidate) { }
+        public static System.IObservable<T> InvalidateWhen<T>(this System.IObservable<T> source, System.IObservable<ReactiveUI.Primitives.RxVoid> invalidate) { }
         public static System.IObservable<T> InvalidateWhen<T, TTrigger>(this System.IObservable<T> source, System.IObservable<TTrigger?> invalidate) { }
     }
     public static class AvgEx
@@ -233,7 +233,7 @@ namespace DynamicData.Alias
 {
     public static class ObservableCacheAlias
     {
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, System.IObservable<System.Reactive.Unit> forceTransform)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -241,7 +241,7 @@ namespace DynamicData.Alias
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, TDestination> transformFactory, System.IObservable<System.Reactive.Unit> forceTransform)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, TDestination> transformFactory, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -254,7 +254,7 @@ namespace DynamicData.Alias
             where TDestinationKey :  notnull
             where TSource :  notnull
             where TSourceKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Reactive.Unit> forceTransform)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -262,7 +262,7 @@ namespace DynamicData.Alias
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Reactive.Unit> forceTransform)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -279,7 +279,7 @@ namespace DynamicData.Alias
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Where<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, bool>> predicateChanged)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Where<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, bool>> predicateChanged, System.IObservable<System.Reactive.Unit> reapplyFilter)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Where<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, bool>> predicateChanged, System.IObservable<ReactiveUI.Primitives.RxVoid> reapplyFilter)
             where TObject :  notnull
             where TKey :  notnull { }
     }
@@ -322,7 +322,7 @@ namespace DynamicData.Binding
     }
     public static class BindingListEx
     {
-        public static System.IObservable<System.Reactive.EventPattern<System.ComponentModel.ListChangedEventArgs>> ObserveCollectionChanges(this System.ComponentModel.IBindingList source) { }
+        public static System.IObservable<ReactiveUI.Primitives.Core.EventPattern<System.ComponentModel.ListChangedEventArgs>> ObserveCollectionChanges(this System.ComponentModel.IBindingList source) { }
         public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  T>(this System.ComponentModel.BindingList<T> source)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
@@ -423,7 +423,7 @@ namespace DynamicData.Binding
     }
     public static class ObservableCollectionEx
     {
-        public static System.IObservable<System.Reactive.EventPattern<System.Collections.Specialized.NotifyCollectionChangedEventArgs>> ObserveCollectionChanges(this System.Collections.Specialized.INotifyCollectionChanged source) { }
+        public static System.IObservable<ReactiveUI.Primitives.Core.EventPattern<System.Collections.Specialized.NotifyCollectionChangedEventArgs>> ObserveCollectionChanges(this System.Collections.Specialized.INotifyCollectionChanged source) { }
         public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.Collections.ObjectModel.ObservableCollection<T> source)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.Collections.ObjectModel.ReadOnlyObservableCollection<T> source)
@@ -470,7 +470,7 @@ namespace DynamicData.Binding
         public int InitialCapacity { get; init; }
         public bool ResetOnFirstTimeLoad { get; init; }
         public int ResetThreshold { get; init; }
-        public System.Reactive.Concurrency.IScheduler? Scheduler { get; init; }
+        public ReactiveUI.Primitives.Concurrency.ISequencer? Scheduler { get; init; }
         public bool UseBinarySearch { get; init; }
         public bool UseReplaceForUpdates { get; init; }
     }
@@ -1132,37 +1132,37 @@ namespace DynamicData
         public static DynamicData.IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, bool applyLocking = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> AsyncDisposeMany<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Action<System.IObservable<System.Reactive.Unit>> disposalsCompletedAccessor)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> AsyncDisposeMany<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Action<System.IObservable<ReactiveUI.Primitives.RxVoid>> disposalsCompletedAccessor)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.TimeSpan? changeSetBuffer = default, System.TimeSpan? propertyChangeThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.TimeSpan? changeSetBuffer = default, System.TimeSpan? propertyChangeThrottle = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject : System.ComponentModel.INotifyPropertyChanged
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey, TProperty>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Linq.Expressions.Expression<System.Func<TObject, TProperty>> propertyAccessor, System.TimeSpan? changeSetBuffer = default, System.TimeSpan? propertyChangeThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey, TProperty>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Linq.Expressions.Expression<System.Func<TObject, TProperty>> propertyAccessor, System.TimeSpan? changeSetBuffer = default, System.TimeSpan? propertyChangeThrottle = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject : System.ComponentModel.INotifyPropertyChanged
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.IObservable<TAny>> reevaluator, System.TimeSpan? changeSetBuffer = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.IObservable<TAny>> reevaluator, System.TimeSpan? changeSetBuffer = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, TKey, System.IObservable<TAny>> reevaluator, System.TimeSpan? changeSetBuffer = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, TKey, System.IObservable<TAny>> reevaluator, System.TimeSpan? changeSetBuffer = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Batch<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.TimeSpan timeSpan, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Batch<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.TimeSpan timeSpan, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, System.TimeSpan? timeOut = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, System.TimeSpan? timeOut = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, System.IObservable<System.Reactive.Unit>? timer = null, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, System.IObservable<ReactiveUI.Primitives.RxVoid>? timer = null, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, System.TimeSpan? timeOut = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, System.TimeSpan? timeOut = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.PageContext<TObject>>> source, System.Collections.Generic.IList<TObject> targetList)
@@ -1225,7 +1225,7 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> source, out System.Collections.ObjectModel.ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25, bool useReplaceForUpdates = true, DynamicData.Binding.ISortedObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BufferInitial<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.TimeSpan initialBuffer, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BufferInitial<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.TimeSpan initialBuffer, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Cast<TSource, TKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> converter)
@@ -1303,16 +1303,16 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.Reactive.Concurrency.IScheduler scheduler)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector, ReactiveUI.Primitives.Concurrency.ISequencer scheduler)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval, System.Reactive.Concurrency.IScheduler scheduler)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval, ReactiveUI.Primitives.Concurrency.ISequencer scheduler)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, bool> filter, bool suppressEmptyChangeSets = true)
@@ -1321,7 +1321,7 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, bool>> predicateChanged, bool suppressEmptyChangeSets = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, bool>> predicateChanged, System.IObservable<System.Reactive.Unit> reapplyFilter, bool suppressEmptyChangeSets = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, bool>> predicateChanged, System.IObservable<ReactiveUI.Primitives.RxVoid> reapplyFilter, bool suppressEmptyChangeSets = true)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Filter<TObject, TKey, TState>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<TState> predicateState, System.Func<TState, TObject, bool> predicate, bool suppressEmptyChangeSets = true)
@@ -1330,10 +1330,10 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> FilterImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, bool> predicate, bool suppressEmptyChangeSets = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> FilterOnObservable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.IObservable<bool>> filterFactory, System.TimeSpan? buffer = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> FilterOnObservable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.IObservable<bool>> filterFactory, System.TimeSpan? buffer = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> FilterOnObservable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, TKey, System.IObservable<bool>> filterFactory, System.TimeSpan? buffer = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> FilterOnObservable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, TKey, System.IObservable<bool>> filterFactory, System.TimeSpan? buffer = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
         [System.Obsolete("This can cause unhandled exception issues so do not use")]
@@ -1379,15 +1379,15 @@ namespace DynamicData
             where TObject :  notnull
             where TKey :  notnull
             where TGroupKey :  notnull { }
-        public static System.IObservable<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, TGroupKey> groupSelectorKey, System.IObservable<System.Reactive.Unit> regrouper)
+        public static System.IObservable<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, TGroupKey> groupSelectorKey, System.IObservable<ReactiveUI.Primitives.RxVoid> regrouper)
             where TObject :  notnull
             where TKey :  notnull
             where TGroupKey :  notnull { }
-        public static System.IObservable<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, TGroupKey>> groupSelectorKeyObservable, System.IObservable<System.Reactive.Unit>? regrouper = null)
+        public static System.IObservable<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, TGroupKey>> groupSelectorKeyObservable, System.IObservable<ReactiveUI.Primitives.RxVoid>? regrouper = null)
             where TObject :  notnull
             where TKey :  notnull
             where TGroupKey :  notnull { }
-        public static System.IObservable<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, TKey, TGroupKey>> groupSelectorKeyObservable, System.IObservable<System.Reactive.Unit>? regrouper = null)
+        public static System.IObservable<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Func<TObject, TKey, TGroupKey>> groupSelectorKeyObservable, System.IObservable<ReactiveUI.Primitives.RxVoid>? regrouper = null)
             where TObject :  notnull
             where TKey :  notnull
             where TGroupKey :  notnull { }
@@ -1399,15 +1399,15 @@ namespace DynamicData
             where TObject :  notnull
             where TKey :  notnull
             where TGroupKey :  notnull { }
-        public static System.IObservable<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnProperty<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Linq.Expressions.Expression<System.Func<TObject, TGroupKey>> propertySelector, System.TimeSpan? propertyChangedThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnProperty<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Linq.Expressions.Expression<System.Func<TObject, TGroupKey>> propertySelector, System.TimeSpan? propertyChangedThrottle = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject : System.ComponentModel.INotifyPropertyChanged
             where TKey :  notnull
             where TGroupKey :  notnull { }
-        public static System.IObservable<DynamicData.IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnPropertyWithImmutableState<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Linq.Expressions.Expression<System.Func<TObject, TGroupKey>> propertySelector, System.TimeSpan? propertyChangedThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnPropertyWithImmutableState<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Linq.Expressions.Expression<System.Func<TObject, TGroupKey>> propertySelector, System.TimeSpan? propertyChangedThrottle = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject : System.ComponentModel.INotifyPropertyChanged
             where TKey :  notnull
             where TGroupKey :  notnull { }
-        public static System.IObservable<DynamicData.IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> GroupWithImmutableState<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, TGroupKey> groupSelectorKey, System.IObservable<System.Reactive.Unit>? regrouper = null)
+        public static System.IObservable<DynamicData.IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> GroupWithImmutableState<TObject, TKey, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, TGroupKey> groupSelectorKey, System.IObservable<ReactiveUI.Primitives.RxVoid>? regrouper = null)
             where TObject :  notnull
             where TKey :  notnull
             where TGroupKey :  notnull { }
@@ -1482,7 +1482,7 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> LimitSizeTo<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, int size)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>> LimitSizeTo<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, int sizeLimit, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>>> LimitSizeTo<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, int sizeLimit, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source)
@@ -1494,43 +1494,43 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Collections.Generic.IComparer<TObject> comparer)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Collections.Generic.IComparer<TObject> comparer, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Collections.Generic.IComparer<TObject> comparer, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> others, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> others, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<DynamicData.IChangeSet<TObject, TKey>> other, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<DynamicData.IChangeSet<TObject, TKey>> other, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Collections.Generic.IComparer<TObject> comparer, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Collections.Generic.IComparer<TObject> comparer, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> others, System.Collections.Generic.IComparer<TObject> comparer, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> others, System.Collections.Generic.IComparer<TObject> comparer, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> others, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> others, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<DynamicData.IChangeSet<TObject, TKey>> other, System.Collections.Generic.IComparer<TObject> comparer, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<DynamicData.IChangeSet<TObject, TKey>> other, System.Collections.Generic.IComparer<TObject> comparer, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<DynamicData.IChangeSet<TObject, TKey>> other, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<DynamicData.IChangeSet<TObject, TKey>> other, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> others, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Collections.Generic.IComparer<TObject> comparer, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> others, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Collections.Generic.IComparer<TObject> comparer, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<DynamicData.IChangeSet<TObject, TKey>> other, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Collections.Generic.IComparer<TObject> comparer, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<DynamicData.IChangeSet<TObject, TKey>> other, System.Collections.Generic.IEqualityComparer<TObject> equalityComparer, System.Collections.Generic.IComparer<TObject> comparer, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, System.IObservable<TDestination>> observableSelector)
@@ -1763,11 +1763,11 @@ namespace DynamicData
             where TObject :  notnull
             where TKey :  notnull { }
         [System.Obsolete("Use SortAndBind as it\'s more efficient")]
-        public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IComparer<TObject> comparer, System.IObservable<System.Reactive.Unit> resorter, DynamicData.SortOptimisations sortOptimisations = 0, int resetThreshold = 100)
+        public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IComparer<TObject> comparer, System.IObservable<ReactiveUI.Primitives.RxVoid> resorter, DynamicData.SortOptimisations sortOptimisations = 0, int resetThreshold = 100)
             where TObject :  notnull
             where TKey :  notnull { }
         [System.Obsolete("Use SortAndBind as it\'s more efficient")]
-        public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerObservable, System.IObservable<System.Reactive.Unit> resorter, DynamicData.SortOptimisations sortOptimisations = 0, int resetThreshold = 100)
+        public static System.IObservable<DynamicData.ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<System.Collections.Generic.IComparer<TObject>> comparerObservable, System.IObservable<ReactiveUI.Primitives.RxVoid> resorter, DynamicData.SortOptimisations sortOptimisations = 0, int resetThreshold = 100)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> SortAndBind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IList<TObject> targetList)
@@ -1878,10 +1878,10 @@ namespace DynamicData
         public static System.IObservable<System.Collections.Generic.IReadOnlyCollection<TObject>> ToCollection<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this System.IObservable<System.Collections.Generic.IEnumerable<TObject>> source, System.Func<TObject, TKey> keySelector, System.Func<TObject, System.TimeSpan?>? expireAfter = null, int limitSizeTo = -1, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this System.IObservable<System.Collections.Generic.IEnumerable<TObject>> source, System.Func<TObject, TKey> keySelector, System.Func<TObject, System.TimeSpan?>? expireAfter = null, int limitSizeTo = -1, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this System.IObservable<TObject> source, System.Func<TObject, TKey> keySelector, System.Func<TObject, System.TimeSpan?>? expireAfter = null, int limitSizeTo = -1, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this System.IObservable<TObject> source, System.Func<TObject, TKey> keySelector, System.Func<TObject, System.TimeSpan?>? expireAfter = null, int limitSizeTo = -1, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.Kernel.Optional<TObject>> ToObservableOptional<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, TKey key, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null)
@@ -1904,7 +1904,7 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>> Top<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IComparer<TObject> comparer, int size)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, System.IObservable<System.Reactive.Unit> forceTransform)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -1916,7 +1916,7 @@ namespace DynamicData
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, TDestination> transformFactory, System.IObservable<System.Reactive.Unit> forceTransform)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, TDestination> transformFactory, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -1928,7 +1928,7 @@ namespace DynamicData
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, TDestination> transformFactory, System.IObservable<System.Reactive.Unit> forceTransform)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, TDestination> transformFactory, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -2060,7 +2060,7 @@ namespace DynamicData
             where TSource :  notnull
             where TKey :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Reactive.Unit> forceTransform)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -2068,7 +2068,7 @@ namespace DynamicData
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Reactive.Unit> forceTransform)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TKey, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -2076,7 +2076,7 @@ namespace DynamicData
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Reactive.Unit> forceTransform)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -2257,11 +2257,11 @@ namespace DynamicData
             where T :  notnull { }
         public static DynamicData.IObservableList<T> AsObservableList<T>(this System.IObservable<DynamicData.IChangeSet<T>> source)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject>> AutoRefresh<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.TimeSpan? changeSetBuffer = default, System.TimeSpan? propertyChangeThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> AutoRefresh<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.TimeSpan? changeSetBuffer = default, System.TimeSpan? propertyChangeThrottle = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject : System.ComponentModel.INotifyPropertyChanged { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject>> AutoRefresh<TObject, TProperty>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Linq.Expressions.Expression<System.Func<TObject, TProperty>> propertyAccessor, System.TimeSpan? changeSetBuffer = default, System.TimeSpan? propertyChangeThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> AutoRefresh<TObject, TProperty>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Linq.Expressions.Expression<System.Func<TObject, TProperty>> propertyAccessor, System.TimeSpan? changeSetBuffer = default, System.TimeSpan? propertyChangeThrottle = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject : System.ComponentModel.INotifyPropertyChanged { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject>> AutoRefreshOnObservable<TObject, TAny>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, System.IObservable<TAny>> reevaluator, System.TimeSpan? changeSetBuffer = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> AutoRefreshOnObservable<TObject, TAny>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, System.IObservable<TAny>> reevaluator, System.TimeSpan? changeSetBuffer = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> Bind<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, DynamicData.Binding.IObservableCollection<T> targetCollection, DynamicData.Binding.BindingOptions options)
             where T :  notnull { }
@@ -2273,15 +2273,15 @@ namespace DynamicData
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> Bind<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)]  T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.ComponentModel.BindingList<T> bindingList, int resetThreshold = 25)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> BufferIf<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<bool> pauseIfTrueSelector, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<T>> BufferIf<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<bool> pauseIfTrueSelector, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> BufferIf<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<bool> pauseIfTrueSelector, System.TimeSpan? timeOut, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<T>> BufferIf<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<bool> pauseIfTrueSelector, System.TimeSpan? timeOut, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> BufferIf<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<T>> BufferIf<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> BufferIf<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState, System.TimeSpan? timeOut, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<T>> BufferIf<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState, System.TimeSpan? timeOut, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject>> BufferInitial<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.TimeSpan initialBuffer, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> BufferInitial<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.TimeSpan initialBuffer, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination>> Cast<TDestination>(this System.IObservable<DynamicData.IChangeSet<object>> source)
             where TDestination :  notnull { }
@@ -2315,7 +2315,7 @@ namespace DynamicData
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> Except<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, params System.IObservable<DynamicData.IChangeSet<T>>[] others)
             where T :  notnull { }
-        public static System.IObservable<System.Collections.Generic.IEnumerable<T>> ExpireAfter<T>(this DynamicData.ISourceList<T> source, System.Func<T, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<System.Collections.Generic.IEnumerable<T>> ExpireAfter<T>(this DynamicData.ISourceList<T> source, System.Func<T, System.TimeSpan?> timeSelector, System.TimeSpan? pollingInterval = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> Filter<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, bool> predicate)
             where T :  notnull { }
@@ -2323,10 +2323,10 @@ namespace DynamicData
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> Filter<T, TState>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<TState> predicateState, System.Func<TState, T, bool> predicate, DynamicData.ListFilterPolicy filterPolicy = 1, bool suppressEmptyChangeSets = true)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject>> FilterOnObservable<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, System.IObservable<bool>> objectFilterObservable, System.TimeSpan? propertyChangedThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> FilterOnObservable<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, System.IObservable<bool>> objectFilterObservable, System.TimeSpan? propertyChangedThrottle = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull { }
         [System.Obsolete("Use AutoRefresh(), followed by Filter() instead")]
-        public static System.IObservable<DynamicData.IChangeSet<TObject>> FilterOnProperty<TObject, TProperty>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Linq.Expressions.Expression<System.Func<TObject, TProperty>> propertySelector, System.Func<TObject, bool> predicate, System.TimeSpan? propertyChangedThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> FilterOnProperty<TObject, TProperty>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Linq.Expressions.Expression<System.Func<TObject, TProperty>> propertySelector, System.Func<TObject, bool> predicate, System.TimeSpan? propertyChangedThrottle = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject : System.ComponentModel.INotifyPropertyChanged { }
         public static System.IObservable<DynamicData.IChangeSet<T>> FlattenBufferResult<T>(this System.IObservable<System.Collections.Generic.IList<DynamicData.IChangeSet<T>>> source)
             where T :  notnull { }
@@ -2334,19 +2334,19 @@ namespace DynamicData
             where TObject :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject>> ForEachItemChange<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Action<DynamicData.ItemChange<TObject>> action)
             where TObject :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<DynamicData.IGroup<TObject, TGroup>>> GroupOn<TObject, TGroup>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, TGroup> groupSelector, System.IObservable<System.Reactive.Unit>? regrouper = null)
+        public static System.IObservable<DynamicData.IChangeSet<DynamicData.IGroup<TObject, TGroup>>> GroupOn<TObject, TGroup>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, TGroup> groupSelector, System.IObservable<ReactiveUI.Primitives.RxVoid>? regrouper = null)
             where TObject :  notnull
             where TGroup :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<DynamicData.IGroup<TObject, TGroup>>> GroupOnProperty<TObject, TGroup>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Linq.Expressions.Expression<System.Func<TObject, TGroup>> propertySelector, System.TimeSpan? propertyChangedThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<DynamicData.IGroup<TObject, TGroup>>> GroupOnProperty<TObject, TGroup>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Linq.Expressions.Expression<System.Func<TObject, TGroup>> propertySelector, System.TimeSpan? propertyChangedThrottle = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject : System.ComponentModel.INotifyPropertyChanged
             where TGroup :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<DynamicData.List.IGrouping<TObject, TGroup>>> GroupOnPropertyWithImmutableState<TObject, TGroup>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Linq.Expressions.Expression<System.Func<TObject, TGroup>> propertySelector, System.TimeSpan? propertyChangedThrottle = default, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<DynamicData.List.IGrouping<TObject, TGroup>>> GroupOnPropertyWithImmutableState<TObject, TGroup>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Linq.Expressions.Expression<System.Func<TObject, TGroup>> propertySelector, System.TimeSpan? propertyChangedThrottle = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject : System.ComponentModel.INotifyPropertyChanged
             where TGroup :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<DynamicData.List.IGrouping<TObject, TGroupKey>>> GroupWithImmutableState<TObject, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, TGroupKey> groupSelectorKey, System.IObservable<System.Reactive.Unit>? regrouper = null)
+        public static System.IObservable<DynamicData.IChangeSet<DynamicData.List.IGrouping<TObject, TGroupKey>>> GroupWithImmutableState<TObject, TGroupKey>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, TGroupKey> groupSelectorKey, System.IObservable<ReactiveUI.Primitives.RxVoid>? regrouper = null)
             where TObject :  notnull
             where TGroupKey :  notnull { }
-        public static System.IObservable<System.Collections.Generic.IEnumerable<T>> LimitSizeTo<T>(this DynamicData.ISourceList<T> source, int sizeLimit, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<System.Collections.Generic.IEnumerable<T>> LimitSizeTo<T>(this DynamicData.ISourceList<T> source, int sizeLimit, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this DynamicData.IObservableList<System.IObservable<DynamicData.IChangeSet<TObject>>> source, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null)
             where TObject :  notnull { }
@@ -2354,11 +2354,11 @@ namespace DynamicData
             where TObject :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.IObservable<System.IObservable<DynamicData.IChangeSet<TObject>>> source, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null)
             where TObject :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject>>> source, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject>>> source, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject>>> others, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Collections.Generic.IEnumerable<System.IObservable<DynamicData.IChangeSet<TObject>>> others, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.IObservable<DynamicData.IChangeSet<TObject>> other, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null, System.Reactive.Concurrency.IScheduler? scheduler = null, bool completable = true)
+        public static System.IObservable<DynamicData.IChangeSet<TObject>> MergeChangeSets<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.IObservable<DynamicData.IChangeSet<TObject>> other, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null, bool completable = true)
             where TObject :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this DynamicData.IObservableList<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Collections.Generic.IComparer<TObject> comparer)
             where TObject :  notnull
@@ -2419,9 +2419,9 @@ namespace DynamicData
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> SkipInitial<T>(this System.IObservable<DynamicData.IChangeSet<T>> source)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> Sort<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<System.Collections.Generic.IComparer<T>> comparerChanged, DynamicData.SortOptions options = 0, System.IObservable<System.Reactive.Unit>? resort = null, int resetThreshold = 50)
+        public static System.IObservable<DynamicData.IChangeSet<T>> Sort<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.IObservable<System.Collections.Generic.IComparer<T>> comparerChanged, DynamicData.SortOptions options = 0, System.IObservable<ReactiveUI.Primitives.RxVoid>? resort = null, int resetThreshold = 50)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> Sort<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Collections.Generic.IComparer<T> comparer, DynamicData.SortOptions options = 0, System.IObservable<System.Reactive.Unit>? resort = null, System.IObservable<System.Collections.Generic.IComparer<T>>? comparerChanged = null, int resetThreshold = 50)
+        public static System.IObservable<DynamicData.IChangeSet<T>> Sort<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Collections.Generic.IComparer<T> comparer, DynamicData.SortOptions options = 0, System.IObservable<ReactiveUI.Primitives.RxVoid>? resort = null, System.IObservable<System.Collections.Generic.IComparer<T>>? comparerChanged = null, int resetThreshold = 50)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> StartWithEmpty<T>(this System.IObservable<DynamicData.IChangeSet<T>> source)
             where T :  notnull { }
@@ -2435,21 +2435,21 @@ namespace DynamicData
             where T :  notnull { }
         public static System.IObservable<System.Collections.Generic.IReadOnlyCollection<TObject>> ToCollection<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source)
             where TObject :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<System.Collections.Generic.IEnumerable<T>> source, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<System.Collections.Generic.IEnumerable<T>> source, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<T> source, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<T> source, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<System.Collections.Generic.IEnumerable<T>> source, System.Func<T, System.TimeSpan?> expireAfter, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<System.Collections.Generic.IEnumerable<T>> source, System.Func<T, System.TimeSpan?> expireAfter, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<System.Collections.Generic.IEnumerable<T>> source, int limitSizeTo, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<System.Collections.Generic.IEnumerable<T>> source, int limitSizeTo, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<T> source, System.Func<T, System.TimeSpan?> expireAfter, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<T> source, System.Func<T, System.TimeSpan?> expireAfter, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<T> source, int limitSizeTo, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<T> source, int limitSizeTo, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<System.Collections.Generic.IEnumerable<T>> source, System.Func<T, System.TimeSpan?>? expireAfter, int limitSizeTo, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<System.Collections.Generic.IEnumerable<T>> source, System.Func<T, System.TimeSpan?>? expireAfter, int limitSizeTo, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<T> source, System.Func<T, System.TimeSpan?>? expireAfter, int limitSizeTo, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<T>> ToObservableChangeSet<T>(this System.IObservable<T> source, System.Func<T, System.TimeSpan?>? expireAfter, int limitSizeTo, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where T :  notnull { }
         public static System.IObservable<System.Collections.Generic.IReadOnlyCollection<TObject>> ToSortedCollection<TObject>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Collections.Generic.IComparer<TObject> comparer)
             where TObject :  notnull { }
@@ -2747,7 +2747,7 @@ namespace DynamicData.Experimental
 {
     public static class ExperimentalEx
     {
-        public static DynamicData.Experimental.IWatcher<TObject, TKey> AsWatcher<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Reactive.Concurrency.IScheduler? scheduler = null)
+        public static DynamicData.Experimental.IWatcher<TObject, TKey> AsWatcher<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
     }
@@ -2793,8 +2793,8 @@ namespace DynamicData.Kernel
     {
         public static System.IObservable<TSource> RetryWithBackOff<TSource, TException>(this System.IObservable<TSource> source, System.Func<TException, int, System.TimeSpan?> backOffStrategy)
             where TException : System.Exception { }
-        public static System.IDisposable ScheduleRecurringAction(this System.Reactive.Concurrency.IScheduler scheduler, System.Func<System.TimeSpan> interval, System.Action action) { }
-        public static System.IDisposable ScheduleRecurringAction(this System.Reactive.Concurrency.IScheduler scheduler, System.TimeSpan interval, System.Action action) { }
+        public static System.IDisposable ScheduleRecurringAction(this ReactiveUI.Primitives.Concurrency.ISequencer scheduler, System.Func<System.TimeSpan> interval, System.Action action) { }
+        public static System.IDisposable ScheduleRecurringAction(this ReactiveUI.Primitives.Concurrency.ISequencer scheduler, System.TimeSpan interval, System.Action action) { }
     }
     public readonly struct ItemWithIndex<T> : System.IEquatable<DynamicData.Kernel.ItemWithIndex<T>>
     {

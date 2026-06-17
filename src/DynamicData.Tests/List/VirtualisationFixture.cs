@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Subjects;
 
 using DynamicData.Tests.Domain;
 
@@ -129,7 +128,6 @@ public class VirtualisationFixture : IDisposable
 
         _results.Data.Items.Should().BeEquivalentTo(expected);
     }
-
 
     [Fact]
     public void DoesNotThrowWithDuplicates()

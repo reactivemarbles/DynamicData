@@ -1,8 +1,5 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 using FluentAssertions;
 using Xunit;
@@ -20,7 +17,6 @@ public sealed class FilterImmutableFixture
             .FilterImmutable(predicate: Item.Predicate)
             .AsAggregator();
 
-
         // Add items
         var item1 = new Item() { Id = 1, IsIncluded = true };
         var item2 = new Item() { Id = 2, IsIncluded = false };
@@ -33,7 +29,6 @@ public sealed class FilterImmutableFixture
         results.Error.Should().BeNull();
         results.Messages.Count.Should().Be(1, "1 source operation was performed");
         results.Data.Items.Should().BeEquivalentTo(new[] { item1 }, "2 items were added, with 1 excluded");
-
 
         // Replace items, changing inclusion
         var item3 = new Item() { Id = item1.Id, IsIncluded = false };
@@ -48,7 +43,6 @@ public sealed class FilterImmutableFixture
         results.Messages.Skip(1).Count().Should().Be(1, "1 source operation was performed");
         results.Data.Items.Should().BeEquivalentTo(new[] { item4 }, "2 items were replaced, with 1 excluded");
 
-
         // Replace items, not changing inclusion
         var item5 = new Item() { Id = item3.Id, IsIncluded = false };
         var item6 = new Item() { Id = item4.Id, IsIncluded = true };
@@ -62,7 +56,6 @@ public sealed class FilterImmutableFixture
         results.Messages.Skip(2).Count().Should().Be(1, "1 source operation was performed");
         results.Data.Items.Should().BeEquivalentTo(new[] { item6 }, "2 items were replaced, with 1 excluded");
 
-
         // Refresh items
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -74,7 +67,6 @@ public sealed class FilterImmutableFixture
         results.Messages.Skip(3).Count().Should().Be(1, "1 source operation was performed");
         results.Data.Items.Should().BeEquivalentTo(new[] { item6 }, "2 items were refreshed, with 1 excluded");
 
-
         // Remove items
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -85,7 +77,6 @@ public sealed class FilterImmutableFixture
         results.Error.Should().BeNull();
         results.Messages.Skip(4).Count().Should().Be(1, "1 source operation was performed");
         results.Data.Items.Should().BeEmpty("2 items were removed, with one excluded");
-
 
         results.Messages.SelectMany(static changes => changes).Should().AllSatisfy(
             change =>
@@ -118,7 +109,6 @@ public sealed class FilterImmutableFixture
         });
         results.Messages.Clear();
 
-
         // Move items
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -148,7 +138,6 @@ public sealed class FilterImmutableFixture
             .FilterImmutable(predicate: _ => throw error)
             .AsAggregator();
 
-
         var item1 = new Item() { Id = 1, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -169,7 +158,6 @@ public sealed class FilterImmutableFixture
             .FilterImmutable(predicate: Item.Predicate)
             .AsAggregator();
 
-
         var item1 = new Item() { Id = 1, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -182,7 +170,6 @@ public sealed class FilterImmutableFixture
         results.Messages.Count.Should().Be(1, "1 source operation was performed");
         results.Data.Items.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
 
-        
         // Make sure no extraneous notifications are published.
         var item2 = new Item() { Id = 2, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
@@ -216,7 +203,6 @@ public sealed class FilterImmutableFixture
             .FilterImmutable(predicate: Item.Predicate)
             .AsAggregator();
 
-
         results.Error.Should().BeNull();
         results.IsCompleted.Should().BeTrue();
         results.Messages.Count.Should().Be(1, "1 source operation was performed");
@@ -234,7 +220,6 @@ public sealed class FilterImmutableFixture
             .FilterImmutable(predicate: Item.Predicate)
             .AsAggregator();
 
-
         var item1 = new Item() { Id = 1, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -247,7 +232,6 @@ public sealed class FilterImmutableFixture
         results.Messages.Count.Should().Be(1, "1 source operation was performed");
         results.Data.Items.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
 
-        
         // Make sure no extraneous notifications are published.
         var item2 = new Item() { Id = 2, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
@@ -280,7 +264,6 @@ public sealed class FilterImmutableFixture
             .FilterImmutable(predicate: Item.Predicate)
             .AsAggregator();
 
-
         results.Error.Should().Be(error);
         results.IsCompleted.Should().BeFalse();
         results.Messages.Count.Should().Be(1, "1 source operation was performed");
@@ -305,7 +288,6 @@ public sealed class FilterImmutableFixture
                 suppressEmptyChangeSets: false)
             .AsAggregator();
 
-
         ManipulateExcludedItems(source);
 
         results.Error.Should().BeNull();
@@ -322,7 +304,6 @@ public sealed class FilterImmutableFixture
         using var results = source
             .FilterImmutable(predicate: Item.Predicate)
             .AsAggregator();
-
 
         ManipulateExcludedItems(source);
 

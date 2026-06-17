@@ -1,9 +1,6 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-
-using System.Reactive.Disposables;
-using System.Reactive.Subjects;
 
 namespace DynamicData.Experimental;
 
@@ -26,6 +23,15 @@ internal sealed class SubjectWithRefCount<T>(ISubject<T>? subject = null) : ISub
     /// The ref count.
     /// </value>
     public int RefCount => _refCount;
+
+    /// <inheritdoc />
+    public bool HasObservers => _subject.HasObservers;
+
+    /// <inheritdoc />
+    public bool IsDisposed => _subject.IsDisposed;
+
+    /// <inheritdoc />
+    public void Dispose() => (_subject as IDisposable)?.Dispose();
 
     /// <summary>
     /// Notifies the observer that the provider has finished sending push-based notifications.

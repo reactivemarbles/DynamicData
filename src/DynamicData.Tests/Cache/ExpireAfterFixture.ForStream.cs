@@ -1,11 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 using Bogus;
@@ -287,7 +283,6 @@ public static partial class ExpireAfterFixture
                 new(reason: ChangeReason.Moved, key: item1.Id, current: item1, previous: default, currentIndex: 4, previousIndex: 1)
             });
 
-
             // Verify initial state, after all emissions
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Count.Should().Be(7, "8 source operations were performed, and 1 should have been ignored");
@@ -453,7 +448,6 @@ public static partial class ExpireAfterFixture
                 new(reason: ChangeReason.Moved, key: item1.Id, current: item1, previous: default, currentIndex: 4, previousIndex: 1)
             });
 
-
             // Verify initial state, after all emissions
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Count.Should().Be(7, "8 source operations were performed, and 1 should have been ignored");
@@ -591,7 +585,6 @@ public static partial class ExpireAfterFixture
             {
                 new(reason: ChangeReason.Add, key: item1.Id, current: item1)
             });
-
 
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
@@ -770,7 +763,7 @@ public static partial class ExpireAfterFixture
         {
             using var source = new Subject<IChangeSet<StressItem, int>>();
 
-            var scheduler = ThreadPoolScheduler.Instance;
+            var scheduler = ThreadPoolSequencer.Instance;
 
             using var subscription = source
                 .ExpireAfter(
@@ -800,7 +793,7 @@ public static partial class ExpireAfterFixture
         {
             using var source = new Subject<IChangeSet<StressItem, int>>();
 
-            var scheduler = ThreadPoolScheduler.Instance;
+            var scheduler = ThreadPoolSequencer.Instance;
 
             using var subscription = source
                 .ExpireAfter(

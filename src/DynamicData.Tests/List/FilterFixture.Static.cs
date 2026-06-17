@@ -1,7 +1,5 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 using FluentAssertions;
 using Xunit;
@@ -30,7 +28,6 @@ public static partial class FilterFixture
                 2
             });
 
-
             // UUT Initialization
             using var subscription = source.Connect()
                 .Filter(static item => (item % 2) is 0)
@@ -45,7 +42,6 @@ public static partial class FilterFixture
                 config: options => options.WithoutStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
             // UUT Action
             source.Remove(2);
 
@@ -56,7 +52,6 @@ public static partial class FilterFixture
                 config: options => options.WithoutStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-        
             // UUT Action
             source.Remove(3);
 
@@ -64,7 +59,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Skip(2).Should().BeEmpty("an operation was performed upon an excluded item");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-        
             // UUT Action
             source.Remove(2);
 
@@ -82,7 +76,6 @@ public static partial class FilterFixture
             // Setup
             using var source = new TestSourceList<Item>();
 
-
             // UUT Initialization
             using var subscription = source.Connect()
                 .Filter(Item.FilterByIsIncluded)
@@ -94,7 +87,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Should().BeEmpty("there were no initial items to publish");
             results.RecordedItems.Should().BeEmpty("no items have been added to the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action
             source.Add(new Item() { Id = 1, IsIncluded = false });
@@ -120,7 +112,6 @@ public static partial class FilterFixture
                 new Item() { Id = 6, IsIncluded = false }
             });
 
-
             // UUT Initialization
             using var subscription = source.Connect()
                 .Filter(Item.FilterByIsIncluded)
@@ -134,7 +125,6 @@ public static partial class FilterFixture
                 because: "all matching items should have been added",
                 config: options => options.WithStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action
             source.RemoveAt(5);
@@ -160,7 +150,6 @@ public static partial class FilterFixture
                 new Item() { Id = 6, IsIncluded = false }
             });
 
-
             // UUT Initialization
             using var subscription = source.Connect()
                 .Filter(Item.FilterByIsIncluded)
@@ -174,7 +163,6 @@ public static partial class FilterFixture
                 because: "all matching items should have been added",
                 config: options => options.WithStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action
             source.RemoveMany(source.Items.Where(static item => !item.IsIncluded).ToArray());
@@ -190,7 +178,6 @@ public static partial class FilterFixture
             // Setup
             using var source = new TestSourceList<Item>();
 
-
             // UUT Initialization
             using var subscription = source.Connect()
                 .Filter(Item.FilterByIsIncluded)
@@ -202,7 +189,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Should().BeEmpty("there were no initial items to publish");
             results.RecordedItems.Should().BeEmpty("no items have been added to the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action
             source.AddRange(new[]
@@ -239,7 +225,6 @@ public static partial class FilterFixture
                 new Item() { Id = 6, IsIncluded = false }
             });
 
-
             // UUT Initialization
             using var subscription = source.Connect()
                 .Filter(Item.FilterByIsIncluded)
@@ -254,7 +239,6 @@ public static partial class FilterFixture
                 config: options => options.WithStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
             // UUT Action: Moves for matching items, 
             source.Edit(items =>
             {
@@ -268,7 +252,6 @@ public static partial class FilterFixture
                 because: "all matching items should have been moved, accordingly",
                 config: options => options.WithStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action: Moves for excluded items
             source.Edit(items =>
@@ -298,7 +281,6 @@ public static partial class FilterFixture
                 new Item() { Id = 6, IsIncluded = false }
             });
 
-
             // UUT Initialization
             using var subscription = source.Connect()
                 .Filter(Item.FilterByIsIncluded)
@@ -311,7 +293,6 @@ public static partial class FilterFixture
             results.RecordedItems.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all matching items should have propagated");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
             // UUT Action (add items)
             foreach (var item in source.Items)
                 item.IsIncluded = true;
@@ -323,7 +304,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.ElementAt(1).ShouldHaveRefreshed(source.Items.Take(3), "all unchanged items should have been refreshed");
             results.RecordedItems.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all newly-matching items should have been added");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action (remove items)
             foreach (var item in source.Items.Take(3))
@@ -354,7 +334,6 @@ public static partial class FilterFixture
                 new Item() { Id = 6, IsIncluded = false }
             });
 
-
             // UUT Initialization
             using var subscription = source.Connect()
                 .Filter(Item.FilterByIsIncluded)
@@ -368,7 +347,6 @@ public static partial class FilterFixture
                 because: "all matching items should have propagated",
                 config: options => options.WithStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action (add and replace items)
             source.Edit(items =>
@@ -387,7 +365,6 @@ public static partial class FilterFixture
                 because: "all newly-matching items should have been added",
                 config: options => options.WithStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action (remove and replace items)
             source.Edit(items =>
@@ -414,7 +391,6 @@ public static partial class FilterFixture
             // Setup
             using var source = new TestSourceList<Item>();
 
-
             // UUT Initialization
             using var subscription = source.Connect()
                 .Filter(Item.FilterByIsIncluded)
@@ -426,7 +402,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Should().BeEmpty("there were no initial items to publish");
             results.RecordedItems.Should().BeEmpty("no items have been added to the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action
             source.Add(new Item() { Id = 1, IsIncluded = true });
@@ -453,7 +428,6 @@ public static partial class FilterFixture
                 new Item() { Id = 6, IsIncluded = false }
             });
 
-
             // UUT Initialization
             using var subscription = source.Connect()
                 .Filter(Item.FilterByIsIncluded)
@@ -467,7 +441,6 @@ public static partial class FilterFixture
                 because: "all matching items should have been added",
                 config: options => options.WithStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action
             var removedItem = source.Items[2];
@@ -497,7 +470,6 @@ public static partial class FilterFixture
                 new Item() { Id = 6, IsIncluded = false }
             });
 
-
             // UUT Initialization
             using var subscription = source.Connect()
                 .Filter(Item.FilterByIsIncluded)
@@ -511,7 +483,6 @@ public static partial class FilterFixture
                 because: "all matching items should have propagated",
                 config: options => options.WithStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action
             source.RemoveMany(source.Items.Where(Item.FilterByIsIncluded).ToArray());
@@ -545,7 +516,6 @@ public static partial class FilterFixture
 
             if (sourceType is SourceType.Immediate)
                 source.Complete();
-
 
             // UUT Initialization & Action
             using var subscription = source.Connect()
@@ -615,7 +585,6 @@ public static partial class FilterFixture
             // Setup
             using var source = new Subject<IChangeSet<Item>>();
 
-
             // UUT Initialization
             using var subscription = source
                 .Filter(Item.FilterByIsIncluded)
@@ -627,7 +596,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Should().BeEmpty("no initial changeset occurred");
             results.RecordedItems.Should().BeEmpty("the source has not initialized");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action
             subscription.Dispose();

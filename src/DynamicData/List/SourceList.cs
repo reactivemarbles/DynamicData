@@ -3,9 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 using DynamicData.List.Internal;
 
@@ -22,7 +19,7 @@ public sealed class SourceList<T> : ISourceList<T>
 {
     private readonly ISubject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();
 
-    private readonly Subject<IChangeSet<T>> _changesPreview = new();
+    private readonly ISubject<IChangeSet<T>> _changesPreview = new Subject<IChangeSet<T>>();
 
     private readonly IDisposable _cleanUp;
 
@@ -111,7 +108,6 @@ public sealed class SourceList<T> : ISourceList<T>
     public void Dispose()
     {
         _cleanUp.Dispose();
-        _changesPreview.Dispose();
     }
 
     /// <inheritdoc />

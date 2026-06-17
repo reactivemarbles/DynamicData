@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Reactive.Linq;
 
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
@@ -32,20 +31,16 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
         _binder = _source.Connect().Sort(_comparer, resetThreshold: 25).Bind(_collection).Subscribe();
     }
 
-
     [Fact]
     public void ResetThresholdsForBinding_ObservableCollection()
     {
         var people = _generator.Take(100).ToArray();
-
-
 
         // check whether reset is fired with different params
         var test1 = Test();
         var test2 = Test(new BindingOptions(95));
         var test3 = Test(new BindingOptions(105, ResetOnFirstTimeLoad: false));
         var test4 = Test(BindingOptions.NeverFireReset());
-
 
         test1.action.Should().Be(NotifyCollectionChangedAction.Reset);
         test2.action.Should().Be(NotifyCollectionChangedAction.Reset);
@@ -68,7 +63,6 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
                     result = events;
                 });
 
-
             var binder = options == null
                 ? _source.Connect().Sort(_comparer).Bind(list).Subscribe()
                 : _source.Connect().Sort(_comparer).Bind(list, options.Value).Subscribe();
@@ -85,13 +79,11 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
     {
         var people = _generator.Take(100).ToArray();
 
-
         // check whether reset is fired with different params
         var test1 = Test();
         var test2 = Test(new BindingOptions(95));
         var test3 = Test(new BindingOptions(105, ResetOnFirstTimeLoad: false));
         var test4 = Test(BindingOptions.NeverFireReset());
-
 
         test1.action.Should().Be(NotifyCollectionChangedAction.Reset);
         test2.action.Should().Be(NotifyCollectionChangedAction.Reset);
@@ -291,7 +283,6 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
     {
         RunTest(true);
         RunTest(false);
-
 
         void RunTest(bool useReplace)
         {

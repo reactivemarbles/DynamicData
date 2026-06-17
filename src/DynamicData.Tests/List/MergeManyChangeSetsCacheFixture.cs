@@ -1,10 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Bogus;
 using DynamicData.Kernel;
@@ -47,7 +43,6 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         _marketFaker = Fakers.Market.WithSeed(_randomizer);
         _marketListResults = _marketList.Connect().AsAggregator();
     }
-
 
     [Theory]
     [InlineData(5, 7)]
@@ -96,7 +91,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         var adding = true;
 
         // Start asynchrononously modifying the parent list and the child lists
-        using var addingSub = AddRemoveStress(marketCount, priceCount, Environment.ProcessorCount, TaskPoolScheduler.Default)
+        using var addingSub = AddRemoveStress(marketCount, priceCount, Environment.ProcessorCount, TaskPoolSequencer.Default)
             .Finally(() => adding = false)
             .Subscribe();
 

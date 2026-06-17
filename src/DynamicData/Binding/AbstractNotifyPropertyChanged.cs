@@ -4,7 +4,6 @@
 
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 
 namespace DynamicData.Binding;

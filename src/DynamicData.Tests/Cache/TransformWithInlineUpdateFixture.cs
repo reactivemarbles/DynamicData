@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
 
@@ -75,7 +75,6 @@ public class TransformWithInlineUpdateFixture
         stub.Results.Messages[1].Removes.Should().Be(1, "Should be 80 removes");
         stub.Results.Data.Count.Should().Be(0, "Should be nothing cached");
     }
-
 
     [Fact]
     public void TransformOnRefresh()

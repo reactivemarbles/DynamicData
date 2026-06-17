@@ -1,9 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 
 using DynamicData.Tests.Domain;
@@ -27,7 +25,6 @@ public class ObservableChangeSetFixture
         //the aim of this test is to ensure we can continuously receive subscriptions when we use the async subscribe overloads
         var result = new List<int>();
 
-
         var observable = ObservableChangeSet.Create<int, int>(
                 async (changeSet, token) =>
                 {
@@ -49,10 +46,8 @@ public class ObservableChangeSetFixture
                 i => i)
             .Select(cs => cs.Select(c => c.Current).ToList());
 
-
         var isComplete = false;
         Exception? error = null;
-
 
         //load list of results
         var subscriber = observable
@@ -76,7 +71,6 @@ public class ObservableChangeSetFixture
 
         subscriber.Dispose();
     }
-
 
     [Fact]
     public void HandlesAsyncError()

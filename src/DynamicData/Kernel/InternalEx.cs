@@ -1,11 +1,6 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 namespace DynamicData.Kernel;
 
@@ -62,13 +57,25 @@ public static class InternalEx
     /// <param name="interval">The interval.</param>
     /// <param name="action">The action.</param>
     /// <returns>A disposable that will stop the schedule.</returns>
-    public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, TimeSpan interval, Action action) => scheduler.Schedule(
-            interval,
-            scheduleNext =>
-            {
-                action();
-                scheduleNext(interval);
-            });
+    public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, TimeSpan interval, Action action)
+    {
+        scheduler.ThrowArgumentNullExceptionIfNull(nameof(scheduler));
+        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+
+        var disposable = new SerialDisposable();
+
+        void ScheduleNext() =>
+            disposable.Disposable = scheduler.Schedule(
+                interval,
+                () =>
+                {
+                    action();
+                    ScheduleNext();
+                });
+
+        ScheduleNext();
+        return disposable;
+    }
 
     /// <summary>
     /// Schedules a recurring action.
@@ -86,14 +93,22 @@ public static class InternalEx
     {
         interval.ThrowArgumentNullExceptionIfNull(nameof(interval));
 
-        return scheduler.Schedule(
-            interval(),
-            scheduleNext =>
-            {
-                action();
-                var next = interval();
-                scheduleNext(next);
-            });
+        scheduler.ThrowArgumentNullExceptionIfNull(nameof(scheduler));
+        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+
+        var disposable = new SerialDisposable();
+
+        void ScheduleNext() =>
+            disposable.Disposable = scheduler.Schedule(
+                interval(),
+                () =>
+                {
+                    action();
+                    ScheduleNext();
+                });
+
+        ScheduleNext();
+        return disposable;
     }
 
     internal static void OnNext(this ISubject<Unit> source) => source.OnNext(Unit.Default);
@@ -110,6 +125,6 @@ public static class InternalEx
         {
             o.OnNext(source());
             o.OnCompleted();
-            return () => { };
+            return Disposable.Empty;
         });
 }

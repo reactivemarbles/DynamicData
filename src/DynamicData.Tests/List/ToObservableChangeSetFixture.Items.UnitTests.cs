@@ -1,9 +1,5 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using Microsoft.Reactive.Testing;
 
 using FluentAssertions;
 using Xunit;
@@ -26,7 +22,6 @@ public static partial class ToObservableChangeSetFixture
 
                 var error = new Exception("Test Exception");
 
-
                 // UUT Initialization
                 using var subscription = source
                     .ToObservableChangeSet(expireAfter: static item => (item.Error is not null)
@@ -40,7 +35,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
                 results.RecordedItems.Should().BeEmpty("no items have been emitted by the source");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 var item1 = new Item() { Id = 1 };
@@ -59,7 +53,6 @@ public static partial class ToObservableChangeSetFixture
                 // Setup
                 using var source = new Subject<Item>();
 
-
                 // UUT Initialization
                 using var subscription = source
                     .ToObservableChangeSet(limitSizeTo: 5)
@@ -71,7 +64,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
                 results.RecordedItems.Should().BeEmpty("no items have been emitted");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action: Not enough items to reach the limit
                 var item1 = new Item() { Id = 1 };
@@ -93,7 +85,6 @@ public static partial class ToObservableChangeSetFixture
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action: Limit is reached
                 var item5 = new Item() { Id = 5 };
                 source.OnNext(item5);
@@ -104,7 +95,6 @@ public static partial class ToObservableChangeSetFixture
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action: New item exceeds the limit
                 var item6 = new Item() { Id = 6 };
@@ -135,7 +125,6 @@ public static partial class ToObservableChangeSetFixture
             
                 var scheduler = new TestScheduler();
 
-
                 // UUT Initialization & Action
                 using var subscription = source
                     .ToObservableChangeSet(
@@ -160,7 +149,6 @@ public static partial class ToObservableChangeSetFixture
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("1 item has yet to expire");
-
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(10).Ticks);
@@ -190,7 +178,6 @@ public static partial class ToObservableChangeSetFixture
                 };
             
                 var scheduler = new TestScheduler();
-
 
                 // UUT Initialization & Action
                 using var subscription = source
@@ -226,7 +213,6 @@ public static partial class ToObservableChangeSetFixture
 
                 var scheduler = new TestScheduler();
 
-
                 // UUT Initialization
                 using var subscription = source
                     .ToObservableChangeSet(
@@ -241,7 +227,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItems.Should().BeEmpty("no items have been emitted");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 var item1 = new Item() { Id = 1, Lifetime = TimeSpan.FromSeconds(3) };
                 source.OnNext(item1);
@@ -253,7 +238,6 @@ public static partial class ToObservableChangeSetFixture
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 var item2 = new Item() { Id = 2 };
@@ -267,7 +251,6 @@ public static partial class ToObservableChangeSetFixture
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 var item3 = new Item() { Id = 3, Lifetime = TimeSpan.FromSeconds(1) };
                 source.OnNext(item3);
@@ -280,7 +263,6 @@ public static partial class ToObservableChangeSetFixture
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(1).Ticks);
 
@@ -290,7 +272,6 @@ public static partial class ToObservableChangeSetFixture
                     because: "1 item expired, and 1 had its lifetime extended",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(2).Ticks);
@@ -302,7 +283,6 @@ public static partial class ToObservableChangeSetFixture
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(3).Ticks);
 
@@ -312,7 +292,6 @@ public static partial class ToObservableChangeSetFixture
                     because: "1 item reached its expiration",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(4).Ticks);
@@ -339,7 +318,6 @@ public static partial class ToObservableChangeSetFixture
                     SourceType.Immediate    => Observable.Throw<Item>(error),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
-
 
                 // UUT Initialization & Action
                 using var subscription = source

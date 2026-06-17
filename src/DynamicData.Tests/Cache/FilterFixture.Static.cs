@@ -1,6 +1,4 @@
-﻿using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+using System;
 
 using FluentAssertions;
 using Xunit;
@@ -30,7 +28,6 @@ public static partial class FilterFixture
             // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
-
             // UUT Initialization & Action
             if (completionStrategy is CompletionStrategy.Immediate)
                 source.Complete();
@@ -48,7 +45,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Should().BeEmpty("no source operations were performed");
             results.HasCompleted.Should().BeTrue("the source has completed");
 
-
             // Final verification
             results.ShouldNotSupportSorting("sorting is not supported by filter operators");
         }
@@ -58,7 +54,6 @@ public static partial class FilterFixture
         {
             // Setup
             using var source = new Subject<IChangeSet<Item, int>>();
-
 
             // UUT Intialization
             using var subscription = source
@@ -71,7 +66,6 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Should().BeEmpty("no source operations were performed");
             results.RecordedItemsByKey.Values.Should().BeEmpty("the source has not initialized");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action
             subscription.Dispose();

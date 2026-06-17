@@ -1,9 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 
 using Bogus;
@@ -188,7 +186,6 @@ public static partial class ExpireAfterFixture
 
             // Not testing Move changes, since ISourceCache<T> doesn't actually provide an API to generate them.
 
-
             // Verify initial state, after all emissions
             results.Error.Should().BeNull();
             results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
@@ -326,7 +323,6 @@ public static partial class ExpireAfterFixture
 
             // Not testing Move changes, since ISourceCache<T> doesn't actually provide an API to generate them.
 
-
             // Verify initial state, after all emissions
             results.Error.Should().BeNull();
             results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
@@ -410,7 +406,6 @@ public static partial class ExpireAfterFixture
 
             var item1 = new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(10) };
             source.AddOrUpdate(item1);
-
 
             results.Error.Should().BeNull();
             results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
@@ -550,7 +545,7 @@ public static partial class ExpireAfterFixture
         {
             using var source = new TestSourceCache<StressItem, int>(static item => item.Id);
 
-            var scheduler = ThreadPoolScheduler.Instance;
+            var scheduler = ThreadPoolSequencer.Instance;
 
             using var subscription = source
                 .ExpireAfter(
@@ -581,7 +576,7 @@ public static partial class ExpireAfterFixture
         {
             using var source = new TestSourceCache<StressItem, int>(static item => item.Id);
 
-            var scheduler = ThreadPoolScheduler.Instance;
+            var scheduler = ThreadPoolSequencer.Instance;
 
             using var subscription = source
                 .ExpireAfter(

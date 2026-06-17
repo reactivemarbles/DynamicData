@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
@@ -167,7 +165,6 @@ public class PageFixtureWithNoInitialData
         pager.OnNext(new PageRequest(2, 3));
         sut.Paged.Count.Should().Be(3);
     }
-
 
     [Fact]
     public void DoesNotThrowWithDuplicates()

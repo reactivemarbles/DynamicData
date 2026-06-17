@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections;
-using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 

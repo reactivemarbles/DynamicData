@@ -1,7 +1,5 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 
 namespace DynamicData.Tests.Utilities;
 
@@ -12,7 +10,7 @@ internal static class StressAddRemoveExtensions
         where T : notnull =>
             items.Do(i => onAdd(i, state))
                  .SelectMany(item => getRemoveTimeout?.Invoke(item) is TimeSpan ts
-                    ? Observable.Timer(ts, scheduler ?? DefaultScheduler.Instance)
+                    ? Observable.Timer(ts, scheduler ?? Sequencer.Default)
                                 .Do(_ => onRemove(item, state))
                                 .Select(_ => item)
                     : Observable.Return(item));

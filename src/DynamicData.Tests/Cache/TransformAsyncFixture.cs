@@ -1,9 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
@@ -199,9 +196,6 @@ public class TransformAsyncFixture
         stub.Results.Messages[1].Updates.Should().Be(1, "Should be 1 update");
     }
 
-
-   
-
     [Theory, InlineData(true), InlineData(false)]
     public void TransformOnRefresh(bool transformOnRefresh)
     {
@@ -218,13 +212,11 @@ public class TransformAsyncFixture
         
         person.Age = 21;
 
-
         results.Data.Count.Should().Be(1);
         results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be(transformOnRefresh ? "Adult": "Child");
 
     }
 
-    
     [Theory, InlineData(10), InlineData(100)]
 
     public async Task WithMaxConcurrency(int maxConcurrency)
@@ -236,7 +228,6 @@ public class TransformAsyncFixture
 
             So it works, but how can it be tested in a scientific way ??
         */
-
 
         const int transformCount = 100;
 

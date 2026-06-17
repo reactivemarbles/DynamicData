@@ -1,12 +1,8 @@
 using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 using DynamicData.Tests.Domain;
 
 using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
 
 using Xunit;
 

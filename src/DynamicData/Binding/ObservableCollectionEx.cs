@@ -4,8 +4,6 @@
 
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Reactive;
-using System.Reactive.Linq;
 
 namespace DynamicData.Binding;
 

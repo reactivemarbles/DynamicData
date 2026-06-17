@@ -1,10 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Bogus;
 using DynamicData.Kernel;
@@ -91,7 +87,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         var addingAnimals = true;
 
         // Start asynchrononously modifying the parent list and the child lists
-        using var addAnimals = AddRemoveAnimalsStress(ownerCount, animalCount, Environment.ProcessorCount, TaskPoolScheduler.Default)
+        using var addAnimals = AddRemoveAnimalsStress(ownerCount, animalCount, Environment.ProcessorCount, TaskPoolSequencer.Default)
             .Finally(() => addingAnimals = false)
             .Subscribe();
 

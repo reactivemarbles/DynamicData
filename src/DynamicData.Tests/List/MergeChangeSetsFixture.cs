@@ -1,16 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Bogus;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
 using FluentAssertions;
-using Microsoft.Reactive.Testing;
 using Xunit;
 using System.Collections.Concurrent;
 
@@ -84,7 +80,7 @@ public sealed class MergeChangeSetsFixture : IDisposable
 
         var addedOwners = new ConcurrentBag<AnimalOwner>();
         var addingAnimals = true;
-        var observableObservable = CreateStressObservable(ownerCount, animalCount, Environment.ProcessorCount, addedOwners, TaskPoolScheduler.Default)
+        var observableObservable = CreateStressObservable(ownerCount, animalCount, Environment.ProcessorCount, addedOwners, TaskPoolSequencer.Default)
                 .Finally(() => addingAnimals = false)
                 .Publish()
                 .RefCount();
@@ -272,7 +268,6 @@ public sealed class MergeChangeSetsFixture : IDisposable
         added.Should().BeSubsetOf(results.Data.Items);
         CheckResultContents(_animalOwners, results);
     }
-
 
     [Fact]
     public async Task ResultContainsCorrectItemsAfterChildReplacementObs()

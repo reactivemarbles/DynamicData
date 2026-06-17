@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -162,8 +161,6 @@ public class SourceCacheFixture : IDisposable
         change!.Count.Should().Be(0);
     }
 
-
-
     [Fact]
     public void StaticFilterRemove()
     {
@@ -174,7 +171,6 @@ public class SourceCacheFixture : IDisposable
 
         cache.AddOrUpdate(Enumerable.Range(1,10).Select(i=> new SomeObject(i,i)));
 
-
         above5.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5).Select(i => new SomeObject(i, i)));
         below5.Items.Should().BeEquivalentTo(Enumerable.Range(1, 5).Select(i => new SomeObject(i, i)));
 
@@ -184,13 +180,11 @@ public class SourceCacheFixture : IDisposable
         above5.Count.Should().Be(4);
         below5.Count.Should().Be(6);
 
-
         above5.Items.Should().BeEquivalentTo(Enumerable.Range(7, 4).Select(i => new SomeObject(i, i)));
         below5.Items.Should().BeEquivalentTo(Enumerable.Range(1, 6).Select(i => new SomeObject(i, i == 6 ? -1 : i)));
     }
 
     public record class SomeObject(int Id, int Value);
-
 
     [Fact]
     public async Task MultiCacheFanInDoesNotDeadlock()

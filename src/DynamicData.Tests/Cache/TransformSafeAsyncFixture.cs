@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using DynamicData.Cache;
 using DynamicData.Kernel;
@@ -201,12 +198,10 @@ public class TransformSafeAsyncFixture
 
         person.Age = 21;
 
-
         results.Data.Count.Should().Be(1);
         results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be(transformOnRefresh ? "Adult" : "Child");
         errorCount.Should().Be(0);
     }
-
 
     [Theory, InlineData(10), InlineData(100)]
 
@@ -235,15 +230,12 @@ public class TransformSafeAsyncFixture
                 , TransformAsyncOptions.Default with { MaximumConcurrency = maxConcurrency })
             .AsAggregator();
 
-
         source.AddOrUpdate(Enumerable.Range(1, transformCount).Select(l => new Person("Person" + l, l)));
-
 
         await results.Data.CountChanged.Where(c => c == transformCount).Take(1);
 
         errorCount.Should().Be(0);
     }
-
 
     private class TransformStub : IDisposable
     {

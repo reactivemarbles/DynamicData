@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reactive.Concurrency;
-
-using Microsoft.Reactive.Testing;
+using System;
 
 namespace DynamicData.Tests.Cache;
 

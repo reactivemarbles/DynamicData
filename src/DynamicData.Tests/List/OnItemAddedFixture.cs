@@ -56,7 +56,6 @@ public class OnItemAddedFixture
                 because:        "the collection contained initial items");
         addActionInvocations.Clear();
         
-
         // UUT Action
         source.Insert(
             index:  insertionIndex,
@@ -112,7 +111,6 @@ public class OnItemAddedFixture
             because:        "the collection contained initial items");
         addActionInvocations.Clear();
         
-
         // UUT Action
         source.Move(
             original:       originalIndex,
@@ -165,7 +163,6 @@ public class OnItemAddedFixture
             because:        "the collection contained initial items");
         addActionInvocations.Clear();
         
-
         // UUT Action
         source.Refresh(refreshIndex);
         
@@ -217,7 +214,6 @@ public class OnItemAddedFixture
             because:        "the collection contained initial items");
         addActionInvocations.Clear();
         
-
         // UUT Action
         source.RemoveAt(removalIndex);
         
@@ -268,7 +264,6 @@ public class OnItemAddedFixture
             because:        "the collection contained initial items");
         addActionInvocations.Clear();
         
-
         // UUT Action
         source.ReplaceAt(
             index:  replacementIndex,
@@ -323,7 +318,6 @@ public class OnItemAddedFixture
             because:        "the collection contained initial items");
         addActionInvocations.Clear();
         
-
         // UUT Action
         source.RemoveRange(
             index: removalIndex,
@@ -372,7 +366,6 @@ public class OnItemAddedFixture
             because:        "the collection contained initial items");
         addActionInvocations.Clear();
         
-
         // UUT Action
         source.Clear();
         
@@ -422,7 +415,6 @@ public class OnItemAddedFixture
             because:        "the collection contained initial items");
         addActionInvocations.Clear();
         
-
         // UUT Action
         source.Complete();
         
@@ -504,7 +496,6 @@ public class OnItemAddedFixture
             because:        "the collection contained initial items");
         addActionInvocations.Clear();
         
-
         // UUT Action
         var error = new Exception();
         source.SetError(error);

@@ -4,7 +4,6 @@
 
 using System.ComponentModel;
 using System.Linq.Expressions;
-using System.Reactive.Linq;
 
 namespace DynamicData.Binding;
 

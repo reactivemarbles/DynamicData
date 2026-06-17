@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Reactive.Linq;
 
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
@@ -34,14 +33,11 @@ public class ObservableCollectionBindCacheFixture : IDisposable
     {
         var people = _generator.Take(100).ToArray();
 
-
-
         // check whether reset is fired with different params
         var test1 = Test();
         var test2 = Test(new BindingOptions(95));
         var test3 = Test(new BindingOptions(105, ResetOnFirstTimeLoad: false));
         var test4 = Test(BindingOptions.NeverFireReset());
-
 
         test1.action.Should().Be(NotifyCollectionChangedAction.Reset);
         test2.action.Should().Be(NotifyCollectionChangedAction.Reset);
@@ -64,7 +60,6 @@ public class ObservableCollectionBindCacheFixture : IDisposable
                     result = events;
                 });
 
-
             var binder = options == null
                 ? _source.Connect().Bind(list).Subscribe()
                 : _source.Connect().Bind(list, options.Value).Subscribe();
@@ -81,13 +76,11 @@ public class ObservableCollectionBindCacheFixture : IDisposable
     {
         var people = _generator.Take(100).ToArray();
 
-
         // check whether reset is fired with different params
         var test1 = Test();
         var test2 = Test(new BindingOptions(95));
         var test3 = Test(new BindingOptions(105, ResetOnFirstTimeLoad: false));
         var test4 = Test(BindingOptions.NeverFireReset());
-
 
         test1.action.Should().Be(NotifyCollectionChangedAction.Reset);
         test2.action.Should().Be(NotifyCollectionChangedAction.Reset);
@@ -120,7 +113,6 @@ public class ObservableCollectionBindCacheFixture : IDisposable
             return (result!.Value, list);
         }
     }
-
 
     [Fact]
     public void AddToSourceAddsToDestination()
@@ -173,14 +165,12 @@ public class ObservableCollectionBindCacheFixture : IDisposable
         RunTest(true);
         RunTest(false);
 
-
         void RunTest(bool useReplace)
         {
             var collection = new ObservableCollectionExtended<Person>();
 
             using var source =  new SourceCache<Person, string>(p => p.Name);
             using var binder = source.Connect().Bind(collection, new ObservableCollectionAdaptor<Person, string>(useReplaceForUpdates: useReplace)).Subscribe();
-
 
             NotifyCollectionChangedAction action = default;
             source.AddOrUpdate(new Person("Adult1", 50));

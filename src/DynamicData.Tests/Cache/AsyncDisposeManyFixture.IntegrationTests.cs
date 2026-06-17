@@ -1,8 +1,5 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 using DynamicData.Kernel;
@@ -44,7 +41,6 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-
             source.AddOrUpdate(new[]
             {
                 ItemBase.Create(type: itemType, id: 1, version: 1),
@@ -60,7 +56,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.Error.Should().BeNull();
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("no disposals should have occurred");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("no disposals should have occurred");
-
 
             var error = new Exception("Test");
             source.Items.ElementAt(1).FailDisposal(error);
@@ -104,7 +99,6 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-
             source.AddOrUpdate(new[]
             {
                 ItemBase.Create(type: itemType, id: 1, version: 1),
@@ -120,7 +114,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.Error.Should().BeNull();
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             sourceCompletionSource.OnNext(Unit.Default);
             foreach (var item in source.Items)
@@ -161,7 +154,6 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-
             var items = Enumerable.Range(1, 100_000)
                 .Select(id => new AsyncDisposableItem()
                 {
@@ -180,7 +172,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.Error.Should().BeNull();
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             sourceCompletionSource.OnNext();
             await Task.WhenAll(items

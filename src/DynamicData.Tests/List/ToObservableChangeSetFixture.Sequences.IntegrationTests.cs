@@ -1,7 +1,5 @@
-﻿using System;
+using System;
 using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -27,10 +25,10 @@ public static partial class ToObservableChangeSetFixture
             {
                 IScheduler scheduler = schedulerType switch
                 {
-                    SchedulerType.Default       => DefaultScheduler.Instance,
+                    SchedulerType.Default       => Sequencer.Default,
                     SchedulerType.NewThread     => new NewThreadScheduler(),
-                    SchedulerType.TaskPool      => TaskPoolScheduler.Default,
-                    SchedulerType.ThreadPool    => ThreadPoolScheduler.Instance,
+                    SchedulerType.TaskPool      => TaskPoolSequencer.Default,
+                    SchedulerType.ThreadPool    => ThreadPoolSequencer.Instance,
                     _                           => throw new ArgumentOutOfRangeException(nameof(schedulerType))
                 };
 

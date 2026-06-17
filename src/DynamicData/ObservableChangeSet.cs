@@ -1,9 +1,6 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 
 namespace DynamicData;
 
@@ -56,6 +53,7 @@ public static class ObservableChangeSet
             {
                 var cache = new SourceCache<TObject, TKey>(keySelector);
                 var disposable = new SingleAssignmentDisposable();
+                var responder = cache.Connect().SubscribeSafe(observer);
 
                 try
                 {
@@ -66,7 +64,7 @@ public static class ObservableChangeSet
                     observer.OnError(e);
                 }
 
-                return new CompositeDisposable(disposable, Disposable.Create(observer.OnCompleted), cache.Connect().SubscribeSafe(observer), cache);
+                return new CompositeDisposable(disposable, Disposable.Create(observer.OnCompleted), responder, cache);
             });
     }
 
@@ -288,6 +286,7 @@ public static class ObservableChangeSet
             {
                 var list = new SourceList<T>();
                 IDisposable? disposeAction = null;
+                var responder = list.Connect().SubscribeSafe(observer);
 
                 try
                 {
@@ -299,7 +298,7 @@ public static class ObservableChangeSet
                 }
 
                 return new CompositeDisposable(
-                    list.Connect().SubscribeSafe(observer),
+                    responder,
                     list,
                     Disposable.Create(
                         () =>
