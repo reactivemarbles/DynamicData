@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using System.ComponentModel;
 using System.Linq.Expressions;
 
 namespace DynamicData.Binding;

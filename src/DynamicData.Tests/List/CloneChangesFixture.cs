@@ -1,12 +1,8 @@
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 using DynamicData.Kernel;
 
 using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 

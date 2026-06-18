@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using ReactiveUI.Primitives.Concurrency;
 
 namespace DynamicData.Tests.Utilities;
 

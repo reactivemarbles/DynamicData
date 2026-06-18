@@ -1,11 +1,7 @@
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 

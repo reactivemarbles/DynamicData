@@ -17,13 +17,13 @@ namespace DynamicData;
 public sealed class SourceList<T> : ISourceList<T>
     where T : notnull
 {
-    private readonly ISubject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();
+    private readonly Subject<IChangeSet<T>> _changes = new();
 
-    private readonly ISubject<IChangeSet<T>> _changesPreview = new Subject<IChangeSet<T>>();
+    private readonly Subject<IChangeSet<T>> _changesPreview = new();
 
     private readonly IDisposable _cleanUp;
 
-    private readonly Lazy<ISubject<int>> _countChanged = new(() => new Subject<int>());
+    private readonly Lazy<Subject<int>> _countChanged = new(() => new Subject<int>());
 
 #if NET9_0_OR_GREATER
     private readonly Lock _locker = new();
@@ -108,6 +108,12 @@ public sealed class SourceList<T> : ISourceList<T>
     public void Dispose()
     {
         _cleanUp.Dispose();
+        _changesPreview.Dispose();
+        _changes.Dispose();
+        if (_countChanged.IsValueCreated)
+        {
+            _countChanged.Value.Dispose();
+        }
     }
 
     /// <inheritdoc />

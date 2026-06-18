@@ -1,6 +1,4 @@
-﻿using System;
-
-using DynamicData.Kernel;
+﻿using DynamicData.Kernel;
 
 namespace DynamicData.Tests.Domain;
 

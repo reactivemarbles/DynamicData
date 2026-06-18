@@ -16,6 +16,8 @@ internal sealed class SubjectWithRefCount<T>(ISubject<T>? subject = null) : ISub
 {
     private readonly ISubject<T> _subject = subject ?? new Subject<T>();
 
+    private bool _isDisposed;
+
     private int _refCount;
 
     /// <summary>Gets number of subscribers.</summary>
@@ -25,13 +27,17 @@ internal sealed class SubjectWithRefCount<T>(ISubject<T>? subject = null) : ISub
     public int RefCount => _refCount;
 
     /// <inheritdoc />
-    public bool HasObservers => _subject.HasObservers;
+    public bool HasObservers => Volatile.Read(ref _refCount) > 0;
 
     /// <inheritdoc />
-    public bool IsDisposed => _subject.IsDisposed;
+    public bool IsDisposed => _isDisposed;
 
     /// <inheritdoc />
-    public void Dispose() => (_subject as IDisposable)?.Dispose();
+    public void Dispose()
+    {
+        _isDisposed = true;
+        (_subject as IDisposable)?.Dispose();
+    }
 
     /// <summary>
     /// Notifies the observer that the provider has finished sending push-based notifications.

@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using DynamicData.Binding;
 using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Issues
 {

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace DynamicData.Tests.Utilities;
 
 public sealed class ValueRecordingObserver<T>

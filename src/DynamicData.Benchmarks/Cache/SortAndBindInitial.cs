@@ -1,6 +1,4 @@
 using BenchmarkDotNet.Attributes;
-using System;
-using System.Linq;
 using DynamicData.Binding;
 
 namespace DynamicData.Benchmarks.Cache;

@@ -1,11 +1,6 @@
-using System;
-using System.Linq;
-
 using DynamicData.Tests.Domain;
 
 using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 //TODO: To optimise this, we need to introduce replace range, or specify a buffer

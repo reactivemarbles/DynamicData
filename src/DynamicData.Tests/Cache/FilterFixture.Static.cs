@@ -1,9 +1,4 @@
-using System;
-
 using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
 
 namespace DynamicData.Tests.Cache;
 

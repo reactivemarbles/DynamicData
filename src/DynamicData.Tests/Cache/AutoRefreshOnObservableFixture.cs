@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-
 namespace DynamicData.Tests.Cache;
 
 public static partial class AutoRefreshOnObservableFixture

@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-
-using DynamicData.Binding;
+﻿using DynamicData.Binding;
 
 using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 

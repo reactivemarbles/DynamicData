@@ -1,10 +1,6 @@
-using System;
-
 using DynamicData.Kernel;
 
 using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 

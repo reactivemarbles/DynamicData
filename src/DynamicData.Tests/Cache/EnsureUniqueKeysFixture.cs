@@ -1,9 +1,5 @@
-using System;
-using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using Mono.Cecil;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 

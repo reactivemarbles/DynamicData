@@ -1,11 +1,6 @@
-using System;
-using System.Linq;
 using System.Linq.Expressions;
 
 using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
 
 namespace DynamicData.Tests.Cache;
 

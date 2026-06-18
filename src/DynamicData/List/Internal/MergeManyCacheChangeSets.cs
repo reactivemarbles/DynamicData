@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using DynamicData.Cache.Internal;
-using DynamicData.Internal;
 
 namespace DynamicData.List.Internal;
 

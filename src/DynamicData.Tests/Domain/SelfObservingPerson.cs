@@ -1,5 +1,3 @@
-using System;
-
 namespace DynamicData.Tests.Domain;
 
 public class SelfObservingPerson : IDisposable

@@ -1,5 +1,3 @@
-using System;
-
 namespace DynamicData.Tests.Cache;
 
 public static partial class ExpireAfterFixture

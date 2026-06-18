@@ -3,9 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Threading;
 using DynamicData.Binding;
-using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 
 // ReSharper disable once CheckNamespace

@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
 
 using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Binding;
 

@@ -1,7 +1,3 @@
-using System;
-
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public class InnerJoinFixtureRaceCondition

@@ -1,7 +1,4 @@
-using System.Linq;
 using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 

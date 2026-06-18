@@ -1,8 +1,5 @@
-using System;
 using DynamicData.Cache.Internal;
-using System.Collections.Generic;
 using DynamicData.Kernel;
-using Xunit;
 
 namespace DynamicData.Tests
 {

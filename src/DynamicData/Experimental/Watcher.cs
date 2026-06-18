@@ -35,7 +35,13 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
                     var subscriber = _subscribers.Lookup(update.Key);
                     if (subscriber.HasValue)
                     {
-                        scheduler.Schedule(() => subscriber.Value.OnNext(update));
+                        scheduler.Schedule(
+                            state: (subject: subscriber.Value, update),
+                            action: static (_, state) =>
+                            {
+                                state.subject.OnNext(state.update);
+                                return Disposable.Empty;
+                            });
                     }
                 }));
 

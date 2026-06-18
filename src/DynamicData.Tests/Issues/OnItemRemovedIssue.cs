@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using DynamicData.Binding;
-using Xunit;
 
 namespace DynamicData.Tests.Issues
 {

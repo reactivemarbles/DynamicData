@@ -1,11 +1,8 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 
 using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Kernal;
 

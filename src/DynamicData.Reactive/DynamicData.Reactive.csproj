@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Title>Dynamic Data</Title>
+    <Description>
+      Bring the power of Rx to collections using Dynamic Data.
+      Dynamic Data is a comprehensive caching and data manipulation solution which introduces domain centric observable collections.
+      Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more.
+    </Description>
+    <TargetFrameworks>net462;net472;net48;net481;net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ReactiveUI.Primitives.Reactive" Version="5.3.0" />
+    <PackageReference Include="ReactiveUI.Primitives.Extensions.Reactive" Version="5.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="System" />
+    <Using Include="System.Collections" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.ComponentModel" />
+    <Using Include="System.Runtime.CompilerServices" />
+    <Using Include="System.Collections.ObjectModel" />
+    <Using Include="DynamicData.Cache" />
+    <Using Include="DynamicData.Kernel" />
+    <Using Include="DynamicData.Internal" />
+    <Using Include="System.Reactive" />
+    <Using Include="System.Reactive.Concurrency" />
+    <Using Include="System.Reactive.Disposables" />
+    <Using Include="System.Reactive.Linq" />
+    <Using Include="System.Reactive.Subjects" />
+    <Using Include="System.Reactive.Threading.Tasks" />
+    <Using Include="System.Reactive.Unit" Alias="Unit" />
+    <Using Include="System.Reactive.Concurrency.IScheduler" Alias="IScheduler" />
+    <Using Include="System.Reactive.Concurrency.Scheduler" Alias="Sequencer" />
+    <Using Include="System.Reactive.Concurrency.TaskPoolScheduler" Alias="TaskPoolSequencer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile
+      Include="..\DynamicData\**\*.cs"
+      Exclude="..\DynamicData\bin\**;..\DynamicData\obj\**;..\DynamicData\Internal\ReactiveCompatibility.cs"
+      Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- AsyncDisposeMany is only supported on platforms that have IAsyncDisposable. -->
+  <ItemGroup Condition="!$(DefineConstants.Contains('SUPPORTS_ASYNC_DISPOSABLE'))">
+    <Compile Remove="Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
+    <Compile Remove="..\DynamicData\Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-
 namespace DynamicData.Tests.Utilities;
 
 internal static class StressAddRemoveExtensions
