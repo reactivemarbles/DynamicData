@@ -13,5 +13,17 @@ namespace DynamicData.APITests
         /// </summary>
         [Fact]
         public Task DynamicDataTests() => typeof(VirtualRequest).Assembly.CheckApproval(["DynamicData"]);
+
+        /// <summary>
+        /// Tests to make sure the API of DynamicData.Reactive project is approved.
+        /// </summary>
+        [Fact]
+        public Task DynamicDataReactiveTests()
+        {
+            var reactiveAssemblyPath = Path.Combine(AppContext.BaseDirectory, "DynamicData.Reactive.dll");
+            var reactiveAssembly = System.Reflection.Assembly.LoadFrom(reactiveAssemblyPath);
+
+            return reactiveAssembly.CheckApproval(["DynamicData.Reactive"]);
+        }
     }
 }

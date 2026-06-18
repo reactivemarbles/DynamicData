@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DynamicData\DynamicData.csproj" />
+    <ProjectReference Include="..\DynamicData.Reactive\DynamicData.Reactive.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,4 +32,11 @@
     <Using Include="ReactiveUI.Primitives.RxVoid" Alias="Unit" />
     <Using Include="ReactiveUI.Primitives.Concurrency.ISequencer" Alias="IScheduler" />
   </ItemGroup>
+
+  <Target Name="CopyDynamicDataReactiveOutput" AfterTargets="Build">
+    <ItemGroup>
+      <DynamicDataReactiveRuntimeFile Include="..\DynamicData.Reactive\bin\$(Configuration)\$(TargetFramework)\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DynamicDataReactiveRuntimeFile)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>
