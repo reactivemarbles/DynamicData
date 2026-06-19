@@ -11,7 +11,7 @@ public class IObservableListBindCacheSortedFixture : IDisposable
 
     private static readonly IComparer<Person> _comparerNameDesc = SortExpressionComparer<Person>.Descending(p => p.Name);
 
-    private readonly BehaviorSubject<IComparer<Person>> _comparer = new(_comparerAgeAscThanNameAsc);
+    private readonly StateSignal<IComparer<Person>> _comparer = new(_comparerAgeAscThanNameAsc);
 
     private readonly RandomPersonGenerator _generator = new();
 

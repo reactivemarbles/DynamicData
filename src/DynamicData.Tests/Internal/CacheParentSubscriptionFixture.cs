@@ -48,11 +48,11 @@ public sealed class CacheParentSubscriptionFixture
     public void ChildOnNext_CalledForEachEmission()
     {
         using var source = new SourceCache<TestItem, int>(x => x.Key);
-        var childSubjects = new List<Subject<string>>();
+        var childSubjects = new List<Signal<string>>();
         var observer = new TestObserver();
         using var sub = new TestSubscription(observer, key =>
         {
-            var subj = new Subject<string>();
+            var subj = new Signal<string>();
             childSubjects.Add(subj);
             return subj;
         });
@@ -98,7 +98,7 @@ public sealed class CacheParentSubscriptionFixture
         using var sub = new TestSubscription(observer, key =>
         {
             Interlocked.Increment(ref childCount);
-            return new BehaviorSubject<string>($"sync-{key}");
+            return new StateSignal<string>($"sync-{key}");
         });
         sub.ExposeCreateParent(source.Connect());
 
@@ -117,11 +117,11 @@ public sealed class CacheParentSubscriptionFixture
     public void Completion_RequiresParentAndAllChildren()
     {
         using var source = new TestSourceCache<TestItem, int>(x => x.Key);
-        var childSubjects = new List<Subject<string>>();
+        var childSubjects = new List<Signal<string>>();
         var observer = new TestObserver();
         using var sub = new TestSubscription(observer, key =>
         {
-            var subj = new Subject<string>();
+            var subj = new Signal<string>();
             childSubjects.Add(subj);
             return subj;
         });
@@ -153,11 +153,11 @@ public sealed class CacheParentSubscriptionFixture
     public void Disposal_StopsAllEmissions()
     {
         using var source = new SourceCache<TestItem, int>(x => x.Key);
-        var childSubjects = new List<Subject<string>>();
+        var childSubjects = new List<Signal<string>>();
         var observer = new TestObserver();
         var sub = new TestSubscription(observer, key =>
         {
-            var subj = new Subject<string>();
+            var subj = new Signal<string>();
             childSubjects.Add(subj);
             return subj;
         });
@@ -199,7 +199,7 @@ public sealed class CacheParentSubscriptionFixture
             observer,
             key =>
             {
-                var subj = new Subject<string>();
+                var subj = new Signal<string>();
                 return subj;
             },
             onParent: () => { lock (callLog) callLog.Add("P-start"); Thread.Sleep(1); lock (callLog) callLog.Add("P-end"); },

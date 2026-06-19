@@ -68,7 +68,7 @@ public class TransformFixture
     public void ReTransformAll()
     {
         var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
-        var forceTransform = new Subject<Unit>();
+        var forceTransform = new Signal<Unit>();
 
         using var stub = new TransformStub(forceTransform);
         stub.Source.AddOrUpdate(people);
@@ -91,7 +91,7 @@ public class TransformFixture
     public void ReTransformSelected()
     {
         var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
-        var forceTransform = new Subject<Func<Person, bool>>();
+        var forceTransform = new Signal<Func<Person, bool>>();
 
         using var stub = new TransformStub(forceTransform);
         stub.Source.AddOrUpdate(people);

@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
 using DynamicData.Binding;
 
 // ReSharper disable once CheckNamespace
@@ -23,7 +22,7 @@ public static partial class ObservableCacheEx
     /// <param name="destination">The <see cref="IObservableCollection{TObject}"/> that will receive the changes.</param>
     /// <param name="refreshThreshold">The number of changes before a reset notification is triggered.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     /// <seealso cref="ObservableListEx.Bind"/>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, int refreshThreshold = BindingOptions.DefaultResetThreshold)
         where TObject : notnull
@@ -51,7 +50,7 @@ public static partial class ObservableCacheEx
     /// <param name="destination">The <see cref="IObservableCollection{TObject}"/> that will receive the changes.</param>
     /// <param name="options">The <see cref="BindingOptions"/> that controls binding behavior.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, BindingOptions options)
         where TObject : notnull
         where TKey : notnull
@@ -98,7 +97,7 @@ public static partial class ObservableCacheEx
     /// <param name="readOnlyObservableCollection">The output <see cref="ReadOnlyObservableCollection{TObject}"/> that will be populated with the results.</param>
     /// <param name="options">The <see cref="BindingOptions"/> that controls binding behavior.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, BindingOptions options)
         where TObject : notnull
         where TKey : notnull
@@ -121,7 +120,7 @@ public static partial class ObservableCacheEx
     /// <param name="useReplaceForUpdates">When <see langword="true"/>, uses Replace instead of Remove/Add for updates in the bound collection. Not all platforms support replace notifications.</param>
     /// <param name="adaptor">An optional <see cref="IObservableCollectionAdaptor{TObject, TKey}"/> that controls how the target collection is updated.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = BindingOptions.DefaultResetThreshold, bool useReplaceForUpdates = BindingOptions.DefaultUseReplaceForUpdates, IObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
         where TObject : notnull
         where TKey : notnull
@@ -174,7 +173,7 @@ public static partial class ObservableCacheEx
     /// <param name="destination">The <see cref="IObservableCollection{TObject}"/> that will receive the changes.</param>
     /// <param name="options">The <see cref="BindingOptions"/> that controls binding behavior.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, BindingOptions options)
         where TObject : notnull
         where TKey : notnull
@@ -223,7 +222,7 @@ public static partial class ObservableCacheEx
     /// <param name="readOnlyObservableCollection">The output <see cref="ReadOnlyObservableCollection{TObject}"/> that will be populated with the results.</param>
     /// <param name="options">The <see cref="BindingOptions"/> that controls binding behavior.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, BindingOptions options)
         where TObject : notnull
         where TKey : notnull
@@ -248,7 +247,7 @@ public static partial class ObservableCacheEx
     /// <param name="useReplaceForUpdates">When <see langword="true"/>, uses Replace instead of Remove/Add for updates in the bound collection. Not all platforms support replace notifications.</param>
     /// <param name="adaptor">An <see cref="IChangeSetAdaptor{TObject, TKey}"/> that specify an adaptor to change the algorithm to update the target collection.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = BindingOptions.DefaultResetThreshold, bool useReplaceForUpdates = BindingOptions.DefaultUseReplaceForUpdates, ISortedObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
         where TObject : notnull
         where TKey : notnull

@@ -15,7 +15,7 @@ namespace DynamicData.Kernel;
 /// <param name="exception">The exception that caused the error.</param>
 /// <param name="value">The value for the error.</param>
 /// <param name="key">The key for the error.</param>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "By Design.")]
+[SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "By Design.")]
 public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TKey key) : IKeyValue<TObject, TKey>, IEquatable<Error<TObject, TKey>>
     where TKey : notnull
 {

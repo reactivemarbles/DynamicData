@@ -29,6 +29,7 @@ public static partial class ObservableCacheEx
         where TKey : notnull
     {
         reasons.ThrowArgumentNullExceptionIfNull(nameof(reasons));
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (reasons.Length == 0)
         {

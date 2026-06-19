@@ -42,5 +42,5 @@ public interface IObservableCache<TObject, TKey> : IConnectableCache<TObject, TK
     /// </remarks>
     /// <param name="key">The key.</param>
     /// <returns>An optional with the looked up value.</returns>
-    Optional<TObject> Lookup(TKey key);
+    Kernel.Optional<TObject> Lookup(TKey key);
 }

@@ -1,5 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Columns;
+using ReactiveUI.Primitives.Signals;
 
 namespace DynamicData.Benchmarks.Cache;
 
@@ -46,7 +47,7 @@ public class ToObservableChangeSet_Cache
     [Arguments(1_000, 1_000)]
     public void AddsUpdatesAndFinalization(int itemCount, int sizeLimit)
     {
-        using var source = new Subject<Item>();
+        using var source = new Signal<Item>();
 
         using var subscription = source
             .ToObservableChangeSet(

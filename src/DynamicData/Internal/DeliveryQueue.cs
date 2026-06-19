@@ -11,14 +11,11 @@ namespace DynamicData.Internal;
 /// </summary>
 /// <typeparam name="T">The value type delivered via OnNext.</typeparam>
 internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
+    where T : notnull
 {
     private readonly Queue<Notification<T>> _queue = new(1);
 
-#if NET9_0_OR_GREATER
     private readonly Lock _gate;
-#else
-    private readonly object _gate;
-#endif
 
     private readonly IObserver<T> _observer;
     private int _drainThreadId = -1;

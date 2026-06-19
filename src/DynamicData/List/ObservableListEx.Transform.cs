@@ -75,7 +75,7 @@ public static partial class ObservableListEx
     /// Projects each item using a transform function that also receives the previously transformed value (if any).
     /// Type arguments must be specified explicitly as type inference fails for this overload.
     /// </summary>
-    public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, TDestination> transformFactory, bool transformOnRefresh = false)
+    public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Kernel.Optional<TDestination>, TDestination> transformFactory, bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
     {
@@ -90,7 +90,7 @@ public static partial class ObservableListEx
     /// Projects each item using a transform function that receives the source item, the previously transformed value, and the index.
     /// Type arguments must be specified explicitly as type inference fails for this overload.
     /// </summary>
-    public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> transformFactory, bool transformOnRefresh = false)
+    public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Kernel.Optional<TDestination>, int, TDestination> transformFactory, bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
     {

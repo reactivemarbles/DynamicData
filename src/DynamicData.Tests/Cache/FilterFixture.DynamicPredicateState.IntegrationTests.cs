@@ -26,8 +26,8 @@ public static partial class FilterFixture
                         randomizer: randomizer)
                     .ToArray();
 
-                using var source            = new Subject<IChangeSet<Item, int>>();
-                using var predicateState    = new Subject<int>();
+                using var source            = new Signal<IChangeSet<Item, int>>();
+                using var predicateState    = new Signal<int>();
 
                 // UUT Initialization
                 using var subscription = source

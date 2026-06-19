@@ -17,7 +17,7 @@ namespace DynamicData.Binding;
 /// <param name="refreshThreshold">The number of changes before a Reset event is used.</param>
 /// <param name="allowReplace"> Use replace instead of remove / add for updates. </param>
 /// <param name="resetOnFirstTimeLoad"> Should a reset be fired for a first time load.This option is due to historic reasons where a reset would be fired for the first time load regardless of the number of changes.</param>
-/// <exception cref="System.ArgumentNullException">collection.</exception>
+/// <exception cref="ArgumentNullException">collection.</exception>
 public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection, int refreshThreshold,
 #pragma warning disable CS9113 // Parameter is unread.
     bool allowReplace = true,

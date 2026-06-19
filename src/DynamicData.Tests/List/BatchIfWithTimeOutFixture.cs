@@ -6,7 +6,7 @@ namespace DynamicData.Tests.List;
 
 public class BatchIfWithTimeOutFixture : IDisposable
 {
-    private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
+    private readonly ISignal<bool> _pausingSubject = new Signal<bool>();
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -16,7 +16,7 @@ public class BatchIfWithTimeOutFixture : IDisposable
 
     public BatchIfWithTimeOutFixture()
     {
-        _pausingSubject = new Subject<bool>();
+        _pausingSubject = new Signal<bool>();
         _scheduler = new TestScheduler();
         _source = new SourceList<Person>();
         _results = _source.Connect().BufferIf(_pausingSubject, TimeSpan.FromMinutes(1), _scheduler).AsAggregator();
@@ -47,6 +47,7 @@ public class BatchIfWithTimeOutFixture : IDisposable
         _results.Dispose();
         _source.Dispose();
         _pausingSubject.OnCompleted();
+        _pausingSubject?.Dispose();
     }
 
     [Fact]

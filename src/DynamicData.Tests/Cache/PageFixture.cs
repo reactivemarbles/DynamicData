@@ -13,9 +13,9 @@ public class PageFixture : IDisposable
 
     private readonly RandomPersonGenerator _generator = new();
 
-    private readonly ISubject<IPageRequest> _pager;
+    private readonly ISignal<IPageRequest> _pager;
 
-    private readonly ISubject<IComparer<Person>> _sort;
+    private readonly ISignal<IComparer<Person>> _sort;
 
     private readonly ISourceCache<Person, string> _source;
 
@@ -23,8 +23,8 @@ public class PageFixture : IDisposable
     {
         _source = new SourceCache<Person, string>(p => p.Name);
         _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
-        _sort = new BehaviorSubject<IComparer<Person>>(_comparer);
-        _pager = new BehaviorSubject<IPageRequest>(new PageRequest(1, 25));
+        _sort = new StateSignal<IComparer<Person>>(_comparer);
+        _pager = new StateSignal<IPageRequest>(new PageRequest(1, 25));
 
         _aggregators = _source.Connect().Sort(_sort, resetThreshold: 200).Page(_pager).AsAggregator();
     }
@@ -61,6 +61,8 @@ public class PageFixture : IDisposable
     {
         _source.Dispose();
         _aggregators.Dispose();
+        _pager.Dispose();
+        _sort.Dispose();
     }
 
     [Fact]

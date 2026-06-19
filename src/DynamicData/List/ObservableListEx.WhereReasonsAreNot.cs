@@ -34,6 +34,7 @@ public static partial class ObservableListEx
         where T : notnull
     {
         reasons.ThrowArgumentNullExceptionIfNull(nameof(reasons));
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (reasons.Length == 0)
         {

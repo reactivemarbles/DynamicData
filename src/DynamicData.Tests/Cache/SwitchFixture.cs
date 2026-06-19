@@ -10,7 +10,7 @@ public class SwitchFixture
     public void ClearsForNewSource()
     {
         using var source = new SourceCache<Person, string>(p => p.Name);
-        using var switchable = new BehaviorSubject<ISourceCache<Person, string>>(source);
+        using var switchable = new StateSignal<ISourceCache<Person, string>>(source);
         var results = switchable.Switch().AsAggregator();
 
         var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
@@ -35,7 +35,7 @@ public class SwitchFixture
     public void PoulatesFirstSource()
     {
         using var source = new SourceCache<Person, string>(p => p.Name);
-        using var switchable = new BehaviorSubject<ISourceCache<Person, string>>(source);
+        using var switchable = new StateSignal<ISourceCache<Person, string>>(source);
         var results = switchable.Switch().AsAggregator();
 
         var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
@@ -48,7 +48,7 @@ public class SwitchFixture
     public void PropagatesOuterErrors()
     {
         using var source = new SourceCache<Person, string>(p => p.Name);
-        using var switchable = new BehaviorSubject<ISourceCache<Person, string>>(source);
+        using var switchable = new StateSignal<ISourceCache<Person, string>>(source);
         var results = switchable.Switch().AsAggregator();
 
         var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
@@ -64,13 +64,13 @@ public class SwitchFixture
     public void PropagatesInnerErrors()
     {
         using var source = new SourceCache<Person, string>(p => p.Name);
-        using var switchable = new BehaviorSubject<IObservable<IChangeSet<Person, string>>>(source.Connect());
+        using var switchable = new StateSignal<IObservable<IChangeSet<Person, string>>>(source.Connect());
         var results = switchable.Switch().AsAggregator();
 
         var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
         source.AddOrUpdate(inital);
 
-        using var source2 = new BehaviorSubject<IChangeSet<Person, string>>(ChangeSet<Person, string>.Empty);
+        using var source2 = new StateSignal<IChangeSet<Person, string>>(ChangeSet<Person, string>.Empty);
 
         switchable.OnNext(source2);
 

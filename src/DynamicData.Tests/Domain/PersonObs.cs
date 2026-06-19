@@ -3,7 +3,7 @@ namespace DynamicData.Tests.Domain;
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Acceptable in test.")]
 public class PersonObs(string name, int age, string gender = "F", string? parentName = null) : IEquatable<PersonObs>
 {
-    private readonly BehaviorSubject<int> _age = new BehaviorSubject<int>(age);
+    private readonly StateSignal<int> _age = new StateSignal<int>(age);
 
     public PersonObs(string firstname, string lastname, int age, string gender = "F", string? parentName = null)
         : this(firstname + " " + lastname, age, gender, parentName)

@@ -39,11 +39,11 @@ public abstract class SortAndBindObservableFixture : IDisposable
     private readonly SortExpressionComparer<Person> _defaultComparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "By Design.")]
-    private protected readonly BehaviorSubject<IComparer<Person>> ComparerObservable;
+    private protected readonly StateSignal<IComparer<Person>> ComparerObservable;
 
     protected SortAndBindObservableFixture()
     {
-        ComparerObservable = new BehaviorSubject<IComparer<Person>>(_defaultComparer);
+        ComparerObservable = new StateSignal<IComparer<Person>>(_defaultComparer);
 
         // It's ok in this case to call VirtualMemberCallInConstructor
 

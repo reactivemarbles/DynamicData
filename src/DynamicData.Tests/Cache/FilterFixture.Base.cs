@@ -104,7 +104,7 @@ public static partial class FilterFixture
         public void ItemsAreMoved_MovementsAreIgnored(EmptyChangesetPolicy emptyChangesetPolicy)
         {
             // Setup
-            using var source = new Subject<IChangeSet<Item, int>>();
+            using var source = new Signal<IChangeSet<Item, int>>();
 
             var items = new[]
             {

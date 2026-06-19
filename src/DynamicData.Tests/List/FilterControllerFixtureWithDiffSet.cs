@@ -6,7 +6,7 @@ namespace DynamicData.Tests.List;
 
 public class FilterControllerFixtureWithDiffSet : IDisposable
 {
-    private readonly ISubject<Func<Person, bool>> _filter;
+    private readonly ISignal<Func<Person, bool>> _filter;
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -15,7 +15,7 @@ public class FilterControllerFixtureWithDiffSet : IDisposable
     public FilterControllerFixtureWithDiffSet()
     {
         _source = new SourceList<Person>();
-        _filter = new BehaviorSubject<Func<Person, bool>>(p => p.Age > 20);
+        _filter = new StateSignal<Func<Person, bool>>(p => p.Age > 20);
         _results = _source.Connect().Filter(_filter).AsAggregator();
     }
 
@@ -143,6 +143,7 @@ public class FilterControllerFixtureWithDiffSet : IDisposable
     {
         _source.Dispose();
         _results.Dispose();
+        _filter.Dispose();
     }
 
     [Fact]

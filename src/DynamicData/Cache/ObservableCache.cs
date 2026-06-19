@@ -14,27 +14,23 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     where TObject : notnull
     where TKey : notnull
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<ChangeSet<TObject, TKey>> _changes = new();
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Signal<ChangeSet<TObject, TKey>> _changes = new();
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<ChangeSet<TObject, TKey>> _changesPreview = new();
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Signal<ChangeSet<TObject, TKey>> _changesPreview = new();
 
     private readonly IDisposable _cleanUp;
 
-    private readonly Lazy<ISubject<int>> _countChanged = new(() => new Subject<int>());
+    private readonly Lazy<ISignal<int>> _countChanged = new(() => new Signal<int>());
 
     private readonly Lazy<SuspensionTracker> _suspensionTracker;
 
-#if NET9_0_OR_GREATER
     private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
 
     private readonly ReaderWriter<TObject, TKey> _readerWriter;
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Terminated via NotifyCompleted in _cleanUp")]
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Terminated via NotifyCompleted in _cleanUp")]
     private readonly DeliveryQueue<CacheUpdate> _notifications;
 
     private int _editLevel; // The level of recursion in editing.
@@ -125,7 +121,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     public void Dispose() => _cleanUp.Dispose();
 
-    public Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
+    public Kernel.Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
 
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
 
@@ -152,7 +148,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         lock (_locker)
         {
             _suspensionTracker.Value.SuspendCount();
-            return Disposable.Create(this, static cache => cache.ResumeCount());
+            return Scope.Create(this, static cache => cache.ResumeCount());
         }
     }
 
@@ -161,7 +157,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         lock (_locker)
         {
             _suspensionTracker.Value.SuspendNotifications();
-            return Disposable.Create(this, static cache => cache.ResumeNotifications());
+            return Scope.Create(this, static cache => cache.ResumeNotifications());
         }
     }
 
@@ -333,20 +329,18 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private void ResumeNotifications()
     {
-        using (var notifications = _notifications.AcquireLock())
+        using var notifications = _notifications.AcquireLock();
+        Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Notifications without Suspend Notifications instance");
+
+        var (changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
+        if (changes is not null)
         {
-            Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Notifications without Suspend Notifications instance");
+            notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+        }
 
-            var (changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
-            if (changes is not null)
-            {
-                notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
-            }
-
-            if (emitResume)
-            {
-                _suspensionTracker.Value.EmitResumeNotification();
-            }
+        if (emitResume)
+        {
+            _suspensionTracker.Value.EmitResumeNotification();
         }
     }
 
@@ -443,7 +437,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private sealed class SuspensionTracker : IDisposable
     {
-        private readonly BehaviorSubject<bool> _areNotificationsSuspended = new(false);
+        private readonly BehaviorSignal<bool> _areNotificationsSuspended = new(false);
 
         private List<Change<TObject, TKey>> _pendingChanges = [];
 

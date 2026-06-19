@@ -8,14 +8,14 @@ internal sealed class TransformAsync<TSource, TDestination>
     where TSource : notnull
     where TDestination : notnull
 {
-    private readonly Func<TSource, Optional<TDestination>, int, Task<Transformer<TSource, TDestination>.TransformedItemContainer>> _containerFactory;
+    private readonly Func<TSource, Kernel.Optional<TDestination>, int, Task<Transformer<TSource, TDestination>.TransformedItemContainer>> _containerFactory;
 
     private readonly IObservable<IChangeSet<TSource>> _source;
     private readonly bool _transformOnRefresh;
 
     public TransformAsync(
         IObservable<IChangeSet<TSource>> source,
-        Func<TSource, Optional<TDestination>, int, Task<TDestination>> factory,
+        Func<TSource, Kernel.Optional<TDestination>, int, Task<TDestination>> factory,
         bool transformOnRefresh)
     {
         factory.ThrowArgumentNullExceptionIfNull(nameof(factory));
@@ -29,7 +29,7 @@ internal sealed class TransformAsync<TSource, TDestination>
         };
     }
 
-    public IObservable<IChangeSet<TDestination>> Run() => Observable.Defer(RunImpl);
+    public IObservable<IChangeSet<TDestination>> Run() => Signal.Lazy(RunImpl);
 
     private IObservable<IChangeSet<TDestination>> RunImpl()
     {
@@ -75,7 +75,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                             var container =
                                 await _containerFactory(
                                     item.Item.Current,
-                                    Optional<TDestination>.None,
+                                    Kernel.Optional<TDestination>.None,
                                     transformed.Count).ConfigureAwait(false);
                             transformed.Add(container);
                         }
@@ -84,7 +84,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                             var container =
                                 await _containerFactory(
                                     item.Item.Current,
-                                    Optional<TDestination>.None,
+                                    Kernel.Optional<TDestination>.None,
                                     change.CurrentIndex).ConfigureAwait(false);
                             transformed.Insert(change.CurrentIndex, container);
                         }
@@ -95,7 +95,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                 case ListChangeReason.AddRange:
                     {
                         var startIndex = item.Range.Index < 0 ? transformed.Count : item.Range.Index;
-                        var tasks = item.Range.Select((t, idx) => _containerFactory(t, Optional<TDestination>.None, idx + startIndex));
+                        var tasks = item.Range.Select((t, idx) => _containerFactory(t, Kernel.Optional<TDestination>.None, idx + startIndex));
                         var containers = await Task.WhenAll(tasks).ConfigureAwait(false);
                         transformed.AddOrInsertRange(containers, item.Range.Index);
                         break;
@@ -106,7 +106,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                         var change = item.Item;
                         if (_transformOnRefresh)
                         {
-                            Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
+                            Kernel.Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
                             var container = await _containerFactory(change.Current, previous, change.CurrentIndex)
                                 .ConfigureAwait(false);
                             transformed[change.CurrentIndex] = container;
@@ -123,7 +123,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                     {
                         var change = item.Item;
 
-                        Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
+                        Kernel.Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
                         if (change.CurrentIndex == change.PreviousIndex)
                         {
                             transformed[change.CurrentIndex] = await _containerFactory(change.Current, previous, change.CurrentIndex);
@@ -131,7 +131,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                         else
                         {
                             transformed.RemoveAt(change.PreviousIndex);
-                            transformed.Insert(change.CurrentIndex, await _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex));
+                            transformed.Insert(change.CurrentIndex, await _containerFactory(change.Current, Kernel.Optional<TDestination>.None, change.CurrentIndex));
                         }
 
                         break;

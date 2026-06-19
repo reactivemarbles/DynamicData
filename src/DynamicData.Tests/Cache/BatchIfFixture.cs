@@ -6,7 +6,7 @@ namespace DynamicData.Tests.Cache;
 
 public class BatchIfFixture : IDisposable
 {
-    private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
+    private readonly ISignal<bool> _pausingSubject = new Signal<bool>();
 
     private readonly ChangeSetAggregator<Person, string> _results;
 
@@ -20,7 +20,7 @@ public class BatchIfFixture : IDisposable
         _source = new SourceCache<Person, string>(p => p.Key);
         _results = _source.Connect().BatchIf(_pausingSubject, _scheduler).AsAggregator();
 
-        // _results = _source.Connect().BatchIf(new BehaviorSubject<bool>(true), scheduler: _scheduler).AsAggregator();
+        // _results = _source.Connect().BatchIf(new StateSignal<bool>(true), scheduler: _scheduler).AsAggregator();
     }
 
     [Fact]
@@ -107,6 +107,7 @@ public class BatchIfFixture : IDisposable
     {
         _results.Dispose();
         _source.Dispose();
+        _pausingSubject.Dispose();
     }
 
     [Fact]

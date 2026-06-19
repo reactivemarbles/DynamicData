@@ -1,5 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Columns;
+using ReactiveUI.Primitives.Signals;
 
 namespace DynamicData.Benchmarks.List;
 
@@ -27,7 +28,7 @@ public class ToObservableChangeSet_List
     [Arguments(1_000, 1_000)]
     public void AddsUpdatesAndFinalization(int itemCount, int sizeLimit)
     {
-        using var source = new Subject<int>();
+        using var source = new Signal<int>();
 
         using var subscription = source
             .ToObservableChangeSet(limitSizeTo: sizeLimit)

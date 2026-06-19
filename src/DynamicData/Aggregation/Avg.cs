@@ -4,9 +4,4 @@
 
 namespace DynamicData.Aggregation;
 
-internal readonly struct Avg<TValue>(int count, TValue sum)
-{
-    public int Count { get; } = count;
-
-    public TValue Sum { get; } = sum;
-}
+internal readonly record struct Avg<TValue>(int Count, TValue Sum);

@@ -7,7 +7,7 @@ public sealed class FilterImmutableFixture
     [Fact]
     public void ItemsAreManipulated_UnmatchedItemsAreExcludedAndIndexesAreDiscarded()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var results = source
             .FilterImmutable(predicate: Item.Predicate)
@@ -87,7 +87,7 @@ public sealed class FilterImmutableFixture
     [Fact]
     public void ItemsAreMoved_ChangesAreNotPropagated()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var results = source
             .FilterImmutable(predicate: Item.Predicate)
@@ -126,7 +126,7 @@ public sealed class FilterImmutableFixture
     [Fact]
     public void PredicateThrows_ExceptionIsCaptured()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         var error = new Exception();
 
@@ -148,7 +148,7 @@ public sealed class FilterImmutableFixture
     [Fact]
     public void SourceCompletes_CompletionIsPropagated()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var results = source
             .FilterImmutable(predicate: Item.Predicate)
@@ -208,7 +208,7 @@ public sealed class FilterImmutableFixture
     [Fact]
     public void SourceErrors_ErrorIsPropagated()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         var error = new Exception();
 
@@ -276,7 +276,7 @@ public sealed class FilterImmutableFixture
     [Fact]
     public void SuppressEmptyChangesetsIsFalse_EmptyChangesetsArePublished()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var results = source
             .FilterImmutable(
@@ -295,7 +295,7 @@ public sealed class FilterImmutableFixture
     [Fact]
     public void SuppressEmptyChangesetsIsTrue_EmptyChangesetsAreNotPublished()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var results = source
             .FilterImmutable(predicate: Item.Predicate)
@@ -308,7 +308,7 @@ public sealed class FilterImmutableFixture
         results.Messages.Should().BeEmpty("no source operations should have generated changes");
     }
 
-    private static void ManipulateExcludedItems(ISubject<IChangeSet<Item, int>> source)
+    private static void ManipulateExcludedItems(ISignal<IChangeSet<Item, int>> source)
     {
         var item1 = new Item() { Id = 1, IsIncluded = false };
         source.OnNext(new ChangeSet<Item, int>()

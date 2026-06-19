@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
 namespace DynamicData.Binding;
@@ -104,7 +103,7 @@ public static class ObservableCollectionEx
     /// <param name="source">The source.</param>
     /// <returns>An observable that emits the change set.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1146:Use conditional access.", Justification = "net 7.0 has error when conditional access is used.")]
+    [SuppressMessage("Roslynator", "RCS1146:Use conditional access.", Justification = "net 7.0 has error when conditional access is used.")]
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
         where TCollection : INotifyCollectionChanged, IEnumerable<T>
         where T : notnull

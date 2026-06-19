@@ -3,7 +3,6 @@ using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-
 using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Cache;
@@ -24,7 +23,7 @@ public class GroupOnObservableFixture : IDisposable
     private readonly SourceCache<Person, string> _cache = new (p => p.UniqueKey);
     private readonly ChangeSetAggregator<Person, string> _results;
     private readonly GroupChangeSetAggregator<Person, string, Color> _groupResults;
-    private readonly Subject<Unit> _grouperShutdown;
+    private readonly Signal<Unit> _grouperShutdown;
     private readonly Faker<Person> _faker;
     private readonly Randomizer _randomizer = new(0x3141_5926);
 

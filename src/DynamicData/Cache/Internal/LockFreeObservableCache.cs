@@ -17,14 +17,14 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     where TObject : notnull
     where TKey : notnull
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<IChangeSet<TObject, TKey>> _changes = new();
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Signal<IChangeSet<TObject, TKey>> _changes = new();
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<IChangeSet<TObject, TKey>> _changesPreview = new();
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Signal<IChangeSet<TObject, TKey>> _changesPreview = new();
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<int> _countChanged = new();
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Signal<int> _countChanged = new();
 
     private readonly IDisposable _cleanUp;
 
@@ -38,6 +38,11 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     /// <param name="source">The source.</param>
     public LockFreeObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
         _updater = new CacheUpdater<TObject, TKey>(_innerCache);
 
         var loader = source.Select(
@@ -88,7 +93,7 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     public IReadOnlyDictionary<TKey, TObject> KeyValues => new Dictionary<TKey, TObject>(_innerCache.GetDictionary());
 
     /// <inheritdoc />
-    public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => Observable.Defer(
+    public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => Signal.Lazy(
             () =>
             {
                 var initial = InternalEx.Return(() => _innerCache.GetInitialUpdates(predicate));
@@ -132,7 +137,7 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     /// <remarks>
     /// Fast indexed lookup.
     /// </remarks>
-    public Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
+    public Kernel.Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
     /// <inheritdoc />
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => predicate is null ? _changesPreview : _changesPreview.Filter(predicate);

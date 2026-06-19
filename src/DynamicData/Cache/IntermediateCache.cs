@@ -64,7 +64,7 @@ public sealed class IntermediateCache<TObject, TKey> : IIntermediateCache<TObjec
     public void Edit(Action<ICacheUpdater<TObject, TKey>> updateAction) => _innerCache.UpdateFromIntermediate(updateAction);
 
     /// <inheritdoc />
-    public Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
+    public Kernel.Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
     /// <inheritdoc />
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null)

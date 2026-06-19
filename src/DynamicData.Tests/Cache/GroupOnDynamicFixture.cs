@@ -2,7 +2,6 @@ using Bogus;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-
 using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Cache;
@@ -25,8 +24,8 @@ public class GroupOnDynamicFixture : IDisposable
     private readonly GroupChangeSetAggregator<Person, string, string> _groupResults;
     private readonly Faker<Person> _faker;
     private readonly Randomizer _randomizer;
-    private readonly BehaviorSubject<Func<Person, string, string>?> _keySelectionSubject = new (null);
-    private readonly Subject<Unit> _regroupSubject = new ();
+    private readonly StateSignal<Func<Person, string, string>?> _keySelectionSubject = new (null);
+    private readonly Signal<Unit> _regroupSubject = new ();
 
     public GroupOnDynamicFixture()
     {

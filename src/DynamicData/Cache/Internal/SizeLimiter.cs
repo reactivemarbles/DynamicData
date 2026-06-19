@@ -22,7 +22,7 @@ internal sealed class SizeLimiter<TObject, TKey>(int size)
         }
 
         var notifications = _cache.CaptureChanges();
-        var changed = notifications.Select(update => new Change<TObject, TKey>(update.Reason, update.Key, update.Current.Value, update.Previous.HasValue ? update.Previous.Value.Value : Optional<TObject>.None));
+        var changed = notifications.Select(update => new Change<TObject, TKey>(update.Reason, update.Key, update.Current.Value, update.Previous.HasValue ? update.Previous.Value.Value : Kernel.Optional<TObject>.None));
 
         return new ChangeSet<TObject, TKey>(changed);
     }

@@ -18,5 +18,9 @@ public static partial class ObservableListEx
     /// <returns>A list changeset stream of <c>object</c> items.</returns>
     /// <seealso cref="Cast{TDestination}(IObservable{IChangeSet{object}})"/>
     public static IObservable<IChangeSet<object>> CastToObject<T>(this IObservable<IChangeSet<T>> source)
-        where T : class => source.Select(changes => changes.Transform(t => (object)t));
+        where T : class
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        return source.Select(changes => changes.Transform(t => (object)t));
+    }
 }

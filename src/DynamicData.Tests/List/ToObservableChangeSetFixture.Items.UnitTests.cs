@@ -12,7 +12,7 @@ public static partial class ToObservableChangeSetFixture
             public void ExpireAfterThrows_ErrorPropagates()
             {
                 // Setup
-                using var source = new Subject<Item>();
+                using var source = new Signal<Item>();
 
                 var error = new Exception("Test Exception");
 
@@ -45,7 +45,7 @@ public static partial class ToObservableChangeSetFixture
             public void SizeLimitIsExceeded_OldestItemsAreRemoved()
             {
                 // Setup
-                using var source = new Subject<Item>();
+                using var source = new Signal<Item>();
 
                 // UUT Initialization
                 using var subscription = source
@@ -112,7 +112,7 @@ public static partial class ToObservableChangeSetFixture
 
                 var source = sourceType switch
                 {
-                    SourceType.Asynchronous => new Subject<Item>(),
+                    SourceType.Asynchronous => new Signal<Item>(),
                     SourceType.Immediate    => Observable.Return(item),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
@@ -128,7 +128,7 @@ public static partial class ToObservableChangeSetFixture
                     .ValidateChangeSets()
                     .RecordListItems(out var results);
 
-                if (source is Subject<Item> subject)
+                if (source is Signal<Item> subject)
                 {
                     subject.OnNext(item);
                     subject.OnCompleted();
@@ -166,7 +166,7 @@ public static partial class ToObservableChangeSetFixture
 
                 var source = sourceType switch
                 {
-                    SourceType.Asynchronous => new Subject<Item>(),
+                    SourceType.Asynchronous => new Signal<Item>(),
                     SourceType.Immediate    => Observable.Return(item),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
@@ -182,7 +182,7 @@ public static partial class ToObservableChangeSetFixture
                     .ValidateChangeSets()
                     .RecordListItems(out var results);
 
-                if (source is Subject<Item> subject)
+                if (source is Signal<Item> subject)
                 {
                     subject.OnNext(item);
                     subject.OnCompleted();
@@ -203,7 +203,7 @@ public static partial class ToObservableChangeSetFixture
             public void SourceEmitsItems_ItemsAreAddedAndRemovedWhenExpired()
             {
                 // Setup
-                using var source = new Subject<Item>();
+                using var source = new Signal<Item>();
 
                 var scheduler = new TestScheduler();
 
@@ -308,7 +308,7 @@ public static partial class ToObservableChangeSetFixture
 
                 var source = sourceType switch
                 { 
-                    SourceType.Asynchronous => new Subject<Item>(),
+                    SourceType.Asynchronous => new Signal<Item>(),
                     SourceType.Immediate    => Observable.Throw<Item>(error),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
@@ -320,7 +320,7 @@ public static partial class ToObservableChangeSetFixture
                     .ValidateChangeSets()
                     .RecordListItems(out var results);
 
-                if (source is Subject<Item> subject)
+                if (source is Signal<Item> subject)
                     subject.OnError(error);
 
                 results.Error.Should().BeSameAs(error, "errors should propagate");

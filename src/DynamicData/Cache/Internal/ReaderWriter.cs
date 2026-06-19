@@ -8,11 +8,7 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
     where TObject : notnull
     where TKey : notnull
 {
-#if NET9_0_OR_GREATER
     private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
 
     private CacheUpdater<TObject, TKey>? _activeUpdater;
 
@@ -87,7 +83,7 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
         }
     }
 
-    public Optional<TObject> Lookup(TKey key)
+    public Kernel.Optional<TObject> Lookup(TKey key)
     {
         lock (_locker)
         {

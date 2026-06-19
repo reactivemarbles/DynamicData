@@ -178,9 +178,9 @@ public class MergeManyWithKeyOverloadFixture : IDisposable
         receivedError.Should().Be(expectedError);
     }
 
-    private class ObjectWithObservable(int id)
+    private class ObjectWithObservable(int id) : IDisposable
     {
-        private readonly ISubject<bool> _changed = new Subject<bool>();
+        private readonly Signal<bool> _changed = new Signal<bool>();
 
         private bool _value;
 
@@ -197,5 +197,7 @@ public class MergeManyWithKeyOverloadFixture : IDisposable
             _value = value;
             _changed.OnNext(value);
         }
+
+        public void Dispose() => _changed.Dispose();
     }
 }

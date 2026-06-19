@@ -15,7 +15,7 @@ internal sealed class ObservableWithValue<TObject, TValue>
 
     public TObject Item { get; }
 
-    public Optional<TValue> LatestValue { get; private set; } = Optional<TValue>.None;
+    public Kernel.Optional<TValue> LatestValue { get; private set; } = Kernel.Optional<TValue>.None;
 
     public IObservable<TValue> Observable { get; }
 }

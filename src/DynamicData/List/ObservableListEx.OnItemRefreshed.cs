@@ -26,7 +26,10 @@ public static partial class ObservableListEx
                 this IObservable<IChangeSet<T>> source,
                 Action<T> refreshAction)
             where T : notnull
-        => List.Internal.OnItemRefreshed<T>.Create(
-            source: source,
-            refreshAction: refreshAction);
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        return List.Internal.OnItemRefreshed<T>.Create(
+                source: source,
+                refreshAction: refreshAction);
+    }
 }

@@ -54,7 +54,7 @@ public sealed class SourceCache<TObject, TKey>(Func<TObject, TKey> keySelector) 
     public void Edit(Action<ISourceUpdater<TObject, TKey>> updateAction) => _innerCache.UpdateFromSource(updateAction);
 
     /// <inheritdoc />
-    public Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
+    public Kernel.Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
     /// <inheritdoc />
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => _innerCache.Preview(predicate);

@@ -577,7 +577,7 @@ public static partial class FilterFixture
         public void SubscriptionIsDisposed_SubscriptionDisposalPropagates()
         {
             // Setup
-            using var source = new Subject<IChangeSet<Item>>();
+            using var source = new Signal<IChangeSet<Item>>();
 
             // UUT Initialization
             using var subscription = source

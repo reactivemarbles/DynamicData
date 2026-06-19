@@ -4,26 +4,8 @@
 
 namespace DynamicData.Cache.Internal;
 
-internal readonly struct ExpirableItem<TObject, TKey>(TObject value, TKey key, DateTime dateTime, long index = 0) : IEquatable<ExpirableItem<TObject, TKey>>
+internal readonly record struct ExpirableItem<TObject, TKey>(TObject Value, TKey Key, DateTime ExpireAt, long Index = 0)
 {
-    public TObject Value { get; } = value;
-
-    public TKey Key { get; } = key;
-
-    public DateTime ExpireAt { get; } = dateTime;
-
-    public long Index { get; } = index;
-
-    public static bool operator ==(in ExpirableItem<TObject, TKey> left, in ExpirableItem<TObject, TKey> right) => left.Equals(right);
-
-    public static bool operator !=(in ExpirableItem<TObject, TKey> left, in ExpirableItem<TObject, TKey> right) => !left.Equals(right);
-
-    /// <inheritdoc />
-    public bool Equals(ExpirableItem<TObject, TKey> other) => EqualityComparer<TKey>.Default.Equals(Key, other.Key) && ExpireAt.Equals(other.ExpireAt);
-
-    /// <inheritdoc />
-    public override bool Equals(object? obj) => obj is ExpirableItem<TObject, TKey> expItem && Equals(expItem);
-
     /// <inheritdoc />
     public override int GetHashCode()
     {

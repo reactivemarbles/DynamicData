@@ -12,7 +12,7 @@ public class SortObservableFixture : IDisposable
     private readonly SortExpressionComparer<Person> _comparer;
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "By Design.")]
-    private readonly BehaviorSubject<IComparer<Person>> _comparerObservable;
+    private readonly StateSignal<IComparer<Person>> _comparerObservable;
 
     private readonly RandomPersonGenerator _generator = new();
 
@@ -23,7 +23,7 @@ public class SortObservableFixture : IDisposable
     public SortObservableFixture()
     {
         _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
-        _comparerObservable = new BehaviorSubject<IComparer<Person>>(_comparer);
+        _comparerObservable = new StateSignal<IComparer<Person>>(_comparer);
         _cache = new SourceCache<Person, string>(p => p.Name);
         //  _sortController = new SortController<Person>(_comparer);
 

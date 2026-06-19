@@ -4,7 +4,7 @@
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TRightKey, Optional<TLeft>, TRight, TDestination> resultSelector)
+internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TRightKey, Kernel.Optional<TLeft>, TRight, TDestination> resultSelector)
     where TLeft : notnull
     where TLeftKey : notnull
     where TRight : notnull
@@ -13,7 +13,7 @@ internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
 {
     private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left = left ?? throw new ArgumentNullException(nameof(left));
 
-    private readonly Func<TRightKey, Optional<TLeft>, TRight, TDestination> _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
+    private readonly Func<TRightKey, Kernel.Optional<TLeft>, TRight, TDestination> _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
 
     private readonly IObservable<IChangeSet<TRight, TRightKey>> _right = right ?? throw new ArgumentNullException(nameof(right));
 
@@ -110,7 +110,7 @@ internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
                                     case ChangeReason.Remove:
                                         if (right.HasValue)
                                         {
-                                            joinedCache.AddOrUpdate(_resultSelector(right.Value.key, Optional<TLeft>.None, right.Value.item), right.Value.key);
+                                            joinedCache.AddOrUpdate(_resultSelector(right.Value.key, Kernel.Optional<TLeft>.None, right.Value.item), right.Value.key);
                                         }
 
                                         break;
@@ -137,7 +137,7 @@ internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
 
                     hasInitialized = true;
 
-                    return new CompositeDisposable(observerSubscription, leftCache, rightCache, rightShare.Connect(), queue);
+                    return new MultipleDisposable(observerSubscription, leftCache, rightCache, rightShare.Connect(), queue);
                 }
             });
 }

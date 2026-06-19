@@ -23,7 +23,7 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     where TChild : notnull
 {
     private readonly KeyedDisposable<TKey> _childSubscriptions = new();
-    private readonly SingleAssignmentDisposable _parentSubscription = new();
+    private readonly OnceDisposable _parentSubscription = new();
     private readonly SharedDeliveryQueue _queue;
     private readonly IObserver<TObserver> _observer;
     private int _subscriptionCounter = 1; // Starts at 1 for the parent subscription
@@ -60,7 +60,7 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         Interlocked.Increment(ref _subscriptionCounter);
 
         // Create a container for the Disposable and add to the KeyedDisposable
-        var disposableContainer = _childSubscriptions.Add(parentKey, new SingleAssignmentDisposable());
+        var disposableContainer = _childSubscriptions.Add(parentKey, new OnceDisposable());
 
         // Create the subscription
         // Will Dispose immediately if OnCompleted fires upon subscription because OnCompleted disposes the container

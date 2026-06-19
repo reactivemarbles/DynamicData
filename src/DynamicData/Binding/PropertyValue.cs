@@ -7,9 +7,12 @@ namespace DynamicData.Binding;
 /// <summary>
 /// Container holding sender and latest property value.
 /// </summary>
+/// <param name="Sender"> Gets the Sender. </param>
+/// <param name="Value"> Gets latest observed value. </param>
+/// <param name="UnobtainableValue"> Gets a value indicating whether flag to indicated that the value was unobtainable when observing a deeply nested struct. </param>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TValue">The type of the value.</typeparam>
-public sealed class PropertyValue<TObject, TValue> : IEquatable<PropertyValue<TObject, TValue>>
+public sealed record PropertyValue<TObject, TValue>(TObject Sender, TValue? Value, bool UnobtainableValue)
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="PropertyValue{TObject, TValue}"/> class.
@@ -17,81 +20,14 @@ public sealed class PropertyValue<TObject, TValue> : IEquatable<PropertyValue<TO
     /// <param name="sender">The sender.</param>
     /// <param name="value">The value.</param>
     public PropertyValue(TObject sender, TValue value)
+        : this(sender, value, default)
     {
-        Sender = sender;
-        Value = value;
     }
 
     internal PropertyValue(TObject sender)
+        : this(sender, default, true)
     {
-        Sender = sender;
-        UnobtainableValue = true;
-        Value = default;
     }
-
-    /// <summary>
-    /// Gets the Sender.
-    /// </summary>
-    public TObject Sender { get; }
-
-    /// <summary>
-    /// Gets latest observed value.
-    /// </summary>
-    public TValue? Value { get; }
-
-    /// <summary>
-    /// Gets a value indicating whether flag to indicated that the value was unobtainable when observing a deeply nested struct.
-    /// </summary>
-    internal bool UnobtainableValue { get; }
-
-    /// <summary>
-    /// Implements the operator ==.
-    /// </summary>
-    /// <param name="left">The left.</param>
-    /// <param name="right">The right.</param>
-    /// <returns>
-    /// The result of the operator.
-    /// </returns>
-    public static bool operator ==(PropertyValue<TObject, TValue>? left, PropertyValue<TObject, TValue>? right) => Equals(left, right);
-
-    /// <summary>
-    /// Implements the operator !=.
-    /// </summary>
-    /// <param name="left">The left.</param>
-    /// <param name="right">The right.</param>
-    /// <returns>
-    /// The result of the operator.
-    /// </returns>
-    public static bool operator !=(PropertyValue<TObject, TValue>? left, PropertyValue<TObject, TValue>? right) => !Equals(left, right);
-
-    /// <inheritdoc />
-    public bool Equals(PropertyValue<TObject, TValue>? other)
-    {
-        if (other is null)
-        {
-            return false;
-        }
-
-        if (ReferenceEquals(this, other))
-        {
-            return true;
-        }
-
-        if (other.Value is null && Value is null)
-        {
-            return true;
-        }
-
-        if (other.Value is null || Value is null)
-        {
-            return false;
-        }
-
-        return EqualityComparer<TObject>.Default.Equals(Sender, other.Sender) && EqualityComparer<TValue>.Default.Equals(Value, other.Value);
-    }
-
-    /// <inheritdoc />
-    public override bool Equals(object? obj) => obj is PropertyValue<TObject, TValue> propertyValue && Equals(propertyValue);
 
     /// <inheritdoc />
     public override int GetHashCode()

@@ -108,7 +108,7 @@ public class FilterOnObservableFixture : IDisposable
     public void ObservableFilterTriggersAddAndRemove()
     {
         // having
-        ISubject<bool> filterSubject = new Subject<bool>();
+        ISignal<bool> filterSubject = new Signal<bool>();
 
         using var filterStats = _source.Connect().FilterOnObservable(_ => filterSubject).AsAggregator();
 
@@ -131,7 +131,7 @@ public class FilterOnObservableFixture : IDisposable
     public void ObservableFilterDuplicateValuesHaveNoEffect()
     {
         // having
-        ISubject<bool> filterSubject = new Subject<bool>();
+        ISignal<bool> filterSubject = new Signal<bool>();
 
         using var filterStats = _source.Connect().FilterOnObservable(_ => filterSubject).AsAggregator();
 
@@ -158,7 +158,7 @@ public class FilterOnObservableFixture : IDisposable
     {
         // having
         TestScheduler? scheduler = new TestScheduler();
-        ISubject<bool> filterSubject = new Subject<bool>();
+        ISignal<bool> filterSubject = new Signal<bool>();
 
         using var filterStats = _source.Connect().FilterOnObservable(_ => filterSubject, TimeSpan.FromSeconds(1), scheduler).AsAggregator();
 

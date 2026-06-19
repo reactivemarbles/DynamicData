@@ -251,7 +251,11 @@ public static class SumEx
     /// <param name="source">The source.</param>
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
-    public static IObservable<int> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, int?> valueSelector) => source.Accumulate(0, t => valueSelector(t).GetValueOrDefault(), (current, value) => current + value, (current, value) => current - value);
+    public static IObservable<int> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, int?> valueSelector)
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        return source.Accumulate(0, t => valueSelector(t).GetValueOrDefault(), (current, value) => current + value, (current, value) => current - value);
+    }
 
     /// <summary>
     /// Continual computes the sum of values matching the value selector.

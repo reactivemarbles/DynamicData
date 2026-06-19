@@ -9,7 +9,7 @@ namespace DynamicData.PLinq
 {
     internal sealed class PTransform<TDestination, TSource, TKey>(
         IObservable<IChangeSet<TSource, TKey>> source,
-        Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory,
+        Func<TSource, Kernel.Optional<TSource>, TKey, TDestination> transformFactory,
         ParallelisationOptions parallelisationOptions,
         Action<Error<TSource, TKey>>? exceptionCallback = null)
         where TDestination : notnull
@@ -24,7 +24,7 @@ namespace DynamicData.PLinq
                 return transformer.NotEmpty().SubscribeSafe(observer);
             });
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "A collection initializer is not equivalent to a .ToArray() call for a ParallelQuery<T>. This change actually introduces a race-condition exception.")]
+        [SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "A collection initializer is not equivalent to a .ToArray() call for a ParallelQuery<T>. This change actually introduces a race-condition exception.")]
         private ChangeSet<TDestination, TKey> DoTransform(ChangeAwareCache<TDestination, TKey> cache, IChangeSet<TSource, TKey> changes)
         {
             var transformed = changes.ShouldParallelise(parallelisationOptions)
@@ -106,7 +106,7 @@ namespace DynamicData.PLinq
                 : this()
             {
                 Change = change;
-                Destination = Optional<TDestination>.None;
+                Destination = Kernel.Optional<TDestination>.None;
                 Success = true;
                 Key = change.Key;
             }
@@ -126,7 +126,7 @@ namespace DynamicData.PLinq
 
             public bool Success { get; }
 
-            public Optional<TDestination> Destination { get; }
+            public Kernel.Optional<TDestination> Destination { get; }
 
             public TKey Key { get; }
         }

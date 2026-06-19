@@ -106,7 +106,7 @@ public static partial class FilterFixture
                 });
 
                 var predicateState = (completionStrategy is CompletionStrategy.Asynchronous)
-                    ? new Subject<object>()
+                    ? new Signal<object>()
                     : Observable.Return(new object());
 
                 // UUT Initialization & Action
@@ -118,7 +118,7 @@ public static partial class FilterFixture
                     .ValidateChangeSets(static item => item.Id)
                     .RecordCacheItems(out var results);
 
-                if (predicateState is Subject<object> subject)
+                if (predicateState is Signal<object> subject)
                 {
                     subject.OnNext(new());
                     subject.OnCompleted();
@@ -156,7 +156,7 @@ public static partial class FilterFixture
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
                 var predicateState = (completionStrategy is CompletionStrategy.Asynchronous)
-                    ? new Subject<object>()
+                    ? new Signal<object>()
                     : Observable.Empty<object>();
 
                 // UUT Initialization & Action
@@ -169,7 +169,7 @@ public static partial class FilterFixture
                     .ValidateChangeSets(static item => item.Id)
                     .RecordCacheItems(out var results);
 
-                if (predicateState is Subject<object> subject)
+                if (predicateState is Signal<object> subject)
                     subject.OnCompleted();
 
                 results.Error.Should().BeNull();
@@ -191,7 +191,7 @@ public static partial class FilterFixture
                 var error = new Exception("Test");
 
                 var predicateState = (completionStrategy is CompletionStrategy.Asynchronous)
-                    ? new Subject<object>()
+                    ? new Signal<object>()
                     : Observable.Throw<object>(error);
 
                 // UUT Initialization & Action
@@ -203,7 +203,7 @@ public static partial class FilterFixture
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results);
 
-                if (predicateState is Subject<object> subject)
+                if (predicateState is Signal<object> subject)
                     subject.OnError(error);
 
                 results.Error.Should().Be(error, "errors should propagate downstream");
@@ -226,7 +226,7 @@ public static partial class FilterFixture
             {
                 // Setup
                 using var source            = new TestSourceCache<Item, int>(Item.SelectId);
-                using var predicateState    = new BehaviorSubject<int>(0x5);
+                using var predicateState    = new StateSignal<int>(0x5);
 
                 source.AddOrUpdate(new[]
                 {
@@ -324,7 +324,7 @@ public static partial class FilterFixture
                     new Item() { Id = 6, IsIncluded = false }
                 });
 
-                using var predicateState = new BehaviorSubject<object>(new object());
+                using var predicateState = new StateSignal<object>(new object());
 
                 // UUT Initialization & Action
                 if (completionStrategy is CompletionStrategy.Immediate)
@@ -362,8 +362,8 @@ public static partial class FilterFixture
             public void SubscriptionIsDisposed_SubscriptionDisposalPropagates()
             {
                 // Setup
-                using var source            = new Subject<IChangeSet<Item, int>>();
-                using var predicateState    = new BehaviorSubject<object>(new());
+                using var source            = new Signal<IChangeSet<Item, int>>();
+                using var predicateState    = new StateSignal<object>(new());
 
                 // UUT Initialization
                 using var subscription = source

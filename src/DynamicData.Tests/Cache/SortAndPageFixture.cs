@@ -6,13 +6,13 @@ namespace DynamicData.Tests.Cache;
 
 public sealed class SortAndPageWithComparerChangesFixture : SortAndPageFixtureBase
 {
-    private BehaviorSubject<IComparer<Person>> _comparerSubject;
+    private StateSignal<IComparer<Person>> _comparerSubject;
 
     private readonly IComparer<Person> _descComparer = SortExpressionComparer<Person>.Descending(p => p.Age).ThenByAscending(p => p.Name);
 
     protected override ChangeSetAggregator<Person, string, PageContext<Person>> SetUpTests()
     {
-        _comparerSubject = new BehaviorSubject<IComparer<Person>>(Comparer);
+        _comparerSubject = new StateSignal<IComparer<Person>>(Comparer);
 
         return Source.Connect()
             .SortAndPage(_comparerSubject, PageRequests)
@@ -76,7 +76,7 @@ public abstract class SortAndPageFixtureBase : IDisposable
 
     protected readonly SourceCache<Person, string> Source = new(p => p.Name);
     protected readonly IComparer<Person> Comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
-    private protected readonly ISubject<IPageRequest> PageRequests = new BehaviorSubject<IPageRequest>(new PageRequest(1, 25));
+    private protected readonly ISignal<IPageRequest> PageRequests = new StateSignal<IPageRequest>(new PageRequest(1, 25));
 
     protected readonly ChangeSetAggregator<Person, string, PageContext<Person>> Aggregator;
 
@@ -399,5 +399,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         Source.Dispose();
         Aggregator.Dispose();
         PageRequests.OnCompleted();
+        PageRequests.Dispose();
     }
 }

@@ -3,6 +3,7 @@ using System.Reflection;
 using BenchmarkDotNet.Attributes;
 
 using Bogus;
+using ReactiveUI.Primitives.Signals;
 
 namespace DynamicData.Benchmarks.List;
 
@@ -38,7 +39,7 @@ public class Filter_List_Static_RandomizedUnboundedEdits
     [Benchmark(Baseline = true)]
     public void CurrentImplementation()
     {
-        using var source = new Subject<IChangeSet<Item>>();
+        using var source = new Signal<IChangeSet<Item>>();
 
         using var subscription = source
             .Filter(Item.FilterByIsIncluded)

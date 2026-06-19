@@ -16,7 +16,7 @@ public static partial class AsyncDisposeManyFixture
         public async Task ItemDisposalErrors_ErrorPropagatesToDisposalsCompleted(ItemType itemType)
         {
             using var source = new SourceCache<ItemBase, int>(static item => item.Id);
-            using var sourceCompletionSource = new Subject<Unit>();
+            using var sourceCompletionSource = new Signal<Unit>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
@@ -74,7 +74,7 @@ public static partial class AsyncDisposeManyFixture
         public async Task ItemDisposalsComplete_DisposalsCompletedOccursAndCompletes(ItemType itemType)
         {
             using var source = new SourceCache<ItemBase, int>(static item => item.Id);
-            using var sourceCompletionSource = new Subject<Unit>();
+            using var sourceCompletionSource = new Signal<Unit>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
@@ -129,7 +129,7 @@ public static partial class AsyncDisposeManyFixture
         public async Task ItemDisposalsOccurOnMultipleThreads_DisposalIsThreadSafe()
         {
             using var source = new SourceCache<AsyncDisposableItem, int>(static item => item.Id);
-            using var sourceCompletionSource = new Subject<Unit>();
+            using var sourceCompletionSource = new Signal<Unit>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 

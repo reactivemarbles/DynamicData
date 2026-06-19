@@ -20,7 +20,7 @@ public class FromAsyncFixture
             return Task.FromResult(items);
         }
 
-        var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet(p => p.Key).AsObservableCache();
+        var data = Signal.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet(p => p.Key).AsObservableCache();
 
         data.Count.Should().Be(100);
     }
@@ -36,7 +36,7 @@ public class FromAsyncFixture
 
         Exception? error = null;
 
-        var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet(p => p.Key).Subscribe((changes) => { }, ex => error = ex);
+        var data = Signal.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet(p => p.Key).Subscribe((changes) => { }, ex => error = ex);
 
         error.Should().NotBeNull();
     }
@@ -51,9 +51,9 @@ public class FromAsyncFixture
 
         Exception? error = null;
 
-        var data = Observable.FromAsync(Loader).ToObservableChangeSet(p => p.Key).Subscribe(changes => { }, ex => error = ex);
+        var data = Signal.FromAsync(Loader).ToObservableChangeSet(p => p.Key).Subscribe(changes => { }, ex => error = ex);
 
-        var data2 = Observable.FromAsync(Loader).ToObservableChangeSet(p => p.Key).AsObservableCache().Connect().Subscribe(changes => { }, ex => error = ex);
+        var data2 = Signal.FromAsync(Loader).ToObservableChangeSet(p => p.Key).AsObservableCache().Connect().Subscribe(changes => { }, ex => error = ex);
 
         //var subscribed = data.Connect()
         //    

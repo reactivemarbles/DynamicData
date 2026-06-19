@@ -4,7 +4,7 @@ namespace DynamicData.Tests.Cache;
 
 public class TransformTreeFixture : IDisposable
 {
-    private readonly BehaviorSubject<Func<Node<EmployeeDto, int>, bool>> _filter;
+    private readonly StateSignal<Func<Node<EmployeeDto, int>, bool>> _filter;
 
     private readonly IObservableCache<Node<EmployeeDto, int>, int> _result;
 
@@ -14,7 +14,7 @@ public class TransformTreeFixture : IDisposable
     {
         _sourceCache = new SourceCache<EmployeeDto, int>(e => e.Id);
 
-        _filter = new BehaviorSubject<Func<Node<EmployeeDto, int>, bool>>(n => n.IsRoot);
+        _filter = new StateSignal<Func<Node<EmployeeDto, int>, bool>>(n => n.IsRoot);
 
         _result = _sourceCache.Connect().TransformToTree(e => e.BossId, _filter).AsObservableCache();
     }

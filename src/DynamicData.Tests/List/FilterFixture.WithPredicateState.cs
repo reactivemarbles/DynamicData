@@ -19,7 +19,7 @@ public partial class FilterFixture
         public void ChangesAreMadeAfterInitialPredicateState_ItemsAreFiltered(ListFilterPolicy filterPolicy)
         {
             using var source            = new TestSourceList<Item>();
-            using var predicateState    = new Subject<object>();
+            using var predicateState    = new Signal<object>();
 
             using var subscription = source
                 .Connect()
@@ -192,7 +192,7 @@ public partial class FilterFixture
         public void ChangesAreMadeAfterMultiplePredicateStateChanges_ItemsAreFilteredWithLatestPredicateState(ListFilterPolicy filterPolicy)
         {
             using var source            = new SourceList<Item>();
-            using var predicateState    = new BehaviorSubject<int>(1);
+            using var predicateState    = new StateSignal<int>(1);
 
             using var subscription = source
                 .Connect()
@@ -229,7 +229,7 @@ public partial class FilterFixture
         public void ChangesAreMadeBeforeInitialPredicateState_ItemsAreFilteredOnPredicateState(ListFilterPolicy filterPolicy)
         {
             using var source            = new TestSourceList<Item>();
-            using var predicateState    = new Subject<object>();
+            using var predicateState    = new Signal<object>();
 
             using var subscription = source
                 .Connect()
@@ -318,7 +318,7 @@ public partial class FilterFixture
         public void FilterPolicyIsClearAndReplace_ReFilteringPreservesOrder()
         {
             using var source            = new SourceList<Item>();
-            using var predicateState    = new BehaviorSubject<int>(1);
+            using var predicateState    = new StateSignal<int>(1);
 
             using var subscription = source
                 .Connect()
@@ -371,7 +371,7 @@ public partial class FilterFixture
         public void PredicateStateChanges_ItemsAreReFiltered(ListFilterPolicy filterPolicy)
         {
             using var source            = new SourceList<Item>();
-            using var predicateState    = new BehaviorSubject<int>(1);
+            using var predicateState    = new StateSignal<int>(1);
 
             using var subscription = source
                 .Connect()
@@ -410,7 +410,7 @@ public partial class FilterFixture
         [InlineData(ListFilterPolicy.ClearAndReplace)]
         public void PredicateStateCompletesAfterInitialValue_CompletionWaitsForSourceCompletion(ListFilterPolicy filterPolicy)
         {
-            using var source = new Subject<IChangeSet<Item>>();
+            using var source = new Signal<IChangeSet<Item>>();
 
             using var subscription = source
                 .Filter(
@@ -435,7 +435,7 @@ public partial class FilterFixture
         [InlineData(ListFilterPolicy.ClearAndReplace)]
         public void PredicateStateCompletesImmediately_CompletionIsPropagated(ListFilterPolicy filterPolicy)
         {
-            using var source = new Subject<IChangeSet<Item>>();
+            using var source = new Signal<IChangeSet<Item>>();
 
             using var subscription = source
                 .Filter(
@@ -457,8 +457,8 @@ public partial class FilterFixture
         [InlineData(ListFilterPolicy.ClearAndReplace)]
         public void PredicateStateErrors_ErrorIsPropagated(ListFilterPolicy filterPolicy)
         {
-            using var source            = new Subject<IChangeSet<Item>>();
-            using var predicateState    = new Subject<object>();
+            using var source            = new Signal<IChangeSet<Item>>();
+            using var predicateState    = new Signal<object>();
 
             using var subscription = source
                 .Filter(
@@ -484,7 +484,7 @@ public partial class FilterFixture
         [InlineData(ListFilterPolicy.ClearAndReplace)]
         public void PredicateStateErrorsImmediately_ErrorIsPropagated(ListFilterPolicy filterPolicy)
         {
-            using var source = new Subject<IChangeSet<Item>>();
+            using var source = new Signal<IChangeSet<Item>>();
 
             var error = new Exception("This is a test.");
 
@@ -529,9 +529,9 @@ public partial class FilterFixture
                 valueCount: 5_000,
                 randomizer: randomizer);
 
-            using var source = new Subject<IChangeSet<Item>>();
+            using var source = new Signal<IChangeSet<Item>>();
 
-            using var predicateState = new Subject<int>();
+            using var predicateState = new Signal<int>();
 
             using var subscription = source
                 .Filter(
@@ -582,9 +582,9 @@ public partial class FilterFixture
         [InlineData(ListFilterPolicy.ClearAndReplace)]
         public void SourceCompletesWhenEmpty_CompletionIsPropagated(ListFilterPolicy filterPolicy)
         {
-            using var source = new Subject<IChangeSet<Item>>();
+            using var source = new Signal<IChangeSet<Item>>();
 
-            using var predicateState = new Subject<object>();
+            using var predicateState = new Signal<object>();
 
             using var subscription = source
                 .Filter(
@@ -608,9 +608,9 @@ public partial class FilterFixture
         [InlineData(ListFilterPolicy.ClearAndReplace)]
         public void SourceCompletesWhenNotEmpty_CompletionWaitsForStateCompletion(ListFilterPolicy filterPolicy)
         {
-            using var source = new Subject<IChangeSet<Item>>();
+            using var source = new Signal<IChangeSet<Item>>();
 
-            using var predicateState = new Subject<object>();
+            using var predicateState = new Signal<object>();
 
             using var subscription = source
                 .Filter(
@@ -638,7 +638,7 @@ public partial class FilterFixture
         [InlineData(ListFilterPolicy.ClearAndReplace)]
         public void SourceCompletesImmediately_CompletionIsPropagated(ListFilterPolicy filterPolicy)
         {
-            using var predicateState = new Subject<object>();
+            using var predicateState = new Signal<object>();
 
             using var subscription = Observable.Empty<IChangeSet<Item>>()
                 .Filter(
@@ -660,9 +660,9 @@ public partial class FilterFixture
         [InlineData(ListFilterPolicy.ClearAndReplace)]
         public void SourceErrors_ErrorIsPropagated(ListFilterPolicy filterPolicy)
         {
-            using var source = new Subject<IChangeSet<Item>>();
+            using var source = new Signal<IChangeSet<Item>>();
 
-            using var predicateState = new Subject<object>();
+            using var predicateState = new Signal<object>();
 
             using var subscription = source
                 .Filter(
@@ -688,7 +688,7 @@ public partial class FilterFixture
         [InlineData(ListFilterPolicy.ClearAndReplace)]
         public void SourceErrorsImmediately_ErrorIsPropagated(ListFilterPolicy filterPolicy)
         {
-            using var predicateState = new Subject<object>();
+            using var predicateState = new Signal<object>();
 
             var error = new Exception("This is a test.");
 
@@ -721,9 +721,9 @@ public partial class FilterFixture
         [InlineData(ListFilterPolicy.ClearAndReplace)]
         public void SubscriptionIsDisposed_UnsubscriptionIsPropagated(ListFilterPolicy filterPolicy)
         {
-            using var source = new Subject<IChangeSet<Item>>();
+            using var source = new Signal<IChangeSet<Item>>();
 
-            using var predicateState = new Subject<object>();
+            using var predicateState = new Signal<object>();
 
             using var subscription = source
                 .Filter(
@@ -747,9 +747,9 @@ public partial class FilterFixture
         [InlineData("predicateState", "source")]
         public void SuppressEmptyChangeSetsIsFalse_EmptyChangesetsArePropagatedAndOnlyFinalCompletionIsPropagated(params string[] completionOrder)
         {
-            using var source = new Subject<IChangeSet<Item>>();
+            using var source = new Signal<IChangeSet<Item>>();
 
-            using var predicateState = new Subject<object>();
+            using var predicateState = new Signal<object>();
 
             using var subscription = source
                 .Filter(

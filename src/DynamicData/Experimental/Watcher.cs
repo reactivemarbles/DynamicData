@@ -2,6 +2,8 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using ReactiveUI.Primitives;
+
 namespace DynamicData.Experimental;
 
 internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
@@ -10,16 +12,12 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
 {
     private readonly IDisposable _disposer;
 
-#if NET9_0_OR_GREATER
     private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly IObservableCache<TObject, TKey> _source;
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly IntermediateCache<SubjectWithRefCount<Change<TObject, TKey>>, TKey> _subscribers = new();
 
     public Watcher(IObservable<IChangeSet<TObject, TKey>> source, IScheduler scheduler)
@@ -72,7 +70,7 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
                     }
                     else
                     {
-                        subject = new SubjectWithRefCount<Change<TObject, TKey>>(new ReplaySubject<Change<TObject, TKey>>(1));
+                        subject = new SubjectWithRefCount<Change<TObject, TKey>>(new ReplaySignal<Change<TObject, TKey>>(1));
 
                         var initial = _source.Lookup(key);
                         if (initial.HasValue)

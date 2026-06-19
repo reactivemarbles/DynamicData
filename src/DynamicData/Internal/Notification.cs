@@ -11,11 +11,12 @@ namespace DynamicData.Internal;
 /// is broken for value types in generic struct fields on .NET 9.
 /// </summary>
 internal readonly struct Notification<T>
+    where T : notnull
 {
-    private readonly Optional<T> _value;
+    private readonly Kernel.Optional<T> _value;
     private readonly Exception? _error;
 
-    private Notification(Optional<T> value, Exception? error)
+    private Notification(Kernel.Optional<T> value, Exception? error)
     {
         _value = value;
         _error = error;

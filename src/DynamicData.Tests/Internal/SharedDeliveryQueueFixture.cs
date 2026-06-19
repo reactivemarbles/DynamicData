@@ -9,11 +9,7 @@ namespace DynamicData.Tests.Internal;
 
 public class SharedDeliveryQueueFixture
 {
-#if NET9_0_OR_GREATER
     private readonly Lock _gate = new();
-#else
-    private readonly object _gate = new();
-#endif
 
     [Fact]
     public void SingleSourceDeliversItems()

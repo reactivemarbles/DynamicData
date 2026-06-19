@@ -21,7 +21,7 @@ internal static class AsyncDisposeMany<TObject, TKey>
             {
                 var gate = new object();
                 var itemsByKey = new Dictionary<TKey, TObject>();
-                var disposalsCompleted = new ReplaySubject<Unit>(1);
+                var disposalsCompleted = new ReplaySignal<Unit>(1);
                 var pendingAsyncDisposals = 0;
                 var teardownStarted = false;
                 var teardownCompleted = false;

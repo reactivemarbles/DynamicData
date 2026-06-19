@@ -35,7 +35,11 @@ public static class CountEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
-    public static IObservable<int> Count<TObject>(this IObservable<IAggregateChangeSet<TObject>> source) => source.Accumulate(0, _ => 1, (current, increment) => current + increment, (current, increment) => current - increment);
+    public static IObservable<int> Count<TObject>(this IObservable<IAggregateChangeSet<TObject>> source)
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        return source.Accumulate(0, _ => 1, (current, increment) => current + increment, (current, increment) => current - increment);
+    }
 
     /// <summary>
     /// Counts the total number of items in the underlying data source.

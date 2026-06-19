@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using BenchmarkDotNet.Attributes;
 
 using Bogus;
+using ReactiveUI.Primitives.Signals;
 
 namespace DynamicData.Benchmarks.Cache;
 
@@ -105,8 +106,8 @@ public class Filter_Cache_WithPredicateState
     [Benchmark(Baseline = true)]
     public void RandomizedEditsAndStateChanges()
     {
-        using var source            = new Subject<IChangeSet<Item, int>>();
-        using var predicateState    = new Subject<int>();
+        using var source            = new Signal<IChangeSet<Item, int>>();
+        using var predicateState    = new Signal<int>();
 
         using var subscription = source
             .Filter(

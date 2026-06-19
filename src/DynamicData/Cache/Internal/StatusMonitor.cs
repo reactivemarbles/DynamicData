@@ -9,7 +9,7 @@ internal sealed class StatusMonitor<T>(IObservable<T> source)
     public IObservable<ConnectionStatus> Run() => Observable.Create<ConnectionStatus>(
             observer =>
             {
-                var statusSubject = new Subject<ConnectionStatus>();
+                var statusSubject = new Signal<ConnectionStatus>();
                 var status = ConnectionStatus.Pending;
 
                 void Error(Exception ex)

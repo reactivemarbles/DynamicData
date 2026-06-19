@@ -39,7 +39,7 @@ public static partial class ObservableListEx
     /// </remarks>
     /// <seealso cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/>
     /// <seealso cref="ObservableCacheEx.TransformAsync{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Task{TDestination}}, IObservable{Func{TSource, TKey, bool}})"/>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
         Func<TSource, Task<TDestination>> transformFactory,
@@ -57,7 +57,7 @@ public static partial class ObservableListEx
     /// <summary>
     /// Async transform overload receiving the source item and its index.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
         Func<TSource, int, Task<TDestination>> transformFactory,
@@ -75,10 +75,10 @@ public static partial class ObservableListEx
     /// <summary>
     /// Async transform overload receiving the source item and the previously transformed value.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
-        Func<TSource, Optional<TDestination>, Task<TDestination>> transformFactory,
+        Func<TSource, Kernel.Optional<TDestination>, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
@@ -93,10 +93,10 @@ public static partial class ObservableListEx
     /// <summary>
     /// Async transform overload receiving the source item, previously transformed value, and index. This is the terminal overload that all other TransformAsync overloads delegate to.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
-        Func<TSource, Optional<TDestination>, int, Task<TDestination>> transformFactory,
+        Func<TSource, Kernel.Optional<TDestination>, int, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull

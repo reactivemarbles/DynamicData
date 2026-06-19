@@ -90,7 +90,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
     /// or
     /// For <see cref="ListChangeReason.Refresh"/>, must supply an index.
     /// </exception>
-    public Change(ListChangeReason reason, T current, in Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
+    public Change(ListChangeReason reason, T current, in Kernel.Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
     {
         if (reason == ListChangeReason.Add && previous.HasValue)
         {

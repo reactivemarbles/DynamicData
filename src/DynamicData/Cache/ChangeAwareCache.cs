@@ -85,7 +85,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// Create a change set from recorded changes and clears known changes.
     /// </summary>
     /// <returns>A change set with the key/value changes.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0301:Simplify collection initialization", Justification = "This would result in differing operation")]
+    [SuppressMessage("Style", "IDE0301:Simplify collection initialization", Justification = "This would result in differing operation")]
     public ChangeSet<TObject, TKey> CaptureChanges()
     {
         if (_changes.Count == 0)
@@ -136,7 +136,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     }
 
     /// <inheritdoc />
-    public Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
+    public Kernel.Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
     /// <summary>
     /// Raises an evaluate change for the specified keys.

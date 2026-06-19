@@ -27,9 +27,9 @@ public static partial class FilterFixture
                     .Select(mask => new Func<Item, bool>(item => Item.FilterByIdInclusionMask(mask, item)))
                     .ToArray();
 
-                using var source            = new Subject<IChangeSet<Item, int>>();
-                using var predicateChanged  = new Subject<Func<Item, bool>>();
-                using var reapplyFilter     = new Subject<Unit>();
+                using var source            = new Signal<IChangeSet<Item, int>>();
+                using var predicateChanged  = new Signal<Func<Item, bool>>();
+                using var reapplyFilter     = new Signal<Unit>();
 
                 // UUT Initialization
                 using var subscription = source

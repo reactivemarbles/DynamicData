@@ -7,7 +7,7 @@ namespace DynamicData.Tests.List;
 
 public class FilterWithObservable : IDisposable
 {
-    private readonly BehaviorSubject<Func<Person, bool>> _filter;
+    private readonly StateSignal<Func<Person, bool>> _filter;
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -16,7 +16,7 @@ public class FilterWithObservable : IDisposable
     public FilterWithObservable()
     {
         _source = new SourceList<Person>();
-        _filter = new BehaviorSubject<Func<Person, bool>>(p => p.Age > 20);
+        _filter = new StateSignal<Func<Person, bool>>(p => p.Age > 20);
         _results = _source.Connect().Filter(_filter).AsAggregator();
     }
 
@@ -115,7 +115,7 @@ public class FilterWithObservable : IDisposable
     [Fact]
     public void ChainFilters()
     {
-        var filter2 = new BehaviorSubject<Func<Person, bool>>(person1 => person1.Age > 20);
+        var filter2 = new StateSignal<Func<Person, bool>>(person1 => person1.Age > 20);
 
         var stream = _source.Connect().Filter(_filter).Filter(filter2);
 

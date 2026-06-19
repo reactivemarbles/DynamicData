@@ -4,12 +4,12 @@
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class Transform<TDestination, TSource, TKey>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>>? exceptionCallback = null, bool transformOnRefresh = false)
+internal sealed class Transform<TDestination, TSource, TKey>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Kernel.Optional<TSource>, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>>? exceptionCallback = null, bool transformOnRefresh = false)
     where TDestination : notnull
     where TSource : notnull
     where TKey : notnull
 {
-    public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Defer(RunImpl);
+    public IObservable<IChangeSet<TDestination, TKey>> Run() => Signal.Lazy(RunImpl);
 
     private IObservable<IChangeSet<TDestination, TKey>> RunImpl() => source.Scan(
                 (ChangeAwareCache<TDestination, TKey>?)null,

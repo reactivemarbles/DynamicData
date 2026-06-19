@@ -34,7 +34,7 @@ namespace DynamicData.PLinq
                 return updates.Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
             }
 
-            protected override IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory)
+            protected override IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Kernel.Optional<Change<TObject, TKey>>> factory)
             {
                 var keyValuePairs = items as KeyValuePair<TKey, TObject>[] ?? items.ToArray();
 

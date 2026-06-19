@@ -8,7 +8,7 @@ namespace DynamicData.Experimental;
 /// A subject which also contains its current reference count.
 /// </summary>
 /// <typeparam name="T">The type of item.</typeparam>
-internal interface ISubjectWithRefCount<T> : ISubject<T>
+internal interface ISubjectWithRefCount<T> : ISignal<T>
 {
     /// <summary>Gets number of subscribers.</summary>
     /// <value>

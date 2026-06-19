@@ -26,6 +26,11 @@
     <Using Include="DynamicData.Reactive.Cache" />
     <Using Include="DynamicData.Reactive.Kernel" />
     <Using Include="DynamicData.Reactive.Internal" />
+    <Using Include="ReactiveUI.Primitives.Disposables"/>
+    <Using Include="ReactiveUI.Primitives.Reactive"/>
+    <Using Include="ReactiveUI.Primitives.Reactive.Concurrency"/>
+    <Using Include="ReactiveUI.Primitives.Reactive.Signals"/>
+    <Using Include="ReactiveUI.Primitives.Signals"/>
     <Using Include="System.Reactive" />
     <Using Include="System.Reactive.Concurrency" />
     <Using Include="System.Reactive.Disposables" />
@@ -37,79 +42,13 @@
     <Using Include="System.Reactive.Concurrency.Scheduler" Alias="Sequencer" />
     <Using Include="System.Reactive.Concurrency.TaskPoolScheduler" Alias="TaskPoolSequencer" />
   </ItemGroup>
-
   <ItemGroup>
-    <DynamicDataReactiveSource
-      Include="..\DynamicData\**\*.cs"
-      Exclude="..\DynamicData\bin\**;..\DynamicData\obj\**;..\DynamicData\Internal\ReactiveCompatibility.cs" />
+    <Compile Include="..\DynamicData\**\*.cs" Exclude="..\DynamicData\bin\**;..\DynamicData\obj\**" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <!-- AsyncDisposeMany is only supported on platforms that have IAsyncDisposable. -->
   <ItemGroup Condition="!$(DefineConstants.Contains('SUPPORTS_ASYNC_DISPOSABLE'))">
-    <DynamicDataReactiveSource Remove="..\DynamicData\Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
+    <Compile Remove="..\DynamicData\Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
   </ItemGroup>
-
-  <UsingTask
-    TaskName="RewriteDynamicDataReactiveNamespaces"
-    TaskFactory="RoslynCodeTaskFactory"
-    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
-    <ParameterGroup>
-      <Sources ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
-      <SourceRoot ParameterType="System.String" Required="true" />
-      <OutputRoot ParameterType="System.String" Required="true" />
-      <GeneratedSources ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
-    </ParameterGroup>
-    <Task>
-      <Using Namespace="System" />
-      <Using Namespace="System.Collections.Generic" />
-      <Using Namespace="System.IO" />
-      <Using Namespace="System.Text.RegularExpressions" />
-      <Using Namespace="Microsoft.Build.Framework" />
-      <Using Namespace="Microsoft.Build.Utilities" />
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[
-var sourceRoot = Path.GetFullPath(SourceRoot);
-var outputRoot = Path.GetFullPath(OutputRoot);
-var generated = new List<ITaskItem>(Sources.Length);
-
-foreach (var source in Sources)
-{
-    var sourcePath = Path.GetFullPath(source.ItemSpec);
-    if (!sourcePath.StartsWith(sourceRoot, StringComparison.OrdinalIgnoreCase))
-    {
-        Log.LogError("Reactive source '{0}' is outside source root '{1}'.", sourcePath, sourceRoot);
-        return false;
-    }
-
-    var relativePath = sourcePath.Substring(sourceRoot.Length)
-        .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-    var outputPath = Path.Combine(outputRoot, relativePath);
-
-    Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
-
-    var text = File.ReadAllText(sourcePath);
-    text = Regex.Replace(text, @"(?m)^(\s*namespace\s+)DynamicData(?=([.;\s{]|$))", "$1DynamicData.Reactive");
-    text = Regex.Replace(text, @"(?m)^(\s*using\s+(?:static\s+)?)DynamicData(?=([.;\s]|$))", "$1DynamicData.Reactive");
-    text = Regex.Replace(text, @"(?m)^(\s*using\s+[A-Za-z_][A-Za-z0-9_]*\s*=\s*)DynamicData(?=([.;\s]|$))", "$1DynamicData.Reactive");
-    text = text.Replace("global::DynamicData.", "global::DynamicData.Reactive.");
-
-    File.WriteAllText(outputPath, text);
-    generated.Add(new TaskItem(outputPath));
-}
-
-GeneratedSources = generated.ToArray();
-        ]]>
-      </Code>
-    </Task>
-  </UsingTask>
-
-  <Target Name="GenerateDynamicDataReactiveSources" BeforeTargets="BeforeCompile">
-    <RewriteDynamicDataReactiveNamespaces
-      Sources="@(DynamicDataReactiveSource)"
-      SourceRoot="$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\DynamicData\'))"
-      OutputRoot="$(IntermediateOutputPath)GeneratedReactiveSources\">
-      <Output TaskParameter="GeneratedSources" ItemName="Compile" />
-    </RewriteDynamicDataReactiveNamespaces>
-  </Target>
 
 </Project>

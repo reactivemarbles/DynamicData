@@ -200,13 +200,13 @@ internal sealed class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey
         AddOrUpdate(items);
     }
 
-    public Optional<TObject> Lookup(TKey key)
+    public Kernel.Optional<TObject> Lookup(TKey key)
     {
         var item = _cache.Lookup(key);
         return item.HasValue ? item.Value : Optional.None<TObject>();
     }
 
-    public Optional<TObject> Lookup(TObject item)
+    public Kernel.Optional<TObject> Lookup(TObject item)
     {
         if (_keySelector is null)
         {

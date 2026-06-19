@@ -26,6 +26,7 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
     <Using Include="DynamicData.Cache" />
     <Using Include="DynamicData.Kernel" />
     <Using Include="DynamicData.Internal" />
+    <Using Include="ReactiveUI.Primitives" />
     <Using Include="ReactiveUI.Primitives.Core" />
     <Using Include="ReactiveUI.Primitives.Concurrency" />
     <Using Include="ReactiveUI.Primitives.Disposables" />

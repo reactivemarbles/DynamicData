@@ -28,8 +28,10 @@
   <ItemGroup>
     <Using Include="DynamicData.Internal" />
     <Using Include="DynamicData.Tests.Utilities" />
+    <Using Include="ReactiveUI.Primitives" />
     <Using Include="ReactiveUI.Primitives.Concurrency" />
     <Using Include="ReactiveUI.Primitives.RxVoid" Alias="Unit" />
+    <Using Include="ReactiveUI.Primitives.Signals" />
     <Using Include="ReactiveUI.Primitives.Concurrency.ISequencer" Alias="IScheduler" />
   </ItemGroup>
 

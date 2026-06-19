@@ -12,7 +12,7 @@ internal sealed class ToObservableOptional<TObject, TKey>(IObservable<IChangeSet
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
     private readonly TKey _key = key;
 
-    public IObservable<Optional<TObject>> Run() => Observable.Create<Optional<TObject>>(observer =>
+    public IObservable<Kernel.Optional<TObject>> Run() => Observable.Create<Kernel.Optional<TObject>>(observer =>
     {
         var lastValue = Optional.None<TObject>();
 
@@ -22,7 +22,7 @@ internal sealed class ToObservableOptional<TObject, TKey>(IObservable<IChangeSet
                     observer.OnCompleted);
     });
 
-    private Optional<TObject> EmitChanges(IChangeSet<TObject, TKey> changes, IObserver<Optional<TObject>> observer, Optional<TObject> lastValue)
+    private Kernel.Optional<TObject> EmitChanges(IChangeSet<TObject, TKey> changes, IObserver<Kernel.Optional<TObject>> observer, Kernel.Optional<TObject> lastValue)
     {
         foreach (var change in changes.ToConcreteType())
         {

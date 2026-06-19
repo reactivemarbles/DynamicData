@@ -44,5 +44,5 @@ public interface IQuery<TObject, TKey>
     /// </remarks>
     /// <param name="key">The key.</param>
     /// <returns>The looked up value.</returns>
-    Optional<TObject> Lookup(TKey key);
+    Kernel.Optional<TObject> Lookup(TKey key);
 }

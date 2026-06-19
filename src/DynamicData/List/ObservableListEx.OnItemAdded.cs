@@ -39,7 +39,10 @@ public static partial class ObservableListEx
                 this IObservable<IChangeSet<T>> source,
                 Action<T> addAction)
             where T : notnull
-        => List.Internal.OnItemAdded<T>.Create(
-            source: source,
-            addAction: addAction);
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        return List.Internal.OnItemAdded<T>.Create(
+                source: source,
+                addAction: addAction);
+    }
 }

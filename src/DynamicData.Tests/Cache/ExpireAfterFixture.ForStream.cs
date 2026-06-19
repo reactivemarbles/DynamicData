@@ -12,7 +12,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void ExpiredItemIsRemoved_RemovalIsSkipped()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -61,7 +61,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void ItemIsRemovedBeforeExpiration_ExpirationIsCancelled()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -113,7 +113,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void NextItemToExpireIsReplaced_ExpirationIsRescheduledIfNeeded()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -190,7 +190,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void PollingIntervalIsGiven_RemovalsAreScheduledAtInterval()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -356,7 +356,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void PollingIntervalIsNotGiven_RemovalsAreScheduledImmediately()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -506,7 +506,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void RemovalsArePending_CompletionWaitsForRemovals()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -558,7 +558,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void SchedulerIsInaccurate_RemovalsAreNotSkipped()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = new FakeScheduler()
             {
@@ -595,7 +595,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void SourceCompletes_CompletionIsPropagated()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -670,7 +670,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void SourceErrors_ErrorIsPropagated()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -754,7 +754,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public async Task ThreadPoolSchedulerIsUsedWithoutPolling_ExpirationIsThreadSafe()
         {
-            using var source = new Subject<IChangeSet<StressItem, int>>();
+            using var source = new Signal<IChangeSet<StressItem, int>>();
 
             var scheduler = ThreadPoolSequencer.Instance;
 
@@ -784,7 +784,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public async Task ThreadPoolSchedulerIsUsedWithPolling_ExpirationIsThreadSafe()
         {
-            using var source = new Subject<IChangeSet<StressItem, int>>();
+            using var source = new Signal<IChangeSet<StressItem, int>>();
 
             var scheduler = ThreadPoolSequencer.Instance;
 
@@ -816,14 +816,14 @@ public static partial class ExpireAfterFixture
 
         [Fact]
         public void TimeSelectorIsNull_ThrowsException()
-            => FluentActions.Invoking(() => new Subject<IChangeSet<TestItem, int>>().ExpireAfter(
+            => FluentActions.Invoking(() => new Signal<IChangeSet<TestItem, int>>().ExpireAfter(
                 timeSelector: null!))
             .Should().Throw<ArgumentNullException>();
 
         [Fact]
         public void TimeSelectorThrows_ErrorIsPropagated()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 

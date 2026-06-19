@@ -43,10 +43,8 @@ internal static partial class Filter
             private readonly IDisposable? _sourceSubscription;
             private readonly bool _suppressEmptyChangeSets;
 
-#if NET9_0_OR_GREATER
             private readonly Lock _downstreamGate = new();
             private readonly Lock _upstreamGate = new();
-#endif
 
             private bool _hasInitialized;
             private bool _hasPredicateStateCompleted;
@@ -117,19 +115,11 @@ internal static partial class Filter
                 _sourceSubscription?.Dispose();
             }
 
-#if NET9_0_OR_GREATER
             private Lock DownstreamSynchronizationGate
                 => _downstreamGate;
 
             private Lock UpstreamSynchronizationGate
                 => _upstreamGate;
-#else
-            private object DownstreamSynchronizationGate
-                => _downstreamChangesBuffer;
-
-            private object UpstreamSynchronizationGate
-                => _itemStatesByKey;
-#endif
 
             private ChangeSet<TObject, TKey> AssembleDownstreamChanges()
             {

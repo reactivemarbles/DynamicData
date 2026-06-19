@@ -46,7 +46,7 @@ internal sealed class ImmutableGroup<TObject, TKey, TGroupKey> : IGrouping<TObje
 
     public override int GetHashCode() => EqualityComparer<TGroupKey>.Default.GetHashCode(Key);
 
-    public Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
+    public Kernel.Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
 
     public override string ToString() => $"Grouping for: {Key} ({Count} items)";
 }

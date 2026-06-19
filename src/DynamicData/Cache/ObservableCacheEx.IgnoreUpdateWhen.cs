@@ -22,7 +22,14 @@ public static partial class ObservableCacheEx
     /// <returns>An observable which emits change sets and ignores updates equal to the lambda.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> IgnoreUpdateWhen<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TObject, bool> ignoreFunction)
         where TObject : notnull
-        where TKey : notnull => source.Select(
+        where TKey : notnull
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        return source.Select(
             updates =>
             {
                 var result = updates.Where(
@@ -37,4 +44,5 @@ public static partial class ObservableCacheEx
                     });
                 return new ChangeSet<TObject, TKey>(result);
             }).NotEmpty();
+    }
 }

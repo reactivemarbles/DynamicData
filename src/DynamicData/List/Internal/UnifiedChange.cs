@@ -4,11 +4,11 @@
 
 namespace DynamicData.List.Internal;
 
-internal readonly struct UnifiedChange<T>(ListChangeReason reason, T current, Optional<T> previous) : IEquatable<UnifiedChange<T>>
+internal readonly struct UnifiedChange<T>(ListChangeReason reason, T current, Kernel.Optional<T> previous) : IEquatable<UnifiedChange<T>>
     where T : notnull
 {
     public UnifiedChange(ListChangeReason reason, T current)
-        : this(reason, current, Optional.None<T>())
+        : this(reason, current, Kernel.Optional.None<T>())
     {
     }
 
@@ -16,7 +16,7 @@ internal readonly struct UnifiedChange<T>(ListChangeReason reason, T current, Op
 
     public T Current { get; } = current;
 
-    public Optional<T> Previous { get; } = previous;
+    public Kernel.Optional<T> Previous { get; } = previous;
 
     public static bool operator ==(in UnifiedChange<T> left, in UnifiedChange<T> right) => left.Equals(right);
 

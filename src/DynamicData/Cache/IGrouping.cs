@@ -50,5 +50,5 @@ public interface IGrouping<TObject, TKey, out TGroupKey>
     /// </remarks>
     /// <param name="key">The key.</param>
     /// <returns>The value that is looked up.</returns>
-    Optional<TObject> Lookup(TKey key);
+    Kernel.Optional<TObject> Lookup(TKey key);
 }

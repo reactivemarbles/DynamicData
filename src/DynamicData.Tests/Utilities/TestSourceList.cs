@@ -5,10 +5,10 @@ public sealed class TestSourceList<T>
     where T : notnull
 {
     private readonly IObservable<int> _countChanged;
-    private readonly BehaviorSubject<Exception?> _error;
-    private readonly BehaviorSubject<bool> _hasCompleted;
-    private readonly Subject<IChangeSet<T>> _refreshRequested;
-    private readonly Subject<IChangeSet<T>> _refreshRequestedPreview;
+    private readonly StateSignal<Exception?> _error;
+    private readonly StateSignal<bool> _hasCompleted;
+    private readonly Signal<IChangeSet<T>> _refreshRequested;
+    private readonly Signal<IChangeSet<T>> _refreshRequestedPreview;
     private readonly SourceList<T> _source;
 
     public TestSourceList()

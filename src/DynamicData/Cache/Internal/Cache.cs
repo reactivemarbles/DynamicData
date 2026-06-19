@@ -57,7 +57,7 @@ internal sealed class Cache<TObject, TKey> : ICache<TObject, TKey>
         }
     }
 
-    public Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
+    public Kernel.Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
     /// <summary>
     /// Sends a signal for operators to recalculate it's state.

@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using BenchmarkDotNet.Attributes;
 
 using Bogus;
+using ReactiveUI.Primitives.Signals;
 
 namespace DynamicData.Benchmarks.Cache;
 
@@ -110,7 +111,7 @@ public class ExpireAfter_Cache_ForStream
     [Benchmark]
     public void RandomizedEditsAndExpirations()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .ExpireAfter(

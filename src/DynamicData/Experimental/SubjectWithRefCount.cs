@@ -12,9 +12,9 @@ namespace DynamicData.Experimental;
 /// Initializes a new instance of the <see cref="SubjectWithRefCount{T}"/> class.
 /// </remarks>
 /// <param name="subject">The subject to perform reference counting on.</param>
-internal sealed class SubjectWithRefCount<T>(ISubject<T>? subject = null) : ISubjectWithRefCount<T>
+internal sealed class SubjectWithRefCount<T>(ISignal<T>? subject = null) : ISubjectWithRefCount<T>
 {
-    private readonly ISubject<T> _subject = subject ?? new Subject<T>();
+    private readonly ISignal<T> _subject = subject ?? new Signal<T>();
 
     private bool _isDisposed;
 

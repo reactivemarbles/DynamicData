@@ -4,11 +4,4 @@
 
 namespace DynamicData.Aggregation;
 
-internal readonly struct StdDev<TValue>(int count, TValue sumOfItems, TValue sumOfSquares)
-{
-    public int Count { get; } = count;
-
-    public TValue SumOfItems { get; } = sumOfItems;
-
-    public TValue SumOfSquares { get; } = sumOfSquares;
-}
+internal readonly record struct StdDev<TValue>(int Count, TValue SumOfItems, TValue SumOfSquares);

@@ -141,7 +141,7 @@ public static partial class AutoRefreshFixture
         public void ItemIsMoved_NotificationPropagates()
         {
             // Setup
-            using var source = new Subject<IChangeSet<Item, int>>();
+            using var source = new Signal<IChangeSet<Item, int>>();
 
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
@@ -529,7 +529,7 @@ public static partial class AutoRefreshFixture
         public void SubscriptionIsDisposed_SubscriptionDisposalPropagates()
         {
             // Setup
-            using var source = new Subject<IChangeSet<Item, int>>();
+            using var source = new Signal<IChangeSet<Item, int>>();
 
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };

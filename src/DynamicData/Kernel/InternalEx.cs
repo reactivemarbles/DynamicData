@@ -9,11 +9,7 @@ namespace DynamicData.Kernel;
 /// </summary>
 public static class InternalEx
 {
-#if NET9_0_OR_GREATER
     internal static Lock NewLock() => new();
-#else
-    internal static object NewLock() => new();
-#endif
 
     /// <summary>
     /// Retries the with back off.
@@ -40,7 +36,7 @@ public static class InternalEx
                         return Observable.Throw<TSource>(error);
                     }
 
-                    return Observable.Timer(delay.Value).SelectMany(Retry(failureCount + 1));
+                    return Signal.After(delay.Value).SelectMany(Retry(failureCount + 1));
                 });
 
         return Retry(0);
@@ -111,7 +107,7 @@ public static class InternalEx
         return disposable;
     }
 
-    internal static void OnNext(this ISubject<Unit> source) => source.OnNext(Unit.Default);
+    internal static void OnNext(this ISignal<Unit> source) => source.OnNext(Unit.Default);
 
     internal static void Swap<TSwap>(ref TSwap t1, ref TSwap t2) => (t2, t1) = (t1, t2);
 

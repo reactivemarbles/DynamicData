@@ -7,7 +7,7 @@ public sealed class TransformImmutableFixture
     [Fact]
     public void ItemsAreManipulated_ItemsAreTransformed()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var results = source
             .TransformImmutable(transformFactory: Item.NameSelector)
@@ -93,7 +93,7 @@ public sealed class TransformImmutableFixture
     [Fact]
     public void SourceCompletes_CompletionIsPropagated()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var results = source
             .TransformImmutable(transformFactory: Item.NameSelector)
@@ -153,7 +153,7 @@ public sealed class TransformImmutableFixture
     [Fact]
     public void SourceErrors_ErrorIsPropagated()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         var error = new Exception();
 
@@ -228,7 +228,7 @@ public sealed class TransformImmutableFixture
     [Fact]
     public void TransformFactoryThrows_ExceptionIsCaptured()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         var error = new Exception();
 
@@ -251,7 +251,7 @@ public sealed class TransformImmutableFixture
     [Fact]
     public void TDestinationIsValueType_DoesNotThrowException()
     {
-        using var source = new Subject<IChangeSet<string, string>>();
+        using var source = new Signal<IChangeSet<string, string>>();
 
         using var results = source
             .TransformImmutable(transformFactory: static value => value.Length)

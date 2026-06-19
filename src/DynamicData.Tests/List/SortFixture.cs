@@ -16,7 +16,7 @@ public class SortChangedFixture
     public void SortsWithoutError()
     {
         var source = new SourceList<ListItem>();
-        var sorter = new Subject<IComparer<ListItem>>();
+        var sorter = new Signal<IComparer<ListItem>>();
 
         source.AddRange(Enumerable.Range(1, 10).Select(i => new ListItem(i)));
 

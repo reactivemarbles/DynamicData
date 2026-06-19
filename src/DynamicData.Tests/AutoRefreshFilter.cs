@@ -62,7 +62,7 @@ public class AutoRefreshFilter
         var items = new SourceList<ActivableItem>();
         items.Add(item1);
 
-        var filterSubject = new BehaviorSubject<Func<ActivableItem, bool>>(_ => false);
+        var filterSubject = new StateSignal<Func<ActivableItem, bool>>(_ => false);
 
         var obsListDerived = items
             .Connect()
@@ -106,7 +106,7 @@ public class AutoRefreshFilter
         var items = new ObservableCollection<ActivableItem>();
         items.Add(item1);
 
-        var filterSubject = new BehaviorSubject<Func<ActivableItem, bool>>(_ => false);
+        var filterSubject = new StateSignal<Func<ActivableItem, bool>>(_ => false);
 
         var obsListDerived = items
             .ToObservableChangeSet()

@@ -46,8 +46,11 @@ public static partial class ObservableListEx
                 Action<T> removeAction,
                 bool invokeOnUnsubscribe = true)
             where T : notnull
-        => List.Internal.OnItemRemoved<T>.Create(
-            source: source,
-            removeAction: removeAction,
-            invokeOnUnsubscribe: invokeOnUnsubscribe);
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        return List.Internal.OnItemRemoved<T>.Create(
+                source: source,
+                removeAction: removeAction,
+                invokeOnUnsubscribe: invokeOnUnsubscribe);
+    }
 }

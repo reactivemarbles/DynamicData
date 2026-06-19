@@ -11,7 +11,7 @@ public class InnerJoinFixtureRaceCondition
     [Fact]
     public void LetsSeeWhetherWeCanRandomlyHitARaceCondition()
     {
-        var ids = ObservableChangeSet.Create<long, long>(sourceCache => { return Observable.Range(1, 1000000, Scheduler.Default).Subscribe(x => sourceCache.AddOrUpdate(x)); }, x => x);
+        var ids = ObservableChangeSet.Create<long, long>(sourceCache => { return Observable.Range(1, 1000000, Sequencer.Default).Subscribe(x => sourceCache.AddOrUpdate(x)); }, x => x);
 
         var itemsCache = new SourceCache<Thing, long>(x => x.Id);
         itemsCache.AddOrUpdate(

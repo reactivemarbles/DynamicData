@@ -11,7 +11,7 @@ internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache
     where TObject : notnull
     where TKey : notnull
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed through _cleanUp")]
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed through _cleanUp")]
     private readonly IObservableCache<TObject, TKey> _cache;
     private readonly IDisposable _cleanUp;
 
@@ -44,7 +44,7 @@ internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true)
         => _cache.Connect(predicate, suppressEmptyChangeSets);
 
-    public Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
+    public Kernel.Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
 
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => _cache.Preview(predicate);
 

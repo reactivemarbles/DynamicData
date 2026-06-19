@@ -41,7 +41,7 @@ namespace DynamicData.Tests
         [Fact]
         public void ExceptionTests()
         {
-            var exSubject = new Subject<Exception>();
+            var exSubject = new Signal<Exception>();
 
             object exceptionRecived = default!;
             exSubject.ObserveOn(Sequencer.Immediate).Subscribe(ex => { exceptionRecived = ex; });

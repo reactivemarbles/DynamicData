@@ -22,7 +22,7 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
                 var paused = initialPauseState;
                 var buffer = new ChangeSet<T>();
                 var timeoutSubscriber = new SerialDisposable();
-                var timeoutSubject = new Subject<bool>();
+                var timeoutSubject = new Signal<bool>();
 
                 var bufferSelector = Observable.Return(initialPauseState).Concat(_pauseIfTrueSelector.Merge(timeoutSubject)).ObserveOn(_scheduler).Synchronize(locker).Publish();
 

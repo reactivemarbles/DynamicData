@@ -9,7 +9,7 @@ namespace DynamicData;
 /// <summary>
 /// Options for the sort and virtualize operator.
 /// </summary>
-public record struct SortAndVirtualizeOptions()
+public readonly record struct SortAndVirtualizeOptions()
 {
     /// <summary>
     /// The sort reset threshold ie the number of changes before a reset is fired.

@@ -4,7 +4,7 @@ namespace DynamicData.Tests.List;
 
 public sealed class DisposeManyFixture : IDisposable
 {
-    private readonly Subject<IChangeSet<DisposableObject>> _changeSetsSource;
+    private readonly Signal<IChangeSet<DisposableObject>> _changeSetsSource;
 
     private readonly SourceList<DisposableObject> _itemsSource;
 

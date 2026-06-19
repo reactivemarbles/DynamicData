@@ -84,7 +84,7 @@ public static partial class FilterFixture
             {
                 // Setup
                 using var source            = new TestSourceCache<Item, int>(Item.SelectId);
-                using var predicateChanged  = new BehaviorSubject<Func<Item, bool>>(Item.FilterByIsIncluded);
+                using var predicateChanged  = new StateSignal<Func<Item, bool>>(Item.FilterByIsIncluded);
 
                 source.AddOrUpdate(new[]
                 {
@@ -146,10 +146,10 @@ public static partial class FilterFixture
                 });
 
                 var predicateChanged = (completionStrategy is CompletionStrategy.Asynchronous)
-                    ? new Subject<Func<Item, bool>>()
+                    ? new Signal<Func<Item, bool>>()
                     : Observable.Return(Item.FilterByIsIncluded);
 
-                var reapplyFilter = new Subject<Unit>();
+                var reapplyFilter = new Signal<Unit>();
 
                 // UUT Initialization & Action
                 using var subscription = source.Connect()
@@ -160,7 +160,7 @@ public static partial class FilterFixture
                     .ValidateChangeSets(static item => item.Id)
                     .RecordCacheItems(out var results);
 
-                if (predicateChanged is Subject<Func<Item, bool>> subject)
+                if (predicateChanged is Signal<Func<Item, bool>> subject)
                 {
                     subject.OnNext(Item.FilterByIsIncluded);
                     subject.OnCompleted();
@@ -214,7 +214,7 @@ public static partial class FilterFixture
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
                 var predicateChanged = (completionStrategy is CompletionStrategy.Asynchronous)
-                    ? new Subject<Func<Item, bool>>()
+                    ? new Signal<Func<Item, bool>>()
                     : Observable.Empty<Func<Item, bool>>();
 
                 // UUT Initialization & Action
@@ -227,7 +227,7 @@ public static partial class FilterFixture
                     .ValidateChangeSets(static item => item.Id)
                     .RecordCacheItems(out var results);
 
-                if (predicateChanged is Subject<Func<Item, bool>> subject)
+                if (predicateChanged is Signal<Func<Item, bool>> subject)
                     subject.OnCompleted();
 
                 results.Error.Should().BeNull();
@@ -249,7 +249,7 @@ public static partial class FilterFixture
                 var error = new Exception("Test");
 
                 var predicateChanged = (completionStrategy is CompletionStrategy.Asynchronous)
-                    ? new Subject<Func<Item, bool>>()
+                    ? new Signal<Func<Item, bool>>()
                     : Observable.Throw<Func<Item, bool>>(error);
 
                 // UUT Initialization & Action
@@ -261,7 +261,7 @@ public static partial class FilterFixture
                     .ValidateChangeSets(static item => item.Id)
                     .RecordCacheItems(out var results);
 
-                if (predicateChanged is Subject<Func<Item, bool>> subject)
+                if (predicateChanged is Signal<Func<Item, bool>> subject)
                     subject.OnError(error);
 
                 results.Error.Should().Be(error, "errors should propagate downstream");
@@ -299,10 +299,10 @@ public static partial class FilterFixture
                     new Item() { Id = 6, IsIncluded = false }
                 });
 
-                var predicateChanged = new BehaviorSubject<Func<Item, bool>>(Item.FilterByIsIncluded);
+                var predicateChanged = new StateSignal<Func<Item, bool>>(Item.FilterByIsIncluded);
 
                 var reapplyFilter = (completionStrategy is CompletionStrategy.Asynchronous)
-                    ? new Subject<Unit>()
+                    ? new Signal<Unit>()
                     : Observable.Empty<Unit>();
 
                 // UUT Initialization & Action
@@ -314,7 +314,7 @@ public static partial class FilterFixture
                     .ValidateChangeSets(static item => item.Id)
                     .RecordCacheItems(out var results);
 
-                if (reapplyFilter is Subject<Unit> subject)
+                if (reapplyFilter is Signal<Unit> subject)
                     subject.OnCompleted();
 
                 results.Error.Should().BeNull();
@@ -357,7 +357,7 @@ public static partial class FilterFixture
                 var error = new Exception("Test");
 
                 var reapplyFilter = (completionStrategy is CompletionStrategy.Asynchronous)
-                    ? new Subject<Unit>()
+                    ? new Signal<Unit>()
                     : Observable.Throw<Unit>(error);
 
                 // UUT Initialization & Action
@@ -369,7 +369,7 @@ public static partial class FilterFixture
                     .ValidateChangeSets(static item => item.Id)
                     .RecordCacheItems(out var results);
 
-                if (reapplyFilter is Subject<Unit> subject)
+                if (reapplyFilter is Signal<Unit> subject)
                     subject.OnError(error);
 
                 results.Error.Should().Be(error, "errors should propagate downstream");
@@ -392,7 +392,7 @@ public static partial class FilterFixture
             {
                 // Setup
                 using var source        = new TestSourceCache<Item, int>(Item.SelectId);
-                using var reapplyFilter = new Subject<Unit>();
+                using var reapplyFilter = new Signal<Unit>();
 
                 source.AddOrUpdate(new[]
                 {
@@ -499,8 +499,8 @@ public static partial class FilterFixture
                     new Item() { Id = 6, IsIncluded = false }
                 });
 
-                using var predicateChanged  = new BehaviorSubject<Func<Item, bool>>(Item.FilterByIsIncluded);
-                using var reapplyFilter     = new Subject<Unit>();
+                using var predicateChanged  = new StateSignal<Func<Item, bool>>(Item.FilterByIsIncluded);
+                using var reapplyFilter     = new Signal<Unit>();
 
                 // UUT Initialization & Action
                 if (completionStrategy is CompletionStrategy.Immediate)
@@ -552,9 +552,9 @@ public static partial class FilterFixture
             public void SubscriptionIsDisposed_SubscriptionDisposalPropagates()
             {
                 // Setup
-                using var source            = new Subject<IChangeSet<Item, int>>();
-                using var predicateChanged  = new BehaviorSubject<Func<Item, bool>>(Item.FilterByIsIncluded);
-                using var reapplyFilter     = new Subject<Unit>();
+                using var source            = new Signal<IChangeSet<Item, int>>();
+                using var predicateChanged  = new StateSignal<Func<Item, bool>>(Item.FilterByIsIncluded);
+                using var reapplyFilter     = new Signal<Unit>();
 
                 // UUT Initialization
                 using var subscription = source
