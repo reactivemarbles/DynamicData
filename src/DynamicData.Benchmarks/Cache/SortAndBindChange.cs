@@ -1,6 +1,8 @@
-using System.Collections.ObjectModel;
 using BenchmarkDotNet.Attributes;
 using DynamicData.Binding;
+using ReactiveUI.Primitives.Disposables;
+using ReactiveUI.Primitives.Signals;
+using System.Collections.ObjectModel;
 
 namespace DynamicData.Benchmarks.Cache;
 
@@ -15,10 +17,10 @@ public class SortAndBindChange: IDisposable
         .Ascending(i => i.Ranking)
         .ThenByAscending(i => i.Name);
 
-    Subject<IChangeSet<Item, int>> _newSubject = new();
-    Subject<IChangeSet<Item, int>> _newSubjectOptimised = new();
-    Subject<IChangeSet<Item, int>> _oldSubject = new();
-    Subject<IChangeSet<Item, int>> _oldSubjectOptimised = new();
+    Signal<IChangeSet<Item, int>> _newSubject = new();
+    Signal<IChangeSet<Item, int>> _newSubjectOptimised = new();
+    Signal<IChangeSet<Item, int>> _oldSubject = new();
+    Signal<IChangeSet<Item, int>> _oldSubjectOptimised = new();
 
     private IDisposable? _cleanUp;
 
@@ -33,12 +35,12 @@ public class SortAndBindChange: IDisposable
     [GlobalSetup]
     public void SetUp()
     {
-        _oldSubject = new Subject<IChangeSet<Item, int>>();
-        _oldSubjectOptimised = new Subject<IChangeSet<Item, int>>();
-        _newSubject = new Subject<IChangeSet<Item, int>>();
-        _newSubjectOptimised = new Subject<IChangeSet<Item, int>>();
+        _oldSubject = new Signal<IChangeSet<Item, int>>();
+        _oldSubjectOptimised = new Signal<IChangeSet<Item, int>>();
+        _newSubject = new Signal<IChangeSet<Item, int>>();
+        _newSubjectOptimised = new Signal<IChangeSet<Item, int>>();
 
-        _cleanUp = new CompositeDisposable  
+        _cleanUp = new CompositeDisposable
         (
             _newSubject.SortAndBind(out var newList, _comparer).Subscribe(),
             _newSubjectOptimised.SortAndBind(out var optimisedList, _comparer, new SortAndBindOptions
@@ -82,7 +84,7 @@ public class SortAndBindChange: IDisposable
     [Benchmark]
     public void NewOptimized() => RunTest(_newSubjectOptimised, _newListOptimised!);
 
-    void RunTest(Subject<IChangeSet<Item, int>> subject, ReadOnlyObservableCollection<Item> list)
+    void RunTest(Signal<IChangeSet<Item, int>> subject, ReadOnlyObservableCollection<Item> list)
     {
         var original = list[Count / 2];
         var updated = original with { Ranking = _random.Next(1, 1000) };

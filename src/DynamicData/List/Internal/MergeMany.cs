@@ -29,10 +29,10 @@ internal sealed class MergeMany<T, TDestination>(IObservable<IChangeSet<T>> sour
 
     private sealed class SubscriptionCounter : IDisposable
     {
-        private readonly Subject<IChangeSet<T>> _subject = new();
+        private readonly Signal<IChangeSet<T>> _subject = new();
         private int _subscriptionCount = 1;
 
-        public IObservable<IChangeSet<T>> DeferCleanup => Observable.Defer(() =>
+        public IObservable<IChangeSet<T>> DeferCleanup => Signal.Lazy(() =>
         {
             CheckCompleted();
             return _subject.AsObservable();

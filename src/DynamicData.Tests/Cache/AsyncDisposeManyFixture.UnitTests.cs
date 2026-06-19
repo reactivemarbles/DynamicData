@@ -16,7 +16,7 @@ public static partial class AsyncDisposeManyFixture
         [InlineData(ItemType.ImmediateAsyncDisposable)]
         public void ItemsAreAddedMovedOrRefreshed_ItemsAreNotDisposed(ItemType itemType)
         {
-            using var source = new Subject<IChangeSet<ItemBase, int>>();
+            using var source = new Signal<IChangeSet<ItemBase, int>>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
@@ -259,7 +259,7 @@ public static partial class AsyncDisposeManyFixture
 
             IObservable<IChangeSet<ImmediateAsyncDisposableItem, int>> source = (sourceType is SourceType.Immediate)
                 ? Observable.Return(changeSet)
-                : new Subject<IChangeSet<ImmediateAsyncDisposableItem, int>>();
+                : new Signal<IChangeSet<ImmediateAsyncDisposableItem, int>>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
@@ -275,7 +275,7 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-            if (source is Subject<IChangeSet<ImmediateAsyncDisposableItem, int>> subject)
+            if (source is Signal<IChangeSet<ImmediateAsyncDisposableItem, int>> subject)
             {
                 subject.OnNext(changeSet);
                 subject.OnCompleted();
@@ -313,7 +313,7 @@ public static partial class AsyncDisposeManyFixture
             IObservable<IChangeSet<ImmediateAsyncDisposableItem, int>> source = (sourceType is SourceType.Immediate)
                 ? Observable.Return(changeSet)
                     .Concat(Observable.Throw<IChangeSet<ImmediateAsyncDisposableItem, int>>(error))
-                : new Subject<IChangeSet<ImmediateAsyncDisposableItem, int>>();
+                : new Signal<IChangeSet<ImmediateAsyncDisposableItem, int>>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
@@ -329,7 +329,7 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-            if (source is Subject<IChangeSet<ImmediateAsyncDisposableItem, int>> subject)
+            if (source is Signal<IChangeSet<ImmediateAsyncDisposableItem, int>> subject)
             {
                 subject.OnNext(changeSet);
                 subject.OnError(error);

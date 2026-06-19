@@ -14,7 +14,7 @@ internal sealed class QueryWhenChanged<TObject, TKey, TValue>(IObservable<IChang
     {
         if (itemChangedTrigger is null)
         {
-            return Observable.Defer(() =>
+            return Signal.Lazy(() =>
                 {
                     return _source.Scan(
                         (Cache<TObject, TKey>?)null,

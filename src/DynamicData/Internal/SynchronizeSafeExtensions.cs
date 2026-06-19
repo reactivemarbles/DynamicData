@@ -35,7 +35,9 @@ internal static class SynchronizeSafeExtensions
     /// Synchronizes the source observable through a <see cref="SharedDeliveryQueue"/>.
     /// Use when multiple sources of different types share a gate.
     /// </summary>
-    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, SharedDeliveryQueue queue) =>
+    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, SharedDeliveryQueue queue)
+        where T : notnull
+        =>
         Observable.Create<T>(observer =>
         {
             var subQueue = queue.CreateQueue(observer);
@@ -48,11 +50,8 @@ internal static class SynchronizeSafeExtensions
     /// Synchronizes the source observable through an implicitly created <see cref="DeliveryQueue{T}"/>.
     /// Drop-in replacement for <c>Synchronize(locker)</c>.
     /// </summary>
-#if NET9_0_OR_GREATER
-    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, Lock gate) =>
-#else
-    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, object gate) =>
-#endif
+    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, Lock gate)
+        where T : notnull =>
         Observable.Create<T>(observer =>
         {
             var queue = new DeliveryQueue<T>(gate, observer);
@@ -67,7 +66,8 @@ internal static class SynchronizeSafeExtensions
     /// before the source subscription is disposed, ensuring all in-flight notifications
     /// are delivered before teardown.
     /// </summary>
-    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source) =>
+    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source)
+        where T : notnull =>
         Observable.Create<T>(observer =>
         {
             var queue = new DeliveryQueue<T>(observer);

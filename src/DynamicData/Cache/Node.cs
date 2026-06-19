@@ -14,7 +14,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     where TObject : class
     where TKey : notnull
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly SourceCache<Node<TObject, TKey>, TKey> _children = new(n => n.Key);
 
     private readonly CompositeDisposable _cleanUp;
@@ -37,13 +37,13 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <param name="item">The item.</param>
     /// <param name="key">The key.</param>
     /// <param name="parent">The parent.</param>
-    public Node(TObject item, TKey key, in Optional<Node<TObject, TKey>> parent)
+    public Node(TObject item, TKey key, in Kernel.Optional<Node<TObject, TKey>> parent)
     {
         Item = item ?? throw new ArgumentNullException(nameof(item));
         Key = key;
         Parent = parent;
         Children = _children.AsObservableCache();
-        _cleanUp = new(Children, _children);
+        _cleanUp = new CompositeDisposable(Children, _children);
     }
 
     /// <summary>
@@ -91,7 +91,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <summary>
     /// Gets the parent if it has one.
     /// </summary>
-    public Optional<Node<TObject, TKey>> Parent { get; internal set; }
+    public Kernel.Optional<Node<TObject, TKey>> Parent { get; internal set; }
 
     /// <summary>
     ///  Determines whether the specified objects are equal.

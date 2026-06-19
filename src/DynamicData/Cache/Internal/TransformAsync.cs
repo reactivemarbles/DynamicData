@@ -6,7 +6,7 @@ namespace DynamicData.Cache.Internal;
 
 internal class TransformAsync<TDestination, TSource, TKey>(
     IObservable<IChangeSet<TSource, TKey>> source,
-    Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory,
+    Func<TSource, Kernel.Optional<TSource>, TKey, Task<TDestination>> transformFactory,
     Action<Error<TSource, TKey>>? exceptionCallback,
     IObservable<Func<TSource, TKey, bool>>? forceTransform = null,
     int? maximumConcurrency = null,
@@ -41,7 +41,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         var toTransform = cache.KeyValues.Where(kvp => shouldTransform(kvp.Value.Source, kvp.Key)).Select(kvp =>
             new Change<TSource, TKey>(ChangeReason.Update, kvp.Key, kvp.Value.Source, kvp.Value.Source)).ToArray();
 
-        return toTransform.Select(change => Observable.Defer(() => Transform(change).ToObservable()))
+        return toTransform.Select(change => Signal.Lazy(() => Transform(change).ToObservable()))
             .Merge(maximumConcurrency ?? int.MaxValue)
             .ToArray()
             .Select(transformed => ProcessUpdates(cache, transformed));
@@ -50,7 +50,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
     private IObservable<IChangeSet<TDestination, TKey>> DoTransform(
         ChangeAwareCache<TransformedItemContainer, TKey> cache, IChangeSet<TSource, TKey> changes)
     {
-        return changes.Select(change => Observable.FromAsync(() => Transform(change)))
+        return changes.Select(change => Signal.FromAsync(() => Transform(change)))
             .Merge(maximumConcurrency ?? int.MaxValue)
             .ToArray()
             .Select(transformed => ProcessUpdates(cache, transformed));
@@ -146,7 +146,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         public TransformResult(in Change<TSource, TKey> change)
         {
             Change = change;
-            Container = Optional<TransformedItemContainer>.None;
+            Container = Kernel.Optional<TransformedItemContainer>.None;
             Success = true;
             Key = change.Key;
         }
@@ -161,7 +161,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
 
         public Change<TSource, TKey> Change { get; }
 
-        public Optional<TransformedItemContainer> Container { get; }
+        public Kernel.Optional<TransformedItemContainer> Container { get; }
 
         public Exception? Error { get; }
 

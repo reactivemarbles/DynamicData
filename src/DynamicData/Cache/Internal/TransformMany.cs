@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-
 using DynamicData.Binding;
 
 namespace DynamicData.Cache.Internal;
@@ -19,7 +17,7 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
             source,
             manySelector,
             keySelector,
-            t => Observable.Defer(
+            t => Signal.Lazy(
                 () =>
                 {
                     var subsequentChanges = manySelector(t).ToObservableChangeSet(keySelector);
@@ -39,7 +37,7 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
             source,
             manySelector,
             keySelector,
-            t => Observable.Defer(
+            t => Signal.Lazy(
                 () =>
                 {
                     var subsequentChanges = manySelector(t).ToObservableChangeSet(keySelector);
@@ -59,7 +57,7 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
             source,
             x => manySelector(x).Items,
             keySelector,
-            t => Observable.Defer(
+            t => Signal.Lazy(
                 () =>
                 {
                     var subsequentChanges = Observable.Create<IChangeSet<TDestination, TDestinationKey>>(o => manySelector(t).Connect().Subscribe(o));

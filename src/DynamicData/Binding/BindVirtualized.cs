@@ -37,8 +37,8 @@ internal sealed class BindVirtualized<[DynamicallyAccessedMembers(DynamicallyAcc
 
             // I tried to make this work without subjects but had issues
             // making the comparedChanged observable to fire. Probably a deadlock
-            var changesSubject = new Subject<IChangeSet<TObject, TKey>>();
-            var comparerSubject = new ReplaySubject<IComparer<TObject>>(1);
+            var changesSubject = new Signal<IChangeSet<TObject, TKey>>();
+            var comparerSubject = new ReplaySignal<IComparer<TObject>>(1);
 
             // once we have the initial values, publish as normal.
             var subsequent = shared

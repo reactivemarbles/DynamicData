@@ -2,6 +2,8 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using ReactiveUI.Primitives;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey> pivotOn, IObservable<Func<Node<TObject, TKey>, bool>>? predicateChanged)
@@ -20,7 +22,7 @@ internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject,
             observer =>
             {
                 var queue = new SharedDeliveryQueue();
-                var reFilterObservable = new BehaviorSubject<Unit>(Unit.Default);
+                var reFilterObservable = new StateSignal<Unit>(Unit.Default);
 
                 var allData = _source.SynchronizeSafe(queue).AsObservableCache();
 
@@ -42,7 +44,7 @@ internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject,
                 }
 
                 // as nodes change, maintain parent and children
-                var parentSetter = allNodes.Connect().Do(
+                var parentSetter = allNodes.Connect().Tap(
                     changes =>
                     {
                         foreach (var group in changes.GroupBy(c => _pivotOn(c.Current.Item)))

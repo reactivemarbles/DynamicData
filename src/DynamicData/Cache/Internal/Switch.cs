@@ -17,7 +17,7 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
 
                 var destination = new LockFreeObservableCache<TObject, TKey>();
 
-                var errors = new Subject<IChangeSet<TObject, TKey>>();
+                var errors = new Signal<IChangeSet<TObject, TKey>>();
 
                 var populator = Observable.Switch(
                         _sources

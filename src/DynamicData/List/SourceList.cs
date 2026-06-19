@@ -17,19 +17,15 @@ namespace DynamicData;
 public sealed class SourceList<T> : ISourceList<T>
     where T : notnull
 {
-    private readonly Subject<IChangeSet<T>> _changes = new();
+    private readonly Signal<IChangeSet<T>> _changes = new();
 
-    private readonly Subject<IChangeSet<T>> _changesPreview = new();
+    private readonly Signal<IChangeSet<T>> _changesPreview = new();
 
     private readonly IDisposable _cleanUp;
 
-    private readonly Lazy<Subject<int>> _countChanged = new(() => new Subject<int>());
+    private readonly Lazy<Signal<int>> _countChanged = new(() => new Signal<int>());
 
-#if NET9_0_OR_GREATER
     private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
 
     private readonly ReaderWriter<T> _readerWriter = new();
 

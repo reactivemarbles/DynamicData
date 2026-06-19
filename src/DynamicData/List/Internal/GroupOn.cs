@@ -230,13 +230,13 @@ internal sealed class GroupOn<TObject, TGroupKey>(IObservable<IChangeSet<TObject
         public bool WasCreated { get; }
     }
 
-    private sealed class ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
+    private sealed class ItemWithGroupKey(TObject item, TGroupKey group, Kernel.Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
     {
         public TGroupKey Group { get; set; } = group;
 
         public TObject Item { get; } = item;
 
-        public Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
+        public Kernel.Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
 
         /// <summary>Returns a value that indicates whether the values of two <see cref="GroupOn{TObject, TGroupKey}.ItemWithGroupKey" /> objects are equal.</summary>
         /// <param name="left">The first value to compare.</param>
