@@ -71,10 +71,16 @@ internal sealed class FilterImmutable<TObject, TKey>
                             if (downstreamReason is { } reason)
                             {
                                 // Do not propagate indexes, we can't guarantee them to be correct, because we aren't caching items.
+                                //
+                                // For Update->Remove (Previous matched, Current does not), the item that leaves
+                                // downstream is Previous; Current never reached downstream. Per the Change<T,K>
+                                // contract, Remove.Current is the value being removed, so carry Previous here.
                                 downstreamChanges.Add(new(
                                     reason: reason,
                                     key: change.Key,
-                                    current: change.Current,
+                                    current: (reason is ChangeReason.Remove && change.Reason is ChangeReason.Update)
+                                        ? change.Previous.Value
+                                        : change.Current,
                                     previous: (reason is ChangeReason.Update)
                                         ? change.Previous
                                         : default));

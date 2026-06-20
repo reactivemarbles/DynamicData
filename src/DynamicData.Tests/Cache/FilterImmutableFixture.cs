@@ -9,9 +9,10 @@ public sealed class FilterImmutableFixture
     {
         using var source = new Signal<IChangeSet<Item, int>>();
 
-        using var results = source
+        using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)
-            .AsAggregator();
+            .ValidateChangeSets(Item.KeySelector)
+            .RecordCacheItems(out var results);
 
         // Add items
         var item1 = new Item() { Id = 1, IsIncluded = true };
@@ -23,8 +24,8 @@ public sealed class FilterImmutableFixture
         });
 
         results.Error.Should().BeNull();
-        results.Messages.Count.Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item1 }, "2 items were added, with 1 excluded");
+        results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "2 items were added, with 1 excluded");
 
         // Replace items, changing inclusion
         var item3 = new Item() { Id = item1.Id, IsIncluded = false };
@@ -36,8 +37,8 @@ public sealed class FilterImmutableFixture
         });
 
         results.Error.Should().BeNull();
-        results.Messages.Skip(1).Count().Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item4 }, "2 items were replaced, with 1 excluded");
+        results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 source operation was performed");
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item4 }, "2 items were replaced, with 1 excluded");
 
         // Replace items, not changing inclusion
         var item5 = new Item() { Id = item3.Id, IsIncluded = false };
@@ -49,8 +50,8 @@ public sealed class FilterImmutableFixture
         });
 
         results.Error.Should().BeNull();
-        results.Messages.Skip(2).Count().Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item6 }, "2 items were replaced, with 1 excluded");
+        results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "1 source operation was performed");
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item6 }, "2 items were replaced, with 1 excluded");
 
         // Refresh items
         source.OnNext(new ChangeSet<Item, int>()
@@ -60,8 +61,8 @@ public sealed class FilterImmutableFixture
         });
 
         results.Error.Should().BeNull();
-        results.Messages.Skip(3).Count().Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item6 }, "2 items were refreshed, with 1 excluded");
+        results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "1 source operation was performed");
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item6 }, "2 items were refreshed, with 1 excluded");
 
         // Remove items
         source.OnNext(new ChangeSet<Item, int>()
@@ -71,17 +72,18 @@ public sealed class FilterImmutableFixture
         });
 
         results.Error.Should().BeNull();
-        results.Messages.Skip(4).Count().Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEmpty("2 items were removed, with one excluded");
+        results.RecordedChangeSets.Skip(4).Count().Should().Be(1, "1 source operation was performed");
+        results.RecordedItemsByKey.Should().BeEmpty("2 items were removed, with one excluded");
 
-        results.Messages.SelectMany(static changes => changes).Should().AllSatisfy(
+
+        results.RecordedChangeSets.SelectMany(static changes => changes).Should().AllSatisfy(
             change =>
             {
                 change.CurrentIndex.Should().Be(-1);
                 change.PreviousIndex.Should().Be(-1);
             },
             because: "indexes should not be preserved");
-        results.IsCompleted.Should().BeFalse();
+        results.HasCompleted.Should().BeFalse();
     }
 
     [Fact]
@@ -89,9 +91,10 @@ public sealed class FilterImmutableFixture
     {
         using var source = new Signal<IChangeSet<Item, int>>();
 
-        using var results = source
+        using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)
-            .AsAggregator();
+            .ValidateChangeSets(Item.KeySelector)
+            .RecordCacheItems(out var results);
 
         // Initial setup
         var item1 = new Item() { Id = 1, IsIncluded = true };
@@ -103,17 +106,17 @@ public sealed class FilterImmutableFixture
             new(reason: ChangeReason.Add, key: item2.Id, current: item2, index: 1),
             new(reason: ChangeReason.Add, key: item3.Id, current: item3, index: 2)
         });
-        results.Messages.Clear();
+        var changeSetsBeforeMove = results.RecordedChangeSets.Count;
 
         // Move items
         source.OnNext(new ChangeSet<Item, int>()
         {
             new(reason: ChangeReason.Moved, key: item1.Id, current: item1, previous: default, currentIndex: 2, previousIndex: 0),
-            new(reason: ChangeReason.Moved, key: item2.Id, current: item1, previous: default, currentIndex: 0, previousIndex: 1)
+            new(reason: ChangeReason.Moved, key: item2.Id, current: item2, previous: default, currentIndex: 0, previousIndex: 1)
         });
 
         results.Error.Should().BeNull();
-        results.Messages.Should().BeEmpty("move operations should not be propagated");
+        results.RecordedChangeSets.Skip(changeSetsBeforeMove).Should().BeEmpty("move operations should not be propagated");
     }
 
     [Fact]
@@ -130,9 +133,10 @@ public sealed class FilterImmutableFixture
 
         var error = new Exception();
 
-        using var results = source
+        using var subscription = source
             .FilterImmutable(predicate: _ => throw error)
-            .AsAggregator();
+            .ValidateChangeSets(Item.KeySelector)
+            .RecordCacheItems(out var results);
 
         var item1 = new Item() { Id = 1, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
@@ -141,8 +145,8 @@ public sealed class FilterImmutableFixture
         });
 
         results.Error.Should().Be(error);
-        results.Messages.Should().BeEmpty("no source operations should have been processed");
-        results.IsCompleted.Should().BeFalse();
+        results.RecordedChangeSets.Should().BeEmpty("no source operations should have been processed");
+        results.HasCompleted.Should().BeFalse();
     }
 
     [Fact]
@@ -150,9 +154,10 @@ public sealed class FilterImmutableFixture
     {
         using var source = new Signal<IChangeSet<Item, int>>();
 
-        using var results = source
+        using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)
-            .AsAggregator();
+            .ValidateChangeSets(Item.KeySelector)
+            .RecordCacheItems(out var results);
 
         var item1 = new Item() { Id = 1, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
@@ -162,9 +167,10 @@ public sealed class FilterImmutableFixture
         source.OnCompleted();
 
         results.Error.Should().BeNull();
-        results.IsCompleted.Should().BeTrue();
-        results.Messages.Count.Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
+        results.HasCompleted.Should().BeTrue();
+        results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
+
 
         // Make sure no extraneous notifications are published.
         var item2 = new Item() { Id = 2, IsIncluded = true };
@@ -173,7 +179,7 @@ public sealed class FilterImmutableFixture
             new(reason: ChangeReason.Add, key: item2.Id, current: item2)
         });
 
-        results.Messages.Skip(1).Should().BeEmpty("no source operations should have been processed");
+        results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations should have been processed");
     }
 
     [Fact]
@@ -193,16 +199,15 @@ public sealed class FilterImmutableFixture
             return Disposable.Empty;
         });
 
-        var error = new Exception();
-
-        using var results = source
+        using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)
-            .AsAggregator();
+            .ValidateChangeSets(Item.KeySelector)
+            .RecordCacheItems(out var results);
 
         results.Error.Should().BeNull();
-        results.IsCompleted.Should().BeTrue();
-        results.Messages.Count.Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
+        results.HasCompleted.Should().BeTrue();
+        results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
     }
 
     [Fact]
@@ -212,9 +217,10 @@ public sealed class FilterImmutableFixture
 
         var error = new Exception();
 
-        using var results = source
+        using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)
-            .AsAggregator();
+            .ValidateChangeSets(Item.KeySelector)
+            .RecordCacheItems(out var results);
 
         var item1 = new Item() { Id = 1, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
@@ -224,9 +230,10 @@ public sealed class FilterImmutableFixture
         source.OnError(error);
 
         results.Error.Should().Be(error);
-        results.IsCompleted.Should().BeFalse();
-        results.Messages.Count.Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
+        results.HasCompleted.Should().BeFalse();
+        results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
+
 
         // Make sure no extraneous notifications are published.
         var item2 = new Item() { Id = 2, IsIncluded = true };
@@ -235,7 +242,7 @@ public sealed class FilterImmutableFixture
             new(reason: ChangeReason.Add, key: item2.Id, current: item2)
         });
 
-        results.Messages.Skip(1).Should().BeEmpty("no source operations should have been processed");
+        results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations should have been processed");
     }
 
     [Fact]
@@ -256,14 +263,15 @@ public sealed class FilterImmutableFixture
             return Disposable.Empty;
         });
 
-        using var results = source
+        using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)
-            .AsAggregator();
+            .ValidateChangeSets(Item.KeySelector)
+            .RecordCacheItems(out var results);
 
         results.Error.Should().Be(error);
-        results.IsCompleted.Should().BeFalse();
-        results.Messages.Count.Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
+        results.HasCompleted.Should().BeFalse();
+        results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
     }
 
     [Fact]
@@ -278,18 +286,19 @@ public sealed class FilterImmutableFixture
     {
         using var source = new Signal<IChangeSet<Item, int>>();
 
-        using var results = source
+        using var subscription = source
             .FilterImmutable(
                 predicate: Item.Predicate,
                 suppressEmptyChangeSets: false)
-            .AsAggregator();
+            .ValidateChangeSets(Item.KeySelector)
+            .RecordCacheItems(out var results);
 
         ManipulateExcludedItems(source);
 
         results.Error.Should().BeNull();
-        results.IsCompleted.Should().BeFalse();
-        results.Messages.Count.Should().Be(5, "5 source operations were performed");
-        results.Messages.Should().AllSatisfy(changes => changes.Should().BeEmpty(), "no included items were manipulated");
+        results.HasCompleted.Should().BeFalse();
+        results.RecordedChangeSets.Count.Should().Be(5, "5 source operations were performed");
+        results.RecordedChangeSets.Should().AllSatisfy(changes => changes.Should().BeEmpty(), "no included items were manipulated");
     }
 
     [Fact]
@@ -297,15 +306,16 @@ public sealed class FilterImmutableFixture
     {
         using var source = new Signal<IChangeSet<Item, int>>();
 
-        using var results = source
+        using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)
-            .AsAggregator();
+            .ValidateChangeSets(Item.KeySelector)
+            .RecordCacheItems(out var results);
 
         ManipulateExcludedItems(source);
 
         results.Error.Should().BeNull();
-        results.IsCompleted.Should().BeFalse();
-        results.Messages.Should().BeEmpty("no source operations should have generated changes");
+        results.HasCompleted.Should().BeFalse();
+        results.RecordedChangeSets.Should().BeEmpty("no source operations should have generated changes");
     }
 
     private static void ManipulateExcludedItems(ISignal<IChangeSet<Item, int>> source)
@@ -339,6 +349,40 @@ public sealed class FilterImmutableFixture
             new(reason: ChangeReason.Remove, key: item2.Id, current: item2, index: 1),
             new(reason: ChangeReason.Remove, key: item3.Id, current: item3, index: 0)
         });
+    }
+
+    [Fact]
+    public void Update_PreviousMatchedCurrentDoesNot_EmitsRemoveCarryingPreviousAsCurrent()
+    {
+        // Per Change<T,K> contract, a Remove change carries the item that was removed in Current.
+        // For an Update where Previous matched the predicate but Current does not, the item that
+        // leaves the filtered view is Previous (it was downstream; Current never reached downstream).
+        using var source = new Subject<IChangeSet<Item, int>>();
+
+        using var subscription = source
+            .FilterImmutable(predicate: Item.Predicate)
+            .ValidateChangeSets(Item.KeySelector)
+            .RecordCacheItems(out var results);
+
+        var included = new Item() { Id = 1, IsIncluded = true };
+        var excluded = new Item() { Id = 1, IsIncluded = false };
+
+        source.OnNext(new ChangeSet<Item, int>()
+        {
+            new(reason: ChangeReason.Add, key: included.Id, current: included, index: 0)
+        });
+
+        source.OnNext(new ChangeSet<Item, int>()
+        {
+            new(reason: ChangeReason.Update, key: excluded.Id, current: excluded, previous: included, currentIndex: 0, previousIndex: 0)
+        });
+
+        var lastChangeSet = results.RecordedChangeSets[results.RecordedChangeSets.Count - 1];
+        lastChangeSet.Count.Should().Be(1);
+
+        var removeChange = lastChangeSet.Single();
+        removeChange.Reason.Should().Be(ChangeReason.Remove);
+        removeChange.Current.Should().BeSameAs(included, "Remove.Current must carry the item that left downstream (the previously-matching value), not the new value that never reached downstream");
     }
 
     private class Item
