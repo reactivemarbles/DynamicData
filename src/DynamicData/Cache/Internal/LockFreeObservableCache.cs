@@ -137,7 +137,7 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     /// <remarks>
     /// Fast indexed lookup.
     /// </remarks>
-    public Kernel.Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
+    public Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
     /// <inheritdoc />
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => predicate is null ? _changesPreview : _changesPreview.Filter(predicate);

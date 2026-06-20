@@ -121,7 +121,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     public void Dispose() => _cleanUp.Dispose();
 
-    public Kernel.Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
+    public Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
 
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
 

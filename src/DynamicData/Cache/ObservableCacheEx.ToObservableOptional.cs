@@ -40,7 +40,7 @@ public static partial class ObservableCacheEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="Watch{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey)"/>
     /// <seealso cref="WatchValue{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey)"/>
-    public static IObservable<Kernel.Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, IEqualityComparer<TObject>? equalityComparer = null)
+    public static IObservable<Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
     {
@@ -63,7 +63,7 @@ public static partial class ObservableCacheEx
     /// <remarks>
     /// <para><b>Worth noting:</b> Uses lock-based coordination. If the key exists synchronously on <c>Connect()</c>, the initial <c>None</c> may or may not be emitted depending on timing.</para>
     /// </remarks>
-    public static IObservable<Kernel.Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, bool initialOptionalWhenMissing, IEqualityComparer<TObject>? equalityComparer = null)
+    public static IObservable<Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, bool initialOptionalWhenMissing, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
     {
@@ -75,8 +75,8 @@ public static partial class ObservableCacheEx
                 return source.ToObservableOptional(key, equalityComparer)
                     .Do(_ => seenValue = true)
                     .Merge(Signal.Lazy(() => seenValue
-                        ? Observable.Empty<Kernel.Optional<TObject>>()
-                        : Observable.Return(Optional.None<TObject>())));
+                        ? Observable.Empty<Optional<TObject>>()
+                        : Observable.Return(Optional<TObject>.None)));
             });
         }
 

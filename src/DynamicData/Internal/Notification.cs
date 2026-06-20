@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -13,10 +13,10 @@ namespace DynamicData.Internal;
 internal readonly struct Notification<T>
     where T : notnull
 {
-    private readonly Kernel.Optional<T> _value;
+    private readonly Optional<T> _value;
     private readonly Exception? _error;
 
-    private Notification(Kernel.Optional<T> value, Exception? error)
+    private Notification(Optional<T> value, Exception? error)
     {
         _value = value;
         _error = error;
@@ -29,11 +29,11 @@ internal readonly struct Notification<T>
     public static Notification<T> CreateError(Exception error)
     {
         error.ThrowArgumentNullExceptionIfNull(nameof(error));
-        return new(Optional.None<T>(), error);
+        return new(Optional<T>.None, error);
     }
 
     /// <summary>Creates an OnCompleted notification (terminal).</summary>
-    public static Notification<T> CreateCompleted() => new(Optional.None<T>(), null);
+    public static Notification<T> CreateCompleted() => new(Optional<T>.None, null);
 
     /// <summary>Gets whether this is an OnError notification.</summary>
     public bool IsError => _error is not null;

@@ -83,7 +83,7 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
         }
     }
 
-    public Kernel.Optional<TObject> Lookup(TKey key)
+    public Optional<TObject> Lookup(TKey key)
     {
         lock (_locker)
         {

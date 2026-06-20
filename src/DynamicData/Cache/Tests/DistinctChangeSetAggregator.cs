@@ -24,6 +24,8 @@ public class DistinctChangeSetAggregator<TValue> : IDisposable
     /// <param name="source">The source.</param>
     public DistinctChangeSetAggregator(IObservable<IDistinctChangeSet<TValue>> source)
     {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+
         var published = source.Publish();
 
         var error = published.Subscribe(_ => { }, ex => Error = ex);

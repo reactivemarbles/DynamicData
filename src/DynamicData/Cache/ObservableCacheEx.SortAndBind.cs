@@ -230,8 +230,12 @@ public static partial class ObservableCacheEx
         IComparer<TObject> comparer,
         SortAndBindOptions options)
         where TObject : notnull
-        where TKey : notnull =>
-        new SortAndBind<TObject, TKey>(source, comparer, options, targetList).Run();
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+
+        return new SortAndBind<TObject, TKey>(source, comparer, options, targetList).Run();
+    }
 
     /// <inheritdoc cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IList{TObject}, IObservable{IComparer{TObject}}, SortAndBindOptions)"/>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
@@ -320,6 +324,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+
         // allow options to set initial capacity for efficiency
         var observableCollection = options.InitialCapacity > 0
             ? new ObservableCollectionExtended<TObject>(new List<TObject>(options.InitialCapacity))

@@ -37,7 +37,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <param name="item">The item.</param>
     /// <param name="key">The key.</param>
     /// <param name="parent">The parent.</param>
-    public Node(TObject item, TKey key, in Kernel.Optional<Node<TObject, TKey>> parent)
+    public Node(TObject item, TKey key, in Optional<Node<TObject, TKey>> parent)
     {
         Item = item ?? throw new ArgumentNullException(nameof(item));
         Key = key;
@@ -91,7 +91,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <summary>
     /// Gets the parent if it has one.
     /// </summary>
-    public Kernel.Optional<Node<TObject, TKey>> Parent { get; internal set; }
+    public Optional<Node<TObject, TKey>> Parent { get; internal set; }
 
     /// <summary>
     ///  Determines whether the specified objects are equal.

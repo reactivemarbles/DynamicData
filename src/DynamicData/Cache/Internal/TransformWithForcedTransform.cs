@@ -4,7 +4,7 @@
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class TransformWithForcedTransform<TDestination, TSource, TKey>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Kernel.Optional<TSource>, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>> forceTransform, Action<Error<TSource, TKey>>? exceptionCallback = null)
+internal sealed class TransformWithForcedTransform<TDestination, TSource, TKey>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>> forceTransform, Action<Error<TSource, TKey>>? exceptionCallback = null)
     where TDestination : notnull
     where TSource : notnull
     where TKey : notnull

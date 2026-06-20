@@ -37,7 +37,7 @@ internal sealed class TransformImmutable<TDestination, TSource, TKey>
                                 current: _transformFactory.Invoke(change.Current),
                                 previous: change.Previous.HasValue
                                     ? _transformFactory.Invoke(change.Previous.Value)
-                                    : Optional.None<TDestination>(),
+                                    : Optional<TDestination>.None,
                                 currentIndex: change.CurrentIndex,
                                 previousIndex: change.PreviousIndex));
                         }

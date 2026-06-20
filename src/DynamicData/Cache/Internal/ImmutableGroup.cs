@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -46,7 +46,7 @@ internal sealed class ImmutableGroup<TObject, TKey, TGroupKey> : IGrouping<TObje
 
     public override int GetHashCode() => EqualityComparer<TGroupKey>.Default.GetHashCode(Key);
 
-    public Kernel.Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
+    public Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
 
     public override string ToString() => $"Grouping for: {Key} ({Count} items)";
 }

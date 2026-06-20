@@ -6,7 +6,7 @@ namespace DynamicData.Cache.Internal;
 
 internal class TransformAsync<TDestination, TSource, TKey>(
     IObservable<IChangeSet<TSource, TKey>> source,
-    Func<TSource, Kernel.Optional<TSource>, TKey, Task<TDestination>> transformFactory,
+    Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory,
     Action<Error<TSource, TKey>>? exceptionCallback,
     IObservable<Func<TSource, TKey, bool>>? forceTransform = null,
     int? maximumConcurrency = null,
@@ -146,7 +146,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         public TransformResult(in Change<TSource, TKey> change)
         {
             Change = change;
-            Container = Kernel.Optional<TransformedItemContainer>.None;
+            Container = Optional<TransformedItemContainer>.None;
             Success = true;
             Key = change.Key;
         }
@@ -161,7 +161,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
 
         public Change<TSource, TKey> Change { get; }
 
-        public Kernel.Optional<TransformedItemContainer> Container { get; }
+        public Optional<TransformedItemContainer> Container { get; }
 
         public Exception? Error { get; }
 

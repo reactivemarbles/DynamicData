@@ -26,6 +26,8 @@ public class PagedChangeSetAggregator<TObject, TKey> : IDisposable
     /// <param name="source">The source.</param>
     public PagedChangeSetAggregator(IObservable<IPagedChangeSet<TObject, TKey>> source)
     {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+
         var published = source.Publish();
 
         var error = published.Subscribe(_ => { }, ex => Error = ex);
