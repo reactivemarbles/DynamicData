@@ -27,7 +27,7 @@ public static class OptionObservableExtensions
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
 
-        return source.Select(optional => optional.HasValue ? converter(optional.Value) : Optional.None<TDestination>());
+        return source.Select(optional => optional.HasValue ? converter(optional.Value) : Optional<TDestination>.None);
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public static class OptionObservableExtensions
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
 
-        return source.Select(optional => optional.HasValue ? converter(optional.Value) : Optional.None<TDestination>());
+        return source.Select(optional => optional.HasValue ? converter(optional.Value) : Optional<TDestination>.None);
     }
 
     /// <summary>

@@ -253,13 +253,13 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
         public IList<TObject> List { get; } = new List<TObject>();
     }
 
-    private sealed class ItemWithGroupKey(TObject item, TGroupKey group, Kernel.Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
+    private sealed class ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
     {
         public TGroupKey Group { get; set; } = group;
 
         public TObject Item { get; } = item;
 
-        public Kernel.Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
+        public Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
 
         public static bool operator ==(ItemWithGroupKey left, ItemWithGroupKey right) => Equals(left, right);
 

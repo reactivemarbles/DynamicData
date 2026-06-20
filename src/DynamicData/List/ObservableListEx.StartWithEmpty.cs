@@ -20,5 +20,10 @@ public static partial class ObservableListEx
     /// <seealso cref="SkipInitial{T}(IObservable{IChangeSet{T}})"/>
     /// <seealso cref="ObservableCacheEx.StartWithEmpty{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
     public static IObservable<IChangeSet<T>> StartWithEmpty<T>(this IObservable<IChangeSet<T>> source)
-        where T : notnull => source.StartWith(ChangeSet<T>.Empty);
+        where T : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+
+        return source.StartWith(ChangeSet<T>.Empty);
+    }
 }

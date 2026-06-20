@@ -8,13 +8,13 @@ internal sealed class Transformer<TSource, TDestination>
     where TSource : notnull
     where TDestination : notnull
 {
-    private readonly Func<TSource, Kernel.Optional<TDestination>, int, TransformedItemContainer> _containerFactory;
+    private readonly Func<TSource, Optional<TDestination>, int, TransformedItemContainer> _containerFactory;
 
     private readonly IObservable<IChangeSet<TSource>> _source;
 
     private readonly bool _transformOnRefresh;
 
-    public Transformer(IObservable<IChangeSet<TSource>> source, Func<TSource, Kernel.Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
+    public Transformer(IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
     {
         factory.ThrowArgumentNullExceptionIfNull(nameof(factory));
 
@@ -49,11 +49,11 @@ internal sealed class Transformer<TSource, TDestination>
                         var change = item.Item;
                         if (change.CurrentIndex < 0 || change.CurrentIndex >= transformed.Count)
                         {
-                            transformed.Add(_containerFactory(change.Current, Kernel.Optional<TDestination>.None, transformed.Count));
+                            transformed.Add(_containerFactory(change.Current, Optional<TDestination>.None, transformed.Count));
                         }
                         else
                         {
-                            var converted = _containerFactory(change.Current, Kernel.Optional<TDestination>.None, change.CurrentIndex);
+                            var converted = _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex);
                             transformed.Insert(change.CurrentIndex, converted);
                         }
 
@@ -64,7 +64,7 @@ internal sealed class Transformer<TSource, TDestination>
                     {
                         var startIndex = item.Range.Index < 0 ? transformed.Count : item.Range.Index;
 
-                        transformed.AddOrInsertRange(item.Range.Select((t, idx) => _containerFactory(t, Kernel.Optional<TDestination>.None, idx + startIndex)), item.Range.Index);
+                        transformed.AddOrInsertRange(item.Range.Select((t, idx) => _containerFactory(t, Optional<TDestination>.None, idx + startIndex)), item.Range.Index);
 
                         break;
                     }
@@ -86,7 +86,7 @@ internal sealed class Transformer<TSource, TDestination>
 
                         if (_transformOnRefresh)
                         {
-                            Kernel.Optional<TDestination> previous = transformed[index].Destination;
+                            Optional<TDestination> previous = transformed[index].Destination;
                             transformed[index] = _containerFactory(change.Current, previous, index);
                         }
                         else
@@ -115,7 +115,7 @@ internal sealed class Transformer<TSource, TDestination>
                         }
                         else
                         {
-                            Kernel.Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
+                            Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
                             if (change.CurrentIndex == change.PreviousIndex)
                             {
                                 transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
@@ -123,7 +123,7 @@ internal sealed class Transformer<TSource, TDestination>
                             else
                             {
                                 transformed.RemoveAt(change.PreviousIndex);
-                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current, Kernel.Optional<TDestination>.None, change.CurrentIndex));
+                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex));
                             }
                         }
 

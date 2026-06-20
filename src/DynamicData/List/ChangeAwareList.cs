@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -83,7 +83,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <summary>
     /// Gets the last change in the collection.
     /// </summary>
-    private Kernel.Optional<Change<T>> Last => _changes.Count == 0 ? Optional.None<Change<T>>() : _changes[_changes.Count - 1];
+    private Optional<Change<T>> Last => _changes.Count == 0 ? Optional<Change<T>>.None : _changes[_changes.Count - 1];
 
     /// <summary>
     /// Gets or sets the item at the specified index.

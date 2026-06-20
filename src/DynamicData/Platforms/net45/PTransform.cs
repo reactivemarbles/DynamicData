@@ -9,7 +9,7 @@ namespace DynamicData.PLinq
 {
     internal sealed class PTransform<TDestination, TSource, TKey>(
         IObservable<IChangeSet<TSource, TKey>> source,
-        Func<TSource, Kernel.Optional<TSource>, TKey, TDestination> transformFactory,
+        Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory,
         ParallelisationOptions parallelisationOptions,
         Action<Error<TSource, TKey>>? exceptionCallback = null)
         where TDestination : notnull
@@ -106,7 +106,7 @@ namespace DynamicData.PLinq
                 : this()
             {
                 Change = change;
-                Destination = Kernel.Optional<TDestination>.None;
+                Destination = Optional<TDestination>.None;
                 Success = true;
                 Key = change.Key;
             }
@@ -126,7 +126,7 @@ namespace DynamicData.PLinq
 
             public bool Success { get; }
 
-            public Kernel.Optional<TDestination> Destination { get; }
+            public Optional<TDestination> Destination { get; }
 
             public TKey Key { get; }
         }

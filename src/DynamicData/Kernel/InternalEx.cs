@@ -26,6 +26,9 @@ public static class InternalEx
     public static IObservable<TSource> RetryWithBackOff<TSource, TException>(this IObservable<TSource> source, Func<TException, int, TimeSpan?> backOffStrategy)
         where TException : Exception
     {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        backOffStrategy.ThrowArgumentNullExceptionIfNull(nameof(backOffStrategy));
+
         IObservable<TSource> Retry(int failureCount) =>
             source.Catch<TSource, TException>(
                 error =>

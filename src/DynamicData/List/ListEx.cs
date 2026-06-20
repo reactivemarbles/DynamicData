@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -289,11 +289,11 @@ public static class ListEx
     /// <param name="item">The item.</param>
     /// <param name="equalityComparer">The equality comparer.</param>
     /// <returns>The index of the item if available.</returns>
-    public static Kernel.Optional<ItemWithIndex<T>> IndexOfOptional<T>(this IEnumerable<T> source, T item, IEqualityComparer<T>? equalityComparer = null)
+    public static Optional<ItemWithIndex<T>> IndexOfOptional<T>(this IEnumerable<T> source, T item, IEqualityComparer<T>? equalityComparer = null)
     {
         var comparer = equalityComparer ?? EqualityComparer<T>.Default;
         var index = source.IndexOf(item, comparer);
-        return index < 0 ? Kernel.Optional<ItemWithIndex<T>>.None : new ItemWithIndex<T>(item, index);
+        return index < 0 ? Optional<ItemWithIndex<T>>.None : new ItemWithIndex<T>(item, index);
     }
 
     /// <summary>

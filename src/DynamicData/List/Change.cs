@@ -19,7 +19,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
     /// <param name="current">The current.</param>
     /// <param name="index">The index.</param>
     public Change(ListChangeReason reason, T current, int index = -1)
-        : this(reason, current, Optional.None<T>(), index)
+        : this(reason, current, Optional<T>.None, index)
     {
     }
 
@@ -70,7 +70,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
         }
 
         Reason = ListChangeReason.Moved;
-        Item = new ItemChange<T>(Reason, current, Optional.None<T>(), currentIndex, previousIndex);
+        Item = new ItemChange<T>(Reason, current, Optional<T>.None, currentIndex, previousIndex);
         Range = RangeChange<T>.Empty;
     }
 
@@ -90,7 +90,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
     /// or
     /// For <see cref="ListChangeReason.Refresh"/>, must supply an index.
     /// </exception>
-    public Change(ListChangeReason reason, T current, in Kernel.Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
+    public Change(ListChangeReason reason, T current, in Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
     {
         if (reason == ListChangeReason.Add && previous.HasValue)
         {

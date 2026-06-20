@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -24,7 +24,7 @@ public static class OptionExtensions
     {
         converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
 
-        return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
+        return source.HasValue ? converter(source.Value) : Optional<TDestination>.None;
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ public static class OptionExtensions
     {
         converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
 
-        return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
+        return source.HasValue ? converter(source.Value) : Optional<TDestination>.None;
     }
 
     /// <summary>
@@ -108,7 +108,7 @@ public static class OptionExtensions
             return Optional<T>.Create(item);
         }
 
-        return Optional.None<T>();
+        return Optional<T>.None;
     }
 
     /// <summary>
@@ -174,7 +174,7 @@ public static class OptionExtensions
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         var result = source.TryGetValue(key, out var contained);
-        return result ? contained : Optional.None<TValue>();
+        return result ? contained : Optional<TValue>.None;
     }
 
     /// <summary>

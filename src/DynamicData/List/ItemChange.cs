@@ -25,7 +25,7 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     /// <param name="previous">The previous.</param>
     /// <param name="currentIndex">Value of the current.</param>
     /// <param name="previousIndex">Value of the previous.</param>
-    public ItemChange(ListChangeReason reason, T current, in Kernel.Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
+    public ItemChange(ListChangeReason reason, T current, in Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
         : this()
     {
         Reason = reason;
@@ -48,7 +48,7 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
         Current = current;
         CurrentIndex = currentIndex;
         PreviousIndex = -1;
-        Previous = Kernel.Optional<T>.None;
+        Previous = Optional<T>.None;
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     /// <para>Gets the item from before the change.</para>
     /// <para>This is only when <see cref="Reason"/> is <see cref="ListChangeReason.Replace"/>.</para>
     /// </summary>
-    public Kernel.Optional<T> Previous { get; }
+    public Optional<T> Previous { get; }
 
     /// <summary>
     /// <para>Gets the previous index.</para>
