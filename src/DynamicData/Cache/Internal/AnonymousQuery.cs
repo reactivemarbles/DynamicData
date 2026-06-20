@@ -18,5 +18,5 @@ internal sealed class AnonymousQuery<TObject, TKey>(Cache<TObject, TKey> cache) 
 
     public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
 
-    public Kernel.Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
+    public Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
 }

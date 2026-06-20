@@ -4,7 +4,7 @@
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, Kernel.Optional<TLeft>, Kernel.Optional<TRight>, TDestination> resultSelector)
+internal sealed class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, Optional<TLeft>, Optional<TRight>, TDestination> resultSelector)
     where TLeft : notnull
     where TLeftKey : notnull
     where TRight : notnull
@@ -13,7 +13,7 @@ internal sealed class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
 {
     private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left = left ?? throw new ArgumentNullException(nameof(left));
 
-    private readonly Func<TLeftKey, Kernel.Optional<TLeft>, Kernel.Optional<TRight>, TDestination> _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
+    private readonly Func<TLeftKey, Optional<TLeft>, Optional<TRight>, TDestination> _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
 
     private readonly IObservable<IChangeSet<TRight, TRightKey>> _right = right ?? throw new ArgumentNullException(nameof(right));
 
@@ -56,7 +56,7 @@ internal sealed class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                                 else
                                 {
                                     // update with no left value
-                                    joinedCache.AddOrUpdate(_resultSelector(change.Key, Kernel.Optional<TLeft>.None, rightLookup), change.Key);
+                                    joinedCache.AddOrUpdate(_resultSelector(change.Key, Optional<TLeft>.None, rightLookup), change.Key);
                                 }
 
                                 break;
@@ -98,7 +98,7 @@ internal sealed class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                                     else
                                     {
                                         // update with no right value
-                                        joinedCache.AddOrUpdate(_resultSelector(change.Key, left, Kernel.Optional<TRight>.None), change.Key);
+                                        joinedCache.AddOrUpdate(_resultSelector(change.Key, left, Optional<TRight>.None), change.Key);
                                     }
                                 }
 

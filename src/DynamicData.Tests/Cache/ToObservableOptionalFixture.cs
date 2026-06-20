@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using DynamicData.Kernel;
 using FluentAssertions;
 
 namespace DynamicData.Tests.Cache;

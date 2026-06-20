@@ -4,7 +4,7 @@
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, Kernel.Optional<TLeft>, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+internal sealed class FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, Optional<TLeft>, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
     where TLeft : notnull
     where TLeftKey : notnull
     where TRight : notnull
@@ -13,7 +13,7 @@ internal sealed class FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestinat
 {
     private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left = left ?? throw new ArgumentNullException(nameof(left));
 
-    private readonly Func<TLeftKey, Kernel.Optional<TLeft>, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
+    private readonly Func<TLeftKey, Optional<TLeft>, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
 
     private readonly IObservable<IChangeSet<TRight, TRightKey>> _right = right ?? throw new ArgumentNullException(nameof(right));
 

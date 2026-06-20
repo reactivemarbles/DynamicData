@@ -1,13 +1,12 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using DynamicData.Kernel;
 using FluentAssertions;
 
 namespace DynamicData.Tests.Cache;
 
 public class EditDiffChangeSetOptionalFixture
 {
-    private static readonly Optional<Person> s_noPerson = Optional.None<Person>();
+    private static readonly Optional<Person> s_noPerson = Optional<Person>.None;
 
     private const int MaxItems = 1097;
 
@@ -178,7 +177,7 @@ public class EditDiffChangeSetOptionalFixture
         receivedError.Should().Be(failSource ? testException : default);
     }
 
-    private static Optional<Person> CreatePerson(int id, string name) => Optional.Some(new Person(id, name));
+    private static Optional<Person> CreatePerson(int id, string name) => Optional<Person>.Some(new Person(id, name));
 
     private class PersonComparer : IEqualityComparer<Person>
     {

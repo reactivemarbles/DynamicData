@@ -23,7 +23,7 @@ internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
     {
         // this is an internal method only so we can be sure there are no duplicate keys in the result
         // (therefore safe to parallelise)
-        Kernel.Optional<Change<TObject, TKey>> Factory(KeyValuePair<TKey, TObject> kv)
+        Optional<Change<TObject, TKey>> Factory(KeyValuePair<TKey, TObject> kv)
         {
             var existing = _cache.Lookup(kv.Key);
             var matches = Filter(kv.Value);
@@ -40,7 +40,7 @@ internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
                 return new Change<TObject, TKey>(ChangeReason.Remove, kv.Key, kv.Value, existing);
             }
 
-            return Optional.None<Change<TObject, TKey>>();
+            return Optional<Change<TObject, TKey>>.None;
         }
 
         var result = Refresh(items, Factory);
@@ -57,7 +57,7 @@ internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
 
     protected abstract IEnumerable<UpdateWithFilter> GetChangesWithFilter(ChangeSet<TObject, TKey> updates);
 
-    protected abstract IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Kernel.Optional<Change<TObject, TKey>>> factory);
+    protected abstract IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory);
 
     private ChangeSet<TObject, TKey> ProcessResult(IEnumerable<UpdateWithFilter> source)
     {

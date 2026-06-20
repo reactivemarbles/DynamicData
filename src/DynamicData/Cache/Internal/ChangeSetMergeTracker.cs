@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -141,7 +141,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
-    private void OnItemUpdated(ChangeSetCache<TObject, TKey>[] sources, TObject item, TKey key, in Kernel.Optional<TObject> prev)
+    private void OnItemUpdated(ChangeSetCache<TObject, TKey>[] sources, TObject item, TKey key, in Optional<TObject> prev)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -219,7 +219,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         UpdateToBestValue(sources, key, cached);
     }
 
-    private bool UpdateToBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key, in Kernel.Optional<TObject> current)
+    private bool UpdateToBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key, in Optional<TObject> current)
     {
         // Determine which value should be the one seen downstream
         var candidate = LookupBestValue(sources, key);
@@ -248,11 +248,11 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         return true;
     }
 
-    private Kernel.Optional<TObject> LookupBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key)
+    private Optional<TObject> LookupBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key)
     {
         if (sources.Length == 0)
         {
-            return Optional.None<TObject>();
+            return Optional<TObject>.None;
         }
 
         var values = sources.Select(s => s.Cache.Lookup(key)).Where(opt => opt.HasValue);

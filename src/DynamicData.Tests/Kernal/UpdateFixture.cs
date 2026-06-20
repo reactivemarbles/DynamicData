@@ -1,4 +1,3 @@
-﻿using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 
 using FluentAssertions;
@@ -16,7 +15,7 @@ public class UpdateFixture
         update.Key.Should().Be("Person");
         update.Reason.Should().Be(ChangeReason.Add);
         update.Current.Should().Be(person);
-        update.Previous.Should().Be(Optional.None<Person>());
+        update.Previous.Should().Be(Optional<Person>.None);
     }
 
     [Fact]
@@ -28,7 +27,7 @@ public class UpdateFixture
         update.Key.Should().Be("Person");
         update.Reason.Should().Be(ChangeReason.Remove);
         update.Current.Should().Be(person);
-        update.Previous.Should().Be(Optional.None<Person>());
+        update.Previous.Should().Be(Optional<Person>.None);
     }
 
     [Fact]

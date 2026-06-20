@@ -4,11 +4,11 @@
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class EditDiffChangeSetOptional<TObject, TKey>(IObservable<Kernel.Optional<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer)
+internal sealed class EditDiffChangeSetOptional<TObject, TKey>(IObservable<Optional<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IObservable<Kernel.Optional<TObject>> _source = source ?? throw new ArgumentNullException(nameof(source));
+    private readonly IObservable<Optional<TObject>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
     private readonly IEqualityComparer<TObject> _equalityComparer = equalityComparer ?? EqualityComparer<TObject>.Default;
 
@@ -16,7 +16,7 @@ internal sealed class EditDiffChangeSetOptional<TObject, TKey>(IObservable<Kerne
 
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
                                                                 {
-                                                                    var previous = Optional.None<ValueContainer>();
+                                                                    var previous = Optional<ValueContainer>.None;
 
                                                                     return _source.Synchronize().Subscribe(
                                                                         nextValue =>

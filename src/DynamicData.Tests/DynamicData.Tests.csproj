@@ -29,10 +29,15 @@
     <Using Include="DynamicData.Internal" />
     <Using Include="DynamicData.Tests.Utilities" />
     <Using Include="ReactiveUI.Primitives" />
+    <Using Include="ReactiveUI.Primitives.Advanced" />
+    <Using Include="ReactiveUI.Primitives.Advanced.Witness" Alias="Observer" />
     <Using Include="ReactiveUI.Primitives.Concurrency" />
     <Using Include="ReactiveUI.Primitives.RxVoid" Alias="Unit" />
     <Using Include="ReactiveUI.Primitives.Signals" />
+    <Using Include="ReactiveUI.Primitives.Signals.Signal" Alias="Observable" />
+    <Using Include="ReactiveUI.Primitives.Disposables.Scope" Alias="Disposable" />
     <Using Include="ReactiveUI.Primitives.Disposables.MultipleDisposable" Alias="CompositeDisposable" />
+    <Using Include="ReactiveUI.Primitives.Disposables.SwapDisposable" Alias="SerialDisposable" />
     <Using Include="ReactiveUI.Primitives.Concurrency.ISequencer" Alias="IScheduler" />
   </ItemGroup>
 

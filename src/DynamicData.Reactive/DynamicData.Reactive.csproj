@@ -12,9 +12,13 @@
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!--<ItemGroup>
     <PackageReference Include="ReactiveUI.Primitives.Reactive" Version="5.3.0" />
     <PackageReference Include="ReactiveUI.Primitives.Extensions.Reactive" Version="5.3.0" />
+  </ItemGroup>-->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\reactiveui\Primitives\src\ReactiveUI.Primitives.Extensions.Reactive\ReactiveUI.Primitives.Extensions.Reactive.csproj" />
+    <ProjectReference Include="..\..\..\..\reactiveui\Primitives\src\ReactiveUI.Primitives.Reactive\ReactiveUI.Primitives.Reactive.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="System" />
@@ -26,11 +30,6 @@
     <Using Include="DynamicData.Reactive.Cache" />
     <Using Include="DynamicData.Reactive.Kernel" />
     <Using Include="DynamicData.Reactive.Internal" />
-    <Using Include="ReactiveUI.Primitives.Disposables"/>
-    <Using Include="ReactiveUI.Primitives.Reactive"/>
-    <Using Include="ReactiveUI.Primitives.Reactive.Concurrency"/>
-    <Using Include="ReactiveUI.Primitives.Reactive.Signals"/>
-    <Using Include="ReactiveUI.Primitives.Signals"/>
     <Using Include="System.Reactive" />
     <Using Include="System.Reactive.Concurrency" />
     <Using Include="System.Reactive.Disposables" />
@@ -43,12 +42,20 @@
     <Using Include="System.Reactive.Concurrency.TaskPoolScheduler" Alias="TaskPoolSequencer" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\DynamicData\**\*.cs" Exclude="..\DynamicData\bin\**;..\DynamicData\obj\**" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <DynamicDataReactiveSource Include="..\DynamicData\**\*.cs" Exclude="..\DynamicData\bin\**;..\DynamicData\obj\**;..\DynamicData\Internal\ObservableEx.cs;..\DynamicData\Internal\ReactiveCompatibility.cs" />
   </ItemGroup>
+
+  <Target Name="RewriteDynamicDataReactiveNamespaces" BeforeTargets="CoreCompile">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)RewriteDynamicDataReactiveSources.ps1&quot; -SourceRoot &quot;$(MSBuildThisFileDirectory)..\DynamicData&quot; -OutputRoot &quot;$(MSBuildProjectDirectory)\$(IntermediateOutputPath)GeneratedReactiveSources&quot;" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)GeneratedReactiveSources\**\*.cs" />
+      <Compile Remove="$(IntermediateOutputPath)GeneratedReactiveSources\Cache\ObservableCacheEx.AsyncDisposeMany.cs" Condition="!$(DefineConstants.Contains('SUPPORTS_ASYNC_DISPOSABLE'))" />
+    </ItemGroup>
+  </Target>
 
   <!-- AsyncDisposeMany is only supported on platforms that have IAsyncDisposable. -->
   <ItemGroup Condition="!$(DefineConstants.Contains('SUPPORTS_ASYNC_DISPOSABLE'))">
-    <Compile Remove="..\DynamicData\Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
+    <Compile Remove="$(IntermediateOutputPath)GeneratedReactiveSources\Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
   </ItemGroup>
 
 </Project>

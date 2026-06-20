@@ -45,8 +45,13 @@ public static class AggregationEx
     /// <param name="source">The source.</param>
     /// <param name="invalidate">The invalidate.</param>
     /// <returns>An observable which emits the value.</returns>
-    public static IObservable<T> InvalidateWhen<T>(this IObservable<T> source, IObservable<Unit> invalidate) =>
-        invalidate.StartWith(Unit.Default).Select(_ => source).Switch().DistinctUntilChanged();
+    public static IObservable<T> InvalidateWhen<T>(this IObservable<T> source, IObservable<Unit> invalidate)
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        invalidate.ThrowArgumentNullExceptionIfNull(nameof(invalidate));
+
+        return invalidate.StartWith(Unit.Default).Select(_ => source).Switch().DistinctUntilChanged();
+    }
 
     /// <summary>
     /// Used to invalidate an aggregating stream. Used when there has been an inline change.
@@ -56,8 +61,13 @@ public static class AggregationEx
     /// <param name="source">The source.</param>
     /// <param name="invalidate">The invalidate.</param>
     /// <returns>An observable which emits the value.</returns>
-    public static IObservable<T> InvalidateWhen<T, TTrigger>(this IObservable<T> source, IObservable<TTrigger?> invalidate) =>
-        invalidate.StartWith(default(TTrigger)).Select(_ => source).Switch().DistinctUntilChanged();
+    public static IObservable<T> InvalidateWhen<T, TTrigger>(this IObservable<T> source, IObservable<TTrigger?> invalidate)
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        invalidate.ThrowArgumentNullExceptionIfNull(nameof(invalidate));
+
+        return invalidate.StartWith(default(TTrigger)).Select(_ => source).Switch().DistinctUntilChanged();
+    }
 
     /// <summary>
     /// Applies an accumulator when items are added to and removed from specified stream,

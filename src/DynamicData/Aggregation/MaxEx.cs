@@ -29,7 +29,13 @@ public static class MaxEx
     /// </returns>
     public static IObservable<TResult> Maximum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
         where TObject : notnull
-        where TResult : struct, IComparable<TResult> => source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
+        where TResult : struct, IComparable<TResult>
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+
+        return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
+    }
 
     /// <summary>
     /// Continually calculates the maximum value from the underlying data source.
@@ -46,7 +52,13 @@ public static class MaxEx
     public static IObservable<TResult> Maximum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
         where TObject : notnull
         where TKey : notnull
-        where TResult : struct, IComparable<TResult> => source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
+        where TResult : struct, IComparable<TResult>
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+
+        return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
+    }
 
     /// <summary>
     /// Continually calculates the minimum value from the underlying data source.
@@ -59,7 +71,13 @@ public static class MaxEx
     /// <returns>A distinct observable of the minimums item.</returns>
     public static IObservable<TResult> Minimum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
         where TObject : notnull
-        where TResult : struct, IComparable<TResult> => source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
+        where TResult : struct, IComparable<TResult>
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+
+        return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
+    }
 
     /// <summary>
     /// Continually calculates the minimum value from the underlying data source.
@@ -76,7 +94,13 @@ public static class MaxEx
     public static IObservable<TResult> Minimum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
         where TObject : notnull
         where TKey : notnull
-        where TResult : struct, IComparable<TResult> => source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
+        where TResult : struct, IComparable<TResult>
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+
+        return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
+    }
 
     private static IObservable<TResult> Calculate<TObject, TResult>(this IObservable<ChangesAndCollection<TObject>> source, Func<TObject, TResult> valueSelector, MaxOrMin maxOrMin, TResult emptyValue = default)
         where TResult : struct, IComparable<TResult>

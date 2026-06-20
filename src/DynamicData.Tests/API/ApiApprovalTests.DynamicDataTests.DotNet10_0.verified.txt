@@ -7,14 +7,10 @@ namespace DynamicData.Aggregation
 {
     public readonly struct AggregateItem<TObject> : System.IEquatable<DynamicData.Aggregation.AggregateItem<TObject>>
     {
-        public AggregateItem(DynamicData.Aggregation.AggregateType type, TObject item) { }
-        public TObject Item { get; }
-        public DynamicData.Aggregation.AggregateType Type { get; }
-        public bool Equals(DynamicData.Aggregation.AggregateItem<TObject> other) { }
-        public override bool Equals(object? obj) { }
+        public AggregateItem(DynamicData.Aggregation.AggregateType Type, TObject Item) { }
+        public TObject Item { get; init; }
+        public DynamicData.Aggregation.AggregateType Type { get; init; }
         public override int GetHashCode() { }
-        public static bool operator !=(in DynamicData.Aggregation.AggregateItem<TObject> left, in DynamicData.Aggregation.AggregateItem<TObject> right) { }
-        public static bool operator ==(in DynamicData.Aggregation.AggregateItem<TObject> left, in DynamicData.Aggregation.AggregateItem<TObject> right) { }
     }
     public enum AggregateType
     {
@@ -456,14 +452,12 @@ namespace DynamicData.Binding
     public sealed class PropertyValue<TObject, TValue> : System.IEquatable<DynamicData.Binding.PropertyValue<TObject, TValue>>
     {
         public PropertyValue(TObject sender, TValue value) { }
-        public TObject Sender { get; }
-        public TValue Value { get; }
-        public bool Equals(DynamicData.Binding.PropertyValue<TObject, TValue>? other) { }
-        public override bool Equals(object? obj) { }
+        public PropertyValue(TObject Sender, TValue? Value, bool UnobtainableValue) { }
+        public TObject Sender { get; init; }
+        public bool UnobtainableValue { get; init; }
+        public TValue Value { get; init; }
         public override int GetHashCode() { }
         public override string ToString() { }
-        public static bool operator !=(DynamicData.Binding.PropertyValue<TObject, TValue>? left, DynamicData.Binding.PropertyValue<TObject, TValue>? right) { }
-        public static bool operator ==(DynamicData.Binding.PropertyValue<TObject, TValue>? left, DynamicData.Binding.PropertyValue<TObject, TValue>? right) { }
     }
     public readonly struct SortAndBindOptions : System.IEquatable<DynamicData.Binding.SortAndBindOptions>
     {
@@ -544,7 +538,7 @@ namespace DynamicData.Cache.Internal
         public System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Connect(System.Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) { }
         public void Dispose() { }
         public void Edit(System.Action<DynamicData.ICacheUpdater<TObject, TKey>> editAction) { }
-        public DynamicData.Kernel.Optional<TObject> Lookup(TKey key) { }
+        public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) { }
         public System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Preview(System.Func<TObject, bool>? predicate = null) { }
         public System.IObservable<DynamicData.Change<TObject, TKey>> Watch(TKey key) { }
     }
@@ -567,7 +561,7 @@ namespace DynamicData
         public DynamicData.ChangeSet<TObject, TKey> CaptureChanges() { }
         public void Clear() { }
         public void Clone(DynamicData.IChangeSet<TObject, TKey> changes) { }
-        public DynamicData.Kernel.Optional<TObject> Lookup(TKey key) { }
+        public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) { }
         public void Refresh() { }
         public void Refresh(System.Collections.Generic.IEnumerable<TKey> keys) { }
         public void Refresh(TKey key) { }
@@ -680,7 +674,7 @@ namespace DynamicData
         public Change(DynamicData.ListChangeReason reason, System.Collections.Generic.IEnumerable<T> items, int index = -1) { }
         public Change(DynamicData.ListChangeReason reason, T current, int index = -1) { }
         public Change(T current, int currentIndex, int previousIndex) { }
-        public Change(DynamicData.ListChangeReason reason, T current, in DynamicData.Kernel.Optional<T> previous, int currentIndex = -1, int previousIndex = -1) { }
+        public Change(DynamicData.ListChangeReason reason, T current, in ReactiveUI.Primitives.Optional<T> previous, int currentIndex = -1, int previousIndex = -1) { }
         public DynamicData.ItemChange<T> Item { get; }
         public DynamicData.RangeChange<T> Range { get; }
         public DynamicData.ListChangeReason Reason { get; }
@@ -698,11 +692,11 @@ namespace DynamicData
     {
         public Change(DynamicData.ChangeReason reason, TKey key, TObject current, int index = -1) { }
         public Change(TKey key, TObject current, int currentIndex, int previousIndex) { }
-        public Change(DynamicData.ChangeReason reason, TKey key, TObject current, in DynamicData.Kernel.Optional<TObject> previous, int currentIndex = -1, int previousIndex = -1) { }
+        public Change(DynamicData.ChangeReason reason, TKey key, TObject current, in ReactiveUI.Primitives.Optional<TObject> previous, int currentIndex = -1, int previousIndex = -1) { }
         public TObject Current { get; }
         public int CurrentIndex { get; }
         public TKey Key { get; }
-        public DynamicData.Kernel.Optional<TObject> Previous { get; }
+        public ReactiveUI.Primitives.Optional<TObject> Previous { get; }
         public int PreviousIndex { get; }
         public DynamicData.ChangeReason Reason { get; }
         public bool Equals(DynamicData.Change<TObject, TKey> other) { }
@@ -841,7 +835,7 @@ namespace DynamicData
         TGroupKey Key { get; }
         System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>> KeyValues { get; }
         System.Collections.Generic.IEnumerable<TKey> Keys { get; }
-        DynamicData.Kernel.Optional<TObject> Lookup(TKey key);
+        ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key);
     }
     public interface IImmutableGroupChangeSet<TObject, TKey, TGroupKey> : DynamicData.IChangeSet, DynamicData.IChangeSet<DynamicData.IGrouping<TObject, TKey, TGroupKey>, TGroupKey>, System.Collections.Generic.IEnumerable<DynamicData.Change<DynamicData.IGrouping<TObject, TKey, TGroupKey>, TGroupKey>>, System.Collections.IEnumerable
         where TObject :  notnull
@@ -875,7 +869,7 @@ namespace DynamicData
         System.Collections.Generic.IReadOnlyList<TObject> Items { get; }
         System.Collections.Generic.IReadOnlyDictionary<TKey, TObject> KeyValues { get; }
         System.Collections.Generic.IReadOnlyList<TKey> Keys { get; }
-        DynamicData.Kernel.Optional<TObject> Lookup(TKey key);
+        ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key);
     }
     public interface IObservableList<T> : System.IDisposable
         where T :  notnull
@@ -909,7 +903,7 @@ namespace DynamicData
         System.Collections.Generic.IEnumerable<TObject> Items { get; }
         System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TObject>> KeyValues { get; }
         System.Collections.Generic.IEnumerable<TKey> Keys { get; }
-        DynamicData.Kernel.Optional<TObject> Lookup(TKey key);
+        ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key);
     }
     public interface ISortedChangeSetAdaptor<TObject, TKey>
         where TObject :  notnull
@@ -997,7 +991,7 @@ namespace DynamicData
         public System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Connect(System.Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) { }
         public void Dispose() { }
         public void Edit(System.Action<DynamicData.ICacheUpdater<TObject, TKey>> updateAction) { }
-        public DynamicData.Kernel.Optional<TObject> Lookup(TKey key) { }
+        public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) { }
         public System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Preview(System.Func<TObject, bool>? predicate = null) { }
         public System.IDisposable SuspendCount() { }
         public System.IDisposable SuspendNotifications() { }
@@ -1008,10 +1002,10 @@ namespace DynamicData
     {
         public static readonly DynamicData.ItemChange<T> Empty;
         public ItemChange(DynamicData.ListChangeReason reason, T current, int currentIndex) { }
-        public ItemChange(DynamicData.ListChangeReason reason, T current, in DynamicData.Kernel.Optional<T> previous, int currentIndex = -1, int previousIndex = -1) { }
+        public ItemChange(DynamicData.ListChangeReason reason, T current, in ReactiveUI.Primitives.Optional<T> previous, int currentIndex = -1, int previousIndex = -1) { }
         public T Current { get; }
         public int CurrentIndex { get; }
-        public DynamicData.Kernel.Optional<T> Previous { get; }
+        public ReactiveUI.Primitives.Optional<T> Previous { get; }
         public int PreviousIndex { get; }
         public DynamicData.ListChangeReason Reason { get; }
         public bool Equals(DynamicData.ItemChange<T> other) { }
@@ -1049,7 +1043,7 @@ namespace DynamicData
             where T :  notnull { }
         public static int IndexOf<T>(this System.Collections.Generic.IEnumerable<T> source, T item) { }
         public static int IndexOf<T>(this System.Collections.Generic.IEnumerable<T> source, T item, System.Collections.Generic.IEqualityComparer<T> equalityComparer) { }
-        public static DynamicData.Kernel.Optional<DynamicData.Kernel.ItemWithIndex<T>> IndexOfOptional<T>(this System.Collections.Generic.IEnumerable<T> source, T item, System.Collections.Generic.IEqualityComparer<T>? equalityComparer = null) { }
+        public static ReactiveUI.Primitives.Optional<DynamicData.Kernel.ItemWithIndex<T>> IndexOfOptional<T>(this System.Collections.Generic.IEnumerable<T> source, T item, System.Collections.Generic.IEqualityComparer<T>? equalityComparer = null) { }
         public static void Remove<T>(this System.Collections.Generic.IList<T> source, System.Collections.Generic.IEnumerable<T> items) { }
         public static void RemoveMany<T>(this System.Collections.Generic.IList<T> source, System.Collections.Generic.IEnumerable<T> itemsToRemove) { }
         public static void Replace<T>(this System.Collections.Generic.IList<T> source, T original, T replaceWith) { }
@@ -1073,13 +1067,13 @@ namespace DynamicData
         where TKey :  notnull
     {
         public Node(TObject item, TKey key) { }
-        public Node(TObject item, TKey key, in DynamicData.Kernel.Optional<DynamicData.Node<TObject, TKey>> parent) { }
+        public Node(TObject item, TKey key, in ReactiveUI.Primitives.Optional<DynamicData.Node<TObject, TKey>> parent) { }
         public DynamicData.IObservableCache<DynamicData.Node<TObject, TKey>, TKey> Children { get; }
         public int Depth { get; }
         public bool IsRoot { get; }
         public TObject Item { get; }
         public TKey Key { get; }
-        public DynamicData.Kernel.Optional<DynamicData.Node<TObject, TKey>> Parent { get; }
+        public ReactiveUI.Primitives.Optional<DynamicData.Node<TObject, TKey>> Parent { get; }
         public void Dispose() { }
         protected virtual void Dispose(bool isDisposing) { }
         public bool Equals(DynamicData.Node<TObject, TKey>? other) { }
@@ -1277,7 +1271,7 @@ namespace DynamicData
         public static void EditDiff<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, System.Collections.Generic.IEnumerable<TObject> allItems, System.Func<TObject, TObject, bool> areItemsEqual)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> EditDiff<TObject, TKey>(this System.IObservable<DynamicData.Kernel.Optional<TObject>> source, System.Func<TObject, TKey> keySelector, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> EditDiff<TObject, TKey>(this System.IObservable<ReactiveUI.Primitives.Optional<TObject>> source, System.Func<TObject, TKey> keySelector, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> EditDiff<TObject, TKey>(this System.IObservable<System.Collections.Generic.IEnumerable<TObject>> source, System.Func<TObject, TKey> keySelector, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null)
@@ -1348,25 +1342,25 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ForEachChange<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Action<DynamicData.Change<TObject, TKey>> action)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<DynamicData.Kernel.Optional<TLeft>, DynamicData.Kernel.Optional<TRight>, TDestination> resultSelector)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<ReactiveUI.Primitives.Optional<TLeft>, ReactiveUI.Primitives.Optional<TRight>, TDestination> resultSelector)
             where TLeft :  notnull
             where TLeftKey :  notnull
             where TRight :  notnull
             where TRightKey :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<TLeftKey, DynamicData.Kernel.Optional<TLeft>, DynamicData.Kernel.Optional<TRight>, TDestination> resultSelector)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<TLeftKey, ReactiveUI.Primitives.Optional<TLeft>, ReactiveUI.Primitives.Optional<TRight>, TDestination> resultSelector)
             where TLeft :  notnull
             where TLeftKey :  notnull
             where TRight :  notnull
             where TRightKey :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<DynamicData.Kernel.Optional<TLeft>, DynamicData.IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<ReactiveUI.Primitives.Optional<TLeft>, DynamicData.IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
             where TLeft :  notnull
             where TLeftKey :  notnull
             where TRight :  notnull
             where TRightKey :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<TLeftKey, DynamicData.Kernel.Optional<TLeft>, DynamicData.IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<TLeftKey, ReactiveUI.Primitives.Optional<TLeft>, DynamicData.IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
             where TLeft :  notnull
             where TLeftKey :  notnull
             where TRight :  notnull
@@ -1456,13 +1450,13 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> InvokeEvaluate<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source)
             where TObject : DynamicData.Binding.IEvaluateAware
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<TLeft, DynamicData.Kernel.Optional<TRight>, TDestination> resultSelector)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<TLeft, ReactiveUI.Primitives.Optional<TRight>, TDestination> resultSelector)
             where TLeft :  notnull
             where TLeftKey :  notnull
             where TRight :  notnull
             where TRightKey :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<TLeftKey, TLeft, DynamicData.Kernel.Optional<TRight>, TDestination> resultSelector)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<TLeftKey, TLeft, ReactiveUI.Primitives.Optional<TRight>, TDestination> resultSelector)
             where TLeft :  notnull
             where TLeftKey :  notnull
             where TRight :  notnull
@@ -1728,25 +1722,25 @@ namespace DynamicData
         public static void RemoveKeys<TObject, TKey>(this DynamicData.ISourceCache<TObject, TKey> source, System.Collections.Generic.IEnumerable<TKey> keys)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TRightKey>> RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<DynamicData.Kernel.Optional<TLeft>, TRight, TDestination> resultSelector)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TRightKey>> RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<ReactiveUI.Primitives.Optional<TLeft>, TRight, TDestination> resultSelector)
             where TLeft :  notnull
             where TLeftKey :  notnull
             where TRight :  notnull
             where TRightKey :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TRightKey>> RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<TRightKey, DynamicData.Kernel.Optional<TLeft>, TRight, TDestination> resultSelector)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TRightKey>> RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<TRightKey, ReactiveUI.Primitives.Optional<TLeft>, TRight, TDestination> resultSelector)
             where TLeft :  notnull
             where TLeftKey :  notnull
             where TRight :  notnull
             where TRightKey :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> RightJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<DynamicData.Kernel.Optional<TLeft>, DynamicData.IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> RightJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<ReactiveUI.Primitives.Optional<TLeft>, DynamicData.IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
             where TLeft :  notnull
             where TLeftKey :  notnull
             where TRight :  notnull
             where TRightKey :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> RightJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<TLeftKey, DynamicData.Kernel.Optional<TLeft>, DynamicData.IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TLeftKey>> RightJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this System.IObservable<DynamicData.IChangeSet<TLeft, TLeftKey>> left, System.IObservable<DynamicData.IChangeSet<TRight, TRightKey>> right, System.Func<TRight, TLeftKey> rightKeySelector, System.Func<TLeftKey, ReactiveUI.Primitives.Optional<TLeft>, DynamicData.IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
             where TLeft :  notnull
             where TLeftKey :  notnull
             where TRight :  notnull
@@ -1885,10 +1879,10 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this System.IObservable<TObject> source, System.Func<TObject, TKey> keySelector, System.Func<TObject, System.TimeSpan?>? expireAfter = null, int limitSizeTo = -1, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.Kernel.Optional<TObject>> ToObservableOptional<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, TKey key, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null)
+        public static System.IObservable<ReactiveUI.Primitives.Optional<TObject>> ToObservableOptional<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, TKey key, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.Kernel.Optional<TObject>> ToObservableOptional<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, TKey key, bool initialOptionalWhenMissing, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null)
+        public static System.IObservable<ReactiveUI.Primitives.Optional<TObject>> ToObservableOptional<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, TKey key, bool initialOptionalWhenMissing, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<System.Collections.Generic.IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Collections.Generic.IComparer<TObject> comparer)
@@ -1929,15 +1923,15 @@ namespace DynamicData
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, TDestination> transformFactory, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, TDestination> transformFactory, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, TDestination> transformFactory, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, TDestination> transformFactory, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, TDestination> transformFactory, bool transformOnRefresh)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, TDestination> transformFactory, bool transformOnRefresh)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -1957,11 +1951,11 @@ namespace DynamicData
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, DynamicData.TransformAsyncOptions options)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, DynamicData.TransformAsyncOptions options)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -2077,11 +2071,11 @@ namespace DynamicData
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<ReactiveUI.Primitives.RxVoid> forceTransform)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, TDestination> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -2101,11 +2095,11 @@ namespace DynamicData
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, DynamicData.TransformAsyncOptions options)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, DynamicData.TransformAsyncOptions options)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, DynamicData.Kernel.Optional<TSource>, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -2461,25 +2455,25 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TDestination>> Transform<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, TDestination> transformFactory, bool transformOnRefresh = false)
             where TSource :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination>> Transform<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, DynamicData.Kernel.Optional<TDestination>, TDestination> transformFactory, bool transformOnRefresh = false)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination>> Transform<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, TDestination> transformFactory, bool transformOnRefresh = false)
             where TSource :  notnull
             where TDestination :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination>> Transform<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, int, TDestination> transformFactory, bool transformOnRefresh = false)
             where TSource :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination>> Transform<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, DynamicData.Kernel.Optional<TDestination>, int, TDestination> transformFactory, bool transformOnRefresh = false)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination>> Transform<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, int, TDestination> transformFactory, bool transformOnRefresh = false)
             where TSource :  notnull
             where TDestination :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, System.Threading.Tasks.Task<TDestination>> transformFactory, bool transformOnRefresh = false)
             where TSource :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, DynamicData.Kernel.Optional<TDestination>, System.Threading.Tasks.Task<TDestination>> transformFactory, bool transformOnRefresh = false)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, System.Threading.Tasks.Task<TDestination>> transformFactory, bool transformOnRefresh = false)
             where TSource :  notnull
             where TDestination :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, int, System.Threading.Tasks.Task<TDestination>> transformFactory, bool transformOnRefresh = false)
             where TSource :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, DynamicData.Kernel.Optional<TDestination>, int, System.Threading.Tasks.Task<TDestination>> transformFactory, bool transformOnRefresh = false)
+        public static System.IObservable<DynamicData.IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, int, System.Threading.Tasks.Task<TDestination>> transformFactory, bool transformOnRefresh = false)
             where TSource :  notnull
             where TDestination :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, DynamicData.IObservableList<TDestination>> manySelector, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null)
@@ -2550,14 +2544,14 @@ namespace DynamicData
         public void SetStartingIndex(int index) { }
         public override string ToString() { }
     }
-    public struct SortAndPageOptions : System.IEquatable<DynamicData.SortAndPageOptions>
+    public readonly struct SortAndPageOptions : System.IEquatable<DynamicData.SortAndPageOptions>
     {
         public SortAndPageOptions() { }
         public int InitialCapacity { get; init; }
         public int ResetThreshold { get; init; }
         public bool UseBinarySearch { get; init; }
     }
-    public struct SortAndVirtualizeOptions : System.IEquatable<DynamicData.SortAndVirtualizeOptions>
+    public readonly struct SortAndVirtualizeOptions : System.IEquatable<DynamicData.SortAndVirtualizeOptions>
     {
         public SortAndVirtualizeOptions() { }
         public int InitialCapacity { get; init; }
@@ -2615,7 +2609,7 @@ namespace DynamicData
         public System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Connect(System.Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) { }
         public void Dispose() { }
         public void Edit(System.Action<DynamicData.ISourceUpdater<TObject, TKey>> updateAction) { }
-        public DynamicData.Kernel.Optional<TObject> Lookup(TKey key) { }
+        public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) { }
         public System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Preview(System.Func<TObject, bool>? predicate = null) { }
         public System.IDisposable SuspendCount() { }
         public System.IDisposable SuspendNotifications() { }
@@ -2709,21 +2703,17 @@ namespace DynamicData.Diagnostics
     public class ChangeStatistics : System.IEquatable<DynamicData.Diagnostics.ChangeStatistics>
     {
         public ChangeStatistics() { }
-        public ChangeStatistics(int index, int adds, int updates, int removes, int refreshes, int moves, int count) { }
-        public int Adds { get; }
-        public int Count { get; }
-        public int Index { get; }
+        public ChangeStatistics(int Index, int Adds, int Updates, int Removes, int Refreshes, int Moves, int Count) { }
+        public int Adds { get; init; }
+        public int Count { get; init; }
+        public int Index { get; init; }
         public System.DateTime LastUpdated { get; }
-        public int Moves { get; }
-        public int Refreshes { get; }
-        public int Removes { get; }
-        public int Updates { get; }
-        public bool Equals(DynamicData.Diagnostics.ChangeStatistics? other) { }
-        public override bool Equals(object? obj) { }
+        public int Moves { get; init; }
+        public int Refreshes { get; init; }
+        public int Removes { get; init; }
+        public int Updates { get; init; }
         public override int GetHashCode() { }
         public override string ToString() { }
-        public static bool operator !=(DynamicData.Diagnostics.ChangeStatistics left, DynamicData.Diagnostics.ChangeStatistics right) { }
-        public static bool operator ==(DynamicData.Diagnostics.ChangeStatistics left, DynamicData.Diagnostics.ChangeStatistics right) { }
     }
     public class ChangeSummary
     {
@@ -2799,27 +2789,19 @@ namespace DynamicData.Kernel
     }
     public readonly struct ItemWithIndex<T> : System.IEquatable<DynamicData.Kernel.ItemWithIndex<T>>
     {
-        public ItemWithIndex(T item, int index) { }
-        public int Index { get; }
-        public T Item { get; }
-        public bool Equals(DynamicData.Kernel.ItemWithIndex<T> other) { }
-        public override bool Equals(object? obj) { }
+        public ItemWithIndex(T Item, int Index) { }
+        public int Index { get; init; }
+        public T Item { get; init; }
         public override int GetHashCode() { }
         public override string ToString() { }
-        public static bool operator !=(in DynamicData.Kernel.ItemWithIndex<T> left, in DynamicData.Kernel.ItemWithIndex<T> right) { }
-        public static bool operator ==(in DynamicData.Kernel.ItemWithIndex<T> left, in DynamicData.Kernel.ItemWithIndex<T> right) { }
     }
     public readonly struct ItemWithValue<TObject, TValue> : System.IEquatable<DynamicData.Kernel.ItemWithValue<TObject, TValue>>
     {
-        public ItemWithValue(TObject item, TValue value) { }
-        public TObject Item { get; }
-        public TValue Value { get; }
-        public bool Equals(DynamicData.Kernel.ItemWithValue<TObject, TValue> other) { }
-        public override bool Equals(object? obj) { }
+        public ItemWithValue(TObject Item, TValue Value) { }
+        public TObject Item { get; init; }
+        public TValue Value { get; init; }
         public override int GetHashCode() { }
         public override string ToString() { }
-        public static bool operator !=(in DynamicData.Kernel.ItemWithValue<TObject, TValue> left, in DynamicData.Kernel.ItemWithValue<TObject, TValue> right) { }
-        public static bool operator ==(in DynamicData.Kernel.ItemWithValue<TObject, TValue> left, in DynamicData.Kernel.ItemWithValue<TObject, TValue> right) { }
     }
     public sealed class OptionElse
     {
@@ -2827,85 +2809,60 @@ namespace DynamicData.Kernel
     }
     public static class OptionExtensions
     {
-        public static DynamicData.Kernel.Optional<TDestination> Convert<TSource, TDestination>(this in DynamicData.Kernel.Optional<TSource> source, System.Func<TSource, DynamicData.Kernel.Optional<TDestination>> converter)
+        public static ReactiveUI.Primitives.Optional<TDestination> Convert<TSource, TDestination>(this in ReactiveUI.Primitives.Optional<TSource> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TDestination>> converter)
             where TSource :  notnull
             where TDestination :  notnull { }
-        public static DynamicData.Kernel.Optional<TDestination> Convert<TSource, TDestination>(this in DynamicData.Kernel.Optional<TSource> source, System.Func<TSource, TDestination> converter)
+        public static ReactiveUI.Primitives.Optional<TDestination> Convert<TSource, TDestination>(this in ReactiveUI.Primitives.Optional<TSource> source, System.Func<TSource, TDestination> converter)
             where TSource :  notnull
             where TDestination :  notnull { }
-        public static TDestination? ConvertOr<TSource, TDestination>(this in DynamicData.Kernel.Optional<TSource> source, System.Func<TSource?, TDestination?> converter, System.Func<TDestination?> fallbackConverter)
+        public static TDestination? ConvertOr<TSource, TDestination>(this in ReactiveUI.Primitives.Optional<TSource> source, System.Func<TSource?, TDestination?> converter, System.Func<TDestination?> fallbackConverter)
             where TSource :  notnull { }
-        public static DynamicData.Kernel.Optional<T> FirstOrOptional<T>(this System.Collections.Generic.IEnumerable<T> source, System.Func<T, bool> selector)
+        public static ReactiveUI.Primitives.Optional<T> FirstOrOptional<T>(this System.Collections.Generic.IEnumerable<T> source, System.Func<T, bool> selector)
             where T :  notnull { }
-        public static DynamicData.Kernel.OptionElse IfHasValue<T>(this DynamicData.Kernel.Optional<T>? source, System.Action<T> action)
+        public static DynamicData.Kernel.OptionElse IfHasValue<T>(this ReactiveUI.Primitives.Optional<T>? source, System.Action<T> action)
             where T :  notnull { }
-        public static DynamicData.Kernel.OptionElse IfHasValue<T>(this in DynamicData.Kernel.Optional<T> source, System.Action<T> action)
+        public static DynamicData.Kernel.OptionElse IfHasValue<T>(this in ReactiveUI.Primitives.Optional<T> source, System.Action<T> action)
             where T :  notnull { }
-        public static DynamicData.Kernel.Optional<TValue> Lookup<TValue, TKey>(this System.Collections.Generic.IDictionary<TKey, TValue> source, TKey key)
+        public static ReactiveUI.Primitives.Optional<TValue> Lookup<TValue, TKey>(this System.Collections.Generic.IDictionary<TKey, TValue> source, TKey key)
             where TValue :  notnull { }
-        public static DynamicData.Kernel.Optional<T> OrElse<T>(this in DynamicData.Kernel.Optional<T> source, System.Func<DynamicData.Kernel.Optional<T>> fallbackOperation)
+        public static ReactiveUI.Primitives.Optional<T> OrElse<T>(this in ReactiveUI.Primitives.Optional<T> source, System.Func<ReactiveUI.Primitives.Optional<T>> fallbackOperation)
             where T :  notnull { }
         public static bool RemoveIfContained<TValue, TKey>(this System.Collections.Generic.IDictionary<TKey, TValue> source, TKey key) { }
-        public static System.Collections.Generic.IEnumerable<T> SelectValues<T>(this System.Collections.Generic.IEnumerable<DynamicData.Kernel.Optional<T>> source)
+        public static System.Collections.Generic.IEnumerable<T> SelectValues<T>(this System.Collections.Generic.IEnumerable<ReactiveUI.Primitives.Optional<T>> source)
             where T :  notnull { }
         public static T ValueOr<T>(this T? source, T defaultValue)
             where T :  struct { }
-        public static T ValueOr<T>(this in DynamicData.Kernel.Optional<T> source, System.Func<T> valueSelector)
+        public static T ValueOr<T>(this in ReactiveUI.Primitives.Optional<T> source, System.Func<T> valueSelector)
             where T :  notnull { }
-        public static T? ValueOrDefault<T>(this in DynamicData.Kernel.Optional<T> source)
+        public static T? ValueOrDefault<T>(this in ReactiveUI.Primitives.Optional<T> source)
             where T :  notnull { }
-        public static T ValueOrThrow<T>(this in DynamicData.Kernel.Optional<T> source, System.Func<System.Exception> exceptionGenerator)
+        public static T ValueOrThrow<T>(this in ReactiveUI.Primitives.Optional<T> source, System.Func<System.Exception> exceptionGenerator)
             where T :  notnull { }
     }
     public static class OptionObservableExtensions
     {
-        public static System.IObservable<DynamicData.Kernel.Optional<TDestination>> Convert<TSource, TDestination>(this System.IObservable<DynamicData.Kernel.Optional<TSource>> source, System.Func<TSource, DynamicData.Kernel.Optional<TDestination>> converter)
+        public static System.IObservable<ReactiveUI.Primitives.Optional<TDestination>> Convert<TSource, TDestination>(this System.IObservable<ReactiveUI.Primitives.Optional<TSource>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TDestination>> converter)
             where TSource :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<DynamicData.Kernel.Optional<TDestination>> Convert<TSource, TDestination>(this System.IObservable<DynamicData.Kernel.Optional<TSource>> source, System.Func<TSource, TDestination> converter)
+        public static System.IObservable<ReactiveUI.Primitives.Optional<TDestination>> Convert<TSource, TDestination>(this System.IObservable<ReactiveUI.Primitives.Optional<TSource>> source, System.Func<TSource, TDestination> converter)
             where TSource :  notnull
             where TDestination :  notnull { }
-        public static System.IObservable<TDestination?> ConvertOr<TSource, TDestination>(this System.IObservable<DynamicData.Kernel.Optional<TSource>> source, System.Func<TSource, TDestination?> converter, System.Func<TDestination?> fallbackConverter)
+        public static System.IObservable<TDestination?> ConvertOr<TSource, TDestination>(this System.IObservable<ReactiveUI.Primitives.Optional<TSource>> source, System.Func<TSource, TDestination?> converter, System.Func<TDestination?> fallbackConverter)
             where TSource :  notnull { }
-        public static System.IObservable<DynamicData.Kernel.Optional<T>> OnHasNoValue<T>(this System.IObservable<DynamicData.Kernel.Optional<T>> source, System.Action action, System.Action<T>? elseAction = null)
+        public static System.IObservable<ReactiveUI.Primitives.Optional<T>> OnHasNoValue<T>(this System.IObservable<ReactiveUI.Primitives.Optional<T>> source, System.Action action, System.Action<T>? elseAction = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.Kernel.Optional<T>> OnHasValue<T>(this System.IObservable<DynamicData.Kernel.Optional<T>> source, System.Action<T> action, System.Action? elseAction = null)
+        public static System.IObservable<ReactiveUI.Primitives.Optional<T>> OnHasValue<T>(this System.IObservable<ReactiveUI.Primitives.Optional<T>> source, System.Action<T> action, System.Action? elseAction = null)
             where T :  notnull { }
-        public static System.IObservable<DynamicData.Kernel.Optional<T>> OrElse<T>(this System.IObservable<DynamicData.Kernel.Optional<T>> source, System.Func<DynamicData.Kernel.Optional<T>> fallbackOperation)
+        public static System.IObservable<ReactiveUI.Primitives.Optional<T>> OrElse<T>(this System.IObservable<ReactiveUI.Primitives.Optional<T>> source, System.Func<ReactiveUI.Primitives.Optional<T>> fallbackOperation)
             where T :  notnull { }
-        public static System.IObservable<T> SelectValues<T>(this System.IObservable<DynamicData.Kernel.Optional<T>> source)
+        public static System.IObservable<T> SelectValues<T>(this System.IObservable<ReactiveUI.Primitives.Optional<T>> source)
             where T :  notnull { }
-        public static System.IObservable<T> ValueOr<T>(this System.IObservable<DynamicData.Kernel.Optional<T>> source, System.Func<T> valueSelector)
+        public static System.IObservable<T> ValueOr<T>(this System.IObservable<ReactiveUI.Primitives.Optional<T>> source, System.Func<T> valueSelector)
             where T :  notnull { }
-        public static System.IObservable<T?> ValueOrDefault<T>(this System.IObservable<DynamicData.Kernel.Optional<T>> source)
+        public static System.IObservable<T?> ValueOrDefault<T>(this System.IObservable<ReactiveUI.Primitives.Optional<T>> source)
             where T :  notnull { }
-        public static System.IObservable<T> ValueOrThrow<T>(this System.IObservable<DynamicData.Kernel.Optional<T>> source, System.Func<System.Exception> exceptionGenerator)
+        public static System.IObservable<T> ValueOrThrow<T>(this System.IObservable<ReactiveUI.Primitives.Optional<T>> source, System.Func<System.Exception> exceptionGenerator)
             where T :  notnull { }
-    }
-    public static class Optional
-    {
-        public static DynamicData.Kernel.Optional<T> None<T>()
-            where T :  notnull { }
-        public static DynamicData.Kernel.Optional<T> Some<T>(T? value)
-            where T :  notnull { }
-    }
-    public readonly struct Optional<T> : System.IEquatable<DynamicData.Kernel.Optional<T>>
-        where T :  notnull
-    {
-        public bool HasValue { get; }
-        public T Value { get; }
-        public static DynamicData.Kernel.Optional<T> None { get; }
-        public bool Equals(DynamicData.Kernel.Optional<T> other) { }
-        public override bool Equals(object? obj) { }
-        public override int GetHashCode() { }
-        public override string? ToString() { }
-        public static DynamicData.Kernel.Optional<T> Create(T? value) { }
-        public static T? FromOptional(in DynamicData.Kernel.Optional<T> value) { }
-        public static DynamicData.Kernel.Optional<T> ToOptional(T? value) { }
-        public static T? op_Explicit(in DynamicData.Kernel.Optional<T> value) { }
-        public static DynamicData.Kernel.Optional<T> op_Implicit(T? value) { }
-        public static bool operator !=(in DynamicData.Kernel.Optional<T> left, in DynamicData.Kernel.Optional<T> right) { }
-        public static bool operator ==(in DynamicData.Kernel.Optional<T> left, in DynamicData.Kernel.Optional<T> right) { }
     }
 }
 namespace DynamicData.List

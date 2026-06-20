@@ -44,7 +44,7 @@ internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true)
         => _cache.Connect(predicate, suppressEmptyChangeSets);
 
-    public Kernel.Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
+    public Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
 
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => _cache.Preview(predicate);
 

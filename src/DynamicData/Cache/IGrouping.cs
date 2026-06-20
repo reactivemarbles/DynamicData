@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -50,5 +50,5 @@ public interface IGrouping<TObject, TKey, out TGroupKey>
     /// </remarks>
     /// <param name="key">The key.</param>
     /// <returns>The value that is looked up.</returns>
-    Kernel.Optional<TObject> Lookup(TKey key);
+    Optional<TObject> Lookup(TKey key);
 }

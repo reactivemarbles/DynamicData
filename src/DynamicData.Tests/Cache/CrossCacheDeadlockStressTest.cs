@@ -7,7 +7,6 @@ using Bogus;
 using DynamicData.Binding;
 
 using FluentAssertions;
-using ReactiveUI.Primitives.Disposables;
 
 namespace DynamicData.Tests.Cache;
 

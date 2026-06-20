@@ -178,7 +178,7 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         _groupCache.Items.ForEach(group => (group as ManagedGroup<TObject, TKey, TGroupKey>)?.Dispose());
     }
 
-    private static void PerformGroupRefresh(TKey key, in Kernel.Optional<ManagedGroup<TObject, TKey, TGroupKey>> optionalGroup, SuspendTracker? suspendTracker = null)
+    private static void PerformGroupRefresh(TKey key, in Optional<ManagedGroup<TObject, TKey, TGroupKey>> optionalGroup, SuspendTracker? suspendTracker = null)
     {
         if (optionalGroup.HasValue)
         {
@@ -191,10 +191,10 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
-    private Kernel.Optional<ManagedGroup<TObject, TKey, TGroupKey>> LookupGroup(TKey key) =>
+    private Optional<ManagedGroup<TObject, TKey, TGroupKey>> LookupGroup(TKey key) =>
         _groupKeys.Lookup(key).Convert(LookupGroup);
 
-    private Kernel.Optional<ManagedGroup<TObject, TKey, TGroupKey>> LookupGroup(TGroupKey groupKey) =>
+    private Optional<ManagedGroup<TObject, TKey, TGroupKey>> LookupGroup(TGroupKey groupKey) =>
         _groupCache.Lookup(groupKey).Convert(static grp => (grp as ManagedGroup<TObject, TKey, TGroupKey>)!);
 
     private ManagedGroup<TObject, TKey, TGroupKey> GetOrAddGroup(TGroupKey groupKey) =>

@@ -1,5 +1,4 @@
 using DynamicData.Cache.Internal;
-using DynamicData.Kernel;
 
 using FluentAssertions;
 
@@ -66,8 +65,8 @@ public static partial class AsyncDisposeManyFixture
             items.Move(2, 1, items[2]);
             source.OnNext(new ChangeSet<ItemBase, int>()
             {
-                new(reason: ChangeReason.Moved, key: items[0].Id, current: items[0], previous: Optional.None<ItemBase>(), currentIndex: 0, previousIndex: 2),
-                new(reason: ChangeReason.Moved, key: items[1].Id, current: items[1], previous: Optional.None<ItemBase>(), currentIndex: 1, previousIndex: 2)
+                new(reason: ChangeReason.Moved, key: items[0].Id, current: items[0], previous: Optional<ItemBase>.None, currentIndex: 0, previousIndex: 2),
+                new(reason: ChangeReason.Moved, key: items[1].Id, current: items[1], previous: Optional<ItemBase>.None, currentIndex: 1, previousIndex: 2)
             });
 
             results.Error.Should().BeNull();
