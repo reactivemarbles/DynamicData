@@ -31,6 +31,8 @@ public sealed class SourceList<T> : ISourceList<T>
 
     private int _editLevel;
 
+    private bool _isDisposed;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SourceList{T}"/> class.
     /// </summary>
@@ -61,6 +63,13 @@ public sealed class SourceList<T> : ISourceList<T>
             {
                 lock (_locker)
                 {
+                    if (_isDisposed)
+                    {
+                        observer.OnNext(_readerWriter.Count);
+                        observer.OnCompleted();
+                        return Disposable.Empty;
+                    }
+
                     var source = _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
                     return source.SubscribeSafe(observer);
                 }
@@ -86,6 +95,12 @@ public sealed class SourceList<T> : ISourceList<T>
                             });
                     }
 
+                    if (_isDisposed)
+                    {
+                        observer.OnCompleted();
+                        return Disposable.Empty;
+                    }
+
                     var source = _changes.Finally(observer.OnCompleted);
 
                     return source.SubscribeSafe(observer);
@@ -103,6 +118,16 @@ public sealed class SourceList<T> : ISourceList<T>
     /// <inheritdoc />
     public void Dispose()
     {
+        lock (_locker)
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+        }
+
         _cleanUp.Dispose();
         _changesPreview.Dispose();
         _changes.Dispose();
@@ -119,6 +144,11 @@ public sealed class SourceList<T> : ISourceList<T>
 
         lock (_locker)
         {
+            if (_isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(SourceList<T>));
+            }
+
             IChangeSet<T>? changes = null;
 
             _editLevel++;
@@ -144,7 +174,20 @@ public sealed class SourceList<T> : ISourceList<T>
     /// <inheritdoc />
     public IObservable<IChangeSet<T>> Preview(Func<T, bool>? predicate = null)
     {
-        IObservable<IChangeSet<T>> observable = _changesPreview;
+        var observable = Observable.Create<IChangeSet<T>>(
+            observer =>
+            {
+                lock (_locker)
+                {
+                    if (_isDisposed)
+                    {
+                        observer.OnCompleted();
+                        return Disposable.Empty;
+                    }
+
+                    return _changesPreview.SubscribeSafe(observer);
+                }
+            });
 
         if (predicate is not null)
         {

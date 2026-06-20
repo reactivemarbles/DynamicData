@@ -17,15 +17,29 @@ internal sealed class MergeMany<T, TDestination>(IObservable<IChangeSet<T>> sour
                 var counter = new SubscriptionCounter();
                 var locker = InternalEx.NewLock();
                 var disposable = _source.Concat(counter.DeferCleanup)
-                                                .SubscribeMany(t =>
-                                                {
-                                                    counter.Added();
-                                                    return _observableSelector(t).Synchronize(locker).Finally(() => counter.Finally()).Subscribe(observer.OnNext, _ => { }, () => { });
-                                                })
+                                                .SubscribeMany(t => SubscribeChild(t, locker, counter, observer))
                                                 .Subscribe(_ => { }, observer.OnError, observer.OnCompleted);
 
                 return new CompositeDisposable(disposable, counter);
             });
+
+#if NET9_0_OR_GREATER
+    private IDisposable SubscribeChild(T item, Lock locker, SubscriptionCounter counter, IObserver<TDestination> observer)
+#else
+    private IDisposable SubscribeChild(T item, object locker, SubscriptionCounter counter, IObserver<TDestination> observer)
+#endif
+    {
+        counter.Added();
+        try
+        {
+            return _observableSelector(item).Synchronize(locker).Finally(counter.Finally).Subscribe(observer.OnNext, _ => { }, () => { });
+        }
+        catch (ObjectDisposedException)
+        {
+            counter.Finally();
+            return Disposable.Empty;
+        }
+    }
 
     private sealed class SubscriptionCounter : IDisposable
     {

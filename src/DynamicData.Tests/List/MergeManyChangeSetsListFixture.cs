@@ -530,9 +530,10 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
     public void Dispose()
     {
-        _animalOwners.Items.ForEach(owner => owner.Dispose());
+        var owners = _animalOwners.Items.ToArray();
         _animalOwnerResults.Dispose();
         _animalResults.Dispose();
+        owners.ForEach(owner => owner.Dispose());
         _animalOwners.Dispose();
     }
 }

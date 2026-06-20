@@ -108,6 +108,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         while (adding);
 
         // Verify the results
+        await WaitForResultContentsAsync(_marketListResults, priceResults, TimeSpan.FromSeconds(5));
         CheckResultContents(_marketListResults, priceResults);
     }
 
@@ -826,11 +827,33 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         priceResults.Data.Items.Count.Should().Be(expectedPrices.Count);
     }
 
+    private async Task WaitForResultContentsAsync(ChangeSetAggregator<IMarket> marketResults, ChangeSetAggregator<MarketPrice, int> priceResults, TimeSpan timeout)
+    {
+        var deadline = DateTimeOffset.UtcNow + timeout;
+        while (!ResultContentsMatch(marketResults, priceResults) && DateTimeOffset.UtcNow < deadline)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(10));
+        }
+    }
+
+    private bool ResultContentsMatch(ChangeSetAggregator<IMarket> marketResults, ChangeSetAggregator<MarketPrice, int> priceResults)
+    {
+        var expectedMarkets = _marketList.Items.ToList();
+        var expectedPrices = expectedMarkets.SelectMany(market => ((Market)market).PricesCache.Items).ToList();
+        var actualMarkets = marketResults.Data.Items;
+        var actualPrices = priceResults.Data.Items;
+
+        return actualMarkets.Count == expectedMarkets.Count &&
+            actualPrices.Count == expectedPrices.Count &&
+            expectedMarkets.All(actualMarkets.Contains) &&
+            expectedPrices.All(actualPrices.Contains);
+    }
+
     private void DisposeMarkets()
     {
-        _marketList.Items.ForEach(m => (m as IDisposable)?.Dispose());
+        var markets = _marketList.Items.ToArray();
+        markets.ForEach(m => (m as IDisposable)?.Dispose());
         _marketList.Dispose();
-        _marketList.Clear();
     }
 
     private decimal GetRandomPrice() => MarketPrice.RandomPrice(_randomizer, BasePrice, PriceOffset);
