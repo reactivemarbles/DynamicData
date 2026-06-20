@@ -11,9 +11,13 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!--<ItemGroup>
     <PackageReference Include="ReactiveUI.Primitives" Version="5.3.0" ExcludeAssets="analyzers" />
     <PackageReference Include="ReactiveUI.Primitives.Extensions" Version="5.3.0" />
+  </ItemGroup>-->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\reactiveui\Primitives\src\ReactiveUI.Primitives.Extensions\ReactiveUI.Primitives.Extensions.csproj" />
+    <ProjectReference Include="..\..\..\..\reactiveui\Primitives\src\ReactiveUI.Primitives\ReactiveUI.Primitives.csproj" />
   </ItemGroup>
 
   <ItemGroup>
