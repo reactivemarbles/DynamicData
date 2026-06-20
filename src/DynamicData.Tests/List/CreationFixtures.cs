@@ -13,7 +13,7 @@ public class ListCreationFixtures
             ObservableChangeSet.Create<int>(
                 async list =>
                 {
-                    var value = await CreateTask<int>(10);
+                    var value = await CreateTask(10);
                     list.Add(value);
                     return () => { };
                 }));

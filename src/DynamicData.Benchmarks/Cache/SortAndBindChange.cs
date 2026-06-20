@@ -1,7 +1,5 @@
 using BenchmarkDotNet.Attributes;
 using DynamicData.Binding;
-using ReactiveUI.Primitives.Disposables;
-using ReactiveUI.Primitives.Signals;
 using System.Collections.ObjectModel;
 
 namespace DynamicData.Benchmarks.Cache;

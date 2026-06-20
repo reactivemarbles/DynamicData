@@ -1,6 +1,5 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Columns;
-using ReactiveUI.Primitives.Signals;
 
 namespace DynamicData.Benchmarks.List;
 

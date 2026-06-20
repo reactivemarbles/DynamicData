@@ -3,7 +3,6 @@ using System.Reflection;
 using BenchmarkDotNet.Attributes;
 
 using Bogus;
-using ReactiveUI.Primitives.Signals;
 
 namespace DynamicData.Benchmarks.List;
 

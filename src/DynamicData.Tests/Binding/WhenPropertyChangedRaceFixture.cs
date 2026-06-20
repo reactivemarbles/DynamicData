@@ -13,7 +13,7 @@ namespace DynamicData.Tests.Binding;
 /// <summary>
 /// Multi-threaded race tests for <see cref="NotifyPropertyChangedEx.WhenPropertyChanged{TObject, TProperty}"/>.
 /// Each test forces concurrency between the operator's subscribe call (or chain re-walk) and one or more
-/// <see cref="System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/> notifiers firing on other threads.
+/// <see cref="INotifyPropertyChanged.PropertyChanged"/> notifiers firing on other threads.
 /// </summary>
 public sealed class WhenPropertyChangedRaceFixture
 {

@@ -218,7 +218,7 @@ public sealed class CrossCacheDeadlockStressTest
         // ── Completion tracking ─────────────────────────────────────
         var completionTasks = new List<Task>();
         var completionNames = new List<string>();
-        using var subs = new MultipleDisposable();
+        using var subs = new CompositeDisposable();
 
         // Helpers
         IObservableCache<TObj, TKey> TrackCache<TObj, TKey>(IObservable<IChangeSet<TObj, TKey>> pipeline, [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(pipeline))] string? name = null)

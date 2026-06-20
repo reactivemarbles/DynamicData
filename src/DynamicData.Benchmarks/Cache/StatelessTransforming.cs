@@ -1,5 +1,4 @@
 using BenchmarkDotNet.Attributes;
-using ReactiveUI.Primitives.Signals;
 
 namespace DynamicData.Benchmarks.Cache;
 

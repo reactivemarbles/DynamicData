@@ -117,7 +117,7 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
                         return new ManyContainer(collection, changes);
                     }).Publish();
 
-                var outerLock = new object();
+                var outerLock = new Lock();
                 var initial = transformed.Synchronize(outerLock).Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer)));
 
                 var subsequent = transformed.MergeMany(x => x.Changes).Synchronize(outerLock);

@@ -86,7 +86,7 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
         // user code and may throw; that exception routes to OnError. The downstream OnNext call
         // is NOT wrapped: per the Rx contract, if the user observer throws, the exception
         // propagates back to whoever invoked the PropertyChanged setter, matching what a plain
-        // Subject<T>.OnNext would do.
+        // Signal<T>.OnNext would do.
         private void EmitCurrent()
         {
             PropertyValue<TObject, TProperty> value;
@@ -204,7 +204,7 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             // Drainer thread. The chain walk (Invoker / notifier Factory / ReadCurrent's accessor)
             // is user code and may throw; those exceptions route to OnError. The downstream
             // OnNext call is NOT wrapped: per the Rx contract, if the user observer throws, the
-            // exception propagates back through the drainer, matching what a plain Subject<T>
+            // exception propagates back through the drainer, matching what a plain Signal<T>
             // would do.
             //
             // The two cases (initial setup vs level-fire) collapse to:
