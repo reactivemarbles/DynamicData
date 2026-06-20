@@ -25,9 +25,9 @@ internal sealed class TrueFor<TObject, TKey, TValue>(IObservable<IChangeSet<TObj
                 .Publish();
 
             var subscription = itemsWithValues.MergeMany(item => item.Observable).CombineLatest(
-                    second: itemsWithValues.ToCollection(),
+                    itemsWithValues.ToCollection(),
                     // We don't need to actually look at the changed values, we just need them as a trigger to re-evaluate the matcher method.
-                    resultSelector: (_, itemsWithValues) => _collectionMatcher.Invoke(itemsWithValues))
+                    (_, itemsWithValues) => _collectionMatcher.Invoke(itemsWithValues))
                 .DistinctUntilChanged()
                 .SubscribeSafe(observer);
 
