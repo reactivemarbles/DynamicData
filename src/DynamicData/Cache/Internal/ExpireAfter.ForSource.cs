@@ -71,7 +71,7 @@ internal static partial class ExpireAfter
                     .Connect()
                     // It's important to set this flag outside the context of a lock, because it'll be read outside of lock as well.
                     .Finally(() => _hasSourceCompleted = true)
-                    .Synchronize(SynchronizationGate)
+                    .SynchronizeObject(SynchronizationGate)
                     .SubscribeSafe(
                         onNext: OnSourceNext,
                         onError: OnSourceError,

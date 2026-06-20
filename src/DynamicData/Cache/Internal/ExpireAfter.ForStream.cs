@@ -63,7 +63,7 @@ internal static partial class ExpireAfter
                 _proposedExpirationsQueue = [];
 
                 _sourceSubscription = source
-                    .Synchronize(SynchronizationGate)
+                    .SynchronizeObject(SynchronizationGate)
                     .SubscribeSafe(
                         onNext: OnSourceNext,
                         onError: OnSourceError,
