@@ -45,6 +45,7 @@
     <Using Include="ReactiveUI.Primitives.Disposables.SwapDisposable" Alias="SerialDisposable" />
     <Using Include="ReactiveUI.Primitives.Concurrency.ISequencer" Alias="IScheduler" />
     <Using Include="ReactiveUI.Primitives.Concurrency.TaskPoolSequencer" Alias="TaskPoolScheduler" />
+    <Using Include="ReactiveUI.Primitives.Concurrency.ThreadPoolSequencer" Alias="ThreadPoolScheduler" />
   </ItemGroup>
 
   <Target Name="CopyDynamicDataReactiveOutput" AfterTargets="Build">

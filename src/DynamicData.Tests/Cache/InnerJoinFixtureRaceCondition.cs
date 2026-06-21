@@ -53,7 +53,7 @@ public class InnerJoinFixtureRaceCondition
 
         IDisposable BeginGeneratingThings(SourceCache<Thing, long> source, string namePrefix)
             // Generate items infinitely. The runtime of the test is limited by the .Subscribe() loop.
-            => Observable.Range(1, int.MaxValue, ThreadPoolSequencer.Instance)
+            => Observable.Range(1, int.MaxValue, ThreadPoolScheduler.Instance)
                 .Subscribe(id =>
                 {
                     source.AddOrUpdate(new Thing()

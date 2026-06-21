@@ -755,7 +755,7 @@ public static partial class ExpireAfterFixture
         {
             using var source = new Signal<IChangeSet<StressItem, int>>();
 
-            var scheduler = ThreadPoolSequencer.Instance;
+            var scheduler = ThreadPoolScheduler.Instance;
 
             using var subscription = source
                 .ExpireAfter(
@@ -785,7 +785,7 @@ public static partial class ExpireAfterFixture
         {
             using var source = new Signal<IChangeSet<StressItem, int>>();
 
-            var scheduler = ThreadPoolSequencer.Instance;
+            var scheduler = ThreadPoolScheduler.Instance;
 
             using var subscription = source
                 .ExpireAfter(

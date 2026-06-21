@@ -537,7 +537,7 @@ public static partial class ExpireAfterFixture
         {
             using var source = new TestSourceCache<StressItem, int>(static item => item.Id);
 
-            var scheduler = ThreadPoolSequencer.Instance;
+            var scheduler = ThreadPoolScheduler.Instance;
 
             using var subscription = source
                 .ExpireAfter(
@@ -568,7 +568,7 @@ public static partial class ExpireAfterFixture
         {
             using var source = new TestSourceCache<StressItem, int>(static item => item.Id);
 
-            var scheduler = ThreadPoolSequencer.Instance;
+            var scheduler = ThreadPoolScheduler.Instance;
 
             using var subscription = source
                 .ExpireAfter(

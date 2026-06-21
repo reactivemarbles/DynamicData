@@ -19,7 +19,7 @@ public static partial class ToObservableChangeSetFixture
                     SchedulerType.Default       => Sequencer.Default,
                     SchedulerType.NewThread     => new NewThreadScheduler(),
                     SchedulerType.TaskPool      => TaskPoolScheduler.Default,
-                    SchedulerType.ThreadPool    => ThreadPoolSequencer.Instance,
+                    SchedulerType.ThreadPool    => ThreadPoolScheduler.Instance,
                     _                           => throw new ArgumentOutOfRangeException(nameof(schedulerType))
                 };
 

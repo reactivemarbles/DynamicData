@@ -539,7 +539,7 @@ public sealed class ExpireAfterFixture
     {
         using var source = new TestSourceList<StressItem>();
 
-        var scheduler = ThreadPoolSequencer.Instance;
+        var scheduler = ThreadPoolScheduler.Instance;
 
         using var subscription = source
             .ExpireAfter(
@@ -571,7 +571,7 @@ public sealed class ExpireAfterFixture
     {
         using var source = new TestSourceList<StressItem>();
 
-        var scheduler = ThreadPoolSequencer.Instance;
+        var scheduler = ThreadPoolScheduler.Instance;
 
         using var subscription = source
             .ExpireAfter(

@@ -55,13 +55,13 @@ public readonly record struct Recorded<T>
 
 public sealed class NewThreadScheduler : ISequencer
 {
-    public DateTimeOffset Now => ThreadPoolSequencer.Instance.Now;
+    public DateTimeOffset Now => ThreadPoolScheduler.Instance.Now;
 
-    public long Timestamp => ThreadPoolSequencer.Instance.Timestamp;
+    public long Timestamp => ThreadPoolScheduler.Instance.Timestamp;
 
-    public void Schedule(IWorkItem item) => ThreadPoolSequencer.Instance.Schedule(item);
+    public void Schedule(IWorkItem item) => ThreadPoolScheduler.Instance.Schedule(item);
 
-    public void Schedule(IWorkItem item, long dueTimestamp) => ThreadPoolSequencer.Instance.Schedule(item, dueTimestamp);
+    public void Schedule(IWorkItem item, long dueTimestamp) => ThreadPoolScheduler.Instance.Schedule(item, dueTimestamp);
 }
 
 public sealed class TestScheduler : ISequencer
