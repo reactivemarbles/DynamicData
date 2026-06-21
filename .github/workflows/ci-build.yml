@@ -21,7 +21,7 @@ jobs:
         lfs: true
 
     - name: Setup .NET (With cache)
-      uses: actions/setup-dotnet@v5.0.1
+      uses: actions/setup-dotnet@v5.3.0
       with:
         dotnet-version: |
             6.0.x
@@ -39,7 +39,7 @@ jobs:
 
     - name: NBGV
       id: nbgv
-      uses: dotnet/nbgv@v0.5.1
+      uses: dotnet/nbgv@v0.5.2
       with:
         setAllVars: true
         
