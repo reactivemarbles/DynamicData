@@ -21,7 +21,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{ISortedChangeSet{TObject, TKey}}"/> to convert move events into remove/add pairs.</param>
+    /// <param name="source">The source <c>IObservable&lt;ISortedChangeSet&lt;TObject, TKey&gt;&gt;</c> to convert move events into remove/add pairs.</param>
     /// <returns>the same SortedChangeSets, except all moves are replaced with remove + add.</returns>
     public static IObservable<ISortedChangeSet<TObject, TKey>> TreatMovesAsRemoveAdd<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
         where TObject : notnull

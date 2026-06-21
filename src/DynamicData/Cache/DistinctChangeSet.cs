@@ -9,18 +9,33 @@ namespace DynamicData.Reactive;
 namespace DynamicData;
 #endif
 
+/// <summary>
+/// Provides members for the DistinctChangeSet class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
 internal sealed class DistinctChangeSet<T> : ChangeSet<T, T>, IDistinctChangeSet<T>
     where T : notnull
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DistinctChangeSet{T}"/> class.
+    /// </summary>
+    /// <param name="items">The items value.</param>
     public DistinctChangeSet(IEnumerable<Change<T, T>> items)
         : base(items)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DistinctChangeSet{T}"/> class.
+    /// </summary>
     public DistinctChangeSet()
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DistinctChangeSet{T}"/> class.
+    /// </summary>
+    /// <param name="capacity">The capacity value.</param>
     public DistinctChangeSet(int capacity)
         : base(capacity)
     {

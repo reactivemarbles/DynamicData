@@ -97,7 +97,7 @@ public static class SourceListEditConvenienceEx
     }
 
     /// <summary>
-    /// Inserts the elements of a collection into the <see cref="IExtendedList{T}" /> at the specified index.
+    /// Inserts the elements of a collection into the <c>IExtendedList&lt;T&gt;</c> at the specified index.
     /// </summary>
     /// <typeparam name="T">The item type.</typeparam>
     /// <param name="source">The source.</param>
@@ -172,14 +172,14 @@ public static class SourceListEditConvenienceEx
     }
 
     /// <summary>
-    /// Removes a range of elements from the <see cref="ISourceList{T}" />.
+    /// Removes a range of elements from the <c>ISourceList&lt;T&gt;</c>.
     /// </summary>
     /// <typeparam name="T">The item type.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="index">The zero-based starting index of the range of elements to remove.</param>
     /// <param name="count">The number of elements to remove.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="count" /> is less than 0.</exception>
-    /// <exception cref="ArgumentException"><paramref name="index" /> and <paramref name="count" /> do not denote a valid range of elements in the <see cref="List{T}" />.</exception>
+    /// <exception cref="ArgumentException"><paramref name="index" /> and <paramref name="count" /> do not denote a valid range of elements in the <c>List&lt;T&gt;</c>.</exception>
     public static void RemoveRange<T>(this ISourceList<T> source, int index, int count)
         where T : notnull
     {

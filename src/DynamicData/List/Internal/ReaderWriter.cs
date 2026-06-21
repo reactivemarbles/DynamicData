@@ -9,15 +9,31 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the ReaderWriter class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
 internal sealed class ReaderWriter<T>
     where T : notnull
 {
+    /// <summary>
+    /// The _locker field.
+    /// </summary>
     private readonly Lock _locker = new();
 
+    /// <summary>
+    /// The _data field.
+    /// </summary>
     private ChangeAwareList<T> _data = new();
 
+    /// <summary>
+    /// The _updateInProgress field.
+    /// </summary>
     private bool _updateInProgress;
 
+    /// <summary>
+    /// Gets the Count value.
+    /// </summary>
     public int Count
     {
         get
@@ -29,6 +45,9 @@ internal sealed class ReaderWriter<T>
         }
     }
 
+    /// <summary>
+    /// Gets the Items value.
+    /// </summary>
     public T[] Items
     {
         get
@@ -42,6 +61,11 @@ internal sealed class ReaderWriter<T>
         }
     }
 
+    /// <summary>
+    /// Executes the Write operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
     public IChangeSet<T> Write(IChangeSet<T> changes)
     {
         ArgumentExceptionHelper.ThrowIfNull(changes);
@@ -57,6 +81,11 @@ internal sealed class ReaderWriter<T>
         return result;
     }
 
+    /// <summary>
+    /// Executes the Write operation.
+    /// </summary>
+    /// <param name="updateAction">The updateAction value.</param>
+    /// <returns>The result of the operation.</returns>
     public IChangeSet<T> Write(Action<IExtendedList<T>> updateAction)
     {
         ArgumentExceptionHelper.ThrowIfNull(updateAction);
@@ -96,6 +125,12 @@ internal sealed class ReaderWriter<T>
         }
     }
 
+    /// <summary>
+    /// Executes the WriteWithPreview operation.
+    /// </summary>
+    /// <param name="updateAction">The updateAction value.</param>
+    /// <param name="previewHandler">The previewHandler value.</param>
+    /// <returns>The result of the operation.</returns>
     public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
     {
         ArgumentExceptionHelper.ThrowIfNull(updateAction);

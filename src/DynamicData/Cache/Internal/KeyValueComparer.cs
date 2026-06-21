@@ -9,8 +9,20 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the KeyValueComparer class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="comparer">The comparer value.</param>
 internal sealed class KeyValueComparer<TObject, TKey>(IComparer<TObject>? comparer = null) : IComparer<KeyValuePair<TKey, TObject>>
 {
+    /// <summary>
+    /// Executes the Compare operation.
+    /// </summary>
+    /// <param name="x">The x value.</param>
+    /// <param name="y">The y value.</param>
+    /// <returns>The result of the operation.</returns>
     public int Compare(KeyValuePair<TKey, TObject> x, KeyValuePair<TKey, TObject> y)
     {
         if (comparer is not null)

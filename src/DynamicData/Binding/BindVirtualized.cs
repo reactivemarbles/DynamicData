@@ -8,10 +8,18 @@ namespace DynamicData.Reactive.Binding;
 
 namespace DynamicData.Binding;
 #endif
-
 /*
  * Binding for the result of the SortAndVirtualize operator
  */
+
+/// <summary>
+/// Provides members for the BindVirtualized class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="targetList">The targetList value.</param>
+/// <param name="options">The options value.</param>
 internal sealed class BindVirtualized<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
     IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
     IList<TObject> targetList,
@@ -19,10 +27,19 @@ internal sealed class BindVirtualized<[DynamicallyAccessedMembers(DynamicallyAcc
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Run() => options is null
         ? UseVirtualSortOptions()
         : UseProvidedOptions(options.Value);
 
+    /// <summary>
+    /// Executes the UseProvidedOptions operation.
+    /// </summary>
+    /// <param name="sortAndBindOptions">The sortAndBindOptions value.</param>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TObject, TKey>> UseProvidedOptions(SortAndBindOptions sortAndBindOptions) =>
         source.Publish(changes =>
         {
@@ -33,6 +50,10 @@ internal sealed class BindVirtualized<[DynamicallyAccessedMembers(DynamicallyAcc
             return changes.SortAndBind(targetList, comparedChanged, sortAndBindOptions);
         });
 
+    /// <summary>
+    /// Executes the UseVirtualSortOptions operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TObject, TKey>> UseVirtualSortOptions() =>
         Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {

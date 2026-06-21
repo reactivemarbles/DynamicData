@@ -22,8 +22,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to selectively suppress updates in.</param>
-    /// <param name="ignoreFunction">The <see cref="Func{TObject, TObject, bool}"/> ignore function (current,previous)=>{ return true to ignore }.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to selectively suppress updates in.</param>
+    /// <param name="ignoreFunction">The <c>Func&lt;TObject, TObject, bool&gt;</c> ignore function (current,previous)=>{ return true to ignore }.</param>
     /// <returns>An observable which emits change sets and ignores updates equal to the lambda.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> IgnoreUpdateWhen<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TObject, bool> ignoreFunction)
         where TObject : notnull

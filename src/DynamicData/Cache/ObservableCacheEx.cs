@@ -16,5 +16,8 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
+    /// <summary>
+    /// The DefaultSortResetThreshold field.
+    /// </summary>
     private const int DefaultSortResetThreshold = 100;
 }

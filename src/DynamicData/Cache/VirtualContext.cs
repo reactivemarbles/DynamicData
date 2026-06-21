@@ -21,6 +21,9 @@ public record VirtualContext<TObject>(
     IComparer<TObject> Comparer,
     SortAndVirtualizeOptions Options)
 {
+    /// <summary>
+    /// The Empty field.
+    /// </summary>
     internal static readonly VirtualContext<TObject> Empty = new
     (
         new VirtualResponse(0, 0, 0),

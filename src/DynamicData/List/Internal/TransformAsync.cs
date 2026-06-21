@@ -9,15 +9,36 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the TransformAsync class.
+/// </summary>
+/// <typeparam name="TSource">The type of the TSource value.</typeparam>
+/// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
 internal sealed class TransformAsync<TSource, TDestination>
     where TSource : notnull
     where TDestination : notnull
 {
+    /// <summary>
+    /// The _containerFactory field.
+    /// </summary>
     private readonly Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, int, Task<Transformer<TSource, TDestination>.TransformedItemContainer>> _containerFactory;
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TSource>> _source;
+
+    /// <summary>
+    /// The _transformOnRefresh field.
+    /// </summary>
     private readonly bool _transformOnRefresh;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TransformAsync{TSource, TDestination}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="factory">The factory value.</param>
+    /// <param name="transformOnRefresh">The transformOnRefresh value.</param>
     public TransformAsync(
         IObservable<IChangeSet<TSource>> source,
         Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, int, Task<TDestination>> factory,
@@ -34,8 +55,16 @@ internal sealed class TransformAsync<TSource, TDestination>
         };
     }
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TDestination>> Run() => Observable.Defer(RunImpl);
 
+    /// <summary>
+    /// Executes the RunImpl operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TDestination>> RunImpl()
     {
         var state = new ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>();
@@ -62,6 +91,12 @@ internal sealed class TransformAsync<TSource, TDestination>
             });
     }
 
+    /// <summary>
+    /// Executes the Transform operation.
+    /// </summary>
+    /// <param name="transformed">The transformed value.</param>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
     private async Task Transform(
         ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer> transformed,
         IChangeSet<TSource> changes)

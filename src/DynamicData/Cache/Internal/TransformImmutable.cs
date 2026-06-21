@@ -9,14 +9,32 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the TransformImmutable class.
+/// </summary>
+/// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+/// <typeparam name="TSource">The type of the TSource value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 internal sealed class TransformImmutable<TDestination, TSource, TKey>
     where TDestination : notnull
     where TSource : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TSource, TKey>> _source;
+
+    /// <summary>
+    /// The _transformFactory field.
+    /// </summary>
     private readonly Func<TSource, TDestination> _transformFactory;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TransformImmutable{TDestination, TSource, TKey}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
     public TransformImmutable(
         IObservable<IChangeSet<TSource, TKey>> source,
         Func<TSource, TDestination> transformFactory)
@@ -25,6 +43,10 @@ internal sealed class TransformImmutable<TDestination, TSource, TKey>
         _transformFactory = transformFactory;
     }
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TDestination, TKey>> Run()
         => Observable.Create<IChangeSet<TDestination, TKey>>(observer => _source
             .SubscribeSafe(Observer.Create<IChangeSet<TSource, TKey>>(

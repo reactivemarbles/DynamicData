@@ -26,20 +26,44 @@ namespace DynamicData;
 public sealed class SourceList<T> : ISourceList<T>
     where T : notnull
 {
+    /// <summary>
+    /// The _changes field.
+    /// </summary>
     private readonly Signal<IChangeSet<T>> _changes = new();
 
+    /// <summary>
+    /// The _changesPreview field.
+    /// </summary>
     private readonly Signal<IChangeSet<T>> _changesPreview = new();
 
+    /// <summary>
+    /// The _cleanUp field.
+    /// </summary>
     private readonly IDisposable _cleanUp;
 
+    /// <summary>
+    /// The _countChanged field.
+    /// </summary>
     private readonly Lazy<Signal<int>> _countChanged = new(() => new Signal<int>());
 
+    /// <summary>
+    /// The _locker field.
+    /// </summary>
     private readonly Lock _locker = new();
 
+    /// <summary>
+    /// The _readerWriter field.
+    /// </summary>
     private readonly ReaderWriter<T> _readerWriter = new();
 
+    /// <summary>
+    /// The _editLevel field.
+    /// </summary>
     private int _editLevel;
 
+    /// <summary>
+    /// The _isDisposed field.
+    /// </summary>
     private bool _isDisposed;
 
     /// <summary>
@@ -88,6 +112,8 @@ public sealed class SourceList<T> : ISourceList<T>
     public IReadOnlyList<T> Items => _readerWriter.Items;
 
     /// <inheritdoc />
+    /// <param name="predicate">The predicate value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<T>> Connect(Func<T, bool>? predicate = null)
     {
         var observable = Observable.Create<IChangeSet<T>>(
@@ -147,6 +173,7 @@ public sealed class SourceList<T> : ISourceList<T>
     }
 
     /// <inheritdoc />
+    /// <param name="updateAction">The updateAction value.</param>
     public void Edit(Action<IExtendedList<T>> updateAction)
     {
         ArgumentExceptionHelper.ThrowIfNull(updateAction);
@@ -181,6 +208,8 @@ public sealed class SourceList<T> : ISourceList<T>
     }
 
     /// <inheritdoc />
+    /// <param name="predicate">The predicate value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<T>> Preview(Func<T, bool>? predicate = null)
     {
         var observable = Observable.Create<IChangeSet<T>>(
@@ -206,6 +235,10 @@ public sealed class SourceList<T> : ISourceList<T>
         return observable;
     }
 
+    /// <summary>
+    /// Executes the InvokeNext operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
     private void InvokeNext(IChangeSet<T> changes)
     {
         if (changes.Count == 0)
@@ -224,6 +257,10 @@ public sealed class SourceList<T> : ISourceList<T>
         }
     }
 
+    /// <summary>
+    /// Executes the InvokeNextPreview operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
     private void InvokeNextPreview(IChangeSet<T> changes)
     {
         if (changes.Count == 0)
@@ -237,8 +274,16 @@ public sealed class SourceList<T> : ISourceList<T>
         }
     }
 
+    /// <summary>
+    /// Executes the LoadFromSource operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source) => source.Synchronize(_locker).Finally(OnCompleted).Select(_readerWriter.Write).Subscribe(InvokeNext, OnError, OnCompleted);
 
+    /// <summary>
+    /// Executes the OnCompleted operation.
+    /// </summary>
     private void OnCompleted()
     {
         lock (_locker)
@@ -248,6 +293,10 @@ public sealed class SourceList<T> : ISourceList<T>
         }
     }
 
+    /// <summary>
+    /// Executes the OnError operation.
+    /// </summary>
+    /// <param name="exception">The exception value.</param>
     private void OnError(Exception exception)
     {
         lock (_locker)

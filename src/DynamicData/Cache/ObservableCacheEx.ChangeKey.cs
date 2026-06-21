@@ -23,8 +23,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TSourceKey}}"/> to re-key.</param>
-    /// <param name="keySelector">The <see cref="Func{TObject, TDestinationKey}"/> that computes the destination key from the item, e.g. <c>(item) =&gt; item.NewId</c>.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TSourceKey&gt;&gt;</c> to re-key.</param>
+    /// <param name="keySelector">The <c>Func&lt;TObject, TDestinationKey&gt;</c> that computes the destination key from the item, e.g. <c>(item) =&gt; item.NewId</c>.</param>
     /// <returns>An observable changeset with items re-keyed using <paramref name="keySelector"/>.</returns>
     /// <remarks>
     /// <list type="table">
@@ -35,7 +35,7 @@ public static partial class ObservableCacheEx
     /// <item><term>Refresh</term><description><paramref name="keySelector"/> is called on the item. A <b>Refresh</b> is emitted with the destination key.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="Transform{TDestination, TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TDestination}, bool)"/>
+    /// <seealso><c>Transform&lt;TDestination, TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, TDestination&gt;, bool)</c></seealso>
     public static IObservable<IChangeSet<TObject, TDestinationKey>> ChangeKey<TObject, TSourceKey, TDestinationKey>(this IObservable<IChangeSet<TObject, TSourceKey>> source, Func<TObject, TDestinationKey> keySelector)
         where TObject : notnull
         where TSourceKey : notnull
@@ -52,7 +52,15 @@ public static partial class ObservableCacheEx
             });
     }
 
-    /// <inheritdoc cref="ChangeKey{TObject, TSourceKey, TDestinationKey}(IObservable{IChangeSet{TObject, TSourceKey}}, Func{TObject, TDestinationKey})"/>
+    /// <summary>
+    /// Provides an overload of <c>ChangeKey</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TSourceKey">The type of the TSourceKey value.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the TDestinationKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="keySelector">The keySelector value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>
     /// This overload also provides the source key to <paramref name="keySelector"/>,
     /// allowing the destination key to be derived from both the item and its original key.

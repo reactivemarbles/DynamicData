@@ -9,14 +9,33 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the RefCount class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
 internal sealed class RefCount<T>(IObservable<IChangeSet<T>> source)
     where T : notnull
 {
+    /// <summary>
+    /// The _locker field.
+    /// </summary>
     private readonly Lock _locker = new();
+
+    /// <summary>
+    /// The _list field.
+    /// </summary>
     private IObservableList<T>? _list;
 
+    /// <summary>
+    /// The _refCount field.
+    /// </summary>
     private int _refCount;
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {

@@ -26,6 +26,9 @@ public sealed class ChangeSetAggregator<TObject, TKey, TContext> : IDisposable
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _disposer field.
+    /// </summary>
     private readonly IDisposable _disposer;
 
     /// <summary>
@@ -109,6 +112,9 @@ public sealed class ChangeSetAggregator<TObject, TKey> : IDisposable
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _disposer field.
+    /// </summary>
     private readonly IDisposable _disposer;
 
     /// <summary>

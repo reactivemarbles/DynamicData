@@ -21,9 +21,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to materialize into a collection on each change.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to materialize into a collection on each change.</param>
     /// <returns>An observable which emits the read only collection.</returns>
-    /// <seealso cref="ObservableListEx.ToCollection{TObject}(IObservable{IChangeSet{TObject}})"/>
+    /// <seealso><c>ObservableListEx.ToCollection&lt;TObject&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;)</c></seealso>
     public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull => source.QueryWhenChanged(query => new ReadOnlyCollectionLight<TObject>(query.Items));

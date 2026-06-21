@@ -28,12 +28,12 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The object of the change set.</typeparam>
     /// <typeparam name="TKey">The key of the change set.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to monitor for property-driven refresh signals.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to monitor for property-driven refresh signals.</param>
     /// <param name="changeSetBuffer">An optional <see cref="TimeSpan"/> buffer duration. Batches multiple refresh signals into a single changeset, improving performance when many elements change in quick succession. This greatly increases performance when many elements have successive property changes.</param>
     /// <param name="propertyChangeThrottle">An optional <see cref="TimeSpan"/> throttle applied to each item's property change notifications, preventing excessive refresh invocations.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
     /// <returns>An observable change set with additional refresh changes.</returns>
-    /// <seealso cref="ObservableListEx.AutoRefresh"/>
+    /// <seealso><c>ObservableListEx.AutoRefresh</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
         where TKey : notnull
@@ -60,8 +60,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The object of the change set.</typeparam>
     /// <typeparam name="TKey">The key of the change set.</typeparam>
     /// <typeparam name="TProperty">The type of the property.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to monitor for property-driven refresh signals.</param>
-    /// <param name="propertyAccessor">A <see cref="Expression{TDelegate}"/> that specify a property to observe changes. When it changes a Refresh is invoked.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to monitor for property-driven refresh signals.</param>
+    /// <param name="propertyAccessor">A <c>Expression&lt;TDelegate&gt;</c> that specify a property to observe changes. When it changes a Refresh is invoked.</param>
     /// <param name="changeSetBuffer">An optional <see cref="TimeSpan"/> buffer duration. Batches multiple refresh signals into a single changeset, improving performance when many elements change in quick succession. This greatly increases performance when many elements have successive property changes.</param>
     /// <param name="propertyChangeThrottle">An optional <see cref="TimeSpan"/> throttle applied to each item's property change notifications, preventing excessive refresh invocations.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>

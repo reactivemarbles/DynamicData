@@ -22,8 +22,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to apply time-based expiration to.</param>
-    /// <param name="timeSelector">An optional <see cref="Func{T, TResult}"/> that returns the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to apply time-based expiration to.</param>
+    /// <param name="timeSelector">An optional <c>Func&lt;T, TResult&gt;</c> that returns the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
     /// <returns>An observable changeset that includes timer-driven <b>Remove</b> changes for expired items.</returns>
     /// <remarks>
     /// <para>When a timer fires, a <b>Remove</b> is emitted for the expired item.</para>
@@ -48,10 +48,15 @@ public static partial class ObservableCacheEx
             source: source,
             timeSelector: timeSelector);
 
-    /// <inheritdoc cref="ExpireAfter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TimeSpan?})"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to apply time-based expiration to.</param>
-    /// <param name="timeSelector">An optional <see cref="Func{T, TResult}"/> that returns the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
+    /// <summary>
+    /// Provides an overload of <c>ExpireAfter</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to apply time-based expiration to.</param>
+    /// <param name="timeSelector">An optional <c>Func&lt;T, TResult&gt;</c> that returns the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
     /// <param name="scheduler">The <see cref="IScheduler"/> used to schedule expiration timers.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(
                 this IObservable<IChangeSet<TObject, TKey>> source,
                 Func<TObject, TimeSpan?> timeSelector,
@@ -63,10 +68,15 @@ public static partial class ObservableCacheEx
             timeSelector: timeSelector,
             scheduler: scheduler);
 
-    /// <inheritdoc cref="ExpireAfter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TimeSpan?})"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to apply time-based expiration to.</param>
-    /// <param name="timeSelector">An optional <see cref="Func{T, TResult}"/> that returns the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
+    /// <summary>
+    /// Provides an overload of <c>ExpireAfter</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to apply time-based expiration to.</param>
+    /// <param name="timeSelector">An optional <c>Func&lt;T, TResult&gt;</c> that returns the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
     /// <param name="pollingInterval">An optional <see cref="TimeSpan"/> polling interval. If specified, items are expired on a polling interval rather than per-item timers. Less accurate but more efficient when many items share similar expiration times.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>
     /// This overload uses periodic polling instead of per-item timers. Expired items are removed on the next
     /// poll after their timeout elapses, which trades accuracy for reduced timer overhead.
@@ -82,11 +92,16 @@ public static partial class ObservableCacheEx
             timeSelector: timeSelector,
             pollingInterval: pollingInterval);
 
-    /// <inheritdoc cref="ExpireAfter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TimeSpan?}, TimeSpan?)"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to apply time-based expiration to.</param>
-    /// <param name="timeSelector">An optional <see cref="Func{T, TResult}"/> that returns the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
+    /// <summary>
+    /// Provides an overload of <c>ExpireAfter</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to apply time-based expiration to.</param>
+    /// <param name="timeSelector">An optional <c>Func&lt;T, TResult&gt;</c> that returns the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
     /// <param name="pollingInterval">An optional <see cref="TimeSpan"/> if specified, items are expired on a polling interval rather than per-item timers.</param>
     /// <param name="scheduler">The <see cref="IScheduler"/> used to schedule polling and expiration timers.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(
                 this IObservable<IChangeSet<TObject, TKey>> source,
                 Func<TObject, TimeSpan?> timeSelector,
@@ -101,19 +116,19 @@ public static partial class ObservableCacheEx
             scheduler: scheduler);
 
     /// <summary>
-    /// Automatically removes items from the <see cref="ISourceCache{TObject, TKey}"/> after the timeout returned
+    /// Automatically removes items from the <c>ISourceCache&lt;TObject, TKey&gt;</c> after the timeout returned
     /// by <paramref name="timeSelector"/>. Returns an observable of the removed key-value pairs (not a changeset stream).
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The <see cref="ISourceCache{TObject, TKey}"/> to operate on.</param>
-    /// <param name="timeSelector">An optional <see cref="Func{T, TResult}"/> that returns the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
+    /// <param name="source">The <c>ISourceCache&lt;TObject, TKey&gt;</c> to operate on.</param>
+    /// <param name="timeSelector">An optional <c>Func&lt;T, TResult&gt;</c> that returns the expiration timeout for each item, or <see langword="null"/> for no expiration.</param>
     /// <param name="pollingInterval">An optional <see cref="TimeSpan"/> if specified, items are expired on a polling interval rather than per-item timers.</param>
     /// <param name="scheduler">The scheduler used to schedule expiration timers. Defaults to <see cref="GlobalConfig.DefaultScheduler"/> if <see langword="null"/>.</param>
     /// <returns>An observable that emits the key-value pairs of items removed from the cache by expiration.</returns>
     /// <remarks>
-    /// Unlike the stream-based overloads, this operates directly on the <see cref="ISourceCache{TObject, TKey}"/>
-    /// and returns the removed items as <see cref="KeyValuePair{TKey, TObject}"/> collections,
+    /// Unlike the stream-based overloads, this operates directly on the <c>ISourceCache&lt;TObject, TKey&gt;</c>
+    /// and returns the removed items as <c>KeyValuePair&lt;TKey, TObject&gt;</c> collections,
     /// not as a changeset stream.
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="timeSelector"/> is <see langword="null"/>.</exception>

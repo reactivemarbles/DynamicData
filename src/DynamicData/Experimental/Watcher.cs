@@ -9,20 +9,42 @@ namespace DynamicData.Reactive.Experimental;
 namespace DynamicData.Experimental;
 #endif
 
+/// <summary>
+/// Provides members for the Watcher class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _disposer field.
+    /// </summary>
     private readonly IDisposable _disposer;
 
+    /// <summary>
+    /// The _locker field.
+    /// </summary>
     private readonly Lock _locker = new();
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly IObservableCache<TObject, TKey> _source;
 
+    /// <summary>
+    /// The _subscribers field.
+    /// </summary>
     [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly IntermediateCache<SubjectWithRefCount<Change<TObject, TKey>>, TKey> _subscribers = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Watcher{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="scheduler">The scheduler value.</param>
     public Watcher(IObservable<IChangeSet<TObject, TKey>> source, IScheduler scheduler)
     {
         _source = source.AsObservableCache();
@@ -57,8 +79,16 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
             });
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose() => _disposer.Dispose();
 
+    /// <summary>
+    /// Executes the Watch operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<Change<TObject, TKey>> Watch(TKey key) => Observable.Create<Change<TObject, TKey>>(
             observer =>
             {

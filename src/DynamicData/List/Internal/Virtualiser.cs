@@ -9,13 +9,29 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the Virtualiser class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="requests">The requests value.</param>
 internal sealed class Virtualiser<T>(IObservable<IChangeSet<T>> source, IObservable<IVirtualRequest> requests)
     where T : notnull
 {
+    /// <summary>
+    /// The _requests field.
+    /// </summary>
     private readonly IObservable<IVirtualRequest> _requests = requests ?? throw new ArgumentNullException(nameof(requests));
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IVirtualChangeSet<T>> Run() => Observable.Create<IVirtualChangeSet<T>>(
             observer =>
             {
@@ -40,6 +56,13 @@ internal sealed class Virtualiser<T>(IObservable<IChangeSet<T>> source, IObserva
                     .Select(changes => new VirtualChangeSet<T>(changes, new VirtualResponse(virtualised.Count, parameters.StartIndex, all.Count))).SubscribeSafe(observer);
             });
 
+    /// <summary>
+    /// Executes the CheckParamsAndVirtualise operation.
+    /// </summary>
+    /// <param name="all">The all value.</param>
+    /// <param name="virtualised">The virtualised value.</param>
+    /// <param name="request">The request value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IChangeSet<T>? CheckParamsAndVirtualise(IList<T> all, ChangeAwareList<T> virtualised, IVirtualRequest? request)
     {
         if (request is null || request.StartIndex < 0 || request.Size < 1)
@@ -50,6 +73,14 @@ internal sealed class Virtualiser<T>(IObservable<IChangeSet<T>> source, IObserva
         return Virtualise(all, virtualised, request);
     }
 
+    /// <summary>
+    /// Executes the Virtualise operation.
+    /// </summary>
+    /// <param name="all">The all value.</param>
+    /// <param name="virtualised">The virtualised value.</param>
+    /// <param name="request">The request value.</param>
+    /// <param name="changeSet">The changeSet value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IChangeSet<T> Virtualise(IList<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request, IChangeSet<T>? changeSet = null)
     {
         if (changeSet is not null)

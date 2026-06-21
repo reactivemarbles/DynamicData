@@ -148,9 +148,13 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     public static bool operator !=(in Change<TObject, TKey> left, in Change<TObject, TKey> right) => !left.Equals(right);
 
     /// <inheritdoc />
+    /// <param name="other">The other value.</param>
+    /// <returns>The result of the operation.</returns>
     public bool Equals(Change<TObject, TKey> other) => EqualityComparer<TKey>.Default.Equals(Key, other.Key) && Reason == other.Reason && EqualityComparer<TObject?>.Default.Equals(Current, other.Current) && CurrentIndex == other.CurrentIndex && Previous.Equals(other.Previous) && PreviousIndex == other.PreviousIndex;
 
     /// <inheritdoc />
+    /// <param name="obj">The obj value.</param>
+    /// <returns>The result of the operation.</returns>
     public override bool Equals(object? obj)
     {
         if (obj is null)
@@ -162,6 +166,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -177,5 +182,6 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"{Reason}, Key: {Key}, Current: {Current}, Previous: {Previous}";
 }

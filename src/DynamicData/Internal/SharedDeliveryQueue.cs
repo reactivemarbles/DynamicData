@@ -11,21 +11,46 @@ namespace DynamicData.Internal;
 
 /// <summary>
 /// A type-erased delivery queue that serializes delivery across multiple sources
-/// with different item types. Each source gets a typed <see cref="DeliverySubQueue{T}"/>
-/// via <see cref="CreateQueue{T}"/>. A single drain loop delivers items from all
+/// with different item types. Each source gets a typed <c>DeliverySubQueue&lt;T&gt;</c>
+/// via <c>CreateQueue&lt;T&gt;</c>. A single drain loop delivers items from all
 /// sub-queues outside the lock, one item per iteration. An <see cref="Bitset"/>
 /// tracks which sub-queues have pending items, replacing O(N) scans with O(1) lookups.
 /// </summary>
 internal sealed class SharedDeliveryQueue : IDisposable
 {
+    /// <summary>
+    /// The _sources field.
+    /// </summary>
     private readonly List<DrainableBase> _sources = [];
+
+    /// <summary>
+    /// The _onDrainComplete field.
+    /// </summary>
     private readonly Action? _onDrainComplete;
 
+    /// <summary>
+    /// The _gate field.
+    /// </summary>
     private readonly Lock _gate;
 
+    /// <summary>
+    /// The _activeBits field.
+    /// </summary>
     private Bitset _activeBits = new();
+
+    /// <summary>
+    /// The _deadCount field.
+    /// </summary>
     private int _deadCount;
+
+    /// <summary>
+    /// The _drainThreadId field.
+    /// </summary>
     private int _drainThreadId = -1;
+
+    /// <summary>
+    /// The _isTerminated field.
+    /// </summary>
     private volatile bool _isTerminated;
 
     /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with its own internal lock.</summary>
@@ -38,6 +63,7 @@ internal sealed class SharedDeliveryQueue : IDisposable
     /// Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with its own internal lock
     /// and a callback that fires outside the lock after each drain cycle completes.
     /// </summary>
+    /// <param name="onDrainComplete">The onDrainComplete value.</param>
     public SharedDeliveryQueue(Action? onDrainComplete)
     {
 #if NET9_0_OR_GREATER
@@ -47,12 +73,15 @@ internal sealed class SharedDeliveryQueue : IDisposable
 #endif
         _onDrainComplete = onDrainComplete;
     }
-
 #if NET9_0_OR_GREATER
+
     /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with a caller-provided lock.</summary>
+    /// <param name="gate">The gate value.</param>
     public SharedDeliveryQueue(Lock gate) => _gate = gate;
 #else
+
     /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with a caller-provided lock.</summary>
+    /// <param name="gate">The gate value.</param>
     public SharedDeliveryQueue(object gate) => _gate = gate;
 #endif
 
@@ -98,6 +127,9 @@ internal sealed class SharedDeliveryQueue : IDisposable
     public void Dispose() => EnsureDeliveryComplete();
 
     /// <summary>Creates a typed sub-queue bound to the specified observer.</summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="observer">The observer value.</param>
+    /// <returns>The result of the operation.</returns>
     public DeliverySubQueue<T> CreateQueue<T>(IObserver<T> observer)
         where T : notnull
     {
@@ -117,10 +149,12 @@ internal sealed class SharedDeliveryQueue : IDisposable
     }
 
     /// <summary>Acquires the gate for read-only inspection. Does not trigger delivery on dispose.</summary>
+    /// <returns>The result of the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlyScopedAccess AcquireReadLock() => new(this);
 
     /// <summary>Called by a sub-queue when it is disposed. Clears its active bit and tracks dead slots.</summary>
+    /// <param name="index">The index value.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void NotifyQueueRemoved(int index)
     {
@@ -129,23 +163,38 @@ internal sealed class SharedDeliveryQueue : IDisposable
     }
 
     /// <summary>Sets the active bit for a sub-queue when an item is enqueued.</summary>
+    /// <param name="index">The index value.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void SetActive(int index) => _activeBits.Set(index);
-
 #if NET9_0_OR_GREATER
+
+    /// <summary>
+    /// Executes the EnterLock operation.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void EnterLock() => _gate.Enter();
 
+    /// <summary>
+    /// Executes the ExitLock operation.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void ExitLock() => _gate.Exit();
 #else
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+    /// <summary>
+    /// Executes the EnterLock operation.
+    /// </summary>
     internal void EnterLock() => Monitor.Enter(_gate);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    /// <summary>
+    /// Executes the ExitLock operation.
+    /// </summary>
     internal void ExitLock() => Monitor.Exit(_gate);
 #endif
 
+    /// <summary>
+    /// Executes the ExitLockAndDrain operation.
+    /// </summary>
     internal void ExitLockAndDrain()
     {
         var currentThreadId = Environment.CurrentManagedThreadId;
@@ -176,6 +225,9 @@ internal sealed class SharedDeliveryQueue : IDisposable
         }
     }
 
+    /// <summary>
+    /// Executes the DrainAll operation.
+    /// </summary>
     private void DrainAll()
     {
         try
@@ -337,11 +389,18 @@ internal sealed class SharedDeliveryQueue : IDisposable
         _activeBits.Compact();
     }
 
-    /// <summary>Read-only scoped access. Disposing releases the gate without triggering delivery.</summary>
-    public ref struct ReadOnlyScopedAccess
+/// <summary>Read-only scoped access. Disposing releases the gate without triggering delivery.</summary>
+public ref struct ReadOnlyScopedAccess
     {
+        /// <summary>
+        /// The _owner field.
+        /// </summary>
         private SharedDeliveryQueue? _owner;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReadOnlyScopedAccess"/> struct.
+        /// </summary>
+        /// <param name="owner">The owner value.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal ReadOnlyScopedAccess(SharedDeliveryQueue owner)
         {
@@ -407,16 +466,46 @@ internal abstract class DrainableBase
 /// A typed sub-queue. All enqueue access goes through <see cref="ScopedAccess"/>
 /// which acquires the parent's lock.
 /// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
 internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDisposable
     where T : notnull
 {
+    /// <summary>
+    /// The _items field.
+    /// </summary>
     private readonly Queue<Notification<T>> _items = new(1);
+
+    /// <summary>
+    /// The _parent field.
+    /// </summary>
     private readonly SharedDeliveryQueue _parent;
+
+    /// <summary>
+    /// The _observer field.
+    /// </summary>
     private readonly IObserver<T> _observer;
+
+    /// <summary>
+    /// The _staged field.
+    /// </summary>
     private Notification<T> _staged;
+
+    /// <summary>
+    /// The _index field.
+    /// </summary>
     private int _index;
+
+    /// <summary>
+    /// The _isRemoved field.
+    /// </summary>
     private bool _isRemoved;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeliverySubQueue{T}"/> class.
+    /// </summary>
+    /// <param name="parent">The parent value.</param>
+    /// <param name="observer">The observer value.</param>
+    /// <param name="index">The index value.</param>
     internal DeliverySubQueue(SharedDeliveryQueue parent, IObserver<T> observer, int index)
     {
         _parent = parent;
@@ -449,10 +538,12 @@ internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDispos
     }
 
     /// <summary>Acquires the parent gate. Disposing releases the lock and triggers drain.</summary>
+    /// <returns>The result of the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ScopedAccess AcquireLock() => new(this);
 
     /// <summary>Enqueues an OnNext notification via the lock, then drains.</summary>
+    /// <param name="value">The value value.</param>
     public void OnNext(T value)
     {
         using var scope = AcquireLock();
@@ -460,6 +551,7 @@ internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDispos
     }
 
     /// <summary>Enqueues an OnError notification via the lock, then drains.</summary>
+    /// <param name="error">The error value.</param>
     public void OnError(Exception error)
     {
         using var scope = AcquireLock();
@@ -498,6 +590,7 @@ internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDispos
     }
 
     /// <inheritdoc/>
+    /// <returns>The result of the operation.</returns>
     internal override bool StageNext()
     {
         _staged = _items.Dequeue();
@@ -514,6 +607,10 @@ internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDispos
     /// <inheritdoc/>
     internal override void Clear() => _items.Clear();
 
+    /// <summary>
+    /// Executes the EnqueueItem operation.
+    /// </summary>
+    /// <param name="item">The item value.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnqueueItem(Notification<T> item)
     {
@@ -526,11 +623,18 @@ internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDispos
         _parent.SetActive(_index);
     }
 
-    /// <summary>Scoped access for enqueueing items. Acquires the parent's gate lock.</summary>
-    public ref struct ScopedAccess
+/// <summary>Scoped access for enqueueing items. Acquires the parent's gate lock.</summary>
+public ref struct ScopedAccess
     {
+        /// <summary>
+        /// The _owner field.
+        /// </summary>
         private DeliverySubQueue<T>? _owner;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ScopedAccess"/> struct.
+        /// </summary>
+        /// <param name="owner">The owner value.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal ScopedAccess(DeliverySubQueue<T> owner)
         {
@@ -539,10 +643,12 @@ internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDispos
         }
 
         /// <summary>Enqueues an OnNext item.</summary>
+        /// <param name="item">The item value.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void EnqueueNext(T item) => _owner?.EnqueueItem(Notification<T>.CreateNext(item));
 
         /// <summary>Enqueues a terminal error.</summary>
+        /// <param name="error">The error value.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void EnqueueError(Exception error) => _owner?.EnqueueItem(Notification<T>.CreateError(error));
 

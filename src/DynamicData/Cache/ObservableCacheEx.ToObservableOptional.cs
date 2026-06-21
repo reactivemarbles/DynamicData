@@ -25,31 +25,31 @@ public static partial class ObservableCacheEx
 {
     /// <summary>
     /// Watches a single key in the source changeset stream, emitting <c>ReactiveUI.Primitives.Optional.Some(value)</c> when the key
-    /// is present and <see cref="ReactiveUI.Primitives.Optional.None{T}"/> when it is removed. Duplicate values are suppressed via <paramref name="equalityComparer"/>.
+    /// is present and <c>ReactiveUI.Primitives.Optional.None&lt;T&gt;</c> when it is removed. Duplicate values are suppressed via <paramref name="equalityComparer"/>.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to watch a single key in.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to watch a single key in.</param>
     /// <param name="key">The <typeparamref name="TKey"/> key to watch.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TObject}"/> that optional comparer to suppress duplicate emissions. Uses default equality if <see langword="null"/>.</param>
-    /// <returns>An observable of <see cref="Optional{TObject}"/> that reflects the presence or absence of the specified key.</returns>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TObject&gt;</c> that optional comparer to suppress duplicate emissions. Uses default equality if <see langword="null"/>.</param>
+    /// <returns>An observable of <c>Optional&lt;TObject&gt;</c> that reflects the presence or absence of the specified key.</returns>
     /// <remarks>
     /// <para>
-    /// Unlike <see cref="WatchValue{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey)"/>, this emits <c>None</c> on removal
+    /// Unlike <c>WatchValue&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, TKey)</c>, this emits <c>None</c> on removal
     /// (rather than the removed value), making it possible to distinguish "key is absent" from "key has a value".
     /// </para>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
     /// <item><term>Add</term><description>Emits <c>ReactiveUI.Primitives.Optional.Some(value)</c> if the key was not previously tracked.</description></item>
     /// <item><term>Update</term><description>Emits <c>ReactiveUI.Primitives.Optional.Some(newValue)</c> if the new value differs from the previous per <paramref name="equalityComparer"/>. Otherwise suppressed.</description></item>
-    /// <item><term>Remove</term><description>Emits <see cref="ReactiveUI.Primitives.Optional.None{T}"/>.</description></item>
+    /// <item><term>Remove</term><description>Emits <c>ReactiveUI.Primitives.Optional.None&lt;T&gt;</c>.</description></item>
     /// <item><term>Refresh</term><description>Emits <c>ReactiveUI.Primitives.Optional.Some(value)</c> if the value differs from the last emission per <paramref name="equalityComparer"/>. Otherwise suppressed.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> No emission occurs if the key is not present at subscription time. To get an initial <c>None</c> when the key is absent, use the overload with <c>initialOptionalWhenMissing: true</c>.</para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="Watch{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey)"/>
-    /// <seealso cref="WatchValue{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey)"/>
+    /// <seealso><c>Watch&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, TKey)</c></seealso>
+    /// <seealso><c>WatchValue&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, TKey)</c></seealso>
     public static IObservable<ReactiveUI.Primitives.Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -64,10 +64,10 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to watch a single key in.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to watch a single key in.</param>
     /// <param name="key">The <typeparamref name="TKey"/> key value.</param>
-    /// <param name="initialOptionalWhenMissing">When <see langword="true"/>, emits an initial <see cref="Optional{TObject}"/> with no value if the key is not present in the cache.</param>
-    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TObject}"/> instance used to determine if an object value has changed.</param>
+    /// <param name="initialOptionalWhenMissing">When <see langword="true"/>, emits an initial <c>Optional&lt;TObject&gt;</c> with no value if the key is not present in the cache.</param>
+    /// <param name="equalityComparer">An optional <c>IEqualityComparer&lt;TObject&gt;</c> instance used to determine if an object value has changed.</param>
     /// <returns>An observable optional.</returns>
     /// <exception cref="ArgumentNullException">source is null.</exception>
     /// <remarks>

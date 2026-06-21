@@ -35,7 +35,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to track for disposal on removal.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to track for disposal on removal.</param>
     /// <returns>A stream that forwards all changesets from <paramref name="source"/> unchanged.</returns>
     /// <remarks>
     /// <para>
@@ -51,13 +51,13 @@ public static partial class ObservableCacheEx
     /// <para>
     /// On stream completion, error, or subscription disposal, all remaining tracked items are disposed.
     /// All disposal is synchronous via <see cref="IDisposable.Dispose()"/>.
-    /// For items that implement <see cref="IAsyncDisposable"/>, use <see cref="AsyncDisposeMany{TObject,TKey}"/> instead.
+    /// For items that implement <see cref="IAsyncDisposable"/>, use <c>AsyncDisposeMany&lt;TObject,TKey&gt;</c> instead.
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="AsyncDisposeMany{TObject,TKey}"/>
-    /// <seealso cref="SubscribeMany{TObject,TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IDisposable})"/>
-    /// <seealso cref="ObservableListEx.DisposeMany"/>
+    /// <seealso><c>AsyncDisposeMany&lt;TObject,TKey&gt;</c></seealso>
+    /// <seealso><c>SubscribeMany&lt;TObject,TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, IDisposable&gt;)</c></seealso>
+    /// <seealso><c>ObservableListEx.DisposeMany</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> DisposeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull

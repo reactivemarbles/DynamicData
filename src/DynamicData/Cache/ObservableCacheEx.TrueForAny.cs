@@ -23,9 +23,9 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value emitted by each per-item observable.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to evaluate a condition across any item in.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory that produces a condition observable for each item.</param>
-    /// <param name="equalityCondition">A <see cref="Func{T, TResult}"/> that predicate applied to each item and its per-item observable's latest value.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to evaluate a condition across any item in.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory that produces a condition observable for each item.</param>
+    /// <param name="equalityCondition">A <c>Func&lt;T, TResult&gt;</c> that predicate applied to each item and its per-item observable's latest value.</param>
     /// <returns>An observable of <c>bool</c> that emits whenever the any-item condition changes.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="observableSelector"/>, or <paramref name="equalityCondition"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -38,16 +38,22 @@ public static partial class ObservableCacheEx
     /// </list>
     /// <para><b>Worth noting:</b> Items whose per-item observable has not yet emitted are treated as not satisfying the condition. An empty cache yields <see langword="false"/>. The result uses <c>DistinctUntilChanged</c>, so duplicate <c>bool</c> values are suppressed.</para>
     /// </remarks>
-    /// <seealso cref="TrueForAll{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TValue}}, Func{TValue, bool})"/>
+    /// <seealso><c>TrueForAll&lt;TObject, TKey, TValue&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, IObservable&lt;TValue&gt;&gt;, Func&lt;TValue, bool&gt;)</c></seealso>
     public static IObservable<bool> TrueForAny<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TObject, TValue, bool> equalityCondition)
         where TObject : notnull
         where TKey : notnull
         where TValue : notnull => source.TrueFor(observableSelector, items => items.Any(o => o.LatestValue.HasValue && equalityCondition(o.Item, o.LatestValue.Value)));
 
-    /// <inheritdoc cref="TrueForAny{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TValue}}, Func{TObject, TValue, bool})"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to evaluate a condition across any item in.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory that produces a condition observable for each item.</param>
-    /// <param name="equalityCondition">A <see cref="Func{T, TResult}"/> that predicate applied to each per-item observable's latest value (without the item).</param>
+    /// <summary>
+    /// Provides an overload of <c>TrueForAny</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <typeparam name="TValue">The type of the TValue value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to evaluate a condition across any item in.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory that produces a condition observable for each item.</param>
+    /// <param name="equalityCondition">A <c>Func&lt;T, TResult&gt;</c> that predicate applied to each per-item observable's latest value (without the item).</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>This overload accepts a predicate that takes only the value, not the item. Useful when the condition depends only on the observed value.</remarks>
     public static IObservable<bool> TrueForAny<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TValue, bool> equalityCondition)
         where TObject : notnull

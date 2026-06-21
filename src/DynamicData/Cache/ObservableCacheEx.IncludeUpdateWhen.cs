@@ -22,8 +22,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to selectively include updates in.</param>
-    /// <param name="includeFunction">The <see cref="Func{TObject, TObject, bool}"/> include function (current,previous)=>{ return true to include }.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to selectively include updates in.</param>
+    /// <param name="includeFunction">The <c>Func&lt;TObject, TObject, bool&gt;</c> include function (current,previous)=>{ return true to include }.</param>
     /// <returns>An observable which emits change sets and ignores updates equal to the lambda.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> IncludeUpdateWhen<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TObject, bool> includeFunction)
         where TObject : notnull

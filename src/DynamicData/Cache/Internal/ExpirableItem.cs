@@ -9,9 +9,19 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Represents the ExpirableItem record.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="Value">The Value value.</param>
+/// <param name="Key">The Key value.</param>
+/// <param name="ExpireAt">The ExpireAt value.</param>
+/// <param name="Index">The Index value.</param>
 internal readonly record struct ExpirableItem<TObject, TKey>(TObject Value, TKey Key, DateTime ExpireAt, long Index = 0)
 {
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -20,5 +30,9 @@ internal readonly record struct ExpirableItem<TObject, TKey>(TObject Value, TKey
         }
     }
 
+    /// <summary>
+    /// Executes the ToString operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"Key: {Key}, Expire At: {ExpireAt}";
 }

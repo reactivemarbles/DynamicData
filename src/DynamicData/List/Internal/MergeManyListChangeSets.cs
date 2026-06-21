@@ -12,10 +12,19 @@ namespace DynamicData.List.Internal;
 /// <summary>
 /// Operator that is similiar to MergeMany but intelligently handles List ChangeSets.
 /// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="selector">The selector value.</param>
+/// <param name="equalityComparer">The equalityComparer value.</param>
 internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> selector, IEqualityComparer<TDestination>? equalityComparer)
     where TObject : notnull
     where TDestination : notnull
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TDestination>> Run() => Observable.Create<IChangeSet<TDestination>>(
         observer =>
         {

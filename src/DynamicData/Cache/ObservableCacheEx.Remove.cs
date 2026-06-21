@@ -21,15 +21,15 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The <see cref="ISourceCache{TObject, TKey}"/> from which to remove items.</param>
+    /// <param name="source">The <c>ISourceCache&lt;TObject, TKey&gt;</c> from which to remove items.</param>
     /// <param name="item">The <typeparamref name="TObject"/> item to remove.</param>
     /// <remarks>
-    /// <para>Convenience method that wraps a single-item removal inside <see cref="ISourceCache{TObject,TKey}.Edit"/>. The key is extracted from the item using the cache's key selector.</para>
+    /// <para>Convenience method that wraps a single-item removal inside <c>ISourceCache&lt;TObject,TKey&gt;.Edit</c>. The key is extracted from the item using the cache's key selector.</para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, TObject)"/>
-    /// <seealso cref="Clear{TObject, TKey}(ISourceCache{TObject, TKey})"/>
-    /// <seealso cref="RemoveKeys{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TKey})"/>
+    /// <seealso><c>AddOrUpdate&lt;TObject, TKey&gt;(ISourceCache&lt;TObject, TKey&gt;, TObject)</c></seealso>
+    /// <seealso><c>Clear&lt;TObject, TKey&gt;(ISourceCache&lt;TObject, TKey&gt;)</c></seealso>
+    /// <seealso><c>RemoveKeys&lt;TObject, TKey&gt;(ISourceCache&lt;TObject, TKey&gt;, IEnumerable&lt;TKey&gt;)</c></seealso>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         where TObject : notnull
         where TKey : notnull
@@ -44,7 +44,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The <see cref="ISourceCache{TObject, TKey}"/> from which to remove items.</param>
+    /// <param name="source">The <c>ISourceCache&lt;TObject, TKey&gt;</c> from which to remove items.</param>
     /// <param name="key">The <typeparamref name="TKey"/> key of the item to remove.</param>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
@@ -62,8 +62,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The <see cref="ISourceCache{TObject, TKey}"/> from which to remove items.</param>
-    /// <param name="items">The <see cref="IEnumerable{TObject}"/> of items to remove.</param>
+    /// <param name="source">The <c>ISourceCache&lt;TObject, TKey&gt;</c> from which to remove items.</param>
+    /// <param name="items">The <c>IEnumerable&lt;TObject&gt;</c> of items to remove.</param>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         where TObject : notnull
@@ -80,8 +80,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The <see cref="ISourceCache{TObject, TKey}"/> from which to remove items.</param>
-    /// <param name="keys">The <see cref="IEnumerable{TKey}"/> keys to remove.</param>
+    /// <param name="source">The <c>ISourceCache&lt;TObject, TKey&gt;</c> from which to remove items.</param>
+    /// <param name="keys">The <c>IEnumerable&lt;TKey&gt;</c> keys to remove.</param>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
         where TObject : notnull
@@ -92,10 +92,14 @@ public static partial class ObservableCacheEx
         source.Edit(updater => updater.Remove(keys));
     }
 
-    /// <inheritdoc cref="Remove{TObject, TKey}(ISourceCache{TObject, TKey}, TKey)"/>
-    /// <param name="source">The <see cref="IIntermediateCache{TObject, TKey}"/> from which to remove items.</param>
+    /// <summary>
+    /// Provides an overload of <c>Remove</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The <c>IIntermediateCache&lt;TObject, TKey&gt;</c> from which to remove items.</param>
     /// <param name="key">The <typeparamref name="TKey"/> key of the item to remove.</param>
-    /// <remarks>Overload that targets an <see cref="IIntermediateCache{TObject, TKey}"/>.</remarks>
+    /// <remarks>Overload that targets an <c>IIntermediateCache&lt;TObject, TKey&gt;</c>.</remarks>
     public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -105,10 +109,14 @@ public static partial class ObservableCacheEx
         source.Edit(updater => updater.Remove(key));
     }
 
-    /// <inheritdoc cref="Remove{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TKey})"/>
-    /// <param name="source">The <see cref="IIntermediateCache{TObject, TKey}"/> from which to remove items.</param>
-    /// <param name="keys">The <see cref="IEnumerable{TKey}"/> keys to remove.</param>
-    /// <remarks>Overload that targets an <see cref="IIntermediateCache{TObject, TKey}"/>.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>Remove</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The <c>IIntermediateCache&lt;TObject, TKey&gt;</c> from which to remove items.</param>
+    /// <param name="keys">The <c>IEnumerable&lt;TKey&gt;</c> keys to remove.</param>
+    /// <remarks>Overload that targets an <c>IIntermediateCache&lt;TObject, TKey&gt;</c>.</remarks>
     public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, IEnumerable<TKey> keys)
         where TObject : notnull
         where TKey : notnull

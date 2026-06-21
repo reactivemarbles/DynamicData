@@ -9,20 +9,50 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the DistinctCalculator class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <typeparam name="TValue">The type of the TValue value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="valueSelector">The valueSelector value.</param>
 internal sealed class DistinctCalculator<TObject, TKey, TValue>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
     where TObject : notnull
     where TKey : notnull
     where TValue : notnull
 {
+    /// <summary>
+    /// The _itemCache field.
+    /// </summary>
     private readonly Dictionary<TKey, TValue> _itemCache = [];
 
+    /// <summary>
+    /// The _keyCounters field.
+    /// </summary>
     private readonly Dictionary<TKey, int> _keyCounters = [];
+
+    /// <summary>
+    /// The _valueCounters field.
+    /// </summary>
     private readonly Dictionary<TValue, int> _valueCounters = [];
 
+    /// <summary>
+    /// The _valueSelector field.
+    /// </summary>
     private readonly Func<TObject, TValue> _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<DistinctChangeSet<TValue>> Run() => source.Select(Calculate).Where(updates => updates.Count != 0);
 
+    /// <summary>
+    /// Executes the Calculate operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
     private DistinctChangeSet<TValue> Calculate(IChangeSet<TObject, TKey> changes)
     {
         var result = new DistinctChangeSet<TValue>();

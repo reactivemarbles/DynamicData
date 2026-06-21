@@ -9,12 +9,28 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the FinallySafe class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="finallyAction">The finallyAction value.</param>
 internal sealed class FinallySafe<T>(IObservable<T> source, Action finallyAction)
 {
+    /// <summary>
+    /// The _finallyAction field.
+    /// </summary>
     private readonly Action _finallyAction = finallyAction ?? throw new ArgumentNullException(nameof(finallyAction));
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<T> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<T> Run() => Observable.Create<T>(
             o =>
             {

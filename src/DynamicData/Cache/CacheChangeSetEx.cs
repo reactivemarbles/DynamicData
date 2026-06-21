@@ -9,6 +9,9 @@ namespace DynamicData.Reactive.Cache;
 namespace DynamicData.Cache;
 #endif
 
+/// <summary>
+/// Provides members for the CacheChangeSetEx class.
+/// </summary>
 internal static class CacheChangeSetEx
 {
     /// <summary>
@@ -17,7 +20,7 @@ internal static class CacheChangeSetEx
     /// This extension is a crazy hack to cast to the concrete change set which means we no longer allocate
     /// as change set now inherits from List which has allocation free enumerations.
     /// </para>
-    /// <para>IChangeSet will be removed in a future version and instead <see cref="ChangeSet{TObject, TKey}"/> will be used directly.</para>
+    /// <para>IChangeSet will be removed in a future version and instead <c>ChangeSet&lt;TObject, TKey&gt;</c> will be used directly.</para>
     /// <para>In the mean time I am banking that no-one has implemented a custom change set - personally I think it is very unlikely.</para>
     /// </summary>
     /// <typeparam name="TObject">ChangeSet Object Type.</typeparam>

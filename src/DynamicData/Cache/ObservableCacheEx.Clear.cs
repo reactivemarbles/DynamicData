@@ -28,7 +28,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The <see cref="ISourceCache{TObject, TKey}"/> to clear.</param>
+    /// <param name="source">The <c>ISourceCache&lt;TObject, TKey&gt;</c> to clear.</param>
     /// <remarks>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
@@ -48,7 +48,12 @@ public static partial class ObservableCacheEx
         source.Edit(updater => updater.Clear());
     }
 
-    /// <inheritdoc cref="Clear{TObject, TKey}(ISourceCache{TObject, TKey})"/>
+    /// <summary>
+    /// Provides an overload of <c>Clear</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
     public static void Clear<TObject, TKey>(this IIntermediateCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull
@@ -58,7 +63,12 @@ public static partial class ObservableCacheEx
         source.Edit(updater => updater.Clear());
     }
 
-    /// <inheritdoc cref="Clear{TObject, TKey}(ISourceCache{TObject, TKey})"/>
+    /// <summary>
+    /// Provides an overload of <c>Clear</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
     public static void Clear<TObject, TKey>(this LockFreeObservableCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull

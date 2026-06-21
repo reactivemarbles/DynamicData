@@ -26,5 +26,6 @@ public readonly record struct ItemWithIndex<T>(T Item, int Index)
     public override int GetHashCode() => Item is null ? 0 : EqualityComparer<T>.Default.GetHashCode(Item);
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"{Item} ({Index})";
 }

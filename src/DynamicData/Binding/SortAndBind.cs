@@ -15,7 +15,6 @@ namespace DynamicData.Reactive.Binding;
 
 namespace DynamicData.Binding;
 #endif
-
 /*
  * A much more optimised bind where the sort forms part of the binding.
  *
@@ -23,15 +22,35 @@ namespace DynamicData.Binding;
  * collection upon every change in order that the sorted list could be transmitted to the bind operator.
  *
  */
+
+/// <summary>
+/// Provides members for the SortAndBind class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
     // NB: Either comparer or comparerChanged will be used, but not both.
 
+    /// <summary>
+    /// The _cache field.
+    /// </summary>
     private readonly Cache<TObject, TKey> _cache = new();
+
+    /// <summary>
+    /// The _sorted field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TObject, TKey>> _sorted;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SortAndBind{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="comparer">The comparer value.</param>
+    /// <param name="options">The options value.</param>
+    /// <param name="target">The target value.</param>
     public SortAndBind(IObservable<IChangeSet<TObject, TKey>> source,
         IComparer<TObject> comparer,
         SortAndBindOptions options,
@@ -56,6 +75,13 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
         });
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SortAndBind{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="comparerChanged">The comparerChanged value.</param>
+    /// <param name="options">The options value.</param>
+    /// <param name="target">The target value.</param>
     public SortAndBind(IObservable<IChangeSet<TObject, TKey>> source,
         IObservable<IComparer<TObject>> comparerChanged,
         SortAndBindOptions options,
@@ -97,14 +123,28 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
             return new CompositeDisposable(latestComparer, subscriber, queue);
         });
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Run() => _sorted;
 
-    internal sealed class SortApplicator(
+/// <summary>
+/// Provides members for the SortApplicator class.
+/// </summary>
+/// <param name="cache">The cache value.</param>
+/// <param name="target">The target value.</param>
+/// <param name="comparer">The comparer value.</param>
+/// <param name="options">The options value.</param>
+internal sealed class SortApplicator(
         Cache<TObject, TKey> cache,
         IList<TObject> target,
         IComparer<TObject> comparer,
         SortAndBindOptions options)
     {
+        /// <summary>
+        /// Executes the ApplySort operation.
+        /// </summary>
         public void ApplySort()
         {
             if (cache.Count == 0) return;
@@ -114,8 +154,13 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
 
             Reset(sorted, fireReset);
         }
-
         // apply sorting as a side effect of the observable stream.
+
+        /// <summary>
+        /// Executes the ProcessChanges operation.
+        /// </summary>
+        /// <param name="changeSet">The changeSet value.</param>
+        /// <param name="isFirstTimeLoad">The isFirstTimeLoad value.</param>
         public void ProcessChanges(IChangeSet<TObject, TKey> changeSet, bool isFirstTimeLoad)
         {
             var forceReset = isFirstTimeLoad && options.ResetOnFirstTimeLoad;
@@ -139,6 +184,11 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
             }
         }
 
+        /// <summary>
+        /// Executes the Reset operation.
+        /// </summary>
+        /// <param name="sorted">The sorted value.</param>
+        /// <param name="fireReset">The fireReset value.</param>
         private void Reset(IEnumerable<TObject> sorted, bool fireReset)
         {
             if (fireReset && target is ObservableCollectionExtended<TObject> observableCollectionExtended)
@@ -167,6 +217,10 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
             }
         }
 
+        /// <summary>
+        /// Executes the ApplyChanges operation.
+        /// </summary>
+        /// <param name="changes">The changes value.</param>
         private void ApplyChanges(IChangeSet<TObject, TKey> changes)
         {
             // iterate through collection, find sorted position and apply changes
@@ -253,9 +307,19 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
             }
         }
 
+        /// <summary>
+        /// Executes the GetCurrentPosition operation.
+        /// </summary>
+        /// <param name="item">The item value.</param>
+        /// <returns>The result of the operation.</returns>
         private int GetCurrentPosition(TObject item) =>
             target.GetCurrentPosition(item, comparer, options.UseBinarySearch);
 
+        /// <summary>
+        /// Executes the GetInsertPosition operation.
+        /// </summary>
+        /// <param name="item">The item value.</param>
+        /// <returns>The result of the operation.</returns>
         private int GetInsertPosition(TObject item) =>
             target.GetInsertPosition(item, comparer, options.UseBinarySearch);
     }

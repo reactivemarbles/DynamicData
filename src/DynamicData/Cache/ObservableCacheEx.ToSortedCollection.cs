@@ -29,11 +29,11 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TSortKey">The sort key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to materialize into a sorted collection on each change.</param>
-    /// <param name="sort">The <see cref="Func{TObject, TSortKey}"/> sort function.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to materialize into a sorted collection on each change.</param>
+    /// <param name="sort">The <c>Func&lt;TObject, TSortKey&gt;</c> sort function.</param>
     /// <param name="sortOrder">The <see cref="SortDirection"/> sort order. Defaults to ascending.</param>
     /// <returns>An observable which emits the read only collection.</returns>
-    /// <seealso cref="ObservableListEx.ToSortedCollection{TObject, TSortKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TSortKey}, SortDirection)"/>
+    /// <seealso><c>ObservableListEx.ToSortedCollection&lt;TObject, TSortKey&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Func&lt;TObject, TSortKey&gt;, SortDirection)</c></seealso>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TKey, TSortKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TSortKey> sort, SortDirection sortOrder = SortDirection.Ascending)
         where TObject : notnull
         where TKey : notnull
@@ -44,8 +44,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to materialize into a sorted collection on each change.</param>
-    /// <param name="comparer">The <see cref="IComparer{TObject}"/> sort comparer.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to materialize into a sorted collection on each change.</param>
+    /// <param name="comparer">The <c>IComparer&lt;TObject&gt;</c> sort comparer.</param>
     /// <returns>An observable which emits the read only collection.</returns>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer)
         where TObject : notnull

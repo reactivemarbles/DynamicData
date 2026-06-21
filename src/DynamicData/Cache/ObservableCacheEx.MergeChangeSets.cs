@@ -31,23 +31,23 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">An <see cref="IObservable{T}"/> that emits changeset streams. Each inner stream is subscribed as it appears.</param>
+    /// <param name="source">An <c>IObservable&lt;T&gt;</c> that emits changeset streams. Each inner stream is subscribed as it appears.</param>
     /// <returns>A unified changeset stream containing changes from all active source streams.</returns>
     /// <remarks>
     /// <para>
     /// Each inner changeset stream is independently tracked in its own cache. When multiple sources provide the same key,
     /// this overload uses first-in-wins semantics: the value from whichever source added the key first is
     /// the one published downstream. To control which value wins for duplicate keys, use an overload that
-    /// accepts an <see cref="IComparer{T}"/>, which selects the lowest-ordered value across all sources.
-    /// An <see cref="IEqualityComparer{T}"/> can be provided separately to suppress no-op updates when
+    /// accepts an <c>IComparer&lt;T&gt;</c>, which selects the lowest-ordered value across all sources.
+    /// An <c>IEqualityComparer&lt;T&gt;</c> can be provided separately to suppress no-op updates when
     /// the new value equals the currently published value for a key.
     /// </para>
     /// <para>
     /// <b>Overload families:</b> MergeChangeSets has 16 overloads organized along three axes:
     /// (1) <b>Source type</b>: dynamic (<c>IObservable&lt;IObservable&lt;IChangeSet&gt;&gt;</c>, sources arrive at runtime),
-    /// pair (<c>source + other</c>, exactly two streams), or static (<see cref="IEnumerable{T}"/>, all sources known up front).
-    /// (2) <b>Conflict resolution</b>: none (first-in-wins), <see cref="IComparer{T}"/> (lowest-ordered wins),
-    /// <see cref="IEqualityComparer{T}"/> (suppresses duplicate updates), or both.
+    /// pair (<c>source + other</c>, exactly two streams), or static (<c>IEnumerable&lt;T&gt;</c>, all sources known up front).
+    /// (2) <b>Conflict resolution</b>: none (first-in-wins), <c>IComparer&lt;T&gt;</c> (lowest-ordered wins),
+    /// <c>IEqualityComparer&lt;T&gt;</c> (suppresses duplicate updates), or both.
     /// (3) <b>Completion</b>: static overloads accept a <c>completable</c> flag; when <see langword="false"/>, the output never completes
     /// even after all sources finish (useful for "live" merge scenarios).
     /// </para>
@@ -67,9 +67,9 @@ public static partial class ObservableCacheEx
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>
-    /// <seealso cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IComparer{TDestination}, IEqualityComparer{TDestination})"/>
-    /// <seealso cref="ObservableListEx.MergeChangeSets"/>
+    /// <seealso><c>MergeMany&lt;TObject, TKey, TDestination&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, IObservable&lt;TDestination&gt;&gt;)</c></seealso>
+    /// <seealso><c>MergeManyChangeSets&lt;TObject, TKey, TDestination, TDestinationKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, TKey, IObservable&lt;IChangeSet&lt;TDestination, TDestinationKey&gt;&gt;&gt;, IComparer&lt;TDestination&gt;, IEqualityComparer&lt;TDestination&gt;)</c></seealso>
+    /// <seealso><c>ObservableListEx.MergeChangeSets</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> source)
         where TObject : notnull
         where TKey : notnull
@@ -86,8 +86,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">An <see cref="IObservable{T}"/> that emits changeset streams. Each inner stream is subscribed as it appears.</param>
-    /// <param name="comparer">An <see cref="IComparer{TObject}"/> that comparer to determine which value wins when multiple sources provide the same key. The lowest-ordered value is published.</param>
+    /// <param name="source">An <c>IObservable&lt;T&gt;</c> that emits changeset streams. Each inner stream is subscribed as it appears.</param>
+    /// <param name="comparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to determine which value wins when multiple sources provide the same key. The lowest-ordered value is published.</param>
     /// <returns>A unified changeset stream containing changes from all active source streams.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="comparer"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> source, IComparer<TObject> comparer)
@@ -107,8 +107,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">An <see cref="IObservable{T}"/> that emits changeset streams. Each inner stream is subscribed as it appears.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TObject}"/> that equality comparer to detect duplicate values for the same key, suppressing no-op updates.</param>
+    /// <param name="source">An <c>IObservable&lt;T&gt;</c> that emits changeset streams. Each inner stream is subscribed as it appears.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TObject&gt;</c> that equality comparer to detect duplicate values for the same key, suppressing no-op updates.</param>
     /// <returns>A unified changeset stream containing changes from all active source streams.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="equalityComparer"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject> equalityComparer)
@@ -127,9 +127,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">An <see cref="IObservable{T}"/> that emits changeset streams. Each inner stream is subscribed as it appears.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TObject}"/> that equality comparer to detect duplicate values for the same key, suppressing no-op updates.</param>
-    /// <param name="comparer">An <see cref="IComparer{TObject}"/> that comparer to determine which value wins when multiple sources provide the same key. The lowest-ordered value is published.</param>
+    /// <param name="source">An <c>IObservable&lt;T&gt;</c> that emits changeset streams. Each inner stream is subscribed as it appears.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TObject&gt;</c> that equality comparer to detect duplicate values for the same key, suppressing no-op updates.</param>
+    /// <param name="comparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to determine which value wins when multiple sources provide the same key. The lowest-ordered value is published.</param>
     /// <returns>A unified changeset stream containing changes from all active source streams.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="equalityComparer"/>, or <paramref name="comparer"/> is null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject> equalityComparer, IComparer<TObject> comparer)
@@ -149,8 +149,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to merge.</param>
-    /// <param name="other">The second <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to merge with <paramref name="source"/>.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to merge.</param>
+    /// <param name="other">The second <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to merge with <paramref name="source"/>.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> used when subscribing to the source streams.</param>
     /// <param name="completable">If <see langword="true"/> (default), the output completes when both streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from both sources.</returns>
@@ -170,9 +170,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to merge.</param>
-    /// <param name="other">The second <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to merge with <paramref name="source"/>.</param>
-    /// <param name="comparer">An <see cref="IComparer{TObject}"/> that comparer to determine which value wins when both sources provide the same key.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to merge.</param>
+    /// <param name="other">The second <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to merge with <paramref name="source"/>.</param>
+    /// <param name="comparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to determine which value wins when both sources provide the same key.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> used when subscribing to the source streams.</param>
     /// <param name="completable">If <see langword="true"/> (default), the output completes when both streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from both sources.</returns>
@@ -193,9 +193,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to merge.</param>
-    /// <param name="other">The second <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to merge with <paramref name="source"/>.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TObject}"/> that equality comparer to detect duplicate values for the same key.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to merge.</param>
+    /// <param name="other">The second <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to merge with <paramref name="source"/>.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TObject&gt;</c> that equality comparer to detect duplicate values for the same key.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> used when subscribing to the source streams.</param>
     /// <param name="completable">If <see langword="true"/> (default), the output completes when both streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from both sources.</returns>
@@ -216,10 +216,10 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to merge.</param>
-    /// <param name="other">The second <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to merge with <paramref name="source"/>.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TObject}"/> that equality comparer to detect duplicate values for the same key.</param>
-    /// <param name="comparer">An <see cref="IComparer{TObject}"/> that comparer to determine which value wins when both sources provide the same key.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to merge.</param>
+    /// <param name="other">The second <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to merge with <paramref name="source"/>.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TObject&gt;</c> that equality comparer to detect duplicate values for the same key.</param>
+    /// <param name="comparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to determine which value wins when both sources provide the same key.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> used when subscribing to the source streams.</param>
     /// <param name="completable">If <see langword="true"/> (default), the output completes when both streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from both sources.</returns>
@@ -242,8 +242,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to merge.</param>
-    /// <param name="others">The additional <see cref="IObservable{IChangeSet{TObject, TKey}}"/> streams to merge with <paramref name="source"/>.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to merge.</param>
+    /// <param name="others">The additional <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> streams to merge with <paramref name="source"/>.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> used when subscribing to the source streams.</param>
     /// <param name="completable">If <see langword="true"/> (default), the output completes when all streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all sources.</returns>
@@ -263,9 +263,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to merge.</param>
-    /// <param name="others">The additional <see cref="IObservable{IChangeSet{TObject, TKey}}"/> streams to merge with <paramref name="source"/>.</param>
-    /// <param name="comparer">An <see cref="IComparer{TObject}"/> that comparer to determine which value wins when multiple sources provide the same key.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to merge.</param>
+    /// <param name="others">The additional <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> streams to merge with <paramref name="source"/>.</param>
+    /// <param name="comparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to determine which value wins when multiple sources provide the same key.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> used when subscribing to the source streams.</param>
     /// <param name="completable">If <see langword="true"/> (default), the output completes when all streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all sources.</returns>
@@ -286,9 +286,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to merge.</param>
-    /// <param name="others">The additional <see cref="IObservable{IChangeSet{TObject, TKey}}"/> streams to merge with <paramref name="source"/>.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TObject}"/> that equality comparer to detect duplicate values for the same key.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to merge.</param>
+    /// <param name="others">The additional <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> streams to merge with <paramref name="source"/>.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TObject&gt;</c> that equality comparer to detect duplicate values for the same key.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> used when subscribing to the source streams.</param>
     /// <param name="completable">If <see langword="true"/> (default), the output completes when all streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all sources.</returns>
@@ -309,10 +309,10 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to merge.</param>
-    /// <param name="others">The additional <see cref="IObservable{IChangeSet{TObject, TKey}}"/> streams to merge with <paramref name="source"/>.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TObject}"/> that equality comparer to detect duplicate values for the same key.</param>
-    /// <param name="comparer">An <see cref="IComparer{TObject}"/> that comparer to determine which value wins when multiple sources provide the same key.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to merge.</param>
+    /// <param name="others">The additional <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> streams to merge with <paramref name="source"/>.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TObject&gt;</c> that equality comparer to detect duplicate values for the same key.</param>
+    /// <param name="comparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to determine which value wins when multiple sources provide the same key.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> used when subscribing to the source streams.</param>
     /// <param name="completable">If <see langword="true"/> (default), the output completes when all streams complete. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all sources.</returns>
@@ -335,7 +335,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The source <see cref="IEnumerable{T}"/> to merge.</param>
+    /// <param name="source">The source <c>IEnumerable&lt;T&gt;</c> to merge.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> used when subscribing to the source streams.</param>
     /// <param name="completable">If <see langword="true"/> (default), the output completes when all source streams have completed. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all source streams.</returns>
@@ -344,7 +344,7 @@ public static partial class ObservableCacheEx
     /// When multiple sources provide items with the same key, this overload uses first-in-wins semantics:
     /// the first source to provide a key retains priority. Removing that source's item allows the next
     /// available value for that key (if any) to surface. To control which value wins, use an overload
-    /// that accepts an <see cref="IComparer{T}"/>.
+    /// that accepts an <c>IComparer&lt;T&gt;</c>.
     /// </para>
     /// <para>
     /// An error from any source terminates the entire merged output.
@@ -367,8 +367,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The source <see cref="IEnumerable{T}"/> to merge.</param>
-    /// <param name="comparer">An <see cref="IComparer{TObject}"/> that comparer to determine which value wins when multiple sources provide the same key. The lowest-ordered value is published.</param>
+    /// <param name="source">The source <c>IEnumerable&lt;T&gt;</c> to merge.</param>
+    /// <param name="comparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to determine which value wins when multiple sources provide the same key. The lowest-ordered value is published.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> used when subscribing to the source streams.</param>
     /// <param name="completable">If <see langword="true"/> (default), the output completes when all source streams have completed. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all source streams.</returns>
@@ -390,8 +390,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The source <see cref="IEnumerable{T}"/> to merge.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TObject}"/> that equality comparer to detect duplicate values for the same key, suppressing no-op updates.</param>
+    /// <param name="source">The source <c>IEnumerable&lt;T&gt;</c> to merge.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TObject&gt;</c> that equality comparer to detect duplicate values for the same key, suppressing no-op updates.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> used when subscribing to the source streams.</param>
     /// <param name="completable">If <see langword="true"/> (default), the output completes when all source streams have completed. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all source streams.</returns>
@@ -412,9 +412,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the changesets.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying items.</typeparam>
-    /// <param name="source">The source <see cref="IEnumerable{T}"/> to merge.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TObject}"/> that equality comparer to detect duplicate values for the same key, suppressing no-op updates.</param>
-    /// <param name="comparer">An <see cref="IComparer{TObject}"/> that comparer to determine which value wins when multiple sources provide the same key. The lowest-ordered value is published.</param>
+    /// <param name="source">The source <c>IEnumerable&lt;T&gt;</c> to merge.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TObject&gt;</c> that equality comparer to detect duplicate values for the same key, suppressing no-op updates.</param>
+    /// <param name="comparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to determine which value wins when multiple sources provide the same key. The lowest-ordered value is published.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> used when subscribing to the source streams.</param>
     /// <param name="completable">If <see langword="true"/> (default), the output completes when all source streams have completed. If <see langword="false"/>, the output never completes.</param>
     /// <returns>A unified changeset stream containing changes from all source streams.</returns>

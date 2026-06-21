@@ -19,8 +19,8 @@ public static partial class ObservableListEx
     /// Only items satisfying <paramref name="predicate"/> are included downstream.
     /// </summary>
     /// <typeparam name="T">The type of items in the list.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to filter.</param>
-    /// <param name="predicate">A <see cref="Func{T, TResult}"/> predicate that determines which items are included. Items returning <see langword="true"/> appear downstream; items returning <see langword="false"/> are excluded.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to filter.</param>
+    /// <param name="predicate">A <c>Func&lt;T, TResult&gt;</c> predicate that determines which items are included. Items returning <see langword="true"/> appear downstream; items returning <see langword="false"/> are excluded.</param>
     /// <returns>A list changeset stream containing only items that satisfy <paramref name="predicate"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="source"/> or <paramref name="predicate"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -41,12 +41,12 @@ public static partial class ObservableListEx
     /// <item><term>Refresh</term><description>The predicate is re-evaluated. If the item now passes but previously did not, an <b>Add</b> is emitted. If it previously passed but no longer does, a <b>Remove</b> is emitted. If still passes, the <b>Refresh</b> is forwarded. If still fails, dropped.</description></item>
     /// <item><term>Clear</term><description>All downstream items are cleared.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> Refresh events trigger re-evaluation, which can promote or demote items (turning a Refresh into an Add or Remove). Pair with <see cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/> for property-change-driven filtering.</para>
+    /// <para><b>Worth noting:</b> Refresh events trigger re-evaluation, which can promote or demote items (turning a Refresh into an Add or Remove). Pair with <c>AutoRefresh&lt;TObject&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, TimeSpan?, TimeSpan?, IScheduler?)</c> for property-change-driven filtering.</para>
     /// </remarks>
-    /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, IObservable{Func{T, bool}}, ListFilterPolicy)"/>
-    /// <seealso cref="FilterOnObservable{TObject}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
-    /// <seealso cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
-    /// <seealso cref="ObservableCacheEx.Filter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, bool}, bool)"/>
+    /// <seealso><c>Filter&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservable&lt;Func&lt;T, bool&gt;&gt;, ListFilterPolicy)</c></seealso>
+    /// <seealso><c>FilterOnObservable&lt;TObject&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Func&lt;TObject, IObservable&lt;bool&gt;&gt;, TimeSpan?, IScheduler?)</c></seealso>
+    /// <seealso><c>AutoRefresh&lt;TObject&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, TimeSpan?, TimeSpan?, IScheduler?)</c></seealso>
+    /// <seealso><c>ObservableCacheEx.Filter&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, bool&gt;, bool)</c></seealso>
     public static IObservable<IChangeSet<T>> Filter<T>(
                 this IObservable<IChangeSet<T>> source,
                 Func<T, bool> predicate)
@@ -61,8 +61,8 @@ public static partial class ObservableListEx
     /// When <paramref name="predicate"/> emits a new function, all items are re-evaluated.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to filter.</param>
-    /// <param name="predicate">An <see cref="IObservable{Func{T, bool}}"/> that emits new predicate functions. Each emission triggers a full re-evaluation of all items.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to filter.</param>
+    /// <param name="predicate">An <c>IObservable&lt;Func&lt;T, bool&gt;&gt;</c> that emits new predicate functions. Each emission triggers a full re-evaluation of all items.</param>
     /// <param name="filterPolicy">The <see cref="ListFilterPolicy"/> that controls re-filtering behavior when the predicate changes.</param>
     /// <returns>A list changeset stream containing only items that satisfy the most recent predicate.</returns>
     /// <remarks>
@@ -83,8 +83,8 @@ public static partial class ObservableListEx
     /// <para><b>Worth noting:</b> No items are included until <paramref name="predicate"/> emits its first function.</para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="predicate"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/>
-    /// <seealso cref="FilterOnObservable{TObject}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
+    /// <seealso><c>Filter&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Func&lt;T, bool&gt;)</c></seealso>
+    /// <seealso><c>FilterOnObservable&lt;TObject&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Func&lt;TObject, IObservable&lt;bool&gt;&gt;, TimeSpan?, IScheduler?)</c></seealso>
     public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate, ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff)
         where T : notnull
     {
@@ -101,9 +101,9 @@ public static partial class ObservableListEx
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <typeparam name="TState">The type of state value required by <paramref name="predicate"/>.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to filter.</param>
-    /// <param name="predicateState">An <see cref="IObservable{TState}"/> stream of state values to be passed to <paramref name="predicate"/>.</param>
-    /// <param name="predicate">A static <see cref="Func{T, TResult}"/> predicate receiving the current state and an item, returning <see langword="true"/> to include or <see langword="false"/> to exclude. The function itself does not change; only the state value passed to it changes.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to filter.</param>
+    /// <param name="predicateState">An <c>IObservable&lt;TState&gt;</c> stream of state values to be passed to <paramref name="predicate"/>.</param>
+    /// <param name="predicate">A static <c>Func&lt;T, TResult&gt;</c> predicate receiving the current state and an item, returning <see langword="true"/> to include or <see langword="false"/> to exclude. The function itself does not change; only the state value passed to it changes.</param>
     /// <param name="filterPolicy">The <see cref="ListFilterPolicy"/> that controls re-filtering behavior when the state changes.</param>
     /// <param name="suppressEmptyChangeSets">When <see langword="true"/> (default), empty changesets are suppressed. Set to <see langword="false"/> to publish empty changesets (useful for monitoring loading status).</param>
     /// <returns>A list changeset stream containing only items satisfying <paramref name="predicate"/> with the current state.</returns>
@@ -123,8 +123,8 @@ public static partial class ObservableListEx
     /// <item><term>State changed</term><description>All items are re-evaluated with the new state value. The output is shaped by <paramref name="filterPolicy"/>.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/>
-    /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, IObservable{Func{T, bool}}, ListFilterPolicy)"/>
+    /// <seealso><c>Filter&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Func&lt;T, bool&gt;)</c></seealso>
+    /// <seealso><c>Filter&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservable&lt;Func&lt;T, bool&gt;&gt;, ListFilterPolicy)</c></seealso>
     public static IObservable<IChangeSet<T>> Filter<T, TState>(
                 this IObservable<IChangeSet<T>> source,
                 IObservable<TState> predicateState,

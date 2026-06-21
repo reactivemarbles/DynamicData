@@ -15,6 +15,9 @@ namespace DynamicData;
 /// <typeparam name="T">The type of the item.</typeparam>
 public sealed class RangeChange<T> : IEnumerable<T>
 {
+    /// <summary>
+    /// The _items field.
+    /// </summary>
     private readonly List<T> _items;
 
     /// <summary>
@@ -62,6 +65,7 @@ public sealed class RangeChange<T> : IEnumerable<T>
     public void Add(T item) => _items.Add(item);
 
     /// <inheritdoc/>
+    /// <returns>The result of the operation.</returns>
     public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
 
     /// <summary>
@@ -86,5 +90,6 @@ public sealed class RangeChange<T> : IEnumerable<T>
     public override string ToString() => $"Range<{typeof(T).Name}>. Count={Count}";
 
     /// <inheritdoc/>
+    /// <returns>The result of the operation.</returns>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

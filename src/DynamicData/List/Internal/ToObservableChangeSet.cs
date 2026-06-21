@@ -9,9 +9,21 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the ToObservableChangeSet class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
 internal static class ToObservableChangeSet<TObject>
     where TObject : notnull
 {
+    /// <summary>
+    /// Executes the Create operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="expireAfter">The expireAfter value.</param>
+    /// <param name="limitSizeTo">The limitSizeTo value.</param>
+    /// <param name="scheduler">The scheduler value.</param>
+    /// <returns>The result of the operation.</returns>
     public static IObservable<IChangeSet<TObject>> Create(
         IObservable<TObject> source,
         Func<TObject, TimeSpan?>? expireAfter,
@@ -38,6 +50,14 @@ internal static class ToObservableChangeSet<TObject>
         });
     }
 
+    /// <summary>
+    /// Executes the Create operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="expireAfter">The expireAfter value.</param>
+    /// <param name="limitSizeTo">The limitSizeTo value.</param>
+    /// <param name="scheduler">The scheduler value.</param>
+    /// <returns>The result of the operation.</returns>
     public static IObservable<IChangeSet<TObject>> Create(
         IObservable<IEnumerable<TObject>> source,
         Func<TObject, TimeSpan?>? expireAfter,
@@ -54,22 +74,75 @@ internal static class ToObservableChangeSet<TObject>
             source: source));
     }
 
-    private sealed class Subscription
+/// <summary>
+/// Provides members for the Subscription class.
+/// </summary>
+private sealed class Subscription
         : IDisposable
     {
+        /// <summary>
+        /// The _downstreamItems field.
+        /// </summary>
         private readonly ChangeAwareList<TObject> _downstreamItems;
+
+        /// <summary>
+        /// The _downstreamObserver field.
+        /// </summary>
         private readonly IObserver<IChangeSet<TObject>> _downstreamObserver;
+
+        /// <summary>
+        /// The _expireAfter field.
+        /// </summary>
         private readonly Func<TObject, TimeSpan?>? _expireAfter;
+
+        /// <summary>
+        /// The _expirationQueue field.
+        /// </summary>
         private readonly List<Expiration> _expirationQueue;
+
+        /// <summary>
+        /// The _limitSizeTo field.
+        /// </summary>
         private readonly int _limitSizeTo;
+
+        /// <summary>
+        /// The _scheduler field.
+        /// </summary>
         private readonly IScheduler _scheduler;
+
+        /// <summary>
+        /// The _sourceSubscription field.
+        /// </summary>
         private readonly IDisposable _sourceSubscription;
+
+        /// <summary>
+        /// The _synchronizationGate field.
+        /// </summary>
         private readonly Lock _synchronizationGate;
 
+        /// <summary>
+        /// The _hasInitialized field.
+        /// </summary>
         private bool _hasInitialized;
+
+        /// <summary>
+        /// The _hasSourceCompleted field.
+        /// </summary>
         private bool _hasSourceCompleted;
+
+        /// <summary>
+        /// The _scheduledExpiration field.
+        /// </summary>
         private ScheduledExpiration? _scheduledExpiration;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Subscription"/> class.
+        /// </summary>
+        /// <param name="downstreamObserver">The downstreamObserver value.</param>
+        /// <param name="expireAfter">The expireAfter value.</param>
+        /// <param name="limitSizeTo">The limitSizeTo value.</param>
+        /// <param name="scheduler">The scheduler value.</param>
+        /// <param name="source">The source value.</param>
         public Subscription(
             IObserver<IChangeSet<TObject>> downstreamObserver,
             Func<TObject, TimeSpan?>? expireAfter,
@@ -99,12 +172,20 @@ internal static class ToObservableChangeSet<TObject>
             }
         }
 
+        /// <summary>
+        /// Executes the Dispose operation.
+        /// </summary>
         public void Dispose()
         {
             _sourceSubscription.Dispose();
             _scheduledExpiration?.Cancellation.Dispose();
         }
 
+        /// <summary>
+        /// Executes the OnScheduledExpirationInvoked operation.
+        /// </summary>
+        /// <param name="intendedExpiration">The intendedExpiration value.</param>
+        /// <returns>The result of the operation.</returns>
         private IDisposable OnScheduledExpirationInvoked(Expiration intendedExpiration)
         {
             try
@@ -166,6 +247,10 @@ internal static class ToObservableChangeSet<TObject>
             return Disposable.Empty;
         }
 
+        /// <summary>
+        /// Executes the OnSourceNext operation.
+        /// </summary>
+        /// <param name="upstreamItems">The upstreamItems value.</param>
         private void OnSourceNext(IEnumerable<TObject> upstreamItems)
         {
             try
@@ -263,6 +348,9 @@ internal static class ToObservableChangeSet<TObject>
             }
         }
 
+        /// <summary>
+        /// Executes the OnSourceCompleted operation.
+        /// </summary>
         private void OnSourceCompleted()
         {
             lock (_synchronizationGate)
@@ -272,13 +360,18 @@ internal static class ToObservableChangeSet<TObject>
                 TryPublishCompletion();
             }
         }
-
         // This method must NOT be invoked under the umbrella of _synchronizationGate,
         // as some IScheduler implementations perform locking internally, which can result in deadlocking if we invoke the scheduler within our own lock.
         //
         // Additionally, some IScheduler implementations can invoke actions synchronously,
         // so it's important that scheduler invocation is only performed AFTER downstream changes have been processed.
         // Otherwise, downstream notifications can end up published out-of-order.
+
+        /// <summary>
+        /// Executes the FinishSchedulingExpiration operation.
+        /// </summary>
+        /// <param name="unfinishedExpiration">The unfinishedExpiration value.</param>
+        /// <param name="scheduler">The scheduler value.</param>
         private void FinishSchedulingExpiration(
                 ScheduledExpiration unfinishedExpiration,
                 IScheduler scheduler)
@@ -298,6 +391,9 @@ internal static class ToObservableChangeSet<TObject>
                     return Disposable.Empty;
                 });
 
+        /// <summary>
+        /// Executes the TryPublishCompletion operation.
+        /// </summary>
         private void TryPublishCompletion()
         {
             // There needs to be no possibility of a new changeset being emitted before we can call the stream complete.
@@ -305,6 +401,9 @@ internal static class ToObservableChangeSet<TObject>
                 _downstreamObserver.OnCompleted();
         }
 
+        /// <summary>
+        /// Executes the TryPublishDownstreamChanges operation.
+        /// </summary>
         private void TryPublishDownstreamChanges()
         {
             var downstreamChanges = _downstreamItems.CaptureChanges();
@@ -316,6 +415,10 @@ internal static class ToObservableChangeSet<TObject>
             }
         }
 
+        /// <summary>
+        /// Executes the TryBeginSchedulingExpiration operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         private ScheduledExpiration? TryBeginSchedulingExpiration()
         {
             // If there's no expirations currently queued up, we don't need to schedule anything.
@@ -341,20 +444,43 @@ internal static class ToObservableChangeSet<TObject>
         }
     }
 
-    private readonly struct ScheduledExpiration
+/// <summary>
+/// Represents the ScheduledExpiration value.
+/// </summary>
+private readonly struct ScheduledExpiration
     {
+        /// <summary>
+        /// Gets or sets the Cancellation value.
+        /// </summary>
         public required SingleAssignmentDisposable Cancellation { get; init; }
 
+        /// <summary>
+        /// Gets or sets the Expiration value.
+        /// </summary>
         public required Expiration Expiration { get; init; }
     }
 
-    private readonly record struct Expiration
+/// <summary>
+/// Represents the Expiration record.
+/// </summary>
+private readonly record struct Expiration
         : IComparable<Expiration>
     {
+        /// <summary>
+        /// Gets or sets the ExpireAt value.
+        /// </summary>
         public required DateTimeOffset ExpireAt { get; init; }
 
+        /// <summary>
+        /// Gets or sets the Index value.
+        /// </summary>
         public required int Index { get; init; }
 
+        /// <summary>
+        /// Executes the CompareTo operation.
+        /// </summary>
+        /// <param name="other">The other value.</param>
+        /// <returns>The result of the operation.</returns>
         public int CompareTo(Expiration other)
             => ExpireAt.CompareTo(other.ExpireAt);
     }

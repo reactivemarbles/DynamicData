@@ -30,7 +30,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the objects in the source changeset.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TDestination">The destination type to filter and cast to.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to filter by type.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to filter by type.</param>
     /// <param name="suppressEmptyChangeSets">If <see langword="true"/>, changesets that become empty after filtering are suppressed.</param>
     /// <returns>An observable changeset of <typeparamref name="TDestination"/> items.</returns>
     /// <remarks>

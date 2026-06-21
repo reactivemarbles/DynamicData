@@ -28,10 +28,18 @@ namespace DynamicData.Binding;
 public class BindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(BindingList<T> list, int refreshThreshold = BindingOptions.DefaultResetThreshold) : IChangeSetAdaptor<T>
     where T : notnull
 {
+    /// <summary>
+    /// The _list field.
+    /// </summary>
     private readonly BindingList<T> _list = list ?? throw new ArgumentNullException(nameof(list));
+
+    /// <summary>
+    /// The _loaded field.
+    /// </summary>
     private bool _loaded;
 
     /// <inheritdoc />
+    /// <param name="changes">The changes value.</param>
     public void Adapt(IChangeSet<T> changes)
     {
         ArgumentExceptionHelper.ThrowIfNull(changes);
@@ -66,12 +74,23 @@ public class BindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAccessedM
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _cache field.
+    /// </summary>
     private readonly Cache<TObject, TKey> _cache = new();
 
+    /// <summary>
+    /// The _list field.
+    /// </summary>
     private readonly BindingList<TObject> _list = list ?? throw new ArgumentNullException(nameof(list));
+
+    /// <summary>
+    /// The _loaded field.
+    /// </summary>
     private bool _loaded;
 
     /// <inheritdoc />
+    /// <param name="changes">The changes value.</param>
     public void Adapt(IChangeSet<TObject, TKey> changes)
     {
         ArgumentExceptionHelper.ThrowIfNull(changes);
@@ -92,6 +111,11 @@ public class BindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAccessedM
         }
     }
 
+    /// <summary>
+    /// Executes the DoUpdate operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    /// <param name="list">The list value.</param>
     private static void DoUpdate(IChangeSet<TObject, TKey> changes, BindingList<TObject> list)
     {
         foreach (var update in changes.ToConcreteType())

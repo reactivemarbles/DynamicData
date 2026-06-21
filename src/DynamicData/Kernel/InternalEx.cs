@@ -14,6 +14,10 @@ namespace DynamicData.Kernel;
 /// </summary>
 public static class InternalEx
 {
+    /// <summary>
+    /// Executes the NewLock operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     internal static Lock NewLock() => new();
 
     /// <summary>
@@ -114,15 +118,34 @@ public static class InternalEx
         return disposable;
     }
 
+    /// <summary>
+    /// Executes the OnNext operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
     internal static void OnNext(this ISignal<Unit> source) => source.OnNext(Unit.Default);
 
+    /// <summary>
+    /// Executes the Swap operation.
+    /// </summary>
+    /// <typeparam name="TSwap">The type of the TSwap value.</typeparam>
+    /// <param name="t1">The t1 value.</param>
+    /// <param name="t2">The t2 value.</param>
     internal static void Swap<TSwap>(ref TSwap t1, ref TSwap t2) => (t2, t1) = (t1, t2);
 
+    /// <summary>
+    /// Executes the ToUnit operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static IObservable<Unit> ToUnit<T>(this IObservable<T> source) => source.Select(_ => Unit.Default);
 
     /// <summary>
     /// Observable.Return without the memory leak.
     /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static IObservable<T> Return<T>(Func<T> source) =>
         Observable.Create<T>(o =>
         {

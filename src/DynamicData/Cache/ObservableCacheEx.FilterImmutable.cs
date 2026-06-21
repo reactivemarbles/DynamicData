@@ -28,14 +28,14 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of collection items to be filtered.</typeparam>
     /// <typeparam name="TKey">The type of the key values of each collection item.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to filter (items assumed immutable).</param>
-    /// <param name="predicate">The <see cref="Func{TObject, bool}"/> filtering predicate to be applied to each item.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to filter (items assumed immutable).</param>
+    /// <param name="predicate">The <c>Func&lt;TObject, bool&gt;</c> filtering predicate to be applied to each item.</param>
     /// <param name="suppressEmptyChangeSets">A flag indicating whether the created stream should emit empty changesets. Empty changesets are suppressed by default, for performance. Set to ensure that a downstream changeset occurs for every upstream changeset.</param>
     /// <returns>A stream of collection changesets where upstream collection items are filtered by the given predicate.</returns>
     /// <remarks>
     /// <para>The goal of this operator is to optimize a common use-case of reactive programming, where data values flowing through a stream are immutable, and state changes are distributed by publishing new immutable items as replacements, instead of mutating the items directly.</para>
     /// <para>In addition to assuming that all collection items are immutable, this operator also assumes that the given filter predicate is deterministic, such that the result it returns will always be the same each time a specific input is passed to it. In other words, the predicate itself also contains no mutable state.</para>
-    /// <para>Under these assumptions, this operator can bypass the need to keep track of every collection item that passes through it, which the normal <see cref="Filter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, bool}, bool)"/> operator must do, in order to re-evaluate the filtering status of items, during a refresh operation.</para>
+    /// <para>Under these assumptions, this operator can bypass the need to keep track of every collection item that passes through it, which the normal <c>Filter&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, bool&gt;, bool)</c> operator must do, in order to re-evaluate the filtering status of items, during a refresh operation.</para>
     /// <para>Consider using this operator when the following are true:</para>
     /// <list type="bullet">
     /// <item><description>Your collection items are immutable, and changes are published by replacing entire items</description></item>

@@ -12,8 +12,14 @@ namespace DynamicData;
 /// <summary>
 /// Defines values used to virtualise the result set.
 /// </summary>
+/// <param name="size">The size value.</param>
+/// <param name="startIndex">The startIndex value.</param>
+/// <param name="totalSize">The totalSize value.</param>
 internal sealed class VirtualResponse(int size, int startIndex, int totalSize) : IEquatable<IVirtualResponse>, IVirtualResponse
 {
+    /// <summary>
+    /// Gets the DefaultComparer value.
+    /// </summary>
     public static IEqualityComparer<IVirtualResponse?> DefaultComparer { get; } = new TotalSizeStartIndexSizeEqualityComparer();
 
     /// <summary>
@@ -74,8 +80,17 @@ internal sealed class VirtualResponse(int size, int startIndex, int totalSize) :
     /// </returns>
     public override string ToString() => $"Size: {Size}, StartIndex: {StartIndex}, TotalSize: {TotalSize}";
 
-    private sealed class TotalSizeStartIndexSizeEqualityComparer : IEqualityComparer<IVirtualResponse?>
+/// <summary>
+/// Provides members for the TotalSizeStartIndexSizeEqualityComparer class.
+/// </summary>
+private sealed class TotalSizeStartIndexSizeEqualityComparer : IEqualityComparer<IVirtualResponse?>
     {
+        /// <summary>
+        /// Executes the Equals operation.
+        /// </summary>
+        /// <param name="x">The x value.</param>
+        /// <param name="y">The y value.</param>
+        /// <returns>The result of the operation.</returns>
         public bool Equals(IVirtualResponse? x, IVirtualResponse? y)
         {
             if (ReferenceEquals(x, y))
@@ -101,6 +116,11 @@ internal sealed class VirtualResponse(int size, int startIndex, int totalSize) :
             return x.TotalSize == y.TotalSize && x.StartIndex == y.StartIndex && x.Size == y.Size;
         }
 
+        /// <summary>
+        /// Executes the GetHashCode operation.
+        /// </summary>
+        /// <param name="obj">The obj value.</param>
+        /// <returns>The result of the operation.</returns>
         public int GetHashCode(IVirtualResponse? obj)
         {
             if (obj is null)

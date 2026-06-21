@@ -9,11 +9,23 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the ChangeSetMergeTracker class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
 internal sealed class ChangeSetMergeTracker<TObject>
     where TObject : notnull
 {
+    /// <summary>
+    /// The _resultList field.
+    /// </summary>
     private readonly ChangeAwareList<TObject> _resultList = new();
 
+    /// <summary>
+    /// Executes the ProcessChangeSet operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    /// <param name="observer">The observer value.</param>
     public void ProcessChangeSet(IChangeSet<TObject> changes, IObserver<IChangeSet<TObject>>? observer = null)
     {
         foreach (var change in changes)
@@ -60,6 +72,11 @@ internal sealed class ChangeSetMergeTracker<TObject>
         }
     }
 
+    /// <summary>
+    /// Executes the RemoveItems operation.
+    /// </summary>
+    /// <param name="removeItems">The removeItems value.</param>
+    /// <param name="observer">The observer value.</param>
     public void RemoveItems(IEnumerable<TObject> removeItems, IObserver<IChangeSet<TObject>>? observer = null)
     {
         _resultList.Remove(removeItems);
@@ -70,6 +87,10 @@ internal sealed class ChangeSetMergeTracker<TObject>
         }
     }
 
+    /// <summary>
+    /// Executes the EmitChanges operation.
+    /// </summary>
+    /// <param name="observer">The observer value.</param>
     public void EmitChanges(IObserver<IChangeSet<TObject>> observer)
     {
         var changeSet = _resultList.CaptureChanges();
@@ -79,17 +100,45 @@ internal sealed class ChangeSetMergeTracker<TObject>
         }
     }
 
+    /// <summary>
+    /// Executes the OnClear operation.
+    /// </summary>
+    /// <param name="change">The change value.</param>
     private void OnClear(Change<TObject> change) => _resultList.ClearOrRemoveMany(change);
 
+    /// <summary>
+    /// Executes the OnItemAdded operation.
+    /// </summary>
+    /// <param name="item">The item value.</param>
     private void OnItemAdded(ItemChange<TObject> item) => _resultList.Add(item.Current);
 
+    /// <summary>
+    /// Executes the OnItemRefreshed operation.
+    /// </summary>
+    /// <param name="item">The item value.</param>
     private void OnItemRefreshed(ItemChange<TObject> item) => _resultList.Refresh(item.Current);
 
+    /// <summary>
+    /// Executes the OnItemRemoved operation.
+    /// </summary>
+    /// <param name="item">The item value.</param>
     private void OnItemRemoved(ItemChange<TObject> item) => _resultList.Remove(item.Current);
 
+    /// <summary>
+    /// Executes the OnItemReplaced operation.
+    /// </summary>
+    /// <param name="item">The item value.</param>
     private void OnItemReplaced(ItemChange<TObject> item) => _resultList.ReplaceOrAdd(item.Previous.Value, item.Current);
 
+    /// <summary>
+    /// Executes the OnRangeAdded operation.
+    /// </summary>
+    /// <param name="range">The range value.</param>
     private void OnRangeAdded(RangeChange<TObject> range) => _resultList.AddRange(range);
 
+    /// <summary>
+    /// Executes the OnRangeRemoved operation.
+    /// </summary>
+    /// <param name="range">The range value.</param>
     private void OnRangeRemoved(RangeChange<TObject> range) => _resultList.Remove(range);
 }

@@ -16,16 +16,38 @@ namespace DynamicData.Reactive;
 namespace DynamicData;
 #endif
 
+/// <summary>
+/// Provides members for the PageResponse class.
+/// </summary>
+/// <param name="pageSize">The pageSize value.</param>
+/// <param name="totalSize">The totalSize value.</param>
+/// <param name="page">The page value.</param>
+/// <param name="pages">The pages value.</param>
 internal sealed class PageResponse(int pageSize, int totalSize, int page, int pages) : IEquatable<IPageResponse>, IPageResponse
 {
+    /// <summary>
+    /// Gets the DefaultComparer value.
+    /// </summary>
     public static IEqualityComparer<IPageResponse?> DefaultComparer { get; } = new PageResponseEqualityComparer();
 
+    /// <summary>
+    /// Gets the Page value.
+    /// </summary>
     public int Page { get; } = page;
 
+    /// <summary>
+    /// Gets the Pages value.
+    /// </summary>
     public int Pages { get; } = pages;
 
+    /// <summary>
+    /// Gets the PageSize value.
+    /// </summary>
     public int PageSize { get; } = pageSize;
 
+    /// <summary>
+    /// Gets the TotalSize value.
+    /// </summary>
     public int TotalSize { get; } = totalSize;
 
     /// <summary>
@@ -85,8 +107,17 @@ internal sealed class PageResponse(int pageSize, int totalSize, int page, int pa
     /// </returns>
     public override string ToString() => $"Page: {Page}, PageSize: {PageSize}, Pages: {Pages}, TotalSize: {TotalSize}";
 
-    private sealed class PageResponseEqualityComparer : IEqualityComparer<IPageResponse?>
+/// <summary>
+/// Provides members for the PageResponseEqualityComparer class.
+/// </summary>
+private sealed class PageResponseEqualityComparer : IEqualityComparer<IPageResponse?>
     {
+        /// <summary>
+        /// Executes the Equals operation.
+        /// </summary>
+        /// <param name="x">The x value.</param>
+        /// <param name="y">The y value.</param>
+        /// <returns>The result of the operation.</returns>
         public bool Equals(IPageResponse? x, IPageResponse? y)
         {
             if (ReferenceEquals(x, y))
@@ -112,6 +143,11 @@ internal sealed class PageResponse(int pageSize, int totalSize, int page, int pa
             return x.PageSize == y.PageSize && x.TotalSize == y.TotalSize && x.Page == y.Page && x.Pages == y.Pages;
         }
 
+        /// <summary>
+        /// Executes the GetHashCode operation.
+        /// </summary>
+        /// <param name="obj">The obj value.</param>
+        /// <returns>The result of the operation.</returns>
         public int GetHashCode(IPageResponse? obj)
         {
             if (obj is null)

@@ -26,6 +26,13 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableListEx
 {
+    /// <summary>
+    /// Executes the Combine operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <param name="type">The type value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<IChangeSet<T>> Combine<T>(this ICollection<IObservable<IChangeSet<T>>> sources, CombineOperator type)
         where T : notnull
     {
@@ -34,6 +41,14 @@ public static partial class ObservableListEx
         return new Combiner<T>(sources, type).Run();
     }
 
+    /// <summary>
+    /// Executes the Combine operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="type">The type value.</param>
+    /// <param name="others">The others value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservable<IChangeSet<T>> source, CombineOperator type, params IObservable<IChangeSet<T>>[] others)
         where T : notnull
     {
@@ -49,6 +64,13 @@ public static partial class ObservableListEx
         return new Combiner<T>(items, type).Run();
     }
 
+    /// <summary>
+    /// Executes the Combine operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <param name="type">The type value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservableList<ISourceList<T>> sources, CombineOperator type)
         where T : notnull
     {
@@ -63,6 +85,13 @@ public static partial class ObservableListEx
             });
     }
 
+    /// <summary>
+    /// Executes the Combine operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <param name="type">The type value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservableList<IObservableList<T>> sources, CombineOperator type)
         where T : notnull
     {
@@ -77,6 +106,13 @@ public static partial class ObservableListEx
             });
     }
 
+    /// <summary>
+    /// Executes the Combine operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <param name="type">The type value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservableList<IObservable<IChangeSet<T>>> sources, CombineOperator type)
         where T : notnull
     {

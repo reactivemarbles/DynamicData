@@ -9,9 +9,20 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the OnItemRemoved class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
 internal static class OnItemRemoved<T>
     where T : notnull
 {
+    /// <summary>
+    /// Executes the Create operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="removeAction">The removeAction value.</param>
+    /// <param name="invokeOnUnsubscribe">The invokeOnUnsubscribe value.</param>
+    /// <returns>The result of the operation.</returns>
     public static IObservable<IChangeSet<T>> Create(
         IObservable<IChangeSet<T>> source,
         Action<T> removeAction,

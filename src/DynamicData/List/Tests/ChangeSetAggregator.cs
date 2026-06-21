@@ -16,8 +16,14 @@ namespace DynamicData.Tests;
 public class ChangeSetAggregator<TObject> : IDisposable
     where TObject : notnull
 {
+    /// <summary>
+    /// The _disposer field.
+    /// </summary>
     private readonly IDisposable _disposer;
 
+    /// <summary>
+    /// The _isDisposed field.
+    /// </summary>
     private bool _isDisposed;
 
     /// <summary>

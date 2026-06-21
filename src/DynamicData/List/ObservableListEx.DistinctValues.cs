@@ -26,8 +26,8 @@ public static partial class ObservableListEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the source list.</typeparam>
     /// <typeparam name="TValue">The type of distinct values produced.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to extract distinct values.</param>
-    /// <param name="valueSelector">A <see cref="Func{T, TResult}"/> function that extracts the value to track from each source item.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject&gt;&gt;</c> to extract distinct values.</param>
+    /// <param name="valueSelector">A <c>Func&lt;T, TResult&gt;</c> function that extracts the value to track from each source item.</param>
     /// <returns>A list changeset stream of distinct values.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="valueSelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -44,7 +44,7 @@ public static partial class ObservableListEx
     /// <item><term><b>Clear</b></term><description>All reference counts cleared. <b>Remove</b> emitted for every tracked distinct value.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="ObservableCacheEx.DistinctValues{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TValue})"/>
+    /// <seealso><c>ObservableCacheEx.DistinctValues&lt;TObject, TKey, TValue&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, TValue&gt;)</c></seealso>
     public static IObservable<IChangeSet<TValue>> DistinctValues<TObject, TValue>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TValue> valueSelector)
         where TObject : notnull
         where TValue : notnull

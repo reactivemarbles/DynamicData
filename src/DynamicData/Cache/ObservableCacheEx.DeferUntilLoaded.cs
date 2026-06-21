@@ -29,12 +29,12 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to defer until the first changeset arrives.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to defer until the first changeset arrives.</param>
     /// <returns>An observable that begins emitting changesets once the first non-empty changeset is received.</returns>
     /// <remarks>
     /// <para><b>Worth noting:</b> Blocks indefinitely if the cache or stream never receives any data. Ensure the source will eventually emit at least one changeset.</para>
     /// </remarks>
-    /// <seealso cref="SkipInitial{TObject, TKey}"/>
+    /// <seealso><c>SkipInitial&lt;TObject, TKey&gt;</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> DeferUntilLoaded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull
@@ -44,7 +44,13 @@ public static partial class ObservableCacheEx
         return new DeferUntilLoaded<TObject, TKey>(source).Run();
     }
 
-    /// <inheritdoc cref="DeferUntilLoaded{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
+    /// <summary>
+    /// Provides an overload of <c>DeferUntilLoaded</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> DeferUntilLoaded<TObject, TKey>(this IObservableCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull

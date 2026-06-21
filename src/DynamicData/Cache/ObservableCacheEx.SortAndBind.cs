@@ -26,10 +26,10 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort and bind.</param>
-    /// <param name="readOnlyObservableCollection">The output <see cref="ReadOnlyObservableCollection{TObject}"/> that will be populated with the sorted results.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort and bind.</param>
+    /// <param name="readOnlyObservableCollection">The output <c>ReadOnlyObservableCollection&lt;TObject&gt;</c> that will be populated with the sorted results.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <remarks>Creates a <see cref="ReadOnlyObservableCollection{T}"/> and delegates to <see cref="Bind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey, PageContext{TObject}}}, IList{TObject})"/>.</remarks>
+    /// <remarks>Creates a <c>ReadOnlyObservableCollection&lt;T&gt;</c> and delegates to <c>Bind&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey, PageContext&lt;TObject&gt;&gt;&gt;, IList&lt;TObject&gt;)</c>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
@@ -47,11 +47,11 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort and bind.</param>
-    /// <param name="readOnlyObservableCollection">The output <see cref="ReadOnlyObservableCollection{TObject}"/> that will be populated with the sorted results.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort and bind.</param>
+    /// <param name="readOnlyObservableCollection">The output <c>ReadOnlyObservableCollection&lt;TObject&gt;</c> that will be populated with the sorted results.</param>
     /// <param name="options">The <see cref="SortAndBindOptions"/> with default settings.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <remarks>Creates a <see cref="ReadOnlyObservableCollection{T}"/> and delegates to <see cref="Bind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey, PageContext{TObject}}}, IList{TObject}, SortAndBindOptions)"/>.</remarks>
+    /// <remarks>Creates a <c>ReadOnlyObservableCollection&lt;T&gt;</c> and delegates to <c>Bind&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey, PageContext&lt;TObject&gt;&gt;&gt;, IList&lt;TObject&gt;, SortAndBindOptions)</c>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
@@ -70,8 +70,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort and bind.</param>
-    /// <param name="targetList">The <see cref="IList{TObject}"/> to bind sorted results to.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort and bind.</param>
+    /// <param name="targetList">The <c>IList&lt;TObject&gt;</c> to bind sorted results to.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <remarks>This is the primary Bind overload for paged data. It applies paged changeset mutations directly to the target list.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
@@ -86,8 +86,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort and bind.</param>
-    /// <param name="targetList">The <see cref="IList{TObject}"/> to bind sorted results to.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort and bind.</param>
+    /// <param name="targetList">The <c>IList&lt;TObject&gt;</c> to bind sorted results to.</param>
     /// <param name="options">The <see cref="SortAndBindOptions"/> with default settings.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <remarks>This overload accepts <see cref="SortAndBindOptions"/> to control reset threshold behavior.</remarks>
@@ -104,10 +104,10 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort and bind.</param>
-    /// <param name="readOnlyObservableCollection">The output <see cref="ReadOnlyObservableCollection{TObject}"/> that will be populated with the sorted results.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort and bind.</param>
+    /// <param name="readOnlyObservableCollection">The output <c>ReadOnlyObservableCollection&lt;TObject&gt;</c> that will be populated with the sorted results.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <remarks>Creates a <see cref="ReadOnlyObservableCollection{T}"/> and delegates to <see cref="Bind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey, VirtualContext{TObject}}}, IList{TObject})"/>.</remarks>
+    /// <remarks>Creates a <c>ReadOnlyObservableCollection&lt;T&gt;</c> and delegates to <c>Bind&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey, VirtualContext&lt;TObject&gt;&gt;&gt;, IList&lt;TObject&gt;)</c>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
@@ -125,11 +125,11 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort and bind.</param>
-    /// <param name="readOnlyObservableCollection">The output <see cref="ReadOnlyObservableCollection{TObject}"/> that will be populated with the sorted results.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort and bind.</param>
+    /// <param name="readOnlyObservableCollection">The output <c>ReadOnlyObservableCollection&lt;TObject&gt;</c> that will be populated with the sorted results.</param>
     /// <param name="options">The <see cref="SortAndBindOptions"/> with default settings.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <remarks>Creates a <see cref="ReadOnlyObservableCollection{T}"/> and delegates to <see cref="Bind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey, VirtualContext{TObject}}}, IList{TObject}, SortAndBindOptions)"/>.</remarks>
+    /// <remarks>Creates a <c>ReadOnlyObservableCollection&lt;T&gt;</c> and delegates to <c>Bind&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey, VirtualContext&lt;TObject&gt;&gt;&gt;, IList&lt;TObject&gt;, SortAndBindOptions)</c>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
@@ -148,8 +148,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort and bind.</param>
-    /// <param name="targetList">The <see cref="IList{TObject}"/> to bind sorted results to.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort and bind.</param>
+    /// <param name="targetList">The <c>IList&lt;TObject&gt;</c> to bind sorted results to.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <remarks>This is the primary Bind overload for virtualized data. It applies virtualized changeset mutations directly to the target list.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
@@ -164,8 +164,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort and bind.</param>
-    /// <param name="targetList">The <see cref="IList{TObject}"/> to bind sorted results to.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort and bind.</param>
+    /// <param name="targetList">The <c>IList&lt;TObject&gt;</c> to bind sorted results to.</param>
     /// <param name="options">The <see cref="SortAndBindOptions"/> with default settings.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <remarks>This overload accepts <see cref="SortAndBindOptions"/> to control reset threshold behavior.</remarks>
@@ -177,8 +177,15 @@ public static partial class ObservableCacheEx
         where TKey : notnull =>
         new BindVirtualized<TObject, TKey>(source, targetList, options).Run();
 
-    /// <inheritdoc cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IList{TObject}, IComparer{TObject}, SortAndBindOptions)"/>
-    /// <remarks>This overload uses <see cref="Comparer{T}.Default"/> for types implementing <see cref="IComparable{T}"/>.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>SortAndBind</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="targetList">The targetList value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>This overload uses <c>Comparer&lt;T&gt;.Default</c> for types implementing <c>IComparable&lt;T&gt;</c>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         IList<TObject> targetList)
@@ -186,8 +193,16 @@ public static partial class ObservableCacheEx
         where TKey : notnull =>
         source.SortAndBind(targetList, DynamicDataOptions.SortAndBind);
 
-    /// <inheritdoc cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IList{TObject}, IComparer{TObject}, SortAndBindOptions)"/>
-    /// <remarks>This overload uses <see cref="Comparer{T}.Default"/> for types implementing <see cref="IComparable{T}"/>.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>SortAndBind</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="targetList">The targetList value.</param>
+    /// <param name="options">The options value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>This overload uses <c>Comparer&lt;T&gt;.Default</c> for types implementing <c>IComparable&lt;T&gt;</c>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         IList<TObject> targetList,
@@ -196,7 +211,15 @@ public static partial class ObservableCacheEx
         where TKey : notnull =>
         source.SortAndBind(targetList, Comparer<TObject>.Default, options);
 
-    /// <inheritdoc cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IList{TObject}, IComparer{TObject}, SortAndBindOptions)"/>
+    /// <summary>
+    /// Provides an overload of <c>SortAndBind</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="targetList">The targetList value.</param>
+    /// <param name="comparer">The comparer value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         IList<TObject> targetList,
@@ -212,9 +235,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort and bind.</param>
-    /// <param name="targetList">The <see cref="IList{TObject}"/> to bind sorted results to. Items are inserted, removed, and moved in-place to maintain sort order.</param>
-    /// <param name="comparer">The <see cref="IComparer{TObject}"/> that determines sort order.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort and bind.</param>
+    /// <param name="targetList">The <c>IList&lt;TObject&gt;</c> to bind sorted results to. Items are inserted, removed, and moved in-place to maintain sort order.</param>
+    /// <param name="comparer">The <c>IComparer&lt;TObject&gt;</c> that determines sort order.</param>
     /// <param name="options">The <see cref="SortAndBindOptions"/> controlling reset threshold and initial capacity.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <remarks>
@@ -233,7 +256,7 @@ public static partial class ObservableCacheEx
     /// </list>
     /// <para><b>Worth noting:</b> Large batches may trigger a full list reset (clear + re-add) instead of incremental moves, controlled by <see cref="SortAndBindOptions.ResetThreshold"/>. This fires <c>CollectionChanged</c> with <c>Reset</c> action, which can be more efficient for UI virtualization but causes a visual flicker.</para>
     /// </remarks>
-    /// <seealso cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IList{TObject}, IObservable{IComparer{TObject}}, SortAndBindOptions)"/>
+    /// <seealso><c>SortAndBind&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, IList&lt;TObject&gt;, IObservable&lt;IComparer&lt;TObject&gt;&gt;, SortAndBindOptions)</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         IList<TObject> targetList,
@@ -247,7 +270,15 @@ public static partial class ObservableCacheEx
         return new SortAndBind<TObject, TKey>(source, comparer, options, targetList).Run();
     }
 
-    /// <inheritdoc cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IList{TObject}, IObservable{IComparer{TObject}}, SortAndBindOptions)"/>
+    /// <summary>
+    /// Provides an overload of <c>SortAndBind</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="targetList">The targetList value.</param>
+    /// <param name="comparerChanged">The comparerChanged value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         IList<TObject> targetList,
@@ -262,9 +293,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort and bind.</param>
-    /// <param name="targetList">The <see cref="IList{TObject}"/> to bind sorted results to. Items are inserted, removed, and moved in-place to maintain sort order.</param>
-    /// <param name="comparerChanged">An <see cref="IObservable{IComparer{TObject}}"/> that emits new comparers to re-sort with.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort and bind.</param>
+    /// <param name="targetList">The <c>IList&lt;TObject&gt;</c> to bind sorted results to. Items are inserted, removed, and moved in-place to maintain sort order.</param>
+    /// <param name="comparerChanged">An <c>IObservable&lt;IComparer&lt;TObject&gt;&gt;</c> that emits new comparers to re-sort with.</param>
     /// <param name="options">The <see cref="SortAndBindOptions"/> controlling reset threshold and initial capacity.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <remarks>
@@ -283,7 +314,7 @@ public static partial class ObservableCacheEx
     /// </list>
     /// <para><b>Worth noting:</b> No data is emitted until the comparer observable produces its first value. Large batches or comparer changes may trigger a full list reset depending on <see cref="SortAndBindOptions.ResetThreshold"/>.</para>
     /// </remarks>
-    /// <seealso cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IList{TObject}, IComparer{TObject}, SortAndBindOptions)"/>
+    /// <seealso><c>SortAndBind&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, IList&lt;TObject&gt;, IComparer&lt;TObject&gt;, SortAndBindOptions)</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         IList<TObject> targetList,
@@ -293,8 +324,15 @@ public static partial class ObservableCacheEx
         where TKey : notnull =>
         new SortAndBind<TObject, TKey>(source, comparerChanged, options, targetList).Run();
 
-    /// <inheritdoc cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, out ReadOnlyObservableCollection{TObject}, IComparer{TObject}, SortAndBindOptions)"/>
-    /// <remarks>This overload uses <see cref="Comparer{T}.Default"/> for types implementing <see cref="IComparable{T}"/>.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>SortAndBind</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="readOnlyObservableCollection">The readOnlyObservableCollection value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>This overload uses <c>Comparer&lt;T&gt;.Default</c> for types implementing <c>IComparable&lt;T&gt;</c>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection)
@@ -302,8 +340,16 @@ public static partial class ObservableCacheEx
         where TKey : notnull =>
         source.SortAndBind(out readOnlyObservableCollection, Comparer<TObject>.Default, DynamicDataOptions.SortAndBind);
 
-    /// <inheritdoc cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, out ReadOnlyObservableCollection{TObject}, IComparer{TObject}, SortAndBindOptions)"/>
-    /// <remarks>This overload uses <see cref="Comparer{T}.Default"/> for types implementing <see cref="IComparable{T}"/>.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>SortAndBind</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="readOnlyObservableCollection">The readOnlyObservableCollection value.</param>
+    /// <param name="options">The options value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>This overload uses <c>Comparer&lt;T&gt;.Default</c> for types implementing <c>IComparable&lt;T&gt;</c>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
@@ -312,7 +358,15 @@ public static partial class ObservableCacheEx
         where TKey : notnull =>
         source.SortAndBind(out readOnlyObservableCollection, Comparer<TObject>.Default, options);
 
-    /// <inheritdoc cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, out ReadOnlyObservableCollection{TObject}, IComparer{TObject}, SortAndBindOptions)"/>
+    /// <summary>
+    /// Provides an overload of <c>SortAndBind</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="readOnlyObservableCollection">The readOnlyObservableCollection value.</param>
+    /// <param name="comparer">The comparer value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
@@ -321,11 +375,16 @@ public static partial class ObservableCacheEx
         where TKey : notnull =>
         source.SortAndBind(out readOnlyObservableCollection, comparer, DynamicDataOptions.SortAndBind);
 
-    /// <inheritdoc cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IList{TObject}, IComparer{TObject}, SortAndBindOptions)"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort and bind.</param>
-    /// <param name="readOnlyObservableCollection">The output <see cref="ReadOnlyObservableCollection{TObject}"/> that will be populated with the sorted results.</param>
-    /// <param name="comparer">The <see cref="IComparer{TObject}"/> that determines sort order.</param>
+    /// <summary>
+    /// Provides an overload of <c>SortAndBind</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort and bind.</param>
+    /// <param name="readOnlyObservableCollection">The output <c>ReadOnlyObservableCollection&lt;TObject&gt;</c> that will be populated with the sorted results.</param>
+    /// <param name="comparer">The <c>IComparer&lt;TObject&gt;</c> that determines sort order.</param>
     /// <param name="options">The <see cref="SortAndBindOptions"/> controlling reset threshold and initial capacity.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
@@ -346,7 +405,15 @@ public static partial class ObservableCacheEx
         return new SortAndBind<TObject, TKey>(source, comparer, options, observableCollection).Run();
     }
 
-    /// <inheritdoc cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, out ReadOnlyObservableCollection{TObject}, IObservable{IComparer{TObject}}, SortAndBindOptions)"/>
+    /// <summary>
+    /// Provides an overload of <c>SortAndBind</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="readOnlyObservableCollection">The readOnlyObservableCollection value.</param>
+    /// <param name="comparerChanged">The comparerChanged value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
@@ -355,11 +422,16 @@ public static partial class ObservableCacheEx
         where TKey : notnull =>
         source.SortAndBind(out readOnlyObservableCollection, comparerChanged, DynamicDataOptions.SortAndBind);
 
-    /// <inheritdoc cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IList{TObject}, IObservable{IComparer{TObject}}, SortAndBindOptions)"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort and bind.</param>
-    /// <param name="readOnlyObservableCollection">The output <see cref="ReadOnlyObservableCollection{TObject}"/> that will be populated with the sorted results.</param>
-    /// <param name="comparerChanged">An <see cref="IObservable{IComparer{TObject}}"/> that emits new comparers to re-sort with.</param>
+    /// <summary>
+    /// Provides an overload of <c>SortAndBind</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort and bind.</param>
+    /// <param name="readOnlyObservableCollection">The output <c>ReadOnlyObservableCollection&lt;TObject&gt;</c> that will be populated with the sorted results.</param>
+    /// <param name="comparerChanged">An <c>IObservable&lt;IComparer&lt;TObject&gt;&gt;</c> that emits new comparers to re-sort with.</param>
     /// <param name="options">The <see cref="SortAndBindOptions"/> controlling reset threshold and initial capacity.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,

@@ -22,15 +22,15 @@ namespace DynamicData;
 public static partial class ObservableListEx
 {
     /// <summary>
-    /// Groups source items by the value returned by <paramref name="groupSelector"/>. Each group is an <see cref="IGroup{TObject, TGroup}"/>
+    /// Groups source items by the value returned by <paramref name="groupSelector"/>. Each group is an <c>IGroup&lt;TObject, TGroup&gt;</c>
     /// containing an inner observable list of its members.
     /// </summary>
     /// <typeparam name="TObject">The type of items in the list.</typeparam>
     /// <typeparam name="TGroup">The type of the group key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to group.</param>
-    /// <param name="groupSelector">A <see cref="Func{T, TResult}"/> function that returns the group key for each item.</param>
-    /// <param name="regrouper">An optional <see cref="IObservable{Unit}"/> of <see cref="Unit"/> that forces all items to be re-evaluated against <paramref name="groupSelector"/> when it fires. Useful for time-based groupings (e.g., "Last Hour", "Today").</param>
-    /// <returns>A list changeset stream of <see cref="IGroup{TObject, TGroup}"/> objects, each containing the items belonging to that group.</returns>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject&gt;&gt;</c> to group.</param>
+    /// <param name="groupSelector">A <c>Func&lt;T, TResult&gt;</c> function that returns the group key for each item.</param>
+    /// <param name="regrouper">An optional <c>IObservable&lt;Unit&gt;</c> of <see cref="Unit"/> that forces all items to be re-evaluated against <paramref name="groupSelector"/> when it fires. Useful for time-based groupings (e.g., "Last Hour", "Today").</param>
+    /// <returns>A list changeset stream of <c>IGroup&lt;TObject, TGroup&gt;</c> objects, each containing the items belonging to that group.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="groupSelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
@@ -46,9 +46,9 @@ public static partial class ObservableListEx
     /// <item><term>Regrouper fires</term><description>All items re-evaluated. Items that changed group key are moved between groups. Empty groups removed, new groups added.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="GroupOnProperty{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TGroup}}, TimeSpan?, IScheduler?)"/>
-    /// <seealso cref="GroupWithImmutableState{TObject, TGroupKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TGroupKey}, IObservable{Unit}?)"/>
-    /// <seealso cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/>
+    /// <seealso><c>GroupOnProperty&lt;TObject, TGroup&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Expression&lt;Func&lt;TObject, TGroup&gt;&gt;, TimeSpan?, IScheduler?)</c></seealso>
+    /// <seealso><c>GroupWithImmutableState&lt;TObject, TGroupKey&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Func&lt;TObject, TGroupKey&gt;, IObservable&lt;Unit&gt;?)</c></seealso>
+    /// <seealso><c>Transform&lt;TSource, TDestination&gt;(IObservable&lt;IChangeSet&lt;TSource&gt;&gt;, Func&lt;TSource, TDestination&gt;, bool)</c></seealso>
     public static IObservable<IChangeSet<IGroup<TObject, TGroup>>> GroupOn<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TGroup> groupSelector, IObservable<Unit>? regrouper = null)
         where TObject : notnull
         where TGroup : notnull

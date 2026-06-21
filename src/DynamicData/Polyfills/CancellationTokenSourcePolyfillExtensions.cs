@@ -10,7 +10,6 @@ namespace System.Threading;
 internal static class CancellationTokenSourcePolyfillExtensions
 {
     /// <summary>Polyfill operations for a cancellation token source.</summary>
-    /// <param name="source">The cancellation token source.</param>
     extension(CancellationTokenSource source)
     {
         /// <summary>Communicates a request for cancellation, completing synchronously (no asynchronous callback draining on this framework).</summary>

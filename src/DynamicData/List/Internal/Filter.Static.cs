@@ -9,11 +9,25 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the Filter class.
+/// </summary>
 internal static partial class Filter
 {
-    public static class Static<T>
+/// <summary>
+/// Provides members for the Static class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+public static class Static<T>
         where T : notnull
     {
+        /// <summary>
+        /// Executes the Create operation.
+        /// </summary>
+        /// <param name="source">The source value.</param>
+        /// <param name="predicate">The predicate value.</param>
+        /// <param name="suppressEmptyChangesets">The suppressEmptyChangesets value.</param>
+        /// <returns>The result of the operation.</returns>
         public static IObservable<IChangeSet<T>> Create(
             IObservable<IChangeSet<T>> source,
             Func<T, bool> predicate,

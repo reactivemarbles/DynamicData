@@ -27,9 +27,9 @@ public static partial class ObservableListEx
     /// </summary>
     /// <typeparam name="TDestination">The type of the destination items.</typeparam>
     /// <typeparam name="TSource">The type of the source items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TSource}}"/> to expand each item into multiple children.</param>
-    /// <param name="manySelector">A <see cref="Func{T, TResult}"/> function that returns the child items for each source item.</param>
-    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TDestination}"/> used during Replace to determine which child items changed between old and new parent values.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TSource&gt;&gt;</c> to expand each item into multiple children.</param>
+    /// <param name="manySelector">A <c>Func&lt;T, TResult&gt;</c> function that returns the child items for each source item.</param>
+    /// <param name="equalityComparer">An optional <c>IEqualityComparer&lt;TDestination&gt;</c> used during Replace to determine which child items changed between old and new parent values.</param>
     /// <returns>A list changeset stream of all child items from all source items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="manySelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -41,9 +41,9 @@ public static partial class ObservableListEx
     /// <item><term><b>Refresh</b></term><description>Children re-expanded and diffed.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/>
-    /// <seealso cref="MergeManyChangeSets{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination}?)"/>
-    /// <seealso cref="ObservableCacheEx.TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, IEnumerable{TDestination}}, Func{TDestination, TDestinationKey})"/>
+    /// <seealso><c>Transform&lt;TSource, TDestination&gt;(IObservable&lt;IChangeSet&lt;TSource&gt;&gt;, Func&lt;TSource, TDestination&gt;, bool)</c></seealso>
+    /// <seealso><c>MergeManyChangeSets&lt;TObject, TDestination&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Func&lt;TObject, IObservable&lt;IChangeSet&lt;TDestination&gt;&gt;&gt;, IEqualityComparer&lt;TDestination&gt;?)</c></seealso>
+    /// <seealso><c>ObservableCacheEx.TransformMany&lt;TDestination, TDestinationKey, TSource, TSourceKey&gt;(IObservable&lt;IChangeSet&lt;TSource, TSourceKey&gt;&gt;, Func&lt;TSource, IEnumerable&lt;TDestination&gt;&gt;, Func&lt;TDestination, TDestinationKey&gt;)</c></seealso>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, IEnumerable<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TDestination : notnull
         where TSource : notnull
@@ -54,26 +54,44 @@ public static partial class ObservableListEx
         return new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
     }
 
-    /// <inheritdoc cref="TransformMany{TDestination, TSource}(IObservable{IChangeSet{TSource}}, Func{TSource, IEnumerable{TDestination}}, IEqualityComparer{TDestination}?)"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
-    /// Flattens each source item into children from an <see cref="ObservableCollection{T}"/>. The collection is observed for subsequent changes.
+    /// Flattens each source item into children from an <c>ObservableCollection&lt;T&gt;</c>. The collection is observed for subsequent changes.
     /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="manySelector">The manySelector value.</param>
+    /// <param name="equalityComparer">The equalityComparer value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, ObservableCollection<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TDestination : notnull
         where TSource : notnull => new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
 
-    /// <inheritdoc cref="TransformMany{TDestination, TSource}(IObservable{IChangeSet{TSource}}, Func{TSource, IEnumerable{TDestination}}, IEqualityComparer{TDestination}?)"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
-    /// Flattens each source item into children from a <see cref="ReadOnlyObservableCollection{T}"/>. The collection is observed for subsequent changes.
+    /// Flattens each source item into children from a <c>ReadOnlyObservableCollection&lt;T&gt;</c>. The collection is observed for subsequent changes.
     /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="manySelector">The manySelector value.</param>
+    /// <param name="equalityComparer">The equalityComparer value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, ReadOnlyObservableCollection<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TDestination : notnull
         where TSource : notnull => new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
 
-    /// <inheritdoc cref="TransformMany{TDestination, TSource}(IObservable{IChangeSet{TSource}}, Func{TSource, IEnumerable{TDestination}}, IEqualityComparer{TDestination}?)"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
-    /// Flattens each source item into children from an <see cref="IObservableList{T}"/>. The inner list is observed for subsequent changes.
+    /// Flattens each source item into children from an <c>IObservableList&lt;T&gt;</c>. The inner list is observed for subsequent changes.
     /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="manySelector">The manySelector value.</param>
+    /// <param name="equalityComparer">The equalityComparer value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, IObservableList<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TDestination : notnull
         where TSource : notnull => new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();

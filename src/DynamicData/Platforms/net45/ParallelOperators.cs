@@ -11,10 +11,10 @@ namespace DynamicData.Reactive.PLinq
 namespace DynamicData.PLinq
 #endif
 {
-    /// <summary>
-    /// PLinq operators or Net4 and Net45 only.
-    /// </summary>
-    public static class ParallelOperators
+/// <summary>
+/// PLinq operators or Net4 and Net45 only.
+/// </summary>
+public static class ParallelOperators
     {
         /// <summary>
         /// Filters the stream using the specified predicate.

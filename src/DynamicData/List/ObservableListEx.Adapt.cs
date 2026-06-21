@@ -22,21 +22,21 @@ namespace DynamicData;
 public static partial class ObservableListEx
 {
     /// <summary>
-    /// Injects a side effect into a changeset stream via an <see cref="IChangeSetAdaptor{T}"/>.
+    /// Injects a side effect into a changeset stream via an <c>IChangeSetAdaptor&lt;T&gt;</c>.
     /// The adaptor's <c>Adapt</c> method is invoked for each changeset before it is forwarded downstream unchanged.
     /// </summary>
     /// <typeparam name="T">The type of items in the list.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to observe and adapt.</param>
-    /// <param name="adaptor">The <see cref="IChangeSetAdaptor{T}"/> adaptor whose <c>Adapt</c> method is invoked for each changeset.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to observe and adapt.</param>
+    /// <param name="adaptor">The <c>IChangeSetAdaptor&lt;T&gt;</c> adaptor whose <c>Adapt</c> method is invoked for each changeset.</param>
     /// <returns>A list changeset stream identical to the source, with the adaptor side effect applied.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="adaptor"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
-    /// This is the primary extension point for custom UI binding adaptors (e.g., <see cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
+    /// This is the primary extension point for custom UI binding adaptors (e.g., <c>Bind&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservableCollection&lt;T&gt;, BindingOptions)</c>
     /// delegates to this operator). If the adaptor throws, the exception propagates downstream as <c>OnError</c>.
     /// </para>
     /// </remarks>
-    /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
+    /// <seealso><c>Bind&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservableCollection&lt;T&gt;, BindingOptions)</c></seealso>
     public static IObservable<IChangeSet<T>> Adapt<T>(this IObservable<IChangeSet<T>> source, IChangeSetAdaptor<T> adaptor)
         where T : notnull
     {

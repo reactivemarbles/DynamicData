@@ -32,6 +32,9 @@ public sealed class SourceCache<TObject, TKey>(Func<TObject, TKey> keySelector) 
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _innerCache field.
+    /// </summary>
     private readonly ObservableCache<TObject, TKey> _innerCache = new(keySelector);
 
     /// <inheritdoc />
@@ -53,26 +56,38 @@ public sealed class SourceCache<TObject, TKey>(Func<TObject, TKey> keySelector) 
     public IReadOnlyDictionary<TKey, TObject> KeyValues => _innerCache.KeyValues;
 
     /// <inheritdoc />
+    /// <param name="predicate">The predicate value.</param>
+    /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => _innerCache.Connect(predicate, suppressEmptyChangeSets);
 
     /// <inheritdoc />
     public void Dispose() => _innerCache.Dispose();
 
     /// <inheritdoc />
+    /// <param name="updateAction">The updateAction value.</param>
     public void Edit(Action<ISourceUpdater<TObject, TKey>> updateAction) => _innerCache.UpdateFromSource(updateAction);
 
     /// <inheritdoc />
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
     public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
     /// <inheritdoc />
+    /// <param name="predicate">The predicate value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => _innerCache.Preview(predicate);
 
     /// <inheritdoc />
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<Change<TObject, TKey>> Watch(TKey key) => _innerCache.Watch(key);
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public IDisposable SuspendCount() => _innerCache.SuspendCount();
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public IDisposable SuspendNotifications() => _innerCache.SuspendNotifications();
 }

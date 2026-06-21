@@ -9,6 +9,17 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the TransformWithInlineUpdate class.
+/// </summary>
+/// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+/// <typeparam name="TSource">The type of the TSource value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="transformFactory">The transformFactory value.</param>
+/// <param name="updateAction">The updateAction value.</param>
+/// <param name="exceptionCallback">The exceptionCallback value.</param>
+/// <param name="transformOnRefresh">The transformOnRefresh value.</param>
 internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>(IObservable<IChangeSet<TSource, TKey>> source,
                                  Func<TSource, TDestination> transformFactory,
                                  Action<TDestination, TSource> updateAction,
@@ -18,8 +29,16 @@ internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>(IOb
     where TSource : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Defer(RunImpl);
 
+    /// <summary>
+    /// Executes the RunImpl operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TDestination, TKey>> RunImpl() => source.Scan(
                 (ChangeAwareCache<TDestination, TKey>?)null,
                 (cache, changes) =>
@@ -65,6 +84,11 @@ internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>(IOb
             .Where(x => x is not null)
             .Select(cache => cache!.CaptureChanges());
 
+    /// <summary>
+    /// Executes the Transform operation.
+    /// </summary>
+    /// <param name="cache">The cache value.</param>
+    /// <param name="change">The change value.</param>
     private void Transform(ChangeAwareCache<TDestination, TKey> cache, in Change<TSource, TKey> change)
     {
         TDestination transformed;
@@ -87,6 +111,11 @@ internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>(IOb
         }
     }
 
+    /// <summary>
+    /// Executes the InlineUpdate operation.
+    /// </summary>
+    /// <param name="cache">The cache value.</param>
+    /// <param name="change">The change value.</param>
     private void InlineUpdate(ChangeAwareCache<TDestination, TKey> cache, Change<TSource, TKey> change)
     {
         var previous = cache.Lookup(change.Key)

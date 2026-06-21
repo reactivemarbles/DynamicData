@@ -21,7 +21,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to filter by excluding change reasons.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to filter by excluding change reasons.</param>
     /// <param name="reasons">The <see cref="ChangeReason"/> values to filter by.</param>
     /// <returns>An observable which emits a change set with items not matching the reasons.</returns>
     /// <exception cref="ArgumentNullException">reasons.</exception>

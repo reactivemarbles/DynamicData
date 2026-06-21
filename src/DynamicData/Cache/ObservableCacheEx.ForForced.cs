@@ -16,6 +16,13 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
+    /// <summary>
+    /// Executes the ForForced operation.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<Func<TSource, TKey, bool>>? ForForced<TSource, TKey>(this IObservable<Unit>? source)
         where TKey : notnull => source?.Select(
             _ =>
@@ -24,6 +31,13 @@ public static partial class ObservableCacheEx
                 return (Func<TSource, TKey, bool>)Transformer;
             });
 
+    /// <summary>
+    /// Executes the ForForced operation.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<Func<TSource, TKey, bool>>? ForForced<TSource, TKey>(this IObservable<Func<TSource, bool>>? source)
         where TKey : notnull => source?.Select(
             condition =>

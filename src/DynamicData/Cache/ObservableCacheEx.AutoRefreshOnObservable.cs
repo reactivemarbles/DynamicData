@@ -29,12 +29,12 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The object of the change set.</typeparam>
     /// <typeparam name="TKey">The key of the change set.</typeparam>
     /// <typeparam name="TAny">The type of evaluation.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to monitor for observable-driven refresh signals.</param>
-    /// <param name="reevaluator">The <see cref="Func{TObject, IObservable{TAny}}"/> observable which acts on items within the collection and produces a value when the item should be refreshed.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to monitor for observable-driven refresh signals.</param>
+    /// <param name="reevaluator">The <c>Func&lt;TObject, IObservable&lt;TAny&gt;&gt;</c> observable which acts on items within the collection and produces a value when the item should be refreshed.</param>
     /// <param name="changeSetBuffer">An optional <see cref="TimeSpan"/> buffer duration. Batches multiple refresh signals into a single changeset, improving performance when many elements change in quick succession. This greatly increases performance when many elements require a refresh.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
     /// <returns>An observable change set with additional refresh changes.</returns>
-    /// <seealso cref="ObservableListEx.AutoRefreshOnObservable"/>
+    /// <seealso><c>ObservableListEx.AutoRefreshOnObservable</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull => source.AutoRefreshOnObservable((t, _) => reevaluator(t), changeSetBuffer, scheduler);
@@ -45,8 +45,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The object of the change set.</typeparam>
     /// <typeparam name="TKey">The key of the change set.</typeparam>
     /// <typeparam name="TAny">The type of evaluation.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to monitor for observable-driven refresh signals.</param>
-    /// <param name="reevaluator">The <see cref="Func{TObject, TKey, IObservable{TAny}}"/> observable which acts on items within the collection and produces a value when the item should be refreshed.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to monitor for observable-driven refresh signals.</param>
+    /// <param name="reevaluator">The <c>Func&lt;TObject, TKey, IObservable&lt;TAny&gt;&gt;</c> observable which acts on items within the collection and produces a value when the item should be refreshed.</param>
     /// <param name="changeSetBuffer">An optional <see cref="TimeSpan"/> buffer duration. Batches multiple refresh signals into a single changeset, improving performance when many elements change in quick succession. This greatly increases performance when many elements require a refresh.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
     /// <returns>An observable change set with additional refresh changes.</returns>

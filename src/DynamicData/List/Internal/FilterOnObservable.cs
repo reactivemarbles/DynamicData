@@ -9,12 +9,31 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the FilterOnObservable class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="filter">The filter value.</param>
+/// <param name="buffer">The buffer value.</param>
+/// <param name="scheduler">The scheduler value.</param>
 internal sealed class FilterOnObservable<TObject>(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<bool>> filter, TimeSpan? buffer = null, IScheduler? scheduler = null)
     where TObject : notnull
 {
+    /// <summary>
+    /// The _filter field.
+    /// </summary>
     private readonly Func<TObject, IObservable<bool>> _filter = filter ?? throw new ArgumentNullException(nameof(filter));
+
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TObject>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject>> Run() => Observable.Create<IChangeSet<TObject>>(
             observer =>
             {
@@ -48,6 +67,17 @@ internal sealed class FilterOnObservable<TObject>(IObservable<IChangeSet<TObject
                 return new CompositeDisposable(publisher, shared.Connect());
             });
 
+    /// <summary>
+    /// Executes the IndexOfMany operation.
+    /// </summary>
+    /// <typeparam name="TObj">The type of the TObj value.</typeparam>
+    /// <typeparam name="TObjectProp">The type of the TObjectProp value.</typeparam>
+    /// <typeparam name="TResult">The type of the TResult value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="itemsToFind">The itemsToFind value.</param>
+    /// <param name="objectPropertyFunc">The objectPropertyFunc value.</param>
+    /// <param name="resultSelector">The resultSelector value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IEnumerable<TResult> IndexOfMany<TObj, TObjectProp, TResult>(IEnumerable<TObj> source, IEnumerable<TObj> itemsToFind, Func<TObj, TObjectProp> objectPropertyFunc, Func<TObj, int, TResult> resultSelector)
     {
         ArgumentExceptionHelper.ThrowIfNull(source);
@@ -58,25 +88,67 @@ internal sealed class FilterOnObservable<TObject>(IObservable<IChangeSet<TObject
         return itemsToFind.Join(indexed, objectPropertyFunc, right => objectPropertyFunc(right.Element), (left, right) => resultSelector(left, right.Index));
     }
 
-    private readonly struct ObjWithFilterValue(TObject obj, bool filter) : IEquatable<ObjWithFilterValue>
+/// <summary>
+/// Represents the ObjWithFilterValue value.
+/// </summary>
+/// <param name="obj">The obj value.</param>
+/// <param name="filter">The filter value.</param>
+private readonly struct ObjWithFilterValue(TObject obj, bool filter) : IEquatable<ObjWithFilterValue>
     {
+        /// <summary>
+        /// The Obj field.
+        /// </summary>
         public readonly TObject Obj = obj;
 
+        /// <summary>
+        /// The Filter field.
+        /// </summary>
         public readonly bool Filter = filter;
 
+        /// <summary>
+        /// Gets the ObjComparer value.
+        /// </summary>
         private static IEqualityComparer<ObjWithFilterValue> ObjComparer { get; } = new ObjEqualityComparer();
 
+        /// <summary>
+        /// Executes the Equals operation.
+        /// </summary>
+        /// <param name="other">The other value.</param>
+        /// <returns>The result of the operation.</returns>
         public bool Equals(ObjWithFilterValue other) =>
             ObjComparer.Equals(this, other); // default equality does _not_ include Filter value, as that would cause the Filter operator that is used later to fail
 
+        /// <summary>
+        /// Executes the Equals operation.
+        /// </summary>
+        /// <param name="obj">The obj value.</param>
+        /// <returns>The result of the operation.</returns>
         public override bool Equals(object? obj) => obj is ObjWithFilterValue value && Equals(value);
 
+        /// <summary>
+        /// Executes the GetHashCode operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         public override int GetHashCode() => ObjComparer.GetHashCode(this);
 
-        private sealed class ObjEqualityComparer : IEqualityComparer<ObjWithFilterValue>
+/// <summary>
+/// Provides members for the ObjEqualityComparer class.
+/// </summary>
+private sealed class ObjEqualityComparer : IEqualityComparer<ObjWithFilterValue>
         {
+            /// <summary>
+            /// Executes the Equals operation.
+            /// </summary>
+            /// <param name="x">The x value.</param>
+            /// <param name="y">The y value.</param>
+            /// <returns>The result of the operation.</returns>
             public bool Equals(ObjWithFilterValue x, ObjWithFilterValue y) => EqualityComparer<TObject>.Default.Equals(x.Obj, y.Obj);
 
+            /// <summary>
+            /// Executes the GetHashCode operation.
+            /// </summary>
+            /// <param name="obj">The obj value.</param>
+            /// <returns>The result of the operation.</returns>
             public int GetHashCode(ObjWithFilterValue obj)
             {
                 unchecked

@@ -9,9 +9,18 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the DisposeMany class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
 internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
     where T : notnull
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<T>> Run()
         => Observable.Create<IChangeSet<T>>(observer =>
         {
@@ -85,6 +94,10 @@ internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
             });
         });
 
+    /// <summary>
+    /// Executes the ProcessFinalization operation.
+    /// </summary>
+    /// <param name="cachedItems">The cachedItems value.</param>
     private static void ProcessFinalization(List<T> cachedItems)
     {
         foreach (var item in cachedItems)

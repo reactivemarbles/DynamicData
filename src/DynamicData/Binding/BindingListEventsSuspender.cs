@@ -9,10 +9,21 @@ namespace DynamicData.Reactive.Binding;
 namespace DynamicData.Binding;
 #endif
 
+/// <summary>
+/// Provides members for the BindingListEventsSuspender class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
 internal sealed class BindingListEventsSuspender<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T> : IDisposable
 {
+    /// <summary>
+    /// The _cleanUp field.
+    /// </summary>
     private readonly IDisposable _cleanUp;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BindingListEventsSuspender{T}"/> class.
+    /// </summary>
+    /// <param name="list">The list value.</param>
     public BindingListEventsSuspender(BindingList<T> list)
     {
         list.RaiseListChangedEvents = false;
@@ -25,5 +36,8 @@ internal sealed class BindingListEventsSuspender<[DynamicallyAccessedMembers(Dyn
             });
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose() => _cleanUp.Dispose();
 }

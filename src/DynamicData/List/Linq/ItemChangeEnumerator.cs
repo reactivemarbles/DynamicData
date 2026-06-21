@@ -9,9 +9,18 @@ namespace DynamicData.Reactive.List.Linq;
 namespace DynamicData.List.Linq;
 #endif
 
+/// <summary>
+/// Provides members for the ItemChangeEnumerator class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="changeSet">The changeSet value.</param>
 internal sealed class ItemChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnumerable<ItemChange<T>>
     where T : notnull
 {
+    /// <summary>
+    /// Executes the GetEnumerator operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IEnumerator<ItemChange<T>> GetEnumerator()
     {
         var lastKnownIndex = 0;
@@ -51,5 +60,9 @@ internal sealed class ItemChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnumer
         }
     }
 
+    /// <summary>
+    /// Executes the GetEnumerator operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

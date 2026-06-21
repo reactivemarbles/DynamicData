@@ -9,10 +9,21 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the Page class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="pageRequests">The pageRequests value.</param>
 internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IPagedChangeSet<TObject, TKey>> Run() => Observable.Create<IPagedChangeSet<TObject, TKey>>(
             observer =>
             {
@@ -27,22 +38,45 @@ internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, 
                     .SubscribeSafe(observer), queue);
             });
 
-    private sealed class Paginator
+/// <summary>
+/// Provides members for the Paginator class.
+/// </summary>
+private sealed class Paginator
     {
+        /// <summary>
+        /// The _all field.
+        /// </summary>
         private IKeyValueCollection<TObject, TKey> _all = new KeyValueCollection<TObject, TKey>();
 
+        /// <summary>
+        /// The _current field.
+        /// </summary>
         private KeyValueCollection<TObject, TKey> _current = new();
 
+        /// <summary>
+        /// The _isLoaded field.
+        /// </summary>
         private bool _isLoaded;
 
+        /// <summary>
+        /// The _request field.
+        /// </summary>
         private IPageRequest _request;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Paginator"/> class.
+        /// </summary>
         public Paginator()
         {
             _request = PageRequest.Default;
             _isLoaded = false;
         }
 
+        /// <summary>
+        /// Executes the Paginate operation.
+        /// </summary>
+        /// <param name="parameters">The parameters value.</param>
+        /// <returns>The result of the operation.</returns>
         public IPagedChangeSet<TObject, TKey>? Paginate(IPageRequest? parameters)
         {
             if (parameters is null || parameters.Page < 0 || parameters.Size < 1)
@@ -60,6 +94,11 @@ internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, 
             return Paginate();
         }
 
+        /// <summary>
+        /// Executes the Update operation.
+        /// </summary>
+        /// <param name="updates">The updates value.</param>
+        /// <returns>The result of the operation.</returns>
         public IPagedChangeSet<TObject, TKey>? Update(ISortedChangeSet<TObject, TKey> updates)
         {
             _isLoaded = true;
@@ -67,6 +106,10 @@ internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, 
             return Paginate(updates);
         }
 
+        /// <summary>
+        /// Executes the CalculatePages operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         private int CalculatePages()
         {
             if (_request.Size >= _all.Count)
@@ -85,6 +128,11 @@ internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, 
             return pages + 1;
         }
 
+        /// <summary>
+        /// Executes the Paginate operation.
+        /// </summary>
+        /// <param name="updates">The updates value.</param>
+        /// <returns>The result of the operation.</returns>
         private PagedChangeSet<TObject, TKey>? Paginate(ISortedChangeSet<TObject, TKey>? updates = null)
         {
             if (!_isLoaded)

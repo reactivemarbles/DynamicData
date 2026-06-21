@@ -25,20 +25,20 @@ public static partial class ObservableCacheEx
 {
     /// <summary>
     /// Emits the property value whenever the specified property changes on any item in the cache.
-    /// Like <see cref="WhenPropertyChanged{TObject, TKey, TValue}"/> but emits only the value, discarding the owning item.
+    /// Like <c>WhenPropertyChanged&lt;TObject, TKey, TValue&gt;</c> but emits only the value, discarding the owning item.
     /// </summary>
     /// <typeparam name="TObject">The type of the object (must implement <see cref="INotifyPropertyChanged"/>).</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the monitored property.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to observe a specific property value on items in.</param>
-    /// <param name="propertyAccessor">A <see cref="Expression{TDelegate}"/> that expression selecting the property to monitor.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to observe a specific property value on items in.</param>
+    /// <param name="propertyAccessor">A <c>Expression&lt;TDelegate&gt;</c> that expression selecting the property to monitor.</param>
     /// <param name="notifyOnInitialValue">When <see langword="true"/> (the default), the current property value is emitted immediately for each item upon subscription.</param>
-    /// <returns>An observable of property values. The owning item is not included; use <see cref="WhenPropertyChanged{TObject, TKey, TValue}"/> if you need it.</returns>
+    /// <returns>An observable of property values. The owning item is not included; use <c>WhenPropertyChanged&lt;TObject, TKey, TValue&gt;</c> if you need it.</returns>
     /// <remarks>
     /// <para>
     /// Per-item subscriptions are created on Add, replaced on Update, disposed on Remove. Errors from individual
     /// property subscriptions are silently ignored. If you need to correlate a value back to its source item,
-    /// use <see cref="WhenPropertyChanged{TObject, TKey, TValue}"/> which returns a <see cref="PropertyValue{TObject, TValue}"/> pair.
+    /// use <c>WhenPropertyChanged&lt;TObject, TKey, TValue&gt;</c> which returns a <c>PropertyValue&lt;TObject, TValue&gt;</c> pair.
     /// </para>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
@@ -49,10 +49,10 @@ public static partial class ObservableCacheEx
     /// <item><term>OnError</term><description>Per-item errors silently ignored. Source errors terminate the stream.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="WhenPropertyChanged{TObject, TKey, TValue}"/>
-    /// <seealso cref="WhenAnyPropertyChanged{TObject, TKey}"/>
-    /// <seealso cref="AutoRefresh{TObject, TKey, TProperty}(IObservable{IChangeSet{TObject, TKey}}, Expression{Func{TObject, TProperty}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
-    /// <seealso cref="ObservableListEx.WhenValueChanged"/>
+    /// <seealso><c>WhenPropertyChanged&lt;TObject, TKey, TValue&gt;</c></seealso>
+    /// <seealso><c>WhenAnyPropertyChanged&lt;TObject, TKey&gt;</c></seealso>
+    /// <seealso><c>AutoRefresh&lt;TObject, TKey, TProperty&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Expression&lt;Func&lt;TObject, TProperty&gt;&gt;, TimeSpan?, TimeSpan?, IScheduler?)</c></seealso>
+    /// <seealso><c>ObservableListEx.WhenValueChanged</c></seealso>
     public static IObservable<TValue?> WhenValueChanged<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
         where TObject : INotifyPropertyChanged
         where TKey : notnull

@@ -28,10 +28,10 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the cache.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to track for async disposal on removal.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to track for async disposal on removal.</param>
     /// <param name="disposalsCompletedAccessor">
     /// <para>
-    /// Invoked once per subscription, providing an <see cref="IObservable{Unit}"/> that signals when all
+    /// Invoked once per subscription, providing an <c>IObservable&lt;Unit&gt;</c> that signals when all
     /// <see cref="IAsyncDisposable.DisposeAsync()"/> calls have finished. The signal emits a single value
     /// and then completes.
     /// </para>
@@ -59,7 +59,7 @@ public static partial class ObservableCacheEx
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="disposalsCompletedAccessor"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="DisposeMany{TObject,TKey}"/>
+    /// <seealso><c>DisposeMany&lt;TObject,TKey&gt;</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> AsyncDisposeMany<TObject, TKey>(
                 this IObservable<IChangeSet<TObject, TKey>> source,
                 Action<IObservable<Unit>> disposalsCompletedAccessor)

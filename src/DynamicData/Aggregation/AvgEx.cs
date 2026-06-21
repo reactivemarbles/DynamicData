@@ -430,6 +430,19 @@ public static class AvgEx
     /// </returns>
     public static IObservable<float> Avg<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, float?> valueSelector, float emptyValue = 0) => source.Avg(t => valueSelector(t).GetValueOrDefault(), emptyValue);
 
+    /// <summary>
+    /// Executes the AvgCalc operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TValue">The type of the TValue value.</typeparam>
+    /// <typeparam name="TResult">The type of the TResult value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="valueSelector">The valueSelector value.</param>
+    /// <param name="fallbackValue">The fallbackValue value.</param>
+    /// <param name="addAction">The addAction value.</param>
+    /// <param name="removeAction">The removeAction value.</param>
+    /// <param name="resultAction">The resultAction value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<TResult> AvgCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, Func<TObject, TValue> valueSelector, TResult fallbackValue, Func<Avg<TValue>, TValue, Avg<TValue>> addAction, Func<Avg<TValue>, TValue, Avg<TValue>> removeAction, Func<Avg<TValue>, TResult> resultAction)
     {
         ArgumentExceptionHelper.ThrowIfNull(source);

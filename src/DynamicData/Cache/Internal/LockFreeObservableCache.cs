@@ -22,19 +22,37 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _changes field.
+    /// </summary>
     [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly Signal<IChangeSet<TObject, TKey>> _changes = new();
 
+    /// <summary>
+    /// The _changesPreview field.
+    /// </summary>
     [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly Signal<IChangeSet<TObject, TKey>> _changesPreview = new();
 
+    /// <summary>
+    /// The _countChanged field.
+    /// </summary>
     [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly Signal<int> _countChanged = new();
 
+    /// <summary>
+    /// The _cleanUp field.
+    /// </summary>
     private readonly IDisposable _cleanUp;
 
+    /// <summary>
+    /// The _innerCache field.
+    /// </summary>
     private readonly ChangeAwareCache<TObject, TKey> _innerCache = new();
 
+    /// <summary>
+    /// The _updater field.
+    /// </summary>
     private readonly ICacheUpdater<TObject, TKey> _updater;
 
     /// <summary>
@@ -95,6 +113,9 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     public IReadOnlyDictionary<TKey, TObject> KeyValues => new Dictionary<TKey, TObject>(_innerCache.GetDictionary());
 
     /// <inheritdoc />
+    /// <param name="predicate">The predicate value.</param>
+    /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => Observable.Defer(
             () =>
             {
@@ -139,6 +160,8 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
     /// <inheritdoc />
+    /// <param name="predicate">The predicate value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
 
     /// <summary>

@@ -24,9 +24,13 @@ public class SortedBindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAcc
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _list field.
+    /// </summary>
     private readonly BindingList<TObject> _list = list ?? throw new ArgumentNullException(nameof(list));
 
     /// <inheritdoc />
+    /// <param name="changes">The changes value.</param>
     public void Adapt(ISortedChangeSet<TObject, TKey> changes)
     {
         ArgumentExceptionHelper.ThrowIfNull(changes);
@@ -69,6 +73,10 @@ public class SortedBindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAcc
         }
     }
 
+    /// <summary>
+    /// Executes the DoUpdate operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
     private void DoUpdate(ISortedChangeSet<TObject, TKey> changes)
     {
         foreach (var change in changes)

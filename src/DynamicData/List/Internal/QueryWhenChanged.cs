@@ -9,11 +9,23 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the QueryWhenChanged class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
 internal sealed class QueryWhenChanged<T>(IObservable<IChangeSet<T>> source)
     where T : notnull
 {
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IReadOnlyCollection<T>> Run() => Observable.Create<IReadOnlyCollection<T>>(observer =>
                                                              {
                                                                  var list = new List<T>();

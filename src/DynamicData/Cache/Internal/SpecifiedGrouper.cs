@@ -9,17 +9,39 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the SpecifiedGrouper class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <typeparam name="TGroupKey">The type of the TGroupKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="groupSelector">The groupSelector value.</param>
+/// <param name="resultGroupSource">The resultGroupSource value.</param>
 internal sealed class SpecifiedGrouper<TObject, TKey, TGroupKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelector, IObservable<IDistinctChangeSet<TGroupKey>> resultGroupSource)
     where TObject : notnull
     where TKey : notnull
     where TGroupKey : notnull
 {
+    /// <summary>
+    /// The _groupSelector field.
+    /// </summary>
     private readonly Func<TObject, TGroupKey> _groupSelector = groupSelector ?? throw new ArgumentNullException(nameof(groupSelector));
 
+    /// <summary>
+    /// The _resultGroupSource field.
+    /// </summary>
     private readonly IObservable<IDistinctChangeSet<TGroupKey>> _resultGroupSource = resultGroupSource ?? throw new ArgumentNullException(nameof(resultGroupSource));
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(
             observer =>
             {

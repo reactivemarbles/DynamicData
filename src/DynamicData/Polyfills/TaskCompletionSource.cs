@@ -7,7 +7,7 @@
 
 namespace System.Threading.Tasks;
 
-/// <summary>Polyfill for the non-generic <see cref="TaskCompletionSource"/> introduced in .NET 5, backed by a <see cref="TaskCompletionSource{TResult}"/>.</summary>
+/// <summary>Polyfill for the non-generic <see cref="TaskCompletionSource"/> introduced in .NET 5, backed by a <c>TaskCompletionSource&lt;TResult&gt;</c>.</summary>
 [SuppressMessage("Performance", "CA1812", Justification = "Broadcast polyfill; not instantiated in every consuming leaf.")]
 internal sealed class TaskCompletionSource
 {

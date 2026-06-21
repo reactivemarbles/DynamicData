@@ -9,4 +9,11 @@ namespace DynamicData.Reactive.Aggregation;
 namespace DynamicData.Aggregation;
 #endif
 
+/// <summary>
+/// Represents the StdDev record.
+/// </summary>
+/// <typeparam name="TValue">The type of the TValue value.</typeparam>
+/// <param name="Count">The Count value.</param>
+/// <param name="SumOfItems">The SumOfItems value.</param>
+/// <param name="SumOfSquares">The SumOfSquares value.</param>
 internal readonly record struct StdDev<TValue>(int Count, TValue SumOfItems, TValue SumOfSquares);

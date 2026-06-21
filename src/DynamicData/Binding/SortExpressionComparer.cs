@@ -30,6 +30,9 @@ public class SortExpressionComparer<T> : List<SortExpression<T>>, IComparer<T>
     public static SortExpressionComparer<T> Descending(Func<T, IComparable> expression) => [new(expression, SortDirection.Descending)];
 
     /// <inheritdoc/>
+    /// <param name="x">The x value.</param>
+    /// <param name="y">The y value.</param>
+    /// <returns>The result of the operation.</returns>
     public int Compare(T? x, T? y)
     {
         foreach (var item in this)

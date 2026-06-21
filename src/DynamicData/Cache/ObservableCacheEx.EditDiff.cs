@@ -23,12 +23,16 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
-    /// <inheritdoc cref="EditDiff{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject}, Func{TObject, TObject, bool})"/>
-    /// <param name="source">The <see cref="ISourceCache{TObject, TKey}"/> to diff and update.</param>
-    /// <param name="allItems">The <see cref="IEnumerable{TObject}"/> representing the complete desired state to diff against the cache.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TObject}"/> used to determine whether a new item is the same as an existing cached item.</param>
+    /// <summary>
+    /// Provides an overload of <c>EditDiff</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The <c>ISourceCache&lt;TObject, TKey&gt;</c> to diff and update.</param>
+    /// <param name="allItems">The <c>IEnumerable&lt;TObject&gt;</c> representing the complete desired state to diff against the cache.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TObject&gt;</c> used to determine whether a new item is the same as an existing cached item.</param>
     /// <remarks>
-    /// This overload uses an <see cref="IEqualityComparer{T}"/> instead of a <see cref="Func{T, T, TResult}"/> delegate
+    /// This overload uses an <c>IEqualityComparer&lt;T&gt;</c> instead of a <c>Func&lt;T, T, TResult&gt;</c> delegate
     /// to determine item equality.
     /// </remarks>
     public static void EditDiff<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> allItems, IEqualityComparer<TObject> equalityComparer)
@@ -48,9 +52,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The <see cref="ISourceCache{TObject, TKey}"/> to diff and update.</param>
-    /// <param name="allItems">The <see cref="IEnumerable{TObject}"/> representing the complete desired state.</param>
-    /// <param name="areItemsEqual">The <see cref="Func{TObject, TObject, bool}"/> that returns <see langword="true"/> when the current and previous items are considered equal, e.g. <c>(current, previous) =&gt; current.Version == previous.Version</c>.</param>
+    /// <param name="source">The <c>ISourceCache&lt;TObject, TKey&gt;</c> to diff and update.</param>
+    /// <param name="allItems">The <c>IEnumerable&lt;TObject&gt;</c> representing the complete desired state.</param>
+    /// <param name="areItemsEqual">The <c>Func&lt;TObject, TObject, bool&gt;</c> that returns <see langword="true"/> when the current and previous items are considered equal, e.g. <c>(current, previous) =&gt; current.Version == previous.Version</c>.</param>
     /// <remarks>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
@@ -74,15 +78,15 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Converts an <see cref="IObservable{T}"/> of <see cref="IEnumerable{T}"/> into a changeset stream by diffing each
+    /// Converts an <c>IObservable&lt;T&gt;</c> of <c>IEnumerable&lt;T&gt;</c> into a changeset stream by diffing each
     /// emission against the previous one. Each emission replaces the entire dataset.
-    /// Counterpart to <see cref="ToCollection{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>.
+    /// Counterpart to <c>ToCollection&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;)</c>.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IEnumerable{TObject}}"/> to convert into a keyed changeset stream.</param>
-    /// <param name="keySelector">The <see cref="Func{TObject, TKey}"/> that extracts the unique key from each item.</param>
-    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TObject}"/> for comparing items. Uses default equality if <see langword="null"/>.</param>
+    /// <param name="source">The source <c>IObservable&lt;IEnumerable&lt;TObject&gt;&gt;</c> to convert into a keyed changeset stream.</param>
+    /// <param name="keySelector">The <c>Func&lt;TObject, TKey&gt;</c> that extracts the unique key from each item.</param>
+    /// <param name="equalityComparer">An optional <c>IEqualityComparer&lt;TObject&gt;</c> for comparing items. Uses default equality if <see langword="null"/>.</param>
     /// <returns>An observable changeset representing the incremental differences between successive snapshots.</returns>
     /// <remarks>
     /// <list type="table">
@@ -94,7 +98,7 @@ public static partial class ObservableCacheEx
     /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="ToCollection{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
+    /// <seealso><c>ToCollection&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> EditDiff<TObject, TKey>(this IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -106,14 +110,14 @@ public static partial class ObservableCacheEx
     }
 
     /// <summary>
-    /// Converts an <see cref="IObservable{T}"/> of <see cref="Optional{T}"/> into a changeset stream that tracks
+    /// Converts an <c>IObservable&lt;T&gt;</c> of <c>Optional&lt;T&gt;</c> into a changeset stream that tracks
     /// a single item: <c>Some</c> produces an <b>Add</b> or <b>Update</b>, and <c>None</c> produces a <b>Remove</b>.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{Optional{TObject}}"/> to convert into a keyed changeset stream.</param>
-    /// <param name="keySelector">The <see cref="Func{TObject, TKey}"/> that extracts the unique key from each item.</param>
-    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TObject}"/> for comparing items. Uses default equality if <see langword="null"/>.</param>
+    /// <param name="source">The source <c>IObservable&lt;Optional&lt;TObject&gt;&gt;</c> to convert into a keyed changeset stream.</param>
+    /// <param name="keySelector">The <c>Func&lt;TObject, TKey&gt;</c> that extracts the unique key from each item.</param>
+    /// <param name="equalityComparer">An optional <c>IEqualityComparer&lt;TObject&gt;</c> for comparing items. Uses default equality if <see langword="null"/>.</param>
     /// <returns>An observable changeset tracking the single optional item.</returns>
     /// <remarks>
     /// <list type="table">

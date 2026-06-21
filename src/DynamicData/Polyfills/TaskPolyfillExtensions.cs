@@ -10,7 +10,6 @@ namespace System.Threading.Tasks;
 internal static class TaskPolyfillExtensions
 {
     /// <summary>Polyfill awaiting operations for a task.</summary>
-    /// <param name="task">The task to await.</param>
     extension(Task task)
     {
         /// <summary>Gets a task that completes with <paramref name="task"/>, or faults when the timeout elapses or the token is cancelled.</summary>
@@ -25,8 +24,6 @@ internal static class TaskPolyfillExtensions
     }
 
     /// <summary>Polyfill awaiting operations for a task that produces a result.</summary>
-    /// <param name="task">The task to await.</param>
-    /// <typeparam name="T">The task result type.</typeparam>
     extension<T>(Task<T> task)
     {
         /// <summary>Gets a task that completes with the same result as <paramref name="task"/>, or faults when the timeout elapses or the token is cancelled.</summary>

@@ -204,6 +204,19 @@ public static class StdDevEx
         return source.StdDevCalc(valueSelector, fallbackValue, (current, item) => new StdDev<float>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<float>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Math.Sqrt(values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) * (1.0d / (values.Count - 1)));
     }
 
+    /// <summary>
+    /// Executes the StdDevCalc operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TValue">The type of the TValue value.</typeparam>
+    /// <typeparam name="TResult">The type of the TResult value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="valueSelector">The valueSelector value.</param>
+    /// <param name="fallbackValue">The fallbackValue value.</param>
+    /// <param name="addAction">The addAction value.</param>
+    /// <param name="removeAction">The removeAction value.</param>
+    /// <param name="resultAction">The resultAction value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<TResult> StdDevCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, Func<TObject, TValue> valueSelector, TResult fallbackValue, Func<StdDev<TValue>, TValue, StdDev<TValue>> addAction, Func<StdDev<TValue>, TValue, StdDev<TValue>> removeAction, Func<StdDev<TValue>, TResult> resultAction)
     {
         ArgumentExceptionHelper.ThrowIfNull(source);
@@ -217,6 +230,12 @@ public static class StdDevEx
                 aggregateItem.Type == AggregateType.Add ? addAction(current, valueSelector(aggregateItem.Item)) : removeAction(current, valueSelector(aggregateItem.Item)))).Select(values => values.Count < 2 ? fallbackValue : resultAction(values));
     }
 
+    /// <summary>
+    /// Executes the Sqrt operation.
+    /// </summary>
+    /// <param name="x">The x value.</param>
+    /// <param name="epsilon">The epsilon value.</param>
+    /// <returns>The result of the operation.</returns>
     private static decimal Sqrt(decimal x, decimal epsilon = 0.0M)
     {
         if (x < 0)

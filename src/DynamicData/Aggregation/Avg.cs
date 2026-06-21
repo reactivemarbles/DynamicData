@@ -9,4 +9,10 @@ namespace DynamicData.Reactive.Aggregation;
 namespace DynamicData.Aggregation;
 #endif
 
+/// <summary>
+/// Represents the Avg record.
+/// </summary>
+/// <typeparam name="TValue">The type of the TValue value.</typeparam>
+/// <param name="Count">The Count value.</param>
+/// <param name="Sum">The Sum value.</param>
 internal readonly record struct Avg<TValue>(int Count, TValue Sum);

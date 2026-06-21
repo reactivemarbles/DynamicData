@@ -9,7 +9,13 @@ namespace DynamicData.Reactive;
 namespace DynamicData;
 #endif
 
+/// <summary>
+/// Provides members for the GlobalConfig class.
+/// </summary>
 internal static class GlobalConfig
 {
+    /// <summary>
+    /// Gets the DefaultScheduler value.
+    /// </summary>
     public static IScheduler DefaultScheduler => TaskPoolScheduler.Default;
 }

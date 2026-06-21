@@ -29,7 +29,7 @@ public class ChangeSet<T> : List<Change<T>>, IChangeSet<T>
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ChangeSet{T}" /> class.
+    /// Initializes a new instance of the <see cref="ChangeSet{T}"/> class.
     /// </summary>
     /// <param name="items">The items.</param>
     /// <exception cref="ArgumentNullException">items.</exception>

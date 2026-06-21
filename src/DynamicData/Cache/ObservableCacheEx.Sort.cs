@@ -28,8 +28,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort.</param>
-    /// <param name="comparer">The <see cref="IComparer{TObject}"/> used to determine sort order.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort.</param>
+    /// <param name="comparer">The <c>IComparer&lt;TObject&gt;</c> used to determine sort order.</param>
     /// <param name="sortOptimisations">A <see cref="SortOptimisations"/> that sort optimisation flags. Specify one or more sort optimisations.</param>
     /// <param name="resetThreshold">The number of updates before the entire list is resorted (rather than inline sort).</param>
     /// <returns>An observable which emits change sets.</returns>
@@ -38,7 +38,7 @@ public static partial class ObservableCacheEx
     /// or
     /// comparer.
     /// </exception>
-    /// <seealso cref="ObservableListEx.Sort"/>
+    /// <seealso><c>ObservableListEx.Sort</c></seealso>
     [Obsolete(Constants.SortIsObsolete)]
     public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
         where TObject : notnull
@@ -55,8 +55,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort.</param>
-    /// <param name="comparerObservable">The <see cref="IObservable{IComparer{TObject}}"/> comparer observable.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort.</param>
+    /// <param name="comparerObservable">The <c>IObservable&lt;IComparer&lt;TObject&gt;&gt;</c> comparer observable.</param>
     /// <param name="sortOptimisations">The <see cref="SortOptimisations"/> sort optimisations.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits change sets.</returns>
@@ -76,9 +76,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort.</param>
-    /// <param name="comparerObservable">The <see cref="IObservable{IComparer{TObject}}"/> comparer observable.</param>
-    /// <param name="resorter">An <see cref="IObservable{Unit}"/> that signals the algorithm to re-sort the entire data set.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort.</param>
+    /// <param name="comparerObservable">The <c>IObservable&lt;IComparer&lt;TObject&gt;&gt;</c> comparer observable.</param>
+    /// <param name="resorter">An <c>IObservable&lt;Unit&gt;</c> that signals the algorithm to re-sort the entire data set.</param>
     /// <param name="sortOptimisations">The <see cref="SortOptimisations"/> sort optimisations.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits change sets.</returns>
@@ -98,9 +98,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort.</param>
-    /// <param name="comparer">The <see cref="IComparer{TObject}"/> used to determine sort order.</param>
-    /// <param name="resorter">An <see cref="IObservable{Unit}"/> that signals the algorithm to re-sort the entire data set.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort.</param>
+    /// <param name="comparer">The <c>IComparer&lt;TObject&gt;</c> used to determine sort order.</param>
+    /// <param name="resorter">An <c>IObservable&lt;Unit&gt;</c> that signals the algorithm to re-sort the entire data set.</param>
     /// <param name="sortOptimisations">The <see cref="SortOptimisations"/> sort optimisations.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits change sets.</returns>

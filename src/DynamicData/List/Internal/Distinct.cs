@@ -9,14 +9,31 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the Distinct class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <typeparam name="TValue">The type of the TValue value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="valueSelector">The valueSelector value.</param>
 internal sealed class Distinct<T, TValue>(IObservable<IChangeSet<T>> source, Func<T, TValue> valueSelector)
     where T : notnull
     where TValue : notnull
 {
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// The _valueSelector field.
+    /// </summary>
     private readonly Func<T, TValue> _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TValue>> Run() => Observable.Create<IChangeSet<TValue>>(
             observer =>
             {
@@ -33,6 +50,13 @@ internal sealed class Distinct<T, TValue>(IObservable<IChangeSet<T>> source, Fun
                     true).Select(changes => Process(valueCounters, result, changes)).NotEmpty().SubscribeSafe(observer);
             });
 
+    /// <summary>
+    /// Executes the Process operation.
+    /// </summary>
+    /// <param name="values">The values value.</param>
+    /// <param name="result">The result value.</param>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IChangeSet<TValue> Process(Dictionary<TValue, int> values, ChangeAwareList<TValue> result, IChangeSet<ItemWithMatch> changes)
     {
         void AddAction(TValue value) =>
@@ -138,26 +162,46 @@ internal sealed class Distinct<T, TValue>(IObservable<IChangeSet<T>> source, Fun
         return result.CaptureChanges();
     }
 
-    private sealed class ItemWithMatch(T item, TValue value, TValue? previousValue) : IEquatable<ItemWithMatch>
+/// <summary>
+/// Provides members for the ItemWithMatch class.
+/// </summary>
+/// <param name="item">The item value.</param>
+/// <param name="value">The value value.</param>
+/// <param name="previousValue">The previousValue value.</param>
+private sealed class ItemWithMatch(T item, TValue value, TValue? previousValue) : IEquatable<ItemWithMatch>
     {
+        /// <summary>
+        /// Gets the Item value.
+        /// </summary>
         public T Item { get; } = item;
 
+        /// <summary>
+        /// Gets the Previous value.
+        /// </summary>
         public TValue? Previous { get; } = previousValue;
 
+        /// <summary>
+        /// Gets the Value value.
+        /// </summary>
         public TValue Value { get; } = value;
 
-        /// <summary>Returns a value that indicates whether the values of two <see cref="Filter{T}.ItemWithMatch" /> objects are equal.</summary>
+        /// <summary>Returns a value that indicates whether the values of two <c>Filter&lt;T&gt;.ItemWithMatch</c> objects are equal.</summary>
         /// <param name="left">The first value to compare.</param>
         /// <param name="right">The second value to compare.</param>
         /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
         public static bool operator ==(ItemWithMatch left, ItemWithMatch right) => Equals(left, right);
 
-        /// <summary>Returns a value that indicates whether two <see cref="Filter{T}.ItemWithMatch" /> objects have different values.</summary>
+        /// <summary>Returns a value that indicates whether two <c>Filter&lt;T&gt;.ItemWithMatch</c> objects have different values.</summary>
         /// <param name="left">The first value to compare.</param>
         /// <param name="right">The second value to compare.</param>
         /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
         public static bool operator !=(ItemWithMatch left, ItemWithMatch right) => !Equals(left, right);
 
+        /// <summary>
+        /// Executes the Equals operation.
+        /// </summary>
+        /// <param name="other">The other value.</param>
+        /// <returns>The result of the operation.</returns>
         public bool Equals(ItemWithMatch? other)
         {
             if (other is null)
@@ -173,6 +217,11 @@ internal sealed class Distinct<T, TValue>(IObservable<IChangeSet<T>> source, Fun
             return EqualityComparer<T>.Default.Equals(Item, other.Item);
         }
 
+        /// <summary>
+        /// Executes the Equals operation.
+        /// </summary>
+        /// <param name="obj">The obj value.</param>
+        /// <returns>The result of the operation.</returns>
         public override bool Equals(object? obj)
         {
             if (obj is null)
@@ -193,8 +242,16 @@ internal sealed class Distinct<T, TValue>(IObservable<IChangeSet<T>> source, Fun
             return Equals((ItemWithMatch)obj);
         }
 
+        /// <summary>
+        /// Executes the GetHashCode operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         public override int GetHashCode() => Item is null ? 0 : EqualityComparer<T>.Default.GetHashCode(Item);
 
+        /// <summary>
+        /// Executes the ToString operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         public override string ToString() => $"{nameof(Item)}: {Item}, {nameof(Value)}: {Value}, {nameof(Previous)}: {Previous}";
     }
 }

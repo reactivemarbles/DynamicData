@@ -80,7 +80,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Change{T}"/> class.
-    /// Initializes a new instance of the <see cref="Change{TObject, TKey}" /> struct.
+    /// Initializes a new instance of the <see cref="Change{TObject, TKey}"/> struct.
     /// </summary>
     /// <param name="reason">The reason.</param>
     /// <param name="current">The current.</param>
@@ -139,11 +139,25 @@ public sealed class Change<T> : IEquatable<Change<T>>
     /// </value>
     public ChangeType Type => Reason.GetChangeType();
 
+    /// <summary>
+    /// Determines whether two <see cref="Change{T}"/> instances are equal.
+    /// </summary>
+    /// <param name="left">The left change to compare.</param>
+    /// <param name="right">The right change to compare.</param>
+    /// <returns><see langword="true"/> when the values are equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator ==(Change<T> left, Change<T> right) => Equals(left, right);
 
+    /// <summary>
+    /// Determines whether two <see cref="Change{T}"/> instances are not equal.
+    /// </summary>
+    /// <param name="left">The left change to compare.</param>
+    /// <param name="right">The right change to compare.</param>
+    /// <returns><see langword="true"/> when the values are not equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator !=(Change<T> left, Change<T> right) => !Equals(left, right);
 
     /// <inheritdoc />
+    /// <param name="other">The other value.</param>
+    /// <returns>The result of the operation.</returns>
     public bool Equals(Change<T>? other)
     {
         if (other is null)
@@ -160,6 +174,8 @@ public sealed class Change<T> : IEquatable<Change<T>>
     }
 
     /// <inheritdoc />
+    /// <param name="obj">The obj value.</param>
+    /// <returns>The result of the operation.</returns>
     public override bool Equals(object? obj)
     {
         if (obj is null)
@@ -181,6 +197,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -193,5 +210,6 @@ public sealed class Change<T> : IEquatable<Change<T>>
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"{Reason}. {Range.Count} changes";
 }

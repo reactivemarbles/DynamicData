@@ -10,7 +10,6 @@ namespace System.Threading;
 internal static class CancellationTokenPolyfillExtensions
 {
     /// <summary>Polyfill registration operations for a cancellation token.</summary>
-    /// <param name="token">The cancellation token.</param>
     extension(CancellationToken token)
     {
         /// <summary>Registers a delegate that is invoked when the token is cancelled, without capturing the execution context.</summary>

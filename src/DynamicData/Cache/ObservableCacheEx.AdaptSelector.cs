@@ -17,6 +17,15 @@ namespace DynamicData;
 public static partial class ObservableCacheEx
 {
     // TODO: Apply the Adapter to more places
+
+    /// <summary>
+    /// Executes the AdaptSelector operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <typeparam name="TResult">The type of the TResult value.</typeparam>
+    /// <param name="other">The other value.</param>
+    /// <returns>The result of the operation.</returns>
     private static Func<TObject, TKey, TResult> AdaptSelector<TObject, TKey, TResult>(Func<TObject, TResult> other)
         where TObject : notnull
         where TKey : notnull

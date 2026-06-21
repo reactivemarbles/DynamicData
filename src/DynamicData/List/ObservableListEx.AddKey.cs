@@ -26,9 +26,9 @@ public static partial class ObservableListEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the list.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to add keys to, converting to a cache changeset.</param>
-    /// <param name="keySelector">A <see cref="Func{T, TResult}"/> function to extract a unique key from each item.</param>
-    /// <returns>A cache <see cref="IObservable{IChangeSet{TObject, TKey}}"/> changeset stream with keyed items.</returns>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject&gt;&gt;</c> to add keys to, converting to a cache changeset.</param>
+    /// <param name="keySelector">A <c>Func&lt;T, TResult&gt;</c> function to extract a unique key from each item.</param>
+    /// <returns>A cache <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> changeset stream with keyed items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
@@ -36,7 +36,7 @@ public static partial class ObservableListEx
     /// Use this when you need to transition from list-based pipelines to cache-based operators (Filter by key, Join, Group, etc.).
     /// </para>
     /// </remarks>
-    /// <seealso cref="ObservableCacheEx.RemoveKey{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
+    /// <seealso><c>ObservableCacheEx.RemoveKey&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> AddKey<TObject, TKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TKey> keySelector)
         where TObject : notnull
         where TKey : notnull

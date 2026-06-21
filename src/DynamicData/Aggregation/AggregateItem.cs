@@ -21,6 +21,7 @@ namespace DynamicData.Aggregation;
 public readonly record struct AggregateItem<TObject>(AggregateType Type, TObject Item)
 {
     /// <inheritdoc/>
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         var hashCode = -1719135621;

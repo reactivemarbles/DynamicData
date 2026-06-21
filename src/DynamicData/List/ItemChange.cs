@@ -22,7 +22,7 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     public static readonly ItemChange<T> Empty;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ItemChange{T}" /> struct.
+    /// Initializes a new instance of the <see cref="ItemChange{T}"/> struct.
     /// </summary>
     /// <param name="reason">The reason.</param>
     /// <param name="current">The current.</param>

@@ -9,19 +9,32 @@ namespace DynamicData.Reactive.List.Linq;
 namespace DynamicData.List.Linq;
 #endif
 
+/// <summary>
+/// Provides members for the AddKeyEnumerator class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="keySelector">The keySelector value.</param>
 internal sealed class AddKeyEnumerator<TObject, TKey>(IChangeSet<TObject> source, Func<TObject, TKey> keySelector) : IEnumerable<Change<TObject, TKey>>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _keySelector field.
+    /// </summary>
     private readonly Func<TObject, TKey> _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IChangeSet<TObject> _source = source ?? throw new ArgumentNullException(nameof(source));
 
     /// <summary>
     /// Returns an enumerator that iterates through the collection.
     /// </summary>
     /// <returns>
-    /// A <see cref="IEnumerator{T}" /> that can be used to iterate through the collection.
+    /// A <c>IEnumerator&lt;T&gt;</c> that can be used to iterate through the collection.
     /// </returns>
     public IEnumerator<Change<TObject, TKey>> GetEnumerator()
     {
@@ -106,5 +119,9 @@ internal sealed class AddKeyEnumerator<TObject, TKey>(IChangeSet<TObject> source
         }
     }
 
+    /// <summary>
+    /// Executes the GetEnumerator operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

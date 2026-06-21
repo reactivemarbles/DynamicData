@@ -16,9 +16,18 @@ namespace DynamicData.Reactive.List.Linq;
 namespace DynamicData.List.Linq;
 #endif
 
+/// <summary>
+/// Provides members for the UnifiedChangeEnumerator class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="changeSet">The changeSet value.</param>
 internal sealed class UnifiedChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnumerable<UnifiedChange<T>>
     where T : notnull
 {
+    /// <summary>
+    /// Executes the GetEnumerator operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IEnumerator<UnifiedChange<T>> GetEnumerator()
     {
         foreach (var change in changeSet)
@@ -53,5 +62,9 @@ internal sealed class UnifiedChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnu
         }
     }
 
+    /// <summary>
+    /// Executes the GetEnumerator operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

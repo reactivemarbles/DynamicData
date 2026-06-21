@@ -17,24 +17,24 @@ namespace DynamicData;
 public static partial class ObservableCacheEx
 {
     /// <summary>
-    /// Filters the source changeset stream to a single key, emitting each <see cref="Change{TObject, TKey}"/> for that key.
+    /// Filters the source changeset stream to a single key, emitting each <c>Change&lt;TObject, TKey&gt;</c> for that key.
     /// Changes for all other keys are ignored.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to watch a single key in.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to watch a single key in.</param>
     /// <param name="key">The <typeparamref name="TKey"/> key to observe.</param>
-    /// <returns>An observable of <see cref="Change{TObject, TKey}"/> for the specified key only.</returns>
+    /// <returns>An observable of <c>Change&lt;TObject, TKey&gt;</c> for the specified key only.</returns>
     /// <remarks>
     /// <para>
     /// Emits Add, Update, Remove, and Refresh changes as they occur for the target key.
     /// No initial emission occurs if the key is not yet present in the cache. This operator does not
     /// produce changesets; it produces individual change notifications. For Optional-based watching,
-    /// use <see cref="ToObservableOptional{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey, IEqualityComparer{TObject}?)"/>.
+    /// use <c>ToObservableOptional&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, TKey, IEqualityComparer&lt;TObject&gt;?)</c>.
     /// </para>
     /// </remarks>
-    /// <seealso cref="WatchValue{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey)"/>
-    /// <seealso cref="ToObservableOptional{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey, IEqualityComparer{TObject}?)"/>
+    /// <seealso><c>WatchValue&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, TKey)</c></seealso>
+    /// <seealso><c>ToObservableOptional&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, TKey, IEqualityComparer&lt;TObject&gt;?)</c></seealso>
     public static IObservable<Change<TObject, TKey>> Watch<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key)
         where TObject : notnull
         where TKey : notnull

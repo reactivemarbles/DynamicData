@@ -23,6 +23,14 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
+    /// <summary>
+    /// Executes the Combine operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="type">The type value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> source, CombineOperator type)
         where TObject : notnull
         where TKey : notnull
@@ -38,6 +46,14 @@ public static partial class ObservableCacheEx
             });
     }
 
+    /// <summary>
+    /// Executes the Combine operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="type">The type value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservableList<ISourceCache<TObject, TKey>> source, CombineOperator type)
         where TObject : notnull
         where TKey : notnull
@@ -53,6 +69,14 @@ public static partial class ObservableCacheEx
             });
     }
 
+    /// <summary>
+    /// Executes the Combine operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="type">The type value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
         where TObject : notnull
         where TKey : notnull
@@ -62,6 +86,14 @@ public static partial class ObservableCacheEx
         return new DynamicCombiner<TObject, TKey>(source, type).Run();
     }
 
+    /// <summary>
+    /// Executes the Combine operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <param name="type">The type value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources, CombineOperator type)
         where TObject : notnull
         where TKey : notnull
@@ -99,6 +131,15 @@ public static partial class ObservableCacheEx
             });
     }
 
+    /// <summary>
+    /// Executes the Combine operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="type">The type value.</param>
+    /// <param name="combineTarget">The combineTarget value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, CombineOperator type, params IObservable<IChangeSet<TObject, TKey>>[] combineTarget)
         where TObject : notnull
         where TKey : notnull

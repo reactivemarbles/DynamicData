@@ -20,8 +20,8 @@ public static partial class ObservableListEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the list.</typeparam>
     /// <typeparam name="TDestination">The type of the destination items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to convert.</param>
-    /// <param name="conversionFactory">The <see cref="Func{T, TResult}"/> conversion factory.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject&gt;&gt;</c> to convert.</param>
+    /// <param name="conversionFactory">The <c>Func&lt;T, TResult&gt;</c> conversion factory.</param>
     /// <returns>An observable which emits the change set.</returns>
     [Obsolete("Prefer Cast as it is does the same thing but is semantically correct")]
     public static IObservable<IChangeSet<TDestination>> Convert<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TDestination> conversionFactory)

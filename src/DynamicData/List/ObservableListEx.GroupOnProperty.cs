@@ -27,11 +27,11 @@ public static partial class ObservableListEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object. Must implement <see cref="INotifyPropertyChanged"/>.</typeparam>
     /// <typeparam name="TGroup">The type of the group key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to group by property value.</param>
-    /// <param name="propertySelector"><see cref="Expression{TDelegate}"/> selecting the property whose value determines the group key.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject&gt;&gt;</c> to group by property value.</param>
+    /// <param name="propertySelector"><c>Expression&lt;TDelegate&gt;</c> selecting the property whose value determines the group key.</param>
     /// <param name="propertyChangedThrottle">An optional <see cref="TimeSpan"/> throttle duration for property change notifications.</param>
     /// <param name="scheduler">The <see cref="IScheduler"/> used when throttling.</param>
-    /// <returns>A list changeset stream of <see cref="IGroup{TObject, TGroup}"/> objects.</returns>
+    /// <returns>A list changeset stream of <c>IGroup&lt;TObject, TGroup&gt;</c> objects.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertySelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
@@ -39,9 +39,9 @@ public static partial class ObservableListEx
     /// Property changes trigger re-evaluation of the group key, potentially moving items between groups.
     /// </para>
     /// </remarks>
-    /// <seealso cref="GroupOn{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Func{TObject, TGroup}, IObservable{Unit}?)"/>
-    /// <seealso cref="GroupOnPropertyWithImmutableState{TObject, TGroup}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TGroup}}, TimeSpan?, IScheduler?)"/>
-    /// <seealso cref="AutoRefresh{TObject, TProperty}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TProperty}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <seealso><c>GroupOn&lt;TObject, TGroup&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Func&lt;TObject, TGroup&gt;, IObservable&lt;Unit&gt;?)</c></seealso>
+    /// <seealso><c>GroupOnPropertyWithImmutableState&lt;TObject, TGroup&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Expression&lt;Func&lt;TObject, TGroup&gt;&gt;, TimeSpan?, IScheduler?)</c></seealso>
+    /// <seealso><c>AutoRefresh&lt;TObject, TProperty&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Expression&lt;Func&lt;TObject, TProperty&gt;&gt;, TimeSpan?, TimeSpan?, IScheduler?)</c></seealso>
     public static IObservable<IChangeSet<IGroup<TObject, TGroup>>> GroupOnProperty<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TGroup>> propertySelector, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
         where TGroup : notnull

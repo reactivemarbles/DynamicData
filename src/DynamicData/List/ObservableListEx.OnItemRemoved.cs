@@ -19,8 +19,8 @@ public static partial class ObservableListEx
     /// Triggers on <see cref="ListChangeReason.Remove"/>, <see cref="ListChangeReason.RemoveRange"/>, <see cref="ListChangeReason.Clear"/>, and the old item of <see cref="ListChangeReason.Replace"/>.
     /// </summary>
     /// <typeparam name="T">The type of items in the list.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to observe item removals in.</param>
-    /// <param name="removeAction">The <see cref="Action{T}"/> action to invoke for each removed item.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to observe item removals in.</param>
+    /// <param name="removeAction">The <c>Action&lt;T&gt;</c> action to invoke for each removed item.</param>
     /// <param name="invokeOnUnsubscribe">When <see langword="true"/> (default), <paramref name="removeAction"/> is also invoked for all remaining tracked items upon stream disposal, completion, or error.</param>
     /// <returns>A continuation of the source changeset stream, with the side effect applied before forwarding.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="removeAction"/> is <see langword="null"/>.</exception>
@@ -41,10 +41,10 @@ public static partial class ObservableListEx
     /// </list>
     /// <para><b>Worth noting:</b> When <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/> (the default), disposing the subscription also invokes the callback for every item still in the list, not just items that were explicitly removed during the subscription. Exceptions in <paramref name="removeAction"/> are not caught.</para>
     /// </remarks>
-    /// <seealso cref="OnItemAdded{T}(IObservable{IChangeSet{T}}, Action{T})"/>
-    /// <seealso cref="DisposeMany{T}(IObservable{IChangeSet{T}})"/>
-    /// <seealso cref="SubscribeMany{T}(IObservable{IChangeSet{T}}, Func{T, IDisposable})"/>
-    /// <seealso cref="ObservableCacheEx.OnItemRemoved{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject}, bool)"/>
+    /// <seealso><c>OnItemAdded&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Action&lt;T&gt;)</c></seealso>
+    /// <seealso><c>DisposeMany&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>
+    /// <seealso><c>SubscribeMany&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Func&lt;T, IDisposable&gt;)</c></seealso>
+    /// <seealso><c>ObservableCacheEx.OnItemRemoved&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Action&lt;TObject&gt;, bool)</c></seealso>
     public static IObservable<IChangeSet<T>> OnItemRemoved<T>(
                 this IObservable<IChangeSet<T>> source,
                 Action<T> removeAction,

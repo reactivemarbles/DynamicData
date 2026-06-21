@@ -11,34 +11,81 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the Cache class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 [DebuggerDisplay("Cache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 internal sealed class Cache<TObject, TKey> : ICache<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The Empty field.
+    /// </summary>
     public static readonly Cache<TObject, TKey> Empty = new();
 
+    /// <summary>
+    /// The _data field.
+    /// </summary>
     private readonly Dictionary<TKey, TObject> _data;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Cache{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="capacity">The capacity value.</param>
     public Cache(int capacity = -1) =>
         _data = capacity > 1 ? new Dictionary<TKey, TObject>(capacity) : [];
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Cache{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="data">The data value.</param>
     public Cache(Dictionary<TKey, TObject> data) => _data = data;
 
+    /// <summary>
+    /// Gets the Count value.
+    /// </summary>
     public int Count => _data.Count;
 
+    /// <summary>
+    /// Gets the Items value.
+    /// </summary>
     public IEnumerable<TObject> Items => _data.Values;
 
+    /// <summary>
+    /// Gets the Keys value.
+    /// </summary>
     public IEnumerable<TKey> Keys => _data.Keys;
 
+    /// <summary>
+    /// Gets the KeyValues value.
+    /// </summary>
     public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
 
+    /// <summary>
+    /// Executes the AddOrUpdate operation.
+    /// </summary>
+    /// <param name="item">The item value.</param>
+    /// <param name="key">The key value.</param>
     public void AddOrUpdate(TObject item, TKey key) => _data[key] = item;
 
+    /// <summary>
+    /// Executes the Clear operation.
+    /// </summary>
     public void Clear() => _data.Clear();
 
+    /// <summary>
+    /// Executes the Clone operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public Cache<TObject, TKey> Clone() => new(new Dictionary<TKey, TObject>(_data));
 
+    /// <summary>
+    /// Executes the Clone operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
     public void Clone(IChangeSet<TObject, TKey> changes)
     {
         ArgumentExceptionHelper.ThrowIfNull(changes);
@@ -62,6 +109,11 @@ internal sealed class Cache<TObject, TKey> : ICache<TObject, TKey>
         }
     }
 
+    /// <summary>
+    /// Executes the Lookup operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
     public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
     /// <summary>
@@ -87,6 +139,10 @@ internal sealed class Cache<TObject, TKey> : ICache<TObject, TKey>
     {
     }
 
+    /// <summary>
+    /// Executes the Remove operation.
+    /// </summary>
+    /// <param name="keys">The keys value.</param>
     public void Remove(IEnumerable<TKey> keys)
     {
         if (keys is IList<TKey> list)
@@ -105,5 +161,9 @@ internal sealed class Cache<TObject, TKey> : ICache<TObject, TKey>
         }
     }
 
+    /// <summary>
+    /// Executes the Remove operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
     public void Remove(TKey key) => _data.Remove(key);
 }

@@ -17,15 +17,15 @@ namespace DynamicData;
 public static partial class ObservableCacheEx
 {
     /// <summary>
-    /// Unwraps each <see cref="IChangeSet{TObject, TKey}"/> into individual <see cref="Change{TObject, TKey}"/>
-    /// values via <see cref="Observable.SelectMany{TSource, TResult}(IObservable{TSource}, Func{TSource, IEnumerable{TResult}})"/>.
+    /// Unwraps each <c>IChangeSet&lt;TObject, TKey&gt;</c> into individual <c>Change&lt;TObject, TKey&gt;</c>
+    /// values via <c>Observable.SelectMany&lt;TSource, TResult&gt;(IObservable&lt;TSource&gt;, Func&lt;TSource, IEnumerable&lt;TResult&gt;&gt;)</c>.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to flatten into individual changes.</param>
-    /// <returns>An observable of individual <see cref="Change{TObject, TKey}"/> values.</returns>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to flatten into individual changes.</param>
+    /// <returns>An observable of individual <c>Change&lt;TObject, TKey&gt;</c> values.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="ForEachChange{TObject, TKey}"/>
+    /// <seealso><c>ForEachChange&lt;TObject, TKey&gt;</c></seealso>
     public static IObservable<Change<TObject, TKey>> Flatten<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull

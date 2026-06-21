@@ -23,12 +23,12 @@ public interface IExtendedList<T> : IList<T>
     void AddRange(IEnumerable<T> collection);
 
     /// <summary>
-    /// Inserts the elements of a collection into the <see cref="List{T}" /> at the specified index.
+    /// Inserts the elements of a collection into the <c>List&lt;T&gt;</c> at the specified index.
     /// </summary>
     /// <param name="collection">The items to insert.</param>
     /// <param name="index">The zero-based index at which the new elements should be inserted.</param>
     /// <exception cref="ArgumentNullException"><paramref name="collection" /> is null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="index" /> is greater than <see cref="List{T}.Count" />.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="index" /> is greater than <c>List&lt;T&gt;.Count</c>.</exception>
     void InsertRange(IEnumerable<T> collection, int index);
 
     /// <summary>
@@ -39,8 +39,8 @@ public interface IExtendedList<T> : IList<T>
     void Move(int original, int destination);
 
     /// <summary>
-    /// Removes a range of elements from the <see cref="List{T}"/>.
+    /// Removes a range of elements from the <c>List&lt;T&gt;</c>.
     /// </summary>
-    /// <param name="index">The zero-based starting index of the range of elements to remove.</param><param name="count">The number of elements to remove.</param><exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is less than 0.-or-<paramref name="count"/> is less than 0.</exception><exception cref="ArgumentException"><paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <see cref="List{T}"/>.</exception>
+    /// <param name="index">The zero-based starting index of the range of elements to remove.</param><param name="count">The number of elements to remove.</param><exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is less than 0.-or-<paramref name="count"/> is less than 0.</exception><exception cref="ArgumentException"><paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <c>List&lt;T&gt;</c>.</exception>
     void RemoveRange(int index, int count);
 }

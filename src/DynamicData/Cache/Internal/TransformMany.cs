@@ -16,12 +16,29 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the TransformMany class.
+/// </summary>
+/// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+/// <typeparam name="TDestinationKey">The type of the TDestinationKey value.</typeparam>
+/// <typeparam name="TSource">The type of the TSource value.</typeparam>
+/// <typeparam name="TSourceKey">The type of the TSourceKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="manySelector">The manySelector value.</param>
+/// <param name="keySelector">The keySelector value.</param>
+/// <param name="childChanges">The childChanges value.</param>
 internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, IEnumerable<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector, Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>>? childChanges = null)
     where TDestination : notnull
     where TDestinationKey : notnull
     where TSource : notnull
     where TSourceKey : notnull
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="manySelector">The manySelector value.</param>
+    /// <param name="keySelector">The keySelector value.</param>
     public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, ReadOnlyObservableCollection<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         : this(
             source,
@@ -42,6 +59,12 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="manySelector">The manySelector value.</param>
+    /// <param name="keySelector">The keySelector value.</param>
     public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, ObservableCollection<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         : this(
             source,
@@ -62,6 +85,12 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="manySelector">The manySelector value.</param>
+    /// <param name="keySelector">The keySelector value.</param>
     public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, IObservableCache<TDestination, TDestinationKey>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         : this(
             source,
@@ -82,8 +111,16 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
     {
     }
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => childChanges is null ? Create() : CreateWithChangeSet();
 
+    /// <summary>
+    /// Executes the Create operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TDestination, TDestinationKey>> Create() => source.Transform(
             (t, _) =>
             {
@@ -92,6 +129,10 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
             },
             true).Select(changes => new ChangeSet<TDestination, TDestinationKey>(new DestinationEnumerator(changes)));
 
+    /// <summary>
+    /// Executes the CreateWithChangeSet operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TDestination, TDestinationKey>> CreateWithChangeSet()
     {
         if (childChanges is null)
@@ -138,16 +179,39 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
             });
     }
 
-    private sealed class DestinationContainer(TDestination item, TDestinationKey key)
+/// <summary>
+/// Provides members for the DestinationContainer class.
+/// </summary>
+/// <param name="item">The item value.</param>
+/// <param name="key">The key value.</param>
+private sealed class DestinationContainer(TDestination item, TDestinationKey key)
     {
+        /// <summary>
+        /// Gets the KeyComparer value.
+        /// </summary>
         public static IEqualityComparer<DestinationContainer> KeyComparer { get; } = new KeyEqualityComparer();
 
+        /// <summary>
+        /// Gets the Item value.
+        /// </summary>
         public TDestination Item { get; } = item;
 
+        /// <summary>
+        /// Gets the Key value.
+        /// </summary>
         public TDestinationKey Key { get; } = key;
 
-        private sealed class KeyEqualityComparer : IEqualityComparer<DestinationContainer>
+/// <summary>
+/// Provides members for the KeyEqualityComparer class.
+/// </summary>
+private sealed class KeyEqualityComparer : IEqualityComparer<DestinationContainer>
         {
+            /// <summary>
+            /// Executes the Equals operation.
+            /// </summary>
+            /// <param name="x">The x value.</param>
+            /// <param name="y">The y value.</param>
+            /// <returns>The result of the operation.</returns>
             public bool Equals(DestinationContainer? x, DestinationContainer? y)
             {
                 if (x is null && y is null)
@@ -163,12 +227,25 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
                 return EqualityComparer<TDestinationKey?>.Default.Equals(x.Key, y.Key);
             }
 
+            /// <summary>
+            /// Executes the GetHashCode operation.
+            /// </summary>
+            /// <param name="obj">The obj value.</param>
+            /// <returns>The result of the operation.</returns>
             public int GetHashCode(DestinationContainer obj) => EqualityComparer<TDestinationKey?>.Default.GetHashCode(obj.Key);
         }
     }
 
-    private sealed class DestinationEnumerator(IChangeSet<ManyContainer, TSourceKey> changes) : IEnumerable<Change<TDestination, TDestinationKey>>
+/// <summary>
+/// Provides members for the DestinationEnumerator class.
+/// </summary>
+/// <param name="changes">The changes value.</param>
+private sealed class DestinationEnumerator(IChangeSet<ManyContainer, TSourceKey> changes) : IEnumerable<Change<TDestination, TDestinationKey>>
     {
+        /// <summary>
+        /// Executes the GetEnumerator operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         public IEnumerator<Change<TDestination, TDestinationKey>> GetEnumerator()
         {
             foreach (var change in changes.ToConcreteType())
@@ -223,13 +300,28 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
             }
         }
 
+        /// <summary>
+        /// Executes the GetEnumerator operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    private sealed class ManyContainer(Func<IEnumerable<DestinationContainer>> initial, IObservable<IChangeSet<TDestination, TDestinationKey>>? changes = null)
+/// <summary>
+/// Provides members for the ManyContainer class.
+/// </summary>
+/// <param name="initial">The initial value.</param>
+/// <param name="changes">The changes value.</param>
+private sealed class ManyContainer(Func<IEnumerable<DestinationContainer>> initial, IObservable<IChangeSet<TDestination, TDestinationKey>>? changes = null)
     {
+        /// <summary>
+        /// Gets the Changes value.
+        /// </summary>
         public IObservable<IChangeSet<TDestination, TDestinationKey>> Changes { get; } = changes ?? Observable.Empty<IChangeSet<TDestination, TDestinationKey>>();
 
+        /// <summary>
+        /// Gets the Destination value.
+        /// </summary>
         public IEnumerable<DestinationContainer> Destination => initial();
     }
 }

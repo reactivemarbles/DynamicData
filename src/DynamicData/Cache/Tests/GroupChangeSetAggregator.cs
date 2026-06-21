@@ -27,8 +27,19 @@ public class GroupChangeSetAggregator<TObject, TKey, TGroupKey> : IDisposable
     where TKey : notnull
     where TGroupKey : notnull
 {
+    /// <summary>
+    /// The _compositeDisposable field.
+    /// </summary>
     private readonly CompositeDisposable _compositeDisposable;
+
+    /// <summary>
+    /// The _messages field.
+    /// </summary>
     private readonly List<IGroupChangeSet<TObject, TKey, TGroupKey>> _messages = [];
+
+    /// <summary>
+    /// The _disposedValue field.
+    /// </summary>
     private bool _disposedValue;
 
     /// <summary>

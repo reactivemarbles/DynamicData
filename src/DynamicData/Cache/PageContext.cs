@@ -28,6 +28,9 @@ public record PageContext<TObject>(
     IComparer<TObject> Comparer,
     SortAndPageOptions Options)
 {
+    /// <summary>
+    /// The Empty field.
+    /// </summary>
     internal static readonly PageContext<TObject> Empty = new
     (
         new PageResponse(0, 0, 0, 0),

@@ -13,14 +13,21 @@ namespace DynamicData;
 /// A cache which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point thw changes are cleared.
 /// Used for creating custom operators.
 /// </summary>
-/// <seealso cref="ICache{TObject, TKey}" />
+/// <seealso><c>ICache&lt;TObject, TKey&gt;</c></seealso>
 /// <typeparam name="TObject">The value of the cache.</typeparam>
 /// <typeparam name="TKey">The key of the cache.</typeparam>
 public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _data field.
+    /// </summary>
     private readonly Dictionary<TKey, TObject> _data;
+
+    /// <summary>
+    /// The _changes field.
+    /// </summary>
     private ChangeSet<TObject, TKey> _changes;
 
     /// <summary>
@@ -66,6 +73,10 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <inheritdoc />
     public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
 
+    /// <summary>
+    /// Executes the GetDictionary operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     internal Dictionary<TKey, TObject> GetDictionary() => _data;
 
     /// <summary>
@@ -80,6 +91,8 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     }
 
     /// <inheritdoc />
+    /// <param name="item">The item value.</param>
+    /// <param name="key">The key value.</param>
     public void AddOrUpdate(TObject item, TKey key)
     {
         _changes.Add(_data.TryGetValue(key, out var existingItem) ? new Change<TObject, TKey>(ChangeReason.Update, key, item, existingItem) : new Change<TObject, TKey>(ChangeReason.Add, key, item));
@@ -113,6 +126,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     }
 
     /// <inheritdoc />
+    /// <param name="changes">The changes value.</param>
     public void Clone(IChangeSet<TObject, TKey> changes)
     {
         ArgumentExceptionHelper.ThrowIfNull(changes);
@@ -142,6 +156,8 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     }
 
     /// <inheritdoc />
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
     public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
     /// <summary>
@@ -210,6 +226,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     }
 
     /// <inheritdoc />
+    /// <param name="key">The key value.</param>
     public void Remove(TKey key)
     {
         if (_data.TryGetValue(key, out var existingItem))

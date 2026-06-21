@@ -39,11 +39,25 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
     /// </summary>
     public TObject Value { get; } = value;
 
+    /// <summary>
+    /// Determines whether two <see cref="Error{TObject, TKey}"/> instances are equal.
+    /// </summary>
+    /// <param name="left">The left error to compare.</param>
+    /// <param name="right">The right error to compare.</param>
+    /// <returns><see langword="true"/> when the values are equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator ==(Error<TObject, TKey> left, Error<TObject, TKey> right) => Equals(left, right);
 
+    /// <summary>
+    /// Determines whether two <see cref="Error{TObject, TKey}"/> instances are not equal.
+    /// </summary>
+    /// <param name="left">The left error to compare.</param>
+    /// <param name="right">The right error to compare.</param>
+    /// <returns><see langword="true"/> when the values are not equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator !=(Error<TObject, TKey> left, Error<TObject, TKey> right) => !Equals(left, right);
 
     /// <inheritdoc />
+    /// <param name="other">The other value.</param>
+    /// <returns>The result of the operation.</returns>
     public bool Equals(Error<TObject, TKey>? other)
     {
         if (other is null)
@@ -60,6 +74,8 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
     }
 
     /// <inheritdoc />
+    /// <param name="obj">The obj value.</param>
+    /// <returns>The result of the operation.</returns>
     public override bool Equals(object? obj)
     {
         if (obj is null)
@@ -76,6 +92,7 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -88,5 +105,6 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"Key: {Key}, Value: {Value}, Exception: {Exception}";
 }

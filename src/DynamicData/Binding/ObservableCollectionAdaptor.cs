@@ -36,7 +36,14 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
 
     where T : notnull
 {
+    /// <summary>
+    /// The _collection field.
+    /// </summary>
     private readonly IObservableCollection<T> _collection = collection ?? throw new ArgumentNullException(nameof(collection));
+
+    /// <summary>
+    /// The _loaded field.
+    /// </summary>
     private bool _loaded;
 
     /// <summary>
@@ -99,7 +106,14 @@ public class ObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 2
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _cache field.
+    /// </summary>
     private readonly Cache<TObject, TKey> _cache = new();
+
+    /// <summary>
+    /// The _loaded field.
+    /// </summary>
     private bool _loaded;
 
     /// <summary>
@@ -140,6 +154,11 @@ public class ObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 2
         }
     }
 
+    /// <summary>
+    /// Executes the DoUpdate operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    /// <param name="list">The list value.</param>
     private void DoUpdate(IChangeSet<TObject, TKey> changes, IObservableCollection<TObject> list)
     {
         foreach (var change in changes.ToConcreteType())

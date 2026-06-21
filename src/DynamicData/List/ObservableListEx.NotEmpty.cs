@@ -18,11 +18,11 @@ public static partial class ObservableListEx
     /// Suppresses empty changesets from the stream. Only changesets with at least one change are forwarded.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to suppress empty changesets.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to suppress empty changesets.</param>
     /// <returns>A list changeset stream with empty changesets filtered out.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="StartWithEmpty{T}(IObservable{IChangeSet{T}})"/>
-    /// <seealso cref="WhereReasonsAre{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
+    /// <seealso><c>StartWithEmpty&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>
+    /// <seealso><c>WhereReasonsAre&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, ListChangeReason[])</c></seealso>
     public static IObservable<IChangeSet<T>> NotEmpty<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {

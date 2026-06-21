@@ -21,11 +21,14 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableListEx
 {
-    /// <inheritdoc cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
     /// Applies a logical OR (union) between a pre-built collection of list changeset sources. Items present in any source are included.
     /// </summary>
-    /// <seealso cref="ObservableCacheEx.Or{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <seealso><c>ObservableCacheEx.Or&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;[])</c></seealso>
     public static IObservable<IChangeSet<T>> Or<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.Or);
 
@@ -34,8 +37,8 @@ public static partial class ObservableListEx
     /// Items present in any of the sources are included in the result, using reference-counted equality.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The primary source <see cref="IObservable{IChangeSet{T}}"/> to union.</param>
-    /// <param name="others">The other <see cref="IObservable{IChangeSet{T}}"/> changeset streams to combine with.</param>
+    /// <param name="source">The primary source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to union.</param>
+    /// <param name="others">The other <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> changeset streams to combine with.</param>
     /// <returns>A list changeset stream containing items that exist in at least one source.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="others"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -52,10 +55,10 @@ public static partial class ObservableListEx
     /// <item><term><b>Moved</b></term><description>Ignored.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <seealso cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <seealso cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <seealso cref="MergeChangeSets{TObject}(IEnumerable{IObservable{IChangeSet{TObject}}}, IEqualityComparer{TObject}?, IScheduler?, bool)"/>
+    /// <seealso><c>And&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservable&lt;IChangeSet&lt;T&gt;&gt;[])</c></seealso>
+    /// <seealso><c>Except&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservable&lt;IChangeSet&lt;T&gt;&gt;[])</c></seealso>
+    /// <seealso><c>Xor&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservable&lt;IChangeSet&lt;T&gt;&gt;[])</c></seealso>
+    /// <seealso><c>MergeChangeSets&lt;TObject&gt;(IEnumerable&lt;IObservable&lt;IChangeSet&lt;TObject&gt;&gt;&gt;, IEqualityComparer&lt;TObject&gt;?, IScheduler?, bool)</c></seealso>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
         where T : notnull
     {
@@ -64,24 +67,33 @@ public static partial class ObservableListEx
         return source.Combine(CombineOperator.Or, others);
     }
 
-    /// <inheritdoc cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
-    /// Dynamic OR: sources can be added or removed from the <see cref="IObservableList{T}"/> at runtime.
+    /// Dynamic OR: sources can be added or removed from the <c>IObservableList&lt;T&gt;</c> at runtime.
     /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.Or);
 
-    /// <inheritdoc cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
-    /// Dynamic OR accepting <see cref="IObservableList{T}"/> of <see cref="IObservableList{T}"/>. Each inner list's <c>Connect()</c> is used as a source.
+    /// Dynamic OR accepting <c>IObservableList&lt;T&gt;</c> of <c>IObservableList&lt;T&gt;</c>. Each inner list's <c>Connect()</c> is used as a source.
     /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservableList<IObservableList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.Or);
 
-    /// <inheritdoc cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
-    /// Dynamic OR accepting <see cref="IObservableList{T}"/> of <see cref="ISourceList{T}"/>. Each inner list's <c>Connect()</c> is used as a source.
+    /// Dynamic OR accepting <c>IObservableList&lt;T&gt;</c> of <c>ISourceList&lt;T&gt;</c>. Each inner list's <c>Connect()</c> is used as a source.
     /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservableList<ISourceList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.Or);
 }

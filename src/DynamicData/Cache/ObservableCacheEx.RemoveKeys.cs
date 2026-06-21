@@ -21,8 +21,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The <see cref="ISourceCache{TObject, TKey}"/> from which to remove keys.</param>
-    /// <param name="keys">The <see cref="IEnumerable{TKey}"/> keys to remove.</param>
+    /// <param name="source">The <c>ISourceCache&lt;TObject, TKey&gt;</c> from which to remove keys.</param>
+    /// <param name="keys">The <c>IEnumerable&lt;TKey&gt;</c> keys to remove.</param>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     public static void RemoveKeys<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
         where TObject : notnull

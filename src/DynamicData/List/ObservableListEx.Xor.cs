@@ -26,8 +26,8 @@ public static partial class ObservableListEx
     /// Items present in exactly one source are included in the result.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The primary source <see cref="IObservable{IChangeSet{T}}"/> to exclusively combine.</param>
-    /// <param name="others">The other <see cref="IObservable{IChangeSet{T}}"/> changeset streams to combine with.</param>
+    /// <param name="source">The primary source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to exclusively combine.</param>
+    /// <param name="others">The other <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> changeset streams to combine with.</param>
     /// <returns>A list changeset stream containing items that exist in exactly one source.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="others"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -45,10 +45,10 @@ public static partial class ObservableListEx
     /// <item><term><b>Moved</b></term><description>Ignored.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <seealso cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <seealso cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <seealso cref="ObservableCacheEx.Xor{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
+    /// <seealso><c>And&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservable&lt;IChangeSet&lt;T&gt;&gt;[])</c></seealso>
+    /// <seealso><c>Or&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservable&lt;IChangeSet&lt;T&gt;&gt;[])</c></seealso>
+    /// <seealso><c>Except&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservable&lt;IChangeSet&lt;T&gt;&gt;[])</c></seealso>
+    /// <seealso><c>ObservableCacheEx.Xor&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;[])</c></seealso>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
         where T : notnull
     {
@@ -57,31 +57,43 @@ public static partial class ObservableListEx
         return source.Combine(CombineOperator.Xor, others);
     }
 
-    /// <inheritdoc cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
     /// Applies a logical XOR between a pre-built collection of list changeset sources.
     /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.Xor);
 
-    /// <inheritdoc cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
-    /// Dynamic XOR: sources can be added or removed from the <see cref="IObservableList{T}"/> at runtime.
+    /// Dynamic XOR: sources can be added or removed from the <c>IObservableList&lt;T&gt;</c> at runtime.
     /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.Xor);
 
-    /// <inheritdoc cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
-    /// Dynamic XOR accepting <see cref="IObservableList{T}"/> of <see cref="IObservableList{T}"/>. Each inner list's <c>Connect()</c> is used as a source.
+    /// Dynamic XOR accepting <c>IObservableList&lt;T&gt;</c> of <c>IObservableList&lt;T&gt;</c>. Each inner list's <c>Connect()</c> is used as a source.
     /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservableList<IObservableList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.Xor);
 
-    /// <inheritdoc cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
-    /// Dynamic XOR accepting <see cref="IObservableList{T}"/> of <see cref="ISourceList{T}"/>. Each inner list's <c>Connect()</c> is used as a source.
+    /// Dynamic XOR accepting <c>IObservableList&lt;T&gt;</c> of <c>ISourceList&lt;T&gt;</c>. Each inner list's <c>Connect()</c> is used as a source.
     /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">The sources value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservableList<ISourceList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.Xor);
 }

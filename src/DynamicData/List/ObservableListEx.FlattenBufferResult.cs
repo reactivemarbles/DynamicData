@@ -19,13 +19,13 @@ public static partial class ObservableListEx
     /// Empty buffers are dropped.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The <see cref="IObservable{T}"/> of buffered changeset lists.</param>
+    /// <param name="source">The <c>IObservable&lt;T&gt;</c> of buffered changeset lists.</param>
     /// <returns>A list changeset stream with all buffered changes concatenated into single changesets.</returns>
     /// <remarks>
     /// <para>Use this after applying <c>Observable.Buffer()</c> to a changeset stream to re-merge the batched changesets into a single stream.</para>
     /// </remarks>
-    /// <seealso cref="BufferIf{T}(IObservable{IChangeSet{T}}, IObservable{bool}, IScheduler?)"/>
-    /// <seealso cref="BufferInitial{T}(IObservable{IChangeSet{T}}, TimeSpan, IScheduler?)"/>
+    /// <seealso><c>BufferIf&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservable&lt;bool&gt;, IScheduler?)</c></seealso>
+    /// <seealso><c>BufferInitial&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, TimeSpan, IScheduler?)</c></seealso>
     public static IObservable<IChangeSet<T>> FlattenBufferResult<T>(this IObservable<IList<IChangeSet<T>>> source)
         where T : notnull
     {

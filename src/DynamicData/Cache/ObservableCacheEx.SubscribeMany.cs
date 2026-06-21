@@ -30,7 +30,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to create a subscription for each item in.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to create a subscription for each item in.</param>
     /// <param name="subscriptionFactory">A factory that creates an <see cref="IDisposable"/> for each item. Called on Add and Update (for the new value).</param>
     /// <returns>A stream that forwards all changesets from <paramref name="source"/> unchanged.</returns>
     /// <remarks>
@@ -45,8 +45,8 @@ public static partial class ObservableCacheEx
     /// </list>
     /// </para>
     /// <para>
-    /// Internally implemented using <see cref="Transform{TDestination,TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, Func{TObject,TKey,TDestination}, bool)"/>
-    /// and <see cref="DisposeMany{TObject,TKey}"/>, so disposal semantics match <see cref="DisposeMany{TObject,TKey}"/>.
+    /// Internally implemented using <c>Transform&lt;TDestination,TObject,TKey&gt;(IObservable&lt;IChangeSet&lt;TObject,TKey&gt;&gt;, Func&lt;TObject,TKey,TDestination&gt;, bool)</c>
+    /// and <c>DisposeMany&lt;TObject,TKey&gt;</c>, so disposal semantics match <c>DisposeMany&lt;TObject,TKey&gt;</c>.
     /// </para>
     /// <para>
     /// Use this to tie per-item side effects (event subscriptions, polling timers, child observable subscriptions)
@@ -54,9 +54,9 @@ public static partial class ObservableCacheEx
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="subscriptionFactory"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="DisposeMany{TObject,TKey}"/>
-    /// <seealso cref="OnItemRemoved{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, Action{TObject,TKey}, bool)"/>
-    /// <seealso cref="ObservableListEx.SubscribeMany"/>
+    /// <seealso><c>DisposeMany&lt;TObject,TKey&gt;</c></seealso>
+    /// <seealso><c>OnItemRemoved&lt;TObject,TKey&gt;(IObservable&lt;IChangeSet&lt;TObject,TKey&gt;&gt;, Action&lt;TObject,TKey&gt;, bool)</c></seealso>
+    /// <seealso><c>ObservableListEx.SubscribeMany</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
         where TObject : notnull
         where TKey : notnull
@@ -67,10 +67,15 @@ public static partial class ObservableCacheEx
         return new SubscribeMany<TObject, TKey>(source, subscriptionFactory).Run();
     }
 
-    /// <inheritdoc cref="SubscribeMany{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IDisposable})"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to create a subscription for each item in.</param>
+    /// <summary>
+    /// Provides an overload of <c>SubscribeMany</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to create a subscription for each item in.</param>
     /// <param name="subscriptionFactory">A factory that creates an <see cref="IDisposable"/> for each item. Receives the item and its key.</param>
-    /// <remarks>Overload whose factory receives both the item and the key. See <see cref="SubscribeMany{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IDisposable})"/> for full details.</remarks>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>Overload whose factory receives both the item and the key. See <c>SubscribeMany&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, IDisposable&gt;)</c> for full details.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory)
         where TObject : notnull
         where TKey : notnull

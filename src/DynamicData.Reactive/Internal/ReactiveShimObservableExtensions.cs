@@ -9,12 +9,37 @@ namespace DynamicData.Reactive.Internal;
 /// </summary>
 internal static class ReactiveShimObservableExtensions
 {
+    /// <summary>
+    /// Subscribes to the source with safe observer callbacks.
+    /// </summary>
+    /// <typeparam name="T">The observable value type.</typeparam>
+    /// <param name="source">The observable source.</param>
+    /// <param name="onNext">The callback invoked for each value.</param>
+    /// <param name="onError">The callback invoked when the source fails.</param>
+    /// <returns>The subscription disposable.</returns>
     public static IDisposable SubscribeSafe<T>(this IObservable<T> source, Action<T> onNext, Action<Exception> onError) =>
         source.Subscribe(onNext, onError);
 
+    /// <summary>
+    /// Subscribes to the source with safe observer callbacks and a completion callback.
+    /// </summary>
+    /// <typeparam name="T">The observable value type.</typeparam>
+    /// <param name="source">The observable source.</param>
+    /// <param name="onNext">The callback invoked for each value.</param>
+    /// <param name="onError">The callback invoked when the source fails.</param>
+    /// <param name="onCompleted">The callback invoked when the source completes.</param>
+    /// <returns>The subscription disposable.</returns>
     public static IDisposable SubscribeSafe<T>(this IObservable<T> source, Action<T> onNext, Action<Exception> onError, Action onCompleted) =>
         source.Subscribe(onNext, onError, onCompleted);
 
+    /// <summary>
+    /// Subscribes to the source with safe error and completion callbacks.
+    /// </summary>
+    /// <typeparam name="T">The observable value type.</typeparam>
+    /// <param name="source">The observable source.</param>
+    /// <param name="onError">The callback invoked when the source fails.</param>
+    /// <param name="onCompleted">The callback invoked when the source completes.</param>
+    /// <returns>The subscription disposable.</returns>
     public static IDisposable SubscribeSafe<T>(this IObservable<T> source, Action<Exception> onError, Action onCompleted) =>
         source.Subscribe(static _ => { }, onError, onCompleted);
 }

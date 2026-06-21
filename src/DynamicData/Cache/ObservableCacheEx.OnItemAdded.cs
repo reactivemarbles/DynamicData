@@ -21,8 +21,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to observe item additions in.</param>
-    /// <param name="addAction">The <see cref="Action{TObject, TKey}"/> callback invoked for each added item. Receives the new item and its key.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to observe item additions in.</param>
+    /// <param name="addAction">The <c>Action&lt;TObject, TKey&gt;</c> callback invoked for each added item. Receives the new item and its key.</param>
     /// <returns>A stream that forwards all changesets from <paramref name="source"/> unchanged.</returns>
     /// <remarks>
     /// <para>
@@ -40,10 +40,10 @@ public static partial class ObservableCacheEx
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="addAction"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="OnItemUpdated{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, Action{TObject,TObject,TKey})"/>
-    /// <seealso cref="OnItemRemoved{TObject,TKey}(IObservable{IChangeSet{TObject,TKey}}, Action{TObject,TKey}, bool)"/>
-    /// <seealso cref="ForEachChange{TObject,TKey}"/>
-    /// <seealso cref="ObservableListEx.OnItemAdded"/>
+    /// <seealso><c>OnItemUpdated&lt;TObject,TKey&gt;(IObservable&lt;IChangeSet&lt;TObject,TKey&gt;&gt;, Action&lt;TObject,TObject,TKey&gt;)</c></seealso>
+    /// <seealso><c>OnItemRemoved&lt;TObject,TKey&gt;(IObservable&lt;IChangeSet&lt;TObject,TKey&gt;&gt;, Action&lt;TObject,TKey&gt;, bool)</c></seealso>
+    /// <seealso><c>ForEachChange&lt;TObject,TKey&gt;</c></seealso>
+    /// <seealso><c>ObservableListEx.OnItemAdded</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> OnItemAdded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TKey> addAction)
         where TObject : notnull
         where TKey : notnull
@@ -54,10 +54,15 @@ public static partial class ObservableCacheEx
         return source.OnChangeAction(ChangeReason.Add, addAction);
     }
 
-    /// <inheritdoc cref="OnItemAdded{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject, TKey})"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to observe item additions in.</param>
-    /// <param name="addAction">The <see cref="Action{TObject}"/> callback invoked for each added item. Receives only the item (no key).</param>
-    /// <remarks>Overload that omits the key from the callback. Delegates to <see cref="OnItemAdded{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject, TKey})"/>.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>addAction</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to observe item additions in.</param>
+    /// <param name="addAction">The <c>Action&lt;TObject&gt;</c> callback invoked for each added item. Receives only the item (no key).</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>Overload that omits the key from the callback. Delegates to <c>OnItemAdded&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Action&lt;TObject, TKey&gt;)</c>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> OnItemAdded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> addAction)
         where TObject : notnull
         where TKey : notnull

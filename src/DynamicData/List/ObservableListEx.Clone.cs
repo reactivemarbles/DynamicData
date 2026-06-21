@@ -25,15 +25,15 @@ public static partial class ObservableListEx
     /// Applies each changeset to the target list as a side effect, keeping it synchronized with the source.
     /// </summary>
     /// <typeparam name="T">The type of items in the list.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to clone.</param>
-    /// <param name="target">The <see cref="IList{T}"/> target list to clone changes into.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to clone.</param>
+    /// <param name="target">The <c>IList&lt;T&gt;</c> target list to clone changes into.</param>
     /// <returns>A continuation of the source changeset stream.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
-    /// <para>Lower-level than <see cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>. Uses <see cref="IList{T}"/>.Clone() to apply all changeset operations directly.</para>
+    /// <para>Lower-level than <c>Bind&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservableCollection&lt;T&gt;, int)</c>. Uses <c>IList&lt;T&gt;</c>.Clone() to apply all changeset operations directly.</para>
     /// </remarks>
-    /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, int)"/>
-    /// <seealso cref="PopulateInto{T}(IObservable{IChangeSet{T}}, ISourceList{T})"/>
+    /// <seealso><c>Bind&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservableCollection&lt;T&gt;, int)</c></seealso>
+    /// <seealso><c>PopulateInto&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, ISourceList&lt;T&gt;)</c></seealso>
     public static IObservable<IChangeSet<T>> Clone<T>(this IObservable<IChangeSet<T>> source, IList<T> target)
         where T : notnull
     {

@@ -15,7 +15,7 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
-/// <seealso cref="IQuery{TObject, TKey}" />
+/// <seealso><c>IQuery&lt;TObject, TKey&gt;</c></seealso>
 public interface ICache<TObject, TKey> : IQuery<TObject, TKey>
     where TObject : notnull
     where TKey : notnull

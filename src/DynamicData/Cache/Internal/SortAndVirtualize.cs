@@ -16,17 +16,47 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the SortAndVirtualize class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 internal sealed class SortAndVirtualize<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _keyComparer field.
+    /// </summary>
     private static readonly KeyComparer<TObject, TKey> _keyComparer = new();
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+
+    /// <summary>
+    /// The _comparerChanged field.
+    /// </summary>
     private readonly IObservable<IComparer<TObject>> _comparerChanged;
+
+    /// <summary>
+    /// The _virtualRequests field.
+    /// </summary>
     private readonly IObservable<IVirtualRequest> _virtualRequests;
+
+    /// <summary>
+    /// The _options field.
+    /// </summary>
     private readonly SortAndVirtualizeOptions _options;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SortAndVirtualize{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="comparer">The comparer value.</param>
+    /// <param name="virtualRequests">The virtualRequests value.</param>
+    /// <param name="options">The options value.</param>
     public SortAndVirtualize(IObservable<IChangeSet<TObject, TKey>> source,
         IComparer<TObject> comparer,
         IObservable<IVirtualRequest> virtualRequests,
@@ -35,6 +65,13 @@ internal sealed class SortAndVirtualize<TObject, TKey>
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SortAndVirtualize{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="comparerChanged">The comparerChanged value.</param>
+    /// <param name="virtualRequests">The virtualRequests value.</param>
+    /// <param name="options">The options value.</param>
     public SortAndVirtualize(IObservable<IChangeSet<TObject, TKey>> source,
         IObservable<IComparer<TObject>> comparerChanged,
         IObservable<IVirtualRequest> virtualRequests,
@@ -46,8 +83,15 @@ internal sealed class SortAndVirtualize<TObject, TKey>
         _virtualRequests = virtualRequests ?? throw new ArgumentNullException(nameof(virtualRequests));
     }
 
+    /// <summary>
+    /// The Empty field.
+    /// </summary>
     private static readonly ChangeSet<TObject, TKey, VirtualContext<TObject>> Empty = new(0, VirtualContext<TObject>.Empty);
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> Run() =>
         Observable.Create<IChangeSet<TObject, TKey, VirtualContext<TObject>>>(
             observer =>
@@ -145,8 +189,16 @@ internal sealed class SortAndVirtualize<TObject, TKey>
                     return virtualChanges;
                 }
             });
-
     // Calculates any changes within the virtualized range.
+
+    /// <summary>
+    /// Executes the CalculateVirtualChanges operation.
+    /// </summary>
+    /// <param name="context">The context value.</param>
+    /// <param name="currentItems">The currentItems value.</param>
+    /// <param name="previousItems">The previousItems value.</param>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
     private static ChangeSet<TObject, TKey, VirtualContext<TObject>> CalculateVirtualChanges(VirtualContext<TObject> context,
         List<KeyValuePair<TKey, TObject>> currentItems,
         List<KeyValuePair<TKey, TObject>> previousItems,

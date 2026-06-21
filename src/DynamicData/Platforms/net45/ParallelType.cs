@@ -10,10 +10,10 @@ namespace DynamicData.Reactive.PLinq
 namespace DynamicData.PLinq
 #endif
 {
-    /// <summary>
-    /// The type of parallelisation.
-    /// </summary>
-    public enum ParallelType
+/// <summary>
+/// The type of parallelisation.
+/// </summary>
+public enum ParallelType
     {
         /// <summary>
         /// No parallelisation will take place.

@@ -12,16 +12,35 @@ namespace DynamicData.Reactive.Binding;
 namespace DynamicData.Binding;
 #endif
 
+/// <summary>
+/// Provides members for the ObservablePropertyFactoryCache class.
+/// </summary>
 internal sealed class ObservablePropertyFactoryCache
 {
+    /// <summary>
+    /// The Instance field.
+    /// </summary>
     public static readonly ObservablePropertyFactoryCache Instance = new();
 
+    /// <summary>
+    /// The _factories field.
+    /// </summary>
     private readonly ConcurrentDictionary<string, object> _factories = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ObservablePropertyFactoryCache"/> class.
+    /// </summary>
     private ObservablePropertyFactoryCache()
     {
     }
 
+    /// <summary>
+    /// Executes the GetFactory operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TProperty">The type of the TProperty value.</typeparam>
+    /// <param name="expression">The expression value.</param>
+    /// <returns>The result of the operation.</returns>
     public ObservablePropertyFactory<TObject, TProperty> GetFactory<TObject, TProperty>(Expression<Func<TObject, TProperty>> expression)
         where TObject : INotifyPropertyChanged
     {

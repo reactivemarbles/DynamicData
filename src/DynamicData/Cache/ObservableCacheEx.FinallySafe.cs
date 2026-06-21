@@ -27,7 +27,7 @@ public static partial class ObservableCacheEx
     /// Obsolete: do not use. This can cause unhandled exception issues. Use the standard Rx <c>Finally</c> operator instead.
     /// </summary>
     /// <typeparam name="T">The type contained within the observables.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{T}"/> to attach a finally action to.</param>
+    /// <param name="source">The source <c>IObservable&lt;T&gt;</c> to attach a finally action to.</param>
     /// <param name="finallyAction">The <see cref="Action"/> to invoke when the subscription terminates.</param>
     /// <returns>An observable which has always a finally action applied.</returns>
     [Obsolete("This can cause unhandled exception issues so do not use")]

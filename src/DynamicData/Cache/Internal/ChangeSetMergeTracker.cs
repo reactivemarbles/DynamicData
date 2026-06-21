@@ -9,16 +9,43 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the ChangeSetMergeTracker class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="selectCaches">The selectCaches value.</param>
+/// <param name="comparer">The comparer value.</param>
+/// <param name="equalityComparer">The equalityComparer value.</param>
 internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCache<TObject, TKey>>> selectCaches, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _resultCache field.
+    /// </summary>
     private readonly ChangeAwareCache<TObject, TKey> _resultCache = new();
+
+    /// <summary>
+    /// The _equalityComparer field.
+    /// </summary>
     private readonly IEqualityComparer<TObject> _equalityComparer = equalityComparer ?? EqualityComparer<TObject>.Default;
+
+    /// <summary>
+    /// The _hasCompleted field.
+    /// </summary>
     private bool _hasCompleted;
 
+    /// <summary>
+    /// Executes the MarkComplete operation.
+    /// </summary>
     public void MarkComplete() => _hasCompleted = true;
 
+    /// <summary>
+    /// Executes the RemoveItems operation.
+    /// </summary>
+    /// <param name="items">The items value.</param>
+    /// <param name="observer">The observer value.</param>
     public void RemoveItems(IEnumerable<KeyValuePair<TKey, TObject>> items, IObserver<IChangeSet<TObject, TKey>>? observer = null)
     {
         var sourceCaches = selectCaches().ToArray();
@@ -46,6 +73,11 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
+    /// <summary>
+    /// Executes the RefreshItems operation.
+    /// </summary>
+    /// <param name="keys">The keys value.</param>
+    /// <param name="observer">The observer value.</param>
     public void RefreshItems(IEnumerable<TKey> keys, IObserver<IChangeSet<TObject, TKey>>? observer = null)
     {
         var sourceCaches = selectCaches().ToArray();
@@ -73,6 +105,11 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
+    /// <summary>
+    /// Executes the ProcessChangeSet operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    /// <param name="observer">The observer value.</param>
     public void ProcessChangeSet(IChangeSet<TObject, TKey> changes, IObserver<IChangeSet<TObject, TKey>>? observer = null)
     {
         var sourceCaches = selectCaches().ToArray();
@@ -105,6 +142,10 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
+    /// <summary>
+    /// Executes the EmitChanges operation.
+    /// </summary>
+    /// <param name="observer">The observer value.</param>
     public void EmitChanges(IObserver<IChangeSet<TObject, TKey>> observer)
     {
         var changeSet = _resultCache.CaptureChanges();
@@ -119,6 +160,11 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
+    /// <summary>
+    /// Executes the OnItemAdded operation.
+    /// </summary>
+    /// <param name="item">The item value.</param>
+    /// <param name="key">The key value.</param>
     private void OnItemAdded(TObject item, TKey key)
     {
         var cached = _resultCache.Lookup(key);
@@ -134,6 +180,12 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
+    /// <summary>
+    /// Executes the OnItemRemoved operation.
+    /// </summary>
+    /// <param name="sourceCaches">The sourceCaches value.</param>
+    /// <param name="item">The item value.</param>
+    /// <param name="key">The key value.</param>
     private void OnItemRemoved(ChangeSetCache<TObject, TKey>[] sourceCaches, TObject item, TKey key)
     {
         var cached = _resultCache.Lookup(key);
@@ -146,6 +198,13 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
+    /// <summary>
+    /// Executes the OnItemUpdated operation.
+    /// </summary>
+    /// <param name="sources">The sources value.</param>
+    /// <param name="item">The item value.</param>
+    /// <param name="key">The key value.</param>
+    /// <param name="prev">The prev value.</param>
     private void OnItemUpdated(ChangeSetCache<TObject, TKey>[] sources, TObject item, TKey key, in ReactiveUI.Primitives.Optional<TObject> prev)
     {
         var cached = _resultCache.Lookup(key);
@@ -190,6 +249,12 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
+    /// <summary>
+    /// Executes the OnItemRefreshed operation.
+    /// </summary>
+    /// <param name="sources">The sources value.</param>
+    /// <param name="item">The item value.</param>
+    /// <param name="key">The key value.</param>
     private void OnItemRefreshed(ChangeSetCache<TObject, TKey>[] sources, TObject item, TKey key)
     {
         var cached = _resultCache.Lookup(key);
@@ -210,6 +275,11 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
+    /// <summary>
+    /// Executes the ForceEvaluate operation.
+    /// </summary>
+    /// <param name="sources">The sources value.</param>
+    /// <param name="key">The key value.</param>
     private void ForceEvaluate(ChangeSetCache<TObject, TKey>[] sources, TKey key)
     {
         var cached = _resultCache.Lookup(key);
@@ -224,6 +294,13 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         UpdateToBestValue(sources, key, cached);
     }
 
+    /// <summary>
+    /// Executes the UpdateToBestValue operation.
+    /// </summary>
+    /// <param name="sources">The sources value.</param>
+    /// <param name="key">The key value.</param>
+    /// <param name="current">The current value.</param>
+    /// <returns>The result of the operation.</returns>
     private bool UpdateToBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key, in ReactiveUI.Primitives.Optional<TObject> current)
     {
         // Determine which value should be the one seen downstream
@@ -253,6 +330,12 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         return true;
     }
 
+    /// <summary>
+    /// Executes the LookupBestValue operation.
+    /// </summary>
+    /// <param name="sources">The sources value.</param>
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
     private ReactiveUI.Primitives.Optional<TObject> LookupBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key)
     {
         if (sources.Length == 0)
@@ -270,10 +353,22 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         return values.FirstOrDefault();
     }
 
+    /// <summary>
+    /// Executes the CheckEquality operation.
+    /// </summary>
+    /// <param name="left">The left value.</param>
+    /// <param name="right">The right value.</param>
+    /// <returns>The result of the operation.</returns>
     private bool CheckEquality(TObject left, TObject right) =>
         _equalityComparer.Equals(left, right);
-
     // Return true if candidate should replace current as the observed downstream value
+
+    /// <summary>
+    /// Executes the ShouldReplace operation.
+    /// </summary>
+    /// <param name="candidate">The candidate value.</param>
+    /// <param name="current">The current value.</param>
+    /// <returns>The result of the operation.</returns>
     private bool ShouldReplace(TObject candidate, TObject current) =>
         comparer?.Compare(candidate, current) < 0;
 }

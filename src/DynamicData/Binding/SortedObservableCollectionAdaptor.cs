@@ -121,6 +121,11 @@ public class SortedObservableCollectionAdaptor<TObject, TKey>(int refreshThresho
         }
     }
 
+    /// <summary>
+    /// Executes the DoUpdate operation.
+    /// </summary>
+    /// <param name="updates">The updates value.</param>
+    /// <param name="list">The list value.</param>
     private void DoUpdate(ISortedChangeSet<TObject, TKey> updates, IObservableCollection<TObject> list)
     {
         foreach (var update in updates)

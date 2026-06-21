@@ -19,7 +19,7 @@ public static partial class ObservableListEx
     /// Internally defers until loaded, then skips the first emission.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to skip the initial changeset.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to skip the initial changeset.</param>
     /// <returns>A list changeset stream that omits the initial snapshot.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -28,11 +28,11 @@ public static partial class ObservableListEx
     /// initial snapshot, those items are silently dropped while downstream consumers remain unaware of them.
     /// Any later <b>Refresh</b>, <b>Replace</b>, <b>Remove</b>, or <b>Moved</b> change targeting one of those
     /// dropped items will throw because the downstream collection has no record of them. Only use this against
-    /// a source you know starts empty (for example, a <see cref="ISourceList{T}"/> that has not yet been populated).
+    /// a source you know starts empty (for example, a <c>ISourceList&lt;T&gt;</c> that has not yet been populated).
     /// </para>
     /// </remarks>
-    /// <seealso cref="DeferUntilLoaded{T}(IObservable{IChangeSet{T}})"/>
-    /// <seealso cref="StartWithEmpty{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso><c>DeferUntilLoaded&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>
+    /// <seealso><c>StartWithEmpty&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<T>> SkipInitial<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {

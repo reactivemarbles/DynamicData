@@ -102,5 +102,6 @@ public class ChangeSet<TObject, TKey> : List<Change<TObject, TKey>>, IChangeSet<
     public int Updates => this.Count(c => c.Reason == ChangeReason.Update);
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"ChangeSet<{typeof(TObject).Name}.{typeof(TKey).Name}>. Count={Count}";
 }

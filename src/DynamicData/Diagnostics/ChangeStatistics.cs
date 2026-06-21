@@ -36,6 +36,7 @@ public record ChangeStatistics(int Index, int Adds, int Updates, int Removes, in
     public DateTime LastUpdated { get; } = DateTime.Now;
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -53,5 +54,6 @@ public record ChangeStatistics(int Index, int Adds, int Updates, int Removes, in
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"CurrentIndex: {Index}, Adds: {Adds}, Updates: {Updates}, Removes: {Removes}, Refreshes: {Refreshes}, Count: {Count}, Timestamp: {LastUpdated}";
 }

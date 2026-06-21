@@ -8,12 +8,20 @@ namespace DynamicData.Reactive.Binding;
 
 namespace DynamicData.Binding;
 #endif
-
 /*
  * Binding for the result of the SortAndPage operator
  *
  * (Direct lift from BindVirtualized).
  */
+
+/// <summary>
+/// Provides members for the BindPaged class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="targetList">The targetList value.</param>
+/// <param name="options">The options value.</param>
 internal sealed class BindPaged<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
     IObservable<IChangeSet<TObject, TKey, PageContext<TObject>>> source,
     IList<TObject> targetList,
@@ -21,10 +29,19 @@ internal sealed class BindPaged<[DynamicallyAccessedMembers(DynamicallyAccessedM
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Run() => options is null
         ? UseContextSortOptions()
         : UseProvidedOptions(options.Value);
 
+    /// <summary>
+    /// Executes the UseProvidedOptions operation.
+    /// </summary>
+    /// <param name="sortAndBindOptions">The sortAndBindOptions value.</param>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TObject, TKey>> UseProvidedOptions(SortAndBindOptions sortAndBindOptions) =>
         source.Publish(changes =>
         {
@@ -35,6 +52,10 @@ internal sealed class BindPaged<[DynamicallyAccessedMembers(DynamicallyAccessedM
             return changes.SortAndBind(targetList, comparedChanged, sortAndBindOptions);
         });
 
+    /// <summary>
+    /// Executes the UseContextSortOptions operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TObject, TKey>> UseContextSortOptions() =>
         Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {

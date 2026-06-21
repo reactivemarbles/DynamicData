@@ -71,12 +71,17 @@ public sealed class PageRequest : IPageRequest, IEquatable<IPageRequest>
     public int Size { get; } = 25;
 
     /// <inheritdoc />
+    /// <param name="other">The other value.</param>
+    /// <returns>The result of the operation.</returns>
     public bool Equals(IPageRequest? other) => DefaultComparer.Equals(this, other);
 
     /// <inheritdoc />
+    /// <param name="obj">The obj value.</param>
+    /// <returns>The result of the operation.</returns>
     public override bool Equals(object? obj) => obj is IPageRequest value && Equals(value);
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -86,10 +91,20 @@ public sealed class PageRequest : IPageRequest, IEquatable<IPageRequest>
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"Page: {Page}, Size: {Size}";
 
-    private sealed class PageSizeEqualityComparer : IEqualityComparer<IPageRequest?>
+/// <summary>
+/// Provides members for the PageSizeEqualityComparer class.
+/// </summary>
+private sealed class PageSizeEqualityComparer : IEqualityComparer<IPageRequest?>
     {
+        /// <summary>
+        /// Executes the Equals operation.
+        /// </summary>
+        /// <param name="x">The x value.</param>
+        /// <param name="y">The y value.</param>
+        /// <returns>The result of the operation.</returns>
         public bool Equals(IPageRequest? x, IPageRequest? y)
         {
             if (ReferenceEquals(x, y))
@@ -115,6 +130,11 @@ public sealed class PageRequest : IPageRequest, IEquatable<IPageRequest>
             return x.Page == y.Page && x.Size == y.Size;
         }
 
+        /// <summary>
+        /// Executes the GetHashCode operation.
+        /// </summary>
+        /// <param name="obj">The obj value.</param>
+        /// <returns>The result of the operation.</returns>
         public int GetHashCode(IPageRequest? obj)
         {
             if (obj is null)

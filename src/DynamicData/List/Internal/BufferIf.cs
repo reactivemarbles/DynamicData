@@ -9,17 +9,42 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the BufferIf class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="pauseIfTrueSelector">The pauseIfTrueSelector value.</param>
+/// <param name="initialPauseState">The initialPauseState value.</param>
+/// <param name="timeOut">The timeOut value.</param>
+/// <param name="scheduler">The scheduler value.</param>
 internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, TimeSpan? timeOut = null, IScheduler? scheduler = null)
     where T : notnull
 {
+    /// <summary>
+    /// The _pauseIfTrueSelector field.
+    /// </summary>
     private readonly IObservable<bool> _pauseIfTrueSelector = pauseIfTrueSelector ?? throw new ArgumentNullException(nameof(pauseIfTrueSelector));
 
+    /// <summary>
+    /// The _scheduler field.
+    /// </summary>
     private readonly IScheduler _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// The _timeOut field.
+    /// </summary>
     private readonly TimeSpan _timeOut = timeOut ?? TimeSpan.Zero;
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {

@@ -9,23 +9,28 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
-/// <summary>Initializes a new instance of the <see cref="RemoveKeyEnumerator{TObject, TKey}"/> class.Converts a <see cref="Change{TObject, TKey}"/> to <see cref="ChangeSet{TObject}"/>.</summary>
+/// <summary>Initializes a new instance of the <see cref="RemoveKeyEnumerator{TObject, TKey}"/> class.Converts a <c>Change&lt;TObject, TKey&gt;</c> to <c>ChangeSet&lt;TObject&gt;</c>.</summary>
 /// <param name="source">The change set with a key.</param>
 /// <param name="list">
 /// An optional list, if provided it allows the refresh from a key based cache to find the index for the resulting list based refresh.
 /// If not provided a refresh will dropdown to a replace which may ultimately result in a remove+add change downstream.
 /// </param>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 internal sealed class RemoveKeyEnumerator<TObject, TKey>(IChangeSet<TObject, TKey> source, IExtendedList<TObject>? list = null) : IEnumerable<Change<TObject>>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IChangeSet<TObject, TKey> _source = source ?? throw new ArgumentNullException(nameof(source));
 
     /// <summary>
     /// Returns an enumerator that iterates through the collection.
     /// </summary>
     /// <returns>
-    /// A <see cref="IEnumerator{T}" /> that can be used to iterate through the collection.
+    /// A <c>IEnumerator&lt;T&gt;</c> that can be used to iterate through the collection.
     /// </returns>
     public IEnumerator<Change<TObject>> GetEnumerator()
     {
@@ -75,5 +80,9 @@ internal sealed class RemoveKeyEnumerator<TObject, TKey>(IChangeSet<TObject, TKe
         }
     }
 
+    /// <summary>
+    /// Executes the GetEnumerator operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

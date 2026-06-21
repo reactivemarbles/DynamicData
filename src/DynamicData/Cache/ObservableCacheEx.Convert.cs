@@ -17,13 +17,13 @@ namespace DynamicData;
 public static partial class ObservableCacheEx
 {
     /// <summary>
-    /// Obsolete: use <see cref="Transform{TDestination, TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TDestination}, bool)"/> instead.
+    /// Obsolete: use <c>Transform&lt;TDestination, TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, TDestination&gt;, bool)</c> instead.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to convert.</param>
-    /// <param name="conversionFactory">The <see cref="Func{TObject, TDestination}"/> conversion factory.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to convert.</param>
+    /// <param name="conversionFactory">The <c>Func&lt;TObject, TDestination&gt;</c> conversion factory.</param>
     /// <returns>An observable which emits change sets.</returns>
     [Obsolete("This was an experiment that did not work. Use Transform instead")]
     public static IObservable<IChangeSet<TDestination, TKey>> Convert<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TDestination> conversionFactory)

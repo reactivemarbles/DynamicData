@@ -23,6 +23,16 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
+    /// <summary>
+    /// Executes the TrueFor operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <typeparam name="TValue">The type of the TValue value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="observableSelector">The observableSelector value.</param>
+    /// <param name="collectionMatcher">The collectionMatcher value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<bool> TrueFor<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<IEnumerable<ObservableWithValue<TObject, TValue>>, bool> collectionMatcher)
         where TObject : notnull
         where TKey : notnull

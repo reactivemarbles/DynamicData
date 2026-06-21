@@ -279,6 +279,13 @@ public static class NotifyPropertyChangedEx
         return source.WhenChanged(propertyAccessor, notifyOnInitialValue, fallbackValue);
     }
 
+    /// <summary>
+    /// Executes the GetFactory operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TProperty">The type of the TProperty value.</typeparam>
+    /// <param name="expression">The expression value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static Func<TObject, bool, IObservable<PropertyValue<TObject, TProperty>>> GetFactory<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         where TObject : INotifyPropertyChanged
     {
@@ -286,6 +293,16 @@ public static class NotifyPropertyChangedEx
         return (t, initial) => factory.Create(t, initial);
     }
 
+    /// <summary>
+    /// Executes the WhenChanged operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TProperty">The type of the TProperty value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="expression">The expression value.</param>
+    /// <param name="notifyInitial">The notifyInitial value.</param>
+    /// <param name="fallbackValue">The fallbackValue value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static IObservable<TProperty?> WhenChanged<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> expression, bool notifyInitial = true, Func<TProperty?>? fallbackValue = null)
         where TObject : INotifyPropertyChanged
     {

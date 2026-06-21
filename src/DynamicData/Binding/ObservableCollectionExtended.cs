@@ -17,8 +17,14 @@ namespace DynamicData.Binding;
 /// <typeparam name="T">The type of the item.</typeparam>
 public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObservableCollection<T>, IExtendedList<T>
 {
+    /// <summary>
+    /// The _suspendCount field.
+    /// </summary>
     private bool _suspendCount;
 
+    /// <summary>
+    /// The _suspendNotifications field.
+    /// </summary>
     private bool _suspendNotifications;
 
     /// <summary>
@@ -62,7 +68,7 @@ public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObserva
     }
 
     /// <summary>
-    /// Inserts the elements of a collection into the <see cref="ObservableCollectionExtended{T}" /> at the specified index.
+    /// Inserts the elements of a collection into the <c>ObservableCollectionExtended&lt;T&gt;</c> at the specified index.
     /// </summary>
     /// <param name="collection">Inserts the items at the specified index.</param>
     /// <param name="index">The zero-based index at which the new elements should be inserted.</param>
@@ -96,9 +102,9 @@ public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObserva
     }
 
     /// <summary>
-    /// Removes a range of elements from the <see cref="ObservableCollectionExtended{T}"/>.
+    /// Removes a range of elements from the <c>ObservableCollectionExtended&lt;T&gt;</c>.
     /// </summary>
-    /// <param name="index">The zero-based starting index of the range of elements to remove.</param><param name="count">The number of elements to remove.</param><exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is less than 0.-or-<paramref name="count"/> is less than 0.</exception><exception cref="ArgumentException"><paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <see cref="List{T}"/>.</exception>
+    /// <param name="index">The zero-based starting index of the range of elements to remove.</param><param name="count">The number of elements to remove.</param><exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is less than 0.-or-<paramref name="count"/> is less than 0.</exception><exception cref="ArgumentException"><paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <c>List&lt;T&gt;</c>.</exception>
     public void RemoveRange(int index, int count)
     {
         for (var i = 0; i < count; i++)

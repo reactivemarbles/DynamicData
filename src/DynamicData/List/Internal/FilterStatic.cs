@@ -9,13 +9,29 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the FilterStatic class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="predicate">The predicate value.</param>
 internal sealed class FilterStatic<T>(IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
     where T : notnull
 {
+    /// <summary>
+    /// The _predicate field.
+    /// </summary>
     private readonly Func<T, bool> _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<T>> Run() => Observable.Defer(() => _source.Scan(
                                                             new ChangeAwareList<T>(),
                                                             (state, changes) =>
@@ -24,6 +40,11 @@ internal sealed class FilterStatic<T>(IObservable<IChangeSet<T>> source, Func<T,
                                                                 return state;
                                                             }).Select(filtered => filtered.CaptureChanges()).NotEmpty());
 
+    /// <summary>
+    /// Executes the Process operation.
+    /// </summary>
+    /// <param name="filtered">The filtered value.</param>
+    /// <param name="changes">The changes value.</param>
     private void Process(ChangeAwareList<T> filtered, IChangeSet<T> changes)
     {
         foreach (var item in changes)

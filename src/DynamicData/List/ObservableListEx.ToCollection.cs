@@ -22,14 +22,14 @@ namespace DynamicData;
 public static partial class ObservableListEx
 {
     /// <summary>
-    /// Emits the full collection as an <see cref="IReadOnlyCollection{T}"/> after every changeset. Equivalent to <c>QueryWhenChanged(items => items)</c>.
+    /// Emits the full collection as an <c>IReadOnlyCollection&lt;T&gt;</c> after every changeset. Equivalent to <c>QueryWhenChanged(items => items)</c>.
     /// </summary>
     /// <typeparam name="TObject">The type of items in the list.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to materialize into a collection on each change.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject&gt;&gt;</c> to materialize into a collection on each change.</param>
     /// <returns>An observable emitting the full collection snapshot after each change.</returns>
-    /// <seealso cref="QueryWhenChanged{T}(IObservable{IChangeSet{T}})"/>
-    /// <seealso cref="ToSortedCollection{TObject, TSortKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TSortKey}, SortDirection)"/>
-    /// <seealso cref="ObservableCacheEx.ToCollection{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
+    /// <seealso><c>QueryWhenChanged&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>
+    /// <seealso><c>ToSortedCollection&lt;TObject, TSortKey&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Func&lt;TObject, TSortKey&gt;, SortDirection)</c></seealso>
+    /// <seealso><c>ObservableCacheEx.ToCollection&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;)</c></seealso>
     public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject>(this IObservable<IChangeSet<TObject>> source)
         where TObject : notnull => source.QueryWhenChanged(items => items);
 }

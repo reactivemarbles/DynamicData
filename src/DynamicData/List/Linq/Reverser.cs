@@ -9,11 +9,23 @@ namespace DynamicData.Reactive.List.Linq;
 namespace DynamicData.List.Linq;
 #endif
 
+/// <summary>
+/// Provides members for the Reverser class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
 internal sealed class Reverser<T>
     where T : notnull
 {
+    /// <summary>
+    /// The _length field.
+    /// </summary>
     private int _length;
 
+    /// <summary>
+    /// Executes the Reverse operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
     public IEnumerable<Change<T>> Reverse(IChangeSet<T> changes)
     {
         foreach (var change in changes)

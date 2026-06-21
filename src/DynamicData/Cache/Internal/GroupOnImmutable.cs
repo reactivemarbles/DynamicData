@@ -9,17 +9,39 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the GroupOnImmutable class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <typeparam name="TGroupKey">The type of the TGroupKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="groupSelectorKey">The groupSelectorKey value.</param>
+/// <param name="regrouper">The regrouper value.</param>
 internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit>? regrouper)
     where TObject : notnull
     where TKey : notnull
     where TGroupKey : notnull
 {
+    /// <summary>
+    /// The _groupSelectorKey field.
+    /// </summary>
     private readonly Func<TObject, TGroupKey> _groupSelectorKey = groupSelectorKey ?? throw new ArgumentNullException(nameof(groupSelectorKey));
 
+    /// <summary>
+    /// The _regrouper field.
+    /// </summary>
     private readonly IObservable<Unit> _regrouper = regrouper ?? Observable.Never<Unit>();
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>>(
             observer =>
             {
@@ -33,11 +55,26 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
                 return new CompositeDisposable(groups.Merge(regroup).SubscribeSafe(observer), queue);
             });
 
-    private sealed class Grouper(Func<TObject, TGroupKey> groupSelectorKey)
+/// <summary>
+/// Provides members for the Grouper class.
+/// </summary>
+/// <param name="groupSelectorKey">The groupSelectorKey value.</param>
+private sealed class Grouper(Func<TObject, TGroupKey> groupSelectorKey)
     {
+        /// <summary>
+        /// The _allGroupings field.
+        /// </summary>
         private readonly Dictionary<TGroupKey, GroupCache> _allGroupings = [];
+
+        /// <summary>
+        /// The _itemCache field.
+        /// </summary>
         private readonly Dictionary<TKey, ChangeWithGroup> _itemCache = [];
 
+        /// <summary>
+        /// Executes the Regroup operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         public IImmutableGroupChangeSet<TObject, TKey, TGroupKey> Regroup()
         {
             // re-evaluate all items in the group
@@ -45,18 +82,45 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
             return HandleUpdates(new ChangeSet<TObject, TKey>(items));
         }
 
+        /// <summary>
+        /// Executes the Update operation.
+        /// </summary>
+        /// <param name="updates">The updates value.</param>
+        /// <returns>The result of the operation.</returns>
         public IImmutableGroupChangeSet<TObject, TKey, TGroupKey> Update(IChangeSet<TObject, TKey> updates) => HandleUpdates(updates);
 
+        /// <summary>
+        /// Executes the CreateMissingKeyException operation.
+        /// </summary>
+        /// <param name="reason">The reason value.</param>
+        /// <param name="key">The key value.</param>
+        /// <returns>The result of the operation.</returns>
         private static MissingKeyException CreateMissingKeyException(ChangeReason reason, TKey key)
         {
             var message = $"{key} is missing from previous group on {reason}.{Environment.NewLine}Object type {typeof(TObject)}, Key type {typeof(TKey)}, Group key type {typeof(TGroupKey)}";
             return new MissingKeyException(message);
         }
 
+        /// <summary>
+        /// Executes the GetGroupState operation.
+        /// </summary>
+        /// <param name="grouping">The grouping value.</param>
+        /// <returns>The result of the operation.</returns>
         private static ImmutableGroup<TObject, TKey, TGroupKey> GetGroupState(GroupCache grouping) => new(grouping.Key, grouping.Cache);
 
+        /// <summary>
+        /// Executes the GetGroupState operation.
+        /// </summary>
+        /// <param name="key">The key value.</param>
+        /// <param name="cache">The cache value.</param>
+        /// <returns>The result of the operation.</returns>
         private static ImmutableGroup<TObject, TKey, TGroupKey> GetGroupState(TGroupKey key, ICache<TObject, TKey> cache) => new(key, cache);
 
+        /// <summary>
+        /// Executes the CreateChangeSet operation.
+        /// </summary>
+        /// <param name="initialGroupState">The initialGroupState value.</param>
+        /// <returns>The result of the operation.</returns>
         private ImmutableGroupChangeSet<TObject, TKey, TGroupKey> CreateChangeSet(IDictionary<TGroupKey, IGrouping<TObject, TKey, TGroupKey>> initialGroupState)
         {
             var result = new List<Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>>();
@@ -88,6 +152,11 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
             return new ImmutableGroupChangeSet<TObject, TKey, TGroupKey>(result);
         }
 
+        /// <summary>
+        /// Executes the GetCache operation.
+        /// </summary>
+        /// <param name="key">The key value.</param>
+        /// <returns>The result of the operation.</returns>
         private Tuple<GroupCache, bool> GetCache(TGroupKey key)
         {
             var cache = _allGroupings.Lookup(key);
@@ -101,6 +170,11 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
             return Tuple.Create(newcache, true);
         }
 
+        /// <summary>
+        /// Executes the HandleUpdates operation.
+        /// </summary>
+        /// <param name="changes">The changes value.</param>
+        /// <returns>The result of the operation.</returns>
         private ImmutableGroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates(IEnumerable<Change<TObject, TKey>> changes)
         {
             // need to keep track of effected groups to calculate correct notifications
@@ -202,6 +276,12 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
             return CreateChangeSet(initialStateOfGroups);
         }
 
+        /// <summary>
+        /// Executes the RemoveFromOldGroup operation.
+        /// </summary>
+        /// <param name="groupState">The groupState value.</param>
+        /// <param name="groupKey">The groupKey value.</param>
+        /// <param name="currentKey">The currentKey value.</param>
         private void RemoveFromOldGroup(Dictionary<TGroupKey, IGrouping<TObject, TKey, TGroupKey>> groupState, TGroupKey groupKey, TKey currentKey) =>
             _allGroupings.Lookup(groupKey).IfHasValue(
                 g =>
@@ -214,35 +294,92 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
                     g.Cache.Remove(currentKey);
                 });
 
-        private readonly struct ChangeWithGroup(Change<TObject, TKey> change, Func<TObject, TGroupKey> keySelector) : IEquatable<ChangeWithGroup>
+/// <summary>
+/// Represents the ChangeWithGroup value.
+/// </summary>
+/// <param name="change">The change value.</param>
+/// <param name="keySelector">The keySelector value.</param>
+private readonly struct ChangeWithGroup(Change<TObject, TKey> change, Func<TObject, TGroupKey> keySelector) : IEquatable<ChangeWithGroup>
         {
+            /// <summary>
+            /// Gets the Item value.
+            /// </summary>
             public TObject Item { get; } = change.Current;
 
+            /// <summary>
+            /// Gets the Key value.
+            /// </summary>
             public TKey Key { get; } = change.Key;
 
+            /// <summary>
+            /// Gets the GroupKey value.
+            /// </summary>
             public TGroupKey GroupKey { get; } = keySelector(change.Current);
 
+            /// <summary>
+            /// Gets the Reason value.
+            /// </summary>
             public ChangeReason Reason { get; } = change.Reason;
 
+            /// <summary>
+            /// Executes the operator operation.
+            /// </summary>
+            /// <param name="left">The left value.</param>
+            /// <param name="right">The right value.</param>
+            /// <returns>The result of the operation.</returns>
             public static bool operator ==(in ChangeWithGroup left, in ChangeWithGroup right) =>
                 left.Equals(right);
 
+            /// <summary>
+            /// Executes the operator operation.
+            /// </summary>
+            /// <param name="left">The left value.</param>
+            /// <param name="right">The right value.</param>
+            /// <returns>The result of the operation.</returns>
             public static bool operator !=(in ChangeWithGroup left, in ChangeWithGroup right) =>
                 !left.Equals(right);
 
+            /// <summary>
+            /// Executes the Equals operation.
+            /// </summary>
+            /// <param name="other">The other value.</param>
+            /// <returns>The result of the operation.</returns>
             public bool Equals(ChangeWithGroup other) => Key.Equals(other.Key);
 
+            /// <summary>
+            /// Executes the Equals operation.
+            /// </summary>
+            /// <param name="obj">The obj value.</param>
+            /// <returns>The result of the operation.</returns>
             public override bool Equals(object? obj) => obj is ChangeWithGroup changeGroup && Equals(changeGroup);
 
+            /// <summary>
+            /// Executes the GetHashCode operation.
+            /// </summary>
+            /// <returns>The result of the operation.</returns>
             public override int GetHashCode() => Key.GetHashCode();
 
+            /// <summary>
+            /// Executes the ToString operation.
+            /// </summary>
+            /// <returns>The result of the operation.</returns>
             public override string ToString() => $"Key: {Key}, GroupKey: {GroupKey}, Item: {Item}";
         }
 
-        private sealed class GroupCache(TGroupKey key)
+/// <summary>
+/// Provides members for the GroupCache class.
+/// </summary>
+/// <param name="key">The key value.</param>
+private sealed class GroupCache(TGroupKey key)
         {
+            /// <summary>
+            /// Gets the Cache value.
+            /// </summary>
             public Cache<TObject, TKey> Cache { get; } = new Cache<TObject, TKey>();
 
+            /// <summary>
+            /// Gets the Key value.
+            /// </summary>
             public TGroupKey Key { get; } = key;
         }
     }

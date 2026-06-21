@@ -27,7 +27,7 @@ public static partial class ObservableListEx
     /// The changeset is forwarded downstream unmodified.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to create a subscription for each item in.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to create a subscription for each item in.</param>
     /// <param name="subscriptionFactory">A function that creates an <see cref="IDisposable"/> for each item.</param>
     /// <returns>A continuation of the source changeset stream with per-item subscriptions managed as a side effect.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="subscriptionFactory"/> is <see langword="null"/>.</exception>
@@ -41,10 +41,10 @@ public static partial class ObservableListEx
     /// <item><term>OnError/OnCompleted/Disposal</term><description>All active subscriptions are disposed.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>
-    /// <seealso cref="DisposeMany{T}(IObservable{IChangeSet{T}})"/>
-    /// <seealso cref="OnItemRemoved{T}(IObservable{IChangeSet{T}}, Action{T}, bool)"/>
-    /// <seealso cref="ObservableCacheEx.SubscribeMany{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IDisposable})"/>
+    /// <seealso><c>MergeMany&lt;T, TDestination&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Func&lt;T, IObservable&lt;TDestination&gt;&gt;)</c></seealso>
+    /// <seealso><c>DisposeMany&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>
+    /// <seealso><c>OnItemRemoved&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Action&lt;T&gt;, bool)</c></seealso>
+    /// <seealso><c>ObservableCacheEx.SubscribeMany&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, IDisposable&gt;)</c></seealso>
     public static IObservable<IChangeSet<T>> SubscribeMany<T>(this IObservable<IChangeSet<T>> source, Func<T, IDisposable> subscriptionFactory)
         where T : notnull
     {

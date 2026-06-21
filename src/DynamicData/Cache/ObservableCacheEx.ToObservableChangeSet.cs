@@ -23,9 +23,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{TObject}"/> to convert into a keyed changeset stream.</param>
-    /// <param name="keySelector">A <see cref="Func{T, TResult}"/> that selects the unique key for each item.</param>
-    /// <param name="expireAfter">An optional <see cref="Func{T, TResult}"/> that specifies per-item expiration time. Return <see langword="null"/> for no expiration.</param>
+    /// <param name="source">The source <c>IObservable&lt;TObject&gt;</c> to convert into a keyed changeset stream.</param>
+    /// <param name="keySelector">A <c>Func&lt;T, TResult&gt;</c> that selects the unique key for each item.</param>
+    /// <param name="expireAfter">An optional <c>Func&lt;T, TResult&gt;</c> that specifies per-item expiration time. Return <see langword="null"/> for no expiration.</param>
     /// <param name="limitSizeTo">The maximum cache size. Oldest items are removed when exceeded. Use -1 for no limit.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> for expiration timing.</param>
     /// <returns>An observable changeset stream.</returns>
@@ -57,9 +57,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IEnumerable{TObject}}"/> to convert into a keyed changeset stream.</param>
-    /// <param name="keySelector">A <see cref="Func{T, TResult}"/> that selects the unique key for each item.</param>
-    /// <param name="expireAfter">An optional <see cref="Func{T, TResult}"/> that specifies per-item expiration time. Return <see langword="null"/> for no expiration.</param>
+    /// <param name="source">The source <c>IObservable&lt;IEnumerable&lt;TObject&gt;&gt;</c> to convert into a keyed changeset stream.</param>
+    /// <param name="keySelector">A <c>Func&lt;T, TResult&gt;</c> that selects the unique key for each item.</param>
+    /// <param name="expireAfter">An optional <c>Func&lt;T, TResult&gt;</c> that specifies per-item expiration time. Return <see langword="null"/> for no expiration.</param>
     /// <param name="limitSizeTo">The maximum cache size. Oldest items are removed when exceeded. Use -1 for no limit.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> for expiration timing.</param>
     /// <returns>An observable changeset stream.</returns>

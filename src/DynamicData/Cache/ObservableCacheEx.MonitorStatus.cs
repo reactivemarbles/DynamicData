@@ -29,9 +29,9 @@ public static partial class ObservableCacheEx
     /// This is not a changeset operator.
     /// </summary>
     /// <typeparam name="T">The type of the source observable.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{T}"/> to monitor for connection status.</param>
+    /// <param name="source">The source <c>IObservable&lt;T&gt;</c> to monitor for connection status.</param>
     /// <returns>An observable that emits <see cref="ConnectionStatus"/> values reflecting the source's lifecycle.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="DeferUntilLoaded{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
+    /// <seealso><c>DeferUntilLoaded&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;)</c></seealso>
     public static IObservable<ConnectionStatus> MonitorStatus<T>(this IObservable<T> source) => new StatusMonitor<T>(source).Run();
 }

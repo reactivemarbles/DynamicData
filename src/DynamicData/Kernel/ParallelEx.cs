@@ -9,8 +9,20 @@ namespace DynamicData.Reactive.Kernel;
 namespace DynamicData.Kernel;
 #endif
 
+/// <summary>
+/// Provides members for the ParallelEx class.
+/// </summary>
 internal static class ParallelEx
 {
+    /// <summary>
+    /// Executes the SelectParallel operation.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="selector">The selector value.</param>
+    /// <param name="maximumThreads">The maximumThreads value.</param>
+    /// <returns>The result of the operation.</returns>
     public static async Task<IEnumerable<TDestination>> SelectParallel<TSource, TDestination>(this IEnumerable<TSource> source, Func<TSource, Task<TDestination>> selector, int maximumThreads = 5)
     {
         ArgumentExceptionHelper.ThrowIfNull(source);

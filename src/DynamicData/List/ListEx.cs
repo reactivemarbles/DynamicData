@@ -457,6 +457,14 @@ public static class ListEx
         }
     }
 
+    /// <summary>
+    /// Executes the MovedWithinRange operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="startIndex">The startIndex value.</param>
+    /// <param name="endIndex">The endIndex value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static bool MovedWithinRange<T>(this Change<T> source, int startIndex, int endIndex)
         where T : notnull
     {
@@ -471,6 +479,13 @@ public static class ListEx
         return (current >= startIndex && current <= endIndex) || (previous >= startIndex && previous <= endIndex);
     }
 
+    /// <summary>
+    /// Executes the Clone operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="item">The item value.</param>
+    /// <param name="equalityComparer">The equalityComparer value.</param>
     private static void Clone<T>(this IList<T> source, Change<T> item, IEqualityComparer<T> equalityComparer)
         where T : notnull
     {

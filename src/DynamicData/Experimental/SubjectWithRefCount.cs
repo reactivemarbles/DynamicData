@@ -19,10 +19,19 @@ namespace DynamicData.Experimental;
 /// <param name="subject">The subject to perform reference counting on.</param>
 internal sealed class SubjectWithRefCount<T>(ISignal<T>? subject = null) : ISubjectWithRefCount<T>
 {
+    /// <summary>
+    /// The _subject field.
+    /// </summary>
     private readonly ISignal<T> _subject = subject ?? new Signal<T>();
 
+    /// <summary>
+    /// The _isDisposed field.
+    /// </summary>
     private bool _isDisposed;
 
+    /// <summary>
+    /// The _refCount field.
+    /// </summary>
     private int _refCount;
 
     /// <summary>Gets number of subscribers.</summary>

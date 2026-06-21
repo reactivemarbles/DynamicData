@@ -14,10 +14,20 @@ namespace DynamicData.Kernel;
 /// </summary>
 public sealed class OptionElse
 {
+    /// <summary>
+    /// The NoAction field.
+    /// </summary>
     internal static readonly OptionElse NoAction = new(false);
 
+    /// <summary>
+    /// The _shouldRunAction field.
+    /// </summary>
     private readonly bool _shouldRunAction;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OptionElse"/> class.
+    /// </summary>
+    /// <param name="shouldRunAction">The shouldRunAction value.</param>
     internal OptionElse(bool shouldRunAction = true) => _shouldRunAction = shouldRunAction;
 
     /// <summary>

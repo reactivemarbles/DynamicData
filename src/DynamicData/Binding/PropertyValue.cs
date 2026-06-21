@@ -29,12 +29,17 @@ public sealed record PropertyValue<TObject, TValue>(TObject Sender, TValue? Valu
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PropertyValue{TObject, TValue}"/> class.
+    /// </summary>
+    /// <param name="sender">The sender value.</param>
     internal PropertyValue(TObject sender)
         : this(sender, default, true)
     {
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -44,5 +49,6 @@ public sealed record PropertyValue<TObject, TValue>(TObject Sender, TValue? Valu
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"{Sender} ({Value})";
 }

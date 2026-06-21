@@ -26,7 +26,7 @@ public static partial class ObservableListEx
     /// changes when any property changes, causing downstream operators to re-evaluate.
     /// </summary>
     /// <typeparam name="TObject">The type of items, which must implement <see cref="INotifyPropertyChanged"/>.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to monitor for property-driven refresh signals.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject&gt;&gt;</c> to monitor for property-driven refresh signals.</param>
     /// <param name="changeSetBuffer">An optional <see cref="TimeSpan"/> buffer duration to batch multiple refresh signals into a single changeset.</param>
     /// <param name="propertyChangeThrottle">An optional <see cref="TimeSpan"/> throttle applied to each item's property change notifications.</param>
     /// <param name="scheduler">The scheduler for throttle and buffer timing. Defaults to <see cref="GlobalConfig.DefaultScheduler"/>.</param>
@@ -34,8 +34,8 @@ public static partial class ObservableListEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
-    /// Wraps <see cref="AutoRefreshOnObservable{TObject, TAny}"/> using <c>WhenAnyPropertyChanged()</c> as the re-evaluator.
-    /// Pair with <see cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/> or <see cref="Sort{T}(IObservable{IChangeSet{T}}, IComparer{T}, SortOptions, IObservable{Unit}?, IObservable{IComparer{T}}?, int)"/>
+    /// Wraps <c>AutoRefreshOnObservable&lt;TObject, TAny&gt;</c> using <c>WhenAnyPropertyChanged()</c> as the re-evaluator.
+    /// Pair with <c>Filter&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Func&lt;T, bool&gt;)</c> or <c>Sort&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IComparer&lt;T&gt;, SortOptions, IObservable&lt;Unit&gt;?, IObservable&lt;IComparer&lt;T&gt;&gt;?, int)</c>
     /// to get reactive re-evaluation on property changes.
     /// </para>
     /// <list type="table">
@@ -48,10 +48,10 @@ public static partial class ObservableListEx
     /// </list>
     /// <para><b>Worth noting:</b> Each item generates a subscription. For large lists with frequent property changes, use <paramref name="changeSetBuffer"/> and <paramref name="propertyChangeThrottle"/> to reduce churn.</para>
     /// </remarks>
-    /// <seealso cref="AutoRefresh{TObject, TProperty}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TProperty}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
-    /// <seealso cref="AutoRefreshOnObservable{TObject, TAny}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{TAny}}, TimeSpan?, IScheduler?)"/>
-    /// <seealso cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/>
-    /// <seealso cref="ObservableCacheEx.AutoRefresh{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <seealso><c>AutoRefresh&lt;TObject, TProperty&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Expression&lt;Func&lt;TObject, TProperty&gt;&gt;, TimeSpan?, TimeSpan?, IScheduler?)</c></seealso>
+    /// <seealso><c>AutoRefreshOnObservable&lt;TObject, TAny&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Func&lt;TObject, IObservable&lt;TAny&gt;&gt;, TimeSpan?, IScheduler?)</c></seealso>
+    /// <seealso><c>SuppressRefresh&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>
+    /// <seealso><c>ObservableCacheEx.AutoRefresh&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, TimeSpan?, TimeSpan?, IScheduler?)</c></seealso>
     public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject>(this IObservable<IChangeSet<TObject>> source, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
     {
@@ -76,7 +76,15 @@ public static partial class ObservableListEx
     /// and emits <b>Refresh</b> changes when that property changes, causing downstream operators to re-evaluate. More efficient than
     /// the all-properties overload when only one property (of type <typeparamref name="TProperty"/>) affects downstream behavior.
     /// </summary>
-    /// <inheritdoc cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TProperty">The type of the TProperty value.</typeparam>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
+    /// <param name="source">The source value.</param>
+    /// <param name="propertyAccessor">The propertyAccessor value.</param>
+    /// <param name="changeSetBuffer">The changeSetBuffer value.</param>
+    /// <param name="propertyChangeThrottle">The propertyChangeThrottle value.</param>
+    /// <param name="scheduler">The scheduler value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TProperty>> propertyAccessor, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
     {

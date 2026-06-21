@@ -11,19 +11,36 @@ namespace DynamicData.Internal;
 
 /// <summary>
 /// A queue that serializes item delivery outside a caller-owned lock.
-/// Internally stores <see cref="Notification{T}"/> values. Delivery
-/// is dispatched to an <see cref="IObserver{T}"/> outside the lock.
+/// Internally stores <c>Notification&lt;T&gt;</c> values. Delivery
+/// is dispatched to an <c>IObserver&lt;T&gt;</c> outside the lock.
 /// </summary>
 /// <typeparam name="T">The value type delivered via OnNext.</typeparam>
 internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     where T : notnull
 {
+    /// <summary>
+    /// The _queue field.
+    /// </summary>
     private readonly Queue<Notification<T>> _queue = new(1);
 
+    /// <summary>
+    /// The _gate field.
+    /// </summary>
     private readonly Lock _gate;
 
+    /// <summary>
+    /// The _observer field.
+    /// </summary>
     private readonly IObserver<T> _observer;
+
+    /// <summary>
+    /// The _drainThreadId field.
+    /// </summary>
     private int _drainThreadId = -1;
+
+    /// <summary>
+    /// The _isTerminated field.
+    /// </summary>
     private volatile bool _isTerminated;
 
     /// <summary>
@@ -92,14 +109,17 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     /// Acquires the gate and returns a scoped access for enqueueing notifications.
     /// Disposing releases the gate and triggers delivery if needed.
     /// </summary>
+    /// <returns>The result of the operation.</returns>
     public ScopedAccess AcquireLock() => new(this);
 
     /// <summary>
     /// Acquires the gate for read-only inspection. Does not trigger delivery on dispose.
     /// </summary>
+    /// <returns>The result of the operation.</returns>
     public ReadOnlyScopedAccess AcquireReadLock() => new(this);
 
     /// <summary>Enqueues an OnNext notification via the lock, then drains.</summary>
+    /// <param name="value">The value value.</param>
     public void OnNext(T value)
     {
         using var scope = AcquireLock();
@@ -107,6 +127,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     }
 
     /// <summary>Enqueues an OnError notification via the lock, then drains.</summary>
+    /// <param name="error">The error value.</param>
     public void OnError(Exception error)
     {
         using var scope = AcquireLock();
@@ -119,17 +140,34 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
         using var scope = AcquireLock();
         scope.EnqueueCompleted();
     }
-
 #if NET9_0_OR_GREATER
+
+    /// <summary>
+    /// Executes the EnterLock operation.
+    /// </summary>
     private void EnterLock() => _gate.Enter();
 
+    /// <summary>
+    /// Executes the ExitLock operation.
+    /// </summary>
     private void ExitLock() => _gate.Exit();
 #else
+
+    /// <summary>
+    /// Executes the EnterLock operation.
+    /// </summary>
     private void EnterLock() => Monitor.Enter(_gate);
 
+    /// <summary>
+    /// Executes the ExitLock operation.
+    /// </summary>
     private void ExitLock() => Monitor.Exit(_gate);
 #endif
 
+    /// <summary>
+    /// Executes the EnqueueNotification operation.
+    /// </summary>
+    /// <param name="item">The item value.</param>
     private void EnqueueNotification(Notification<T> item)
     {
         if (_isTerminated)
@@ -140,6 +178,9 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
         _queue.Enqueue(item);
     }
 
+    /// <summary>
+    /// Executes the ExitLockAndDeliver operation.
+    /// </summary>
     private void ExitLockAndDeliver()
     {
         var shouldDeliver = TryStartDelivery();
@@ -214,13 +255,20 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
         }
     }
 
-    /// <summary>
-    /// Scoped access for enqueueing notifications under the gate lock.
-    /// </summary>
-    public ref struct ScopedAccess
+/// <summary>
+/// Scoped access for enqueueing notifications under the gate lock.
+/// </summary>
+public ref struct ScopedAccess
     {
+        /// <summary>
+        /// The _owner field.
+        /// </summary>
         private DeliveryQueue<T>? _owner;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ScopedAccess"/> struct.
+        /// </summary>
+        /// <param name="owner">The owner value.</param>
         internal ScopedAccess(DeliveryQueue<T> owner)
         {
             _owner = owner;
@@ -228,9 +276,11 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
         }
 
         /// <summary>Enqueues an OnNext notification.</summary>
+        /// <param name="value">The value value.</param>
         public readonly void EnqueueNext(T value) => _owner?.EnqueueNotification(Notification<T>.CreateNext(value));
 
         /// <summary>Enqueues an OnError notification (terminal).</summary>
+        /// <param name="error">The error value.</param>
         public readonly void EnqueueError(Exception error) => _owner?.EnqueueNotification(Notification<T>.CreateError(error));
 
         /// <summary>Enqueues an OnCompleted notification (terminal).</summary>
@@ -250,13 +300,20 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
         }
     }
 
-    /// <summary>
-    /// Read-only scoped access. Disposing releases the gate without triggering delivery.
-    /// </summary>
-    public ref struct ReadOnlyScopedAccess
+/// <summary>
+/// Read-only scoped access. Disposing releases the gate without triggering delivery.
+/// </summary>
+public ref struct ReadOnlyScopedAccess
     {
+        /// <summary>
+        /// The _owner field.
+        /// </summary>
         private DeliveryQueue<T>? _owner;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ReadOnlyScopedAccess"/> struct.
+        /// </summary>
+        /// <param name="owner">The owner value.</param>
         internal ReadOnlyScopedAccess(DeliveryQueue<T> owner)
         {
             _owner = owner;

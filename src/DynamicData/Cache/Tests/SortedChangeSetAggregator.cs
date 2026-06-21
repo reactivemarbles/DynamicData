@@ -25,8 +25,14 @@ public class SortedChangeSetAggregator<TObject, TKey> : IDisposable
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _disposer field.
+    /// </summary>
     private readonly IDisposable _disposer;
 
+    /// <summary>
+    /// The _isDisposed field.
+    /// </summary>
     private bool _isDisposed;
 
     /// <summary>

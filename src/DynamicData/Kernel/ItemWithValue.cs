@@ -23,6 +23,7 @@ namespace DynamicData.Kernel;
 public readonly record struct ItemWithValue<TObject, TValue>(TObject Item, TValue Value)
 {
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -32,5 +33,6 @@ public readonly record struct ItemWithValue<TObject, TValue>(TObject Item, TValu
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"{Item} ({Value})";
 }

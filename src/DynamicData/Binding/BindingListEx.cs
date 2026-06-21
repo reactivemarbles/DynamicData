@@ -132,6 +132,12 @@ public static class BindingListEx
             });
     }
 
+    /// <summary>
+    /// Executes the Clone operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="changes">The changes value.</param>
     internal static void Clone<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this BindingList<T> source, IEnumerable<Change<T>> changes)
         where T : notnull
     {
@@ -145,6 +151,13 @@ public static class BindingListEx
         }
     }
 
+    /// <summary>
+    /// Executes the Clone operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="item">The item value.</param>
+    /// <param name="equalityComparer">The equalityComparer value.</param>
     private static void Clone<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this BindingList<T> source, Change<T> item, IEqualityComparer<T> equalityComparer)
         where T : notnull
     {

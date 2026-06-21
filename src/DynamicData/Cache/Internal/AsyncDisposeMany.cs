@@ -8,12 +8,23 @@ namespace DynamicData.Reactive.Cache.Internal;
 
 namespace DynamicData.Cache.Internal;
 #endif
-
 #if SUPPORTS_ASYNC_DISPOSABLE
+
+/// <summary>
+/// Provides members for the AsyncDisposeMany class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 internal static class AsyncDisposeMany<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// Executes the Create operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="disposalsCompletedAccessor">The disposalsCompletedAccessor value.</param>
+    /// <returns>The result of the operation.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> Create(
         IObservable<IChangeSet<TObject, TKey>> source,
         Action<IObservable<Unit>> disposalsCompletedAccessor)

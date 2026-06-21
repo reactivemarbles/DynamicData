@@ -22,17 +22,17 @@ namespace DynamicData;
 public static partial class ObservableListEx
 {
     /// <summary>
-    /// Subscribes to the latest inner <see cref="IObservableList{T}"/>, switching to each new source and clearing the result when switching.
-    /// This is the changeset-aware equivalent of Rx's <see cref="Observable.Switch{TSource}(IObservable{IObservable{TSource}})"/>, which cannot be applied directly to changeset streams.
+    /// Subscribes to the latest inner <c>IObservableList&lt;T&gt;</c>, switching to each new source and clearing the result when switching.
+    /// This is the changeset-aware equivalent of Rx's <c>Observable.Switch&lt;TSource&gt;(IObservable&lt;IObservable&lt;TSource&gt;&gt;)</c>, which cannot be applied directly to changeset streams.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="sources">An observable that emits <see cref="IObservableList{T}"/> instances. Each emission triggers a switch to the new list.</param>
+    /// <param name="sources">An observable that emits <c>IObservableList&lt;T&gt;</c> instances. Each emission triggers a switch to the new list.</param>
     /// <returns>A list changeset stream reflecting the most recently received inner list.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sources"/> is <see langword="null"/>.</exception>
     /// <remarks>
-    /// <para>Convenience overload that calls <c>Connect()</c> on each inner list, then delegates to <see cref="Switch{T}(IObservable{IObservable{IChangeSet{T}}})"/>.</para>
+    /// <para>Convenience overload that calls <c>Connect()</c> on each inner list, then delegates to <c>Switch&lt;T&gt;(IObservable&lt;IObservable&lt;IChangeSet&lt;T&gt;&gt;&gt;)</c>.</para>
     /// </remarks>
-    /// <seealso cref="Switch{T}(IObservable{IObservable{IChangeSet{T}}})"/>
+    /// <seealso><c>Switch&lt;T&gt;(IObservable&lt;IObservable&lt;IChangeSet&lt;T&gt;&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservableList<T>> sources)
         where T : notnull
     {
@@ -46,7 +46,7 @@ public static partial class ObservableListEx
     /// Previous subscriptions are disposed and the result set is emptied before subscribing to the new inner stream.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="sources">An <see cref="IObservable{T}"/> of <see cref="IObservable{T}"/> changeset streams. The operator subscribes to the latest inner stream.</param>
+    /// <param name="sources">An <c>IObservable&lt;T&gt;</c> of <c>IObservable&lt;T&gt;</c> changeset streams. The operator subscribes to the latest inner stream.</param>
     /// <returns>A list changeset stream reflecting the most recently received inner changeset stream.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sources"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -55,7 +55,7 @@ public static partial class ObservableListEx
     /// This is the changeset-aware equivalent of Rx's <c>Switch()</c>.
     /// </para>
     /// </remarks>
-    /// <seealso cref="Switch{T}(IObservable{IObservableList{T}})"/>
+    /// <seealso><c>Switch&lt;T&gt;(IObservable&lt;IObservableList&lt;T&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservable<IChangeSet<T>>> sources)
         where T : notnull
     {

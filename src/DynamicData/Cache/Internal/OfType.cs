@@ -9,11 +9,23 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the OfType class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
 internal sealed class OfType<TObject, TKey, TDestination>(IObservable<IChangeSet<TObject, TKey>> source, bool suppressEmptyChangeSets)
     where TObject : notnull
     where TKey : notnull
     where TDestination : notnull
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TDestination, TKey>> Run() =>
         Observable.Create<IChangeSet<TDestination, TKey>>(observer => source
             .SubscribeSafe(

@@ -28,8 +28,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to pipe into a target cache.</param>
-    /// <param name="destination">The <see cref="ISourceCache{TObject, TKey}"/> that will receive the changes.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to pipe into a target cache.</param>
+    /// <param name="destination">The <c>ISourceCache&lt;TObject, TKey&gt;</c> that will receive the changes.</param>
     /// <returns>An <see cref="IDisposable"/> that, when disposed, unsubscribes from the source.</returns>
     /// <remarks>
     /// <para>
@@ -46,9 +46,9 @@ public static partial class ObservableCacheEx
     /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="destination"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="PopulateFrom{TObject, TKey}(ISourceCache{TObject, TKey}, IObservable{IEnumerable{TObject}})"/>
-    /// <seealso cref="AsObservableCache{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, bool)"/>
-    /// <seealso cref="ObservableListEx.PopulateInto{T}(IObservable{IChangeSet{T}}, ISourceList{T})"/>
+    /// <seealso><c>PopulateFrom&lt;TObject, TKey&gt;(ISourceCache&lt;TObject, TKey&gt;, IObservable&lt;IEnumerable&lt;TObject&gt;&gt;)</c></seealso>
+    /// <seealso><c>AsObservableCache&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, bool)</c></seealso>
+    /// <seealso><c>ObservableListEx.PopulateInto&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, ISourceList&lt;T&gt;)</c></seealso>
     public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ISourceCache<TObject, TKey> destination)
         where TObject : notnull
         where TKey : notnull
@@ -59,10 +59,15 @@ public static partial class ObservableCacheEx
         return source.Subscribe(changes => destination.Edit(updater => updater.Clone(changes)));
     }
 
-    /// <inheritdoc cref="PopulateInto{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, ISourceCache{TObject, TKey})"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to pipe into a target cache.</param>
-    /// <param name="destination">The <see cref="IIntermediateCache{TObject, TKey}"/> that will receive the changes.</param>
-    /// <remarks>Overload that targets an <see cref="IIntermediateCache{TObject, TKey}"/>.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>PopulateInto</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to pipe into a target cache.</param>
+    /// <param name="destination">The <c>IIntermediateCache&lt;TObject, TKey&gt;</c> that will receive the changes.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>Overload that targets an <c>IIntermediateCache&lt;TObject, TKey&gt;</c>.</remarks>
     public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IIntermediateCache<TObject, TKey> destination)
         where TObject : notnull
         where TKey : notnull
@@ -73,10 +78,15 @@ public static partial class ObservableCacheEx
         return source.Subscribe(changes => destination.Edit(updater => updater.Clone(changes)));
     }
 
-    /// <inheritdoc cref="PopulateInto{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, ISourceCache{TObject, TKey})"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to pipe into a target cache.</param>
-    /// <param name="destination">The <see cref="LockFreeObservableCache{TObject, TKey}"/> that will receive the changes.</param>
-    /// <remarks>Overload that targets a <see cref="LockFreeObservableCache{TObject, TKey}"/>.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>PopulateInto</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to pipe into a target cache.</param>
+    /// <param name="destination">The <c>LockFreeObservableCache&lt;TObject, TKey&gt;</c> that will receive the changes.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>Overload that targets a <c>LockFreeObservableCache&lt;TObject, TKey&gt;</c>.</remarks>
     public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, LockFreeObservableCache<TObject, TKey> destination)
         where TObject : notnull
         where TKey : notnull

@@ -18,11 +18,11 @@ public static partial class ObservableListEx
     /// Prepends an empty changeset to the source stream. Useful for initializing downstream consumers that expect an initial emission.
     /// </summary>
     /// <typeparam name="T">The type of item.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to prepend an empty changeset to.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to prepend an empty changeset to.</param>
     /// <returns>A list changeset stream that begins with an empty changeset.</returns>
-    /// <seealso cref="DeferUntilLoaded{T}(IObservable{IChangeSet{T}})"/>
-    /// <seealso cref="SkipInitial{T}(IObservable{IChangeSet{T}})"/>
-    /// <seealso cref="ObservableCacheEx.StartWithEmpty{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
+    /// <seealso><c>DeferUntilLoaded&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>
+    /// <seealso><c>SkipInitial&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>
+    /// <seealso><c>ObservableCacheEx.StartWithEmpty&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<T>> StartWithEmpty<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {

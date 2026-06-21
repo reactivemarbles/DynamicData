@@ -29,7 +29,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to validate for unique keys.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to validate for unique keys.</param>
     /// <returns>A changeset stream guaranteed to contain unique keys per changeset.</returns>
     /// <remarks>
     /// <list type="table">

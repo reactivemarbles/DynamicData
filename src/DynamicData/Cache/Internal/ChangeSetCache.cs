@@ -18,10 +18,20 @@ internal sealed class ChangeSetCache<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ChangeSetCache{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
     public ChangeSetCache(IObservable<IChangeSet<TObject, TKey>> source) =>
         Source = source.Do(Cache.Clone);
 
+    /// <summary>
+    /// Gets the Cache value.
+    /// </summary>
     public Cache<TObject, TKey> Cache { get; } = new();
 
+    /// <summary>
+    /// Gets the Source value.
+    /// </summary>
     public IObservable<IChangeSet<TObject, TKey>> Source { get; }
 }

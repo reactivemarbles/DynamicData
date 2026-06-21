@@ -25,11 +25,11 @@ public static partial class ObservableCacheEx
 {
     /// <summary>
     /// Sets the <c>Index</c> property on each item (which must implement <see cref="IIndexAware"/>)
-    /// to reflect its position in the sorted output. Operates on <see cref="ISortedChangeSet{TObject, TKey}"/>.
+    /// to reflect its position in the sorted output. Operates on <c>ISortedChangeSet&lt;TObject, TKey&gt;</c>.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{ISortedChangeSet{TObject, TKey}}"/> to update index positions in.</param>
+    /// <param name="source">The source <c>IObservable&lt;ISortedChangeSet&lt;TObject, TKey&gt;&gt;</c> to update index positions in.</param>
     /// <returns>An observable that emits the sorted changesets after updating item indices.</returns>
     public static IObservable<ISortedChangeSet<TObject, TKey>> UpdateIndex<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
         where TObject : IIndexAware

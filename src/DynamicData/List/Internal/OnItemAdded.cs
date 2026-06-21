@@ -9,9 +9,19 @@ namespace DynamicData.Reactive.List.Internal;
 namespace DynamicData.List.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the OnItemAdded class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
 internal static class OnItemAdded<T>
     where T : notnull
 {
+    /// <summary>
+    /// Executes the Create operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="addAction">The addAction value.</param>
+    /// <returns>The result of the operation.</returns>
     public static IObservable<IChangeSet<T>> Create(
         IObservable<IChangeSet<T>> source,
         Action<T> addAction)

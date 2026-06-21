@@ -86,13 +86,31 @@ public static class EnumerableEx
         return itemsToFind.Join(indexed, left => left, right => right.Element, (_, right) => right).Select(x => resultSelector(x.Element, x.Index));
     }
 
+    /// <summary>
+    /// Executes the EmptyIfNull operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source) => source ?? Enumerable.Empty<T>();
 
+    /// <summary>
+    /// Executes the EnumerateOne operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static IEnumerable<T> EnumerateOne<T>(this T source)
     {
         yield return source;
     }
 
+    /// <summary>
+    /// Executes the ForEach operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="action">The action value.</param>
     internal static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
     {
         foreach (var item in source)
@@ -101,6 +119,12 @@ public static class EnumerableEx
         }
     }
 
+    /// <summary>
+    /// Executes the ForEach operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="action">The action value.</param>
     internal static void ForEach<TObject>(this IEnumerable<TObject> source, Action<TObject, int> action)
     {
         var i = 0;
@@ -111,6 +135,12 @@ public static class EnumerableEx
         }
     }
 
+    /// <summary>
+    /// Executes the ToHashSet operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => new(source);
 
     /// <summary>

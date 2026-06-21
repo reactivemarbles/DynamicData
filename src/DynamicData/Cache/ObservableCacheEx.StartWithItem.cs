@@ -16,10 +16,15 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
-    /// <inheritdoc cref="StartWithItem{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TObject, TKey)"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to prepend an initial item to.</param>
-    /// <param name="item">The item to prepend. The key is extracted from <see cref="IKey{TKey}.Key"/>.</param>
-    /// <remarks>Overload for items that implement <see cref="IKey{TKey}"/>. Delegates to the explicit key overload.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>StartWithItem</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to prepend an initial item to.</param>
+    /// <param name="item">The item to prepend. The key is extracted from <c>IKey&lt;TKey&gt;.Key</c>.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>Overload for items that implement <c>IKey&lt;TKey&gt;</c>. Delegates to the explicit key overload.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> StartWithItem<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TObject item)
         where TObject : IKey<TKey>
         where TKey : notnull
@@ -35,7 +40,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to prepend an initial item to.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to prepend an initial item to.</param>
     /// <param name="item">The <typeparamref name="TObject"/> item to prepend.</param>
     /// <param name="key">The <typeparamref name="TKey"/> key for the item.</param>
     /// <returns>An observable that emits a single-item Add changeset first, then all source changesets.</returns>

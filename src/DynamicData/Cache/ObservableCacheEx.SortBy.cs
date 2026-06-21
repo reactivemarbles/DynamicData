@@ -25,13 +25,13 @@ public static partial class ObservableCacheEx
 {
     /// <summary>
     /// Sorts the changeset stream by the value returned from <paramref name="expression"/>. Creates a comparer internally
-    /// and delegates to <see cref="Sort{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IComparer{TObject}, SortOptimisations, int)"/>.
+    /// and delegates to <c>Sort&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, IComparer&lt;TObject&gt;, SortOptimisations, int)</c>.
     /// Since Sort is obsolete, prefer SortAndBind for new code.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort.</param>
-    /// <param name="expression">A <see cref="Func{T, TResult}"/> that expression that selects a comparable value from each item.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort.</param>
+    /// <param name="expression">A <c>Func&lt;T, TResult&gt;</c> that expression that selects a comparable value from each item.</param>
     /// <param name="sortOrder">The <see cref="SortDirection"/> sort direction. Defaults to ascending.</param>
     /// <param name="sortOptimisations">A <see cref="SortOptimisations"/> that sort optimization flags.</param>
     /// <param name="resetThreshold">The number of updates before the entire list is re-sorted (rather than inline sort).</param>

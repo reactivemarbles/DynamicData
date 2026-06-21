@@ -22,23 +22,23 @@ namespace DynamicData;
 public static partial class ObservableListEx
 {
     /// <summary>
-    /// Watches a specific property on all items in the source list and emits a <see cref="PropertyValue{TObject, TValue}"/> (item + value pair) when it changes.
+    /// Watches a specific property on all items in the source list and emits a <c>PropertyValue&lt;TObject, TValue&gt;</c> (item + value pair) when it changes.
     /// Requires <typeparamref name="TObject"/> to implement <see cref="INotifyPropertyChanged"/>.
-    /// This is NOT a changeset operator: it returns a flat <see cref="IObservable{T}"/>.
+    /// This is NOT a changeset operator: it returns a flat <c>IObservable&lt;T&gt;</c>.
     /// </summary>
     /// <typeparam name="TObject">The type of item. Must implement <see cref="INotifyPropertyChanged"/>.</typeparam>
     /// <typeparam name="TValue">The type of the property value.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to observe a specific property on items in.</param>
-    /// <param name="propertyAccessor">An <see cref="Expression{TDelegate}"/> expression selecting the property to observe.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject&gt;&gt;</c> to observe a specific property on items in.</param>
+    /// <param name="propertyAccessor">An <c>Expression&lt;TDelegate&gt;</c> expression selecting the property to observe.</param>
     /// <param name="notifyOnInitialValue">When <see langword="true"/> (default), the current value is emitted immediately upon subscribing to each item.</param>
-    /// <returns>An observable emitting <see cref="PropertyValue{TObject, TValue}"/> whenever the property changes on any tracked item.</returns>
+    /// <returns>An observable emitting <c>PropertyValue&lt;TObject, TValue&gt;</c> whenever the property changes on any tracked item.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="propertyAccessor"/> is <see langword="null"/>.</exception>
     /// <remarks>
-    /// <para>Implemented via <see cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>.</para>
+    /// <para>Implemented via <c>MergeMany&lt;T, TDestination&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Func&lt;T, IObservable&lt;TDestination&gt;&gt;)</c>.</para>
     /// </remarks>
-    /// <seealso cref="WhenValueChanged{TObject, TValue}(IObservable{IChangeSet{TObject}}, Expression{Func{TObject, TValue}}, bool)"/>
-    /// <seealso cref="WhenAnyPropertyChanged{TObject}(IObservable{IChangeSet{TObject}}, string[])"/>
-    /// <seealso cref="ObservableCacheEx.WhenPropertyChanged{TObject, TKey, TValue}(IObservable{IChangeSet{TObject, TKey}}, Expression{Func{TObject, TValue}}, bool)"/>
+    /// <seealso><c>WhenValueChanged&lt;TObject, TValue&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Expression&lt;Func&lt;TObject, TValue&gt;&gt;, bool)</c></seealso>
+    /// <seealso><c>WhenAnyPropertyChanged&lt;TObject&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, string[])</c></seealso>
+    /// <seealso><c>ObservableCacheEx.WhenPropertyChanged&lt;TObject, TKey, TValue&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Expression&lt;Func&lt;TObject, TValue&gt;&gt;, bool)</c></seealso>
     public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TValue>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
         where TObject : INotifyPropertyChanged
     {

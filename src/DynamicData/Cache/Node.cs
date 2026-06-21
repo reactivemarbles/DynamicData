@@ -18,11 +18,20 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     where TObject : class
     where TKey : notnull
 {
+    /// <summary>
+    /// The _children field.
+    /// </summary>
     [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly SourceCache<Node<TObject, TKey>, TKey> _children = new(n => n.Key);
 
+    /// <summary>
+    /// The _cleanUp field.
+    /// </summary>
     private readonly CompositeDisposable _cleanUp;
 
+    /// <summary>
+    /// The _isDisposed field.
+    /// </summary>
     private bool _isDisposed;
 
     /// <summary>
@@ -181,6 +190,10 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
         return $"{Item}{count}";
     }
 
+    /// <summary>
+    /// Executes the Update operation.
+    /// </summary>
+    /// <param name="updateAction">The updateAction value.</param>
     internal void Update(Action<ISourceUpdater<Node<TObject, TKey>, TKey>> updateAction) => _children.Edit(updateAction);
 
     /// <summary>

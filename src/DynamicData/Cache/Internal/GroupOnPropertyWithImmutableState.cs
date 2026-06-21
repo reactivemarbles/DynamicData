@@ -11,16 +11,40 @@ namespace DynamicData.Reactive.Cache.Internal;
 namespace DynamicData.Cache.Internal;
 #endif
 
+/// <summary>
+/// Provides members for the GroupOnPropertyWithImmutableState class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <typeparam name="TGroup">The type of the TGroup value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="groupSelectorKey">The groupSelectorKey value.</param>
+/// <param name="throttle">The throttle value.</param>
+/// <param name="scheduler">The scheduler value.</param>
 internal sealed class GroupOnPropertyWithImmutableState<TObject, TKey, TGroup>(IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TGroup>> groupSelectorKey, TimeSpan? throttle = null, IScheduler? scheduler = null)
     where TObject : INotifyPropertyChanged
     where TKey : notnull
     where TGroup : notnull
 {
+    /// <summary>
+    /// The _groupSelector field.
+    /// </summary>
     private readonly Func<TObject, TGroup> _groupSelector = groupSelectorKey.Compile();
+
+    /// <summary>
+    /// The _scheduler field.
+    /// </summary>
     private readonly IScheduler _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroup>> Run() => _source.Publish(
             shared =>
             {

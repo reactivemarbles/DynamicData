@@ -29,7 +29,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to trigger re-evaluation on.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to trigger re-evaluation on.</param>
     /// <returns>An observable that emits the same changesets as <paramref name="source"/>, unchanged.</returns>
     /// <remarks>
     /// <list type="table">

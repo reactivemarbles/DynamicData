@@ -15,12 +15,12 @@ namespace DynamicData;
 public static partial class ObservableListEx
 {
     /// <summary>
-    /// Casts each item in the changeset to <c>object</c>. Typically used before <see cref="Cast{TDestination}(IObservable{IChangeSet{object}})"/> to work around type inference limitations.
+    /// Casts each item in the changeset to <c>object</c>. Typically used before <c>Cast&lt;TDestination&gt;(IObservable&lt;IChangeSet&lt;object&gt;&gt;)</c> to work around type inference limitations.
     /// </summary>
     /// <typeparam name="T">The source item type (must be a reference type).</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to cast to object.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to cast to object.</param>
     /// <returns>A list changeset stream of <c>object</c> items.</returns>
-    /// <seealso cref="Cast{TDestination}(IObservable{IChangeSet{object}})"/>
+    /// <seealso><c>Cast&lt;TDestination&gt;(IObservable&lt;IChangeSet&lt;object&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<object>> CastToObject<T>(this IObservable<IChangeSet<T>> source)
         where T : class
     {

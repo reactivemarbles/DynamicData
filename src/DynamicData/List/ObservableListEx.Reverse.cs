@@ -25,13 +25,13 @@ public static partial class ObservableListEx
     /// Reverses the order of items in the changeset stream by transforming all indices: <c>new_index = length - old_index - 1</c>.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to reverse.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to reverse.</param>
     /// <returns>A list changeset stream with all index positions reversed.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>This is a pure index transformation. The items themselves are unchanged; only their positional indices are inverted.</para>
     /// </remarks>
-    /// <seealso cref="Sort{T}(IObservable{IChangeSet{T}}, IComparer{T}, SortOptions, IObservable{Unit}?, IObservable{IComparer{T}}?, int)"/>
+    /// <seealso><c>Sort&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IComparer&lt;T&gt;, SortOptions, IObservable&lt;Unit&gt;?, IObservable&lt;IComparer&lt;T&gt;&gt;?, int)</c></seealso>
     public static IObservable<IChangeSet<T>> Reverse<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {

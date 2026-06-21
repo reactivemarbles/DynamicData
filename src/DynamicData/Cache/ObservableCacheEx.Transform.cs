@@ -23,9 +23,18 @@ namespace DynamicData;
 /// </summary>
 public static partial class ObservableCacheEx
 {
-    /// <inheritdoc cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>
+    /// <summary>
+    /// Provides an overload of <c>Transform</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="transformOnRefresh">The transformOnRefresh value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>This overload accepts a <c>bool transformOnRefresh</c> flag. When <see langword="true"/>, Refresh changes cause re-transformation (emitted as Update). The factory receives only the current item.</remarks>
-    /// <seealso cref="ObservableListEx.Transform"/>
+    /// <seealso><c>ObservableListEx.Transform</c></seealso>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, bool transformOnRefresh)
         where TDestination : notnull
         where TSource : notnull
@@ -37,7 +46,16 @@ public static partial class ObservableCacheEx
         return source.Transform((current, _, _) => transformFactory(current), transformOnRefresh);
     }
 
-    /// <inheritdoc cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>
+    /// <summary>
+    /// Provides an overload of <c>Transform</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="transformOnRefresh">The transformOnRefresh value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>This overload accepts a <c>bool transformOnRefresh</c> flag. When <see langword="true"/>, Refresh changes cause re-transformation (emitted as Update). The factory receives the current item and key.</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, bool transformOnRefresh)
         where TDestination : notnull
@@ -50,7 +68,16 @@ public static partial class ObservableCacheEx
         return source.Transform((current, _, key) => transformFactory(current, key), transformOnRefresh);
     }
 
-    /// <inheritdoc cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>
+    /// <summary>
+    /// Provides an overload of <c>Transform</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="transformOnRefresh">The transformOnRefresh value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>This overload accepts a <c>bool transformOnRefresh</c> flag. When <see langword="true"/>, Refresh changes cause re-transformation (emitted as Update).</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, TDestination> transformFactory, bool transformOnRefresh)
         where TDestination : notnull
@@ -63,7 +90,16 @@ public static partial class ObservableCacheEx
         return new Transform<TDestination, TSource, TKey>(source, transformFactory, transformOnRefresh: transformOnRefresh).Run();
     }
 
-    /// <inheritdoc cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>
+    /// <summary>
+    /// Provides an overload of <c>Transform</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="forceTransform">The forceTransform value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>This overload accepts an optional <c>forceTransform</c> predicate filtering by source item only (without the key). The factory receives only the current item.</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, IObservable<Func<TSource, bool>>? forceTransform = null)
         where TDestination : notnull
@@ -76,7 +112,16 @@ public static partial class ObservableCacheEx
         return source.Transform((current, _, _) => transformFactory(current), forceTransform?.ForForced<TSource, TKey>());
     }
 
-    /// <inheritdoc cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>
+    /// <summary>
+    /// Provides an overload of <c>Transform</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="forceTransform">The forceTransform value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>This overload accepts an optional <c>forceTransform</c> predicate filtering by source item and key. The factory receives the current item and key.</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
@@ -95,8 +140,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TDestination">The type of the transformed items.</typeparam>
     /// <typeparam name="TSource">The type of the source items.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TSource, TKey}}"/> to transform.</param>
-    /// <param name="transformFactory">The <see cref="Func{TSource, Optional{TSource}, TKey, TDestination}"/> that produces a <typeparamref name="TDestination"/> from the current source item, the previous source item (if any), and the key.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TSource, TKey&gt;&gt;</c> to transform.</param>
+    /// <param name="transformFactory">The <c>Func&lt;TSource, Optional&lt;TSource&gt;, TKey, TDestination&gt;</c> that produces a <typeparamref name="TDestination"/> from the current source item, the previous source item (if any), and the key.</param>
     /// <param name="forceTransform">An observable that, when it emits a predicate, re-transforms all items for which the predicate returns <see langword="true"/>. Re-transformed items are emitted as <see cref="ChangeReason.Update"/> changes. If <see langword="null"/>, no forced re-transforms occur.</param>
     /// <returns>An observable changeset of transformed items.</returns>
     /// <remarks>
@@ -118,14 +163,14 @@ public static partial class ObservableCacheEx
     /// Matching items are re-transformed and emitted as Updates.
     /// </para>
     /// <para>
-    /// Factory exceptions propagate as <see cref="IObserver{T}.OnError"/>, terminating the stream.
-    /// Use <see cref="TransformSafe{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, Action{Error{TSource, TKey}}, IObservable{Func{TSource, TKey, bool}}?)"/>
+    /// Factory exceptions propagate as <c>IObserver&lt;T&gt;.OnError</c>, terminating the stream.
+    /// Use <c>TransformSafe&lt;TDestination, TSource, TKey&gt;(IObservable&lt;IChangeSet&lt;TSource, TKey&gt;&gt;, Func&lt;TSource, Optional&lt;TSource&gt;, TKey, TDestination&gt;, Action&lt;Error&lt;TSource, TKey&gt;&gt;, IObservable&lt;Func&lt;TSource, TKey, bool&gt;&gt;?)</c>
     /// to catch factory errors without killing the stream.
     /// </para>
     /// </remarks>
-    /// <seealso cref="TransformSafe{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, Action{Error{TSource, TKey}}, IObservable{Func{TSource, TKey, bool}}?)"/>
-    /// <seealso cref="TransformAsync{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, Task{TDestination}}, IObservable{Func{TSource, TKey, bool}}?)"/>
-    /// <seealso cref="TransformImmutable{TDestination, TSource, TKey}"/>
+    /// <seealso><c>TransformSafe&lt;TDestination, TSource, TKey&gt;(IObservable&lt;IChangeSet&lt;TSource, TKey&gt;&gt;, Func&lt;TSource, Optional&lt;TSource&gt;, TKey, TDestination&gt;, Action&lt;Error&lt;TSource, TKey&gt;&gt;, IObservable&lt;Func&lt;TSource, TKey, bool&gt;&gt;?)</c></seealso>
+    /// <seealso><c>TransformAsync&lt;TDestination, TSource, TKey&gt;(IObservable&lt;IChangeSet&lt;TSource, TKey&gt;&gt;, Func&lt;TSource, Optional&lt;TSource&gt;, TKey, Task&lt;TDestination&gt;&gt;, IObservable&lt;Func&lt;TSource, TKey, bool&gt;&gt;?)</c></seealso>
+    /// <seealso><c>TransformImmutable&lt;TDestination, TSource, TKey&gt;</c></seealso>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <see langword="null"/>.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
@@ -142,15 +187,33 @@ public static partial class ObservableCacheEx
         return new Transform<TDestination, TSource, TKey>(source, transformFactory).Run();
     }
 
-    /// <inheritdoc cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>
-    /// <remarks>This overload accepts <see cref="IObservable{T}"/> of <see cref="Unit"/> to force re-transformation of ALL items when the observable emits. The factory receives only the current item.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>ForForced</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="forceTransform">The forceTransform value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>This overload accepts <c>IObservable&lt;T&gt;</c> of <see cref="Unit"/> to force re-transformation of ALL items when the observable emits. The factory receives only the current item.</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, IObservable<Unit> forceTransform)
         where TDestination : notnull
         where TSource : notnull
         where TKey : notnull => source.Transform((cur, _, _) => transformFactory(cur), forceTransform.ForForced<TSource, TKey>());
 
-    /// <inheritdoc cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>
-    /// <remarks>This overload accepts <see cref="IObservable{T}"/> of <see cref="Unit"/> to force re-transformation of ALL items when the observable emits. The factory receives the current item and key.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>Transform</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="forceTransform">The forceTransform value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>This overload accepts <c>IObservable&lt;T&gt;</c> of <see cref="Unit"/> to force re-transformation of ALL items when the observable emits. The factory receives the current item and key.</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, IObservable<Unit> forceTransform)
         where TDestination : notnull
         where TSource : notnull
@@ -163,8 +226,17 @@ public static partial class ObservableCacheEx
         return source.Transform((cur, _, key) => transformFactory(cur, key), forceTransform.ForForced<TSource, TKey>());
     }
 
-    /// <inheritdoc cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>
-    /// <remarks>This overload accepts <see cref="IObservable{T}"/> of <see cref="Unit"/> to force re-transformation of ALL items when the observable emits.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>Transform</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="forceTransform">The forceTransform value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>This overload accepts <c>IObservable&lt;T&gt;</c> of <see cref="Unit"/> to force re-transformation of ALL items when the observable emits.</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, TDestination> transformFactory, IObservable<Unit> forceTransform)
         where TDestination : notnull
         where TSource : notnull
