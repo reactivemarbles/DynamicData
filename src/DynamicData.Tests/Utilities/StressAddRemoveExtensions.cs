@@ -7,7 +7,7 @@ internal static class StressAddRemoveExtensions
         where T : notnull =>
             items.Do(i => onAdd(i, state))
                  .SelectMany(item => getRemoveTimeout?.Invoke(item) is TimeSpan ts
-                    ? Observable.Timer(ts, scheduler ?? Sequencer.Default)
+                    ? Observable.Timer(ts, scheduler ?? Scheduler.Default)
                                 .Do(_ => onRemove(item, state))
                                 .Select(_ => item)
                     : Observable.Return(item));

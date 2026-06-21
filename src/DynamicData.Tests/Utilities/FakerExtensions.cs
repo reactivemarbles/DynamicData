@@ -10,5 +10,5 @@ internal static class FakerExtensions
 
     public static IObservable<T> IntervalGenerate<T>(this Faker<T> faker, TimeSpan period, IScheduler? scheduler = null)
          where T : class =>
-            Observable.Interval(period, scheduler ?? Sequencer.Default).Select(_ => faker.Generate());
+            Observable.Interval(period, scheduler ?? Scheduler.Default).Select(_ => faker.Generate());
 }

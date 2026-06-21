@@ -44,7 +44,7 @@ namespace DynamicData.Tests
             var exSubject = new Signal<Exception>();
 
             object exceptionRecived = default!;
-            exSubject.ObserveOn(Sequencer.Immediate).Subscribe(ex => { exceptionRecived = ex; });
+            exSubject.ObserveOn(Scheduler.Immediate).Subscribe(ex => { exceptionRecived = ex; });
             exSubject.OnNext(new UnspecifiedIndexException());
 
             Assert.IsType<UnspecifiedIndexException>(exceptionRecived);

@@ -16,7 +16,7 @@ public static partial class ToObservableChangeSetFixture
             {
                 IScheduler scheduler = schedulerType switch
                 {
-                    SchedulerType.Default       => Sequencer.Default,
+                    SchedulerType.Default       => Scheduler.Default,
                     SchedulerType.NewThread     => new NewThreadScheduler(),
                     SchedulerType.TaskPool      => TaskPoolScheduler.Default,
                     SchedulerType.ThreadPool    => ThreadPoolScheduler.Instance,

@@ -29,6 +29,6 @@ internal static class ObservableEx
                 return sch.Schedule<long>(0, nextInterval(), HandleNext);
             }
 
-            return ScheduleFirst(scheduler ?? Sequencer.Default);
+            return ScheduleFirst(scheduler ?? Scheduler.Default);
         });
 }

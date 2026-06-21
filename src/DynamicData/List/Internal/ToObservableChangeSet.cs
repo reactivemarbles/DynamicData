@@ -224,7 +224,7 @@ internal static class ToObservableChangeSet<TObject>
                         var lifetime = _expireAfter?.Invoke(item);
                         if (lifetime is TimeSpan lifetimeValue)
                         {
-                            var expireAtTicks = (now + Sequencer.Normalize(lifetimeValue)).UtcTicks;
+                            var expireAtTicks = (now + Scheduler.Normalize(lifetimeValue)).UtcTicks;
                             var expireAt = new DateTimeOffset(ticks: expireAtTicks - (expireAtTicks % TimeSpan.TicksPerMillisecond), offset: TimeSpan.Zero);
 
                             var expiration = new Expiration()

@@ -39,6 +39,7 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
     <Using Include="ReactiveUI.Primitives.Signals.Signal" Alias="Observable" />
     <Using Include="ReactiveUI.Primitives.RxVoid" Alias="Unit" />
     <Using Include="ReactiveUI.Primitives.Concurrency.ISequencer" Alias="IScheduler" />
+    <Using Include="ReactiveUI.Primitives.Concurrency.Sequencer" Alias="Scheduler" />
     <Using Include="ReactiveUI.Primitives.Concurrency.TaskPoolSequencer" Alias="TaskPoolScheduler" />
   </ItemGroup>
 
