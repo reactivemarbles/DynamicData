@@ -58,11 +58,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     /// </summary>
     /// <param name="gate">The lock shared with the caller.</param>
     /// <param name="observer">The observer that receives delivered items.</param>
-#if NET9_0_OR_GREATER
     public DeliveryQueue(Lock gate, IObserver<T> observer)
-#else
-    public DeliveryQueue(object gate, IObserver<T> observer)
-#endif
     {
         _gate = gate;
         _observer = observer;

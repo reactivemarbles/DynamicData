@@ -69,17 +69,10 @@ internal sealed class SharedDeliveryQueue : IDisposable
         _gate = new Lock();
         _onDrainComplete = onDrainComplete;
     }
-#if NET9_0_OR_GREATER
 
     /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with a caller-provided lock.</summary>
     /// <param name="gate">The gate value.</param>
     public SharedDeliveryQueue(Lock gate) => _gate = gate;
-#else
-
-    /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with a caller-provided lock.</summary>
-    /// <param name="gate">The gate value.</param>
-    public SharedDeliveryQueue(object gate) => _gate = gate;
-#endif
 
     /// <summary>Gets whether this queue has been terminated.</summary>
     public bool IsTerminated
