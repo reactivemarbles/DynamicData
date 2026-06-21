@@ -81,10 +81,10 @@ public class TransformOnObservableFixture : IDisposable
         // Create an observable that fires a wrong value on an interval a fixed number of times
         // then fires the expected value before completing
         IObservable<string> CreateChildObs(Animal a, int id) =>
-            Signal.Every(UpdateTime)
+            Observable.Interval(UpdateTime)
                 .Select(n => $"{a.Name}-{id}-{n}")
                 .Take(UpdateCount)
-                .Concat(Signal.Emit(a.Name));
+                .Concat(Observable.Return(a.Name));
 
         // Arrange
         var shared = _animalCache.Connect().TransformOnObservable(CreateChildObs).Publish();
