@@ -1,5 +1,4 @@
 using DynamicData.Kernel;
-using FluentAssertions;
 
 namespace DynamicData.Tests.Cache;
 

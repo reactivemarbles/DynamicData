@@ -1,7 +1,5 @@
 using DynamicData.Kernel;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.Cache;
 
 public static partial class AsyncDisposeManyFixture

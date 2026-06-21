@@ -1,6 +1,4 @@
-﻿using FluentAssertions;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 public static class CacheChangeSetAssertions
 {

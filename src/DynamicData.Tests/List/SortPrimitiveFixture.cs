@@ -1,7 +1,5 @@
 using DynamicData.Binding;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.List;
 
 public class SortPrimitiveFixture : IDisposable

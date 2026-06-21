@@ -1,9 +1,4 @@
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-
 using DynamicData.Binding;
-
-using FluentAssertions;
 
 namespace DynamicData.Tests.Binding;
 

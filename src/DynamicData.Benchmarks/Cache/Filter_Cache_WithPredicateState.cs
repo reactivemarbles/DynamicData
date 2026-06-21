@@ -1,7 +1,3 @@
-using System.Collections.Immutable;
-
-using BenchmarkDotNet.Attributes;
-
 using Bogus;
 
 namespace DynamicData.Benchmarks.Cache;

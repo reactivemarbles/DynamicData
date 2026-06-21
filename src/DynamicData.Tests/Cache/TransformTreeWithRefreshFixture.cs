@@ -1,7 +1,5 @@
 ﻿using DynamicData.Binding;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.Cache;
 
 public class TransformTreeWithRefreshFixture : IDisposable

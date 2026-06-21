@@ -1,7 +1,5 @@
 using DynamicData.Tests.Domain;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.Cache;
 
 public class TransformFixture

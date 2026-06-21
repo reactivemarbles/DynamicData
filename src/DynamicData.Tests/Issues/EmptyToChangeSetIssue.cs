@@ -1,6 +1,4 @@
-using System.Collections.ObjectModel;
 using DynamicData.Binding;
-using FluentAssertions;
 
 namespace DynamicData.Tests.Issues
 {

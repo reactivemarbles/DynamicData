@@ -1,5 +1,3 @@
-using FluentAssertions;
-
 namespace DynamicData.Tests.Cache;
 
 public sealed class FilterImmutableFixture

@@ -1,8 +1,6 @@
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.AggregationTests;
 
 public class MaxFixture : IDisposable

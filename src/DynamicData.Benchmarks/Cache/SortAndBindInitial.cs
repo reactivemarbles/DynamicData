@@ -1,6 +1,3 @@
-using BenchmarkDotNet.Attributes;
-using DynamicData.Binding;
-
 namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]

@@ -1,8 +1,6 @@
 using DynamicData.PLinq;
 using DynamicData.Tests.Domain;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.Cache;
 
 public class FilterParallelFixture : IDisposable

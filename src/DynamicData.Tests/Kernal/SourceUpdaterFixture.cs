@@ -1,8 +1,6 @@
 using DynamicData.Cache.Internal;
 using DynamicData.Tests.Domain;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.Kernal;
 
 public class SourceUpdaterFixture

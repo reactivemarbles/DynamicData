@@ -1,7 +1,5 @@
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.Cache;
 
 public static partial class AutoRefreshFixture

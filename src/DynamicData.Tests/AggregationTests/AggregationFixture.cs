@@ -2,8 +2,6 @@ using DynamicData.Aggregation;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.AggregationTests;
 
 public class AggregationFixture : IDisposable

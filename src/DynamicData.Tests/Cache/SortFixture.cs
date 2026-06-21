@@ -1,12 +1,6 @@
-#region
-
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-#endregion
 
 namespace DynamicData.Tests.Cache;
 

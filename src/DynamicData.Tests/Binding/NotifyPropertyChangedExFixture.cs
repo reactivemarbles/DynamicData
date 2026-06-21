@@ -1,10 +1,7 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
 
 namespace DynamicData.Tests.Binding;
 

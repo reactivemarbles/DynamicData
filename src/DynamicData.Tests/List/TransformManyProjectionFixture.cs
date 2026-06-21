@@ -1,8 +1,4 @@
-﻿using System.Collections.ObjectModel;
-
-using DynamicData.Binding;
-
-using FluentAssertions;
+﻿using DynamicData.Binding;
 
 namespace DynamicData.Tests.List;
 

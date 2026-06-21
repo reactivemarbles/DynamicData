@@ -1,5 +1,3 @@
-using FluentAssertions;
-
 namespace DynamicData.Tests.List;
 
 public class MergeManyFixture : IDisposable

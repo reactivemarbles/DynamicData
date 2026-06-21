@@ -2,8 +2,6 @@ using System.Diagnostics;
 
 using DynamicData.Binding;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.Binding;
 
 public class DeeplyNestedNotifyPropertyChangedFixture

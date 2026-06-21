@@ -2,7 +2,6 @@ using Bogus;
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-using FluentAssertions;
 using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Cache;

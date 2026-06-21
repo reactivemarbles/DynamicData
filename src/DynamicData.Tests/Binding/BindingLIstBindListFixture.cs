@@ -1,10 +1,6 @@
 #if SUPPORTS_BINDINGLIST
 
-using System.ComponentModel;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
 
 namespace DynamicData.Tests.Binding
 {

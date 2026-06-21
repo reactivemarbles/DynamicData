@@ -2,8 +2,6 @@
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.Kernal;
 
 public class OptionFixture

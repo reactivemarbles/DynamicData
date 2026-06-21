@@ -1,7 +1,6 @@
 using Bogus;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-using FluentAssertions;
 using System.Collections.Concurrent;
 
 namespace DynamicData.Tests.List;

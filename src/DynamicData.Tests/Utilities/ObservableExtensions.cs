@@ -1,5 +1,3 @@
-using FluentAssertions;
-
 namespace DynamicData.Tests.Utilities;
 
 internal static class ObservableExtensions

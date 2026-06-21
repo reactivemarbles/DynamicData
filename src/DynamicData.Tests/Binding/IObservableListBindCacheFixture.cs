@@ -1,8 +1,6 @@
 ﻿using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.Binding;
 
 public class IObservableListBindCacheFixture : IDisposable

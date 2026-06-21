@@ -1,8 +1,6 @@
 ﻿using DynamicData.Alias;
 using DynamicData.Tests.Domain;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.List;
 
 public class SelectFixture : IDisposable

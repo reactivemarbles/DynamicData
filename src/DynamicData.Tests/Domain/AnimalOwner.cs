@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain;

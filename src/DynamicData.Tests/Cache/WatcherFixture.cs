@@ -1,11 +1,5 @@
-#region
-
 using DynamicData.Experimental;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-#endregion
 
 namespace DynamicData.Tests.Cache;
 

@@ -1,7 +1,4 @@
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using DynamicData.Binding;
-using FluentAssertions;
 
 namespace DynamicData.Tests;
 

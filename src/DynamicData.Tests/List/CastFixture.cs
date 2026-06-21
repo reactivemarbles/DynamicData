@@ -1,6 +1,4 @@
-﻿using FluentAssertions;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class CastFixture : IDisposable
 {

@@ -23,6 +23,12 @@
 		<None Include="BenchmarkDotNet.Artifacts\**\*" />
 	</ItemGroup>
 	<ItemGroup>
+		<Using Include="System.Collections.ObjectModel" />
+		<Using Include="System.Collections.Immutable" />
+		<Using Include="BenchmarkDotNet.Attributes" />
+		<Using Include="BenchmarkDotNet.Columns" />
+		<Using Include="BenchmarkDotNet.Jobs" />
+		<Using Include="DynamicData.Binding" />
 		<Using Include="DynamicData.Internal" />
 		<Using Include="ReactiveUI.Primitives" />
 		<Using Include="ReactiveUI.Primitives.Advanced" />

@@ -1,11 +1,7 @@
-using System.Collections;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-using FluentAssertions;
 
 namespace DynamicData.Tests.Binding;
 

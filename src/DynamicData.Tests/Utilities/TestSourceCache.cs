@@ -1,5 +1,3 @@
-using DynamicData.Kernel;
-
 namespace DynamicData.Tests.Utilities;
 
 public sealed class TestSourceCache<TObject, TKey>

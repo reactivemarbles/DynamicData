@@ -1,7 +1,5 @@
 using DynamicData.Tests.Domain;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.List;
 //TODO: To optimise this, we need to introduce replace range, or specify a buffer
 

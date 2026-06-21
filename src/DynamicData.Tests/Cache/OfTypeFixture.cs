@@ -1,6 +1,5 @@
 ﻿using Bogus;
 using DynamicData.Tests.Domain;
-using FluentAssertions;
 using Xunit.Abstractions;
 
 namespace DynamicData.Tests.Cache;

@@ -1,6 +1,4 @@
-﻿using FluentAssertions;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 /// <summary>
 /// See https://github.com/reactivemarbles/DynamicData/issues/400

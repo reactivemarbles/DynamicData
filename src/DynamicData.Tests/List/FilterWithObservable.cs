@@ -1,8 +1,6 @@
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.List;
 
 public class FilterWithObservable : IDisposable

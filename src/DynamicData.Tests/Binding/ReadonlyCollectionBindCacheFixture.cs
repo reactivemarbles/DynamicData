@@ -1,8 +1,5 @@
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-using FluentAssertions;
 
 namespace DynamicData.Tests.Binding;
 

@@ -6,8 +6,6 @@ using Bogus;
 
 using DynamicData.Binding;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.Cache;
 
 /// <summary>

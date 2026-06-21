@@ -26,8 +26,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="System.Collections.ObjectModel" />
+    <Using Include="System.ComponentModel" />
+    <Using Include="System.Collections" />
+    <Using Include="System.Collections.Specialized" />
     <Using Include="DynamicData.Internal" />
     <Using Include="DynamicData.Tests.Utilities" />
+    <Using Include="FluentAssertions" />
     <Using Include="ReactiveUI.Primitives" />
     <Using Include="ReactiveUI.Primitives.Advanced" />
     <Using Include="ReactiveUI.Primitives.Advanced.Witness" Alias="Observer" />

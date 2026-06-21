@@ -1,6 +1,4 @@
 ﻿using Bogus;
-
-using FluentAssertions;
 using Xunit.Abstractions;
 
 namespace DynamicData.Tests.List;

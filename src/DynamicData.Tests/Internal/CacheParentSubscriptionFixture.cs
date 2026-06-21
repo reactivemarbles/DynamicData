@@ -4,8 +4,6 @@
 
 using Bogus;
 
-using FluentAssertions;
-
 namespace DynamicData.Tests.Internal;
 
 /// <summary>
