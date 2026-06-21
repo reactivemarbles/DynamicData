@@ -73,7 +73,7 @@ public sealed class MergeChangeSetsFixture : IDisposable
 
         var addedOwners = new ConcurrentBag<AnimalOwner>();
         var addingAnimals = true;
-        var observableObservable = CreateStressObservable(ownerCount, animalCount, Environment.ProcessorCount, addedOwners, TaskPoolSequencer.Default)
+        var observableObservable = CreateStressObservable(ownerCount, animalCount, Environment.ProcessorCount, addedOwners, TaskPoolScheduler.Default)
                 .Finally(() => addingAnimals = false)
                 .Publish()
                 .RefCount();

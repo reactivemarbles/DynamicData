@@ -82,7 +82,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         using var connect = mergeAnimals.Connect();
 
         // Start asynchrononously modifying the parent list and the child lists
-        using var addAnimals = AddRemoveAnimalsStress(ownerCount, animalCount, Environment.ProcessorCount, TaskPoolSequencer.Default)
+        using var addAnimals = AddRemoveAnimalsStress(ownerCount, animalCount, Environment.ProcessorCount, TaskPoolScheduler.Default)
             .Finally(() => addingAnimals = false)
             .Subscribe();
 

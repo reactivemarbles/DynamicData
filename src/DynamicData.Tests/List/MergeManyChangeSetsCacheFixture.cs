@@ -83,7 +83,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         var adding = true;
 
         // Start asynchrononously modifying the parent list and the child lists
-        using var addingSub = AddRemoveStress(marketCount, priceCount, Environment.ProcessorCount, TaskPoolSequencer.Default)
+        using var addingSub = AddRemoveStress(marketCount, priceCount, Environment.ProcessorCount, TaskPoolScheduler.Default)
             .Finally(() => adding = false)
             .Subscribe();
 

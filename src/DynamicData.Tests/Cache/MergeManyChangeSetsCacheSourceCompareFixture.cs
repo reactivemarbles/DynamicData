@@ -85,7 +85,7 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         using var connect = merged.Connect();
 
         // Start asynchrononously modifying the parent list and the child lists
-        using var addingSub = AddRemoveStress(marketCount, priceCount, Environment.ProcessorCount, TaskPoolSequencer.Default)
+        using var addingSub = AddRemoveStress(marketCount, priceCount, Environment.ProcessorCount, TaskPoolScheduler.Default)
             .Finally(() => adding = false)
             .Subscribe();
 
