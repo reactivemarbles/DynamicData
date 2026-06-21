@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Internal;
+#else
 
 namespace DynamicData.Internal;
+#endif
 
 /// <summary>
 /// A lightweight notification struct for delivery queues. Discriminates
@@ -13,10 +18,10 @@ namespace DynamicData.Internal;
 internal readonly struct Notification<T>
     where T : notnull
 {
-    private readonly Optional<T> _value;
+    private readonly ReactiveUI.Primitives.Optional<T> _value;
     private readonly Exception? _error;
 
-    private Notification(Optional<T> value, Exception? error)
+    private Notification(ReactiveUI.Primitives.Optional<T> value, Exception? error)
     {
         _value = value;
         _error = error;
@@ -29,11 +34,11 @@ internal readonly struct Notification<T>
     public static Notification<T> CreateError(Exception error)
     {
         ArgumentExceptionHelper.ThrowIfNull(error);
-        return new(Optional<T>.None, error);
+        return new(ReactiveUI.Primitives.Optional<T>.None, error);
     }
 
     /// <summary>Creates an OnCompleted notification (terminal).</summary>
-    public static Notification<T> CreateCompleted() => new(Optional<T>.None, null);
+    public static Notification<T> CreateCompleted() => new(ReactiveUI.Primitives.Optional<T>.None, null);
 
     /// <summary>Gets whether this is an OnError notification.</summary>
     public bool IsError => _error is not null;

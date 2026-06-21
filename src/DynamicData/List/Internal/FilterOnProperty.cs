@@ -3,8 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Linq.Expressions;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
 [Obsolete("Use AutoRefresh(), followed by Filter() instead")]
 internal sealed class FilterOnProperty<TObject, TProperty>(IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TProperty>> propertySelector, Func<TObject, bool> predicate, TimeSpan? throttle = null, IScheduler? scheduler = null)

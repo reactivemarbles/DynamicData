@@ -3,8 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 [DebuggerDisplay("Cache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 internal sealed class Cache<TObject, TKey> : ICache<TObject, TKey>
@@ -57,7 +62,7 @@ internal sealed class Cache<TObject, TKey> : ICache<TObject, TKey>
         }
     }
 
-    public Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
     /// <summary>
     /// Sends a signal for operators to recalculate it's state.

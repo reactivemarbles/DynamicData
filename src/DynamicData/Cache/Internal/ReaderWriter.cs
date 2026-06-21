@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelector = null)
     where TObject : notnull
@@ -83,7 +88,7 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
         }
     }
 
-    public Optional<TObject> Lookup(TKey key)
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key)
     {
         lock (_locker)
         {

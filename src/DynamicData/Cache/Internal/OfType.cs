@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 internal sealed class OfType<TObject, TKey, TDestination>(IObservable<IChangeSet<TObject, TKey>> source, bool suppressEmptyChangeSets)
     where TObject : notnull
@@ -36,7 +41,7 @@ internal sealed class OfType<TObject, TKey, TDestination>(IObservable<IChangeSet
 
                                 // For any other change reason, if the Current is the right type, forward with converted types
                                 (_, TDestination otherDestination) =>
-                                    new(change.Reason, change.Key, otherDestination, change.Previous.HasValue && change.Previous.Value is TDestination pd ? Optional.Some(pd) : default),
+                                    new(change.Reason, change.Key, otherDestination, change.Previous.HasValue && change.Previous.Value is TDestination pd ? ReactiveUI.Primitives.Optional.Some(pd) : default),
 
                                 // Otherwise, don't do anything at all
                                 _ => default,

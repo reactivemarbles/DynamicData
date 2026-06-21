@@ -1,12 +1,17 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 internal class TransformAsync<TDestination, TSource, TKey>(
     IObservable<IChangeSet<TSource, TKey>> source,
-    Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory,
+    Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, Task<TDestination>> transformFactory,
     Action<Error<TSource, TKey>>? exceptionCallback,
     IObservable<Func<TSource, TKey, bool>>? forceTransform = null,
     int? maximumConcurrency = null,
@@ -146,7 +151,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         public TransformResult(in Change<TSource, TKey> change)
         {
             Change = change;
-            Container = Optional<TransformedItemContainer>.None;
+            Container = ReactiveUI.Primitives.Optional<TransformedItemContainer>.None;
             Success = true;
             Key = change.Key;
         }
@@ -161,7 +166,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
 
         public Change<TSource, TKey> Change { get; }
 
-        public Optional<TransformedItemContainer> Container { get; }
+        public ReactiveUI.Primitives.Optional<TransformedItemContainer> Container { get; }
 
         public Exception? Error { get; }
 

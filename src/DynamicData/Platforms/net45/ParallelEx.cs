@@ -4,7 +4,11 @@
 
 #if P_LINQ
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.PLinq
+#else
 namespace DynamicData.PLinq
+#endif
 {
     /// <summary>
     /// Parallelisation extensions for DynamicData.

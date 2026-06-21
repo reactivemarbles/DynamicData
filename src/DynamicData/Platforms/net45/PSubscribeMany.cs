@@ -5,7 +5,11 @@
 #if P_LINQ
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.PLinq
+#else
 namespace DynamicData.PLinq
+#endif
 {
     internal sealed class PSubscribeMany<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions)
         where TObject : notnull

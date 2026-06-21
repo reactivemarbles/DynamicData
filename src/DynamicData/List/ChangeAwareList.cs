@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// <para>A list which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point the changes are cleared.</para>
@@ -83,7 +88,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <summary>
     /// Gets the last change in the collection.
     /// </summary>
-    private Optional<Change<T>> Last => _changes.Count == 0 ? Optional<Change<T>>.None : _changes[_changes.Count - 1];
+    private ReactiveUI.Primitives.Optional<Change<T>> Last => _changes.Count == 0 ? ReactiveUI.Primitives.Optional<Change<T>>.None : _changes[_changes.Count - 1];
 
     /// <summary>
     /// Gets or sets the item at the specified index.

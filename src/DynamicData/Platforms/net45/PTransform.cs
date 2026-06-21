@@ -5,11 +5,15 @@
 #if P_LINQ
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.PLinq
+#else
 namespace DynamicData.PLinq
+#endif
 {
     internal sealed class PTransform<TDestination, TSource, TKey>(
         IObservable<IChangeSet<TSource, TKey>> source,
-        Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory,
+        Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, TDestination> transformFactory,
         ParallelisationOptions parallelisationOptions,
         Action<Error<TSource, TKey>>? exceptionCallback = null)
         where TDestination : notnull
@@ -106,7 +110,7 @@ namespace DynamicData.PLinq
                 : this()
             {
                 Change = change;
-                Destination = Optional<TDestination>.None;
+                Destination = ReactiveUI.Primitives.Optional<TDestination>.None;
                 Success = true;
                 Key = change.Key;
             }
@@ -126,7 +130,7 @@ namespace DynamicData.PLinq
 
             public bool Success { get; }
 
-            public Optional<TDestination> Destination { get; }
+            public ReactiveUI.Primitives.Optional<TDestination> Destination { get; }
 
             public TKey Key { get; }
         }

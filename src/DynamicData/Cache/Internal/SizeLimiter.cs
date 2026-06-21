@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 internal sealed class SizeLimiter<TObject, TKey>(int size)
     where TObject : notnull
@@ -22,7 +27,7 @@ internal sealed class SizeLimiter<TObject, TKey>(int size)
         }
 
         var notifications = _cache.CaptureChanges();
-        var changed = notifications.Select(update => new Change<TObject, TKey>(update.Reason, update.Key, update.Current.Value, update.Previous.HasValue ? update.Previous.Value.Value : Optional<TObject>.None));
+        var changed = notifications.Select(update => new Change<TObject, TKey>(update.Reason, update.Key, update.Current.Value, update.Previous.HasValue ? update.Previous.Value.Value : ReactiveUI.Primitives.Optional<TObject>.None));
 
         return new ChangeSet<TObject, TKey>(changed);
     }

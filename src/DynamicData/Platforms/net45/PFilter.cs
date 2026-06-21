@@ -3,11 +3,20 @@
 // See the LICENSE file in the project root for full license information.
 
 #if P_LINQ
+#if REACTIVE_SHIM
+
+using DynamicData.Reactive.Cache.Internal;
+#else
 
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.PLinq
+#else
 namespace DynamicData.PLinq
+#endif
 {
     internal sealed class PFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
         where TObject : notnull
@@ -34,7 +43,7 @@ namespace DynamicData.PLinq
                 return updates.Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
             }
 
-            protected override IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory)
+            protected override IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, ReactiveUI.Primitives.Optional<Change<TObject, TKey>>> factory)
             {
                 var keyValuePairs = items as KeyValuePair<TKey, TObject>[] ?? items.ToArray();
 

@@ -4,8 +4,13 @@
 
 using System.Linq.Expressions;
 using System.Reflection;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 internal static class ExpressionBuilder
 {

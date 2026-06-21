@@ -5,8 +5,13 @@
 #if NETCOREAPP3_0_OR_GREATER
 using System.Numerics;
 #endif
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Internal;
+#else
 
 namespace DynamicData.Internal;
+#endif
 
 /// <summary>
 /// <para>

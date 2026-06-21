@@ -3,8 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Internal;
+#else
 
 namespace DynamicData.Internal;
+#endif
 
 /// <summary>
 /// Base class for subscriptions that need to manage child subscriptions and emit updates

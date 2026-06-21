@@ -1,14 +1,19 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
-internal sealed class EditDiffChangeSetOptional<TObject, TKey>(IObservable<Optional<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer)
+internal sealed class EditDiffChangeSetOptional<TObject, TKey>(IObservable<ReactiveUI.Primitives.Optional<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IObservable<Optional<TObject>> _source = source ?? throw new ArgumentNullException(nameof(source));
+    private readonly IObservable<ReactiveUI.Primitives.Optional<TObject>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
     private readonly IEqualityComparer<TObject> _equalityComparer = equalityComparer ?? EqualityComparer<TObject>.Default;
 
@@ -16,7 +21,7 @@ internal sealed class EditDiffChangeSetOptional<TObject, TKey>(IObservable<Optio
 
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
                                                                 {
-                                                                    var previous = Optional<ValueContainer>.None;
+                                                                    var previous = ReactiveUI.Primitives.Optional<ValueContainer>.None;
 
                                                                     return _source.Synchronize().Subscribe(
                                                                         nextValue =>

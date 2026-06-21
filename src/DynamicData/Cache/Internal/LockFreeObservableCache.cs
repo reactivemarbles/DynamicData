@@ -3,8 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 /// <summary>
 /// An observable cache which exposes an update API. Used at the root
@@ -131,7 +136,7 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     /// <remarks>
     /// Fast indexed lookup.
     /// </remarks>
-    public Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
     /// <inheritdoc />
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => predicate is null ? _changesPreview : _changesPreview.Filter(predicate);

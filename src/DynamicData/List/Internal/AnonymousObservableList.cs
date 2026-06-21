@@ -3,8 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
 [DebuggerDisplay("AnonymousObservableList<{typeof(T).Name}> ({Count} Items)")]
 internal sealed class AnonymousObservableList<T> : IObservableList<T>

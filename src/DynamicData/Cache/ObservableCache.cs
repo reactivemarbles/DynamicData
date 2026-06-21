@@ -3,11 +3,23 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+#if REACTIVE_SHIM
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
+#if REACTIVE_SHIM
+using DynamicData.Reactive.Cache.Internal;
+#else
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 [DebuggerDisplay("ObservableCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>, INotifyCollectionChangedSuspender
@@ -121,7 +133,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     public void Dispose() => _cleanUp.Dispose();
 
-    public Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
 
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
 

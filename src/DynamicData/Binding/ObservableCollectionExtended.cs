@@ -3,8 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Specialized;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 /// <summary>
 /// An override of observable collection which allows the suspension of notifications.

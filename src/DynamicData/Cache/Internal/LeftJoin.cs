@@ -1,10 +1,15 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
-internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, TLeft, Optional<TRight>, TDestination> resultSelector)
+internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, TLeft, ReactiveUI.Primitives.Optional<TRight>, TDestination> resultSelector)
     where TLeft : notnull
     where TLeftKey : notnull
     where TRight : notnull
@@ -13,7 +18,7 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
 {
     private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left = left ?? throw new ArgumentNullException(nameof(left));
 
-    private readonly Func<TLeftKey, TLeft, Optional<TRight>, TDestination> _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
+    private readonly Func<TLeftKey, TLeft, ReactiveUI.Primitives.Optional<TRight>, TDestination> _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
 
     private readonly IObservable<IChangeSet<TRight, TRightKey>> _right = right ?? throw new ArgumentNullException(nameof(right));
 
@@ -89,7 +94,7 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                                         {
                                             var priorLeft = leftCache.Lookup(priorForeignKey);
                                             if (priorLeft.HasValue)
-                                                joined.AddOrUpdate(_resultSelector(priorForeignKey, priorLeft.Value, Optional<TRight>.None), priorForeignKey);
+                                                joined.AddOrUpdate(_resultSelector(priorForeignKey, priorLeft.Value, ReactiveUI.Primitives.Optional<TRight>.None), priorForeignKey);
                                         }
 
                                         if (left.HasValue)
@@ -102,7 +107,7 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
 
                                 case ChangeReason.Remove:
                                     if (left.HasValue)
-                                        joined.AddOrUpdate(_resultSelector(foreignKey, left.Value, Optional<TRight>.None), foreignKey);
+                                        joined.AddOrUpdate(_resultSelector(foreignKey, left.Value, ReactiveUI.Primitives.Optional<TRight>.None), foreignKey);
 
                                     rightForeignKeysByKey.Remove(change.Key);
 
@@ -115,7 +120,7 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                                         {
                                             var priorLeft = leftCache.Lookup(priorForeignKey);
                                             if (priorLeft.HasValue)
-                                                joined.AddOrUpdate(_resultSelector(priorForeignKey, priorLeft.Value, Optional<TRight>.None), priorForeignKey);
+                                                joined.AddOrUpdate(_resultSelector(priorForeignKey, priorLeft.Value, ReactiveUI.Primitives.Optional<TRight>.None), priorForeignKey);
 
                                             if (left.HasValue)
                                                 joined.AddOrUpdate(_resultSelector(foreignKey, left.Value, right), foreignKey);

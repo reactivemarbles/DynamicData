@@ -3,7 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 ///   Container to describe a single change to a cache.
@@ -22,7 +26,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// <param name="current">The current.</param>
     /// <param name="index">The index.</param>
     public Change(ChangeReason reason, TKey key, TObject current, int index = -1)
-        : this(reason, key, current, Optional<TObject>.None, index)
+        : this(reason, key, current, ReactiveUI.Primitives.Optional<TObject>.None, index)
     {
     }
 
@@ -53,7 +57,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
         }
 
         Current = current;
-        Previous = Optional<TObject>.None;
+        Previous = ReactiveUI.Primitives.Optional<TObject>.None;
         Key = key;
         Reason = ChangeReason.Moved;
         CurrentIndex = currentIndex;
@@ -74,7 +78,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// or
     /// For <see cref="ChangeReason.Update"/>, must supply previous value.
     /// </exception>
-    public Change(ChangeReason reason, TKey key, TObject current, in Optional<TObject> previous, int currentIndex = -1, int previousIndex = -1)
+    public Change(ChangeReason reason, TKey key, TObject current, in ReactiveUI.Primitives.Optional<TObject> previous, int currentIndex = -1, int previousIndex = -1)
         : this()
     {
         Current = current;
@@ -119,7 +123,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// <para>Gets the item from before the change.</para>
     /// <para>This is only when <see cref="Reason"/> is <see cref="ChangeReason.Update"/>.</para>
     /// </summary>
-    public Optional<TObject> Previous { get; }
+    public ReactiveUI.Primitives.Optional<TObject> Previous { get; }
 
     /// <summary>
     /// <para>Gets the previous index.</para>

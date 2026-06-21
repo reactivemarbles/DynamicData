@@ -1,11 +1,20 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+using DynamicData.Reactive.List.Internal;
+#else
 
 using DynamicData.List.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for ObservableList.
@@ -75,7 +84,7 @@ public static partial class ObservableListEx
     /// Projects each item using a transform function that also receives the previously transformed value (if any).
     /// Type arguments must be specified explicitly as type inference fails for this overload.
     /// </summary>
-    public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, TDestination> transformFactory, bool transformOnRefresh = false)
+    public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, TDestination> transformFactory, bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
     {
@@ -90,7 +99,7 @@ public static partial class ObservableListEx
     /// Projects each item using a transform function that receives the source item, the previously transformed value, and the index.
     /// Type arguments must be specified explicitly as type inference fails for this overload.
     /// </summary>
-    public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> transformFactory, bool transformOnRefresh = false)
+    public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, int, TDestination> transformFactory, bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
     {

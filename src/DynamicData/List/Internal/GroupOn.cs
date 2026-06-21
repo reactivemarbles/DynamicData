@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
 internal sealed class GroupOn<TObject, TGroupKey>(IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelector, IObservable<Unit>? regrouper)
     where TObject : notnull
@@ -230,13 +235,13 @@ internal sealed class GroupOn<TObject, TGroupKey>(IObservable<IChangeSet<TObject
         public bool WasCreated { get; }
     }
 
-    private sealed class ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
+    private sealed class ItemWithGroupKey(TObject item, TGroupKey group, ReactiveUI.Primitives.Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
     {
         public TGroupKey Group { get; set; } = group;
 
         public TObject Item { get; } = item;
 
-        public Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
+        public ReactiveUI.Primitives.Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
 
         /// <summary>Returns a value that indicates whether the values of two <see cref="GroupOn{TObject, TGroupKey}.ItemWithGroupKey" /> objects are equal.</summary>
         /// <param name="left">The first value to compare.</param>

@@ -4,8 +4,13 @@
 
 using System.Diagnostics;
 using System.Linq.Expressions;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 [DebuggerDisplay("ObservablePropertyPart<{" + nameof(expression) + "}>")]
 internal sealed class ObservablePropertyPart(Expression expression)

@@ -4,7 +4,11 @@
 
 #if P_LINQ
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.PLinq
+#else
 namespace DynamicData.PLinq
+#endif
 {
     /// <summary>
     /// Options to specify parallelisation of stream operations.  Only applicable for .Net4 and .Net45 builds.

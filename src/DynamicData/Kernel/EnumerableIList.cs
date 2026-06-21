@@ -1,9 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 // Lifted from here https://github.com/benaadams/Ben.Enumerable. Many thanks to the genius of the man.
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.Kernel;
+#else
 namespace DynamicData.Kernel;
+#endif
 
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same class name, different generics.")]
 internal readonly struct EnumerableIList<T>(IList<T> list) : IEnumerableIList<T>, IList<T>

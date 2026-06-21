@@ -1,11 +1,20 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+using DynamicData.Reactive.Diagnostics;
+#else
 
 using DynamicData.Diagnostics;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.Tests;
+#else
 namespace DynamicData.Tests;
+#endif
 
 /// <summary>
 /// Aggregates all events and statistics for a distinct change set to help assertions when testing.

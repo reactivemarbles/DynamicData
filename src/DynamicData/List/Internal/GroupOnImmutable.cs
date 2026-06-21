@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
 internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelector, IObservable<Unit>? reGrouper)
     where TObject : notnull
@@ -253,13 +258,13 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
         public IList<TObject> List { get; } = new List<TObject>();
     }
 
-    private sealed class ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
+    private sealed class ItemWithGroupKey(TObject item, TGroupKey group, ReactiveUI.Primitives.Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
     {
         public TGroupKey Group { get; set; } = group;
 
         public TObject Item { get; } = item;
 
-        public Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
+        public ReactiveUI.Primitives.Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
 
         public static bool operator ==(ItemWithGroupKey left, ItemWithGroupKey right) => Equals(left, right);
 

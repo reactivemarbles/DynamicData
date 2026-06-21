@@ -3,7 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Node describing the relationship between and item and it's ancestors and descendent.
@@ -37,7 +41,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <param name="item">The item.</param>
     /// <param name="key">The key.</param>
     /// <param name="parent">The parent.</param>
-    public Node(TObject item, TKey key, in Optional<Node<TObject, TKey>> parent)
+    public Node(TObject item, TKey key, in ReactiveUI.Primitives.Optional<Node<TObject, TKey>> parent)
     {
         Item = item ?? throw new ArgumentNullException(nameof(item));
         Key = key;
@@ -91,7 +95,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <summary>
     /// Gets the parent if it has one.
     /// </summary>
-    public Optional<Node<TObject, TKey>> Parent { get; internal set; }
+    public ReactiveUI.Primitives.Optional<Node<TObject, TKey>> Parent { get; internal set; }
 
     /// <summary>
     ///  Determines whether the specified objects are equal.

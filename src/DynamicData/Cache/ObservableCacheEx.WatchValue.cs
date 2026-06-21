@@ -3,8 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -23,7 +28,7 @@ public static partial class ObservableCacheEx
     /// <remarks>
     /// <para>
     /// Unlike <see cref="ToObservableOptional{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TKey, IEqualityComparer{TObject}?)"/>,
-    /// this does not emit <see cref="Optional.None{T}"/> on removal. It emits the removed item's value instead.
+    /// this does not emit <see cref="ReactiveUI.Primitives.Optional.None{T}"/> on removal. It emits the removed item's value instead.
     /// If you need to distinguish presence from absence, use ToObservableOptional.
     /// </para>
     /// <list type="table">

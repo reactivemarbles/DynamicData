@@ -1,8 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 /// <summary>Initializes a new instance of the <see cref="RemoveKeyEnumerator{TObject, TKey}"/> class.Converts a <see cref="Change{TObject, TKey}"/> to <see cref="ChangeSet{TObject}"/>.</summary>
 /// <param name="source">The change set with a key.</param>

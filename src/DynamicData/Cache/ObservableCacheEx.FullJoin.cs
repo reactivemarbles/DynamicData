@@ -1,12 +1,22 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+using DynamicData.Reactive.Cache.Internal;
+#else
 
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -19,7 +29,7 @@ public static partial class ObservableCacheEx
     /// <param name="rightKeySelector">A <see cref="Func{T, TResult}"/> that maps each right item to the left key it should join on.</param>
     /// <param name="resultSelector">A <see cref="Func{T, TResult}"/> that combines the optional left and right values into a destination object. The key is not provided in this overload.</param>
     /// <remarks>Overload that omits the key from the result selector. Delegates to <see cref="FullJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, Optional{TLeft}, Optional{TRight}, TDestination})"/>.</remarks>
-    public static IObservable<IChangeSet<TDestination, TLeftKey>> FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<Optional<TLeft>, Optional<TRight>, TDestination> resultSelector)
+    public static IObservable<IChangeSet<TDestination, TLeftKey>> FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<ReactiveUI.Primitives.Optional<TLeft>, ReactiveUI.Primitives.Optional<TRight>, TDestination> resultSelector)
         where TLeft : notnull
         where TLeftKey : notnull
         where TRight : notnull
@@ -54,9 +64,9 @@ public static partial class ObservableCacheEx
     /// <b>Left-side change handling:</b>
     /// <list type="table">
     ///   <listheader><term>Event</term><description>Behavior</description></listheader>
-    ///   <item><term>Add</term><description>Emits with the left value and the matching right (or <see cref="Optional.None{T}"/> if no right exists).</description></item>
+    ///   <item><term>Add</term><description>Emits with the left value and the matching right (or <see cref="ReactiveUI.Primitives.Optional.None{T}"/> if no right exists).</description></item>
     ///   <item><term>Update</term><description>Re-invokes <paramref name="resultSelector"/> with the new left value and current right (if any).</description></item>
-    ///   <item><term>Remove</term><description>If a right match still exists, re-invokes the selector with left as <see cref="Optional.None{T}"/>. If neither side remains, removes the joined result.</description></item>
+    ///   <item><term>Remove</term><description>If a right match still exists, re-invokes the selector with left as <see cref="ReactiveUI.Primitives.Optional.None{T}"/>. If neither side remains, removes the joined result.</description></item>
     ///   <item><term>Refresh</term><description>Forwarded as Refresh on the joined result.</description></item>
     /// </list>
     /// </para>
@@ -64,9 +74,9 @@ public static partial class ObservableCacheEx
     /// <b>Right-side change handling:</b>
     /// <list type="table">
     ///   <listheader><term>Event</term><description>Behavior</description></listheader>
-    ///   <item><term>Add</term><description>Emits with the matching left (or <see cref="Optional.None{T}"/>) and the right value.</description></item>
+    ///   <item><term>Add</term><description>Emits with the matching left (or <see cref="ReactiveUI.Primitives.Optional.None{T}"/>) and the right value.</description></item>
     ///   <item><term>Update</term><description>Re-invokes selector with current left (if any) and the new right value.</description></item>
-    ///   <item><term>Remove</term><description>If a left match still exists, re-invokes the selector with right as <see cref="Optional.None{T}"/>. If neither side remains, removes the joined result.</description></item>
+    ///   <item><term>Remove</term><description>If a left match still exists, re-invokes the selector with right as <see cref="ReactiveUI.Primitives.Optional.None{T}"/>. If neither side remains, removes the joined result.</description></item>
     ///   <item><term>Refresh</term><description>Forwarded as Refresh on the joined result.</description></item>
     /// </list>
     /// </para>
@@ -77,7 +87,7 @@ public static partial class ObservableCacheEx
     /// <seealso cref="LeftJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, Optional{TRight}, TDestination})"/>
     /// <seealso cref="RightJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TRightKey, Optional{TLeft}, TRight, TDestination})"/>
     /// <seealso cref="FullJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, Optional{TLeft}, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
-    public static IObservable<IChangeSet<TDestination, TLeftKey>> FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, Optional<TLeft>, Optional<TRight>, TDestination> resultSelector)
+    public static IObservable<IChangeSet<TDestination, TLeftKey>> FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, ReactiveUI.Primitives.Optional<TLeft>, ReactiveUI.Primitives.Optional<TRight>, TDestination> resultSelector)
         where TLeft : notnull
         where TLeftKey : notnull
         where TRight : notnull

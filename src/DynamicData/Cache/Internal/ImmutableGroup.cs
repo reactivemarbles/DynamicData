@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 internal sealed class ImmutableGroup<TObject, TKey, TGroupKey> : IGrouping<TObject, TKey, TGroupKey>, IEquatable<ImmutableGroup<TObject, TKey, TGroupKey>>
     where TObject : notnull
@@ -46,7 +51,7 @@ internal sealed class ImmutableGroup<TObject, TKey, TGroupKey> : IGrouping<TObje
 
     public override int GetHashCode() => EqualityComparer<TGroupKey>.Default.GetHashCode(Key);
 
-    public Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
 
     public override string ToString() => $"Grouping for: {Key} ({Count} items)";
 }

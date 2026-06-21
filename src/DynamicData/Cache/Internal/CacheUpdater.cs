@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 internal sealed class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
     where TObject : notnull
@@ -196,13 +201,13 @@ internal sealed class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey
         AddOrUpdate(items);
     }
 
-    public Optional<TObject> Lookup(TKey key)
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key)
     {
         var item = _cache.Lookup(key);
-        return item.HasValue ? item.Value : Optional<TObject>.None;
+        return item.HasValue ? item.Value : ReactiveUI.Primitives.Optional<TObject>.None;
     }
 
-    public Optional<TObject> Lookup(TObject item)
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TObject item)
     {
         if (_keySelector is null)
         {

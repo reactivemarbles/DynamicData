@@ -3,7 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// A cache which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point thw changes are cleared.
@@ -138,7 +142,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     }
 
     /// <inheritdoc />
-    public Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
     /// <summary>
     /// Raises an evaluate change for the specified keys.

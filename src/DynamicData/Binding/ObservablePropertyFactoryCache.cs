@@ -4,8 +4,13 @@
 
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 internal sealed class ObservablePropertyFactoryCache
 {

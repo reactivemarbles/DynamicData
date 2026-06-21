@@ -3,7 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.Tests;
+#else
 namespace DynamicData.Tests;
+#endif
 
 /// <summary>
 /// Aggregates all events and statistics for a change set to help assertions when testing.

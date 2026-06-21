@@ -3,10 +3,18 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+#if REACTIVE_SHIM
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Cache designed to be used for custom operator construction. It requires no key to be specified
@@ -64,7 +72,7 @@ public sealed class IntermediateCache<TObject, TKey> : IIntermediateCache<TObjec
     public void Edit(Action<ICacheUpdater<TObject, TKey>> updateAction) => _innerCache.UpdateFromIntermediate(updateAction);
 
     /// <inheritdoc />
-    public Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
     /// <inheritdoc />
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null)

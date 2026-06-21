@@ -1,11 +1,20 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if SUPPORTS_BINDINGLIST
+#if REACTIVE_SHIM
+using DynamicData.Reactive.Cache.Internal;
+#else
 using DynamicData.Cache.Internal;
+#endif
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 /// <summary>
 /// Adaptor to reflect a change set into a binding list.

@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCache<TObject, TKey>>> selectCaches, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
     where TObject : notnull
@@ -141,7 +146,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
-    private void OnItemUpdated(ChangeSetCache<TObject, TKey>[] sources, TObject item, TKey key, in Optional<TObject> prev)
+    private void OnItemUpdated(ChangeSetCache<TObject, TKey>[] sources, TObject item, TKey key, in ReactiveUI.Primitives.Optional<TObject> prev)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -219,7 +224,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         UpdateToBestValue(sources, key, cached);
     }
 
-    private bool UpdateToBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key, in Optional<TObject> current)
+    private bool UpdateToBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key, in ReactiveUI.Primitives.Optional<TObject> current)
     {
         // Determine which value should be the one seen downstream
         var candidate = LookupBestValue(sources, key);
@@ -248,11 +253,11 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         return true;
     }
 
-    private Optional<TObject> LookupBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key)
+    private ReactiveUI.Primitives.Optional<TObject> LookupBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key)
     {
         if (sources.Length == 0)
         {
-            return Optional<TObject>.None;
+            return ReactiveUI.Primitives.Optional<TObject>.None;
         }
 
         var values = sources.Select(s => s.Cache.Lookup(key)).Where(opt => opt.HasValue);

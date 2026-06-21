@@ -3,8 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Linq.Expressions;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 internal sealed class GroupOnProperty<TObject, TKey, TGroup>(IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TGroup>> groupSelectorKey, TimeSpan? throttle = null, IScheduler? scheduler = null)
     where TObject : INotifyPropertyChanged
