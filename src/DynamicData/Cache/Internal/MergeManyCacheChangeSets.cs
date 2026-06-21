@@ -97,8 +97,8 @@ private sealed class Subscription : CacheParentSubscription<ChangeSetCache<TDest
                     // Shutdown the existing subscription and remove from the cache
                     case ChangeReason.Remove:
                         _cache.Remove(change.Key);
-                        RemoveChildSubscription(change.Key);
                         _changeSetMergeTracker.RemoveItems(change.Current.Cache.KeyValues);
+                        RemoveChildSubscription(change.Key);
                         break;
                 }
             }

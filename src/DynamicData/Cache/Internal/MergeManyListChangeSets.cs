@@ -90,8 +90,8 @@ private sealed class Subscription : CacheParentSubscription<ClonedListChangeSet<
 
                     // Shutdown the existing subscription and remove from the cache
                     case ChangeReason.Remove:
-                        RemoveChildSubscription(change.Key);
                         _changeSetMergeTracker.RemoveItems(change.Current.List);
+                        RemoveChildSubscription(change.Key);
                         break;
                 }
             }

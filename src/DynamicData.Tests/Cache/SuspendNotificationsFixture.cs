@@ -2,6 +2,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Tests.Cache;
 
+[Collection(IntegrationTestFixtureBase.CollectionName)]
 public sealed class SuspendNotificationsFixture : IDisposable
 {
     private readonly SourceCache<int, int> _source = new(static x => x);

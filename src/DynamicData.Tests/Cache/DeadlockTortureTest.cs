@@ -17,6 +17,7 @@ namespace DynamicData.Tests.Cache;
 /// On main (Synchronize(lock)): deadlocks reliably within seconds.
 /// On the PR branch (SynchronizeSafe queue-drain): no deadlock possible.
 /// </summary>
+[Collection(IntegrationTestFixtureBase.CollectionName)]
 public sealed class DeadlockTortureTest
 {
     private const int ItemCount = 200;

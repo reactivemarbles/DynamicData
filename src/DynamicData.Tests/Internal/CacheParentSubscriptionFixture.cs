@@ -10,6 +10,7 @@ namespace DynamicData.Tests.Internal;
 /// Tests for <see cref="CacheParentSubscription{TParent, TKey, TChild, TObserver}"/>
 /// behavioral contracts using a minimal concrete subclass.
 /// </summary>
+[Collection(IntegrationTestFixtureBase.CollectionName)]
 public sealed class CacheParentSubscriptionFixture
 {
     private const int SeedMin = 1;
