@@ -49,11 +49,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     /// <param name="observer">The observer that receives delivered items.</param>
     public DeliveryQueue(IObserver<T> observer)
     {
-#if NET9_0_OR_GREATER
         _gate = new Lock();
-#else
-        _gate = new object();
-#endif
         _observer = observer;
     }
 

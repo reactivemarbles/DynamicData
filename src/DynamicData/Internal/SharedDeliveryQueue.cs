@@ -66,11 +66,7 @@ internal sealed class SharedDeliveryQueue : IDisposable
     /// <param name="onDrainComplete">The onDrainComplete value.</param>
     public SharedDeliveryQueue(Action? onDrainComplete)
     {
-#if NET9_0_OR_GREATER
         _gate = new Lock();
-#else
-        _gate = new object();
-#endif
         _onDrainComplete = onDrainComplete;
     }
 #if NET9_0_OR_GREATER
