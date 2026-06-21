@@ -9,6 +9,7 @@
     </Description>
     <TargetFrameworks>net462;net472;net48;net481;net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
+    <DefineConstants>$(DefineConstants);REACTIVE_SHIM</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,26 +32,24 @@
     <Using Include="System.Reactive.Linq" />
     <Using Include="System.Reactive.Subjects" />
     <Using Include="System.Reactive.Threading.Tasks" />
+    <Using Include="ReactiveUI.Primitives.Signals" />
+    <Using Include="ReactiveUI.Primitives.Reactive.Signals" />
     <Using Include="System.Reactive.Unit" Alias="Unit" />
     <Using Include="System.Reactive.Concurrency.IScheduler" Alias="IScheduler" />
     <Using Include="System.Reactive.Concurrency.Scheduler" Alias="Scheduler" />
     <Using Include="System.Reactive.Concurrency.TaskPoolScheduler" Alias="TaskPoolScheduler" />
   </ItemGroup>
-  <ItemGroup>
-    <DynamicDataReactiveSource Include="..\DynamicData\**\*.cs" Exclude="..\DynamicData\bin\**;..\DynamicData\obj\**;..\DynamicData\Internal\ObservableEx.cs;..\DynamicData\Internal\ReactiveCompatibility.cs" />
-  </ItemGroup>
 
-  <Target Name="RewriteDynamicDataReactiveNamespaces" BeforeTargets="CoreCompile">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)RewriteDynamicDataReactiveSources.ps1&quot; -SourceRoot &quot;$(MSBuildThisFileDirectory)..\DynamicData&quot; -OutputRoot &quot;$(MSBuildProjectDirectory)\$(IntermediateOutputPath)GeneratedReactiveSources&quot;" />
-    <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath)GeneratedReactiveSources\**\*.cs" />
-      <Compile Remove="$(IntermediateOutputPath)GeneratedReactiveSources\Cache\ObservableCacheEx.AsyncDisposeMany.cs" Condition="!$(DefineConstants.Contains('SUPPORTS_ASYNC_DISPOSABLE'))" />
-    </ItemGroup>
-  </Target>
+  <ItemGroup>
+    <Compile Include="..\DynamicData\**\*.cs" Exclude="..\DynamicData\bin\**;..\DynamicData\obj\**" LinkBase="DynamicData" />
+    <Compile Update="..\DynamicData\**\ObservableCacheEx.*.cs">
+      <DependentUpon>ObservableCacheEx.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
 
   <!-- AsyncDisposeMany is only supported on platforms that have IAsyncDisposable. -->
   <ItemGroup Condition="!$(DefineConstants.Contains('SUPPORTS_ASYNC_DISPOSABLE'))">
-    <Compile Remove="$(IntermediateOutputPath)GeneratedReactiveSources\Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
+    <Compile Remove="..\DynamicData\Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
