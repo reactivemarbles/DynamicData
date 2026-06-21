@@ -330,7 +330,7 @@ public sealed class WhenPropertyChangedRaceFixture
             var items = Enumerable.Range(0, itemCount).Select(i => new KeyedActivable(i)).ToList();
 
             using var mutator = cache.Connect()
-                .ObserveOn(TaskPoolSequencer.Default)
+                .ObserveOn(TaskPoolScheduler.Default)
                 .Subscribe(changes =>
                 {
                     foreach (var change in changes)
@@ -343,7 +343,7 @@ public sealed class WhenPropertyChangedRaceFixture
                 });
 
             using var results = cache.Connect()
-                .ObserveOn(TaskPoolSequencer.Default)
+                .ObserveOn(TaskPoolScheduler.Default)
                 .AutoRefresh(x => x.Activated)
                 .Filter(x => x.Activated)
                 .AsAggregator();

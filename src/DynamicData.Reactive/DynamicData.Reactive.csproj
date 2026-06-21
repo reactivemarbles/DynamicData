@@ -34,7 +34,7 @@
     <Using Include="System.Reactive.Unit" Alias="Unit" />
     <Using Include="System.Reactive.Concurrency.IScheduler" Alias="IScheduler" />
     <Using Include="System.Reactive.Concurrency.Scheduler" Alias="Sequencer" />
-    <Using Include="System.Reactive.Concurrency.TaskPoolScheduler" Alias="TaskPoolSequencer" />
+    <Using Include="System.Reactive.Concurrency.TaskPoolScheduler" Alias="TaskPoolScheduler" />
   </ItemGroup>
   <ItemGroup>
     <DynamicDataReactiveSource Include="..\DynamicData\**\*.cs" Exclude="..\DynamicData\bin\**;..\DynamicData\obj\**;..\DynamicData\Internal\ObservableEx.cs;..\DynamicData\Internal\ReactiveCompatibility.cs" />
