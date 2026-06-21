@@ -19,7 +19,7 @@ internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
             var cachedItems = new List<T>();
 
             var sourceSubscription = source
-                .SynchronizeObject(cachedItems)
+                .Synchronize(cachedItems)
                 .SubscribeSafe(Observer.Create<IChangeSet<T>>(
                     onNext: changeSet =>
                     {

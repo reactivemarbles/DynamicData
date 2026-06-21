@@ -59,7 +59,7 @@ internal static class TaskPolyfillExtensions
             linked.CancelAfter(timeout);
         }
 
-        using (linked.Token.Register(static state => ((TaskCompletionSource<bool>)state!).TrySetResult(true), signal))
+        using (linked.Token.Register(static state => ((TaskCompletionSource<bool>)state).TrySetResult(true), signal))
         {
             var completed = await Task.WhenAny(task, signal.Task).ConfigureAwait(false);
             if (completed != task)

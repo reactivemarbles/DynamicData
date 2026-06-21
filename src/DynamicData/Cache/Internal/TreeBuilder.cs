@@ -47,7 +47,7 @@ internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject,
                 }
 
                 // as nodes change, maintain parent and children
-                var parentSetter = allNodes.Connect().Tap(
+                var parentSetter = allNodes.Connect().Do(
                     changes =>
                     {
                         foreach (var group in changes.GroupBy(c => _pivotOn(c.Current.Item)))
