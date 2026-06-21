@@ -38,10 +38,7 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     /// <param name="source">The source.</param>
     public LockFreeObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         _updater = new CacheUpdater<TObject, TKey>(_innerCache);
 
@@ -120,10 +117,7 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     /// <param name="editAction">The edit action.</param>
     public void Edit(Action<ICacheUpdater<TObject, TKey>> editAction)
     {
-        if (editAction is null)
-        {
-            throw new ArgumentNullException(nameof(editAction));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(editAction);
 
         editAction(_updater);
         _changes.OnNext(_innerCache.CaptureChanges());

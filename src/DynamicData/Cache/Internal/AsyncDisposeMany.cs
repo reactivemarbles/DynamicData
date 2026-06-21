@@ -19,7 +19,7 @@ internal static class AsyncDisposeMany<TObject, TKey>
         return Observable
             .Create<IChangeSet<TObject, TKey>>(downstreamObserver =>
             {
-                var gate = new object();
+                var gate = new Lock();
                 var itemsByKey = new Dictionary<TKey, TObject>();
                 var disposalsCompleted = new ReplaySignal<Unit>(1);
                 var pendingAsyncDisposals = 0;

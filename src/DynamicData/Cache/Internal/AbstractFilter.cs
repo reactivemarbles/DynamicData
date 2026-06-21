@@ -12,8 +12,9 @@ internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
 
     protected AbstractFilter(ChangeAwareCache<TObject, TKey> cache, Func<TObject, bool>? filter)
     {
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        ArgumentExceptionHelper.ThrowIfNull(cache);
 
+        _cache = cache;
         Filter = filter ?? (_ => true);
     }
 
