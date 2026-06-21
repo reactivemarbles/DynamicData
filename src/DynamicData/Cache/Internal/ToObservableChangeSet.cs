@@ -178,7 +178,8 @@ private sealed class Subscription
             _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
             _synchronizationGate = new();
 
-            _sourceSubscription = source.SubscribeSafe(
+            _sourceSubscription = PrimitivesLinqExtensions.SubscribeSafe(
+                source,
                 onNext: OnSourceNext,
                 onError: downstreamObserver.OnError,
                 onCompleted: OnSourceCompleted);

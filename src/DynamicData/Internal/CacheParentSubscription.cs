@@ -125,12 +125,11 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         // on normal completion (not disposal), so RemoveChildSubscription is NOT called when the
         // parent disposes child subscriptions during Dispose(). This asymmetry is intentional:
         // disposal cleanup is handled by KeyedDisposable, not by individual completion callbacks.
-        disposableContainer.Disposable = observable
-            .Finally(CheckCompleted)
-            .SubscribeSafe(
-                onNext: val => ChildOnNext(val, parentKey),
-                onError: TerminalError,
-                onCompleted: () => RemoveChildSubscription(parentKey));
+        disposableContainer.Disposable = PrimitivesLinqExtensions.SubscribeSafe(
+            observable.Finally(CheckCompleted),
+            onNext: val => ChildOnNext(val, parentKey),
+            onError: TerminalError,
+            onCompleted: () => RemoveChildSubscription(parentKey));
     }
 
     /// <summary>
@@ -145,12 +144,11 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     /// <param name="source">The source value.</param>
     protected void CreateParentSubscription(IObservable<IChangeSet<TParent, TKey>> source) =>
         _parentSubscription.Disposable =
-            source
-                .SynchronizeSafe(_queue)
-                .SubscribeSafe(
-                    onNext: ParentOnNext,
-                    onError: TerminalError,
-                    onCompleted: CheckCompleted);
+            PrimitivesLinqExtensions.SubscribeSafe(
+                source.SynchronizeSafe(_queue),
+                onNext: ParentOnNext,
+                onError: TerminalError,
+                onCompleted: CheckCompleted);
 
     /// <summary>
     /// Executes the Dispose operation.

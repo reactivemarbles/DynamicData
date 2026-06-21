@@ -11,6 +11,7 @@ namespace DynamicData.Tests.Binding;
 /// Each test forces concurrency between the operator's subscribe call (or chain re-walk) and one or more
 /// <see cref="INotifyPropertyChanged.PropertyChanged"/> notifiers firing on other threads.
 /// </summary>
+[Collection(IntegrationTestFixtureBase.CollectionName)]
 public sealed class WhenPropertyChangedRaceFixture
 {
     private static readonly TimeSpan ConditionTimeout = TimeSpan.FromSeconds(30);

@@ -13,8 +13,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ReactiveUI.Primitives.Reactive" Version="5.5.0" />
-    <PackageReference Include="ReactiveUI.Primitives.Extensions.Reactive" Version="5.5.0" />
+    <PackageReference Include="ReactiveUI.Primitives.Reactive" Version="5.6.0" />
+    <PackageReference Include="ReactiveUI.Primitives.Extensions.Reactive" Version="5.6.0" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="System" />
@@ -32,6 +32,7 @@
     <Using Include="System.Reactive.Linq" />
     <Using Include="System.Reactive.Subjects" />
     <Using Include="System.Reactive.Threading.Tasks" />
+    <Using Include="ReactiveUI.Primitives.Reactive.LinqExtensions" Alias="PrimitivesLinqExtensions" />
     <Using Include="ReactiveUI.Primitives.Signals" />
     <Using Include="ReactiveUI.Primitives.Reactive.Signals" />
     <Using Include="System.Reactive.Unit" Alias="Unit" />

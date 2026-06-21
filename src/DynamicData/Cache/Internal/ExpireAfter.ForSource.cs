@@ -140,15 +140,15 @@ private abstract class SubscriptionBase
                 _proposedExpirationsQueue = [];
                 _removedItemsBuffer = [];
 
-                _sourceSubscription = source
-                    .Connect()
-                    // It's important to set this flag outside the context of a lock, because it'll be read outside of lock as well.
-                    .Finally(() => _hasSourceCompleted = true)
-                    .Synchronize(SynchronizationGate)
-                    .SubscribeSafe(
-                        onNext: OnSourceNext,
-                        onError: OnSourceError,
-                        onCompleted: OnSourceCompleted);
+                _sourceSubscription = PrimitivesLinqExtensions.SubscribeSafe(
+                    source
+                        .Connect()
+                        // It's important to set this flag outside the context of a lock, because it'll be read outside of lock as well.
+                        .Finally(() => _hasSourceCompleted = true)
+                        .Synchronize(SynchronizationGate),
+                    OnSourceNext,
+                    OnSourceError,
+                    OnSourceCompleted);
             }
 
             /// <summary>

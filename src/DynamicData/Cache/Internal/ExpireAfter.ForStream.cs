@@ -127,12 +127,11 @@ private abstract class SubscriptionBase
                 _itemsCache = new();
                 _proposedExpirationsQueue = [];
 
-                _sourceSubscription = source
-                    .Synchronize(SynchronizationGate)
-                    .SubscribeSafe(
-                        onNext: OnSourceNext,
-                        onError: OnSourceError,
-                        onCompleted: OnSourceCompleted);
+                _sourceSubscription = PrimitivesLinqExtensions.SubscribeSafe(
+                    source.Synchronize(SynchronizationGate),
+                    OnSourceNext,
+                    OnSourceError,
+                    OnSourceCompleted);
             }
 
             /// <summary>

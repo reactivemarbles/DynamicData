@@ -53,6 +53,6 @@
     <ItemGroup>
       <DynamicDataReactiveRuntimeFile Include="..\DynamicData.Reactive\bin\$(Configuration)\$(TargetFramework)\*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(DynamicDataReactiveRuntimeFile)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(DynamicDataReactiveRuntimeFile)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" Condition="'$(TargetDir)' != '' and '@(DynamicDataReactiveRuntimeFile)' != ''" />
   </Target>
 </Project>

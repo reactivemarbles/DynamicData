@@ -175,17 +175,16 @@ private abstract class SubscriptionBase
                 _predicateStateSubscription = predicateStateSubscription;
                 _sourceSubscription = sourceSubscription;
 
-                predicateStateSubscription.Disposable = predicateState
-                    .SubscribeSafe(
-                        onNext: OnPredicateStateNext,
-                        onError: onError,
-                        onCompleted: OnPredicateStateCompleted);
+                predicateStateSubscription.Disposable = predicateState.SubscribeSafe(Observer.Create<TState>(
+                    onNext: OnPredicateStateNext,
+                    onError: onError,
+                    onCompleted: OnPredicateStateCompleted));
 
-                sourceSubscription.Disposable = source
-                    .SubscribeSafe(
-                        onNext: OnSourceNext,
-                        onError: onError,
-                        onCompleted: OnSourceCompleted);
+                sourceSubscription.Disposable = PrimitivesLinqExtensions.SubscribeSafe(
+                    source,
+                    onNext: OnSourceNext,
+                    onError: onError,
+                    onCompleted: OnSourceCompleted);
             }
 
             /// <summary>

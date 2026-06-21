@@ -170,23 +170,22 @@ private sealed class Subscription
 
                 using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
 
-                _predicateStateSubscription = predicateState
-                    .SubscribeSafe(
-                        onNext: OnPredicateStateNext,
-                        onError: onError,
-                        onCompleted: OnPredicateStateCompleted);
+                _predicateStateSubscription = predicateState.SubscribeSafe(Observer.Create<TState>(
+                    onNext: OnPredicateStateNext,
+                    onError: onError,
+                    onCompleted: OnPredicateStateCompleted));
 
-                _reapplyFilterSubscription = reapplyFilter
-                    .SubscribeSafe(
-                        onNext: OnReapplyFilterNext,
-                        onError: onError,
-                        onCompleted: OnReapplyFilterCompleted);
+                _reapplyFilterSubscription = PrimitivesLinqExtensions.SubscribeSafe(
+                    reapplyFilter,
+                    OnReapplyFilterNext,
+                    onError,
+                    OnReapplyFilterCompleted);
 
-                _sourceSubscription = source
-                    .SubscribeSafe(
-                        onNext: OnSourceNext,
-                        onError: onError,
-                        onCompleted: OnSourceCompleted);
+                _sourceSubscription = PrimitivesLinqExtensions.SubscribeSafe(
+                    source,
+                    OnSourceNext,
+                    onError,
+                    OnSourceCompleted);
 
                 _hasInitialized = true;
 

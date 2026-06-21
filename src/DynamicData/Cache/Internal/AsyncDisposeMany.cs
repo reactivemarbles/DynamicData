@@ -45,40 +45,39 @@ internal static class AsyncDisposeMany<TObject, TKey>
 
                 disposalsCompletedAccessor.Invoke(disposalsCompleted);
 
-                var sourceSubscription = source
-                    .SynchronizeSafe()
-                    .SubscribeSafe(
-                        onNext: upstreamChanges =>
-                        {
-                            downstreamObserver.OnNext(upstreamChanges);
+                var sourceSubscription = PrimitivesLinqExtensions.SubscribeSafe(
+                    source.SynchronizeSafe(),
+                    onNext: upstreamChanges =>
+                    {
+                        downstreamObserver.OnNext(upstreamChanges);
 
-                            foreach (var change in upstreamChanges.ToConcreteType())
+                        foreach (var change in upstreamChanges.ToConcreteType())
+                        {
+                            switch (change.Reason)
                             {
-                                switch (change.Reason)
-                                {
-                                    case ChangeReason.Update:
-                                        if (change.Previous.HasValue && !EqualityComparer<TObject>.Default.Equals(change.Current, change.Previous.Value))
-                                            TryDisposeItem(change.Previous.Value);
-                                        break;
+                                case ChangeReason.Update:
+                                    if (change.Previous.HasValue && !EqualityComparer<TObject>.Default.Equals(change.Current, change.Previous.Value))
+                                        TryDisposeItem(change.Previous.Value);
+                                    break;
 
-                                    case ChangeReason.Remove:
-                                        TryDisposeItem(change.Current);
-                                        break;
-                                }
+                                case ChangeReason.Remove:
+                                    TryDisposeItem(change.Current);
+                                    break;
                             }
+                        }
 
-                            itemsByKey.Clone(upstreamChanges);
-                        },
-                        onError: error =>
-                        {
-                            downstreamObserver.OnError(error);
-                            TearDown();
-                        },
-                        onCompleted: () =>
-                        {
-                            downstreamObserver.OnCompleted();
-                            TearDown();
-                        });
+                        itemsByKey.Clone(upstreamChanges);
+                    },
+                    onError: error =>
+                    {
+                        downstreamObserver.OnError(error);
+                        TearDown();
+                    },
+                    onCompleted: () =>
+                    {
+                        downstreamObserver.OnCompleted();
+                        TearDown();
+                    });
 
                 return Disposable.Create(() =>
                 {

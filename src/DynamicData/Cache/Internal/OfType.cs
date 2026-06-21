@@ -27,55 +27,55 @@ internal sealed class OfType<TObject, TKey, TDestination>(IObservable<IChangeSet
     /// </summary>
     /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TDestination, TKey>> Run() =>
-        Observable.Create<IChangeSet<TDestination, TKey>>(observer => source
-            .SubscribeSafe(
-                onNext: upstreamChanges =>
+        Observable.Create<IChangeSet<TDestination, TKey>>(observer => PrimitivesLinqExtensions.SubscribeSafe(
+            source,
+            onNext: upstreamChanges =>
+            {
+                var downstreamChanges = new ChangeSet<TDestination, TKey>(capacity: upstreamChanges.Count);
+
+                try
                 {
-                    var downstreamChanges = new ChangeSet<TDestination, TKey>(capacity: upstreamChanges.Count);
-
-                    try
+                    foreach (var change in upstreamChanges.ToConcreteType())
                     {
-                        foreach (var change in upstreamChanges.ToConcreteType())
+                        // Don't propagate moves at all, since we don't preserve indexes.
+                        if (change.Reason is ChangeReason.Moved)
+                            continue;
+
+                        Change<TDestination, TKey>? transformedChange = (change.Reason, change.Current) switch
                         {
-                            // Don't propagate moves at all, since we don't preserve indexes.
-                            if (change.Reason is ChangeReason.Moved)
-                                continue;
+                            // Update when Current is the right type, but the Previous was not (Add)
+                            (ChangeReason.Update, TDestination addDestination) when change.Previous.Value is not TDestination =>
+                                new(ChangeReason.Add, change.Key, addDestination),
 
-                            Change<TDestination, TKey>? transformedChange = (change.Reason, change.Current) switch
-                            {
-                                // Update when Current is the right type, but the Previous was not (Add)
-                                (ChangeReason.Update, TDestination addDestination) when change.Previous.Value is not TDestination =>
-                                    new(ChangeReason.Add, change.Key, addDestination),
+                            // Update when Current is not the right type, but the Previous was (Remove)
+                            (ChangeReason.Update, not TDestination) when change.Previous.Value is TDestination removeDestination =>
+                                new(ChangeReason.Remove, change.Key, removeDestination),
 
-                                // Update when Current is not the right type, but the Previous was (Remove)
-                                (ChangeReason.Update, not TDestination) when change.Previous.Value is TDestination removeDestination =>
-                                    new(ChangeReason.Remove, change.Key, removeDestination),
+                            // For any other change reason, if the Current is the right type, forward with converted types
+                            (_, TDestination otherDestination) =>
+                                new(change.Reason, change.Key, otherDestination, change.Previous.HasValue && change.Previous.Value is TDestination pd ? ReactiveUI.Primitives.Optional.Some(pd) : default),
 
-                                // For any other change reason, if the Current is the right type, forward with converted types
-                                (_, TDestination otherDestination) =>
-                                    new(change.Reason, change.Key, otherDestination, change.Previous.HasValue && change.Previous.Value is TDestination pd ? ReactiveUI.Primitives.Optional.Some(pd) : default),
+                            // Otherwise, don't do anything at all
+                            _ => default,
+                        };
 
-                                // Otherwise, don't do anything at all
-                                _ => default,
-                            };
-
-                            if (transformedChange is { } c)
-                            {
-                                // Do not propagate indexes, we can't guarantee them to be correct, because we aren't caching items.
-                                downstreamChanges.Add(c);
-                            }
-                        }
-
-                        if (!suppressEmptyChangeSets || downstreamChanges.Count != 0)
+                        if (transformedChange is { } c)
                         {
-                            observer.OnNext(downstreamChanges);
+                            // Do not propagate indexes, we can't guarantee them to be correct, because we aren't caching items.
+                            downstreamChanges.Add(c);
                         }
                     }
-                    catch (Exception error)
+
+                    if (!suppressEmptyChangeSets || downstreamChanges.Count != 0)
                     {
-                        observer.OnError(error);
+                        observer.OnNext(downstreamChanges);
                     }
-                },
-                onError: observer.OnError,
-                onCompleted: observer.OnCompleted));
+                }
+                catch (Exception error)
+                {
+                    observer.OnError(error);
+                }
+            },
+            onError: observer.OnError,
+            onCompleted: observer.OnCompleted));
 }

@@ -41,54 +41,55 @@ internal sealed class GroupOnDynamic<TObject, TKey, TGroupKey>(IObservable<IChan
 
         // The first value from the Group Selector should update the Grouper with all the values seen so far
         // Then indicate a selector has been found.  Subsequent values should just update the group selector.
-        var subGroupSelector = sharedGroupSelector
-            .SubscribeSafe(
-                onNext: groupSelector =>
+        var subGroupSelector = PrimitivesLinqExtensions.SubscribeSafe(
+            sharedGroupSelector,
+            onNext: groupSelector =>
+            {
+                if (hasSelector)
                 {
-                    if (hasSelector)
-                    {
-                        dynamicGrouper.SetGroupSelector(groupSelector, observer);
-                    }
-                    else
-                    {
-                        dynamicGrouper.Initialize(notGrouped.KeyValues, groupSelector, observer);
-                        hasSelector = true;
-                    }
-                },
-                onError: observer.OnError);
+                    dynamicGrouper.SetGroupSelector(groupSelector, observer);
+                }
+                else
+                {
+                    dynamicGrouper.Initialize(notGrouped.KeyValues, groupSelector, observer);
+                    hasSelector = true;
+                }
+            },
+            onError: observer.OnError);
 
         // Ignore values until a selector has been provided
         // Then re-evaluate all the groupings each time it fires
-        var subRegrouper = sharedRegrouper
-            .SubscribeSafe(
-                onNext: _ =>
+        var subRegrouper = PrimitivesLinqExtensions.SubscribeSafe(
+            sharedRegrouper,
+            onNext: _ =>
+            {
+                if (hasSelector)
                 {
-                    if (hasSelector)
-                    {
-                        dynamicGrouper.RegroupAll(observer);
-                    }
-                },
-                onError: observer.OnError);
+                    dynamicGrouper.RegroupAll(observer);
+                }
+            },
+            onError: observer.OnError);
 
-        var subChanges = sharedSource
-            .SubscribeSafe(
-                onNext: changeSet =>
+        var subChanges = PrimitivesLinqExtensions.SubscribeSafe(
+            sharedSource,
+            onNext: changeSet =>
+            {
+                if (hasSelector)
                 {
-                    if (hasSelector)
-                    {
-                        dynamicGrouper.ProcessChangeSet(changeSet, observer);
-                    }
-                    else
-                    {
-                        notGrouped.Clone(changeSet);
-                    }
-                },
-                onError: observer.OnError);
+                    dynamicGrouper.ProcessChangeSet(changeSet, observer);
+                }
+                else
+                {
+                    notGrouped.Clone(changeSet);
+                }
+            },
+            onError: observer.OnError);
 
         // Create an observable that completes when all 3 inputs complete so the downstream can be completed as well
-        var subOnComplete = Observable.Merge(sharedSource.ToUnit(), sharedGroupSelector.ToUnit(), sharedRegrouper)
-            .IgnoreElements()
-            .SubscribeSafe(observer.OnError, observer.OnCompleted);
+        var subOnComplete = PrimitivesLinqExtensions.SubscribeSafe(
+            Observable.Merge(sharedSource.ToUnit(), sharedGroupSelector.ToUnit(), sharedRegrouper).IgnoreElements(),
+            observer.OnError,
+            observer.OnCompleted);
 
         return new CompositeDisposable(
             sharedGroupSelector.Connect(),
