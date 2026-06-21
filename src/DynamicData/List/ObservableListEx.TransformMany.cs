@@ -39,8 +39,8 @@ public static partial class ObservableListEx
         where TDestination : notnull
         where TSource : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(manySelector);
 
         return new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
     }

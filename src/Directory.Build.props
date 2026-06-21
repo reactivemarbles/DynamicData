@@ -42,6 +42,10 @@
     <CodeAnalysisRuleSet></CodeAnalysisRuleSet>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <SolutionDir Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)</SolutionDir>
+  </PropertyGroup>
+
   <!-- AOT/trim analyzers on net8.0+ (netfx doesn't support them). -->
   <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
     <IsAotCompatible>true</IsAotCompatible>
@@ -49,14 +53,9 @@
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
   </PropertyGroup>
 
-  <!-- Alias Lock to the dedicated System.Threading.Lock on .NET 9+ (faster EnterScope fast path),
-     and to a plain object elsewhere (the lock statement falls back to Monitor). -->
-  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
-    <Using Include="System.Threading.Lock" Alias="Lock"/>
-  </ItemGroup>
-  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
-    <Using Include="System.Object" Alias="Lock"/>
-  </ItemGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0'))">
+    <Features>$(Features);runtime-async=on</Features>
+  </PropertyGroup>
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\images\logo.png" Pack="true" PackagePath="\"/>
@@ -66,22 +65,23 @@
   <ItemGroup Condition="'$(IsTestProject)' != 'true'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
-  
-   <PropertyGroup>
-    <SolutionDir Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)</SolutionDir>
-  </PropertyGroup>
 
   <ItemGroup>	
     <PackageReference Include="Nerdbank.GitVersioning" Version="3.9.50" PrivateAssets="all" />	
   </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.9" />
-  </ItemGroup>
+  
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
     <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
     <PackageReference Include="Roslynator.Analyzers" Version="4.15.0" PrivateAssets="All" />
-  </ItemGroup>
-  <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
+  <!-- Alias Lock to the dedicated System.Threading.Lock on .NET 9+ (faster EnterScope fast path),
+     and to a plain object elsewhere (the lock statement falls back to Monitor). -->
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
+    <Using Include="System.Threading.Lock" Alias="Lock"/>
+  </ItemGroup>
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
+    <Using Include="System.Object" Alias="Lock"/>
   </ItemGroup>
 </Project>

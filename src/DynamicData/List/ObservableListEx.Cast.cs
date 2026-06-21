@@ -22,7 +22,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<TDestination>> Cast<TDestination>(this IObservable<IChangeSet<object>> source)
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.Select(changes => changes.Transform(t => (TDestination)t));
     }
@@ -43,9 +43,8 @@ public static partial class ObservableListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        conversionFactory.ThrowArgumentNullExceptionIfNull(nameof(conversionFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(conversionFactory);
 
         return source.Select(changes => changes.Transform(conversionFactory));
     }

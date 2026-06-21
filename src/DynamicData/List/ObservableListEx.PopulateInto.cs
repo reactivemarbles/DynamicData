@@ -29,8 +29,8 @@ public static partial class ObservableListEx
     public static IDisposable PopulateInto<T>(this IObservable<IChangeSet<T>> source, ISourceList<T> destination)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(destination);
 
         return source.Subscribe(changes => destination.Edit(updater => updater.Clone(changes)));
     }

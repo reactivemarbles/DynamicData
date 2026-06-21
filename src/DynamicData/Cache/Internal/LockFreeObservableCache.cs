@@ -93,7 +93,7 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     public IReadOnlyDictionary<TKey, TObject> KeyValues => new Dictionary<TKey, TObject>(_innerCache.GetDictionary());
 
     /// <inheritdoc />
-    public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => Signal.Lazy(
+    public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => Observable.Defer(
             () =>
             {
                 var initial = InternalEx.Return(() => _innerCache.GetInitialUpdates(predicate));

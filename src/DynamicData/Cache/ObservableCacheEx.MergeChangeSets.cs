@@ -64,7 +64,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer: null).Run();
     }
@@ -84,8 +84,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer).Run();
     }
@@ -105,8 +105,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        equalityComparer.ThrowArgumentNullExceptionIfNull(nameof(equalityComparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(equalityComparer);
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer, comparer: null).Run();
     }
@@ -126,9 +126,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        equalityComparer.ThrowArgumentNullExceptionIfNull(nameof(equalityComparer));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(equalityComparer);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer, comparer).Run();
     }
@@ -149,8 +149,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        other.ThrowArgumentNullExceptionIfNull(nameof(other));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(other);
 
         return new[] { source, other }.MergeChangeSets(scheduler, completable);
     }
@@ -171,9 +171,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        other.ThrowArgumentNullExceptionIfNull(nameof(other));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(other);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return new[] { source, other }.MergeChangeSets(comparer, scheduler, completable);
     }
@@ -194,9 +194,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        other.ThrowArgumentNullExceptionIfNull(nameof(other));
-        equalityComparer.ThrowArgumentNullExceptionIfNull(nameof(equalityComparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(other);
+        ArgumentExceptionHelper.ThrowIfNull(equalityComparer);
 
         return new[] { source, other }.MergeChangeSets(equalityComparer, scheduler, completable);
     }
@@ -218,10 +218,10 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        other.ThrowArgumentNullExceptionIfNull(nameof(other));
-        equalityComparer.ThrowArgumentNullExceptionIfNull(nameof(equalityComparer));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(other);
+        ArgumentExceptionHelper.ThrowIfNull(equalityComparer);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return new[] { source, other }.MergeChangeSets(equalityComparer, comparer, scheduler, completable);
     }
@@ -242,8 +242,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        others.ThrowArgumentNullExceptionIfNull(nameof(others));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(others);
 
         return source.EnumerateOne().Concat(others).MergeChangeSets(scheduler, completable);
     }
@@ -264,9 +264,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        others.ThrowArgumentNullExceptionIfNull(nameof(others));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(others);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return source.EnumerateOne().Concat(others).MergeChangeSets(comparer, scheduler, completable);
     }
@@ -287,9 +287,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        others.ThrowArgumentNullExceptionIfNull(nameof(others));
-        equalityComparer.ThrowArgumentNullExceptionIfNull(nameof(equalityComparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(others);
+        ArgumentExceptionHelper.ThrowIfNull(equalityComparer);
 
         return source.EnumerateOne().Concat(others).MergeChangeSets(equalityComparer, scheduler, completable);
     }
@@ -311,10 +311,10 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        others.ThrowArgumentNullExceptionIfNull(nameof(others));
-        equalityComparer.ThrowArgumentNullExceptionIfNull(nameof(equalityComparer));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(others);
+        ArgumentExceptionHelper.ThrowIfNull(equalityComparer);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return source.EnumerateOne().Concat(others).MergeChangeSets(equalityComparer, comparer, scheduler, completable);
     }
@@ -345,7 +345,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer: null, completable, scheduler).Run();
     }
@@ -367,8 +367,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer, completable, scheduler).Run();
     }
@@ -390,8 +390,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        equalityComparer.ThrowArgumentNullExceptionIfNull(nameof(equalityComparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(equalityComparer);
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer, comparer: null, completable, scheduler).Run();
     }
@@ -413,9 +413,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        equalityComparer.ThrowArgumentNullExceptionIfNull(nameof(equalityComparer));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(equalityComparer);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer, comparer, completable, scheduler).Run();
     }

@@ -20,7 +20,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<object>> CastToObject<T>(this IObservable<IChangeSet<T>> source)
         where T : class
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.Select(changes => changes.Transform(t => (object)t));
     }
 }

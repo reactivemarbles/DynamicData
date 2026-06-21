@@ -27,7 +27,7 @@ public static partial class ObservableListEx
                 Action<T> refreshAction)
             where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return List.Internal.OnItemRefreshed<T>.Create(
                 source: source,
                 refreshAction: refreshAction);

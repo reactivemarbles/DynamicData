@@ -39,7 +39,7 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new Cast<TSource, TKey, TDestination>(source, converter).Run();
     }

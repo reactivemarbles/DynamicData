@@ -20,7 +20,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentExceptionHelper.ThrowIfNull(sources);
 
         return sources.Select(cache => cache.Connect()).Switch();
     }
@@ -41,7 +41,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentExceptionHelper.ThrowIfNull(sources);
 
         return new Switch<TObject, TKey>(sources).Run();
     }

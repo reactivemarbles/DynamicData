@@ -16,9 +16,9 @@ internal static partial class Filter
             ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff,
             bool suppressEmptyChangeSets = true)
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            predicateState.ThrowArgumentNullExceptionIfNull(nameof(predicateState));
-            predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(predicateState);
+            ArgumentExceptionHelper.ThrowIfNull(predicate);
 
             if (!EnumEx.IsDefined(filterPolicy))
                 throw new ArgumentException($"Invalid {nameof(ListFilterPolicy)} value {filterPolicy}");

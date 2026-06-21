@@ -137,7 +137,7 @@ internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
 
                     hasInitialized = true;
 
-                    return new MultipleDisposable(observerSubscription, leftCache, rightCache, rightShare.Connect(), queue);
+                    return new CompositeDisposable(observerSubscription, leftCache, rightCache, rightShare.Connect(), queue);
                 }
             });
 }

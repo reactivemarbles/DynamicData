@@ -33,8 +33,8 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> WhereReasonsAreNot<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
         where T : notnull
     {
-        reasons.ThrowArgumentNullExceptionIfNull(nameof(reasons));
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(reasons);
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         if (reasons.Length == 0)
         {

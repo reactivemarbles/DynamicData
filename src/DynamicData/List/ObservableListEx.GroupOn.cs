@@ -45,9 +45,8 @@ public static partial class ObservableListEx
         where TObject : notnull
         where TGroup : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        groupSelector.ThrowArgumentNullExceptionIfNull(nameof(groupSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(groupSelector);
 
         return new GroupOn<TObject, TGroup>(source, groupSelector, regrouper).Run();
     }

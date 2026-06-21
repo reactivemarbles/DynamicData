@@ -31,7 +31,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <param name="items">The items to seed the change aware list with.</param>
     public ChangeAwareList(IEnumerable<T> items)
     {
-        items.ThrowArgumentNullExceptionIfNull(nameof(items));
+        ArgumentExceptionHelper.ThrowIfNull(items);
 
         var list = items.ToList();
 
@@ -51,7 +51,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <param name="copyChanges">Should the list of changes also be copied over?.</param>
     public ChangeAwareList(ChangeAwareList<T> list, bool copyChanges)
     {
-        list.ThrowArgumentNullExceptionIfNull(nameof(list));
+        ArgumentExceptionHelper.ThrowIfNull(list);
 
         _innerList = new List<T>(list._innerList);
 

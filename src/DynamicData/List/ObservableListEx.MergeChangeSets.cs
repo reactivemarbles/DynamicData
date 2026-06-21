@@ -22,7 +22,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IObservable<IObservable<IChangeSet<TObject>>> source, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new MergeChangeSets<TObject>(source, equalityComparer).Run();
     }
@@ -39,8 +39,8 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IObservable<IChangeSet<TObject>> source, IObservable<IChangeSet<TObject>> other, IEqualityComparer<TObject>? equalityComparer = null, IScheduler? scheduler = null, bool completable = true)
         where TObject : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        other.ThrowArgumentNullExceptionIfNull(nameof(other));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(other);
 
         return new[] { source, other }.MergeChangeSets(equalityComparer, scheduler, completable);
     }
@@ -57,8 +57,8 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IObservable<IChangeSet<TObject>> source, IEnumerable<IObservable<IChangeSet<TObject>>> others, IEqualityComparer<TObject>? equalityComparer = null, IScheduler? scheduler = null, bool completable = true)
         where TObject : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        others.ThrowArgumentNullExceptionIfNull(nameof(others));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(others);
 
         return source.EnumerateOne().Concat(others).MergeChangeSets(equalityComparer, scheduler, completable);
     }
@@ -94,7 +94,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IEnumerable<IObservable<IChangeSet<TObject>>> source, IEqualityComparer<TObject>? equalityComparer = null, IScheduler? scheduler = null, bool completable = true)
         where TObject : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new MergeChangeSets<TObject>(source, equalityComparer, completable, scheduler).Run();
     }
@@ -106,7 +106,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IObservableList<IObservable<IChangeSet<TObject>>> source, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.Connect().MergeChangeSets(equalityComparer);
     }
@@ -119,7 +119,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<TObject>> MergeChangeSets<TObject>(this IObservable<IChangeSet<IObservable<IChangeSet<TObject>>>> source, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.MergeManyChangeSets(static src => src, equalityComparer);
     }
@@ -152,7 +152,7 @@ public static partial class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.Connect().MergeChangeSets(comparer);
     }
@@ -168,7 +168,7 @@ public static partial class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.Connect().MergeChangeSets(equalityComparer, comparer);
     }
@@ -183,7 +183,7 @@ public static partial class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return source.MergeChangeSets(comparer);
     }
@@ -199,7 +199,7 @@ public static partial class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.MergeManyChangeSets(static src => src, equalityComparer, comparer);
     }

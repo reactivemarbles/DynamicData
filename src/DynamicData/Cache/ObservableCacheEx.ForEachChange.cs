@@ -40,8 +40,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(action);
 
         return source.Do(changes => changes.ForEach(action));
     }

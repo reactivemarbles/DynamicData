@@ -33,11 +33,9 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<TObject>> FilterOnProperty<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TProperty>> propertySelector, Func<TObject, bool> predicate, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        propertySelector.ThrowArgumentNullExceptionIfNull(nameof(propertySelector));
-
-        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(propertySelector);
+        ArgumentExceptionHelper.ThrowIfNull(predicate);
 
         return new FilterOnProperty<TObject, TProperty>(source, propertySelector, predicate, propertyChangedThrottle, scheduler).Run();
     }

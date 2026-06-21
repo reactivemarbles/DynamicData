@@ -35,7 +35,7 @@ internal sealed class BindPaged<[DynamicallyAccessedMembers(DynamicallyAccessedM
         {
             var shared = source.Publish();
 
-            var subscriber = new OnceDisposable();
+            var subscriber = new SingleAssignmentDisposable();
 
             // I tried to make this work without subjects but had issues
             // making the comparedChanged observable to fire. Probably a deadlock

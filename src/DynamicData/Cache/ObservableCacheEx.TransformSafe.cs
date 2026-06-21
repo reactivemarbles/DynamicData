@@ -20,9 +20,9 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(errorHandler);
 
         return source.TransformSafe((current, _, _) => transformFactory(current), errorHandler, forceTransform.ForForced<TSource, TKey>());
     }
@@ -34,9 +34,9 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(errorHandler);
 
         return source.TransformSafe((current, _, key) => transformFactory(current, key), errorHandler, forceTransform);
     }
@@ -67,9 +67,9 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(errorHandler);
         if (forceTransform is not null)
         {
             return new TransformWithForcedTransform<TDestination, TSource, TKey>(source, transformFactory, forceTransform, errorHandler).Run();
@@ -92,9 +92,9 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        forceTransform.ThrowArgumentNullExceptionIfNull(nameof(forceTransform));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(forceTransform);
 
         return source.TransformSafe((cur, _, key) => transformFactory(cur, key), errorHandler, forceTransform.ForForced<TSource, TKey>());
     }
@@ -106,9 +106,9 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        forceTransform.ThrowArgumentNullExceptionIfNull(nameof(forceTransform));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(forceTransform);
 
         return source.TransformSafe(transformFactory, errorHandler, forceTransform.ForForced<TSource, TKey>());
     }

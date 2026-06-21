@@ -22,7 +22,7 @@ public class ChangeSetAggregator<TObject> : IDisposable
     /// <param name="source">The source.</param>
     public ChangeSetAggregator(IObservable<IChangeSet<TObject>> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         var published = source.Publish();
 

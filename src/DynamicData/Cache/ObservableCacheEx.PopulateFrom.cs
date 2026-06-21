@@ -29,8 +29,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observable.ThrowArgumentNullExceptionIfNull(nameof(observable));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observable);
 
         return observable.Subscribe(source.AddOrUpdate);
     }
@@ -48,8 +48,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observable.ThrowArgumentNullExceptionIfNull(nameof(observable));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observable);
 
         return observable.Subscribe(source.AddOrUpdate);
     }

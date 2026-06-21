@@ -36,7 +36,7 @@ internal sealed class Cache<TObject, TKey> : ICache<TObject, TKey>
 
     public void Clone(IChangeSet<TObject, TKey> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
 
         foreach (var item in changes.ToConcreteType())
         {

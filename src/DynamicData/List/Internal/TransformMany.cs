@@ -18,7 +18,7 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
             source,
             manySelector,
             equalityComparer,
-            t => Signal.Lazy(
+            t => Observable.Defer(
                 () =>
                 {
                     var subsequentChanges = manySelector(t).ToObservableChangeSet();
@@ -38,7 +38,7 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
             source,
             manySelector,
             equalityComparer,
-            t => Signal.Lazy(
+            t => Observable.Defer(
                 () =>
                 {
                     var subsequentChanges = manySelector(t).ToObservableChangeSet();
@@ -58,7 +58,7 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
             source,
             s => new ManySelectorFunc(s, x => manySelector(x).Items),
             equalityComparer,
-            t => Signal.Lazy(
+            t => Observable.Defer(
                 () =>
                 {
                     var subsequentChanges = manySelector(t).Connect();

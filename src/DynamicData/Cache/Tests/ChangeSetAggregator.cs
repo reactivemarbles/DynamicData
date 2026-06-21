@@ -24,7 +24,7 @@ public sealed class ChangeSetAggregator<TObject, TKey, TContext> : IDisposable
     /// <param name="source">The source.</param>
     public ChangeSetAggregator(IObservable<IChangeSet<TObject, TKey, TContext>> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         var published = source.Publish();
 
@@ -107,7 +107,7 @@ public sealed class ChangeSetAggregator<TObject, TKey> : IDisposable
     /// <param name="source">The source.</param>
     public ChangeSetAggregator(IObservable<IChangeSet<TObject, TKey>> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         var published = source.Publish();
 

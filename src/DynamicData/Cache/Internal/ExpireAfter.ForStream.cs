@@ -16,8 +16,8 @@ internal static partial class ExpireAfter
             TimeSpan? pollingInterval = null,
             IScheduler? scheduler = null)
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(timeSelector);
 
             return Observable.Create<IChangeSet<TObject, TKey>>(observer => (pollingInterval is { } pollingIntervalValue)
                 ? new PollingSubscription(

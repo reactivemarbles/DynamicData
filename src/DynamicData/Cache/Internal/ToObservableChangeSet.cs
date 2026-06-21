@@ -304,7 +304,7 @@ internal static class ToObservableChangeSet<TObject, TKey>
 
     private readonly struct ScheduledExpiration
     {
-        public required OnceDisposable Cancellation { get; init; }
+        public required SingleAssignmentDisposable Cancellation { get; init; }
 
         public required Expiration Expiration { get; init; }
     }

@@ -45,8 +45,8 @@ public static partial class ObservableCacheEx
         where TObject : INotifyPropertyChanged
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        propertyAccessor.ThrowArgumentNullExceptionIfNull(nameof(propertyAccessor));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(propertyAccessor);
 
         return source.MergeMany(t => t.WhenPropertyChanged(propertyAccessor, notifyOnInitialValue));
     }

@@ -44,8 +44,8 @@ public class SortedObservableCollectionAdaptor<TObject, TKey>(int refreshThresho
     /// <param name="collection">The collection.</param>
     public void Adapt(ISortedChangeSet<TObject, TKey> changes, IObservableCollection<TObject> collection)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
-        collection.ThrowArgumentNullExceptionIfNull(nameof(collection));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
+        ArgumentExceptionHelper.ThrowIfNull(collection);
 
         switch (changes.SortedItems.SortReason)
         {

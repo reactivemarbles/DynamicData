@@ -24,8 +24,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        includeFunction.ThrowArgumentNullExceptionIfNull(nameof(includeFunction));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(includeFunction);
 
         return source.Select(
             changes =>

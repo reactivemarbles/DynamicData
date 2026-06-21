@@ -40,7 +40,7 @@ public static partial class ObservableListEx
                 Action<T> addAction)
             where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return List.Internal.OnItemAdded<T>.Create(
                 source: source,
                 addAction: addAction);

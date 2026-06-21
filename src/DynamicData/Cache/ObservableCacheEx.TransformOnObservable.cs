@@ -61,8 +61,8 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
 
         return new TransformOnObservable<TSource, TKey, TDestination>(source, transformFactory).Run();
     }
@@ -74,7 +74,7 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TDestination : notnull
     {
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
 
         return source.TransformOnObservable((obj, _) => transformFactory(obj));
     }

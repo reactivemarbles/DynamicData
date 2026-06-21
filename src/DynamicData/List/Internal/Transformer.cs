@@ -16,14 +16,15 @@ internal sealed class Transformer<TSource, TDestination>
 
     public Transformer(IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
     {
-        factory.ThrowArgumentNullExceptionIfNull(nameof(factory));
+        ArgumentExceptionHelper.ThrowIfNull(factory);
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
-        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _source = source;
         _transformOnRefresh = transformOnRefresh;
         _containerFactory = (item, prev, index) => new TransformedItemContainer(item, factory(item, prev, index));
     }
 
-    public IObservable<IChangeSet<TDestination>> Run() => Signal.Lazy(RunImpl);
+    public IObservable<IChangeSet<TDestination>> Run() => Observable.Defer(RunImpl);
 
     private IObservable<IChangeSet<TDestination>> RunImpl() => _source.Scan(new ChangeAwareList<TransformedItemContainer>(), (state, changes) =>
             {
@@ -38,7 +39,7 @@ internal sealed class Transformer<TSource, TDestination>
 
     private void Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
 
         foreach (var item in changes)
         {

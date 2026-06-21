@@ -17,7 +17,7 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
             source,
             manySelector,
             keySelector,
-            t => Signal.Lazy(
+            t => Observable.Defer(
                 () =>
                 {
                     var subsequentChanges = manySelector(t).ToObservableChangeSet(keySelector);
@@ -37,7 +37,7 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
             source,
             manySelector,
             keySelector,
-            t => Signal.Lazy(
+            t => Observable.Defer(
                 () =>
                 {
                     var subsequentChanges = manySelector(t).ToObservableChangeSet(keySelector);
@@ -57,7 +57,7 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
             source,
             x => manySelector(x).Items,
             keySelector,
-            t => Signal.Lazy(
+            t => Observable.Defer(
                 () =>
                 {
                     var subsequentChanges = Observable.Create<IChangeSet<TDestination, TDestinationKey>>(o => manySelector(t).Connect().Subscribe(o));

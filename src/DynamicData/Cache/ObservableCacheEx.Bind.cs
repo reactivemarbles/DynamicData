@@ -28,7 +28,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
+        ArgumentExceptionHelper.ThrowIfNull(destination);
 
         // if user has not specified different defaults, use system wide defaults instead.
         // This is a hack to retro fit system wide defaults which override the hard coded defaults above
@@ -55,7 +55,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
+        ArgumentExceptionHelper.ThrowIfNull(destination);
 
         return source?.Bind(destination, new ObservableCollectionAdaptor<TObject, TKey>(options)) ?? throw new ArgumentNullException(nameof(source));
     }
@@ -74,9 +74,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
-        updater.ThrowArgumentNullExceptionIfNull(nameof(updater));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(destination);
+        ArgumentExceptionHelper.ThrowIfNull(updater);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
@@ -102,7 +102,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         var target = new ObservableCollectionExtended<TObject>();
         readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(target);
@@ -125,7 +125,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         if (adaptor is not null)
         {
@@ -158,8 +158,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(destination);
 
         return source.Bind(destination, DynamicDataOptions.Binding);
     }
@@ -178,8 +178,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(destination);
 
         var updater = new SortedObservableCollectionAdaptor<TObject, TKey>(options);
         return source.Bind(destination, updater);
@@ -199,9 +199,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
-        updater.ThrowArgumentNullExceptionIfNull(nameof(updater));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(destination);
+        ArgumentExceptionHelper.ThrowIfNull(updater);
 
         return Observable.Create<ISortedChangeSet<TObject, TKey>>(
             observer =>
@@ -227,7 +227,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         var target = new ObservableCollectionExtended<TObject>();
         var result = new ReadOnlyObservableCollection<TObject>(target);
@@ -252,7 +252,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         // if user has not specified different defaults, use system wide defaults instead.
         // This is a hack to retro fit system wide defaults which override the hard coded defaults above
@@ -287,8 +287,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        bindingList.ThrowArgumentNullExceptionIfNull(nameof(bindingList));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(bindingList);
 
         return source.Adapt(new BindingListAdaptor<TObject, TKey>(bindingList, resetThreshold));
     }
@@ -311,8 +311,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        bindingList.ThrowArgumentNullExceptionIfNull(nameof(bindingList));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(bindingList);
 
         return source.Adapt(new SortedBindingListAdaptor<TObject, TKey>(bindingList, resetThreshold));
     }

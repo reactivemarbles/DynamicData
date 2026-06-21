@@ -301,7 +301,7 @@ public static class AvgEx
     /// </returns>
     public static IObservable<double> Avg<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, int> valueSelector, int emptyValue = 0)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.AvgCalc(valueSelector, emptyValue, (current, item) => new Avg<int>(current.Count + 1, current.Sum + item), (current, item) => new Avg<int>(current.Count - 1, current.Sum - item), values => values.Sum / (double)values.Count);
     }
 
@@ -327,7 +327,7 @@ public static class AvgEx
     /// <returns>An observable of averages as a double value.</returns>
     public static IObservable<double> Avg<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, long> valueSelector, long emptyValue = 0)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.AvgCalc(valueSelector, emptyValue, (current, item) => new Avg<long>(current.Count + 1, current.Sum + item), (current, item) => new Avg<long>(current.Count - 1, current.Sum - item), values => values.Sum / (double)values.Count);
     }
 
@@ -355,7 +355,7 @@ public static class AvgEx
     /// </returns>
     public static IObservable<double> Avg<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, double> valueSelector, double emptyValue = 0)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.AvgCalc(valueSelector, emptyValue, (current, item) => new Avg<double>(current.Count + 1, current.Sum + item), (current, item) => new Avg<double>(current.Count - 1, current.Sum - item), values => values.Sum / (double)values.Count);
     }
 
@@ -383,7 +383,7 @@ public static class AvgEx
     /// </returns>
     public static IObservable<decimal> Avg<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, decimal> valueSelector, decimal emptyValue = 0)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.AvgCalc(valueSelector, emptyValue, (current, item) => new Avg<decimal>(current.Count + 1, current.Sum + item), (current, item) => new Avg<decimal>(current.Count - 1, current.Sum - item), values => values.Sum / values.Count);
     }
 
@@ -409,7 +409,7 @@ public static class AvgEx
     /// </returns>
     public static IObservable<float> Avg<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, float> valueSelector, float emptyValue = 0)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.AvgCalc(valueSelector, emptyValue, (current, item) => new Avg<float>(current.Count + 1, current.Sum + item), (current, item) => new Avg<float>(current.Count - 1, current.Sum - item), values => values.Sum / values.Count);
     }
 
@@ -427,11 +427,11 @@ public static class AvgEx
 
     private static IObservable<TResult> AvgCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, Func<TObject, TValue> valueSelector, TResult fallbackValue, Func<Avg<TValue>, TValue, Avg<TValue>> addAction, Func<Avg<TValue>, TValue, Avg<TValue>> removeAction, Func<Avg<TValue>, TResult> resultAction)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
-        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
-        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
-        resultAction.ThrowArgumentNullExceptionIfNull(nameof(resultAction));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(valueSelector);
+        ArgumentExceptionHelper.ThrowIfNull(addAction);
+        ArgumentExceptionHelper.ThrowIfNull(removeAction);
+        ArgumentExceptionHelper.ThrowIfNull(resultAction);
 
         return source.Scan(default(Avg<TValue>), (state, changes) =>
             changes.Aggregate(state, (current, aggregateItem) =>

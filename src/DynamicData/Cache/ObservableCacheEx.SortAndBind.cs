@@ -232,7 +232,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new SortAndBind<TObject, TKey>(source, comparer, options, targetList).Run();
     }
@@ -324,7 +324,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         // allow options to set initial capacity for efficiency
         var observableCollection = options.InitialCapacity > 0

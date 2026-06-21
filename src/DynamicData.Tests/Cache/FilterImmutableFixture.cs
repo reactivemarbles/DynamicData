@@ -355,7 +355,7 @@ public sealed class FilterImmutableFixture
         // Per Change<T,K> contract, a Remove change carries the item that was removed in Current.
         // For an Update where Previous matched the predicate but Current does not, the item that
         // leaves the filtered view is Previous (it was downstream; Current never reached downstream).
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)

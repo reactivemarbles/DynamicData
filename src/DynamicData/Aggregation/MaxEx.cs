@@ -31,8 +31,8 @@ public static class MaxEx
         where TObject : notnull
         where TResult : struct, IComparable<TResult>
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(valueSelector);
 
         return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
     }
@@ -54,8 +54,8 @@ public static class MaxEx
         where TKey : notnull
         where TResult : struct, IComparable<TResult>
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(valueSelector);
 
         return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
     }
@@ -73,8 +73,8 @@ public static class MaxEx
         where TObject : notnull
         where TResult : struct, IComparable<TResult>
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(valueSelector);
 
         return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
     }
@@ -96,8 +96,8 @@ public static class MaxEx
         where TKey : notnull
         where TResult : struct, IComparable<TResult>
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(valueSelector);
 
         return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
     }
@@ -105,8 +105,8 @@ public static class MaxEx
     private static IObservable<TResult> Calculate<TObject, TResult>(this IObservable<ChangesAndCollection<TObject>> source, Func<TObject, TResult> valueSelector, MaxOrMin maxOrMin, TResult emptyValue = default)
         where TResult : struct, IComparable<TResult>
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(valueSelector);
 
         return source.Scan(
             default(TResult?),
@@ -169,7 +169,7 @@ public static class MaxEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.Publish(
             shared =>
@@ -183,7 +183,7 @@ public static class MaxEx
     private static IObservable<ChangesAndCollection<TObject>> ToChangesAndCollection<TObject>(this IObservable<IChangeSet<TObject>> source)
         where TObject : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.Publish(
             shared =>

@@ -78,9 +78,9 @@ public static partial class ObservableListEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return source.MergeManyChangeSets(observableSelector, equalityComparer: null, comparer: comparer);
     }
@@ -127,8 +127,8 @@ public static partial class ObservableListEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
 
         return new MergeManyCacheChangeSets<TObject, TDestination, TDestinationKey>(source, observableSelector, equalityComparer, comparer).Run();
     }

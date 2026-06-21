@@ -12,8 +12,8 @@ internal static class OnItemRemoved<T>
         Action<T> removeAction,
         bool invokeOnUnsubscribe)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(removeAction);
 
         var removalProcessor = source.Do(changeSet =>
         {

@@ -27,7 +27,7 @@ public class GroupChangeSetAggregator<TObject, TKey, TGroupKey> : IDisposable
     /// <param name="source">The source.</param>
     public GroupChangeSetAggregator(IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         var published = source.Publish();
 

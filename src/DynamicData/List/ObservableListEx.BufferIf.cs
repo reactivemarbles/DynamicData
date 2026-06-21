@@ -28,8 +28,8 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, IScheduler? scheduler = null)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pauseIfTrueSelector.ThrowArgumentNullExceptionIfNull(nameof(pauseIfTrueSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(pauseIfTrueSelector);
 
         return BufferIf(source, pauseIfTrueSelector, initialPauseState, null, scheduler);
     }
@@ -73,8 +73,8 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, TimeSpan? timeOut, IScheduler? scheduler = null)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pauseIfTrueSelector.ThrowArgumentNullExceptionIfNull(nameof(pauseIfTrueSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(pauseIfTrueSelector);
 
         return new BufferIf<T>(source, pauseIfTrueSelector, initialPauseState, timeOut, scheduler).Run();
     }

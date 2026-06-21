@@ -22,7 +22,7 @@ public static class ExperimentalEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new Watcher<TObject, TKey>(source, scheduler ?? GlobalConfig.DefaultScheduler);
     }

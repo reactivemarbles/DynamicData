@@ -24,7 +24,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> RemoveIndex<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.Select(changes => new ChangeSet<T>(changes.YieldWithoutIndex()));
     }

@@ -13,8 +13,8 @@ internal static class AsyncDisposeMany<TObject, TKey>
         IObservable<IChangeSet<TObject, TKey>> source,
         Action<IObservable<Unit>> disposalsCompletedAccessor)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        disposalsCompletedAccessor.ThrowArgumentNullExceptionIfNull(nameof(disposalsCompletedAccessor));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(disposalsCompletedAccessor);
 
         return Observable
             .Create<IChangeSet<TObject, TKey>>(downstreamObserver =>

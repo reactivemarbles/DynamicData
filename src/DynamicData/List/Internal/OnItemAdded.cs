@@ -11,8 +11,8 @@ internal static class OnItemAdded<T>
         IObservable<IChangeSet<T>> source,
         Action<T> addAction)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(addAction);
 
         return source.Do(changeSet =>
         {

@@ -18,7 +18,7 @@ internal sealed class TransformAsync<TSource, TDestination>
         Func<TSource, Optional<TDestination>, int, Task<TDestination>> factory,
         bool transformOnRefresh)
     {
-        factory.ThrowArgumentNullExceptionIfNull(nameof(factory));
+        ArgumentExceptionHelper.ThrowIfNull(factory);
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _transformOnRefresh = transformOnRefresh;
@@ -29,7 +29,7 @@ internal sealed class TransformAsync<TSource, TDestination>
         };
     }
 
-    public IObservable<IChangeSet<TDestination>> Run() => Signal.Lazy(RunImpl);
+    public IObservable<IChangeSet<TDestination>> Run() => Observable.Defer(RunImpl);
 
     private IObservable<IChangeSet<TDestination>> RunImpl()
     {
@@ -61,7 +61,7 @@ internal sealed class TransformAsync<TSource, TDestination>
         ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer> transformed,
         IChangeSet<TSource> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
 
         foreach (var item in changes)
         {

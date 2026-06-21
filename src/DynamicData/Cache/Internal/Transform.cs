@@ -9,7 +9,7 @@ internal sealed class Transform<TDestination, TSource, TKey>(IObservable<IChange
     where TSource : notnull
     where TKey : notnull
 {
-    public IObservable<IChangeSet<TDestination, TKey>> Run() => Signal.Lazy(RunImpl);
+    public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Defer(RunImpl);
 
     private IObservable<IChangeSet<TDestination, TKey>> RunImpl() => source.Scan(
                 (ChangeAwareCache<TDestination, TKey>?)null,

@@ -26,7 +26,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.StartWith(ChangeSet<TObject, TKey>.Empty);
     }
@@ -39,7 +39,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.StartWith(SortedChangeSet<TObject, TKey>.Empty);
     }
@@ -52,7 +52,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.StartWith(VirtualChangeSet<TObject, TKey>.Empty);
     }
@@ -65,7 +65,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.StartWith(PagedChangeSet<TObject, TKey>.Empty);
     }
@@ -82,7 +82,7 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.StartWith(GroupChangeSet<TObject, TKey, TGroupKey>.Empty);
     }
@@ -99,7 +99,7 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.StartWith(ImmutableGroupChangeSet<TObject, TKey, TGroupKey>.Empty);
     }
@@ -111,7 +111,7 @@ public static partial class ObservableCacheEx
     /// <remarks>Overload for <see cref="IReadOnlyCollection{T}"/>.</remarks>
     public static IObservable<IReadOnlyCollection<T>> StartWithEmpty<T>(this IObservable<IReadOnlyCollection<T>> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.StartWith(ReadOnlyCollectionLight<T>.Empty);
     }

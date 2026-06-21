@@ -17,10 +17,10 @@ internal static partial class Filter
             IObservable<Unit> reapplyFilter,
             bool suppressEmptyChangeSets)
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            predicateState.ThrowArgumentNullExceptionIfNull(nameof(predicateState));
-            predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
-            reapplyFilter.ThrowArgumentNullExceptionIfNull(nameof(reapplyFilter));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(predicateState);
+            ArgumentExceptionHelper.ThrowIfNull(predicate);
+            ArgumentExceptionHelper.ThrowIfNull(reapplyFilter);
 
             return Observable.Create<IChangeSet<TObject, TKey>>(downstreamObserver => new Subscription(
                 downstreamObserver: downstreamObserver,

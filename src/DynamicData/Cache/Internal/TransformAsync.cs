@@ -41,7 +41,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         var toTransform = cache.KeyValues.Where(kvp => shouldTransform(kvp.Value.Source, kvp.Key)).Select(kvp =>
             new Change<TSource, TKey>(ChangeReason.Update, kvp.Key, kvp.Value.Source, kvp.Value.Source)).ToArray();
 
-        return toTransform.Select(change => Signal.Lazy(() => Transform(change).ToObservable()))
+        return toTransform.Select(change => Observable.Defer(() => Transform(change).ToObservable()))
             .Merge(maximumConcurrency ?? int.MaxValue)
             .ToArray()
             .Select(transformed => ProcessUpdates(cache, transformed));
@@ -50,7 +50,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
     private IObservable<IChangeSet<TDestination, TKey>> DoTransform(
         ChangeAwareCache<TransformedItemContainer, TKey> cache, IChangeSet<TSource, TKey> changes)
     {
-        return changes.Select(change => Signal.FromAsync(() => Transform(change)))
+        return changes.Select(change => Observable.FromAsync(() => Transform(change)))
             .Merge(maximumConcurrency ?? int.MaxValue)
             .ToArray()
             .Select(transformed => ProcessUpdates(cache, transformed));

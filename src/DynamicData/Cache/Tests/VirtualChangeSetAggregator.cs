@@ -26,7 +26,7 @@ public class VirtualChangeSetAggregator<TObject, TKey> : IDisposable
     /// <param name="source">The source.</param>
     public VirtualChangeSetAggregator(IObservable<IVirtualChangeSet<TObject, TKey>> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         var published = source.Publish();
 

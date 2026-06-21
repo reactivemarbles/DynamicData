@@ -46,8 +46,8 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        groupSelectorKey.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKey));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(groupSelectorKey);
 
         return new GroupOnImmutable<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
     }

@@ -84,9 +84,9 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate, ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
-        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+        ArgumentExceptionHelper.ThrowIfNull(predicate);
 
         return new List.Internal.Filter.Dynamic<T>(source, predicate, filterPolicy).Run();
     }

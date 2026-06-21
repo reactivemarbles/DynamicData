@@ -28,7 +28,7 @@ public sealed class IntermediateCache<TObject, TKey> : IIntermediateCache<TObjec
     /// <exception cref="ArgumentNullException">source.</exception>
     public IntermediateCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         _innerCache = new ObservableCache<TObject, TKey>(source);
     }

@@ -26,8 +26,8 @@ public static class ObservableListAlias
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
 
         return source.Transform(transformFactory);
     }
@@ -45,8 +45,8 @@ public static class ObservableListAlias
         where TDestination : notnull
         where TSource : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(manySelector);
 
         return source.TransformMany(manySelector);
     }
@@ -62,8 +62,8 @@ public static class ObservableListAlias
     public static IObservable<IChangeSet<T>> Where<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(predicate);
 
         return source.Filter(predicate);
     }
@@ -81,8 +81,8 @@ public static class ObservableListAlias
     public static IObservable<IChangeSet<T>> Where<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(predicate);
 
         return source.Filter(predicate);
     }

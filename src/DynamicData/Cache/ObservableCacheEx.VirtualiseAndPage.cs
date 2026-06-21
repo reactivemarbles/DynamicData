@@ -29,8 +29,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(virtualRequests);
 
         return source.SortAndVirtualize(comparerChanged, virtualRequests, new SortAndVirtualizeOptions());
     }
@@ -73,8 +73,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(virtualRequests);
 
         return new SortAndVirtualize<TObject, TKey>(source, comparer, virtualRequests, options).Run();
     }
@@ -117,8 +117,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(virtualRequests);
 
         return new SortAndVirtualize<TObject, TKey>(source, comparerChanged, virtualRequests, options).Run();
     }
@@ -137,8 +137,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        virtualRequests.ThrowArgumentNullExceptionIfNull(nameof(virtualRequests));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(virtualRequests);
 
         return new Virtualise<TObject, TKey>(source, virtualRequests).Run();
     }
@@ -167,8 +167,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         if (size <= 0)
         {
@@ -193,7 +193,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         if (size <= 0)
         {
@@ -221,8 +221,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pageRequests.ThrowArgumentNullExceptionIfNull(nameof(pageRequests));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(pageRequests);
 
         return source.SortAndPage(comparerChanged, pageRequests, new SortAndPageOptions());
     }
@@ -264,8 +264,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pageRequests.ThrowArgumentNullExceptionIfNull(nameof(pageRequests));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(pageRequests);
 
         return new SortAndPage<TObject, TKey>(source, comparer, pageRequests, options).Run();
     }
@@ -307,8 +307,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pageRequests.ThrowArgumentNullExceptionIfNull(nameof(pageRequests));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(pageRequests);
 
         return new SortAndPage<TObject, TKey>(source, comparerChanged, pageRequests, options).Run();
     }
@@ -326,8 +326,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pageRequests.ThrowArgumentNullExceptionIfNull(nameof(pageRequests));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(pageRequests);
 
         return new Page<TObject, TKey>(source, pageRequests).Run();
     }

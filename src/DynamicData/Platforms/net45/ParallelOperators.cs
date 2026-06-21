@@ -26,7 +26,7 @@ namespace DynamicData.PLinq
             where TObject : notnull
             where TKey : notnull
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
+            ArgumentExceptionHelper.ThrowIfNull(source);
 
             return new PFilter<TObject, TKey>(source, filter, parallelisationOptions).Run();
         }
@@ -50,9 +50,9 @@ namespace DynamicData.PLinq
             where TObject : notnull
             where TKey : notnull
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            subscriptionFactory.ThrowArgumentNullExceptionIfNull(nameof(subscriptionFactory));
-            parallelisationOptions.ThrowArgumentNullExceptionIfNull(nameof(parallelisationOptions));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(subscriptionFactory);
+            ArgumentExceptionHelper.ThrowIfNull(parallelisationOptions);
 
             return new PSubscribeMany<TObject, TKey>(source, (t, _) => subscriptionFactory(t), parallelisationOptions).Run();
         }
@@ -76,9 +76,9 @@ namespace DynamicData.PLinq
             where TObject : notnull
             where TKey : notnull
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            subscriptionFactory.ThrowArgumentNullExceptionIfNull(nameof(subscriptionFactory));
-            parallelisationOptions.ThrowArgumentNullExceptionIfNull(nameof(parallelisationOptions));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(subscriptionFactory);
+            ArgumentExceptionHelper.ThrowIfNull(parallelisationOptions);
 
             return new PSubscribeMany<TObject, TKey>(source, subscriptionFactory, parallelisationOptions).Run();
         }
@@ -103,9 +103,9 @@ namespace DynamicData.PLinq
             where TSource : notnull
             where TKey : notnull
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-            parallelisationOptions.ThrowArgumentNullExceptionIfNull(nameof(parallelisationOptions));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+            ArgumentExceptionHelper.ThrowIfNull(parallelisationOptions);
 
             return new PTransform<TDestination, TSource, TKey>(source, (t, _, k) => transformFactory(t, k), parallelisationOptions).Run();
         }
@@ -154,10 +154,10 @@ namespace DynamicData.PLinq
             where TSource : notnull
             where TKey : notnull
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-            errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
-            parallelisationOptions.ThrowArgumentNullExceptionIfNull(nameof(parallelisationOptions));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+            ArgumentExceptionHelper.ThrowIfNull(errorHandler);
+            ArgumentExceptionHelper.ThrowIfNull(parallelisationOptions);
 
             return new PTransform<TDestination, TSource, TKey>(source, (t, _, _) => transformFactory(t), parallelisationOptions, errorHandler).Run();
         }

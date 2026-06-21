@@ -31,8 +31,8 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> Adapt<T>(this IObservable<IChangeSet<T>> source, IChangeSetAdaptor<T> adaptor)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        adaptor.ThrowArgumentNullExceptionIfNull(nameof(adaptor));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(adaptor);
 
         return Observable.Create<IChangeSet<T>>(
             observer =>

@@ -45,7 +45,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         if (others is null || others.Length == 0)
         {
@@ -62,7 +62,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentExceptionHelper.ThrowIfNull(sources);
 
         return sources.Combine(CombineOperator.Xor);
     }
@@ -79,7 +79,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentExceptionHelper.ThrowIfNull(sources);
 
         return sources.Combine(CombineOperator.Xor);
     }
@@ -96,7 +96,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentExceptionHelper.ThrowIfNull(sources);
 
         return sources.Combine(CombineOperator.Xor);
     }
@@ -113,7 +113,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentExceptionHelper.ThrowIfNull(sources);
 
         return sources.Combine(CombineOperator.Xor);
     }

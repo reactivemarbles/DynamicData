@@ -46,7 +46,7 @@ internal sealed class MergeMany<T, TDestination>(IObservable<IChangeSet<T>> sour
         private readonly Signal<IChangeSet<T>> _subject = new();
         private int _subscriptionCount = 1;
 
-        public IObservable<IChangeSet<T>> DeferCleanup => Signal.Lazy(() =>
+        public IObservable<IChangeSet<T>> DeferCleanup => Observable.Defer(() =>
         {
             CheckCompleted();
             return _subject.AsObservable();

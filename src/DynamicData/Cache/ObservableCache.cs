@@ -148,7 +148,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         lock (_locker)
         {
             _suspensionTracker.Value.SuspendCount();
-            return Scope.Create(this, static cache => cache.ResumeCount());
+            return Disposable.Create(this, static cache => cache.ResumeCount());
         }
     }
 
@@ -157,7 +157,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         lock (_locker)
         {
             _suspensionTracker.Value.SuspendNotifications();
-            return Scope.Create(this, static cache => cache.ResumeNotifications());
+            return Disposable.Create(this, static cache => cache.ResumeNotifications());
         }
     }
 
@@ -165,7 +165,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     internal void UpdateFromIntermediate(Action<ICacheUpdater<TObject, TKey>> updateAction)
     {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
         using var notifications = _notifications.AcquireLock();
 
@@ -192,7 +192,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction)
     {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
         using var notifications = _notifications.AcquireLock();
 

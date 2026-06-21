@@ -23,8 +23,8 @@ public static class SourceListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        conversionFactory.ThrowArgumentNullExceptionIfNull(nameof(conversionFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(conversionFactory);
 
         return source.Connect().Cast(conversionFactory);
     }

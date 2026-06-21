@@ -28,7 +28,7 @@ internal readonly struct Notification<T>
     /// <summary>Creates an OnError notification (terminal).</summary>
     public static Notification<T> CreateError(Exception error)
     {
-        error.ThrowArgumentNullExceptionIfNull(nameof(error));
+        ArgumentExceptionHelper.ThrowIfNull(error);
         return new(Optional<T>.None, error);
     }
 

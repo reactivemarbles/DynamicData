@@ -20,7 +20,7 @@ public static class AggregationEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.Select(changeSet => (IAggregateChangeSet<TObject>)new AggregateEnumerator<TObject, TKey>(changeSet));
     }
 
@@ -33,7 +33,7 @@ public static class AggregationEx
     public static IObservable<IAggregateChangeSet<TObject>> ForAggregation<TObject>(this IObservable<IChangeSet<TObject>> source)
         where TObject : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.Select(changeSet => (IAggregateChangeSet<TObject>)new AggregateEnumerator<TObject>(changeSet));
     }
 
@@ -47,8 +47,8 @@ public static class AggregationEx
     /// <returns>An observable which emits the value.</returns>
     public static IObservable<T> InvalidateWhen<T>(this IObservable<T> source, IObservable<Unit> invalidate)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        invalidate.ThrowArgumentNullExceptionIfNull(nameof(invalidate));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(invalidate);
 
         return invalidate.StartWith(Unit.Default).Select(_ => source).Switch().DistinctUntilChanged();
     }
@@ -63,8 +63,8 @@ public static class AggregationEx
     /// <returns>An observable which emits the value.</returns>
     public static IObservable<T> InvalidateWhen<T, TTrigger>(this IObservable<T> source, IObservable<TTrigger?> invalidate)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        invalidate.ThrowArgumentNullExceptionIfNull(nameof(invalidate));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(invalidate);
 
         return invalidate.StartWith(default(TTrigger)).Select(_ => source).Switch().DistinctUntilChanged();
     }
@@ -115,10 +115,10 @@ public static class AggregationEx
     /// <returns>An observable with the accumulated value.</returns>
     internal static IObservable<TResult> Accumulate<TObject, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        accessor.ThrowArgumentNullExceptionIfNull(nameof(accessor));
-        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
-        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(accessor);
+        ArgumentExceptionHelper.ThrowIfNull(addAction);
+        ArgumentExceptionHelper.ThrowIfNull(removeAction);
 
         return source.Scan(seed, (state, changes) =>
             changes.Aggregate(state, (current, aggregateItem) =>

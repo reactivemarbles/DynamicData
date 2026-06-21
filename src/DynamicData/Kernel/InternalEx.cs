@@ -26,8 +26,8 @@ public static class InternalEx
     public static IObservable<TSource> RetryWithBackOff<TSource, TException>(this IObservable<TSource> source, Func<TException, int, TimeSpan?> backOffStrategy)
         where TException : Exception
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        backOffStrategy.ThrowArgumentNullExceptionIfNull(nameof(backOffStrategy));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(backOffStrategy);
 
         IObservable<TSource> Retry(int failureCount) =>
             source.Catch<TSource, TException>(
@@ -39,7 +39,7 @@ public static class InternalEx
                         return Observable.Throw<TSource>(error);
                     }
 
-                    return Signal.After(delay.Value).SelectMany(Retry(failureCount + 1));
+                    return Observable.Timer(delay.Value).SelectMany(Retry(failureCount + 1));
                 });
 
         return Retry(0);
@@ -58,8 +58,8 @@ public static class InternalEx
     /// <returns>A disposable that will stop the schedule.</returns>
     public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, TimeSpan interval, Action action)
     {
-        scheduler.ThrowArgumentNullExceptionIfNull(nameof(scheduler));
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentExceptionHelper.ThrowIfNull(scheduler);
+        ArgumentExceptionHelper.ThrowIfNull(action);
 
         var disposable = new SerialDisposable();
 
@@ -90,10 +90,9 @@ public static class InternalEx
     /// <returns>A disposable that will stop the schedule.</returns>
     public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, Func<TimeSpan> interval, Action action)
     {
-        interval.ThrowArgumentNullExceptionIfNull(nameof(interval));
-
-        scheduler.ThrowArgumentNullExceptionIfNull(nameof(scheduler));
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentExceptionHelper.ThrowIfNull(interval);
+        ArgumentExceptionHelper.ThrowIfNull(scheduler);
+        ArgumentExceptionHelper.ThrowIfNull(action);
 
         var disposable = new SerialDisposable();
 

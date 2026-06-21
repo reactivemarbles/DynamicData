@@ -34,8 +34,8 @@ public static partial class ObservableListEx
     public static IObservable<IPageChangeSet<T>> Page<T>(this IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        requests.ThrowArgumentNullExceptionIfNull(nameof(requests));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(requests);
 
         return new Pager<T>(source, requests).Run();
     }

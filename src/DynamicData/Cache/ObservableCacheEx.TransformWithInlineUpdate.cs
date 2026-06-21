@@ -20,9 +20,9 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
         return source.TransformWithInlineUpdate(transformFactory, updateAction, false);
     }
@@ -34,9 +34,9 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
         return new TransformWithInlineUpdate<TDestination, TSource, TKey>(source, transformFactory, updateAction, transformOnRefresh: transformOnRefresh).Run();
     }
@@ -48,10 +48,10 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
+        ArgumentExceptionHelper.ThrowIfNull(errorHandler);
 
         return source.TransformWithInlineUpdate(transformFactory, updateAction, errorHandler, false);
     }
@@ -89,10 +89,10 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
+        ArgumentExceptionHelper.ThrowIfNull(errorHandler);
 
         return new TransformWithInlineUpdate<TDestination, TSource, TKey>(source, transformFactory, updateAction, errorHandler, transformOnRefresh).Run();
     }

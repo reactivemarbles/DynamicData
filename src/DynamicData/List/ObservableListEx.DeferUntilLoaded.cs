@@ -30,7 +30,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new DeferUntilLoaded<T>(source).Run();
     }
@@ -43,7 +43,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservableList<T> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.Connect().DeferUntilLoaded();
     }

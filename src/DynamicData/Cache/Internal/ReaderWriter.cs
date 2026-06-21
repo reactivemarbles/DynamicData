@@ -93,21 +93,21 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
 
     public ChangeSet<TObject, TKey> Write(IChangeSet<TObject, TKey> changes, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
 
         return DoUpdate(updater => updater.Clone(changes), previewHandler, collectChanges);
     }
 
     public ChangeSet<TObject, TKey> Write(Action<ICacheUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
     {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
         return DoUpdate(updateAction, previewHandler, collectChanges);
     }
 
     public ChangeSet<TObject, TKey> Write(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
     {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
         return DoUpdate(updateAction, previewHandler, collectChanges);
     }

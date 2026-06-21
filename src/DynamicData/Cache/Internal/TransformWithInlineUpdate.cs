@@ -13,7 +13,7 @@ internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>(IOb
     where TSource : notnull
     where TKey : notnull
 {
-    public IObservable<IChangeSet<TDestination, TKey>> Run() => Signal.Lazy(RunImpl);
+    public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Defer(RunImpl);
 
     private IObservable<IChangeSet<TDestination, TKey>> RunImpl() => source.Scan(
                 (ChangeAwareCache<TDestination, TKey>?)null,

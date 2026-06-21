@@ -29,9 +29,9 @@ public static class ObservableCacheAlias
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        forceTransform.ThrowArgumentNullExceptionIfNull(nameof(forceTransform));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(forceTransform);
 
         return source.Transform(transformFactory, forceTransform);
     }
@@ -96,8 +96,8 @@ public static class ObservableCacheAlias
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
 
         return source.Transform(transformFactory, forceTransform);
     }
@@ -143,10 +143,10 @@ public static class ObservableCacheAlias
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
-        forceTransform.ThrowArgumentNullExceptionIfNull(nameof(forceTransform));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(errorHandler);
+        ArgumentExceptionHelper.ThrowIfNull(forceTransform);
 
         return source.TransformSafe(transformFactory, errorHandler, forceTransform);
     }
@@ -175,9 +175,9 @@ public static class ObservableCacheAlias
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(errorHandler);
 
         return source.TransformSafe(transformFactory, errorHandler, forceTransform);
     }
@@ -206,9 +206,9 @@ public static class ObservableCacheAlias
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(errorHandler);
 
         return source.TransformSafe(transformFactory, errorHandler, forceTransform);
     }
@@ -249,8 +249,8 @@ public static class ObservableCacheAlias
         where TObject : class
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pivotOn.ThrowArgumentNullExceptionIfNull(nameof(pivotOn));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(pivotOn);
 
         return source.TransformToTree(pivotOn);
     }
@@ -267,7 +267,7 @@ public static class ObservableCacheAlias
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.Filter(filter);
     }
@@ -284,8 +284,8 @@ public static class ObservableCacheAlias
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        predicateChanged.ThrowArgumentNullExceptionIfNull(nameof(predicateChanged));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(predicateChanged);
 
         return source.Filter(predicateChanged);
     }
@@ -303,9 +303,9 @@ public static class ObservableCacheAlias
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        predicateChanged.ThrowArgumentNullExceptionIfNull(nameof(predicateChanged));
-        reapplyFilter.ThrowArgumentNullExceptionIfNull(nameof(reapplyFilter));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(predicateChanged);
+        ArgumentExceptionHelper.ThrowIfNull(reapplyFilter);
 
         return source.Filter(predicateChanged, reapplyFilter);
     }

@@ -26,7 +26,7 @@ public class SortedChangeSetAggregator<TObject, TKey> : IDisposable
     /// <param name="source">The source.</param>
     public SortedChangeSetAggregator(IObservable<ISortedChangeSet<TObject, TKey>> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         var published = source.Publish();
 

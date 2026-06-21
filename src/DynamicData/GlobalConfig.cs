@@ -6,5 +6,5 @@ namespace DynamicData;
 
 internal static class GlobalConfig
 {
-    public static IScheduler DefaultScheduler => TaskPoolSequencer.Default;
+    public static IScheduler DefaultScheduler => TaskPoolScheduler.Default;
 }

@@ -11,7 +11,7 @@ internal sealed class FilterStatic<T>(IObservable<IChangeSet<T>> source, Func<T,
 
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public IObservable<IChangeSet<T>> Run() => Signal.Lazy(() => _source.Scan(
+    public IObservable<IChangeSet<T>> Run() => Observable.Defer(() => _source.Scan(
                                                             new ChangeAwareList<T>(),
                                                             (state, changes) =>
                                                             {

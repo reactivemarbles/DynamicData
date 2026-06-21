@@ -41,8 +41,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        refreshAction.ThrowArgumentNullExceptionIfNull(nameof(refreshAction));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(refreshAction);
 
         return source.OnChangeAction(ChangeReason.Refresh, refreshAction);
     }

@@ -36,7 +36,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(item);
 
         source.Edit(updater => updater.AddOrUpdate(item));
     }
@@ -50,7 +51,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(item);
+        ArgumentExceptionHelper.ThrowIfNull(equalityComparer);
 
         source.Edit(updater => updater.AddOrUpdate(item, equalityComparer));
     }
@@ -63,7 +66,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(items);
 
         source.Edit(updater => updater.AddOrUpdate(items));
     }
@@ -77,7 +81,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(items);
+        ArgumentExceptionHelper.ThrowIfNull(equalityComparer);
 
         source.Edit(updater => updater.AddOrUpdate(items, equalityComparer));
     }
@@ -91,8 +97,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        item.ThrowArgumentNullExceptionIfNull(nameof(item));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(item);
+        ArgumentExceptionHelper.ThrowIfNull(key);
 
         source.Edit(updater => updater.AddOrUpdate(item, key));
     }

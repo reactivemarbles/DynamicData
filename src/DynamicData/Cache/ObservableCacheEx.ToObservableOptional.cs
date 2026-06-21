@@ -44,7 +44,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new ToObservableOptional<TObject, TKey>(source, key, equalityComparer).Run();
     }
@@ -69,12 +69,12 @@ public static partial class ObservableCacheEx
     {
         if (initialOptionalWhenMissing)
         {
-            return Signal.Lazy(() =>
+            return Observable.Defer(() =>
             {
                 var seenValue = false;
                 return source.ToObservableOptional(key, equalityComparer)
                     .Do(_ => seenValue = true)
-                    .Merge(Signal.Lazy(() => seenValue
+                    .Merge(Observable.Defer(() => seenValue
                         ? Observable.Empty<Optional<TObject>>()
                         : Observable.Return(Optional<TObject>.None)));
             });

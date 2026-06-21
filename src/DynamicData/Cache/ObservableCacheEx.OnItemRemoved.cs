@@ -57,8 +57,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(removeAction);
 
         if (invokeOnUnsubscribe)
         {

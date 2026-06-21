@@ -26,10 +26,10 @@ public static partial class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        left.ThrowArgumentNullExceptionIfNull(nameof(left));
-        right.ThrowArgumentNullExceptionIfNull(nameof(right));
-        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
-        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
+        ArgumentExceptionHelper.ThrowIfNull(left);
+        ArgumentExceptionHelper.ThrowIfNull(right);
+        ArgumentExceptionHelper.ThrowIfNull(rightKeySelector);
+        ArgumentExceptionHelper.ThrowIfNull(resultSelector);
 
         return left.RightJoinMany(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
     }
@@ -85,10 +85,10 @@ public static partial class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        left.ThrowArgumentNullExceptionIfNull(nameof(left));
-        right.ThrowArgumentNullExceptionIfNull(nameof(right));
-        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
-        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
+        ArgumentExceptionHelper.ThrowIfNull(left);
+        ArgumentExceptionHelper.ThrowIfNull(right);
+        ArgumentExceptionHelper.ThrowIfNull(rightKeySelector);
+        ArgumentExceptionHelper.ThrowIfNull(resultSelector);
 
         return new RightJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
     }

@@ -12,7 +12,7 @@ internal sealed class DeferUntilLoaded<TObject, TKey>
 
     public DeferUntilLoaded(IObservableCache<TObject, TKey> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         _result = source.CountChanged.Where(count => count != 0).Take(1).Select(_ => new ChangeSet<TObject, TKey>()).Concat(source.Connect()).NotEmpty();
     }

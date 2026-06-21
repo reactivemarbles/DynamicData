@@ -34,8 +34,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return Cache.Internal.ToObservableChangeSet<TObject, TKey>.Create(
             source: source,
@@ -68,8 +68,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return Cache.Internal.ToObservableChangeSet<TObject, TKey>.Create(
             source: source,

@@ -65,8 +65,8 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        groupObservableSelector.ThrowArgumentNullExceptionIfNull(nameof(groupObservableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(groupObservableSelector);
 
         return new GroupOnObservable<TObject, TKey, TGroupKey>(source, groupObservableSelector).Run();
     }
@@ -85,7 +85,7 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        groupObservableSelector.ThrowArgumentNullExceptionIfNull(nameof(groupObservableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(groupObservableSelector);
 
         return source.GroupOnObservable(AdaptSelector<TObject, TKey, IObservable<TGroupKey>>(groupObservableSelector));
     }

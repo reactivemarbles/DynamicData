@@ -139,7 +139,7 @@ public static class StdDevEx
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, int> valueSelector, int fallbackValue = 0)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.StdDevCalc(t => (long)valueSelector(t), fallbackValue, (current, item) => new StdDev<long>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<long>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Math.Sqrt(values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) * (1.0d / (values.Count - 1)));
     }
 
@@ -153,7 +153,7 @@ public static class StdDevEx
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, long> valueSelector, long fallbackValue = 0)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.StdDevCalc(valueSelector, fallbackValue, (current, item) => new StdDev<long>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<long>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Math.Sqrt(values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) * (1.0d / (values.Count - 1)));
     }
 
@@ -167,7 +167,7 @@ public static class StdDevEx
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<decimal> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, decimal> valueSelector, decimal fallbackValue = 0M)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.StdDevCalc(valueSelector, fallbackValue, (current, item) => new StdDev<decimal>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<decimal>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Sqrt(values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) * (1.0M / (values.Count - 1)));
     }
 
@@ -181,7 +181,7 @@ public static class StdDevEx
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, double> valueSelector, double fallbackValue = 0)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.StdDevCalc(valueSelector, fallbackValue, (current, item) => new StdDev<double>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<double>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Math.Sqrt(values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) * (1.0d / (values.Count - 1)));
     }
 
@@ -195,17 +195,17 @@ public static class StdDevEx
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, float> valueSelector, float fallbackValue = 0)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.StdDevCalc(valueSelector, fallbackValue, (current, item) => new StdDev<float>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<float>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Math.Sqrt(values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) * (1.0d / (values.Count - 1)));
     }
 
     private static IObservable<TResult> StdDevCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, Func<TObject, TValue> valueSelector, TResult fallbackValue, Func<StdDev<TValue>, TValue, StdDev<TValue>> addAction, Func<StdDev<TValue>, TValue, StdDev<TValue>> removeAction, Func<StdDev<TValue>, TResult> resultAction)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
-        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
-        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
-        resultAction.ThrowArgumentNullExceptionIfNull(nameof(resultAction));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(valueSelector);
+        ArgumentExceptionHelper.ThrowIfNull(addAction);
+        ArgumentExceptionHelper.ThrowIfNull(removeAction);
+        ArgumentExceptionHelper.ThrowIfNull(resultAction);
 
         return source.Scan(default(StdDev<TValue>), (state, changes) =>
             changes.Aggregate(state, (current, aggregateItem) =>

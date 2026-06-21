@@ -40,9 +40,8 @@ public static partial class ObservableListEx
         where TObject : notnull
         where TValue : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(valueSelector);
 
         return new Distinct<TObject, TValue>(source, valueSelector).Run();
     }

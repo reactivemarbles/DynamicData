@@ -37,7 +37,7 @@ public static class CountEx
     /// <returns>An observable which emits the count.</returns>
     public static IObservable<int> Count<TObject>(this IObservable<IAggregateChangeSet<TObject>> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
         return source.Accumulate(0, _ => 1, (current, increment) => current + increment, (current, increment) => current - increment);
     }
 

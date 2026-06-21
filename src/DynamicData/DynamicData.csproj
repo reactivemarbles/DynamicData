@@ -62,4 +62,13 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
     <Compile Remove="Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
   </ItemGroup>
 
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <Using Include="DynamicData.ArgumentExceptionHelper" Alias="ArgumentExceptionHelper" />
+    <Using Include="DynamicData.ArgumentOutOfRangeExceptionHelper" Alias="ArgumentOutOfRangeExceptionHelper" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!$(TargetFramework.StartsWith('net4'))">
+    <Using Include="System.ArgumentNullException" Alias="ArgumentExceptionHelper" />
+    <Using Include="System.ArgumentOutOfRangeException" Alias="ArgumentOutOfRangeExceptionHelper" />
+  </ItemGroup>
 </Project>
