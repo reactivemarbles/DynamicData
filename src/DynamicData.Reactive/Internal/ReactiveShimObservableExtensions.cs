@@ -5,7 +5,7 @@
 namespace DynamicData.Reactive.Internal;
 
 /// <summary>
-/// Temporary shim to provide SubscribeSafe extension methods for IObservable<T> when using the REACTIVE_SHIM compilation symbol. This is a workaround for the absence of SubscribeSafe in the Reactive Extensions (Primitives) library as of V5.5.0.
+/// Temporary shim to provide SubscribeSafe extension methods for IObservable{T} when using the REACTIVE_SHIM compilation symbol. This is a workaround for the absence of SubscribeSafe in the Reactive Extensions (Primitives) library as of V5.5.0.
 /// </summary>
 internal static class ReactiveShimObservableExtensions
 {
