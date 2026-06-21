@@ -7,17 +7,12 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
       Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more.
     </Description>
     <TargetFrameworks>net462;net472;net48;net481;net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
-    <IsAotCompatible>true</IsAotCompatible>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
-  <!--<ItemGroup>
-    <PackageReference Include="ReactiveUI.Primitives" Version="5.3.0" ExcludeAssets="analyzers" />
-    <PackageReference Include="ReactiveUI.Primitives.Extensions" Version="5.3.0" />
-  </ItemGroup>-->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\reactiveui\Primitives\src\ReactiveUI.Primitives.Extensions\ReactiveUI.Primitives.Extensions.csproj" />
-    <ProjectReference Include="..\..\..\..\reactiveui\Primitives\src\ReactiveUI.Primitives\ReactiveUI.Primitives.csproj" />
+    <PackageReference Include="ReactiveUI.Primitives" Version="5.5.0" ExcludeAssets="analyzers" />
+    <PackageReference Include="ReactiveUI.Primitives.Extensions" Version="5.5.0" />
   </ItemGroup>
 
   <ItemGroup>

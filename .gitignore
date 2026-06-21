@@ -369,3 +369,5 @@ src/*.Tests/API/ApiApprovalTests.*.received.txt
 
 # JetBrains
 .idea/
+
+.dotnet-home/

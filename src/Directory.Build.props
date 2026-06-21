@@ -42,6 +42,13 @@
     <CodeAnalysisRuleSet></CodeAnalysisRuleSet>
   </PropertyGroup>
 
+  <!-- AOT/trim analyzers on net8.0+ (netfx doesn't support them). -->
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <IsAotCompatible>true</IsAotCompatible>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+  </PropertyGroup>
+
   <!-- Alias Lock to the dedicated System.Threading.Lock on .NET 9+ (faster EnterScope fast path),
      and to a plain object elsewhere (the lock statement falls back to Monitor). -->
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
