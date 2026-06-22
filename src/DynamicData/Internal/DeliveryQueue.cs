@@ -80,6 +80,11 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     public bool IsTerminated => _isTerminated;
 
     /// <summary>
+    /// Gets whether the current thread is delivering queued notifications.
+    /// </summary>
+    internal bool IsDeliveringOnCurrentThread => Volatile.Read(ref _drainThreadId) == Environment.CurrentManagedThreadId;
+
+    /// <summary>
     /// Terminates the queue (rejecting further enqueues) and blocks until
     /// any in-flight delivery has completed. After this returns, no more
     /// observer callbacks will fire. Safe to call from within a delivery

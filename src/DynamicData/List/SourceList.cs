@@ -57,9 +57,24 @@ public sealed class SourceList<T> : ISourceList<T>
     private readonly ReaderWriter<T> _readerWriter = new();
 
     /// <summary>
+    /// The _notifications field.
+    /// </summary>
+    private readonly DeliveryQueue<ListUpdate> _notifications;
+
+    /// <summary>
     /// The _editLevel field.
     /// </summary>
     private int _editLevel;
+
+    /// <summary>
+    /// The _currentVersion field.
+    /// </summary>
+    private long _currentVersion;
+
+    /// <summary>
+    /// The _currentDeliveryVersion field.
+    /// </summary>
+    private long _currentDeliveryVersion;
 
     /// <summary>
     /// The _isDisposed field.
@@ -72,17 +87,15 @@ public sealed class SourceList<T> : ISourceList<T>
     /// <param name="source">The source.</param>
     public SourceList(IObservable<IChangeSet<T>>? source = null)
     {
+        _notifications = new DeliveryQueue<ListUpdate>(_locker, new ListUpdateObserver(this));
+
         var loader = source is null ? Disposable.Empty : LoadFromSource(source);
 
         _cleanUp = Disposable.Create(
             () =>
             {
                 loader.Dispose();
-                OnCompleted();
-                if (_countChanged.IsValueCreated)
-                {
-                    _countChanged.Value.OnCompleted();
-                }
+                NotifyCompleted();
             });
     }
 
@@ -94,18 +107,22 @@ public sealed class SourceList<T> : ISourceList<T>
         Observable.Create<int>(
             observer =>
             {
-                lock (_locker)
-                {
-                    if (_isDisposed)
-                    {
-                        observer.OnNext(_readerWriter.Count);
-                        observer.OnCompleted();
-                        return Disposable.Empty;
-                    }
+                using var readLock = _notifications.AcquireReadLock();
 
-                    var source = _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
-                    return source.SubscribeSafe(observer);
+                if (_isDisposed)
+                {
+                    observer.OnNext(_readerWriter.Count);
+                    observer.OnCompleted();
+                    return Disposable.Empty;
                 }
+
+                var snapshotVersion = _currentVersion;
+                var countChanged = readLock.HasPending
+                    ? _countChanged.Value.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
+                    : _countChanged.Value;
+
+                var source = countChanged.StartWith(_readerWriter.Count).DistinctUntilChanged();
+                return source.SubscribeSafe(observer);
             });
 
     /// <inheritdoc />
@@ -119,27 +136,31 @@ public sealed class SourceList<T> : ISourceList<T>
         var observable = Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                lock (_locker)
+                using var readLock = _notifications.AcquireReadLock();
+
+                if (_readerWriter.Items.Length > 0)
                 {
-                    if (_readerWriter.Items.Length > 0)
-                    {
-                        observer.OnNext(
-                            new ChangeSet<T>
-                            {
-                                new(ListChangeReason.AddRange, _readerWriter.Items, 0)
-                            });
-                    }
-
-                    if (_isDisposed)
-                    {
-                        observer.OnCompleted();
-                        return Disposable.Empty;
-                    }
-
-                    var source = _changes.Finally(observer.OnCompleted);
-
-                    return source.SubscribeSafe(observer);
+                    observer.OnNext(
+                        new ChangeSet<T>
+                        {
+                            new(ListChangeReason.AddRange, _readerWriter.Items, 0)
+                        });
                 }
+
+                if (_isDisposed)
+                {
+                    observer.OnCompleted();
+                    return Disposable.Empty;
+                }
+
+                var snapshotVersion = _currentVersion;
+                var changes = readLock.HasPending
+                    ? _changes.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
+                    : (IObservable<IChangeSet<T>>)_changes;
+
+                var source = changes.Finally(observer.OnCompleted);
+
+                return source.SubscribeSafe(observer);
             });
 
         if (predicate is not null)
@@ -153,7 +174,7 @@ public sealed class SourceList<T> : ISourceList<T>
     /// <inheritdoc />
     public void Dispose()
     {
-        lock (_locker)
+        using (var notifications = _notifications.AcquireLock())
         {
             if (_isDisposed)
             {
@@ -164,6 +185,19 @@ public sealed class SourceList<T> : ISourceList<T>
         }
 
         _cleanUp.Dispose();
+
+        if (_notifications.IsDeliveringOnCurrentThread)
+        {
+            return;
+        }
+
+        SpinWait spinner = default;
+        while (!_notifications.IsTerminated)
+        {
+            spinner.SpinOnce();
+        }
+
+        _notifications.Dispose();
         _changesPreview.Dispose();
         _changes.Dispose();
         if (_countChanged.IsValueCreated)
@@ -178,32 +212,31 @@ public sealed class SourceList<T> : ISourceList<T>
     {
         ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
-        lock (_locker)
+        using var notifications = _notifications.AcquireLock();
+
+        if (_isDisposed)
         {
-            if (_isDisposed)
-            {
-                throw new ObjectDisposedException(nameof(SourceList<T>));
-            }
+            throw new ObjectDisposedException(nameof(SourceList<T>));
+        }
 
-            IChangeSet<T>? changes = null;
+        IChangeSet<T>? changes = null;
 
-            _editLevel++;
+        _editLevel++;
 
-            if (_editLevel == 1)
-            {
-                changes = _changesPreview.HasObservers ? _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview) : _readerWriter.Write(updateAction);
-            }
-            else
-            {
-                _readerWriter.WriteNested(updateAction);
-            }
+        if (_editLevel == 1)
+        {
+            changes = _changesPreview.HasObservers ? _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview) : _readerWriter.Write(updateAction);
+        }
+        else
+        {
+            _readerWriter.WriteNested(updateAction);
+        }
 
-            _editLevel--;
+        _editLevel--;
 
-            if (changes is not null && _editLevel == 0)
-            {
-                InvokeNext(changes);
-            }
+        if (changes is not null && changes.Count != 0 && _editLevel == 0)
+        {
+            notifications.EnqueueNext(new ListUpdate(changes, _readerWriter.Count, ++_currentVersion));
         }
     }
 
@@ -215,16 +248,15 @@ public sealed class SourceList<T> : ISourceList<T>
         var observable = Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                lock (_locker)
-                {
-                    if (_isDisposed)
-                    {
-                        observer.OnCompleted();
-                        return Disposable.Empty;
-                    }
+                using var readLock = _notifications.AcquireReadLock();
 
-                    return _changesPreview.SubscribeSafe(observer);
+                if (_isDisposed)
+                {
+                    observer.OnCompleted();
+                    return Disposable.Empty;
                 }
+
+                return _changesPreview.SubscribeSafe(observer);
             });
 
         if (predicate is not null)
@@ -236,34 +268,12 @@ public sealed class SourceList<T> : ISourceList<T>
     }
 
     /// <summary>
-    /// Executes the InvokeNext operation.
-    /// </summary>
-    /// <param name="changes">The changes value.</param>
-    private void InvokeNext(IChangeSet<T> changes)
-    {
-        if (changes.Count == 0)
-        {
-            return;
-        }
-
-        lock (_locker)
-        {
-            _changes.OnNext(changes);
-
-            if (_countChanged.IsValueCreated)
-            {
-                _countChanged.Value.OnNext(_readerWriter.Count);
-            }
-        }
-    }
-
-    /// <summary>
     /// Executes the InvokeNextPreview operation.
     /// </summary>
     /// <param name="changes">The changes value.</param>
     private void InvokeNextPreview(IChangeSet<T> changes)
     {
-        if (changes.Count == 0)
+        if (changes.Count == 0 || _notifications.IsTerminated)
         {
             return;
         }
@@ -279,30 +289,104 @@ public sealed class SourceList<T> : ISourceList<T>
     /// </summary>
     /// <param name="source">The source value.</param>
     /// <returns>The result of the operation.</returns>
-    private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source) => source.Synchronize(_locker).Finally(OnCompleted).Select(_readerWriter.Write).Subscribe(InvokeNext, OnError, OnCompleted);
+    private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source) =>
+        source.Subscribe(
+            changes =>
+            {
+                using var notifications = _notifications.AcquireLock();
+
+                if (_isDisposed)
+                {
+                    return;
+                }
+
+                var capturedChanges = _readerWriter.Write(changes);
+                if (capturedChanges.Count != 0)
+                {
+                    notifications.EnqueueNext(new ListUpdate(capturedChanges, _readerWriter.Count, ++_currentVersion));
+                }
+            },
+            NotifyError,
+            NotifyCompleted);
 
     /// <summary>
-    /// Executes the OnCompleted operation.
+    /// Executes the NotifyCompleted operation.
     /// </summary>
-    private void OnCompleted()
+    private void NotifyCompleted()
     {
-        lock (_locker)
-        {
-            _changesPreview.OnCompleted();
-            _changes.OnCompleted();
-        }
+        using var notifications = _notifications.AcquireLock();
+        notifications.EnqueueCompleted();
     }
 
     /// <summary>
-    /// Executes the OnError operation.
+    /// Executes the NotifyError operation.
     /// </summary>
     /// <param name="exception">The exception value.</param>
-    private void OnError(Exception exception)
+    private void NotifyError(Exception exception)
     {
-        lock (_locker)
+        using var notifications = _notifications.AcquireLock();
+        notifications.EnqueueError(exception);
+    }
+
+    /// <summary>
+    /// The notification payload for list delivery. Null Changes = count-only notification.
+    /// </summary>
+    /// <param name="Changes">The Changes value.</param>
+    /// <param name="Count">The Count value.</param>
+    /// <param name="Version">The Version value.</param>
+    private readonly record struct ListUpdate(IChangeSet<T>? Changes, int Count, long Version = 0);
+
+    /// <summary>
+    /// Observer that dispatches <see cref="ListUpdate"/> items to the list's downstream subjects.
+    /// </summary>
+    /// <param name="sourceList">The source list value.</param>
+    private sealed class ListUpdateObserver(SourceList<T> sourceList) : IObserver<ListUpdate>
+    {
+        /// <summary>
+        /// Executes the OnNext operation.
+        /// </summary>
+        /// <param name="value">The value value.</param>
+        public void OnNext(ListUpdate value)
         {
-            _changesPreview.OnError(exception);
-            _changes.OnError(exception);
+            if (value.Changes is not null)
+            {
+                Volatile.Write(ref sourceList._currentDeliveryVersion, value.Version);
+                sourceList._changes.OnNext(value.Changes);
+            }
+
+            if (sourceList._countChanged.IsValueCreated)
+            {
+                sourceList._countChanged.Value.OnNext(value.Count);
+            }
+        }
+
+        /// <summary>
+        /// Executes the OnError operation.
+        /// </summary>
+        /// <param name="error">The error value.</param>
+        public void OnError(Exception error)
+        {
+            sourceList._changesPreview.OnError(error);
+            sourceList._changes.OnError(error);
+
+            if (sourceList._countChanged.IsValueCreated)
+            {
+                sourceList._countChanged.Value.OnError(error);
+            }
+        }
+
+        /// <summary>
+        /// Executes the OnCompleted operation.
+        /// </summary>
+        public void OnCompleted()
+        {
+            sourceList._changesPreview.OnCompleted();
+            sourceList._changes.OnCompleted();
+
+            if (sourceList._countChanged.IsValueCreated)
+            {
+                sourceList._countChanged.Value.OnCompleted();
+            }
         }
     }
 }

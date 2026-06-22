@@ -59,9 +59,14 @@ private abstract class SubscriptionBase
         private readonly List<DateTimeOffset?> _expirationDueTimes;
 
         /// <summary>
-        /// The _expiringIndexesBuffer field.
+        /// The _items field.
         /// </summary>
-        private readonly List<int> _expiringIndexesBuffer;
+        private readonly List<T> _items;
+
+        /// <summary>
+        /// The _expiringItemsBuffer field.
+        /// </summary>
+        private readonly List<ExpiringItem> _expiringItemsBuffer;
 
         /// <summary>
         /// The _observer field.
@@ -125,7 +130,8 @@ private abstract class SubscriptionBase
             _onEditingSource = OnEditingSource;
 
             _expirationDueTimes = new();
-            _expiringIndexesBuffer = new();
+            _items = new();
+            _expiringItemsBuffer = new();
 
             _sourceSubscription = PrimitivesLinqExtensions.SubscribeSafe(
                 source
@@ -237,7 +243,7 @@ private abstract class SubscriptionBase
                 {
                     if ((_expirationDueTimes[i] is { } dueTime) && (dueTime <= now))
                     {
-                        _expiringIndexesBuffer.Add(i);
+                        _expiringItemsBuffer.Add(new ExpiringItem(i, _items[i]));
 
                         // This shouldn't be necessary, but it guarantees we don't accidentally expire an item more than once,
                         // in the event of a race condition or something we haven't predicted.
@@ -246,22 +252,30 @@ private abstract class SubscriptionBase
                 }
 
                 // I'm pretty sure it shouldn't be possible to end up with no removals here, but it costs basically nothing to check.
-                if (_expiringIndexesBuffer.Count is not 0)
+                if (_expiringItemsBuffer.Count is not 0)
                 {
                     // Processing removals in reverse-index order eliminates the need for us to adjust index of each .RemoveAt() call, as we go.
-                    _expiringIndexesBuffer.Sort(static (x, y) => y.CompareTo(x));
+                    _expiringItemsBuffer.Sort(static (x, y) => y.Index.CompareTo(x.Index));
 
-                    var removedItems = new T[_expiringIndexesBuffer.Count];
-                    for (var i = 0; i < _expiringIndexesBuffer.Count; ++i)
+                    var removedItems = new List<T>(_expiringItemsBuffer.Count);
+                    for (var i = 0; i < _expiringItemsBuffer.Count; ++i)
                     {
-                        var removedIndex = _expiringIndexesBuffer[i];
-                        removedItems[i] = updater[removedIndex];
+                        var expiringItem = _expiringItemsBuffer[i];
+                        if (!TryGetCurrentIndex(updater, expiringItem, out var removedIndex))
+                        {
+                            continue;
+                        }
+
+                        removedItems.Add(updater[removedIndex]);
                         updater.RemoveAt(removedIndex);
                     }
 
-                    _observer.OnNext(removedItems);
+                    if (removedItems.Count != 0)
+                    {
+                        _observer.OnNext(removedItems);
+                    }
 
-                    _expiringIndexesBuffer.Clear();
+                    _expiringItemsBuffer.Clear();
                 }
 
                 OnExpirationsManaged(thisScheduledManagement.DueTime);
@@ -351,6 +365,10 @@ private abstract class SubscriptionBase
                             {
                                 var dueTime = now + _timeSelector.Invoke(change.Item.Current);
 
+                                _items.Insert(
+                                    index: change.Item.CurrentIndex,
+                                    item: change.Item.Current);
+
                                 _expirationDueTimes.Insert(
                                     index: change.Item.CurrentIndex,
                                     item: dueTime);
@@ -367,6 +385,10 @@ private abstract class SubscriptionBase
                                 foreach (var item in change.Range)
                                 {
                                     var dueTime = now + _timeSelector.Invoke(item);
+
+                                    _items.Insert(
+                                        index: itemIndex,
+                                        item: item);
 
                                     _expirationDueTimes.Insert(
                                         index: itemIndex,
@@ -390,11 +412,18 @@ private abstract class SubscriptionBase
                             }
 
                             _expirationDueTimes.Clear();
+                            _items.Clear();
                             break;
 
                         case ListChangeReason.Moved:
                             {
+                                var item = _items[change.Item.PreviousIndex];
                                 var expirationDueTime = _expirationDueTimes[change.Item.PreviousIndex];
+
+                                _items.RemoveAt(change.Item.PreviousIndex);
+                                _items.Insert(
+                                    index: change.Item.CurrentIndex,
+                                    item: item);
 
                                 _expirationDueTimes.RemoveAt(change.Item.PreviousIndex);
                                 _expirationDueTimes.Insert(
@@ -411,6 +440,7 @@ private abstract class SubscriptionBase
                                 }
 
                                 _expirationDueTimes.RemoveAt(change.Item.CurrentIndex);
+                                _items.RemoveAt(change.Item.CurrentIndex);
                             }
                             break;
 
@@ -427,6 +457,7 @@ private abstract class SubscriptionBase
                                 }
 
                                 _expirationDueTimes.RemoveRange(change.Range.Index, change.Range.Count);
+                                _items.RemoveRange(change.Range.Index, change.Range.Count);
                             }
                             break;
 
@@ -438,6 +469,7 @@ private abstract class SubscriptionBase
                                 // Ignoring the possibility that the item's index has changed as well, because ISourceList<T> does not allow for this.
 
                                 _expirationDueTimes[change.Item.CurrentIndex] = newDueTime;
+                                _items[change.Item.CurrentIndex] = change.Item.Current;
 
                                 haveExpirationDueTimesChanged |= newDueTime != oldDueTime;
                             }
@@ -466,6 +498,43 @@ private abstract class SubscriptionBase
             _nextScheduledManagement?.Cancellation.Dispose();
             _nextScheduledManagement = null;
         }
+
+        /// <summary>
+        /// Attempts to find the current source index for an item scheduled for expiration.
+        /// </summary>
+        /// <param name="updater">The updater value.</param>
+        /// <param name="expiringItem">The expiringItem value.</param>
+        /// <param name="index">The index value.</param>
+        /// <returns><see langword="true"/> when the item is still present in the source list.</returns>
+        private static bool TryGetCurrentIndex(IExtendedList<T> updater, ExpiringItem expiringItem, out int index)
+        {
+            if (expiringItem.Index >= 0 &&
+                expiringItem.Index < updater.Count &&
+                EqualityComparer<T>.Default.Equals(updater[expiringItem.Index], expiringItem.Item))
+            {
+                index = expiringItem.Index;
+                return true;
+            }
+
+            for (var i = 0; i < updater.Count; ++i)
+            {
+                if (EqualityComparer<T>.Default.Equals(updater[i], expiringItem.Item))
+                {
+                    index = i;
+                    return true;
+                }
+            }
+
+            index = -1;
+            return false;
+        }
+
+/// <summary>
+/// The source item and index captured when an expiration becomes due.
+/// </summary>
+/// <param name="Index">The Index value.</param>
+/// <param name="Item">The Item value.</param>
+private readonly record struct ExpiringItem(int Index, T Item);
 
 /// <summary>
 /// Represents the ScheduledManagement record.
