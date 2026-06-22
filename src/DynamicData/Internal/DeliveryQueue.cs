@@ -29,9 +29,19 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     private readonly Lock _gate;
 
     /// <summary>
+    /// The _queueGate field.
+    /// </summary>
+    private readonly Lock _queueGate = new();
+
+    /// <summary>
     /// The _observer field.
     /// </summary>
     private readonly IObserver<T> _observer;
+
+    /// <summary>
+    /// The _activeAccessCount field.
+    /// </summary>
+    private int _activeAccessCount;
 
     /// <summary>
     /// The _drainThreadId field.
@@ -77,16 +87,26 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     /// </summary>
     private void EnsureDeliveryComplete()
     {
-        using (AcquireReadLock())
+        var isDrainThread = false;
+
+        EnterQueueLock();
+        try
         {
             _isTerminated = true;
             _queue.Clear();
+            isDrainThread = _drainThreadId == Environment.CurrentManagedThreadId;
+        }
+        finally
+        {
+            ExitQueueLock();
+        }
 
-            // If we're being called from within the drain loop (e.g., downstream
-            // disposed during OnNext), the current thread IS the deliverer.
-            // The drain loop will see _isTerminated and exit after we return.
-            if (_drainThreadId == Environment.CurrentManagedThreadId)
-                return;
+        // If we're being called from within the drain loop (e.g., downstream
+        // disposed during OnNext), the current thread IS the deliverer.
+        // The drain loop will see _isTerminated and exit after we return.
+        if (isDrainThread)
+        {
+            return;
         }
 
         SpinWait spinner = default;
@@ -155,6 +175,60 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     /// </summary>
     private void ExitLock() => Monitor.Exit(_gate);
 #endif
+#if NET9_0_OR_GREATER
+
+    /// <summary>
+    /// Executes the EnterQueueLock operation.
+    /// </summary>
+    private void EnterQueueLock() => _queueGate.Enter();
+
+    /// <summary>
+    /// Executes the ExitQueueLock operation.
+    /// </summary>
+    private void ExitQueueLock() => _queueGate.Exit();
+#else
+
+    /// <summary>
+    /// Executes the EnterQueueLock operation.
+    /// </summary>
+    private void EnterQueueLock() => Monitor.Enter(_queueGate);
+
+    /// <summary>
+    /// Executes the ExitQueueLock operation.
+    /// </summary>
+    private void ExitQueueLock() => Monitor.Exit(_queueGate);
+#endif
+
+    /// <summary>
+    /// Enters caller-owned access and prevents queue draining until the access is released.
+    /// </summary>
+    private void EnterAccess()
+    {
+        Interlocked.Increment(ref _activeAccessCount);
+
+        try
+        {
+            EnterLock();
+        }
+        catch
+        {
+            Interlocked.Decrement(ref _activeAccessCount);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Releases caller-owned access and starts delivery if this was the final active access.
+    /// </summary>
+    private void ExitAccessAndDeliver()
+    {
+        ExitLock();
+
+        if (Interlocked.Decrement(ref _activeAccessCount) == 0)
+        {
+            DeliverIfNeeded();
+        }
+    }
 
     /// <summary>
     /// Executes the EnqueueNotification operation.
@@ -162,21 +236,28 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     /// <param name="item">The item value.</param>
     private void EnqueueNotification(Notification<T> item)
     {
-        if (_isTerminated)
+        EnterQueueLock();
+        try
         {
-            return;
-        }
+            if (_isTerminated)
+            {
+                return;
+            }
 
-        _queue.Enqueue(item);
+            _queue.Enqueue(item);
+        }
+        finally
+        {
+            ExitQueueLock();
+        }
     }
 
     /// <summary>
-    /// Executes the ExitLockAndDeliver operation.
+    /// Executes the DeliverIfNeeded operation.
     /// </summary>
-    private void ExitLockAndDeliver()
+    private void DeliverIfNeeded()
     {
         var shouldDeliver = TryStartDelivery();
-        ExitLock();
 
         if (shouldDeliver)
         {
@@ -185,13 +266,21 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
 
         bool TryStartDelivery()
         {
-            if (_drainThreadId != -1 || _queue.Count == 0)
+            EnterQueueLock();
+            try
             {
-                return false;
-            }
+                if (_drainThreadId != -1 || _queue.Count == 0 || _isTerminated || Volatile.Read(ref _activeAccessCount) != 0)
+                {
+                    return false;
+                }
 
-            _drainThreadId = Environment.CurrentManagedThreadId;
-            return true;
+                Volatile.Write(ref _drainThreadId, Environment.CurrentManagedThreadId);
+                return true;
+            }
+            finally
+            {
+                ExitQueueLock();
+            }
         }
 
         void DeliverAll()
@@ -200,25 +289,9 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
             {
                 while (true)
                 {
-                    Notification<T> notification;
-
-                    using (AcquireReadLock())
+                    if (!TryTakeNotification(out var notification))
                     {
-                        if (_queue.Count == 0 || _isTerminated)
-                        {
-                            _drainThreadId = -1;
-                            return;
-                        }
-
-                        notification = _queue.Dequeue();
-
-                        // Mark terminated BEFORE delivery so concurrent code
-                        // (e.g., InvokePreview) sees the terminal state immediately.
-                        if (notification.IsTerminal)
-                        {
-                            _isTerminated = true;
-                            _queue.Clear();
-                        }
+                        return;
                     }
 
                     // Deliver outside the lock
@@ -226,24 +299,76 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
 
                     if (notification.IsTerminal)
                     {
-                        using (AcquireReadLock())
-                        {
-                            _drainThreadId = -1;
-                        }
-
+                        StopDelivery();
                         return;
                     }
                 }
             }
             catch
             {
-                using (AcquireReadLock())
-                {
-                    _drainThreadId = -1;
-                }
-
+                StopDelivery();
                 throw;
             }
+        }
+
+        bool TryTakeNotification(out Notification<T> notification)
+        {
+            EnterQueueLock();
+            try
+            {
+                if (_queue.Count == 0 || _isTerminated || Volatile.Read(ref _activeAccessCount) != 0)
+                {
+                    Volatile.Write(ref _drainThreadId, -1);
+                    notification = default;
+                    return false;
+                }
+
+                notification = _queue.Dequeue();
+
+                // Mark terminated BEFORE delivery so concurrent code
+                // (e.g., InvokePreview) sees the terminal state immediately.
+                if (notification.IsTerminal)
+                {
+                    _isTerminated = true;
+                    _queue.Clear();
+                }
+
+                return true;
+            }
+            finally
+            {
+                ExitQueueLock();
+            }
+        }
+
+        void StopDelivery()
+        {
+            EnterQueueLock();
+            try
+            {
+                Volatile.Write(ref _drainThreadId, -1);
+            }
+            finally
+            {
+                ExitQueueLock();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets whether queue delivery is currently pending or in progress.
+    /// </summary>
+    /// <returns><see langword="true"/> when there are queued or in-flight notifications.</returns>
+    private bool HasPendingNotifications()
+    {
+        EnterQueueLock();
+        try
+        {
+            return _queue.Count > 0 || _drainThreadId != -1;
+        }
+        finally
+        {
+            ExitQueueLock();
         }
     }
 
@@ -264,7 +389,7 @@ public ref struct ScopedAccess
         internal ScopedAccess(DeliveryQueue<T> owner)
         {
             _owner = owner;
-            owner.EnterLock();
+            owner.EnterAccess();
         }
 
         /// <summary>Enqueues an OnNext notification.</summary>
@@ -288,12 +413,12 @@ public ref struct ScopedAccess
             }
 
             _owner = null;
-            owner.ExitLockAndDeliver();
+            owner.ExitAccessAndDeliver();
         }
     }
 
 /// <summary>
-/// Read-only scoped access. Disposing releases the gate without triggering delivery.
+/// Read-only scoped access. Disposing releases the gate and resumes any deferred delivery.
 /// </summary>
 public ref struct ReadOnlyScopedAccess
     {
@@ -309,12 +434,11 @@ public ref struct ReadOnlyScopedAccess
         internal ReadOnlyScopedAccess(DeliveryQueue<T> owner)
         {
             _owner = owner;
-            owner.EnterLock();
+            owner.EnterAccess();
         }
 
         /// <summary>Gets whether there are notifications pending delivery.</summary>
-        public readonly bool HasPending =>
-            _owner is not null && (_owner._queue.Count > 0 || _owner._drainThreadId != -1);
+        public readonly bool HasPending => _owner?.HasPendingNotifications() == true;
 
         /// <summary>Releases the gate lock.</summary>
         public void Dispose()
@@ -326,7 +450,7 @@ public ref struct ReadOnlyScopedAccess
             }
 
             _owner = null;
-            owner.ExitLock();
+            owner.ExitAccessAndDeliver();
         }
     }
 }
