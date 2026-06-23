@@ -12,17 +12,21 @@ namespace DynamicData.Benchmarks.List;
 [MarkdownExporterAttribute.GitHub]
 public class Sum_List
 {
-    private readonly IReadOnlyList<IChangeSet<Item>> _addChangeSets;
-    private readonly IReadOnlyList<IChangeSet<Item>> _replaceChangeSets;
-    private readonly IReadOnlyList<IChangeSet<Item>> _removeChangeSets;
-    private readonly IReadOnlyList<IChangeSet<Item>> _refreshChangeSets;
+    private IReadOnlyList<IChangeSet<Item>> _addChangeSets = null!;
+    private IReadOnlyList<IChangeSet<Item>> _replaceChangeSets = null!;
+    private IReadOnlyList<IChangeSet<Item>> _removeChangeSets = null!;
+    private IReadOnlyList<IChangeSet<Item>> _refreshChangeSets = null!;
 
-    public Sum_List()
+    [Params(100, 500, 1_000, 10_000)]
+    public int Count { get; set; }
+
+    [GlobalSetup]
+    public void Setup()
     {
-        var source = new ChangeAwareList<Item>(capacity: 1_000);
+        var source = new ChangeAwareList<Item>(capacity: Count);
 
-        var addChangeSets = new List<IChangeSet<Item>>(capacity: 1_000);
-        for (var id = 1; id <= 1_000; ++id)
+        var addChangeSets = new List<IChangeSet<Item>>(capacity: Count);
+        for (var id = 1; id <= Count; ++id)
         {
             source.Add(new Item()
             {
@@ -33,8 +37,8 @@ public class Sum_List
         }
         _addChangeSets = addChangeSets;
 
-        var replaceChangeSets = new List<IChangeSet<Item>>(capacity: 500);
-        for (var index = 0; index < 1_000; index += 2)
+        var replaceChangeSets = new List<IChangeSet<Item>>(capacity: Count);
+        for (var index = 0; index < Count; ++index)
         {
             source[index] = new Item()
             {
@@ -45,8 +49,8 @@ public class Sum_List
         }
         _replaceChangeSets = replaceChangeSets;
 
-        var refreshChangeSets = new List<IChangeSet<Item>>(capacity: 1_000);
-        for (var index = 0; index < 1_000; ++index)
+        var refreshChangeSets = new List<IChangeSet<Item>>(capacity: Count);
+        for (var index = 0; index < Count; ++index)
         {
             // Mutate in place, then refresh - the scenario stateless aggregation cannot currently observe.
             source[index].Value += 1;
@@ -55,8 +59,8 @@ public class Sum_List
         }
         _refreshChangeSets = refreshChangeSets;
 
-        var removeChangeSets = new List<IChangeSet<Item>>(capacity: 1_000);
-        for (var id = 1; id <= 1_000; ++id)
+        var removeChangeSets = new List<IChangeSet<Item>>(capacity: Count);
+        for (var id = 1; id <= Count; ++id)
         {
             source.RemoveAt(source.Count - 1);
             removeChangeSets.Add(source.CaptureChanges());
@@ -65,58 +69,18 @@ public class Sum_List
     }
 
     [Benchmark]
-    public void Adds()
-    {
-        using var source = new Subject<IChangeSet<Item>>();
-
-        using var subscription = source
-            .Sum(static item => item.Value)
-            .Subscribe();
-
-        foreach (var changeSet in _addChangeSets)
-            source.OnNext(changeSet);
-
-        source.OnCompleted();
-    }
+    public void Adds() => Run(_addChangeSets);
 
     [Benchmark]
-    public void AddsAndReplacements()
-    {
-        using var source = new Subject<IChangeSet<Item>>();
-
-        using var subscription = source
-            .Sum(static item => item.Value)
-            .Subscribe();
-
-        foreach (var changeSet in _addChangeSets)
-            source.OnNext(changeSet);
-
-        foreach (var changeSet in _replaceChangeSets)
-            source.OnNext(changeSet);
-
-        source.OnCompleted();
-    }
+    public void Replaces() => Run(_replaceChangeSets);
 
     [Benchmark]
-    public void AddsAndRefreshes()
-    {
-        using var source = new Subject<IChangeSet<Item>>();
-
-        using var subscription = source
-            .Sum(static item => item.Value)
-            .Subscribe();
-
-        foreach (var changeSet in _addChangeSets)
-            source.OnNext(changeSet);
-
-        foreach (var changeSet in _refreshChangeSets)
-            source.OnNext(changeSet);
-
-        source.OnCompleted();
-    }
+    public void Refreshes() => Run(_refreshChangeSets);
 
     [Benchmark]
-    public void AddsAndRemoves()
+    public void Removes() => Run(_removeChangeSets);
+
+    private static void Run(IReadOnlyList<IChangeSet<Item>> changeSets)
     {
         using var source = new Subject<IChangeSet<Item>>();
 
@@ -124,31 +88,7 @@ public class Sum_List
             .Sum(static item => item.Value)
             .Subscribe();
 
-        foreach (var changeSet in _addChangeSets)
-            source.OnNext(changeSet);
-
-        foreach (var changeSet in _removeChangeSets)
-            source.OnNext(changeSet);
-
-        source.OnCompleted();
-    }
-
-    [Benchmark]
-    public void AddsReplacementsAndRemoves()
-    {
-        using var source = new Subject<IChangeSet<Item>>();
-
-        using var subscription = source
-            .Sum(static item => item.Value)
-            .Subscribe();
-
-        foreach (var changeSet in _addChangeSets)
-            source.OnNext(changeSet);
-
-        foreach (var changeSet in _replaceChangeSets)
-            source.OnNext(changeSet);
-
-        foreach (var changeSet in _removeChangeSets)
+        foreach (var changeSet in changeSets)
             source.OnNext(changeSet);
 
         source.OnCompleted();
