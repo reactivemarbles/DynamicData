@@ -176,12 +176,10 @@ internal static partial class Filter
                                 break;
 
                             case ListChangeReason.Remove:
-                                {
-                                    if (upstreamItemsStates[change.Item.CurrentIndex].isIncluded)
-                                        downstreamItems.RemoveAt(change.Item.CurrentIndex - CountExcludedItemsBefore(change.Item.CurrentIndex));
+                                if (upstreamItemsStates[change.Item.CurrentIndex].isIncluded)
+                                    downstreamItems.RemoveAt(change.Item.CurrentIndex - CountExcludedItemsBefore(change.Item.CurrentIndex));
 
-                                    upstreamItemsStates.RemoveAt(change.Item.CurrentIndex);
-                                }
+                                upstreamItemsStates.RemoveAt(change.Item.CurrentIndex);
                                 break;
 
                             case ListChangeReason.RemoveRange:
