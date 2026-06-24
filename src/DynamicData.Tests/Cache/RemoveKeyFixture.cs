@@ -19,8 +19,6 @@ namespace DynamicData.Tests.Cache;
 
 public class RemoveKeyFixture : IDisposable
 {
-    private readonly IComparer<Person> _comparer;
-
     private readonly RandomPersonGenerator _generator = new();
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Handled with CompositeDisposable")]
