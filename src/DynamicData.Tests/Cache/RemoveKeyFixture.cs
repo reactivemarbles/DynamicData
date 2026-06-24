@@ -28,8 +28,6 @@ public class RemoveKeyFixture : IDisposable
 
     public RemoveKeyFixture()
     {
-        _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
-
         _source = new SourceCache<Person, string>(p => p.Key);
         _cleanup.Add(_source);
     }
