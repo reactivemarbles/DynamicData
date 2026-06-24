@@ -26,7 +26,6 @@ internal static partial class Filter
 
                 var downstreamItems = new ChangeAwareList<T>();
                 var itemsBuffer = new List<T>();
-
                 var downstream = source.Select(upstreamChanges =>
                 {
                     foreach (var change in upstreamChanges)
@@ -177,10 +176,12 @@ internal static partial class Filter
                                 break;
 
                             case ListChangeReason.Remove:
-                                if (upstreamItemsStates[change.Item.CurrentIndex].isIncluded)
-                                    downstreamItems.RemoveAt(change.Item.CurrentIndex - CountExcludedItemsBefore(change.Item.CurrentIndex));
+                                {
+                                    if (upstreamItemsStates[change.Item.CurrentIndex].isIncluded)
+                                        downstreamItems.RemoveAt(change.Item.CurrentIndex - CountExcludedItemsBefore(change.Item.CurrentIndex));
 
-                                upstreamItemsStates.RemoveAt(change.Item.CurrentIndex);
+                                    upstreamItemsStates.RemoveAt(change.Item.CurrentIndex);
+                                }
                                 break;
 
                             case ListChangeReason.RemoveRange:
@@ -212,13 +213,24 @@ internal static partial class Filter
                                 {
                                     var isIncluded = predicate.Invoke(change.Item.Current);
 
-                                    var itemState = upstreamItemsStates[change.Item.CurrentIndex];
-                                    upstreamItemsStates[change.Item.CurrentIndex] = (
+                                    var currentIndex = change.Item.CurrentIndex;
+                                    // A Replace might have a negative CurrentIndex from a Refresh in RemoveKeyEnumerator
+                                    if (currentIndex < 0)
+                                    {
+                                        // this code mimics the previous logic
+                                        var previous = upstreamItemsStates.Select(x => x.item)
+                                            .IndexOfOptional(change.Item.Current)
+                                            .ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Item.Current}. Expected to be in the list"));
+                                        currentIndex = previous.Index;
+                                    }
+                                    var itemState = upstreamItemsStates[currentIndex];
+
+                                    upstreamItemsStates[currentIndex] = (
                                         item: change.Item.Current,
                                         isIncluded: isIncluded);
 
                                     var downstreamIndex = (isIncluded || itemState.isIncluded)
-                                        ? change.Item.CurrentIndex - CountExcludedItemsBefore(change.Item.CurrentIndex)
+                                        ? currentIndex - CountExcludedItemsBefore(currentIndex)
                                         : -1;
 
                                     switch (itemState.isIncluded, isIncluded)
