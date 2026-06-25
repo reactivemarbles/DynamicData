@@ -215,7 +215,6 @@ internal static partial class Filter
                                     // A Replace might have a negative CurrentIndex from a Refresh in RemoveKeyEnumerator
                                     if (currentIndex < 0)
                                     {
-                                        // this code mimics the previous logic
                                         var previous = upstreamItemsStates.Select(x => x.item)
                                             .IndexOfOptional(change.Item.Current)
                                             .ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Item.Current}. Expected to be in the list"));
