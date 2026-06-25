@@ -93,7 +93,7 @@ public class RemoveKeyFixture : IDisposable
     }
 
     [Fact]
-    public void RefreshFilter()
+    public void RefreshRemoveKeyFilter()
     {
         var people = _generator.Take(100).ToArray();
         var average = people.Average(x => x.Age);
@@ -103,6 +103,31 @@ public class RemoveKeyFixture : IDisposable
                 .AutoRefresh(x => x.Age)
                 .RemoveKey()
                 .Filter(x => x.Age < average)
+                .Bind(out collection)
+                .Subscribe()
+        );
+        _source.AddOrUpdate(people);
+
+        Assert.Equivalent(people.Where(x => x.Age < average), collection);
+
+        foreach (var person in people)
+        {
+            person.Age = person.Age + 1;
+        }
+        Assert.Equivalent(people.Where(x => x.Age < average), collection);
+    }
+
+    [Fact]
+    public void RefreshFilterRemoveKey()
+    {
+        var people = _generator.Take(100).ToArray();
+        var average = people.Average(x => x.Age);
+        ReadOnlyObservableCollection<Person> collection;
+        _cleanup.Add(
+            _source.Connect()
+                .AutoRefresh(x => x.Age)
+                .Filter(x => x.Age < average)
+                .RemoveKey()
                 .Bind(out collection)
                 .Subscribe()
         );
