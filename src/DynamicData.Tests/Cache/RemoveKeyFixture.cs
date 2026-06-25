@@ -35,7 +35,7 @@ public class RemoveKeyFixture : IDisposable
     public void Dispose() => _cleanup.Dispose();
 
     [Fact]
-    public void Add()
+    public void CacheRemoveKey_Add_KeyIsRemoved()
     {
         ReadOnlyObservableCollection<Person> collection;
         _cleanup.Add(
@@ -51,7 +51,7 @@ public class RemoveKeyFixture : IDisposable
     }
 
     [Fact]
-    public void Filter()
+    public void CacheRemoveKey_Filter_ItemsFilterKeyIsRemoved()
     {
         var people = _generator.Take(100).ToArray();
         var average = people.Average(x => x.Age);
@@ -70,7 +70,7 @@ public class RemoveKeyFixture : IDisposable
     }
 
     [Fact]
-    public void Refresh()
+    public void CacheRemoveKey_AutoRefreshUpdateITems_CollectionUpdated()
     {
         ReadOnlyObservableCollection<Person> collection;
         _cleanup.Add(
@@ -93,7 +93,7 @@ public class RemoveKeyFixture : IDisposable
     }
 
     [Fact]
-    public void RefreshRemoveKeyFilter()
+    public void Cache_AutoRefreshRemoveKeyFilterUpdate_CollectionUpdated()
     {
         var people = _generator.Take(100).ToArray();
         var average = people.Average(x => x.Age);
@@ -118,7 +118,7 @@ public class RemoveKeyFixture : IDisposable
     }
 
     [Fact]
-    public void RefreshFilterRemoveKey()
+    public void Cache_AutoRefreshFilterRemoveKeyUpdate_CollectionUpdated()
     {
         var people = _generator.Take(100).ToArray();
         var average = people.Average(x => x.Age);
