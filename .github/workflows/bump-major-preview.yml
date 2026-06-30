@@ -29,7 +29,7 @@ jobs:
       DISCARD_PREVIEW_INPUT: ${{ inputs.discard_current_preview }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         ref: main
         fetch-depth: 0
