@@ -10,4 +10,15 @@
   <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
     <DefineConstants>$(DefineConstants);NETSTANDARD;P_LINQ;SUPPORTS_BINDINGLIST;SUPPORTS_ASYNC_DISPOSABLE;SUPPORTS_DICTIONARY_MUTATION_DURING_ENUMERATION</DefineConstants>
   </PropertyGroup>
+
+  <Target Name="RemoveGeneratedBridgeAnalyzers"
+          AfterTargets="ResolvePackageAssets"
+          BeforeTargets="CoreCompile;Csc">
+    <ItemGroup>
+      <ResolvedAnalyzers Remove="@(ResolvedAnalyzers)"
+                         Condition="'%(ResolvedAnalyzers.Filename)' == 'ReactiveUI.Primitives.R3Bridge.Generator'" />
+      <Analyzer Remove="@(Analyzer)"
+                Condition="'%(Analyzer.Filename)' == 'ReactiveUI.Primitives.R3Bridge.Generator'" />
+    </ItemGroup>
+  </Target>
 </Project>
