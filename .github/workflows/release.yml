@@ -119,7 +119,7 @@ jobs:
       shell: pwsh
       run: |
         $ErrorActionPreference = 'Stop'
-        $packages = Get-ChildItem -Path src -Recurse -Filter '*.nupkg' | Where-Object { $_.FullName -like '*\bin\Release\*' }
+        $packages = Get-ChildItem -Path src -Recurse -Filter 'DynamicData.*.nupkg' | Where-Object { $_.FullName -like '*\bin\Release\*' }
         if (-not $packages) { throw "No .nupkg files found under src/**/bin/Release/." }
         foreach ($pkg in $packages) {
           dotnet nuget push -s $env:SOURCE_URL -k $env:NUGET_AUTH_TOKEN --skip-duplicate $pkg.FullName
