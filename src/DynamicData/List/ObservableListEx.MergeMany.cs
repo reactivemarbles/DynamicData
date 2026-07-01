@@ -41,6 +41,7 @@ public static partial class ObservableListEx
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Subscription disposed.</description></item>
     /// <item><term><b>Refresh</b>/<b>Moved</b></term><description>No effect on subscriptions.</description></item>
     /// <item><term>OnCompleted (source)</term><description>Completes only after the source and all active inner observables have completed.</description></item>
+    /// <item><term>OnError</term><description>Errors from any per-item observable terminate the merged output. Source errors also terminate the output.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="SubscribeMany{T}(IObservable{IChangeSet{T}}, Func{T, IDisposable})"/>

@@ -29,7 +29,7 @@ internal sealed class MergeChangeSets<TObject>(IObservable<IObservable<IChangeSe
             // Merge all of the changeset streams together and Process them with the change tracker which will emit the results
             return CreateClonedListObservable(source, locker)
                 .Synchronize(locker)
-                .MergeMany(clonedList => clonedList.Source.RemoveIndex().Do(static _ => { }, observer.OnError))
+                .MergeMany(clonedList => clonedList.Source.Do(clonedList.Process).RemoveIndex())
                 .Subscribe(
                     changes => changeTracker.ProcessChangeSet(changes, observer),
                     observer.OnError,

@@ -38,9 +38,8 @@ public static partial class ObservableCacheEx
     /// <returns>An observable of property values. The owning item is not included; use <see cref="WhenPropertyChanged{TObject, TKey, TValue}"/> if you need it.</returns>
     /// <remarks>
     /// <para>
-    /// Per-item subscriptions are created on Add, replaced on Update, disposed on Remove. Errors from individual
-    /// property subscriptions are silently ignored. If you need to correlate a value back to its source item,
-    /// use <see cref="WhenPropertyChanged{TObject, TKey, TValue}"/> which returns a <see cref="PropertyValue{TObject, TValue}"/> pair.
+    /// Per-item subscriptions are created on Add, replaced on Update, disposed on Remove. If you need to correlate a value
+    /// back to its source item, use <see cref="WhenPropertyChanged{TObject, TKey, TValue}"/> which returns a <see cref="PropertyValue{TObject, TValue}"/> pair.
     /// </para>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
@@ -48,7 +47,7 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Disposes the old subscription, subscribes to the new item's property.</description></item>
     /// <item><term>Remove</term><description>Disposes the property subscription.</description></item>
     /// <item><term>Refresh</term><description>No effect on subscriptions.</description></item>
-    /// <item><term>OnError</term><description>Per-item errors silently ignored. Source errors terminate the stream.</description></item>
+    /// <item><term>OnError</term><description>Errors from any item's property subscription terminate the output stream. Source errors also terminate the stream.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="WhenPropertyChanged{TObject, TKey, TValue}"/>

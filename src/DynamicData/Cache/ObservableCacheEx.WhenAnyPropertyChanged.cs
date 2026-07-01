@@ -37,8 +37,7 @@ public static partial class ObservableCacheEx
     /// <remarks>
     /// <para>
     /// Subscriptions are managed per item: created on Add, replaced on Update, disposed on Remove.
-    /// Errors from individual property subscriptions are silently ignored. The output is not a changeset
-    /// stream; it is a plain <c>IObservable&lt;TObject?&gt;</c>. If the same item changes multiple properties
+    /// The output is not a changeset stream; it is a plain <c>IObservable&lt;TObject?&gt;</c>. If the same item changes multiple properties
     /// rapidly, each change emits the item separately (no deduplication).
     /// </para>
     /// <list type="table">
@@ -47,7 +46,7 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Disposes the old item's subscription and subscribes to the new item.</description></item>
     /// <item><term>Remove</term><description>Disposes the item's PropertyChanged subscription.</description></item>
     /// <item><term>Refresh</term><description>No effect on subscriptions.</description></item>
-    /// <item><term>OnError</term><description>Errors from individual property subscriptions are silently ignored. Source errors terminate the stream.</description></item>
+    /// <item><term>OnError</term><description>Errors from any item's property subscription terminate the output stream. Source errors also terminate the stream.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="WhenPropertyChanged{TObject, TKey, TValue}"/>

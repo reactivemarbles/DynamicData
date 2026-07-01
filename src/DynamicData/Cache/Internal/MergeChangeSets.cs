@@ -33,7 +33,7 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
             return new CompositeDisposable(CreateContainerObservable(source, queue)
                 .SynchronizeSafe(queue)
                 .Do(cache.Clone)
-                .MergeMany(mc => mc.Source.Do(static _ => { }, observer.OnError))
+                .MergeMany(mc => mc.Source.Do(mc.Process))
                 .SubscribeSafe(
                     changes => changeTracker.ProcessChangeSet(changes, observer),
                     observer.OnError,

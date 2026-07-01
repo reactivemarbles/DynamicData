@@ -47,6 +47,7 @@ public static partial class ObservableListEx
     /// <item><term>Remove/RemoveRange/Clear</term><description>Unsubscribes from removed items. The original change is forwarded.</description></item>
     /// <item><term>Moved/Refresh</term><description>Forwarded unchanged.</description></item>
     /// <item><term>Re-evaluator fires</term><description>The item's current index is looked up and a <b>Refresh</b> change is emitted.</description></item>
+    /// <item><term>OnError</term><description>Errors from any per-item re-evaluator terminate the output. Source errors also terminate the output.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="AutoRefresh{TObject}(IObservable{IChangeSet{TObject}}, TimeSpan?, TimeSpan?, IScheduler?)"/>

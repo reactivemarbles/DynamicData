@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,35 +6,130 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
-internal sealed class AutoRefresh<TObject, TKey, TAny>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
+internal sealed class AutoRefresh<TObject, TKey, TAny>(
+        IObservable<IChangeSet<TObject, TKey>> source,
+        Func<TObject, TKey, IObservable<TAny>> reEvaluator,
+        TimeSpan? buffer = null,
+        IScheduler? scheduler = null)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly Func<TObject, TKey, IObservable<TAny>> _reEvaluator = reEvaluator ?? throw new ArgumentNullException(nameof(reEvaluator));
+    public IObservable<IChangeSet<TObject, TKey>> Run()
+    {
+        var sched = buffer is null ? null : scheduler ?? GlobalConfig.DefaultScheduler;
+        return source.Orchestrate<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>, Orchestrator>(
+            (context, emitter) => new Orchestrator(context, emitter, reEvaluator, buffer, sched));
+    }
 
-    private readonly IScheduler _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
+    /// <summary>
+    /// Forwards each source changeset immediately. Refresh notifications from per-key reevaluators
+    /// are coalesced (latest wins) and flushed at drain end (unbuffered) or via a Timer armed by
+    /// the first pending refresh (buffered). Source events drop any pending refresh for the same
+    /// key; reevaluator emissions for source-touched keys in the same drain are suppressed.
+    /// </summary>
+    internal sealed class Orchestrator(
+            ICacheOrchestratorContext<TKey, Change<TObject, TKey>> context,
+            IObserver<IChangeSet<TObject, TKey>> emitter,
+            Func<TObject, TKey, IObservable<TAny>> reEvaluator,
+            TimeSpan? buffer,
+            IScheduler? scheduler)
+        : CacheOrchestratorBase<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>(context, emitter), IDisposable
+    {
+        private readonly Dictionary<TKey, Change<TObject, TKey>> _pendingRefreshes = new();
+        private readonly HashSet<TKey> _sourceTouched = [];
+        private readonly SerialDisposable _timerSubscription = new();
 
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
+        public void Dispose() => _timerSubscription.Dispose();
 
-    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
-            observer =>
+        public override void OnSourceChangeSet(IChangeSet<TObject, TKey> changes)
+        {
+            base.OnSourceChangeSet(changes);
+            if (changes.Count > 0)
             {
-                var shared = _source.Publish();
+                Emitter.OnNext(changes);
+            }
+        }
 
-                // monitor each item observable and create change
-                var changes = shared.MergeMany((t, k) => _reEvaluator(t, k).Select(_ => new Change<TObject, TKey>(ChangeReason.Refresh, k, t)));
+        public override void OnInner(Change<TObject, TKey> refresh, TKey key)
+        {
+            if (_sourceTouched.Contains(key))
+            {
+                return;
+            }
 
-                // create a change set, either buffered or one item at the time
-                IObservable<IChangeSet<TObject, TKey>> refreshChanges = buffer is null ?
-                    changes.Select(c => new ChangeSet<TObject, TKey>(new[] { c })) :
-                    changes.Buffer(buffer.Value, _scheduler).Where(list => list.Count > 0).Select(items => new ChangeSet<TObject, TKey>(items));
+            _pendingRefreshes[key] = refresh;
 
-                // publish refreshes and underlying changes
-                var queue = new SharedDeliveryQueue();
-                var publisher = shared.SynchronizeSafe(queue).Merge(refreshChanges.SynchronizeSafe(queue)).SubscribeSafe(observer);
+            if (buffer is { } window)
+            {
+                _timerSubscription.Disposable ??= Context.Serialize(Observable.Timer(window, scheduler!))
+                    .SubscribeSafe(_ => FlushPending(), Emitter.OnError);
+            }
+        }
 
-                return new CompositeDisposable(publisher, shared.Connect(), queue);
-            });
+        public override void OnDrainComplete(bool isFinal, bool wasReentrant)
+        {
+            _sourceTouched.Clear();
+
+            // Flush when unbuffered, or on the final drain (the timer would otherwise be cancelled
+            // by stream termination).
+            if (isFinal || buffer is null)
+            {
+                FlushPending();
+            }
+        }
+
+        protected override void OnItemAdded(TObject item, TKey key)
+        {
+            _sourceTouched.Add(key);
+            Context.Track(key, reEvaluator(item, key).Select(_ => new Change<TObject, TKey>(ChangeReason.Refresh, key, item)));
+        }
+
+        protected override void OnItemUpdated(TObject current, TObject previous, TKey key)
+        {
+            DropPending(key);
+            OnItemAdded(current, key);
+        }
+
+        protected override void OnItemRemoved(TObject item, TKey key)
+        {
+            _sourceTouched.Add(key);
+            DropPending(key);
+            Context.Untrack(key);
+        }
+
+        protected override void OnItemRefreshed(TObject item, TKey key)
+        {
+            _sourceTouched.Add(key);
+
+            // Source is forwarding its own Refresh; drop any pending from a prior drain so the
+            // consumer doesn't see two Refresh notifications back-to-back.
+            DropPending(key);
+        }
+
+        private void DropPending(TKey key)
+        {
+            if (_pendingRefreshes.Remove(key) && _pendingRefreshes.Count == 0)
+            {
+                _timerSubscription.Disposable = null;
+            }
+        }
+
+        private void FlushPending()
+        {
+            _timerSubscription.Disposable = null;
+
+            if (_pendingRefreshes.Count == 0)
+            {
+                return;
+            }
+
+            var batch = new ChangeSet<TObject, TKey>(_pendingRefreshes.Values);
+            _pendingRefreshes.Clear();
+            Emitter.OnNext(batch);
+        }
+    }
 }

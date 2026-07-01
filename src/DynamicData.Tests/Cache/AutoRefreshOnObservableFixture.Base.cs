@@ -125,7 +125,317 @@ public static partial class AutoRefreshOnObservableFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "no items should have changed, within the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-    
+
+        [Fact]
+        public void ChangeSetBufferIsGiven_RemoveDuringWindow_DropsPendingRefresh()
+        {
+            // Setup
+            using var source = new TestSourceCache<Item, int>(Item.SelectId);
+
+            using var item1 = new Item() { Id = 1 };
+            source.AddOrUpdate(item1);
+
+            var scheduler = new TestScheduler();
+
+
+            // UUT Initialization
+            using var subscription = BuildUut(
+                    source:             source.Connect(),
+                    reevaluator:        Item.ObserveValueChanged,
+                    changeSetBuffer:    TimeSpan.FromSeconds(10),
+                    scheduler:          scheduler)
+                .ValidateSynchronization()
+                .ValidateChangeSets(Item.SelectId)
+                .RecordCacheItems(out var results);
+
+            results.RecordedChangeSets.Count.Should().Be(1, "the initial Add changeset should propagate");
+
+
+            // UUT Action (publish reevaluator notification at T=5)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(5).Ticks);
+            ++item1.Value;
+
+
+            // UUT Action (remove the item at T=9, before the buffer window ends at T=15)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(9).Ticks);
+            source.Remove(item1);
+
+            results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "the Remove should propagate immediately");
+            results.RecordedChangeSets.Skip(1).First().Removes.Should().Be(1, "the source removed item #1");
+
+
+            // UUT Action (advance past the buffer window)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(20).Ticks);
+
+            results.Error.Should().BeNull();
+            results.RecordedChangeSets.Skip(2).Should().BeEmpty(
+                "a Refresh for a key the source has already removed is incoherent on arrival");
+            results.HasCompleted.Should().BeFalse("the source has not completed");
+        }
+
+        [Fact]
+        public void ChangeSetBufferIsGiven_UpdateDuringWindow_RefreshEmittedForNewInstance()
+        {
+            // Setup
+            using var source = new TestSourceCache<Item, int>(Item.SelectId);
+
+            using var item1V1 = new Item() { Id = 1 };
+            using var item1V2 = new Item() { Id = 1 };
+            source.AddOrUpdate(item1V1);
+
+            var scheduler = new TestScheduler();
+
+
+            // UUT Initialization
+            using var subscription = BuildUut(
+                    source:             source.Connect(),
+                    reevaluator:        Item.ObserveValueChanged,
+                    changeSetBuffer:    TimeSpan.FromSeconds(10),
+                    scheduler:          scheduler)
+                .ValidateSynchronization()
+                .ValidateChangeSets(Item.SelectId)
+                .RecordCacheItems(out var results);
+
+            results.RecordedChangeSets.Count.Should().Be(1, "the initial Add changeset should propagate");
+
+
+            // UUT Action (v1's reevaluator fires at T=5)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(5).Ticks);
+            ++item1V1.Value;
+
+
+            // UUT Action (Update replaces v1 with v2 at T=9, within the window armed by the v1 refresh)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(9).Ticks);
+            source.AddOrUpdate(item1V2);
+
+            results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "the Update should propagate immediately");
+
+
+            // UUT Action (v2's reevaluator fires at T=12, arming a fresh window for T=22)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(12).Ticks);
+            ++item1V2.Value;
+
+
+            // UUT Action (advance to T=15, the original v1-armed window boundary)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(15).Ticks);
+
+            results.RecordedChangeSets.Skip(2).Should().BeEmpty(
+                "the v1-armed window must not fire after the Update replaced its pending refresh");
+
+
+            // UUT Action (advance past the new buffer window at T=22)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(22).Ticks);
+
+            results.Error.Should().BeNull();
+            results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "the v2 buffer window has expired");
+            results.RecordedChangeSets.Skip(2).First().Refreshes.Should().Be(1, "exactly one Refresh is buffered for the key");
+            results.RecordedChangeSets.Skip(2).First().First().Current.Should().BeSameAs(item1V2, "a Refresh carries the instance the source currently holds, not a superseded one");
+            results.HasCompleted.Should().BeFalse("the source has not completed");
+        }
+
+        [Fact]
+        public void ChangeSetBufferIsGiven_MultipleUpdatesDuringWindow_OnlyLatestRefreshEmitted()
+        {
+            // Setup
+            using var source = new TestSourceCache<Item, int>(Item.SelectId);
+
+            using var item1V1 = new Item() { Id = 1 };
+            using var item1V2 = new Item() { Id = 1 };
+            using var item1V3 = new Item() { Id = 1 };
+            source.AddOrUpdate(item1V1);
+
+            var scheduler = new TestScheduler();
+
+
+            // UUT Initialization
+            using var subscription = BuildUut(
+                    source:             source.Connect(),
+                    reevaluator:        Item.ObserveValueChanged,
+                    changeSetBuffer:    TimeSpan.FromSeconds(10),
+                    scheduler:          scheduler)
+                .ValidateSynchronization()
+                .ValidateChangeSets(Item.SelectId)
+                .RecordCacheItems(out var results);
+
+            results.RecordedChangeSets.Count.Should().Be(1, "the initial Add changeset should propagate");
+
+
+            // UUT Action (v1 reEval at T=2, then Update to v2 at T=4)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(2).Ticks);
+            ++item1V1.Value;
+
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(4).Ticks);
+            source.AddOrUpdate(item1V2);
+
+
+            // UUT Action (v2 reEval at T=6, then Update to v3 at T=8)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(6).Ticks);
+            ++item1V2.Value;
+
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(8).Ticks);
+            source.AddOrUpdate(item1V3);
+
+
+            // UUT Action (v3 reEval at T=10)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(10).Ticks);
+            ++item1V3.Value;
+
+            results.RecordedChangeSets.Skip(1).Count().Should().Be(2, "two Updates propagated immediately");
+
+
+            // UUT Action (advance past v3's window at T=20)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(20).Ticks);
+
+            results.Error.Should().BeNull();
+            results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "the chain produces a single Refresh changeset");
+            results.RecordedChangeSets.Skip(3).First().Refreshes.Should().Be(1, "the chain coalesces to a single Refresh");
+            results.RecordedChangeSets.Skip(3).First().First().Current.Should().BeSameAs(item1V3, "a Refresh carries the instance the source currently holds, not a superseded one");
+            results.HasCompleted.Should().BeFalse("the source has not completed");
+        }
+
+        [Fact]
+        public void ChangeSetBufferIsGiven_SourceCompletesBeforeWindowExpires_PendingRefreshIsEmittedBeforeCompletion()
+        {
+            // Setup
+            using var source = new TestSourceCache<Item, int>(Item.SelectId);
+
+            using var item = new Item() { Id = 1 };
+            source.AddOrUpdate(item);
+
+            var scheduler = new TestScheduler();
+
+
+            // UUT Initialization
+            using var subscription = BuildUut(
+                    source:             source.Connect(),
+                    reevaluator:        Item.ObserveValueChanged,
+                    changeSetBuffer:    TimeSpan.FromSeconds(10),
+                    scheduler:          scheduler)
+                .ValidateSynchronization()
+                .ValidateChangeSets(Item.SelectId)
+                .RecordCacheItems(out var results);
+
+
+            // UUT Action (reevaluator fires at T=5, arms the buffer window for T=15)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(5).Ticks);
+            ++item.Value;
+
+
+            // UUT Action (complete the source and the reevaluator while the buffer window is still open)
+            source.Complete();
+            item.Complete();
+
+            results.Error.Should().BeNull();
+            results.RecordedChangeSets.SelectMany(static cs => cs).Where(static c => c.Reason is ChangeReason.Refresh).Should().HaveCount(1,
+                "a pending buffered refresh must surface before completion, even when source and reevaluator have already completed");
+            results.HasCompleted.Should().BeTrue(
+                "completion of all upstream subscriptions triggers an immediate flush of pending refreshes");
+
+
+            // UUT Action (advance past the original window boundary; the timer was cancelled when sources completed)
+            scheduler.AdvanceTo(TimeSpan.FromSeconds(15).Ticks);
+
+            results.RecordedChangeSets.SelectMany(static cs => cs).Where(static c => c.Reason is ChangeReason.Refresh).Should().HaveCount(1,
+                "the pending timer was disposed when sources completed; no second refresh should fire at the window boundary");
+        }
+
+        [Fact]
+        public void NoChangeSetBuffer_AddAndRemoveInSameChangeset_NoRefreshEmitted()
+        {
+            // Setup
+            using var source = new TestSourceCache<Item, int>(Item.SelectId);
+
+            using var item1 = new Item() { Id = 1 };
+
+
+            // UUT Initialization
+            using var subscription = BuildUut(
+                    source:         source.Connect(),
+                    reevaluator:    Item.ObserveValue)
+                .ValidateSynchronization()
+                .ValidateChangeSets(Item.SelectId)
+                .RecordCacheItems(out var results);
+
+
+            // UUT Action (Add + Remove in a single changeset)
+            source.Edit(updater =>
+            {
+                updater.AddOrUpdate(item1);
+                updater.Remove(item1);
+            });
+
+            results.Error.Should().BeNull();
+            results.RecordedChangeSets.SelectMany(static cs => cs).Where(static c => c.Reason is ChangeReason.Refresh).Should().BeEmpty(
+                "a sync reevaluator emission queued during Add must not surface once the same drain removes the item");
+            results.HasCompleted.Should().BeFalse("the source has not completed");
+        }
+
+        [Fact]
+        public void NoChangeSetBuffer_AddAndUpdateInSameChangeset_NoRefreshFromObsoleteInstance()
+        {
+            // Setup
+            using var source = new TestSourceCache<Item, int>(Item.SelectId);
+
+            using var item1V1 = new Item() { Id = 1 };
+            using var item1V2 = new Item() { Id = 1 };
+
+
+            // UUT Initialization
+            using var subscription = BuildUut(
+                    source:         source.Connect(),
+                    reevaluator:    Item.ObserveValue)
+                .ValidateSynchronization()
+                .ValidateChangeSets(Item.SelectId)
+                .RecordCacheItems(out var results);
+
+
+            // UUT Action (Add v1 + Update to v2 in a single changeset)
+            source.Edit(updater =>
+            {
+                updater.AddOrUpdate(item1V1);
+                updater.AddOrUpdate(item1V2);
+            });
+
+            results.Error.Should().BeNull();
+            results.RecordedChangeSets.SelectMany(static cs => cs).Where(static c => c.Reason is ChangeReason.Refresh).Should().BeEmpty(
+                "a Refresh carrying an instance the source has already replaced is incoherent on arrival");
+            results.HasCompleted.Should().BeFalse("the source has not completed");
+        }
+
+        [Fact]
+        public void NoChangeSetBuffer_MultipleUpdatesInSameChangeset_NoRefreshFromIntermediateInstances()
+        {
+            // Setup
+            using var source = new TestSourceCache<Item, int>(Item.SelectId);
+
+            using var item1V1 = new Item() { Id = 1 };
+            using var item1V2 = new Item() { Id = 1 };
+            using var item1V3 = new Item() { Id = 1 };
+
+
+            // UUT Initialization
+            using var subscription = BuildUut(
+                    source:         source.Connect(),
+                    reevaluator:    Item.ObserveValue)
+                .ValidateSynchronization()
+                .ValidateChangeSets(Item.SelectId)
+                .RecordCacheItems(out var results);
+
+
+            // UUT Action (Add v1 + Update v2 + Update v3 in a single changeset)
+            source.Edit(updater =>
+            {
+                updater.AddOrUpdate(item1V1);
+                updater.AddOrUpdate(item1V2);
+                updater.AddOrUpdate(item1V3);
+            });
+
+            results.Error.Should().BeNull();
+            results.RecordedChangeSets.SelectMany(static cs => cs).Where(static c => c.Reason is ChangeReason.Refresh).Should().BeEmpty(
+                "every Refresh carrying a value the source has already superseded is incoherent on arrival");
+            results.HasCompleted.Should().BeFalse("the source has not completed");
+        }
+
         [Fact]
         public void ItemIsAdded_SubscribesToReevaluator()
         {
@@ -495,7 +805,7 @@ public static partial class AutoRefreshOnObservableFixture
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
           
-        [Fact(Skip = "Existing defect, #1099")]
+        [Fact]
         public void ReevaluatorEmitsImmediately_ItemDoesNotRefresh()
         {
             // Setup
@@ -523,7 +833,7 @@ public static partial class AutoRefreshOnObservableFixture
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
             
-        [Theory(Skip = "Existing defect. Docs say that ignoring reevaluator exceptions is intentional, but it shouldn't be. Basic RX philosophy is that exceptions should basically always propagate.")]
+        [Theory]
         [InlineData(NotificationStrategy.Immediate)]
         [InlineData(NotificationStrategy.Asynchronous)]
         public void ReevaluatorFails_ErrorPropagates(NotificationStrategy notificationStrategy)
@@ -564,7 +874,7 @@ public static partial class AutoRefreshOnObservableFixture
             }
         }
             
-        [Fact(Skip = "Existing defect. Docs say that ignoring reevaluator exceptions is intentional, but it shouldn't be. Basic RX philosophy is that exceptions should basically always propagate.")]
+        [Fact]
         public void ReevaluatorThrows_ExceptionPropagates()
         {
             // Setup 

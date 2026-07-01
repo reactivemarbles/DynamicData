@@ -16,7 +16,7 @@ public static partial class AutoRefreshFixture
     public class WithPropertyAccessor
         : Base
     {
-        [Fact(Skip = "Existing defect: propertyAccessor is not null checked, throws NRE on first notification, instead")]
+        [Fact]
         public void PropertyAccessorIsNull_ThrowsException()
             => FluentActions.Invoking(() => ObservableCacheEx.AutoRefresh(
                     source:             Observable.Never<IChangeSet<Item, int>>(),

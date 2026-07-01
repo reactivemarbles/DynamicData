@@ -175,6 +175,36 @@ public class SharedDeliveryQueueFixture
         }
     }
 
+    [Fact]
+    public void OnDrainComplete_RefiresAfterReentrantDrainTriggeredByCallback()
+    {
+        var callCount = 0;
+        var delivered = new List<int>();
+        DeliverySubQueue<int>? sub = null;
+
+        SharedDeliveryQueue queue = null!;
+        queue = new SharedDeliveryQueue(onDrainComplete: _ =>
+        {
+            if (Interlocked.Increment(ref callCount) == 1)
+            {
+                using var scope = sub!.AcquireLock();
+                scope.EnqueueNext(42);
+            }
+        });
+
+        var observer = new TestObserver<int>(delivered.Add);
+        sub = queue.CreateQueue(observer);
+
+        using (var scope = sub.AcquireLock())
+        {
+            scope.EnqueueNext(1);
+        }
+
+        delivered.Should().Equal(new[] { 1, 42 }, "the reentrantly-enqueued item must be delivered");
+        callCount.Should().BeGreaterThanOrEqualTo(2,
+            "onDrainComplete must fire again after the reentrant drain consumed the enqueued item");
+    }
+
     private sealed class TestObserver<T>(Action<T> onNext) : IObserver<T>
     {
         public Exception? Error { get; private set; }

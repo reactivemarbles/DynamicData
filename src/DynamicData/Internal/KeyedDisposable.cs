@@ -58,10 +58,12 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
     }
 
     /// <summary>
-    /// Tracks an item by key. If the item implements <see cref="IDisposable"/>,
-    /// it replaces any existing entry (disposing the previous one if different).
-    /// If the item is NOT disposable, any existing entry for the key is removed
-    /// and disposed.
+    /// Tracks an item by key. If the item implements <see cref="IDisposable"/>, it is registered
+    /// against <paramref name="key"/>: any previously registered disposable for the same key is
+    /// disposed and replaced (unless it is reference-equal to the new one, in which case nothing
+    /// changes). If the item is NOT disposable, any existing entry for the key is removed and
+    /// disposed; no new entry is registered. Despite the name "Add", this method has replace-or-add
+    /// semantics on key collision.
     /// </summary>
     public TItem Add<TItem>(TKey key, TItem item)
         where TItem : notnull
