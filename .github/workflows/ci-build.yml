@@ -38,12 +38,20 @@ jobs:
             **/global.json
             **/nuget.config
 
-    - name: NBGV
+    - name: Install (or update) nbgv tool
+      run: dotnet tool update --global nbgv
+
+    - name: Set NBGV cloud variables
+      run: nbgv cloud -a
+
+    - name: Expose NBGV version as step outputs
       id: nbgv
-      uses: dotnet/nbgv@v0.5.2
-      with:
-        setAllVars: true
-        
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        "SemVer2=$env:NBGV_SemVer2" >> $env:GITHUB_OUTPUT
+        "PrereleaseVersion=$env:NBGV_PrereleaseVersion" >> $env:GITHUB_OUTPUT
+
     - name: NuGet Restore
       run: dotnet restore DynamicData.sln
       working-directory: src
