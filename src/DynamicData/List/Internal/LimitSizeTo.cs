@@ -5,14 +5,11 @@
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.List.Internal;
 
-#if NET9_0_OR_GREATER
-internal sealed class LimitSizeTo<T>(ISourceList<T> sourceList, int sizeLimit, IScheduler scheduler, Lock locker)
-#else
-internal sealed class LimitSizeTo<T>(ISourceList<T> sourceList, int sizeLimit, IScheduler scheduler, object locker)
-#endif
-
+internal sealed class LimitSizeTo<T>(ISourceList<T> sourceList, int sizeLimit, IScheduler scheduler, SharedDeliveryQueue queue)
     where T : notnull
 {
     private readonly IScheduler _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
@@ -23,7 +20,7 @@ internal sealed class LimitSizeTo<T>(ISourceList<T> sourceList, int sizeLimit, I
         var emptyResult = new List<T>();
         long orderItemWasAdded = -1;
 
-        return _sourceList.Connect().ObserveOn(_scheduler).Synchronize(locker).Transform(t => new ExpirableItem<T>(t, _scheduler.Now.UtcDateTime, Interlocked.Increment(ref orderItemWasAdded))).ToCollection().Select(
+        return _sourceList.Connect().ObserveOn(_scheduler).SynchronizeSafe(queue).Transform(t => new ExpirableItem<T>(t, _scheduler.Now.UtcDateTime, Interlocked.Increment(ref orderItemWasAdded))).ToCollection().Select(
             list =>
             {
                 var numberToExpire = list.Count - sizeLimit;

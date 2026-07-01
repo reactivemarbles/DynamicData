@@ -2,7 +2,10 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+
+using DynamicData.Internal;
 
 namespace DynamicData.List.Internal;
 
@@ -16,25 +19,29 @@ internal sealed class Virtualiser<T>(IObservable<IChangeSet<T>> source, IObserva
     public IObservable<IVirtualChangeSet<T>> Run() => Observable.Create<IVirtualChangeSet<T>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                // SharedDeliveryQueue + SynchronizeSafe replaces Synchronize(locker) so the
+                // gate lock is released before downstream OnNext. Closes the cross-cache
+                // deadlock window.
+                var queue = new SharedDeliveryQueue();
                 var all = new List<T>();
                 var virtualised = new ChangeAwareList<T>();
 
                 IVirtualRequest parameters = new VirtualRequest(0, 25);
 
-                var requestStream = _requests.Synchronize(locker).Select(
+                var requestStream = _requests.SynchronizeSafe(queue).Select(
                     request =>
                     {
                         parameters = request;
                         return CheckParamsAndVirtualise(all, virtualised, request);
                     });
 
-                var dataChanged = _source.Synchronize(locker).Select(changes => Virtualise(all, virtualised, parameters, changes));
+                var dataChanged = _source.SynchronizeSafe(queue).Select(changes => Virtualise(all, virtualised, parameters, changes));
 
-                // TODO: Remove this shared state stuff ie. _parameters
-                return requestStream.Merge(dataChanged).Where(changes => changes is not null && changes.Count != 0)
+                var publisher = requestStream.UnsynchronizedMerge(dataChanged).Where(changes => changes is not null && changes.Count != 0)
                     .Select(x => x!)
                     .Select(changes => new VirtualChangeSet<T>(changes, new VirtualResponse(virtualised.Count, parameters.StartIndex, all.Count))).SubscribeSafe(observer);
+
+                return new CompositeDisposable(publisher, queue);
             });
 
     private static IChangeSet<T>? CheckParamsAndVirtualise(IList<T> all, ChangeAwareList<T> virtualised, IVirtualRequest? request)

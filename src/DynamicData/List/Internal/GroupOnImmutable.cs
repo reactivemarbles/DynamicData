@@ -6,6 +6,8 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.List.Internal;
 
 internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelector, IObservable<Unit>? reGrouper)
@@ -24,24 +26,23 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
                 var groupings = new ChangeAwareList<IGrouping<TObject, TGroupKey>>();
                 var groupCache = new Dictionary<TGroupKey, GroupContainer>();
 
-                // var itemsWithGroup = _source
-                //    .Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)));
-
                 // capture the grouping up front which has the benefit that the group key is only selected once
                 var itemsWithGroup = _source.Transform<TObject, ItemWithGroupKey>((t, previous) => new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p => p.Group)), true);
 
-                var locker = InternalEx.NewLock();
-                var shared = itemsWithGroup.Synchronize(locker).Publish();
+                // Shared queue serializes the source changesets with the optional regrouper signal
+                // without holding a lock during downstream delivery.
+                var queue = new SharedDeliveryQueue();
+                var shared = itemsWithGroup.SynchronizeSafe(queue).Publish();
 
                 var grouper = shared.Select(changes => Process(groupings, groupCache, changes));
 
                 var reGroupFunc = _reGrouper is null ?
                     Observable.Never<IChangeSet<IGrouping<TObject, TGroupKey>>>() :
-                    _reGrouper.Synchronize(locker).CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
+                    _reGrouper.SynchronizeSafe(queue).UnsynchronizedCombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
 
-                var publisher = grouper.Merge(reGroupFunc).NotEmpty().SubscribeSafe(observer);
+                var publisher = grouper.UnsynchronizedMerge(reGroupFunc).NotEmpty().SubscribeSafe(observer);
 
-                return new CompositeDisposable(publisher, shared.Connect());
+                return new CompositeDisposable(publisher, shared.Connect(), queue);
             });
 
     private static IChangeSet<IGrouping<TObject, TGroupKey>> CreateChangeSet(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IDictionary<TGroupKey, IGrouping<TObject, TGroupKey>> initialStateOfGroups)

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,7 +6,9 @@ using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 
+using DynamicData.Internal;
 using DynamicData.List.Internal;
 
 // ReSharper disable once CheckNamespace
@@ -20,8 +22,10 @@ namespace DynamicData;
 public sealed class SourceList<T> : ISourceList<T>
     where T : notnull
 {
-    private readonly ISubject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Terminated via OnCompleted/OnError delivered through _notifications; explicit Dispose would race with in-flight queue drains.")]
+    private readonly Subject<IChangeSet<T>> _changes = new();
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Terminated via OnCompleted/OnError delivered through _notifications; explicit Dispose would race with in-flight queue drains.")]
     private readonly Subject<IChangeSet<T>> _changesPreview = new();
 
     private readonly IDisposable _cleanUp;
@@ -36,7 +40,20 @@ public sealed class SourceList<T> : ISourceList<T>
 
     private readonly ReaderWriter<T> _readerWriter = new();
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Terminated via NotifyCompleted in _cleanUp")]
+    private readonly DeliveryQueue<ListUpdate> _notifications;
+
     private int _editLevel;
+
+    private long _currentVersion;
+
+    private long _currentDeliveryVersion;
+
+    // Set true (under the queue gate) the instant a terminal notification is enqueued, so any
+    // Edit that lands between enqueue and the drain dequeueing the terminal can suppress its
+    // preview emission. Without this, a preview subscriber would observe a change whose main
+    // delivery is cleared from the queue when the terminal item is staged.
+    private bool _terminalEnqueued;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SourceList{T}"/> class.
@@ -44,17 +61,15 @@ public sealed class SourceList<T> : ISourceList<T>
     /// <param name="source">The source.</param>
     public SourceList(IObservable<IChangeSet<T>>? source = null)
     {
+        _notifications = new DeliveryQueue<ListUpdate>(_locker, new ListUpdateObserver(this));
+
         var loader = source is null ? Disposable.Empty : LoadFromSource(source);
 
         _cleanUp = Disposable.Create(
             () =>
             {
                 loader.Dispose();
-                OnCompleted();
-                if (_countChanged.IsValueCreated)
-                {
-                    _countChanged.Value.OnCompleted();
-                }
+                NotifyCompleted();
             });
     }
 
@@ -66,11 +81,15 @@ public sealed class SourceList<T> : ISourceList<T>
         Observable.Create<int>(
             observer =>
             {
-                lock (_locker)
-                {
-                    var source = _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
-                    return source.SubscribeSafe(observer);
-                }
+                using var readLock = _notifications.AcquireReadLock();
+
+                var snapshotVersion = _currentVersion;
+                var countChanged = readLock.HasPending
+                    ? _countChanged.Value.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
+                    : _countChanged.Value;
+
+                var source = countChanged.StartWith(_readerWriter.Count).DistinctUntilChanged();
+                return source.SubscribeSafe(observer);
             });
 
     /// <inheritdoc />
@@ -82,21 +101,27 @@ public sealed class SourceList<T> : ISourceList<T>
         var observable = Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                lock (_locker)
+                using var readLock = _notifications.AcquireReadLock();
+
+                var snapshot = _readerWriter.Items;
+                var snapshotVersion = _currentVersion;
+
+                var changes = readLock.HasPending
+                    ? _changes.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
+                    : (IObservable<IChangeSet<T>>)_changes;
+
+                IObservable<IChangeSet<T>> result;
+                if (snapshot.Length > 0)
                 {
-                    if (_readerWriter.Items.Length > 0)
-                    {
-                        observer.OnNext(
-                            new ChangeSet<T>
-                            {
-                                new(ListChangeReason.AddRange, _readerWriter.Items, 0)
-                            });
-                    }
-
-                    var source = _changes.Finally(observer.OnCompleted);
-
-                    return source.SubscribeSafe(observer);
+                    var initial = new ChangeSet<T> { new(ListChangeReason.AddRange, snapshot, 0) };
+                    result = Observable.Return((IChangeSet<T>)initial).Concat(changes);
                 }
+                else
+                {
+                    result = changes;
+                }
+
+                return result.SubscribeSafe(observer);
             });
 
         if (predicate is not null)
@@ -108,23 +133,21 @@ public sealed class SourceList<T> : ISourceList<T>
     }
 
     /// <inheritdoc />
-    public void Dispose()
-    {
-        _cleanUp.Dispose();
-        _changesPreview.Dispose();
-    }
+    public void Dispose() => _cleanUp.Dispose();
 
     /// <inheritdoc />
     public void Edit(Action<IExtendedList<T>> updateAction)
     {
         updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
 
-        lock (_locker)
+        using var notifications = _notifications.AcquireLock();
+
+        IChangeSet<T>? changes = null;
+
+        _editLevel++;
+
+        try
         {
-            IChangeSet<T>? changes = null;
-
-            _editLevel++;
-
             if (_editLevel == 1)
             {
                 changes = _changesPreview.HasObservers ? _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview) : _readerWriter.Write(updateAction);
@@ -133,13 +156,15 @@ public sealed class SourceList<T> : ISourceList<T>
             {
                 _readerWriter.WriteNested(updateAction);
             }
-
+        }
+        finally
+        {
             _editLevel--;
+        }
 
-            if (changes is not null && _editLevel == 0)
-            {
-                InvokeNext(changes);
-            }
+        if (changes is not null && changes.Count > 0 && _editLevel == 0)
+        {
+            notifications.EnqueueNext(new ListUpdate(changes, _readerWriter.Count, ++_currentVersion));
         }
     }
 
@@ -156,54 +181,89 @@ public sealed class SourceList<T> : ISourceList<T>
         return observable;
     }
 
-    private void InvokeNext(IChangeSet<T> changes)
-    {
-        if (changes.Count == 0)
-        {
-            return;
-        }
-
-        lock (_locker)
-        {
-            _changes.OnNext(changes);
-
-            if (_countChanged.IsValueCreated)
-            {
-                _countChanged.Value.OnNext(_readerWriter.Count);
-            }
-        }
-    }
-
     private void InvokeNextPreview(IChangeSet<T> changes)
     {
-        if (changes.Count == 0)
-        {
-            return;
-        }
-
-        lock (_locker)
+        if (changes.Count != 0 && !_terminalEnqueued && !_notifications.IsTerminated)
         {
             _changesPreview.OnNext(changes);
         }
     }
 
-    private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source) => source.Synchronize(_locker).Finally(OnCompleted).Select(_readerWriter.Write).Subscribe(InvokeNext, OnError, OnCompleted);
+    private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source) =>
+        source.Subscribe(
+            changeSet =>
+            {
+                IChangeSet<T>? changes = null;
+                try
+                {
+                    using var notifications = _notifications.AcquireLock();
+                    changes = _readerWriter.Write(changeSet);
 
-    private void OnCompleted()
+                    if (changes.Count > 0)
+                    {
+                        notifications.EnqueueNext(new ListUpdate(changes, _readerWriter.Count, ++_currentVersion));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Convert ReaderWriter / Write exceptions into a downstream OnError.
+                    // Without this, exceptions thrown by Write would escape the source's
+                    // observer callback and leave subscribers unterminated.
+                    NotifyError(ex);
+                }
+            },
+            NotifyError,
+            NotifyCompleted);
+
+    private void NotifyCompleted()
     {
-        lock (_locker)
-        {
-            _changesPreview.OnCompleted();
-            _changes.OnCompleted();
-        }
+        using var notifications = _notifications.AcquireLock();
+        _terminalEnqueued = true;
+        notifications.EnqueueCompleted();
     }
 
-    private void OnError(Exception exception)
+    private void NotifyError(Exception exception)
     {
-        lock (_locker)
+        using var notifications = _notifications.AcquireLock();
+        _terminalEnqueued = true;
+        notifications.EnqueueError(exception);
+    }
+
+    private readonly record struct ListUpdate(IChangeSet<T> Changes, int Count, long Version);
+
+    private sealed class ListUpdateObserver(SourceList<T> source) : IObserver<ListUpdate>
+    {
+        public void OnNext(ListUpdate value)
         {
-            _changesPreview.OnError(exception);
-            _changes.OnError(exception);
+            Volatile.Write(ref source._currentDeliveryVersion, value.Version);
+            source._changes.OnNext(value.Changes);
+
+            if (source._countChanged.IsValueCreated)
+            {
+                source._countChanged.Value.OnNext(value.Count);
+            }
+        }
+
+        public void OnError(Exception error)
+        {
+            source._changesPreview.OnError(error);
+            source._changes.OnError(error);
+
+            if (source._countChanged.IsValueCreated)
+            {
+                source._countChanged.Value.OnError(error);
+            }
+        }
+
+        public void OnCompleted()
+        {
+            source._changes.OnCompleted();
+            source._changesPreview.OnCompleted();
+
+            if (source._countChanged.IsValueCreated)
+            {
+                source._countChanged.Value.OnCompleted();
+            }
         }
     }
 }

@@ -6,6 +6,8 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.List.Internal;
 
 internal sealed class GroupOn<TObject, TGroupKey>(IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelector, IObservable<Unit>? regrouper)
@@ -27,19 +29,22 @@ internal sealed class GroupOn<TObject, TGroupKey>(IObservable<IChangeSet<TObject
                 // capture the grouping up front which has the benefit that the group key is only selected once
                 var itemsWithGroup = _source.Transform<TObject, ItemWithGroupKey>((t, previous) => new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p => p.Group)), true);
 
-                var locker = InternalEx.NewLock();
-                var shared = itemsWithGroup.Synchronize(locker).Publish();
+                // Shared queue serializes the source changesets with the optional regrouper signal
+                // so they appear as a single sequence to the combiner, without holding a lock
+                // during the downstream observer.OnNext call.
+                var queue = new SharedDeliveryQueue();
+                var shared = itemsWithGroup.SynchronizeSafe(queue).Publish();
 
                 var grouper = shared.Select(changes => Process(groupings, groupCache, changes));
 
                 var regrouperFunc = _regrouper is null ?
                     Observable.Never<IChangeSet<IGroup<TObject, TGroupKey>>>() :
-                    _regrouper.Synchronize(locker).CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
+                    _regrouper.SynchronizeSafe(queue).UnsynchronizedCombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
 
-                var publisher = grouper.Merge(regrouperFunc).DisposeMany() // dispose removes as the grouping is disposable
+                var publisher = grouper.UnsynchronizedMerge(regrouperFunc).DisposeMany() // dispose removes as the grouping is disposable
                     .NotEmpty().SubscribeSafe(observer);
 
-                return new CompositeDisposable(publisher, shared.Connect());
+                return new CompositeDisposable(publisher, shared.Connect(), queue);
             });
 
     private static GroupWithAddIndicator GetCache(IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCaches, TGroupKey key)
