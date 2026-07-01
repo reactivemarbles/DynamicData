@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 /// <summary>
 /// Represents an adaptor which is used to update observable collection from
@@ -44,8 +49,8 @@ public class SortedObservableCollectionAdaptor<TObject, TKey>(int refreshThresho
     /// <param name="collection">The collection.</param>
     public void Adapt(ISortedChangeSet<TObject, TKey> changes, IObservableCollection<TObject> collection)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
-        collection.ThrowArgumentNullExceptionIfNull(nameof(collection));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
+        ArgumentExceptionHelper.ThrowIfNull(collection);
 
         switch (changes.SortedItems.SortReason)
         {
@@ -116,6 +121,11 @@ public class SortedObservableCollectionAdaptor<TObject, TKey>(int refreshThresho
         }
     }
 
+    /// <summary>
+    /// Executes the DoUpdate operation.
+    /// </summary>
+    /// <param name="updates">The updates value.</param>
+    /// <param name="list">The list value.</param>
     private void DoUpdate(ISortedChangeSet<TObject, TKey> updates, IObservableCollection<TObject> list)
     {
         foreach (var update in updates)

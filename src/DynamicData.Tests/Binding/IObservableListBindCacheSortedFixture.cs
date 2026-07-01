@@ -1,14 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Binding;
 
@@ -18,7 +9,7 @@ public class IObservableListBindCacheSortedFixture : IDisposable
 
     private static readonly IComparer<Person> _comparerNameDesc = SortExpressionComparer<Person>.Descending(p => p.Name);
 
-    private readonly BehaviorSubject<IComparer<Person>> _comparer = new(_comparerAgeAscThanNameAsc);
+    private readonly StateSignal<IComparer<Person>> _comparer = new(_comparerAgeAscThanNameAsc);
 
     private readonly RandomPersonGenerator _generator = new();
 

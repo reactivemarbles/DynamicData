@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using FluentAssertions;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 public static class CacheChangeSetAssertions
 {

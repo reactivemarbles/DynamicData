@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using DynamicData.Binding;
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests;
 
@@ -31,7 +22,6 @@ public class AutoRefreshFilter
                 ex => {Assert.Fail("There should be no error");}
             );
     }
-
 
     [Fact]
     public void Test()
@@ -69,7 +59,7 @@ public class AutoRefreshFilter
         var items = new SourceList<ActivableItem>();
         items.Add(item1);
 
-        var filterSubject = new BehaviorSubject<Func<ActivableItem, bool>>(_ => false);
+        var filterSubject = new StateSignal<Func<ActivableItem, bool>>(_ => false);
 
         var obsListDerived = items
             .Connect()
@@ -113,7 +103,7 @@ public class AutoRefreshFilter
         var items = new ObservableCollection<ActivableItem>();
         items.Add(item1);
 
-        var filterSubject = new BehaviorSubject<Func<ActivableItem, bool>>(_ => false);
+        var filterSubject = new StateSignal<Func<ActivableItem, bool>>(_ => false);
 
         var obsListDerived = items
             .ToObservableChangeSet()

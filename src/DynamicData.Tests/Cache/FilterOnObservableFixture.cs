@@ -1,13 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Microsoft.Reactive.Testing;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -115,7 +107,7 @@ public class FilterOnObservableFixture : IDisposable
     public void ObservableFilterTriggersAddAndRemove()
     {
         // having
-        ISubject<bool> filterSubject = new Subject<bool>();
+        ISignal<bool> filterSubject = new Signal<bool>();
 
         using var filterStats = _source.Connect().FilterOnObservable(_ => filterSubject).AsAggregator();
 
@@ -138,7 +130,7 @@ public class FilterOnObservableFixture : IDisposable
     public void ObservableFilterDuplicateValuesHaveNoEffect()
     {
         // having
-        ISubject<bool> filterSubject = new Subject<bool>();
+        ISignal<bool> filterSubject = new Signal<bool>();
 
         using var filterStats = _source.Connect().FilterOnObservable(_ => filterSubject).AsAggregator();
 
@@ -165,7 +157,7 @@ public class FilterOnObservableFixture : IDisposable
     {
         // having
         TestScheduler? scheduler = new TestScheduler();
-        ISubject<bool> filterSubject = new Subject<bool>();
+        ISignal<bool> filterSubject = new Signal<bool>();
 
         using var filterStats = _source.Connect().FilterOnObservable(_ => filterSubject, TimeSpan.FromSeconds(1), scheduler).AsAggregator();
 

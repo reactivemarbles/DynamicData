@@ -1,38 +1,41 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
 /// </summary>
 public static partial class ObservableCacheEx
 {
-    /// <inheritdoc cref="Switch{TObject, TKey}(IObservable{IObservable{IChangeSet{TObject, TKey}}})"/>
-    /// <param name="sources">An observable that emits <see cref="IObservableCache{TObject, TKey}"/> instances.</param>
+    /// <summary>
+    /// Provides an overload of <c>Switch</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="sources">An observable that emits <c>IObservableCache&lt;TObject, TKey&gt;</c> instances.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>Overload that accepts observable caches. Internally calls <c>Connect()</c> on each cache and delegates to the changeset overload.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Switch<TObject, TKey>(this IObservable<IObservableCache<TObject, TKey>> sources)
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentExceptionHelper.ThrowIfNull(sources);
 
         return sources.Select(cache => cache.Connect()).Switch();
     }
@@ -43,7 +46,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="sources">An <see cref="IObservable{T}"/> of <see cref="IObservable{T}"/> changeset streams. The operator subscribes to the latest inner stream.</param>
+    /// <param name="sources">An <c>IObservable&lt;T&gt;</c> of <c>IObservable&lt;T&gt;</c> changeset streams. The operator subscribes to the latest inner stream.</param>
     /// <returns>A changeset stream reflecting the items from the most recently emitted inner source.</returns>
     /// <remarks>
     /// <para>On switch: <b>Remove</b> is emitted for all items from the previous source, then <b>Add</b> for all items from the new source.</para>
@@ -53,7 +56,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentExceptionHelper.ThrowIfNull(sources);
 
         return new Switch<TObject, TKey>(sources).Run();
     }

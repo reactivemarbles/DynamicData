@@ -1,8 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.Reactive;
 using DynamicData.Binding;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Issues
 {

@@ -1,10 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Concurrency;
+namespace DynamicData.Reactive.Experimental;
+#else
 
 namespace DynamicData.Experimental;
+#endif
 
 /// <summary>
 /// Experimental operator extensions.
@@ -24,7 +27,7 @@ public static class ExperimentalEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new Watcher<TObject, TKey>(source, scheduler ?? GlobalConfig.DefaultScheduler);
     }

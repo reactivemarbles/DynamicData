@@ -1,22 +1,20 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+using DynamicData.Reactive.Binding;
+#else
+
 using DynamicData.Binding;
-using DynamicData.Cache.Internal;
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for ObservableList.
@@ -24,26 +22,26 @@ namespace DynamicData;
 public static partial class ObservableListEx
 {
     /// <summary>
-    /// Injects a side effect into a changeset stream via an <see cref="IChangeSetAdaptor{T}"/>.
+    /// Injects a side effect into a changeset stream via an <c>IChangeSetAdaptor&lt;T&gt;</c>.
     /// The adaptor's <c>Adapt</c> method is invoked for each changeset before it is forwarded downstream unchanged.
     /// </summary>
     /// <typeparam name="T">The type of items in the list.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to observe and adapt.</param>
-    /// <param name="adaptor">The <see cref="IChangeSetAdaptor{T}"/> adaptor whose <c>Adapt</c> method is invoked for each changeset.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to observe and adapt.</param>
+    /// <param name="adaptor">The <c>IChangeSetAdaptor&lt;T&gt;</c> adaptor whose <c>Adapt</c> method is invoked for each changeset.</param>
     /// <returns>A list changeset stream identical to the source, with the adaptor side effect applied.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="adaptor"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
-    /// This is the primary extension point for custom UI binding adaptors (e.g., <see cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
+    /// This is the primary extension point for custom UI binding adaptors (e.g., <c>Bind&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservableCollection&lt;T&gt;, BindingOptions)</c>
     /// delegates to this operator). If the adaptor throws, the exception propagates downstream as <c>OnError</c>.
     /// </para>
     /// </remarks>
-    /// <seealso cref="Bind{T}(IObservable{IChangeSet{T}}, IObservableCollection{T}, BindingOptions)"/>
+    /// <seealso><c>Bind&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservableCollection&lt;T&gt;, BindingOptions)</c></seealso>
     public static IObservable<IChangeSet<T>> Adapt<T>(this IObservable<IChangeSet<T>> source, IChangeSetAdaptor<T> adaptor)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        adaptor.ThrowArgumentNullExceptionIfNull(nameof(adaptor));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(adaptor);
 
         return Observable.Create<IChangeSet<T>>(
             observer =>

@@ -1,15 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Disposables;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -25,7 +15,6 @@ public sealed class SortByAndBindToList : SortAndBindFixture
         return (aggregator, list);
     }
 }
-
 
 // Bind to a list
 public sealed class SortAndBindToList: SortAndBindFixture
@@ -65,7 +54,6 @@ public sealed class SortAndBindToObservableCollection : SortAndBindFixture
     }
 }
 
-
 // Bind to a binding list
 public sealed class SortAndBindToBindingList : SortAndBindFixture
 
@@ -77,7 +65,6 @@ public sealed class SortAndBindToBindingList : SortAndBindFixture
         return (aggregator, list);
     }
 }
-
 
 // Bind to a readonly observable collection
 public sealed class SortAndBindToReadOnlyObservableCollection: SortAndBindFixture
@@ -140,8 +127,6 @@ public class SortAndBindBinarySearch_ForSameKeyAndObjectValues: IDisposable
     public void Dispose() => _strings.Dispose();
 }
 
-
-
 // Bind to a readonly observable collection - using default comparer
 public sealed class SortAndBindToReadOnlyObservableCollectionDefaultComparer : SortAndBindFixture
 {
@@ -175,7 +160,6 @@ public sealed class SortAndBindWithResetOptions: IDisposable
         _collectionChangedEventArgs.Count.Should().Be(5);
         _collectionChangedEventArgs.All(a=>a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
 
-        
         _collectionChangedEventArgs.Clear();
 
         // fire 15 changes, we should get a refresh event
@@ -194,7 +178,6 @@ public sealed class SortAndBindWithResetOptions: IDisposable
 
     }
 
-
     [Fact]
     [Description("Check reset is not fired")]
     public void NeverFireReset()
@@ -208,7 +191,6 @@ public sealed class SortAndBindWithResetOptions: IDisposable
         _source.AddOrUpdate(Enumerable.Range(0, 5).Select(i => new Person($"P{i}", i)));
         _collectionChangedEventArgs.Count.Should().Be(5);
         _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
-
 
         _collectionChangedEventArgs.Clear();
 
@@ -235,7 +217,6 @@ public sealed class SortAndBindWithResetOptions: IDisposable
         _collectionChangedEventArgs.Count.Should().Be(1);
         _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Reset).Should().BeTrue();
 
-
         _collectionChangedEventArgs.Clear();
 
         // fire 15 changes, we should get a refresh event
@@ -254,11 +235,8 @@ public sealed class SortAndBindWithResetOptions: IDisposable
 
     }
 
-
-
     public void Dispose() => _source.Dispose();
 }
-
 
 public abstract class SortAndBindFixture : IDisposable
 {
@@ -269,7 +247,6 @@ public abstract class SortAndBindFixture : IDisposable
 
     protected readonly IComparer<Person> _comparer = Person.DefaultComparer;
     protected readonly ISourceCache<Person, string> _source = new SourceCache<Person, string>(p => p.Key);
-
 
     public SortAndBindFixture()
     {
@@ -287,9 +264,7 @@ public abstract class SortAndBindFixture : IDisposable
 
     }
 
-
     protected abstract (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests();
-
 
     [Fact]
     public void InsertAtBeginning()
@@ -333,7 +308,6 @@ public abstract class SortAndBindFixture : IDisposable
         _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
     }
 
-
     [Fact]
     public void InsertInMiddle()
     {
@@ -352,7 +326,6 @@ public abstract class SortAndBindFixture : IDisposable
 
         _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
     }
-
 
     [Fact]
     public void InsertSameLocation()
@@ -377,10 +350,8 @@ public abstract class SortAndBindFixture : IDisposable
 
         _boundList.Count.Should().Be(10);
 
-  
         _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
     }
-
 
     [Fact]
     public void Refresh()
@@ -395,7 +366,6 @@ public abstract class SortAndBindFixture : IDisposable
         RefreshAtAndAssetPosition(toRefresh, p=>p.Age =15, 1);
         RefreshAtAndAssetPosition(toRefresh, p => p.Age = 20, 1);
         RefreshAtAndAssetPosition(toRefresh, p => p.Age = 25, 1);
-
 
         // move after
         RefreshAtAndAssetPosition(toRefresh, p => p.Age = 45, 3);
@@ -414,10 +384,8 @@ public abstract class SortAndBindFixture : IDisposable
 
         _boundList.Count.Should().Be(10);
 
-
         _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
     }
-
 
     [Fact]
     public void BatchOfVariousChanges()
@@ -452,7 +420,6 @@ public abstract class SortAndBindFixture : IDisposable
         expectedInOrder.SequenceEqual(_boundList).Should().BeTrue();
     }
 
-
     [Fact]
     public void BatchOfVariousEndingInClear()
     {
@@ -470,7 +437,6 @@ public abstract class SortAndBindFixture : IDisposable
 
     }
 
-
     [Fact]
     public void LargeBatchChange()
     {
@@ -478,11 +444,9 @@ public abstract class SortAndBindFixture : IDisposable
         _source.AddOrUpdate(Enumerable.Range(0, 100).Select(i => new Person($"P{i}", i)));
         _source.AddOrUpdate(Enumerable.Range(100, 100).Select(i => new Person($"P{i}", i)));
 
-
         _boundList.Count.Should().Be(200);
         _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
     }
-
 
     [Fact]
     public void BatchUpdateShiftingIndicies()
@@ -519,8 +483,6 @@ public abstract class SortAndBindFixture : IDisposable
         _boundList.SequenceEqual(expected).Should().BeTrue();
     }
 
-
-
     [Fact]
     public void RemoveFirst()
     {
@@ -549,7 +511,6 @@ public abstract class SortAndBindFixture : IDisposable
         _source.Remove(people[99].Key);
         _boundList.Count.Should().Be(99);
 
-
         people.RemoveAt(99);
         people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
     }
@@ -565,14 +526,11 @@ public abstract class SortAndBindFixture : IDisposable
         _source.Remove(people[50].Key);
         _boundList.Count.Should().Be(99);
 
-
         people.RemoveAt(IndexFromKey(people[50].Key));
         int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
 
-    
         people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
     }
-
 
     [Fact]
     public void SortInitialBatch()
@@ -594,13 +552,11 @@ public abstract class SortAndBindFixture : IDisposable
 
         var update = new Person(toUpdate.Name, toUpdate.Age + 5);
 
-
         _source.AddOrUpdate(new Person(toUpdate.Name, toUpdate.Age + 5));
 
         people[IndexFromKey(update.Key)] = new Person(toUpdate.Name, toUpdate.Age + 5);
        
         int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
-
 
         people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
     }
@@ -621,7 +577,6 @@ public abstract class SortAndBindFixture : IDisposable
 
         people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
     }
-
 
     [Fact]
     public void UpdateMiddle()

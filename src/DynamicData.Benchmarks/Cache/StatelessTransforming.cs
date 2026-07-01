@@ -1,10 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using BenchmarkDotNet.Attributes;
-
 namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
@@ -54,7 +47,7 @@ public class StatelessTransforming
     [Benchmark(Baseline = true)]
     public void Transform()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .Transform(static item => item.Name)
@@ -68,7 +61,7 @@ public class StatelessTransforming
     [Benchmark]
     public void TransformImmutable()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .TransformImmutable(static item => item.Name)

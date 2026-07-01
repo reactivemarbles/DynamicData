@@ -1,34 +1,57 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net462;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <IsAotCompatible>true</IsAotCompatible>
-    <IsPackable>true</IsPackable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="6.1.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="DynamicData.Kernel" />
-    <Using Include="DynamicData.Internal" />
-  </ItemGroup>
-
-  <PropertyGroup>
     <Title>Dynamic Data</Title>
     <Description>
 Bring the power of Rx to collections using Dynamic Data.
 Dynamic Data is a comprehensive caching and data manipulation solution which introduces domain centric observable collections.
       Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more.
     </Description>
+    <TargetFrameworks>net462;net472;net48;net481;net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ReactiveUI.Primitives" Version="5.8.0" ExcludeAssets="analyzers" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="System" />
+    <Using Include="System.Collections" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.ComponentModel" />
+    <Using Include="System.Runtime.CompilerServices" />
+    <Using Include="System.Collections.ObjectModel" />
+    <Using Include="DynamicData.Cache" />
+    <Using Include="DynamicData.Kernel" />
+    <Using Include="DynamicData.Internal" />
+    <Using Include="ReactiveUI.Primitives" />
+    <Using Include="ReactiveUI.Primitives.LinqExtensions" Alias="PrimitivesLinqExtensions" />
+    <Using Include="ReactiveUI.Primitives.Advanced" />
+    <Using Include="ReactiveUI.Primitives.Advanced.Witness" Alias="Observer" />
+    <Using Include="ReactiveUI.Primitives.Core" />
+    <Using Include="ReactiveUI.Primitives.Concurrency" />
+    <Using Include="ReactiveUI.Primitives.Disposables" />
+    <Using Include="ReactiveUI.Primitives.Disposables.Scope" Alias="Disposable" />
+    <Using Include="ReactiveUI.Primitives.Disposables.MultipleDisposable" Alias="CompositeDisposable" />
+    <Using Include="ReactiveUI.Primitives.Disposables.SwapDisposable" Alias="SerialDisposable" />
+    <Using Include="ReactiveUI.Primitives.Disposables.OnceDisposable" Alias="SingleAssignmentDisposable" />
+    <Using Include="ReactiveUI.Primitives.Signals" />
+    <Using Include="ReactiveUI.Primitives.Signals.Signal" Alias="Observable" />
+    <Using Include="ReactiveUI.Primitives.RxVoid" Alias="Unit" />
+    <Using Include="ReactiveUI.Primitives.Concurrency.ISequencer" Alias="IScheduler" />
+    <Using Include="ReactiveUI.Primitives.Concurrency.Sequencer" Alias="Scheduler" />
+    <Using Include="ReactiveUI.Primitives.Concurrency.TaskPoolSequencer" Alias="TaskPoolScheduler" />
+  </ItemGroup>
+
+  <PropertyGroup>
   </PropertyGroup>
 
   <ItemGroup>
 
     <!-- Group nested ObservableCacheEx.x.cs classes with ObservableCacheEx.cs -->
     <Compile Remove="**\ObservableCacheEx.*.cs" />
+    <Compile Remove="Internal\ObservableEx.cs" />
+    <Compile Remove="Internal\ReactiveCompatibility.cs" />
   
     <Compile Include="**\ObservableCacheEx.*.cs">
       <DependentUpon>ObservableCacheEx.cs</DependentUpon>
@@ -40,4 +63,13 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
     <Compile Remove="Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
   </ItemGroup>
 
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <Using Include="DynamicData.ArgumentExceptionHelper" Alias="ArgumentExceptionHelper" />
+    <Using Include="DynamicData.ArgumentOutOfRangeExceptionHelper" Alias="ArgumentOutOfRangeExceptionHelper" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!$(TargetFramework.StartsWith('net4'))">
+    <Using Include="System.ArgumentNullException" Alias="ArgumentExceptionHelper" />
+    <Using Include="System.ArgumentOutOfRangeException" Alias="ArgumentOutOfRangeExceptionHelper" />
+  </ItemGroup>
 </Project>

@@ -1,22 +1,20 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
+using DynamicData.Reactive.List.Internal;
+#else
+
 using DynamicData.List.Internal;
-using DynamicData.List.Linq;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for ObservableList.
@@ -24,17 +22,17 @@ namespace DynamicData;
 public static partial class ObservableListEx
 {
     /// <summary>
-    /// Projects each item to a new form using an async transform function. Behaves like <see cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/> but the factory returns a <see cref="Task{T}"/>.
+    /// Projects each item to a new form using an async transform function. Behaves like <c>Transform&lt;TSource, TDestination&gt;(IObservable&lt;IChangeSet&lt;TSource&gt;&gt;, Func&lt;TSource, TDestination&gt;, bool)</c> but the factory returns a <c>Task&lt;T&gt;</c>.
     /// </summary>
     /// <typeparam name="TSource">The type of the source items.</typeparam>
     /// <typeparam name="TDestination">The type of the destination items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TSource}}"/> to transform asynchronously.</param>
-    /// <param name="transformFactory">An <see cref="Func{T, TResult}"/> async function that transforms each source item.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TSource&gt;&gt;</c> to transform asynchronously.</param>
+    /// <param name="transformFactory">An <c>Func&lt;T, TResult&gt;</c> async function that transforms each source item.</param>
     /// <param name="transformOnRefresh">When <see langword="true"/>, Refresh events re-invoke the factory.</param>
     /// <returns>A list changeset stream of asynchronously transformed items.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <see langword="null"/>.</exception>
     /// <remarks>
-    /// <para>Change handling is identical to the synchronous <see cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/> except the factory is awaited. Operations are serialized per changeset via a semaphore.</para>
+    /// <para>Change handling is identical to the synchronous <c>Transform&lt;TSource, TDestination&gt;(IObservable&lt;IChangeSet&lt;TSource&gt;&gt;, Func&lt;TSource, TDestination&gt;, bool)</c> except the factory is awaited. Operations are serialized per changeset via a semaphore.</para>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
     /// <item><term>Add/AddRange</term><description>The async factory is awaited for each item. An <b>Add</b>/<b>AddRange</b> is emitted with the transformed results.</description></item>
@@ -48,9 +46,9 @@ public static partial class ObservableListEx
     /// </list>
     /// <para><b>Worth noting:</b> All async transforms within a single changeset are serialized (not parallel). Each changeset is fully processed before the next begins. By default, Refresh does NOT re-transform.</para>
     /// </remarks>
-    /// <seealso cref="Transform{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, TDestination}, bool)"/>
-    /// <seealso cref="ObservableCacheEx.TransformAsync{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Task{TDestination}}, IObservable{Func{TSource, TKey, bool}})"/>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    /// <seealso><c>Transform&lt;TSource, TDestination&gt;(IObservable&lt;IChangeSet&lt;TSource&gt;&gt;, Func&lt;TSource, TDestination&gt;, bool)</c></seealso>
+    /// <seealso><c>ObservableCacheEx.TransformAsync&lt;TDestination, TSource, TKey&gt;(IObservable&lt;IChangeSet&lt;TSource, TKey&gt;&gt;, Func&lt;TSource, Task&lt;TDestination&gt;&gt;, IObservable&lt;Func&lt;TSource, TKey, bool&gt;&gt;)</c></seealso>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
         Func<TSource, Task<TDestination>> transformFactory,
@@ -58,17 +56,23 @@ public static partial class ObservableListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
 
         return source.TransformAsync<TSource, TDestination>((t, _, _) => transformFactory(t), transformOnRefresh);
     }
 
-    /// <inheritdoc cref="TransformAsync{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, Task{TDestination}}, bool)"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
     /// Async transform overload receiving the source item and its index.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="transformOnRefresh">The transformOnRefresh value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
         Func<TSource, int, Task<TDestination>> transformFactory,
@@ -76,44 +80,56 @@ public static partial class ObservableListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
 
         return source.TransformAsync<TSource, TDestination>((t, _, i) => transformFactory(t, i), transformOnRefresh);
     }
 
-    /// <inheritdoc cref="TransformAsync{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, Task{TDestination}}, bool)"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
     /// Async transform overload receiving the source item and the previously transformed value.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="transformOnRefresh">The transformOnRefresh value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
-        Func<TSource, Optional<TDestination>, Task<TDestination>> transformFactory,
+        Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
 
         return source.TransformAsync<TSource, TDestination>((t, d, _) => transformFactory(t, d), transformOnRefresh);
     }
 
-    /// <inheritdoc cref="TransformAsync{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, Task{TDestination}}, bool)"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <summary>
     /// Async transform overload receiving the source item, previously transformed value, and index. This is the terminal overload that all other TransformAsync overloads delegate to.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="transformOnRefresh">The transformOnRefresh value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
-        Func<TSource, Optional<TDestination>, int, Task<TDestination>> transformFactory,
+        Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, int, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
 
         return new TransformAsync<TSource, TDestination>(source, transformFactory, transformOnRefresh).Run();
     }

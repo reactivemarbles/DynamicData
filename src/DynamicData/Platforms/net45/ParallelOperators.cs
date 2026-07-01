@@ -5,12 +5,16 @@
 #if P_LINQ
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.PLinq
+#else
 namespace DynamicData.PLinq
+#endif
 {
-    /// <summary>
-    /// PLinq operators or Net4 and Net45 only.
-    /// </summary>
-    public static class ParallelOperators
+/// <summary>
+/// PLinq operators or Net4 and Net45 only.
+/// </summary>
+public static class ParallelOperators
     {
         /// <summary>
         /// Filters the stream using the specified predicate.
@@ -26,7 +30,7 @@ namespace DynamicData.PLinq
             where TObject : notnull
             where TKey : notnull
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
+            ArgumentExceptionHelper.ThrowIfNull(source);
 
             return new PFilter<TObject, TKey>(source, filter, parallelisationOptions).Run();
         }
@@ -50,9 +54,9 @@ namespace DynamicData.PLinq
             where TObject : notnull
             where TKey : notnull
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            subscriptionFactory.ThrowArgumentNullExceptionIfNull(nameof(subscriptionFactory));
-            parallelisationOptions.ThrowArgumentNullExceptionIfNull(nameof(parallelisationOptions));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(subscriptionFactory);
+            ArgumentExceptionHelper.ThrowIfNull(parallelisationOptions);
 
             return new PSubscribeMany<TObject, TKey>(source, (t, _) => subscriptionFactory(t), parallelisationOptions).Run();
         }
@@ -76,9 +80,9 @@ namespace DynamicData.PLinq
             where TObject : notnull
             where TKey : notnull
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            subscriptionFactory.ThrowArgumentNullExceptionIfNull(nameof(subscriptionFactory));
-            parallelisationOptions.ThrowArgumentNullExceptionIfNull(nameof(parallelisationOptions));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(subscriptionFactory);
+            ArgumentExceptionHelper.ThrowIfNull(parallelisationOptions);
 
             return new PSubscribeMany<TObject, TKey>(source, subscriptionFactory, parallelisationOptions).Run();
         }
@@ -103,9 +107,9 @@ namespace DynamicData.PLinq
             where TSource : notnull
             where TKey : notnull
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-            parallelisationOptions.ThrowArgumentNullExceptionIfNull(nameof(parallelisationOptions));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+            ArgumentExceptionHelper.ThrowIfNull(parallelisationOptions);
 
             return new PTransform<TDestination, TSource, TKey>(source, (t, _, k) => transformFactory(t, k), parallelisationOptions).Run();
         }
@@ -154,10 +158,10 @@ namespace DynamicData.PLinq
             where TSource : notnull
             where TKey : notnull
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-            errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
-            parallelisationOptions.ThrowArgumentNullExceptionIfNull(nameof(parallelisationOptions));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+            ArgumentExceptionHelper.ThrowIfNull(errorHandler);
+            ArgumentExceptionHelper.ThrowIfNull(parallelisationOptions);
 
             return new PTransform<TDestination, TSource, TKey>(source, (t, _, _) => transformFactory(t), parallelisationOptions, errorHandler).Run();
         }

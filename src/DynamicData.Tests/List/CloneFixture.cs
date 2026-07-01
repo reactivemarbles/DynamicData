@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+﻿using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.List;
 

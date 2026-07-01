@@ -1,16 +1,19 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Subjects;
+namespace DynamicData.Reactive.Experimental;
+#else
 
 namespace DynamicData.Experimental;
+#endif
 
 /// <summary>
 /// A subject which also contains its current reference count.
 /// </summary>
 /// <typeparam name="T">The type of item.</typeparam>
-internal interface ISubjectWithRefCount<T> : ISubject<T>
+internal interface ISubjectWithRefCount<T> : ISignal<T>
 {
     /// <summary>Gets number of subscribers.</summary>
     /// <value>

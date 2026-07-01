@@ -1,16 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading.Tasks;
-
 using DynamicData.Kernel;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -26,7 +14,7 @@ public static partial class AsyncDisposeManyFixture
         public async Task ItemDisposalErrors_ErrorPropagatesToDisposalsCompleted(ItemType itemType)
         {
             using var source = new SourceCache<ItemBase, int>(static item => item.Id);
-            using var sourceCompletionSource = new Subject<Unit>();
+            using var sourceCompletionSource = new Signal<Unit>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
@@ -44,7 +32,6 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-
             source.AddOrUpdate(new[]
             {
                 ItemBase.Create(type: itemType, id: 1, version: 1),
@@ -60,7 +47,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.Error.Should().BeNull();
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("no disposals should have occurred");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("no disposals should have occurred");
-
 
             var error = new Exception("Test");
             source.Items.ElementAt(1).FailDisposal(error);
@@ -86,7 +72,7 @@ public static partial class AsyncDisposeManyFixture
         public async Task ItemDisposalsComplete_DisposalsCompletedOccursAndCompletes(ItemType itemType)
         {
             using var source = new SourceCache<ItemBase, int>(static item => item.Id);
-            using var sourceCompletionSource = new Subject<Unit>();
+            using var sourceCompletionSource = new Signal<Unit>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
@@ -104,7 +90,6 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-
             source.AddOrUpdate(new[]
             {
                 ItemBase.Create(type: itemType, id: 1, version: 1),
@@ -120,7 +105,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.Error.Should().BeNull();
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             sourceCompletionSource.OnNext(Unit.Default);
             foreach (var item in source.Items)
@@ -143,7 +127,7 @@ public static partial class AsyncDisposeManyFixture
         public async Task ItemDisposalsOccurOnMultipleThreads_DisposalIsThreadSafe()
         {
             using var source = new SourceCache<AsyncDisposableItem, int>(static item => item.Id);
-            using var sourceCompletionSource = new Subject<Unit>();
+            using var sourceCompletionSource = new Signal<Unit>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
@@ -160,7 +144,6 @@ public static partial class AsyncDisposeManyFixture
                 .RecordCacheItems(out var results);
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
-
 
             var items = Enumerable.Range(1, 100_000)
                 .Select(id => new AsyncDisposableItem()
@@ -180,7 +163,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.Error.Should().BeNull();
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             sourceCompletionSource.OnNext();
             await Task.WhenAll(items

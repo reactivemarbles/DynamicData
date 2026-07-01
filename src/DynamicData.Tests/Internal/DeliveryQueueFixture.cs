@@ -1,23 +1,10 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using DynamicData.Internal;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Internal;
 
 public class DeliveryQueueFixture
 {
-#if NET9_0_OR_GREATER
     private readonly Lock _gate = new();
-#else
-    private readonly object _gate = new();
-#endif
 
     /// <summary>Helper observer that captures OnNext items into a list.</summary>
     private sealed class ListObserver<T> : IObserver<T>
@@ -55,12 +42,14 @@ public class DeliveryQueueFixture
     }
 
     private static void EnqueueAndDeliver<T>(DeliveryQueue<T> queue, T item)
+        where T : notnull
     {
         using var scope = queue.AcquireLock();
         scope.EnqueueNext(item);
     }
 
     private static void TriggerDelivery<T>(DeliveryQueue<T> queue)
+        where T : notnull
     {
         using var scope = queue.AcquireLock();
     }

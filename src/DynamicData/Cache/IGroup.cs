@@ -3,7 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// An update stream which has been grouped by a common key.

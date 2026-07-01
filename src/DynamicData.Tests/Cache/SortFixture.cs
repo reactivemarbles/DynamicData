@@ -1,20 +1,6 @@
-#region
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Subjects;
-
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
-#endregion
 
 namespace DynamicData.Tests.Cache;
 
@@ -263,7 +249,7 @@ public class SortFixtureWithReorder : IDisposable
     public void DoesNotThrow1()
     {
         var cache = new SourceCache<Data, int>(d => d.Id);
-        var sortPump = new Subject<Unit>();
+        var sortPump = new Signal<Unit>();
         var disposable = cache.Connect().Sort(SortExpressionComparer<Data>.Ascending(d => d.Id), sortPump).Subscribe();
 
         disposable.Dispose();
@@ -273,7 +259,7 @@ public class SortFixtureWithReorder : IDisposable
     public void DoesNotThrow2()
     {
         var cache = new SourceCache<Data, int>(d => d.Id);
-        var disposable = cache.Connect().Sort(new BehaviorSubject<IComparer<Data>>(SortExpressionComparer<Data>.Ascending(d => d.Id))).Subscribe();
+        var disposable = cache.Connect().Sort(new StateSignal<IComparer<Data>>(SortExpressionComparer<Data>.Ascending(d => d.Id))).Subscribe();
 
         disposable.Dispose();
     }
@@ -364,7 +350,7 @@ public class SortFixtureWithReorder : IDisposable
     {
         var source = new SourceCache<Person, string>(p => p.Key);
 
-        var filterSubject = new BehaviorSubject<Func<Person, bool>>(p => true);
+        var filterSubject = new StateSignal<Func<Person, bool>>(p => true);
 
         var agg = new SortedChangeSetAggregator<ViewModel, TestString>(source.Connect().Filter(filterSubject).Group(x => (TestString)x.Key).Transform(x => new ViewModel(x.Key)).Sort(new ViewModel.Comparer()));
 
@@ -385,7 +371,7 @@ public class SortFixtureWithReorder : IDisposable
     {
         var source = new SourceList<Person>();
 
-        var filterSubject = new BehaviorSubject<Func<Person, bool>>(p => true);
+        var filterSubject = new StateSignal<Func<Person, bool>>(p => true);
 
         var agg = source.Connect().Filter(filterSubject).Transform(x => new ViewModel(x.Name)).Sort(new ViewModel.Comparer()).AsAggregator();
 
@@ -789,7 +775,7 @@ public class SortFixture : IDisposable
     public void DoesNotThrow1()
     {
         var cache = new SourceCache<Data, int>(d => d.Id);
-        var sortPump = new Subject<Unit>();
+        var sortPump = new Signal<Unit>();
         var disposable = cache.Connect().Sort(SortExpressionComparer<Data>.Ascending(d => d.Id), sortPump).Subscribe();
 
         disposable.Dispose();
@@ -799,7 +785,7 @@ public class SortFixture : IDisposable
     public void DoesNotThrow2()
     {
         var cache = new SourceCache<Data, int>(d => d.Id);
-        var disposable = cache.Connect().Sort(new BehaviorSubject<IComparer<Data>>(SortExpressionComparer<Data>.Ascending(d => d.Id))).Subscribe();
+        var disposable = cache.Connect().Sort(new StateSignal<IComparer<Data>>(SortExpressionComparer<Data>.Ascending(d => d.Id))).Subscribe();
 
         disposable.Dispose();
     }
@@ -890,7 +876,7 @@ public class SortFixture : IDisposable
     {
         var source = new SourceCache<Person, string>(p => p.Key);
 
-        var filterSubject = new BehaviorSubject<Func<Person, bool>>(p => true);
+        var filterSubject = new StateSignal<Func<Person, bool>>(p => true);
 
         var agg = new SortedChangeSetAggregator<ViewModel, TestString>(source.Connect().Filter(filterSubject).Group(x => (TestString)x.Key).Transform(x => new ViewModel(x.Key)).Sort(new ViewModel.Comparer()));
 
@@ -911,7 +897,7 @@ public class SortFixture : IDisposable
     {
         var source = new SourceList<Person>();
 
-        var filterSubject = new BehaviorSubject<Func<Person, bool>>(p => true);
+        var filterSubject = new StateSignal<Func<Person, bool>>(p => true);
 
         var agg = source.Connect().Filter(filterSubject).Transform(x => new ViewModel(x.Name)).Sort(new ViewModel.Comparer()).AsAggregator();
 

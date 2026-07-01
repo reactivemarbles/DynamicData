@@ -1,7 +1,3 @@
-﻿using System;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-
 namespace DynamicData.Tests.Utilities;
 
 /// <summary>
@@ -33,6 +29,6 @@ internal static class ObservableEx
                 return sch.Schedule<long>(0, nextInterval(), HandleNext);
             }
 
-            return ScheduleFirst(scheduler ?? DefaultScheduler.Instance);
+            return ScheduleFirst(scheduler ?? Scheduler.Default);
         });
 }

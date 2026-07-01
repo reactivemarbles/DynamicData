@@ -1,14 +1,5 @@
-using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading.Tasks;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -123,7 +114,7 @@ public class TransformAsyncFixture
     public void ReTransformAll()
     {
         var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
-        var forceTransform = new Subject<Unit>();
+        var forceTransform = new Signal<Unit>();
 
         using var stub = new TransformStub(forceTransform);
         stub.Source.AddOrUpdate(people);
@@ -146,7 +137,7 @@ public class TransformAsyncFixture
     public void ReTransformSelected()
     {
         var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
-        var forceTransform = new Subject<Func<Person, bool>>();
+        var forceTransform = new Signal<Func<Person, bool>>();
 
         using var stub = new TransformStub(forceTransform);
         stub.Source.AddOrUpdate(people);
@@ -199,9 +190,6 @@ public class TransformAsyncFixture
         stub.Results.Messages[1].Updates.Should().Be(1, "Should be 1 update");
     }
 
-
-   
-
     [Theory, InlineData(true), InlineData(false)]
     public void TransformOnRefresh(bool transformOnRefresh)
     {
@@ -218,13 +206,11 @@ public class TransformAsyncFixture
         
         person.Age = 21;
 
-
         results.Data.Count.Should().Be(1);
         results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be(transformOnRefresh ? "Adult": "Child");
 
     }
 
-    
     [Theory, InlineData(10), InlineData(100)]
 
     public async Task WithMaxConcurrency(int maxConcurrency)
@@ -236,7 +222,6 @@ public class TransformAsyncFixture
 
             So it works, but how can it be tested in a scientific way ??
         */
-
 
         const int transformCount = 100;
 

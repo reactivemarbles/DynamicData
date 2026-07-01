@@ -1,9 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.Tests;
+#else
 namespace DynamicData.Tests;
+#endif
 
 /// <summary>
 /// Test extensions.
@@ -43,7 +47,7 @@ public static class TestEx
     public static DistinctChangeSetAggregator<TValue> AsAggregator<TValue>(this IObservable<IDistinctChangeSet<TValue>> source)
         where TValue : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new DistinctChangeSetAggregator<TValue>(source);
     }
@@ -62,7 +66,7 @@ public static class TestEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new GroupChangeSetAggregator<TValue, TKey, TGroupKey>(source);
     }
@@ -79,7 +83,7 @@ public static class TestEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new SortedChangeSetAggregator<TObject, TKey>(source);
     }
@@ -96,7 +100,7 @@ public static class TestEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new VirtualChangeSetAggregator<TObject, TKey>(source);
     }
@@ -112,7 +116,7 @@ public static class TestEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new PagedChangeSetAggregator<TObject, TKey>(source);
     }

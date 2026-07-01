@@ -1,19 +1,33 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the Switch class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="sources">The sources value.</param>
 internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<TObject, TKey>>> sources)
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _sources field.
+    /// </summary>
     private readonly IObservable<IObservable<IChangeSet<TObject, TKey>>> _sources = sources ?? throw new ArgumentNullException(nameof(sources));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
@@ -21,7 +35,7 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
 
                 var destination = new LockFreeObservableCache<TObject, TKey>();
 
-                var errors = new Subject<IChangeSet<TObject, TKey>>();
+                var errors = new Signal<IChangeSet<TObject, TKey>>();
 
                 var populator = Observable.Switch(
                         _sources
@@ -31,6 +45,7 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
                     .SynchronizeSafe(queue)
                     .Do(onNext: static _ => { },
                         onError: error => errors.OnError(error))
+                    .Catch<IChangeSet<TObject, TKey>, Exception>(static _ => Observable.Empty<IChangeSet<TObject, TKey>>())
                     .PopulateInto(destination);
 
                 return new CompositeDisposable(

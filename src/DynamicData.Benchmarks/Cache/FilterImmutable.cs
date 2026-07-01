@@ -1,9 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reactive.Subjects;
-
-using BenchmarkDotNet.Attributes;
-
 namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
@@ -58,7 +52,7 @@ public class FilterImmutable
     [Benchmark]
     public void Adds()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .FilterImmutable(static item => item.IsIncluded)
@@ -73,7 +67,7 @@ public class FilterImmutable
     [Benchmark]
     public void AddsAndReplacements()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .FilterImmutable(static item => item.IsIncluded)
@@ -91,7 +85,7 @@ public class FilterImmutable
     [Benchmark]
     public void AddsAndRemoves()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .FilterImmutable(static item => item.IsIncluded)
@@ -109,7 +103,7 @@ public class FilterImmutable
     [Benchmark]
     public void AddsReplacementsAndRemoves()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .FilterImmutable(static item => item.IsIncluded)

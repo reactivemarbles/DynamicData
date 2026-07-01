@@ -2,29 +2,27 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
 /// </summary>
 public static partial class ObservableCacheEx
 {
+    /// <summary>
+    /// Executes the ForForced operation.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<Func<TSource, TKey, bool>>? ForForced<TSource, TKey>(this IObservable<Unit>? source)
         where TKey : notnull => source?.Select(
             _ =>
@@ -33,6 +31,13 @@ public static partial class ObservableCacheEx
                 return (Func<TSource, TKey, bool>)Transformer;
             });
 
+    /// <summary>
+    /// Executes the ForForced operation.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IObservable<Func<TSource, TKey, bool>>? ForForced<TSource, TKey>(this IObservable<Func<TSource, bool>>? source)
         where TKey : notnull => source?.Select(
             condition =>

@@ -1,11 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.Internal;
+#else
 
 namespace DynamicData.Internal;
+#endif
 
 /// <summary>
 /// Provides SynchronizeSafe extension methods, drop-in replacements
@@ -25,7 +27,7 @@ namespace DynamicData.Internal;
 ///   <item>
 ///     <term>Queue-first (parameterless overload)</term>
 ///     <description>Used by operators with teardown side effects (DisposeMany, OnBeingRemoved).
-///     The queue is terminated first via <see cref="DeliveryQueue{T}.Dispose"/>, which ensures
+///     The queue is terminated first via <c>DeliveryQueue&lt;T&gt;.Dispose</c>, which ensures
 ///     all in-flight deliveries complete before the subscription is disposed and teardown logic
 ///     (e.g., disposing removed items) runs. Terminal notifications are not needed because
 ///     the subscriber is explicitly tearing down.</description>
@@ -38,7 +40,13 @@ internal static class SynchronizeSafeExtensions
     /// Synchronizes the source observable through a <see cref="SharedDeliveryQueue"/>.
     /// Use when multiple sources of different types share a gate.
     /// </summary>
-    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, SharedDeliveryQueue queue) =>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="queue">The queue value.</param>
+    /// <returns>The result of the operation.</returns>
+    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, SharedDeliveryQueue queue)
+        where T : notnull
+        =>
         Observable.Create<T>(observer =>
         {
             var subQueue = queue.CreateQueue(observer);
@@ -48,14 +56,15 @@ internal static class SynchronizeSafeExtensions
         });
 
     /// <summary>
-    /// Synchronizes the source observable through an implicitly created <see cref="DeliveryQueue{T}"/>.
+    /// Synchronizes the source observable through an implicitly created <c>DeliveryQueue&lt;T&gt;</c>.
     /// Drop-in replacement for <c>Synchronize(locker)</c>.
     /// </summary>
-#if NET9_0_OR_GREATER
-    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, Lock gate) =>
-#else
-    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, object gate) =>
-#endif
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="gate">The gate value.</param>
+    /// <returns>The result of the operation.</returns>
+    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, Lock gate)
+        where T : notnull =>
         Observable.Create<T>(observer =>
         {
             var queue = new DeliveryQueue<T>(gate, observer);
@@ -65,12 +74,16 @@ internal static class SynchronizeSafeExtensions
         });
 
     /// <summary>
-    /// Synchronizes the source observable through an implicitly created <see cref="DeliveryQueue{T}"/>
+    /// Synchronizes the source observable through an implicitly created <c>DeliveryQueue&lt;T&gt;</c>
     /// with automatic delivery completion on dispose. The queue is terminated and drained
     /// before the source subscription is disposed, ensuring all in-flight notifications
     /// are delivered before teardown.
     /// </summary>
-    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source) =>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
+    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source)
+        where T : notnull =>
         Observable.Create<T>(observer =>
         {
             var queue = new DeliveryQueue<T>(observer);

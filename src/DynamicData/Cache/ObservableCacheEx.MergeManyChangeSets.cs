@@ -1,24 +1,22 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -34,19 +32,19 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and returns a child cache changeset stream.</param>
-    /// <param name="comparer">An <see cref="IComparer{TDestination}"/> that comparer to resolve key conflicts when multiple child streams provide items with the same destination key. The lowest-ordered item wins.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and returns a child cache changeset stream.</param>
+    /// <param name="comparer">An <c>IComparer&lt;TDestination&gt;</c> that comparer to resolve key conflicts when multiple child streams provide items with the same destination key. The lowest-ordered item wins.</param>
     /// <returns>A merged changeset stream containing items from all active child streams.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="observableSelector"/> or <paramref name="comparer"/> is null.</exception>
-    /// <seealso cref="ObservableListEx.MergeManyChangeSets"/>
+    /// <seealso><c>ObservableListEx.MergeManyChangeSets</c></seealso>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TDestination> comparer)
         where TObject : notnull
         where TKey : notnull
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
 
         return source.MergeManyChangeSets((t, _) => observableSelector(t), comparer);
     }
@@ -59,9 +57,9 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
-    /// <param name="comparer">An <see cref="IComparer{TDestination}"/> that comparer to resolve key conflicts when multiple child streams provide items with the same destination key. The lowest-ordered item wins.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
+    /// <param name="comparer">An <c>IComparer&lt;TDestination&gt;</c> that comparer to resolve key conflicts when multiple child streams provide items with the same destination key. The lowest-ordered item wins.</param>
     /// <returns>A merged changeset stream containing items from all active child streams.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="observableSelector"/>, or <paramref name="comparer"/> is null.</exception>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TDestination> comparer)
@@ -70,9 +68,9 @@ public static partial class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return source.MergeManyChangeSets(observableSelector, equalityComparer: null, comparer: comparer);
     }
@@ -85,10 +83,10 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and returns a child cache changeset stream.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TDestination}"/> that optional equality comparer to suppress updates when the incoming child value equals the current value for a destination key.</param>
-    /// <param name="comparer">An <see cref="IComparer{TDestination}"/> that optional comparer to resolve key conflicts when multiple child streams provide items with the same destination key. The lowest-ordered item wins.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and returns a child cache changeset stream.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TDestination&gt;</c> that optional equality comparer to suppress updates when the incoming child value equals the current value for a destination key.</param>
+    /// <param name="comparer">An <c>IComparer&lt;TDestination&gt;</c> that optional comparer to resolve key conflicts when multiple child streams provide items with the same destination key. The lowest-ordered item wins.</param>
     /// <returns>A merged changeset stream containing items from all active child streams.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
@@ -97,8 +95,8 @@ public static partial class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
 
         return source.MergeManyChangeSets((t, _) => observableSelector(t), equalityComparer, comparer);
     }
@@ -112,14 +110,14 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying parent items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a parent item and its key, and returns a child cache changeset stream. Called once per parent Add/Update.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TDestination}"/> that optional equality comparer to suppress no-op child updates. When a child key's new value equals the current value per this comparer, the update is not emitted.</param>
-    /// <param name="comparer">An <see cref="IComparer{TDestination}"/> that optional comparer to resolve child key conflicts when multiple parents contribute children with the same destination key. The lowest-ordered child value wins. Without a comparer, the first parent to provide a key retains priority.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a parent item and its key, and returns a child cache changeset stream. Called once per parent Add/Update.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TDestination&gt;</c> that optional equality comparer to suppress no-op child updates. When a child key's new value equals the current value per this comparer, the update is not emitted.</param>
+    /// <param name="comparer">An <c>IComparer&lt;TDestination&gt;</c> that optional comparer to resolve child key conflicts when multiple parents contribute children with the same destination key. The lowest-ordered child value wins. Without a comparer, the first parent to provide a key retains priority.</param>
     /// <returns>A merged changeset stream containing all child items from all active parent subscriptions.</returns>
     /// <remarks>
     /// <para>
-    /// This is the changeset-aware counterpart to <see cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>.
+    /// This is the changeset-aware counterpart to <c>MergeMany&lt;TObject, TKey, TDestination&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, IObservable&lt;TDestination&gt;&gt;)</c>.
     /// Where MergeMany produces a flat <c>IObservable&lt;T&gt;</c>, MergeManyChangeSets produces an <c>IObservable&lt;IChangeSet&gt;</c>
     /// that tracks the full lifecycle of child items, including key conflict resolution across parents.
     /// </para>
@@ -148,7 +146,7 @@ public static partial class ObservableCacheEx
     /// </para>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>OnError</term><description>An error from the source (parent) stream or from any child changeset stream terminates the entire output. Unlike <see cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>, child errors are NOT swallowed.</description></item>
+    /// <item><term>OnError</term><description>An error from the source (parent) stream or from any child changeset stream terminates the entire output. Unlike <c>MergeMany&lt;TObject, TKey, TDestination&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, IObservable&lt;TDestination&gt;&gt;)</c>, child errors are NOT swallowed.</description></item>
     /// <item><term>OnCompleted</term><description>The output completes when the source (parent) stream completes <b>and</b> all active child changeset streams have also completed.</description></item>
     /// </list>
     /// <para>
@@ -160,17 +158,17 @@ public static partial class ObservableCacheEx
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>
-    /// <seealso cref="MergeChangeSets{TObject, TKey}(IObservable{IObservable{IChangeSet{TObject, TKey}}})"/>
-    /// <seealso cref="TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, IObservable{IChangeSet{TDestination, TDestinationKey}}}, Func{TDestination, TDestinationKey})"/>
+    /// <seealso><c>MergeMany&lt;TObject, TKey, TDestination&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, IObservable&lt;TDestination&gt;&gt;)</c></seealso>
+    /// <seealso><c>MergeChangeSets&lt;TObject, TKey&gt;(IObservable&lt;IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;&gt;)</c></seealso>
+    /// <seealso><c>TransformMany&lt;TDestination, TDestinationKey, TSource, TSourceKey&gt;(IObservable&lt;IChangeSet&lt;TSource, TSourceKey&gt;&gt;, Func&lt;TSource, IObservable&lt;IChangeSet&lt;TDestination, TDestinationKey&gt;&gt;&gt;, Func&lt;TDestination, TDestinationKey&gt;)</c></seealso>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
         where TObject : notnull
         where TKey : notnull
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
 
         return new MergeManyCacheChangeSets<TObject, TKey, TDestination, TDestinationKey>(source, observableSelector, equalityComparer, comparer).Run();
     }
@@ -185,10 +183,10 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and returns a child cache changeset stream.</param>
-    /// <param name="sourceComparer">An <see cref="IComparer{TObject}"/> that comparer to prioritize between source items when their children produce the same destination key. Lower-ordered source wins.</param>
-    /// <param name="childComparer">An <see cref="IComparer{TDestination}"/> that fallback comparer to resolve destination key conflicts when source items compare equal.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and returns a child cache changeset stream.</param>
+    /// <param name="sourceComparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to prioritize between source items when their children produce the same destination key. Lower-ordered source wins.</param>
+    /// <param name="childComparer">An <c>IComparer&lt;TDestination&gt;</c> that fallback comparer to resolve destination key conflicts when source items compare equal.</param>
     /// <returns>A merged changeset stream with conflicts resolved by source priority.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TObject> sourceComparer, IComparer<TDestination> childComparer)
@@ -197,8 +195,8 @@ public static partial class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
 
         return source.MergeManyChangeSets((t, _) => observableSelector(t), sourceComparer, DefaultResortOnSourceRefresh, equalityComparer: null, childComparer);
     }
@@ -212,10 +210,10 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
-    /// <param name="sourceComparer">An <see cref="IComparer{TObject}"/> that comparer to prioritize between source items when their children produce the same destination key. Lower-ordered source wins.</param>
-    /// <param name="childComparer">An <see cref="IComparer{TDestination}"/> that fallback comparer to resolve destination key conflicts when source items compare equal.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
+    /// <param name="sourceComparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to prioritize between source items when their children produce the same destination key. Lower-ordered source wins.</param>
+    /// <param name="childComparer">An <c>IComparer&lt;TDestination&gt;</c> that fallback comparer to resolve destination key conflicts when source items compare equal.</param>
     /// <returns>A merged changeset stream with conflicts resolved by source priority.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TObject> sourceComparer, IComparer<TDestination> childComparer)
@@ -232,11 +230,11 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and returns a child cache changeset stream.</param>
-    /// <param name="sourceComparer">An <see cref="IComparer{TObject}"/> that comparer to prioritize between source items when their children produce the same destination key.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and returns a child cache changeset stream.</param>
+    /// <param name="sourceComparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to prioritize between source items when their children produce the same destination key.</param>
     /// <param name="resortOnSourceRefresh">If <see langword="true"/>, a Refresh in the source stream re-evaluates source priorities. If <see langword="false"/>, Refresh events are ignored for priority recalculation.</param>
-    /// <param name="childComparer">An <see cref="IComparer{TDestination}"/> that fallback comparer to resolve destination key conflicts when source items compare equal.</param>
+    /// <param name="childComparer">An <c>IComparer&lt;TDestination&gt;</c> that fallback comparer to resolve destination key conflicts when source items compare equal.</param>
     /// <returns>A merged changeset stream with conflicts resolved by source priority.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TObject> sourceComparer, bool resortOnSourceRefresh, IComparer<TDestination> childComparer)
@@ -245,8 +243,8 @@ public static partial class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
 
         return source.MergeManyChangeSets((t, _) => observableSelector(t), sourceComparer, resortOnSourceRefresh, equalityComparer: null, childComparer);
     }
@@ -259,11 +257,11 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
-    /// <param name="sourceComparer">An <see cref="IComparer{TObject}"/> that comparer to prioritize between source items when their children produce the same destination key.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
+    /// <param name="sourceComparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to prioritize between source items when their children produce the same destination key.</param>
     /// <param name="resortOnSourceRefresh">If <see langword="true"/>, a Refresh in the source stream re-evaluates source priorities. If <see langword="false"/>, Refresh events are ignored for priority recalculation.</param>
-    /// <param name="childComparer">An <see cref="IComparer{TDestination}"/> that fallback comparer to resolve destination key conflicts when source items compare equal.</param>
+    /// <param name="childComparer">An <c>IComparer&lt;TDestination&gt;</c> that fallback comparer to resolve destination key conflicts when source items compare equal.</param>
     /// <returns>A merged changeset stream with conflicts resolved by source priority.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TObject> sourceComparer, bool resortOnSourceRefresh, IComparer<TDestination> childComparer)
@@ -281,11 +279,11 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and returns a child cache changeset stream.</param>
-    /// <param name="sourceComparer">An <see cref="IComparer{TObject}"/> that comparer to prioritize between source items when their children produce the same destination key.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TDestination}"/> that optional equality comparer to suppress updates when the incoming child value equals the current value.</param>
-    /// <param name="childComparer">An <see cref="IComparer{TDestination}"/> that optional fallback comparer for destination key conflicts when source items compare equal.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and returns a child cache changeset stream.</param>
+    /// <param name="sourceComparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to prioritize between source items when their children produce the same destination key.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TDestination&gt;</c> that optional equality comparer to suppress updates when the incoming child value equals the current value.</param>
+    /// <param name="childComparer">An <c>IComparer&lt;TDestination&gt;</c> that optional fallback comparer for destination key conflicts when source items compare equal.</param>
     /// <returns>A merged changeset stream with conflicts resolved by source priority.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TObject> sourceComparer, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? childComparer = null)
@@ -294,8 +292,8 @@ public static partial class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
 
         return source.MergeManyChangeSets((t, _) => observableSelector(t), sourceComparer, DefaultResortOnSourceRefresh, equalityComparer, childComparer);
     }
@@ -308,11 +306,11 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
-    /// <param name="sourceComparer">An <see cref="IComparer{TObject}"/> that comparer to prioritize between source items when their children produce the same destination key.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TDestination}"/> that optional equality comparer to suppress updates when the incoming child value equals the current value.</param>
-    /// <param name="childComparer">An <see cref="IComparer{TDestination}"/> that optional fallback comparer for destination key conflicts when source items compare equal.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
+    /// <param name="sourceComparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to prioritize between source items when their children produce the same destination key.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TDestination&gt;</c> that optional equality comparer to suppress updates when the incoming child value equals the current value.</param>
+    /// <param name="childComparer">An <c>IComparer&lt;TDestination&gt;</c> that optional fallback comparer for destination key conflicts when source items compare equal.</param>
     /// <returns>A merged changeset stream with conflicts resolved by source priority.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TObject> sourceComparer, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? childComparer = null)
@@ -329,12 +327,12 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and returns a child cache changeset stream.</param>
-    /// <param name="sourceComparer">An <see cref="IComparer{TObject}"/> that comparer to prioritize between source items when their children produce the same destination key.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and returns a child cache changeset stream.</param>
+    /// <param name="sourceComparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to prioritize between source items when their children produce the same destination key.</param>
     /// <param name="resortOnSourceRefresh">If <see langword="true"/>, a Refresh in the source stream re-evaluates source priorities. If <see langword="false"/>, Refresh events are ignored for priority recalculation.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TDestination}"/> that optional equality comparer to suppress updates when the incoming child value equals the current value.</param>
-    /// <param name="childComparer">An <see cref="IComparer{TDestination}"/> that optional fallback comparer for destination key conflicts when source items compare equal.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TDestination&gt;</c> that optional equality comparer to suppress updates when the incoming child value equals the current value.</param>
+    /// <param name="childComparer">An <c>IComparer&lt;TDestination&gt;</c> that optional fallback comparer for destination key conflicts when source items compare equal.</param>
     /// <returns>A merged changeset stream with conflicts resolved by source priority.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TObject> sourceComparer, bool resortOnSourceRefresh, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? childComparer = null)
@@ -343,8 +341,8 @@ public static partial class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
 
         return source.MergeManyChangeSets((t, _) => observableSelector(t), sourceComparer, resortOnSourceRefresh, equalityComparer, childComparer);
     }
@@ -359,12 +357,12 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key identifying child items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
-    /// <param name="sourceComparer">An <see cref="IComparer{TObject}"/> that comparer to prioritize between source items when their children produce the same destination key. Lower-ordered source wins.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and its key, and returns a child cache changeset stream.</param>
+    /// <param name="sourceComparer">An <c>IComparer&lt;TObject&gt;</c> that comparer to prioritize between source items when their children produce the same destination key. Lower-ordered source wins.</param>
     /// <param name="resortOnSourceRefresh">If <see langword="true"/> (default), a Refresh in the source stream re-evaluates source priorities. If <see langword="false"/>, Refresh events are ignored for priority recalculation.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TDestination}"/> that optional equality comparer to suppress updates when the incoming child value equals the current value for a destination key.</param>
-    /// <param name="childComparer">An <see cref="IComparer{TDestination}"/> that optional fallback comparer to resolve destination key conflicts when source items compare equal.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TDestination&gt;</c> that optional equality comparer to suppress updates when the incoming child value equals the current value for a destination key.</param>
+    /// <param name="childComparer">An <c>IComparer&lt;TDestination&gt;</c> that optional fallback comparer to resolve destination key conflicts when source items compare equal.</param>
     /// <returns>A merged changeset stream containing items from all active child streams, with conflicts resolved by source priority.</returns>
     /// <remarks>
     /// <para>
@@ -383,9 +381,9 @@ public static partial class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
-        sourceComparer.ThrowArgumentNullExceptionIfNull(nameof(sourceComparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
+        ArgumentExceptionHelper.ThrowIfNull(sourceComparer);
 
         return new MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDestination, TDestinationKey>(source, observableSelector, sourceComparer, equalityComparer, childComparer, resortOnSourceRefresh).Run();
     }
@@ -398,17 +396,17 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of items in the source cache.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child list changeset streams.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and its key, and returns a child list changeset stream.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TDestination}"/> that optional equality comparer to detect duplicate items in the merged list output.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and its key, and returns a child list changeset stream.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TDestination&gt;</c> that optional equality comparer to detect duplicate items in the merged list output.</param>
     /// <returns>A merged list changeset stream containing items from all active child streams.</returns>
     public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
 
         return new MergeManyListChangeSets<TObject, TKey, TDestination>(source, observableSelector, equalityComparer).Run();
     }
@@ -420,18 +418,21 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of items in the source cache.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child list changeset streams.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives a source item and returns a child list changeset stream.</param>
-    /// <param name="equalityComparer">An <see cref="IEqualityComparer{TDestination}"/> that optional equality comparer to detect duplicate items in the merged list output.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives a source item and returns a child list changeset stream.</param>
+    /// <param name="equalityComparer">An <c>IEqualityComparer&lt;TDestination&gt;</c> that optional equality comparer to detect duplicate items in the merged list output.</param>
     /// <returns>A merged list changeset stream containing items from all active child streams.</returns>
     public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
         where TDestination : notnull
     {
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
         return source.MergeManyChangeSets((obj, _) => observableSelector(obj), equalityComparer);
     }
 
+    /// <summary>
+    /// The DefaultResortOnSourceRefresh field.
+    /// </summary>
     private const bool DefaultResortOnSourceRefresh = true;
 }

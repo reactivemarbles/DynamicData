@@ -1,0 +1,64 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Title>Dynamic Data</Title>
+    <Description>
+      Bring the power of Rx to collections using Dynamic Data.
+      Dynamic Data is a comprehensive caching and data manipulation solution which introduces domain centric observable collections.
+      Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more.
+    </Description>
+    <TargetFrameworks>net462;net472;net48;net481;net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
+    <IsPackable>true</IsPackable>
+    <DefineConstants>$(DefineConstants);REACTIVE_SHIM</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ReactiveUI.Primitives.Reactive" Version="5.8.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="System" />
+    <Using Include="System.Collections" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.ComponentModel" />
+    <Using Include="System.Runtime.CompilerServices" />
+    <Using Include="System.Collections.ObjectModel" />
+    <Using Include="DynamicData.Reactive.Cache" />
+    <Using Include="DynamicData.Reactive.Kernel" />
+    <Using Include="DynamicData.Reactive.Internal" />
+    <Using Include="System.Reactive" />
+    <Using Include="System.Reactive.Concurrency" />
+    <Using Include="System.Reactive.Disposables" />
+    <Using Include="System.Reactive.Linq" />
+    <Using Include="System.Reactive.Subjects" />
+    <Using Include="System.Reactive.Threading.Tasks" />
+    <Using Include="ReactiveUI.Primitives.Reactive.LinqExtensions" Alias="PrimitivesLinqExtensions" />
+    <Using Include="ReactiveUI.Primitives.Signals" />
+    <Using Include="ReactiveUI.Primitives.Reactive.Signals" />
+    <Using Include="System.Reactive.Unit" Alias="Unit" />
+    <Using Include="System.Reactive.Concurrency.IScheduler" Alias="IScheduler" />
+    <Using Include="System.Reactive.Concurrency.Scheduler" Alias="Scheduler" />
+    <Using Include="System.Reactive.Concurrency.TaskPoolScheduler" Alias="TaskPoolScheduler" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DynamicData\**\*.cs" Exclude="..\DynamicData\bin\**;..\DynamicData\obj\**" LinkBase="DynamicData" />
+    <Compile Update="..\DynamicData\**\ObservableCacheEx.*.cs">
+      <DependentUpon>ObservableCacheEx.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <!-- AsyncDisposeMany is only supported on platforms that have IAsyncDisposable. -->
+  <ItemGroup Condition="!$(DefineConstants.Contains('SUPPORTS_ASYNC_DISPOSABLE'))">
+    <Compile Remove="..\DynamicData\Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <Using Include="DynamicData.Reactive.ArgumentExceptionHelper" Alias="ArgumentExceptionHelper" />
+    <Using Include="DynamicData.Reactive.ArgumentOutOfRangeExceptionHelper" Alias="ArgumentOutOfRangeExceptionHelper" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!$(TargetFramework.StartsWith('net4'))">
+    <Using Include="System.ArgumentNullException" Alias="ArgumentExceptionHelper" />
+    <Using Include="System.ArgumentOutOfRangeException" Alias="ArgumentOutOfRangeExceptionHelper" />
+  </ItemGroup>
+</Project>

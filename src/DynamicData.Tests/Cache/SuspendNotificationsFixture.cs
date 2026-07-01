@@ -1,16 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using DynamicData.Kernel;
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
+[Collection(IntegrationTestFixtureBase.CollectionName)]
 public sealed class SuspendNotificationsFixture : IDisposable
 {
     private readonly SourceCache<int, int> _source = new(static x => x);

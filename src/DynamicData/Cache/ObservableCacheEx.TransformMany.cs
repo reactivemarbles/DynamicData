@@ -1,24 +1,22 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -33,9 +31,9 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TDestinationKey">The type of the child item keys.</typeparam>
     /// <typeparam name="TSource">The type of the source (parent) items.</typeparam>
     /// <typeparam name="TSourceKey">The type of the source (parent) keys.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TSource, TSourceKey}}"/> to expand each item into multiple children.</param>
-    /// <param name="manySelector">A function that expands a parent item into its children. For <see cref="ObservableCollection{T}"/> or <see cref="IObservableCache{TObject, TKey}"/> overloads, subsequent changes to the child collection are automatically tracked.</param>
-    /// <param name="keySelector">A <see cref="Func{T, TResult}"/> that extracts a unique key from each child item. Keys must be unique across ALL parents, not just within one parent.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TSource, TSourceKey&gt;&gt;</c> to expand each item into multiple children.</param>
+    /// <param name="manySelector">A function that expands a parent item into its children. For <c>ObservableCollection&lt;T&gt;</c> or <c>IObservableCache&lt;TObject, TKey&gt;</c> overloads, subsequent changes to the child collection are automatically tracked.</param>
+    /// <param name="keySelector">A <c>Func&lt;T, TResult&gt;</c> that extracts a unique key from each child item. Keys must be unique across ALL parents, not just within one parent.</param>
     /// <returns>An observable changeset of flattened child items.</returns>
     /// <remarks>
     /// <para><b>Change reason handling:</b></para>
@@ -47,35 +45,65 @@ public static partial class ObservableCacheEx
     ///   <item><term>Refresh</term><description>Propagated as Refresh to all children (no re-expansion).</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> If two source items produce children with the same key, last-in-wins. <b>Refresh</b> does NOT re-expand children (only <b>Update</b> does).</para>
-    /// <para>If two parents produce children with the same key, last-in-wins. Use the async variant with a <see cref="IComparer{T}"/> to control conflict resolution.</para>
+    /// <para>If two parents produce children with the same key, last-in-wins. Use the async variant with a <c>IComparer&lt;T&gt;</c> to control conflict resolution.</para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="manySelector"/>, or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="TransformManyAsync{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, TSourceKey, Task{IEnumerable{TDestination}}}, Func{TDestination, TDestinationKey}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
-    /// <seealso cref="ObservableListEx.TransformMany"/>
+    /// <seealso><c>TransformManyAsync&lt;TDestination, TDestinationKey, TSource, TSourceKey&gt;(IObservable&lt;IChangeSet&lt;TSource, TSourceKey&gt;&gt;, Func&lt;TSource, TSourceKey, Task&lt;IEnumerable&lt;TDestination&gt;&gt;&gt;, Func&lt;TDestination, TDestinationKey&gt;, IEqualityComparer&lt;TDestination&gt;?, IComparer&lt;TDestination&gt;?)</c></seealso>
+    /// <seealso><c>ObservableListEx.TransformMany</c></seealso>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, IEnumerable<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
         where TSourceKey : notnull => new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manySelector, keySelector).Run();
 
-    /// <inheritdoc cref="TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, IEnumerable{TDestination}}, Func{TDestination, TDestinationKey})"/>
-    /// <remarks>This overload accepts an <see cref="ObservableCollection{T}"/> selector. Changes to the child collection (adds, removes, replacements) are automatically observed and reflected downstream.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>Run</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the TDestinationKey value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TSourceKey">The type of the TSourceKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="manySelector">The manySelector value.</param>
+    /// <param name="keySelector">The keySelector value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>This overload accepts an <c>ObservableCollection&lt;T&gt;</c> selector. Changes to the child collection (adds, removes, replacements) are automatically observed and reflected downstream.</remarks>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, ObservableCollection<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
         where TSourceKey : notnull => new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manySelector, keySelector).Run();
 
-    /// <inheritdoc cref="TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, IEnumerable{TDestination}}, Func{TDestination, TDestinationKey})"/>
-    /// <remarks>This overload accepts a <see cref="ReadOnlyObservableCollection{T}"/> selector. Changes to the child collection are automatically observed and reflected downstream.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>Run</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the TDestinationKey value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TSourceKey">The type of the TSourceKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="manySelector">The manySelector value.</param>
+    /// <param name="keySelector">The keySelector value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>This overload accepts a <c>ReadOnlyObservableCollection&lt;T&gt;</c> selector. Changes to the child collection are automatically observed and reflected downstream.</remarks>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, ReadOnlyObservableCollection<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
         where TSourceKey : notnull => new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manySelector, keySelector).Run();
 
-    /// <inheritdoc cref="TransformMany{TDestination, TDestinationKey, TSource, TSourceKey}(IObservable{IChangeSet{TSource, TSourceKey}}, Func{TSource, IEnumerable{TDestination}}, Func{TDestination, TDestinationKey})"/>
-    /// <remarks>This overload accepts an <see cref="IObservableCache{TObject, TKey}"/> selector. The child cache is live: subsequent changes to it are automatically propagated downstream.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>Run</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the TDestinationKey value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TSourceKey">The type of the TSourceKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="manySelector">The manySelector value.</param>
+    /// <param name="keySelector">The keySelector value.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>This overload accepts an <c>IObservableCache&lt;TObject, TKey&gt;</c> selector. The child cache is live: subsequent changes to it are automatically propagated downstream.</remarks>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, IObservableCache<TDestination, TDestinationKey>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         where TDestination : notnull
         where TDestinationKey : notnull

@@ -1,28 +1,45 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 /// <summary>
 ///     Combines multiple caches using logical operators.
 /// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="type">The type value.</param>
+/// <param name="updatedCallback">The updatedCallback value.</param>
 internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChangeSet<TObject, TKey>> updatedCallback)
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _combinedCache field.
+    /// </summary>
     private readonly ChangeAwareCache<TObject, TKey> _combinedCache = new();
 
-#if NET9_0_OR_GREATER
+    /// <summary>
+    /// The _locker field.
+    /// </summary>
     private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
 
+    /// <summary>
+    /// The _sourceCaches field.
+    /// </summary>
     private readonly IList<Cache<TObject, TKey>> _sourceCaches = [];
 
+    /// <summary>
+    /// Executes the Subscribe operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     public IDisposable Subscribe(IObservable<IChangeSet<TObject, TKey>>[] source)
     {
         // subscribe
@@ -42,6 +59,11 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
         return disposable;
     }
 
+    /// <summary>
+    /// Executes the MatchesConstraint operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
     private bool MatchesConstraint(TKey key)
     {
         switch (type)
@@ -73,6 +95,11 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
         }
     }
 
+    /// <summary>
+    /// Executes the Update operation.
+    /// </summary>
+    /// <param name="cache">The cache value.</param>
+    /// <param name="updates">The updates value.</param>
     private void Update(Cache<TObject, TKey> cache, IChangeSet<TObject, TKey> updates)
     {
         ChangeSet<TObject, TKey> notifications;
@@ -92,6 +119,11 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
         }
     }
 
+    /// <summary>
+    /// Executes the UpdateCombined operation.
+    /// </summary>
+    /// <param name="updates">The updates value.</param>
+    /// <returns>The result of the operation.</returns>
     private ChangeSet<TObject, TKey> UpdateCombined(IChangeSet<TObject, TKey> updates)
     {
         // child caches have been updated before we reached this point.

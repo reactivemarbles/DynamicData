@@ -1,24 +1,22 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -32,9 +30,9 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to group.</param>
-    /// <param name="groupSelector">The <see cref="Func{TObject, TGroupKey}"/> group selector factory.</param>
-    /// <param name="resultGroupSource">An <see cref="IObservable{IDistinctChangeSet{TGroupKey}}"/> of <see cref="IDistinctChangeSet{TGroupKey}"/> used to determine which groups appear in the result.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to group.</param>
+    /// <param name="groupSelector">The <c>Func&lt;TObject, TGroupKey&gt;</c> group selector factory.</param>
+    /// <param name="resultGroupSource">An <c>IObservable&lt;IDistinctChangeSet&lt;TGroupKey&gt;&gt;</c> of <c>IDistinctChangeSet&lt;TGroupKey&gt;</c> used to determine which groups appear in the result.</param>
     /// <remarks>
     /// Useful for parent-child collection when the parent and child are soured from different streams.
     /// </remarks>
@@ -44,9 +42,9 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        groupSelector.ThrowArgumentNullExceptionIfNull(nameof(groupSelector));
-        resultGroupSource.ThrowArgumentNullExceptionIfNull(nameof(resultGroupSource));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(groupSelector);
+        ArgumentExceptionHelper.ThrowIfNull(resultGroupSource);
 
         return new SpecifiedGrouper<TObject, TKey, TGroupKey>(source, groupSelector, resultGroupSource).Run();
     }
@@ -58,8 +56,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to group.</param>
-    /// <param name="groupSelectorKey">A <see cref="Func{T, TResult}"/> that extracts the group key from each item.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to group.</param>
+    /// <param name="groupSelectorKey">A <c>Func&lt;T, TResult&gt;</c> that extracts the group key from each item.</param>
     /// <returns>An observable that emits group changesets. Each group exposes a sub-cache of its members.</returns>
     /// <remarks>
     /// <para>
@@ -79,24 +77,29 @@ public static partial class ObservableCacheEx
     /// its sub-cache completes.
     /// </para>
     /// </remarks>
-    /// <seealso cref="GroupWithImmutableState{TObject, TKey, TGroupKey}"/>
-    /// <seealso cref="GroupOnObservable{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{TGroupKey}}, TimeSpan?, IScheduler?)"/>
-    /// <seealso cref="GroupOnProperty{TObject, TKey, TGroupKey}"/>
+    /// <seealso><c>GroupWithImmutableState&lt;TObject, TKey, TGroupKey&gt;</c></seealso>
+    /// <seealso><c>GroupOnObservable&lt;TObject, TKey, TGroupKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, TKey, IObservable&lt;TGroupKey&gt;&gt;, TimeSpan?, IScheduler?)</c></seealso>
+    /// <seealso><c>GroupOnProperty&lt;TObject, TKey, TGroupKey&gt;</c></seealso>
     public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey)
         where TObject : notnull
         where TKey : notnull
         where TGroupKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        groupSelectorKey.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKey));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(groupSelectorKey);
 
         return new GroupOn<TObject, TKey, TGroupKey>(source, groupSelectorKey, null).Run();
     }
 
-    /// <inheritdoc cref="Group{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TGroupKey})"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to group.</param>
-    /// <param name="groupSelectorKey">A <see cref="Func{T, TResult}"/> that extracts the group key from each item.</param>
-    /// <param name="regrouper">An <see cref="IObservable{Unit}"/> that, when it emits, all items are re-evaluated against the group selector, potentially moving items between groups.</param>
+    /// <summary>
+    /// Provides an overload of <c>Group</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <typeparam name="TGroupKey">The type of the TGroupKey value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to group.</param>
+    /// <param name="groupSelectorKey">A <c>Func&lt;T, TResult&gt;</c> that extracts the group key from each item.</param>
+    /// <param name="regrouper">An <c>IObservable&lt;Unit&gt;</c> that, when it emits, all items are re-evaluated against the group selector, potentially moving items between groups.</param>
     /// <returns>An observable that emits group changesets.</returns>
     /// <remarks>This overload adds a <paramref name="regrouper"/> signal. When it fires, every item in the cache is re-grouped using the current selector, which is useful when the grouping depends on mutable item state.</remarks>
     public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit> regrouper)
@@ -104,9 +107,9 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        groupSelectorKey.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKey));
-        regrouper.ThrowArgumentNullExceptionIfNull(nameof(regrouper));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(groupSelectorKey);
+        ArgumentExceptionHelper.ThrowIfNull(regrouper);
 
         return new GroupOn<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
     }
@@ -118,9 +121,9 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to group.</param>
-    /// <param name="groupSelectorKeyObservable">The <see cref="IObservable{Func{TObject, TKey, TGroupKey}}"/> that emits group selector functions. Each emission triggers a full re-grouping of all items.</param>
-    /// <param name="regrouper">An <see cref="IObservable{Unit}"/> that optional signal to force re-evaluation of all items against the current selector.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to group.</param>
+    /// <param name="groupSelectorKeyObservable">The <c>IObservable&lt;Func&lt;TObject, TKey, TGroupKey&gt;&gt;</c> that emits group selector functions. Each emission triggers a full re-grouping of all items.</param>
+    /// <param name="regrouper">An <c>IObservable&lt;Unit&gt;</c> that optional signal to force re-evaluation of all items against the current selector.</param>
     /// <returns>An observable that emits group changesets.</returns>
     /// <remarks>
     /// <para>
@@ -136,30 +139,36 @@ public static partial class ObservableCacheEx
     /// <item><term>Refresh</term><description>Group key re-evaluated. Item may move between groups.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="Group{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TGroupKey})"/>
-    /// <seealso cref="GroupOnObservable{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{TGroupKey}}, TimeSpan?, IScheduler?)"/>
+    /// <seealso><c>Group&lt;TObject, TKey, TGroupKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, TGroupKey&gt;)</c></seealso>
+    /// <seealso><c>GroupOnObservable&lt;TObject, TKey, TGroupKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, TKey, IObservable&lt;TGroupKey&gt;&gt;, TimeSpan?, IScheduler?)</c></seealso>
     public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, TKey, TGroupKey>> groupSelectorKeyObservable, IObservable<Unit>? regrouper = null)
         where TObject : notnull
         where TKey : notnull
         where TGroupKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        groupSelectorKeyObservable.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKeyObservable));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(groupSelectorKeyObservable);
 
         return new GroupOnDynamic<TObject, TKey, TGroupKey>(source, groupSelectorKeyObservable, regrouper).Run();
     }
 
-    /// <inheritdoc cref="Group{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{Func{TObject, TKey, TGroupKey}}, IObservable{Unit}?)"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to group.</param>
-    /// <param name="groupSelectorKeyObservable">The <see cref="IObservable{Func{TObject, TGroupKey}}"/> of selector functions that take only the item (not the key).</param>
-    /// <param name="regrouper">An optional <see cref="IObservable{Unit}"/> signal to force re-evaluation.</param>
+    /// <summary>
+    /// Provides an overload of <c>Group</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <typeparam name="TGroupKey">The type of the TGroupKey value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to group.</param>
+    /// <param name="groupSelectorKeyObservable">The <c>IObservable&lt;Func&lt;TObject, TGroupKey&gt;&gt;</c> of selector functions that take only the item (not the key).</param>
+    /// <param name="regrouper">An optional <c>IObservable&lt;Unit&gt;</c> signal to force re-evaluation.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>This overload accepts a selector that does not receive the key. Delegates to the overload accepting <c>Func&lt;TObject, TKey, TGroupKey&gt;</c>.</remarks>
     public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, TGroupKey>> groupSelectorKeyObservable, IObservable<Unit>? regrouper = null)
         where TObject : notnull
         where TKey : notnull
         where TGroupKey : notnull
     {
-        groupSelectorKeyObservable.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKeyObservable));
+        ArgumentExceptionHelper.ThrowIfNull(groupSelectorKeyObservable);
 
         return source.Group(groupSelectorKeyObservable.Select(AdaptSelector<TObject, TKey, TGroupKey>), regrouper);
     }

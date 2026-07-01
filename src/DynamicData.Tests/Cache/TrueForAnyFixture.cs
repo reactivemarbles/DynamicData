@@ -1,13 +1,3 @@
-using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public class TrueForAnyFixture : IDisposable
@@ -99,9 +89,9 @@ public class TrueForAnyFixture : IDisposable
         results.RecordedValues[0].Should().Be(true, because: "One of the two items in the source has a true value");
     }
 
-    private class ObjectWithObservable(int id)
+    private class ObjectWithObservable(int id) : IDisposable
     {
-        private readonly ISubject<bool> _changed = new Subject<bool>();
+        private readonly ISignal<bool> _changed = new Signal<bool>();
 
         public int Id { get; } = id;
 
@@ -114,5 +104,10 @@ public class TrueForAnyFixture : IDisposable
             Value = value;
             _changed.OnNext(value);
         }
-    }
+
+        public void Dispose()
+        {
+            _changed.Dispose();
+        }
+}
 }

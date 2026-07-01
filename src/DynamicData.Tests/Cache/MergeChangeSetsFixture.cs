@@ -1,14 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-using FluentAssertions;
-using Microsoft.Reactive.Testing;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 

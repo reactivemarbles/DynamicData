@@ -1,13 +1,20 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+using DynamicData.Reactive.Diagnostics;
+#else
 
 using DynamicData.Diagnostics;
+#endif
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Tests;
+#else
 
 namespace DynamicData.Tests;
+#endif
 
 /// <summary>
 /// Aggregates all events and statistics for a change set to help assertions when testing.
@@ -19,6 +26,9 @@ public sealed class ChangeSetAggregator<TObject, TKey, TContext> : IDisposable
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _disposer field.
+    /// </summary>
     private readonly IDisposable _disposer;
 
     /// <summary>
@@ -27,6 +37,8 @@ public sealed class ChangeSetAggregator<TObject, TKey, TContext> : IDisposable
     /// <param name="source">The source.</param>
     public ChangeSetAggregator(IObservable<IChangeSet<TObject, TKey, TContext>> source)
     {
+        ArgumentExceptionHelper.ThrowIfNull(source);
+
         var published = source.Publish();
 
         Data = published.AsObservableCache();
@@ -100,6 +112,9 @@ public sealed class ChangeSetAggregator<TObject, TKey> : IDisposable
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _disposer field.
+    /// </summary>
     private readonly IDisposable _disposer;
 
     /// <summary>
@@ -108,6 +123,8 @@ public sealed class ChangeSetAggregator<TObject, TKey> : IDisposable
     /// <param name="source">The source.</param>
     public ChangeSetAggregator(IObservable<IChangeSet<TObject, TKey>> source)
     {
+        ArgumentExceptionHelper.ThrowIfNull(source);
+
         var published = source.Publish();
 
         Data = published.AsObservableCache();

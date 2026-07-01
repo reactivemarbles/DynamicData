@@ -1,23 +1,60 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Reactive.Disposables;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the DynamicGrouper class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <typeparam name="TGroupKey">The type of the TGroupKey value.</typeparam>
+/// <param name="groupSelector">The groupSelector value.</param>
 internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKey, TGroupKey>? groupSelector = null) : IDisposable
     where TObject : notnull
     where TKey : notnull
     where TGroupKey : notnull
 {
+    /// <summary>
+    /// The _groupCache field.
+    /// </summary>
     private readonly ChangeAwareCache<IGroup<TObject, TKey, TGroupKey>, TGroupKey> _groupCache = new();
+
+    /// <summary>
+    /// The _groupKeys field.
+    /// </summary>
     private readonly Dictionary<TKey, TGroupKey> _groupKeys = [];
+
+    /// <summary>
+    /// The _emptyGroups field.
+    /// </summary>
     private readonly HashSet<ManagedGroup<TObject, TKey, TGroupKey>> _emptyGroups = [];
+
+    /// <summary>
+    /// The _suspendTracker field.
+    /// </summary>
     private readonly SuspendTracker _suspendTracker = new();
+
+    /// <summary>
+    /// The _groupSelector field.
+    /// </summary>
     private Func<TObject, TKey, TGroupKey>? _groupSelector = groupSelector;
 
+    /// <summary>
+    /// Executes the AddOrUpdate operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <param name="groupKey">The groupKey value.</param>
+    /// <param name="item">The item value.</param>
+    /// <param name="observer">The observer value.</param>
     public void AddOrUpdate(TKey key, TGroupKey groupKey, TObject item, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null)
     {
         // If not emitting the changes, then suspend the notifications
@@ -30,6 +67,11 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
+    /// <summary>
+    /// Executes the ProcessChangeSet operation.
+    /// </summary>
+    /// <param name="changeSet">The changeSet value.</param>
+    /// <param name="observer">The observer value.</param>
     public void ProcessChangeSet(IChangeSet<TObject, TKey> changeSet, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>>? observer = null)
     {
         var suspendTracker = (observer, changeSet.Count) switch
@@ -53,8 +95,17 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
+    /// <summary>
+    /// Executes the ProcessChange operation.
+    /// </summary>
+    /// <param name="change">The change value.</param>
     public void ProcessChange(Change<TObject, TKey> change) => ProcessChange(change, _suspendTracker);
 
+    /// <summary>
+    /// Executes the ProcessChange operation.
+    /// </summary>
+    /// <param name="change">The change value.</param>
+    /// <param name="suspendTracker">The suspendTracker value.</param>
     private void ProcessChange(Change<TObject, TKey> change, SuspendTracker? suspendTracker)
     {
         switch (change.Reason)
@@ -84,9 +135,13 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
                 break;
         }
     }
-
     // Re-evaluate the GroupSelector for each item and apply the changes so that each group only emits a single changset
     // Perform all the adds/removes for each group in a single step
+
+    /// <summary>
+    /// Executes the RegroupAll operation.
+    /// </summary>
+    /// <param name="observer">The observer value.</param>
     public void RegroupAll(IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>> observer)
     {
         if (_groupSelector == null)
@@ -119,12 +174,23 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         EmitChanges(observer);
     }
 
+    /// <summary>
+    /// Executes the SetGroupSelector operation.
+    /// </summary>
+    /// <param name="groupSelector">The groupSelector value.</param>
+    /// <param name="observer">The observer value.</param>
     public void SetGroupSelector(Func<TObject, TKey, TGroupKey> groupSelector, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>> observer)
     {
         _groupSelector = groupSelector;
         RegroupAll(observer);
     }
 
+    /// <summary>
+    /// Executes the Initialize operation.
+    /// </summary>
+    /// <param name="initialValues">The initialValues value.</param>
+    /// <param name="groupSelector">The groupSelector value.</param>
+    /// <param name="observer">The observer value.</param>
     public void Initialize(IEnumerable<KeyValuePair<TKey, TObject>> initialValues, Func<TObject, TKey, TGroupKey> groupSelector, IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>> observer)
     {
         if (_groupSelector != null)
@@ -143,6 +209,10 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         EmitChanges(observer);
     }
 
+    /// <summary>
+    /// Executes the EmitChanges operation.
+    /// </summary>
+    /// <param name="observer">The observer value.</param>
     public void EmitChanges(IObserver<IGroupChangeSet<TObject, TKey, TGroupKey>> observer)
     {
         // Verify logic doesn't capture any non-empty groups
@@ -173,13 +243,22 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose()
     {
         _suspendTracker.Dispose();
         _groupCache.Items.ForEach(group => (group as ManagedGroup<TObject, TKey, TGroupKey>)?.Dispose());
     }
 
-    private static void PerformGroupRefresh(TKey key, in Optional<ManagedGroup<TObject, TKey, TGroupKey>> optionalGroup, SuspendTracker? suspendTracker = null)
+    /// <summary>
+    /// Executes the PerformGroupRefresh operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <param name="optionalGroup">The optionalGroup value.</param>
+    /// <param name="suspendTracker">The suspendTracker value.</param>
+    private static void PerformGroupRefresh(TKey key, in ReactiveUI.Primitives.Optional<ManagedGroup<TObject, TKey, TGroupKey>> optionalGroup, SuspendTracker? suspendTracker = null)
     {
         if (optionalGroup.HasValue)
         {
@@ -192,12 +271,27 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
-    private Optional<ManagedGroup<TObject, TKey, TGroupKey>> LookupGroup(TKey key) =>
+    /// <summary>
+    /// Executes the LookupGroup operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
+    private ReactiveUI.Primitives.Optional<ManagedGroup<TObject, TKey, TGroupKey>> LookupGroup(TKey key) =>
         _groupKeys.Lookup(key).Convert(LookupGroup);
 
-    private Optional<ManagedGroup<TObject, TKey, TGroupKey>> LookupGroup(TGroupKey groupKey) =>
+    /// <summary>
+    /// Executes the LookupGroup operation.
+    /// </summary>
+    /// <param name="groupKey">The groupKey value.</param>
+    /// <returns>The result of the operation.</returns>
+    private ReactiveUI.Primitives.Optional<ManagedGroup<TObject, TKey, TGroupKey>> LookupGroup(TGroupKey groupKey) =>
         _groupCache.Lookup(groupKey).Convert(static grp => (grp as ManagedGroup<TObject, TKey, TGroupKey>)!);
 
+    /// <summary>
+    /// Executes the GetOrAddGroup operation.
+    /// </summary>
+    /// <param name="groupKey">The groupKey value.</param>
+    /// <returns>The result of the operation.</returns>
     private ManagedGroup<TObject, TKey, TGroupKey> GetOrAddGroup(TGroupKey groupKey) =>
         LookupGroup(groupKey).ValueOr(() =>
         {
@@ -206,6 +300,13 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
             return newGroup;
         });
 
+    /// <summary>
+    /// Executes the PerformAddOrUpdate operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <param name="groupKey">The groupKey value.</param>
+    /// <param name="item">The item value.</param>
+    /// <param name="suspendTracker">The suspendTracker value.</param>
     private void PerformAddOrUpdate(TKey key, TGroupKey groupKey, TObject item, SuspendTracker? suspendTracker = null)
     {
         // See if this item already has been grouped
@@ -236,6 +337,13 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         PerformGroupAddOrUpdate(key, groupKey, item, suspendTracker);
     }
 
+    /// <summary>
+    /// Executes the PerformGroupAddOrUpdate operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <param name="groupKey">The groupKey value.</param>
+    /// <param name="item">The item value.</param>
+    /// <param name="suspendTracker">The suspendTracker value.</param>
     private void PerformGroupAddOrUpdate(TKey key, TGroupKey groupKey, TObject item, SuspendTracker? suspendTracker = null)
     {
         var group = GetOrAddGroup(groupKey);
@@ -247,9 +355,21 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         _emptyGroups.Remove(group);
     }
 
+    /// <summary>
+    /// Executes the PerformRefresh operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <param name="suspendTracker">The suspendTracker value.</param>
     private void PerformRefresh(TKey key, SuspendTracker? suspendTracker = null) => PerformGroupRefresh(key, LookupGroup(key), suspendTracker);
-
     // When the GroupKey is available, check then and move the group if it changed
+
+    /// <summary>
+    /// Executes the PerformRefresh operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <param name="newGroupKey">The newGroupKey value.</param>
+    /// <param name="item">The item value.</param>
+    /// <param name="suspendTracker">The suspendTracker value.</param>
     private void PerformRefresh(TKey key, TGroupKey newGroupKey, TObject item, SuspendTracker? suspendTracker = null)
     {
         if (_groupKeys.TryGetValue(key, out var groupKey))
@@ -273,6 +393,11 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
+    /// <summary>
+    /// Executes the PerformRemove operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <param name="suspendTracker">The suspendTracker value.</param>
     private void PerformRemove(TKey key, SuspendTracker? suspendTracker = null)
     {
         if (_groupKeys.TryGetValue(key, out var groupKey))
@@ -286,6 +411,12 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
         }
     }
 
+    /// <summary>
+    /// Executes the PerformRemove operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <param name="groupKey">The groupKey value.</param>
+    /// <param name="suspendTracker">The suspendTracker value.</param>
     private void PerformRemove(TKey key, TGroupKey groupKey, SuspendTracker? suspendTracker = null)
     {
         var optionalGroup = LookupGroup(groupKey);
@@ -307,18 +438,40 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
             Debug.Fail("Should not receive a Remove Event for an unknown Group Key");
         }
     }
-
     // Without the new group key, all that can be done is remove the old value
     // Consumer of the Grouper is resonsible for Adding the New Value.
+
+    /// <summary>
+    /// Executes the PerformUpdate operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <param name="suspendTracker">The suspendTracker value.</param>
     private void PerformUpdate(TKey key, SuspendTracker? suspendTracker = null) => PerformRemove(key, suspendTracker);
 
-    private sealed class SuspendTracker : IDisposable
+/// <summary>
+/// Provides members for the SuspendTracker class.
+/// </summary>
+private sealed class SuspendTracker : IDisposable
     {
+        /// <summary>
+        /// The _trackedKeys field.
+        /// </summary>
         private readonly HashSet<TGroupKey> _trackedKeys = [];
+
+        /// <summary>
+        /// The _disposables field.
+        /// </summary>
         private CompositeDisposable _disposables = [];
 
+        /// <summary>
+        /// Gets the HasItems value.
+        /// </summary>
         public bool HasItems => _disposables.Count > 0;
 
+        /// <summary>
+        /// Executes the Add operation.
+        /// </summary>
+        /// <param name="managedGroup">The managedGroup value.</param>
         public void Add(ManagedGroup<TObject, TKey, TGroupKey> managedGroup)
         {
             if (_trackedKeys.Add(managedGroup.Key))
@@ -327,6 +480,9 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
             }
         }
 
+        /// <summary>
+        /// Executes the Reset operation.
+        /// </summary>
         public void Reset()
         {
             if (_disposables.Count > 0)
@@ -337,6 +493,9 @@ internal sealed class DynamicGrouper<TObject, TKey, TGroupKey>(Func<TObject, TKe
             }
         }
 
+        /// <summary>
+        /// Executes the Dispose operation.
+        /// </summary>
         public void Dispose() => _disposables.Dispose();
     }
 }

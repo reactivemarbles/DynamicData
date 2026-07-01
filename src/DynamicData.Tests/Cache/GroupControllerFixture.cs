@@ -1,13 +1,4 @@
-using System;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Subjects;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -25,14 +16,14 @@ public class GroupControllerFixture : IDisposable
         return p.Age <= 60 ? AgeBracket.Adult : AgeBracket.Pensioner;
     };
 
-    private readonly ISubject<Unit> _refresher;
+    private readonly Signal<Unit> _refresher;
 
     private readonly ISourceCache<Person, string> _source;
 
     public GroupControllerFixture()
     {
         _source = new SourceCache<Person, string>(p => p.Name);
-        _refresher = new Subject<Unit>();
+        _refresher = new Signal<Unit>();
         _grouped = _source.Connect().Group(_grouper, _refresher).AsObservableCache();
     }
 
@@ -49,6 +40,7 @@ public class GroupControllerFixture : IDisposable
     {
         _source?.Dispose();
         _grouped?.Dispose();
+        _refresher.Dispose();
     }
 
     [Fact]

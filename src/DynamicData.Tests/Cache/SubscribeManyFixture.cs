@@ -1,11 +1,3 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Disposables;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public class SubscribeManyFixture : IDisposable

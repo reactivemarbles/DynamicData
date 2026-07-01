@@ -1,24 +1,15 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -32,9 +23,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{TObject}"/> to convert into a keyed changeset stream.</param>
-    /// <param name="keySelector">A <see cref="Func{T, TResult}"/> that selects the unique key for each item.</param>
-    /// <param name="expireAfter">An optional <see cref="Func{T, TResult}"/> that specifies per-item expiration time. Return <see langword="null"/> for no expiration.</param>
+    /// <param name="source">The source <c>IObservable&lt;TObject&gt;</c> to convert into a keyed changeset stream.</param>
+    /// <param name="keySelector">A <c>Func&lt;T, TResult&gt;</c> that selects the unique key for each item.</param>
+    /// <param name="expireAfter">An optional <c>Func&lt;T, TResult&gt;</c> that specifies per-item expiration time. Return <see langword="null"/> for no expiration.</param>
     /// <param name="limitSizeTo">The maximum cache size. Oldest items are removed when exceeded. Use -1 for no limit.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> for expiration timing.</param>
     /// <returns>An observable changeset stream.</returns>
@@ -48,8 +39,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return Cache.Internal.ToObservableChangeSet<TObject, TKey>.Create(
             source: source,
@@ -66,9 +57,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IEnumerable{TObject}}"/> to convert into a keyed changeset stream.</param>
-    /// <param name="keySelector">A <see cref="Func{T, TResult}"/> that selects the unique key for each item.</param>
-    /// <param name="expireAfter">An optional <see cref="Func{T, TResult}"/> that specifies per-item expiration time. Return <see langword="null"/> for no expiration.</param>
+    /// <param name="source">The source <c>IObservable&lt;IEnumerable&lt;TObject&gt;&gt;</c> to convert into a keyed changeset stream.</param>
+    /// <param name="keySelector">A <c>Func&lt;T, TResult&gt;</c> that selects the unique key for each item.</param>
+    /// <param name="expireAfter">An optional <c>Func&lt;T, TResult&gt;</c> that specifies per-item expiration time. Return <see langword="null"/> for no expiration.</param>
     /// <param name="limitSizeTo">The maximum cache size. Oldest items are removed when exceeded. Use -1 for no limit.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> for expiration timing.</param>
     /// <returns>An observable changeset stream.</returns>
@@ -82,8 +73,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return Cache.Internal.ToObservableChangeSet<TObject, TKey>.Create(
             source: source,

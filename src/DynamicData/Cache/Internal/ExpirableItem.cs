@@ -1,30 +1,27 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
-internal readonly struct ExpirableItem<TObject, TKey>(TObject value, TKey key, DateTime dateTime, long index = 0) : IEquatable<ExpirableItem<TObject, TKey>>
+/// <summary>
+/// Represents the ExpirableItem record.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="Value">The Value value.</param>
+/// <param name="Key">The Key value.</param>
+/// <param name="ExpireAt">The ExpireAt value.</param>
+/// <param name="Index">The Index value.</param>
+internal readonly record struct ExpirableItem<TObject, TKey>(TObject Value, TKey Key, DateTime ExpireAt, long Index = 0)
 {
-    public TObject Value { get; } = value;
-
-    public TKey Key { get; } = key;
-
-    public DateTime ExpireAt { get; } = dateTime;
-
-    public long Index { get; } = index;
-
-    public static bool operator ==(in ExpirableItem<TObject, TKey> left, in ExpirableItem<TObject, TKey> right) => left.Equals(right);
-
-    public static bool operator !=(in ExpirableItem<TObject, TKey> left, in ExpirableItem<TObject, TKey> right) => !left.Equals(right);
-
     /// <inheritdoc />
-    public bool Equals(ExpirableItem<TObject, TKey> other) => EqualityComparer<TKey>.Default.Equals(Key, other.Key) && ExpireAt.Equals(other.ExpireAt);
-
-    /// <inheritdoc />
-    public override bool Equals(object? obj) => obj is ExpirableItem<TObject, TKey> expItem && Equals(expItem);
-
-    /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -33,5 +30,9 @@ internal readonly struct ExpirableItem<TObject, TKey>(TObject value, TKey key, D
         }
     }
 
+    /// <summary>
+    /// Executes the ToString operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"Key: {Key}, Expire At: {ExpireAt}";
 }

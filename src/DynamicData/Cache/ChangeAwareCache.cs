@@ -1,24 +1,33 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using DynamicData.Cache;
-
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// A cache which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point thw changes are cleared.
 /// Used for creating custom operators.
 /// </summary>
-/// <seealso cref="ICache{TObject, TKey}" />
+/// <seealso><c>ICache&lt;TObject, TKey&gt;</c></seealso>
 /// <typeparam name="TObject">The value of the cache.</typeparam>
 /// <typeparam name="TKey">The key of the cache.</typeparam>
 public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _data field.
+    /// </summary>
     private readonly Dictionary<TKey, TObject> _data;
+
+    /// <summary>
+    /// The _changes field.
+    /// </summary>
     private ChangeSet<TObject, TKey> _changes;
 
     /// <summary>
@@ -46,7 +55,9 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <param name="data">Data to populate the cache with.</param>
     public ChangeAwareCache(Dictionary<TKey, TObject> data)
     {
-        _data = data ?? throw new ArgumentNullException(nameof(data));
+        ArgumentExceptionHelper.ThrowIfNull(data);
+
+        _data = data;
         _changes = [];
     }
 
@@ -62,6 +73,10 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <inheritdoc />
     public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
 
+    /// <summary>
+    /// Executes the GetDictionary operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     internal Dictionary<TKey, TObject> GetDictionary() => _data;
 
     /// <summary>
@@ -76,6 +91,8 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     }
 
     /// <inheritdoc />
+    /// <param name="item">The item value.</param>
+    /// <param name="key">The key value.</param>
     public void AddOrUpdate(TObject item, TKey key)
     {
         _changes.Add(_data.TryGetValue(key, out var existingItem) ? new Change<TObject, TKey>(ChangeReason.Update, key, item, existingItem) : new Change<TObject, TKey>(ChangeReason.Add, key, item));
@@ -87,7 +104,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// Create a change set from recorded changes and clears known changes.
     /// </summary>
     /// <returns>A change set with the key/value changes.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0301:Simplify collection initialization", Justification = "This would result in differing operation")]
+    [SuppressMessage("Style", "IDE0301:Simplify collection initialization", Justification = "This would result in differing operation")]
     public ChangeSet<TObject, TKey> CaptureChanges()
     {
         if (_changes.Count == 0)
@@ -109,9 +126,10 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     }
 
     /// <inheritdoc />
+    /// <param name="changes">The changes value.</param>
     public void Clone(IChangeSet<TObject, TKey> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
 
         foreach (var change in changes.ToConcreteType())
         {
@@ -138,7 +156,9 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     }
 
     /// <inheritdoc />
-    public Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
     /// <summary>
     /// Raises an evaluate change for the specified keys.
@@ -146,7 +166,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <param name="keys">The keys to refresh.</param>
     public void Refresh(IEnumerable<TKey> keys)
     {
-        keys.ThrowArgumentNullExceptionIfNull(nameof(keys));
+        ArgumentExceptionHelper.ThrowIfNull(keys);
 
         if (keys is IList<TKey> list)
         {
@@ -187,7 +207,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <param name="keys">The keys.</param>
     public void Remove(IEnumerable<TKey> keys)
     {
-        keys.ThrowArgumentNullExceptionIfNull(nameof(keys));
+        ArgumentExceptionHelper.ThrowIfNull(keys);
 
         if (keys is IList<TKey> list)
         {
@@ -206,6 +226,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     }
 
     /// <inheritdoc />
+    /// <param name="key">The key value.</param>
     public void Remove(TKey key)
     {
         if (_data.TryGetValue(key, out var existingItem))

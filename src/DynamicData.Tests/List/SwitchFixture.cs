@@ -1,11 +1,3 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.List;
 
 public class SwitchFixture : IDisposable
@@ -14,12 +6,12 @@ public class SwitchFixture : IDisposable
 
     private readonly ISourceList<int> _source;
 
-    private readonly ISubject<ISourceList<int>> _switchable;
+    private readonly ISignal<ISourceList<int>> _switchable;
 
     public SwitchFixture()
     {
         _source = new SourceList<int>();
-        _switchable = new BehaviorSubject<ISourceList<int>>(_source);
+        _switchable = new StateSignal<ISourceList<int>>(_source);
         _results = _switchable.Switch().AsAggregator();
     }
 
@@ -48,6 +40,7 @@ public class SwitchFixture : IDisposable
     {
         _source.Dispose();
         _results.Dispose();
+        _switchable.Dispose();
     }
 
     [Fact]

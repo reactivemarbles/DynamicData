@@ -1,5 +1,3 @@
-using System;
-
 namespace DynamicData.Tests.Domain;
 
 public class PersonWithEmployment(IGroup<PersonEmployment, PersonEmpKey, string> source) : IDisposable

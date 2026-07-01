@@ -1,14 +1,31 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.List.Linq;
+#else
 
 namespace DynamicData.List.Linq;
+#endif
 
+/// <summary>
+/// Provides members for the Reverser class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
 internal sealed class Reverser<T>
     where T : notnull
 {
+    /// <summary>
+    /// The _length field.
+    /// </summary>
     private int _length;
 
+    /// <summary>
+    /// Executes the Reverse operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
     public IEnumerable<Change<T>> Reverse(IChangeSet<T> changes)
     {
         foreach (var change in changes)

@@ -1,10 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.Aggregation;
+#else
 
 namespace DynamicData.Aggregation;
+#endif
 
 /// <summary>
 /// Count extensions.
@@ -37,7 +40,11 @@ public static class CountEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
-    public static IObservable<int> Count<TObject>(this IObservable<IAggregateChangeSet<TObject>> source) => source.Accumulate(0, _ => 1, (current, increment) => current + increment, (current, increment) => current - increment);
+    public static IObservable<int> Count<TObject>(this IObservable<IAggregateChangeSet<TObject>> source)
+    {
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        return source.Accumulate(0, _ => 1, (current, increment) => current + increment, (current, increment) => current - increment);
+    }
 
     /// <summary>
     /// Counts the total number of items in the underlying data source.

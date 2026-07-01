@@ -1,8 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Diagnostics;
+#else
 
 namespace DynamicData.Diagnostics;
+#endif
 
 /// <summary>
 /// Accumulates change statics.
@@ -14,6 +19,9 @@ public class ChangeSummary
     /// </summary>
     public static readonly ChangeSummary Empty = new();
 
+    /// <summary>
+    /// The _index field.
+    /// </summary>
     private readonly int _index;
 
     /// <summary>
@@ -56,6 +64,8 @@ public class ChangeSummary
     public ChangeStatistics Overall { get; }
 
     /// <inheritdoc />
+    /// <param name="obj">The obj value.</param>
+    /// <returns>The result of the operation.</returns>
     public override bool Equals(object? obj)
     {
         if (obj is null)
@@ -72,6 +82,7 @@ public class ChangeSummary
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -84,7 +95,13 @@ public class ChangeSummary
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"CurrentIndex: {_index}, Latest Count: {Latest.Count}, Overall Count: {Overall.Count}";
 
+    /// <summary>
+    /// Executes the Equals operation.
+    /// </summary>
+    /// <param name="other">The other value.</param>
+    /// <returns>The result of the operation.</returns>
     private bool Equals(ChangeSummary other) => _index == other._index && Equals(Latest, other.Latest) && Equals(Overall, other.Overall);
 }

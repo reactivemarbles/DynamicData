@@ -1,20 +1,44 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the FilterImmutable class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 internal sealed class FilterImmutable<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _onNextInvoker field.
+    /// </summary>
     private readonly Action<IObserver<IChangeSet<TObject, TKey>>, IChangeSet<TObject, TKey>> _onNextInvoker;
+
+    /// <summary>
+    /// The _predicate field.
+    /// </summary>
     private readonly Func<TObject, bool> _predicate;
+
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TObject, TKey>> _source;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FilterImmutable{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="predicate">The predicate value.</param>
+    /// <param name="source">The source value.</param>
+    /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
     public FilterImmutable(
         Func<TObject, bool> predicate,
         IObservable<IChangeSet<TObject, TKey>> source,
@@ -35,6 +59,10 @@ internal sealed class FilterImmutable<TObject, TKey>
             : (observer, changes) => observer.OnNext(changes);
     }
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Run()
         => Observable.Create<IChangeSet<TObject, TKey>>(observer => _source
             .SubscribeSafe(Observer.Create<IChangeSet<TObject, TKey>>(

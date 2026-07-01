@@ -1,17 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
 using Bogus;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
@@ -540,9 +529,10 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
     public void Dispose()
     {
-        _animalOwners.Items.ForEach(owner => owner.Dispose());
+        var owners = _animalOwners.Items.ToArray();
         _animalOwnerResults.Dispose();
         _animalResults.Dispose();
+        owners.ForEach(owner => owner.Dispose());
         _animalOwners.Dispose();
     }
 }

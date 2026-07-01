@@ -1,22 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
-
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for ObservableList.
@@ -24,12 +15,16 @@ namespace DynamicData;
 public static partial class ObservableListEx
 {
     /// <summary>
-    /// Casts each item in the changeset to <c>object</c>. Typically used before <see cref="Cast{TDestination}(IObservable{IChangeSet{object}})"/> to work around type inference limitations.
+    /// Casts each item in the changeset to <c>object</c>. Typically used before <c>Cast&lt;TDestination&gt;(IObservable&lt;IChangeSet&lt;object&gt;&gt;)</c> to work around type inference limitations.
     /// </summary>
     /// <typeparam name="T">The source item type (must be a reference type).</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to cast to object.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to cast to object.</param>
     /// <returns>A list changeset stream of <c>object</c> items.</returns>
-    /// <seealso cref="Cast{TDestination}(IObservable{IChangeSet{object}})"/>
+    /// <seealso><c>Cast&lt;TDestination&gt;(IObservable&lt;IChangeSet&lt;object&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<object>> CastToObject<T>(this IObservable<IChangeSet<T>> source)
-        where T : class => source.Select(changes => changes.Transform(t => (object)t));
+        where T : class
+    {
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        return source.Select(changes => changes.Transform(t => (object)t));
+    }
 }

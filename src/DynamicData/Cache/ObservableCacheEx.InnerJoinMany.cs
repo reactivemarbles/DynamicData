@@ -1,36 +1,42 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
 /// </summary>
 public static partial class ObservableCacheEx
 {
-    /// <inheritdoc cref="InnerJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
-    /// <param name="left">The left <see cref="IObservable{IChangeSet{TLeft, TLeftKey}}"/> to join.</param>
-    /// <param name="right">The right <see cref="IObservable{IChangeSet{TRight, TRightKey}}"/> to join.</param>
-    /// <param name="rightKeySelector">A <see cref="Func{T, TResult}"/> that maps each right item to the left key it should join on.</param>
-    /// <param name="resultSelector">A <see cref="Func{T, TResult}"/> that combines the left value and the right group into a destination object. The key is not provided in this overload.</param>
-    /// <remarks>Overload that omits the key from the result selector. Delegates to <see cref="InnerJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>.</remarks>
+    /// <summary>
+    /// Provides an overload of <c>InnerJoinMany</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TLeft">The type of the TLeft value.</typeparam>
+    /// <typeparam name="TLeftKey">The type of the TLeftKey value.</typeparam>
+    /// <typeparam name="TRight">The type of the TRight value.</typeparam>
+    /// <typeparam name="TRightKey">The type of the TRightKey value.</typeparam>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <param name="left">The left <c>IObservable&lt;IChangeSet&lt;TLeft, TLeftKey&gt;&gt;</c> to join.</param>
+    /// <param name="right">The right <c>IObservable&lt;IChangeSet&lt;TRight, TRightKey&gt;&gt;</c> to join.</param>
+    /// <param name="rightKeySelector">A <c>Func&lt;T, TResult&gt;</c> that maps each right item to the left key it should join on.</param>
+    /// <param name="resultSelector">A <c>Func&lt;T, TResult&gt;</c> that combines the left value and the right group into a destination object. The key is not provided in this overload.</param>
+    /// <returns>The resulting observable sequence.</returns>
+    /// <remarks>Overload that omits the key from the result selector. Delegates to <c>InnerJoinMany&lt;TLeft, TLeftKey, TRight, TRightKey, TDestination&gt;(IObservable&lt;IChangeSet&lt;TLeft, TLeftKey&gt;&gt;, IObservable&lt;IChangeSet&lt;TRight, TRightKey&gt;&gt;, Func&lt;TRight, TLeftKey&gt;, Func&lt;TLeftKey, TLeft, IGrouping&lt;TRight, TRightKey, TLeftKey&gt;, TDestination&gt;)</c>.</remarks>
     public static IObservable<IChangeSet<TDestination, TLeftKey>> InnerJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeft, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
         where TLeft : notnull
         where TLeftKey : notnull
@@ -38,10 +44,10 @@ public static partial class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        left.ThrowArgumentNullExceptionIfNull(nameof(left));
-        right.ThrowArgumentNullExceptionIfNull(nameof(right));
-        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
-        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
+        ArgumentExceptionHelper.ThrowIfNull(left);
+        ArgumentExceptionHelper.ThrowIfNull(right);
+        ArgumentExceptionHelper.ThrowIfNull(rightKeySelector);
+        ArgumentExceptionHelper.ThrowIfNull(resultSelector);
 
         return left.InnerJoinMany(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
     }
@@ -56,10 +62,10 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TRight">The item type of the right source.</typeparam>
     /// <typeparam name="TRightKey">The key type of the right source.</typeparam>
     /// <typeparam name="TDestination">The type produced by <paramref name="resultSelector"/>.</typeparam>
-    /// <param name="left">The left <see cref="IObservable{IChangeSet{TLeft, TLeftKey}}"/> to join.</param>
-    /// <param name="right">The right <see cref="IObservable{IChangeSet{TRight, TRightKey}}"/> to join.</param>
-    /// <param name="rightKeySelector">A <see cref="Func{T, TResult}"/> that maps each right item to the left key it should join on.</param>
-    /// <param name="resultSelector">A <see cref="Func{T, TResult}"/> that combines the key, left value, and right group into a destination object. Example: <c>(key, left, group) =&gt; new Result(key, left, group)</c>.</param>
+    /// <param name="left">The left <c>IObservable&lt;IChangeSet&lt;TLeft, TLeftKey&gt;&gt;</c> to join.</param>
+    /// <param name="right">The right <c>IObservable&lt;IChangeSet&lt;TRight, TRightKey&gt;&gt;</c> to join.</param>
+    /// <param name="rightKeySelector">A <c>Func&lt;T, TResult&gt;</c> that maps each right item to the left key it should join on.</param>
+    /// <param name="resultSelector">A <c>Func&lt;T, TResult&gt;</c> that combines the key, left value, and right group into a destination object. Example: <c>(key, left, group) =&gt; new Result(key, left, group)</c>.</param>
     /// <returns>An observable changeset keyed by <typeparamref name="TLeftKey"/>.</returns>
     /// <remarks>
     /// <para>
@@ -85,10 +91,10 @@ public static partial class ObservableCacheEx
     /// <para>Both sources are serialized through a shared lock held during downstream delivery. Avoid blocking operations in subscribers.</para>
     /// </remarks>
     /// <exception cref="ArgumentNullException">Any argument is <see langword="null"/>.</exception>
-    /// <seealso cref="InnerJoin{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{ValueTuple{TLeftKey, TRightKey}, TLeft, TRight, TDestination})"/>
-    /// <seealso cref="LeftJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, TLeft, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
-    /// <seealso cref="RightJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, Optional{TLeft}, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
-    /// <seealso cref="FullJoinMany{TLeft, TLeftKey, TRight, TRightKey, TDestination}(IObservable{IChangeSet{TLeft, TLeftKey}}, IObservable{IChangeSet{TRight, TRightKey}}, Func{TRight, TLeftKey}, Func{TLeftKey, Optional{TLeft}, IGrouping{TRight, TRightKey, TLeftKey}, TDestination})"/>
+    /// <seealso><c>InnerJoin&lt;TLeft, TLeftKey, TRight, TRightKey, TDestination&gt;(IObservable&lt;IChangeSet&lt;TLeft, TLeftKey&gt;&gt;, IObservable&lt;IChangeSet&lt;TRight, TRightKey&gt;&gt;, Func&lt;TRight, TLeftKey&gt;, Func&lt;ValueTuple&lt;TLeftKey, TRightKey&gt;, TLeft, TRight, TDestination&gt;)</c></seealso>
+    /// <seealso><c>LeftJoinMany&lt;TLeft, TLeftKey, TRight, TRightKey, TDestination&gt;(IObservable&lt;IChangeSet&lt;TLeft, TLeftKey&gt;&gt;, IObservable&lt;IChangeSet&lt;TRight, TRightKey&gt;&gt;, Func&lt;TRight, TLeftKey&gt;, Func&lt;TLeftKey, TLeft, IGrouping&lt;TRight, TRightKey, TLeftKey&gt;, TDestination&gt;)</c></seealso>
+    /// <seealso><c>RightJoinMany&lt;TLeft, TLeftKey, TRight, TRightKey, TDestination&gt;(IObservable&lt;IChangeSet&lt;TLeft, TLeftKey&gt;&gt;, IObservable&lt;IChangeSet&lt;TRight, TRightKey&gt;&gt;, Func&lt;TRight, TLeftKey&gt;, Func&lt;TLeftKey, Optional&lt;TLeft&gt;, IGrouping&lt;TRight, TRightKey, TLeftKey&gt;, TDestination&gt;)</c></seealso>
+    /// <seealso><c>FullJoinMany&lt;TLeft, TLeftKey, TRight, TRightKey, TDestination&gt;(IObservable&lt;IChangeSet&lt;TLeft, TLeftKey&gt;&gt;, IObservable&lt;IChangeSet&lt;TRight, TRightKey&gt;&gt;, Func&lt;TRight, TLeftKey&gt;, Func&lt;TLeftKey, Optional&lt;TLeft&gt;, IGrouping&lt;TRight, TRightKey, TLeftKey&gt;, TDestination&gt;)</c></seealso>
     public static IObservable<IChangeSet<TDestination, TLeftKey>> InnerJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, TLeft, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
         where TLeft : notnull
         where TLeftKey : notnull
@@ -96,10 +102,10 @@ public static partial class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        left.ThrowArgumentNullExceptionIfNull(nameof(left));
-        right.ThrowArgumentNullExceptionIfNull(nameof(right));
-        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
-        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
+        ArgumentExceptionHelper.ThrowIfNull(left);
+        ArgumentExceptionHelper.ThrowIfNull(right);
+        ArgumentExceptionHelper.ThrowIfNull(rightKeySelector);
+        ArgumentExceptionHelper.ThrowIfNull(resultSelector);
 
         return new InnerJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
     }

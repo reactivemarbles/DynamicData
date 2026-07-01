@@ -1,15 +1,6 @@
-﻿using System;
-using System.Linq;
-
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 

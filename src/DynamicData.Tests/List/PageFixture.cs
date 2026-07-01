@@ -1,15 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
@@ -17,7 +7,7 @@ public class PageFixture : IDisposable
 {
     private readonly RandomPersonGenerator _generator = new();
 
-    private readonly ISubject<PageRequest> _requestSubject = new BehaviorSubject<PageRequest>(new PageRequest(1, 25));
+    private readonly ISignal<PageRequest> _requestSubject = new StateSignal<PageRequest>(new PageRequest(1, 25));
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -34,6 +24,7 @@ public class PageFixture : IDisposable
         _requestSubject.OnCompleted();
         _source.Dispose();
         _results.Dispose();
+        _requestSubject.Dispose();
     }
 
     [Fact]
@@ -150,7 +141,7 @@ public class PageFixtureWithNoInitialData
     [Fact]
     public void SimplePaging()
     {
-        using var pager = new BehaviorSubject<IPageRequest>(new PageRequest(0, 0));
+        using var pager = new StateSignal<IPageRequest>(new PageRequest(0, 0));
         using var sourceList = new SourceList<Animal>();
         using var sut = new SimplePaging(sourceList, pager);
         // Add items to source
@@ -168,7 +159,6 @@ public class PageFixtureWithNoInitialData
         sut.Paged.Count.Should().Be(3);
     }
 
-
     [Fact]
     public void DoesNotThrowWithDuplicates()
     {
@@ -179,7 +169,7 @@ public class PageFixtureWithNoInitialData
         var source = new SourceList<string>();
         source.AddRange(Enumerable.Repeat("item", 10));
         source.Connect()
-            .Page(new BehaviorSubject<IPageRequest>(new PageRequest(0, 3)))
+            .Page(new StateSignal<IPageRequest>(new PageRequest(0, 3)))
             .Clone(result)
             .Subscribe();
 

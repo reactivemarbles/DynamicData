@@ -1,18 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading.Tasks;
 
 using Bogus;
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
 
 namespace DynamicData.Tests.Cache;
 
@@ -23,7 +11,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void ExpiredItemIsRemoved_RemovalIsSkipped()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -72,7 +60,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void ItemIsRemovedBeforeExpiration_ExpirationIsCancelled()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -124,7 +112,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void NextItemToExpireIsReplaced_ExpirationIsRescheduledIfNeeded()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -201,7 +189,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void PollingIntervalIsGiven_RemovalsAreScheduledAtInterval()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -287,7 +275,6 @@ public static partial class ExpireAfterFixture
                 new(reason: ChangeReason.Moved, key: item1.Id, current: item1, previous: default, currentIndex: 4, previousIndex: 1)
             });
 
-
             // Verify initial state, after all emissions
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Count.Should().Be(7, "8 source operations were performed, and 1 should have been ignored");
@@ -368,7 +355,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void PollingIntervalIsNotGiven_RemovalsAreScheduledImmediately()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -453,7 +440,6 @@ public static partial class ExpireAfterFixture
                 new(reason: ChangeReason.Moved, key: item1.Id, current: item1, previous: default, currentIndex: 4, previousIndex: 1)
             });
 
-
             // Verify initial state, after all emissions
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Count.Should().Be(7, "8 source operations were performed, and 1 should have been ignored");
@@ -519,7 +505,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void RemovalsArePending_CompletionWaitsForRemovals()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -571,7 +557,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void SchedulerIsInaccurate_RemovalsAreNotSkipped()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = new FakeScheduler()
             {
@@ -592,7 +578,6 @@ public static partial class ExpireAfterFixture
                 new(reason: ChangeReason.Add, key: item1.Id, current: item1)
             });
 
-
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
@@ -609,7 +594,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void SourceCompletes_CompletionIsPropagated()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -684,7 +669,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public void SourceErrors_ErrorIsPropagated()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -768,7 +753,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public async Task ThreadPoolSchedulerIsUsedWithoutPolling_ExpirationIsThreadSafe()
         {
-            using var source = new Subject<IChangeSet<StressItem, int>>();
+            using var source = new Signal<IChangeSet<StressItem, int>>();
 
             var scheduler = ThreadPoolScheduler.Instance;
 
@@ -798,7 +783,7 @@ public static partial class ExpireAfterFixture
         [Fact]
         public async Task ThreadPoolSchedulerIsUsedWithPolling_ExpirationIsThreadSafe()
         {
-            using var source = new Subject<IChangeSet<StressItem, int>>();
+            using var source = new Signal<IChangeSet<StressItem, int>>();
 
             var scheduler = ThreadPoolScheduler.Instance;
 
@@ -830,14 +815,14 @@ public static partial class ExpireAfterFixture
 
         [Fact]
         public void TimeSelectorIsNull_ThrowsException()
-            => FluentActions.Invoking(() => new Subject<IChangeSet<TestItem, int>>().ExpireAfter(
+            => FluentActions.Invoking(() => new Signal<IChangeSet<TestItem, int>>().ExpireAfter(
                 timeSelector: null!))
             .Should().Throw<ArgumentNullException>();
 
         [Fact]
         public void TimeSelectorThrows_ErrorIsPropagated()
         {
-            using var source = new Subject<IChangeSet<TestItem, int>>();
+            using var source = new Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 

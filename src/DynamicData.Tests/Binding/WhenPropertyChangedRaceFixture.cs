@@ -1,31 +1,17 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
 using DynamicData.Binding;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Binding;
 
 /// <summary>
 /// Multi-threaded race tests for <see cref="NotifyPropertyChangedEx.WhenPropertyChanged{TObject, TProperty}"/>.
 /// Each test forces concurrency between the operator's subscribe call (or chain re-walk) and one or more
-/// <see cref="System.ComponentModel.INotifyPropertyChanged.PropertyChanged"/> notifiers firing on other threads.
+/// <see cref="INotifyPropertyChanged.PropertyChanged"/> notifiers firing on other threads.
 /// </summary>
+[Collection(IntegrationTestFixtureBase.CollectionName)]
 public sealed class WhenPropertyChangedRaceFixture
 {
     private static readonly TimeSpan ConditionTimeout = TimeSpan.FromSeconds(30);

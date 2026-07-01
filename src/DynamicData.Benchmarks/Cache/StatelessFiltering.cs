@@ -1,9 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reactive.Subjects;
-
-using BenchmarkDotNet.Attributes;
-
 namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
@@ -53,7 +47,7 @@ public class StatelessFiltering
     [Benchmark(Baseline = true)]
     public void Filter()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .Filter(static item => item.IsIncluded)
@@ -67,7 +61,7 @@ public class StatelessFiltering
     [Benchmark]
     public void FilterImmutable()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .FilterImmutable(static item => item.IsIncluded)

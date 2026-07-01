@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
+using System.Diagnostics;
 
 namespace DynamicData.Tests.Utilities;
 
@@ -11,6 +8,7 @@ internal sealed class FakeScheduler
     private readonly List<ScheduledAction> _scheduledActions;
 
     private DateTimeOffset _now;
+    private long? _originClockTicks;
 
     public FakeScheduler()
         => _scheduledActions = new();
@@ -23,6 +21,35 @@ internal sealed class FakeScheduler
         get => _now;
         set => _now = value;
     }
+
+    public long Timestamp
+    {
+        get
+        {
+            _originClockTicks ??= _now.Ticks;
+            return ToTimestamp(_now.Ticks);
+        }
+    }
+
+    public void Schedule(IWorkItem item) =>
+        _scheduledActions.Add(
+            new ScheduledAction(
+                dueTime: null,
+                onInvoked: () =>
+                {
+                    item.Execute();
+                    return Disposable.Empty;
+                }));
+
+    public void Schedule(IWorkItem item, long dueTimestamp) =>
+        _scheduledActions.Add(
+            new ScheduledAction(
+                dueTime: new DateTimeOffset(ToClockTicks(dueTimestamp), TimeSpan.Zero),
+                onInvoked: () =>
+                {
+                    item.Execute();
+                    return Disposable.Empty;
+                }));
 
     public IDisposable Schedule<TState>(
             TState state,
@@ -89,6 +116,31 @@ internal sealed class FakeScheduler
         _scheduledActions.Add(scheduledAction);
 
         return Disposable.Create(scheduledAction.Cancel);
+    }
+
+    private long ToTimestamp(long ticks)
+    {
+        _originClockTicks ??= ticks;
+        var elapsedTicks = ticks - _originClockTicks.Value;
+        if (elapsedTicks <= 0)
+        {
+            return 0;
+        }
+
+        var value = elapsedTicks / (double)TimeSpan.TicksPerSecond * Stopwatch.Frequency;
+        return value >= long.MaxValue ? long.MaxValue : (long)value;
+    }
+
+    private long ToClockTicks(long timestamp)
+    {
+        var originClockTicks = _originClockTicks ?? 0;
+        if (timestamp <= 0)
+        {
+            return originClockTicks;
+        }
+
+        var value = timestamp / (double)Stopwatch.Frequency * TimeSpan.TicksPerSecond;
+        return value >= long.MaxValue - originClockTicks ? long.MaxValue : originClockTicks + (long)value;
     }
 
     public sealed class ScheduledAction

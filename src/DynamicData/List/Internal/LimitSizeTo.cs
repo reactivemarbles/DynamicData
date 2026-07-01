@@ -1,23 +1,53 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
-
+#endif
 #if NET9_0_OR_GREATER
+
+/// <summary>
+/// Provides members for the LimitSizeTo class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="sourceList">The sourceList value.</param>
+/// <param name="sizeLimit">The sizeLimit value.</param>
+/// <param name="scheduler">The scheduler value.</param>
+/// <param name="locker">The locker value.</param>
 internal sealed class LimitSizeTo<T>(ISourceList<T> sourceList, int sizeLimit, IScheduler scheduler, Lock locker)
 #else
+
+/// <summary>
+/// Provides members for the LimitSizeTo class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="sourceList">The sourceList value.</param>
+/// <param name="sizeLimit">The sizeLimit value.</param>
+/// <param name="scheduler">The scheduler value.</param>
+/// <param name="locker">The locker value.</param>
 internal sealed class LimitSizeTo<T>(ISourceList<T> sourceList, int sizeLimit, IScheduler scheduler, object locker)
 #endif
 
     where T : notnull
 {
+    /// <summary>
+    /// The _scheduler field.
+    /// </summary>
     private readonly IScheduler _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
+
+    /// <summary>
+    /// The _sourceList field.
+    /// </summary>
     private readonly ISourceList<T> _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IEnumerable<T>> Run()
     {
         var emptyResult = new List<T>();

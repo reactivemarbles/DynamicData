@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -127,7 +121,6 @@ public class OnItemFixture
         public Item Item { get; set; }
 
         public bool? Active { get; set; }
-
 
     }
 

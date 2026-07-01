@@ -1,10 +1,3 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using BenchmarkDotNet.Attributes;
-
 using Bogus;
 
 namespace DynamicData.Benchmarks.Cache;
@@ -99,7 +92,6 @@ public class Filter_Cache_WithPredicateState
         }
         _changeSets = changeSets.MoveToImmutable();
 
-
         var predicateStates = ImmutableArray.CreateBuilder<int>(initialCapacity: 5_000);
         while (predicateStates.Count < predicateStates.Capacity)
             predicateStates.Add(randomizer.Int());
@@ -109,8 +101,8 @@ public class Filter_Cache_WithPredicateState
     [Benchmark(Baseline = true)]
     public void RandomizedEditsAndStateChanges()
     {
-        using var source            = new Subject<IChangeSet<Item, int>>();
-        using var predicateState    = new Subject<int>();
+        using var source            = new Signal<IChangeSet<Item, int>>();
+        using var predicateState    = new Signal<int>();
 
         using var subscription = source
             .Filter(

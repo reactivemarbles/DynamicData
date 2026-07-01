@@ -1,24 +1,22 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -37,7 +35,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to track for disposal on removal.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to track for disposal on removal.</param>
     /// <returns>A stream that forwards all changesets from <paramref name="source"/> unchanged.</returns>
     /// <remarks>
     /// <para>
@@ -53,18 +51,18 @@ public static partial class ObservableCacheEx
     /// <para>
     /// On stream completion, error, or subscription disposal, all remaining tracked items are disposed.
     /// All disposal is synchronous via <see cref="IDisposable.Dispose()"/>.
-    /// For items that implement <see cref="IAsyncDisposable"/>, use <see cref="AsyncDisposeMany{TObject,TKey}"/> instead.
+    /// For items that implement <see cref="IAsyncDisposable"/>, use <c>AsyncDisposeMany&lt;TObject,TKey&gt;</c> instead.
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="AsyncDisposeMany{TObject,TKey}"/>
-    /// <seealso cref="SubscribeMany{TObject,TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IDisposable})"/>
-    /// <seealso cref="ObservableListEx.DisposeMany"/>
+    /// <seealso><c>AsyncDisposeMany&lt;TObject,TKey&gt;</c></seealso>
+    /// <seealso><c>SubscribeMany&lt;TObject,TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, IDisposable&gt;)</c></seealso>
+    /// <seealso><c>ObservableListEx.DisposeMany</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> DisposeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new DisposeMany<TObject, TKey>(source).Run();
     }

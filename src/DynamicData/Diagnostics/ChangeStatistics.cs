@@ -1,63 +1,31 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Diagnostics;
+#else
 
 namespace DynamicData.Diagnostics;
+#endif
 
 /// <summary>
 ///     Object used to capture accumulated changes.
 /// </summary>
-public class ChangeStatistics : IEquatable<ChangeStatistics>
+/// <param name="Index">     Gets the index. </param>
+/// <param name="Adds">     Gets the adds. </param>
+/// <param name="Updates">     Gets the updates. </param>
+/// <param name="Removes">     Gets the removes. </param>
+/// <param name="Refreshes">     Gets the refreshes. </param>
+/// <param name="Moves">     Gets the moves. </param>
+/// <param name="Count">     Gets the count. </param>
+public record ChangeStatistics(int Index, int Adds, int Updates, int Removes, int Refreshes, int Moves, int Count)
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="ChangeStatistics"/> class.
     /// </summary>
-    public ChangeStatistics() => Index = -1;
-
-    /// <summary>
-    ///     Initializes a new instance of the <see cref="ChangeStatistics"/> class.
-    /// </summary>
-    /// <param name="index">The index of the change.</param>
-    /// <param name="adds">The number of additions.</param>
-    /// <param name="updates">The number of updates.</param>
-    /// <param name="removes">The number of removals.</param>
-    /// <param name="refreshes">The number of refreshes.</param>
-    /// <param name="moves">The number of moves.</param>
-    /// <param name="count">The new count.</param>
-    public ChangeStatistics(int index, int adds, int updates, int removes, int refreshes, int moves, int count)
-    {
-        Index = index;
-        Adds = adds;
-        Updates = updates;
-        Removes = removes;
-        Refreshes = refreshes;
-        Moves = moves;
-        Count = count;
-    }
-
-    /// <summary>
-    ///     Gets the adds.
-    /// </summary>
-    /// <value>
-    ///     The adds.
-    /// </value>
-    public int Adds { get; }
-
-    /// <summary>
-    ///     Gets the count.
-    /// </summary>
-    /// <value>
-    ///     The count.
-    /// </value>
-    public int Count { get; }
-
-    /// <summary>
-    ///     Gets the index.
-    /// </summary>
-    /// <value>
-    ///     The index.
-    /// </value>
-    public int Index { get; }
+    public ChangeStatistics()
+        : this(-1, default, default, default, default, default, default) => Index = -1;
 
     /// <summary>
     ///     Gets the last updated.
@@ -67,74 +35,8 @@ public class ChangeStatistics : IEquatable<ChangeStatistics>
     /// </value>
     public DateTime LastUpdated { get; } = DateTime.Now;
 
-    /// <summary>
-    ///     Gets the moves.
-    /// </summary>
-    /// <value>
-    ///     The moves.
-    /// </value>
-    public int Moves { get; }
-
-    /// <summary>
-    ///     Gets the refreshes.
-    /// </summary>
-    /// <value>
-    ///     The refreshes.
-    /// </value>
-    public int Refreshes { get; }
-
-    /// <summary>
-    ///     Gets the removes.
-    /// </summary>
-    /// <value>
-    ///     The removes.
-    /// </value>
-    public int Removes { get; }
-
-    /// <summary>
-    ///     Gets the updates.
-    /// </summary>
-    /// <value>
-    ///     The updates.
-    /// </value>
-    public int Updates { get; }
-
-    /// <summary>
-    /// Checks to see if both sides are equal.
-    /// </summary>
-    /// <param name="left">The left side to compare.</param>
-    /// <param name="right">The right side to compare.</param>
-    /// <returns>If the two sides are equal.</returns>
-    public static bool operator ==(ChangeStatistics left, ChangeStatistics right) => Equals(left, right);
-
-    /// <summary>
-    /// Checks to see if both sides are not equal.
-    /// </summary>
-    /// <param name="left">The left side to compare.</param>
-    /// <param name="right">The right side to compare.</param>
-    /// <returns>If the two sides are not equal.</returns>
-    public static bool operator !=(ChangeStatistics left, ChangeStatistics right) => !Equals(left, right);
-
     /// <inheritdoc />
-    public bool Equals(ChangeStatistics? other)
-    {
-        if (other is null)
-        {
-            return false;
-        }
-
-        if (ReferenceEquals(this, other))
-        {
-            return true;
-        }
-
-        return Adds == other.Adds && Updates == other.Updates && Removes == other.Removes && Refreshes == other.Refreshes && Moves == other.Moves && Count == other.Count && Index == other.Index && LastUpdated.Equals(other.LastUpdated);
-    }
-
-    /// <inheritdoc />
-    public override bool Equals(object? obj) => obj is ChangeStatistics change && Equals(change);
-
-    /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -152,5 +54,6 @@ public class ChangeStatistics : IEquatable<ChangeStatistics>
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"CurrentIndex: {Index}, Adds: {Adds}, Updates: {Updates}, Removes: {Removes}, Refreshes: {Refreshes}, Count: {Count}, Timestamp: {LastUpdated}";
 }

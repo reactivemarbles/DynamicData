@@ -1,6 +1,3 @@
-﻿using System.Collections.Generic;
-using System.Reactive.Concurrency;
-
 namespace DynamicData.Tests.Utilities;
 
 public sealed class ListItemRecordingObserver<T>

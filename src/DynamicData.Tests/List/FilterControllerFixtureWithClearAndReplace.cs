@@ -1,18 +1,10 @@
-using System;
-using System.Linq;
-using System.Reactive.Subjects;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
 public class FilterControllerFixtureWithClearAndReplace : IDisposable
 {
-    private readonly ISubject<Func<Person, bool>> _filter;
+    private readonly ISignal<Func<Person, bool>> _filter;
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -21,7 +13,7 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
     public FilterControllerFixtureWithClearAndReplace()
     {
         _source = new SourceList<Person>();
-        _filter = new BehaviorSubject<Func<Person, bool>>(p => p.Age > 20);
+        _filter = new StateSignal<Func<Person, bool>>(p => p.Age > 20);
         _results = _source.Connect().Filter(_filter, ListFilterPolicy.ClearAndReplace).AsAggregator();
     }
 
@@ -149,6 +141,7 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
     {
         _source.Dispose();
         _results.Dispose();
+        _filter.Dispose();
     }
 
     [Fact]
@@ -249,7 +242,7 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
     [Fact]
     public void VeryLargeDataSet()
     {
-        var filter = new BehaviorSubject<Func<int, bool>>(i => false);
+        var filter = new StateSignal<Func<int, bool>>(i => false);
         var source = new SourceList<int>();
 
         var result = source.Connect().Filter(filter, ListFilterPolicy.ClearAndReplace).AsObservableList();

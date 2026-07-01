@@ -1,16 +1,29 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the TransformAsync class.
+/// </summary>
+/// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+/// <typeparam name="TSource">The type of the TSource value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="transformFactory">The transformFactory value.</param>
+/// <param name="exceptionCallback">The exceptionCallback value.</param>
+/// <param name="forceTransform">The forceTransform value.</param>
+/// <param name="maximumConcurrency">The maximumConcurrency value.</param>
+/// <param name="transformOnRefresh">The transformOnRefresh value.</param>
 internal class TransformAsync<TDestination, TSource, TKey>(
     IObservable<IChangeSet<TSource, TKey>> source,
-    Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory,
+    Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, Task<TDestination>> transformFactory,
     Action<Error<TSource, TKey>>? exceptionCallback,
     IObservable<Func<TSource, TKey, bool>>? forceTransform = null,
     int? maximumConcurrency = null,
@@ -19,6 +32,10 @@ internal class TransformAsync<TDestination, TSource, TKey>(
     where TSource : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TDestination, TKey>> Run() =>
         Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
         {
@@ -40,6 +57,12 @@ internal class TransformAsync<TDestination, TSource, TKey>(
             return transformer.SubscribeSafe(observer);
         });
 
+    /// <summary>
+    /// Executes the DoTransform operation.
+    /// </summary>
+    /// <param name="cache">The cache value.</param>
+    /// <param name="shouldTransform">The shouldTransform value.</param>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TDestination, TKey>> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey> cache, Func<TSource, TKey, bool> shouldTransform)
     {
         var toTransform = cache.KeyValues.Where(kvp => shouldTransform(kvp.Value.Source, kvp.Key)).Select(kvp =>
@@ -51,6 +74,12 @@ internal class TransformAsync<TDestination, TSource, TKey>(
             .Select(transformed => ProcessUpdates(cache, transformed));
     }
 
+    /// <summary>
+    /// Executes the DoTransform operation.
+    /// </summary>
+    /// <param name="cache">The cache value.</param>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TDestination, TKey>> DoTransform(
         ChangeAwareCache<TransformedItemContainer, TKey> cache, IChangeSet<TSource, TKey> changes)
     {
@@ -60,6 +89,12 @@ internal class TransformAsync<TDestination, TSource, TKey>(
             .Select(transformed => ProcessUpdates(cache, transformed));
     }
 
+    /// <summary>
+    /// Executes the ProcessUpdates operation.
+    /// </summary>
+    /// <param name="cache">The cache value.</param>
+    /// <param name="transformedItems">The transformedItems value.</param>
+    /// <returns>The result of the operation.</returns>
     private ChangeSet<TDestination, TKey> ProcessUpdates(ChangeAwareCache<TransformedItemContainer, TKey> cache, TransformResult[] transformedItems)
     {
         // check for errors and callback if a handler has been specified
@@ -105,6 +140,11 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         return new ChangeSet<TDestination, TKey>(transformed);
     }
 
+    /// <summary>
+    /// Executes the Transform operation.
+    /// </summary>
+    /// <param name="change">The change value.</param>
+    /// <returns>The result of the operation.</returns>
     private async Task<TransformResult> Transform(Change<TSource, TKey> change)
     {
         try
@@ -130,15 +170,34 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         }
     }
 
-    private readonly struct TransformedItemContainer(TSource source, TDestination destination)
+/// <summary>
+/// Represents the TransformedItemContainer value.
+/// </summary>
+/// <param name="source">The source value.</param>
+/// <param name="destination">The destination value.</param>
+private readonly struct TransformedItemContainer(TSource source, TDestination destination)
     {
+        /// <summary>
+        /// Gets the Destination value.
+        /// </summary>
         public TDestination Destination { get; } = destination;
 
+        /// <summary>
+        /// Gets the Source value.
+        /// </summary>
         public TSource Source { get; } = source;
     }
 
-    private sealed class TransformResult
+/// <summary>
+/// Provides members for the TransformResult class.
+/// </summary>
+private sealed class TransformResult
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TransformResult"/> class.
+        /// </summary>
+        /// <param name="change">The change value.</param>
+        /// <param name="container">The container value.</param>
         public TransformResult(in Change<TSource, TKey> change, in TransformedItemContainer container)
         {
             Change = change;
@@ -147,14 +206,23 @@ internal class TransformAsync<TDestination, TSource, TKey>(
             Key = change.Key;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TransformResult"/> class.
+        /// </summary>
+        /// <param name="change">The change value.</param>
         public TransformResult(in Change<TSource, TKey> change)
         {
             Change = change;
-            Container = Optional<TransformedItemContainer>.None;
+            Container = ReactiveUI.Primitives.Optional<TransformedItemContainer>.None;
             Success = true;
             Key = change.Key;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TransformResult"/> class.
+        /// </summary>
+        /// <param name="change">The change value.</param>
+        /// <param name="error">The error value.</param>
         public TransformResult(in Change<TSource, TKey> change, Exception error)
         {
             Change = change;
@@ -163,14 +231,29 @@ internal class TransformAsync<TDestination, TSource, TKey>(
             Key = change.Key;
         }
 
+        /// <summary>
+        /// Gets the Change value.
+        /// </summary>
         public Change<TSource, TKey> Change { get; }
 
-        public Optional<TransformedItemContainer> Container { get; }
+        /// <summary>
+        /// Gets the Container value.
+        /// </summary>
+        public ReactiveUI.Primitives.Optional<TransformedItemContainer> Container { get; }
 
+        /// <summary>
+        /// Gets the Error value.
+        /// </summary>
         public Exception? Error { get; }
 
+        /// <summary>
+        /// Gets the Key value.
+        /// </summary>
         public TKey Key { get; }
 
+        /// <summary>
+        /// Gets the Success value.
+        /// </summary>
         public bool Success { get; }
     }
 }

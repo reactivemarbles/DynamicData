@@ -3,7 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// A cache for observing and querying in memory data. With additional data access operators.
@@ -42,5 +46,5 @@ public interface IObservableCache<TObject, TKey> : IConnectableCache<TObject, TK
     /// </remarks>
     /// <param name="key">The key.</param>
     /// <returns>An optional with the looked up value.</returns>
-    Optional<TObject> Lookup(TKey key);
+    ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key);
 }

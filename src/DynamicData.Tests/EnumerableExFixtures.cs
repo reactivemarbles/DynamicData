@@ -1,10 +1,4 @@
-﻿using System;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+﻿using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests;
 

@@ -1,13 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Disposables;
-using System.Runtime.CompilerServices;
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 /// <summary>
 /// Base class for implementing notify property changes.

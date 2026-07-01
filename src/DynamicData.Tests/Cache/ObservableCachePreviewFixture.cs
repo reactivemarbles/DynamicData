@@ -1,9 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using DynamicData.Tests.Domain;
-
-using Xunit;
+﻿using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
 

@@ -1,22 +1,20 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
+using DynamicData.Reactive.List.Internal;
+#else
+
 using DynamicData.List.Internal;
-using DynamicData.List.Linq;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for ObservableList.
@@ -29,9 +27,9 @@ public static partial class ObservableListEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the source list.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child changeset streams.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns a child list changeset stream for each source item.</param>
-    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TDestination}"/> used to compare child items.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> function that returns a child list changeset stream for each source item.</param>
+    /// <param name="equalityComparer">An optional <c>IEqualityComparer&lt;TDestination&gt;</c> used to compare child items.</param>
     /// <returns>A single list changeset stream containing all items from all child streams.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -46,10 +44,10 @@ public static partial class ObservableListEx
     /// <item><term><b>Remove</b>/<b>RemoveRange</b>/<b>Clear</b></term><description>Child subscription disposed. All child items from that parent are removed.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="MergeChangeSets{TObject}(IEnumerable{IObservable{IChangeSet{TObject}}}, IEqualityComparer{TObject}?, IScheduler?, bool)"/>
-    /// <seealso cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
-    /// <seealso cref="TransformMany{TDestination, TSource}(IObservable{IChangeSet{TSource}}, Func{TSource, IEnumerable{TDestination}}, IEqualityComparer{TDestination}?)"/>
-    /// <seealso cref="ObservableCacheEx.MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}, IComparer{TDestination})"/>
+    /// <seealso><c>MergeChangeSets&lt;TObject&gt;(IEnumerable&lt;IObservable&lt;IChangeSet&lt;TObject&gt;&gt;&gt;, IEqualityComparer&lt;TObject&gt;?, IScheduler?, bool)</c></seealso>
+    /// <seealso><c>MergeManyChangeSets&lt;TObject, TDestination, TDestinationKey&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Func&lt;TObject, IObservable&lt;IChangeSet&lt;TDestination, TDestinationKey&gt;&gt;&gt;, IEqualityComparer&lt;TDestination&gt;?, IComparer&lt;TDestination&gt;?)</c></seealso>
+    /// <seealso><c>TransformMany&lt;TDestination, TSource&gt;(IObservable&lt;IChangeSet&lt;TSource&gt;&gt;, Func&lt;TSource, IEnumerable&lt;TDestination&gt;&gt;, IEqualityComparer&lt;TDestination&gt;?)</c></seealso>
+    /// <seealso><c>ObservableCacheEx.MergeManyChangeSets&lt;TObject, TKey, TDestination, TDestinationKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, IObservable&lt;IChangeSet&lt;TDestination, TDestinationKey&gt;&gt;&gt;, IEqualityComparer&lt;TDestination&gt;, IComparer&lt;TDestination&gt;)</c></seealso>
     public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TObject : notnull
         where TDestination : notnull
@@ -74,24 +72,24 @@ public static partial class ObservableListEx
     /// <typeparam name="TObject">The type of items in the source list.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child cache changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key in the child cache changesets.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns a child cache changeset stream for each source item.</param>
-    /// <param name="comparer"><see cref="IComparer{TDestination}"/> to resolve which value wins when the same key appears from multiple children.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> function that returns a child cache changeset stream for each source item.</param>
+    /// <param name="comparer"><c>IComparer&lt;TDestination&gt;</c> to resolve which value wins when the same key appears from multiple children.</param>
     /// <returns>A single cache changeset stream with key-based deduplication.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/>, <paramref name="observableSelector"/>, or <paramref name="comparer"/> is <see langword="null"/>.</exception>
     /// <remarks>
-    /// <inheritdoc cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
-    /// <para>Delegates to <see cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/> with a <see langword="null"/> equality comparer.</para>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
+    /// <para>Delegates to <c>MergeManyChangeSets&lt;TObject, TDestination, TDestinationKey&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Func&lt;TObject, IObservable&lt;IChangeSet&lt;TDestination, TDestinationKey&gt;&gt;&gt;, IEqualityComparer&lt;TDestination&gt;?, IComparer&lt;TDestination&gt;?)</c> with a <see langword="null"/> equality comparer.</para>
     /// </remarks>
-    /// <seealso cref="MergeManyChangeSets{TObject, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/>
+    /// <seealso><c>MergeManyChangeSets&lt;TObject, TDestination, TDestinationKey&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Func&lt;TObject, IObservable&lt;IChangeSet&lt;TDestination, TDestinationKey&gt;&gt;&gt;, IEqualityComparer&lt;TDestination&gt;?, IComparer&lt;TDestination&gt;?)</c></seealso>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TDestination> comparer)
         where TObject : notnull
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return source.MergeManyChangeSets(observableSelector, equalityComparer: null, comparer: comparer);
     }
@@ -103,10 +101,10 @@ public static partial class ObservableListEx
     /// <typeparam name="TObject">The type of items in the source list.</typeparam>
     /// <typeparam name="TDestination">The type of items in the child cache changeset streams.</typeparam>
     /// <typeparam name="TDestinationKey">The type of the key in the child cache changesets.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> whose items each produce a child changeset stream.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> function that returns a child cache changeset stream for each source item.</param>
-    /// <param name="equalityComparer">An optional <see cref="IEqualityComparer{TDestination}"/> to determine if two elements are the same.</param>
-    /// <param name="comparer">An optional <see cref="IComparer{TDestination}"/> to resolve conflicts when the same key appears from multiple children.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject&gt;&gt;</c> whose items each produce a child changeset stream.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> function that returns a child cache changeset stream for each source item.</param>
+    /// <param name="equalityComparer">An optional <c>IEqualityComparer&lt;TDestination&gt;</c> to determine if two elements are the same.</param>
+    /// <param name="comparer">An optional <c>IComparer&lt;TDestination&gt;</c> to resolve conflicts when the same key appears from multiple children.</param>
     /// <returns>A single cache changeset stream with key-based deduplication.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -127,19 +125,19 @@ public static partial class ObservableListEx
     /// </para>
     /// <list type="table">
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>OnError</term><description>An error from the source (parent) stream or from any child changeset stream terminates the entire output. Unlike <see cref="MergeMany{T, TDestination}(IObservable{IChangeSet{T}}, Func{T, IObservable{TDestination}})"/>, child errors are NOT swallowed.</description></item>
+    /// <item><term>OnError</term><description>An error from the source (parent) stream or from any child changeset stream terminates the entire output. Unlike <c>MergeMany&lt;T, TDestination&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Func&lt;T, IObservable&lt;TDestination&gt;&gt;)</c>, child errors are NOT swallowed.</description></item>
     /// <item><term>OnCompleted</term><description>The output completes when the source (parent) stream completes <b>and</b> all active child changeset streams have also completed.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="MergeManyChangeSets{TObject, TDestination}(IObservable{IChangeSet{TObject}}, Func{TObject, IObservable{IChangeSet{TDestination}}}, IEqualityComparer{TDestination}?)"/>
-    /// <seealso cref="MergeChangeSets{TObject, TKey}(IObservableList{IObservable{IChangeSet{TObject, TKey}}}, IComparer{TObject})"/>
+    /// <seealso><c>MergeManyChangeSets&lt;TObject, TDestination&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Func&lt;TObject, IObservable&lt;IChangeSet&lt;TDestination&gt;&gt;&gt;, IEqualityComparer&lt;TDestination&gt;?)</c></seealso>
+    /// <seealso><c>MergeChangeSets&lt;TObject, TKey&gt;(IObservableList&lt;IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;&gt;, IComparer&lt;TObject&gt;)</c></seealso>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
         where TObject : notnull
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
 
         return new MergeManyCacheChangeSets<TObject, TDestination, TDestinationKey>(source, observableSelector, equalityComparer, comparer).Run();
     }

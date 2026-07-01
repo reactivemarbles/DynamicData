@@ -1,20 +1,11 @@
-﻿using System;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Subjects;
-
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
 public class GroupImmutableFixture : IDisposable
 {
-    private readonly ISubject<Unit> _regrouper;
+    private readonly ISignal<Unit> _regrouper;
 
     private readonly ChangeSetAggregator<DynamicData.List.IGrouping<Person, int>> _results;
 
@@ -23,7 +14,7 @@ public class GroupImmutableFixture : IDisposable
     public GroupImmutableFixture()
     {
         _source = new SourceList<Person>();
-        _regrouper = new Subject<Unit>();
+        _regrouper = new Signal<Unit>();
         _results = _source.Connect().GroupWithImmutableState(p => p.Age, _regrouper).AsAggregator();
     }
 
@@ -67,6 +58,7 @@ public class GroupImmutableFixture : IDisposable
     {
         _source.Dispose();
         _results.Dispose();
+        _regrouper.Dispose();
     }
 
     [Fact]

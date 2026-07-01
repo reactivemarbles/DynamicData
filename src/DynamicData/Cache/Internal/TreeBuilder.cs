@@ -1,31 +1,55 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the TreeBuilder class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="pivotOn">The pivotOn value.</param>
+/// <param name="predicateChanged">The predicateChanged value.</param>
 internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey> pivotOn, IObservable<Func<Node<TObject, TKey>, bool>>? predicateChanged)
     where TObject : class
     where TKey : notnull
 {
+    /// <summary>
+    /// The _pivotOn field.
+    /// </summary>
     private readonly Func<TObject, TKey> _pivotOn = pivotOn ?? throw new ArgumentNullException(nameof(pivotOn));
 
+    /// <summary>
+    /// The _predicateChanged field.
+    /// </summary>
     private readonly IObservable<Func<Node<TObject, TKey>, bool>> _predicateChanged = predicateChanged ?? Observable.Return(DefaultPredicate);
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// Gets the DefaultPredicate value.
+    /// </summary>
     private static Func<Node<TObject, TKey>, bool> DefaultPredicate => node => node.IsRoot;
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<Node<TObject, TKey>, TKey>> Run() => Observable.Create<IChangeSet<Node<TObject, TKey>, TKey>>(
             observer =>
             {
                 var queue = new SharedDeliveryQueue();
-                var reFilterObservable = new BehaviorSubject<Unit>(Unit.Default);
+                var reFilterObservable = new StateSignal<Unit>(Unit.Default);
 
                 var allData = _source.SynchronizeSafe(queue).AsObservableCache();
 

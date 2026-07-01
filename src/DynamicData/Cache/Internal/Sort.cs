@@ -1,29 +1,62 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the Sort class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 internal sealed class Sort<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _comparer field.
+    /// </summary>
     private readonly IComparer<TObject>? _comparer;
 
+    /// <summary>
+    /// The _comparerChangedObservable field.
+    /// </summary>
     private readonly IObservable<IComparer<TObject>>? _comparerChangedObservable;
 
+    /// <summary>
+    /// The _resetThreshold field.
+    /// </summary>
     private readonly int _resetThreshold;
 
+    /// <summary>
+    /// The _resorter field.
+    /// </summary>
     private readonly IObservable<Unit>? _resorter;
 
+    /// <summary>
+    /// The _sortOptimisations field.
+    /// </summary>
     private readonly SortOptimisations _sortOptimisations;
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TObject, TKey>> _source;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Sort{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="comparer">The comparer value.</param>
+    /// <param name="sortOptimisations">The sortOptimisations value.</param>
+    /// <param name="comparerChangedObservable">The comparerChangedObservable value.</param>
+    /// <param name="resorter">The resorter value.</param>
+    /// <param name="resetThreshold">The resetThreshold value.</param>
     public Sort(IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject>? comparer, SortOptimisations sortOptimisations = SortOptimisations.None, IObservable<IComparer<TObject>>? comparerChangedObservable = null, IObservable<Unit>? resorter = null, int resetThreshold = -1)
     {
         if (comparer is null && comparerChangedObservable is null)
@@ -39,6 +72,10 @@ internal sealed class Sort<TObject, TKey>
         _resetThreshold = resetThreshold;
     }
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<ISortedChangeSet<TObject, TKey>> Run() => Observable.Create<ISortedChangeSet<TObject, TKey>>(
             observer =>
             {
@@ -60,17 +97,42 @@ internal sealed class Sort<TObject, TKey>
                 return new CompositeDisposable(comparerChanged.Merge(dataChanged).Merge(sortAgain).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer), queue);
             });
 
-    private sealed class Sorter(SortOptimisations optimisations, IComparer<TObject>? comparer = null, int resetThreshold = -1)
+/// <summary>
+/// Provides members for the Sorter class.
+/// </summary>
+/// <param name="optimisations">The optimisations value.</param>
+/// <param name="comparer">The comparer value.</param>
+/// <param name="resetThreshold">The resetThreshold value.</param>
+private sealed class Sorter(SortOptimisations optimisations, IComparer<TObject>? comparer = null, int resetThreshold = -1)
     {
+        /// <summary>
+        /// The _cache field.
+        /// </summary>
         private readonly ChangeAwareCache<TObject, TKey> _cache = new();
+
+        /// <summary>
+        /// The _calculator field.
+        /// </summary>
         private IndexCalculator<TObject, TKey>? _calculator;
 
+        /// <summary>
+        /// The _comparer field.
+        /// </summary>
         private KeyValueComparer<TObject, TKey> _comparer = new(comparer);
 
+        /// <summary>
+        /// The _haveReceivedData field.
+        /// </summary>
         private bool _haveReceivedData;
 
+        /// <summary>
+        /// The _initialised field.
+        /// </summary>
         private bool _initialised;
 
+        /// <summary>
+        /// The _sorted field.
+        /// </summary>
         private IKeyValueCollection<TObject, TKey> _sorted = new KeyValueCollection<TObject, TKey>();
 
         /// <summary>

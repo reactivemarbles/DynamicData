@@ -1,11 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Columns;
-
 namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
@@ -51,7 +43,7 @@ public class ToObservableChangeSet_Cache
     [Arguments(1_000, 1_000)]
     public void AddsUpdatesAndFinalization(int itemCount, int sizeLimit)
     {
-        using var source = new Subject<Item>();
+        using var source = new Signal<Item>();
 
         using var subscription = source
             .ToObservableChangeSet(

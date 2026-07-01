@@ -1,13 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
 namespace DynamicData.Tests.List;
 
 public class OnItemRemovedFixture
@@ -74,7 +64,6 @@ public class OnItemRemovedFixture
         
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Setup: Remove some items, to ensure correct tracking of remaining items.
         var removedItems = source.Items
             .Skip(removalIndex)
@@ -142,7 +131,6 @@ public class OnItemRemovedFixture
         
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Setup: Remove some items, to ensure correct tracking of remaining items.
         var removedItems = source.Items
             .Skip(removalIndex)
@@ -206,7 +194,6 @@ public class OnItemRemovedFixture
         
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Action
         source.Insert(
             index:  insertionIndex,
@@ -252,7 +239,6 @@ public class OnItemRemovedFixture
         
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Action
         source.Move(
             original:       originalIndex,
@@ -296,7 +282,6 @@ public class OnItemRemovedFixture
         
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Action
         var removedItem = source.Items[removalIndex];
         source.RemoveAt(removalIndex);
@@ -339,7 +324,6 @@ public class OnItemRemovedFixture
         
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Action
         source.Refresh(refreshIndex);
         
@@ -380,7 +364,6 @@ public class OnItemRemovedFixture
         
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Action
         var replacedItem = source.Items[replacementIndex];
         source.ReplaceAt(
@@ -429,7 +412,6 @@ public class OnItemRemovedFixture
         
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Action
         var removedItems = source.Items
             .Skip(removalIndex)
@@ -473,7 +455,6 @@ public class OnItemRemovedFixture
         
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Action
         var clearedItems = source.Items
             .ToArray();
@@ -520,7 +501,6 @@ public class OnItemRemovedFixture
         
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Action
         source.Complete();
         
@@ -602,7 +582,6 @@ public class OnItemRemovedFixture
         
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Action
         var error = new Exception();
         source.SetError(error);

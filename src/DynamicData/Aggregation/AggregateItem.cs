@@ -1,8 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Aggregation;
+#else
 
 namespace DynamicData.Aggregation;
+#endif
 
 /// <summary>
 /// An object representing added and removed items in a continuous aggregation stream.
@@ -11,32 +16,12 @@ namespace DynamicData.Aggregation;
 /// <remarks>
 /// Initializes a new instance of the <see cref="AggregateItem{TObject}"/> struct.
 /// </remarks>
-/// <param name="type">The type.</param>
-/// <param name="item">The item.</param>
-public readonly struct AggregateItem<TObject>(AggregateType type, TObject item) : IEquatable<AggregateItem<TObject>>
+/// <param name="Type">The type.</param>
+/// <param name="Item">The item.</param>
+public readonly record struct AggregateItem<TObject>(AggregateType Type, TObject Item)
 {
-    /// <summary>
-    /// Gets the type.
-    /// </summary>
-    public AggregateType Type { get; } = type;
-
-    /// <summary>
-    /// Gets the item.
-    /// </summary>
-    public TObject Item { get; } = item;
-
-    public static bool operator ==(in AggregateItem<TObject> left, in AggregateItem<TObject> right) => left.Equals(right);
-
-    public static bool operator !=(in AggregateItem<TObject> left, in AggregateItem<TObject> right) => !(left == right);
-
     /// <inheritdoc/>
-    public override bool Equals(object? obj) => obj is AggregateItem<TObject> aggItem && Equals(aggItem);
-
-    /// <inheritdoc/>
-    public bool Equals(AggregateItem<TObject> other) =>
-        Type == other.Type && EqualityComparer<TObject>.Default.Equals(Item, other.Item);
-
-    /// <inheritdoc/>
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         var hashCode = -1719135621;

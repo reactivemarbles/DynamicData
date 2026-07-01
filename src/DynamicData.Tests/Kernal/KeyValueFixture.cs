@@ -1,10 +1,4 @@
-﻿using System.Collections.Generic;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+﻿using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Kernal;
 

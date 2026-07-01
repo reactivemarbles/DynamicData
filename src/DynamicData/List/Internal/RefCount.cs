@@ -1,24 +1,41 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the RefCount class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
 internal sealed class RefCount<T>(IObservable<IChangeSet<T>> source)
     where T : notnull
 {
-#if NET9_0_OR_GREATER
+    /// <summary>
+    /// The _locker field.
+    /// </summary>
     private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
+
+    /// <summary>
+    /// The _list field.
+    /// </summary>
     private IObservableList<T>? _list;
 
+    /// <summary>
+    /// The _refCount field.
+    /// </summary>
     private int _refCount;
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {

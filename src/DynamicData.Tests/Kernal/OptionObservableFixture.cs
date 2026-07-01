@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
 using DynamicData.Kernel;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Kernal;
 
@@ -15,13 +7,13 @@ public class OptionObservableFixture
     private const int NoneCount = 5;
     private const int SomeCount = 10;
 
-    private static Optional<string> NotConvertableToInt { get; } = Optional.Some("NOT AN INT");
+    private static Optional<string> NotConvertableToInt { get; } = Optional<string>.Some("NOT AN INT");
     private static IEnumerable<int> IntEnum { get; } = Enumerable.Range(0, SomeCount);
     private static IEnumerable<string> StringEnum { get; } = IntEnum.Select(n => n.ToString());
-    private static IEnumerable<Optional<int>> OptIntEnum { get; } = IntEnum.Select(i => Optional.Some(i));
-    private static IEnumerable<Optional<int>> OptNoneIntEnum { get; } = Enumerable.Repeat(Optional.None<int>(), NoneCount);
-    private static IEnumerable<Optional<string>> OptNoneStringEnum { get; } = Enumerable.Repeat(Optional.None<string>(), NoneCount);
-    private static IEnumerable<Optional<string>> OptStringEnum { get; } = StringEnum.Select(str => Optional.Some(str));
+    private static IEnumerable<Optional<int>> OptIntEnum { get; } = IntEnum.Select(i => Optional<int>.Some(i));
+    private static IEnumerable<Optional<int>> OptNoneIntEnum { get; } = Enumerable.Repeat(Optional<int>.None, NoneCount);
+    private static IEnumerable<Optional<string>> OptNoneStringEnum { get; } = Enumerable.Repeat(Optional<string>.None, NoneCount);
+    private static IEnumerable<Optional<string>> OptStringEnum { get; } = StringEnum.Select(str => Optional<string>.Some(str));
     private static IEnumerable<Optional<string>> OptStringWithNoneEnum { get; } = OptNoneStringEnum.Concat(OptStringEnum);
     private static IEnumerable<Optional<string>> OptStringWithBadEnum { get; } = OptStringEnum.Prepend(NotConvertableToInt);
     private static IEnumerable<Optional<string>> OptStringWithBadAndNoneEnum { get; } = OptStringWithNoneEnum.Prepend(NotConvertableToInt);
@@ -126,7 +118,7 @@ public class OptionObservableFixture
 
         // then
         intList.Should().BeSubsetOf(results);
-        results.Should().Contain(Optional.None<int>());
+        results.Should().Contain(Optional<int>.None);
     }
 
     [Fact]
@@ -164,7 +156,7 @@ public class OptionObservableFixture
     public void OrElseFallsback()
     {
         // having
-        var observable = OptIntEnum.ToObservable().StartWith(Optional.None<int>());
+        var observable = OptIntEnum.ToObservable().StartWith(Optional<int>.None);
 
         // when
         var results = observable.OrElse(() => -1).ToEnumerable();
@@ -280,7 +272,7 @@ public class OptionObservableFixture
     }
 
     private static Optional<int> ParseIntOpt(string input) =>
-        int.TryParse(input, out var result) ? Optional.Some(result) : Optional.None<int>();
+        int.TryParse(input, out var result) ? Optional<int>.Some(result) : Optional<int>.None;
 
     private static int ParseInt(string input) => int.Parse(input);
 }

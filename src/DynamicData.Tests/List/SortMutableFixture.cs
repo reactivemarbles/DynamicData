@@ -1,28 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Subjects;
-
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
 public class SortMutableFixture : IDisposable
 {
-    private readonly ISubject<IComparer<Person>> _changeComparer;
+    private readonly ISignal<IComparer<Person>> _changeComparer;
 
     private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
 
     private readonly RandomPersonGenerator _generator = new();
 
-    private readonly ISubject<Unit> _resort;
+    private readonly ISignal<Unit> _resort;
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -31,8 +21,8 @@ public class SortMutableFixture : IDisposable
     public SortMutableFixture()
     {
         _source = new SourceList<Person>();
-        _changeComparer = new BehaviorSubject<IComparer<Person>>(_comparer);
-        _resort = new Subject<Unit>();
+        _changeComparer = new StateSignal<IComparer<Person>>(_comparer);
+        _resort = new Signal<Unit>();
 
         _results = _source.Connect().Sort(_changeComparer, resetThreshold: 25, resort: _resort).AsAggregator();
     }
@@ -59,6 +49,8 @@ public class SortMutableFixture : IDisposable
     {
         _results.Dispose();
         _source.Dispose();
+        _changeComparer.Dispose();
+        _resort.Dispose();
     }
 
     [Fact]

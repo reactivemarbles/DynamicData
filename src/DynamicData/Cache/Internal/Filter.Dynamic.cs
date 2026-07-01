@@ -1,19 +1,38 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive;
-using System.Reactive.Linq;
-using DynamicData.Internal;
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the Filter class.
+/// </summary>
 internal static partial class Filter
 {
-    public static class Dynamic<TObject, TKey, TState>
+/// <summary>
+/// Provides members for the Dynamic class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <typeparam name="TState">The type of the TState value.</typeparam>
+public static class Dynamic<TObject, TKey, TState>
         where TObject : notnull
         where TKey : notnull
     {
+        /// <summary>
+        /// Executes the Create operation.
+        /// </summary>
+        /// <param name="source">The source value.</param>
+        /// <param name="predicateState">The predicateState value.</param>
+        /// <param name="predicate">The predicate value.</param>
+        /// <param name="reapplyFilter">The reapplyFilter value.</param>
+        /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
+        /// <returns>The result of the operation.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create(
             IObservable<IChangeSet<TObject, TKey>> source,
             IObservable<TState> predicateState,
@@ -21,10 +40,10 @@ internal static partial class Filter
             IObservable<Unit> reapplyFilter,
             bool suppressEmptyChangeSets)
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            predicateState.ThrowArgumentNullExceptionIfNull(nameof(predicateState));
-            predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
-            reapplyFilter.ThrowArgumentNullExceptionIfNull(nameof(reapplyFilter));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(predicateState);
+            ArgumentExceptionHelper.ThrowIfNull(predicate);
+            ArgumentExceptionHelper.ThrowIfNull(reapplyFilter);
 
             return Observable.Create<IChangeSet<TObject, TKey>>(downstreamObserver => new Subscription(
                 downstreamObserver: downstreamObserver,
@@ -35,30 +54,101 @@ internal static partial class Filter
                 suppressEmptyChangeSets: suppressEmptyChangeSets));
         }
 
-        private sealed class Subscription
+/// <summary>
+/// Provides members for the Subscription class.
+/// </summary>
+private sealed class Subscription
             : IDisposable
         {
+            /// <summary>
+            /// The _downstreamChangesBuffer field.
+            /// </summary>
             private readonly List<Change<TObject, TKey>> _downstreamChangesBuffer;
+
+            /// <summary>
+            /// The _downstreamObserver field.
+            /// </summary>
             private readonly IObserver<IChangeSet<TObject, TKey>> _downstreamObserver;
+
+            /// <summary>
+            /// The _itemStatesByKey field.
+            /// </summary>
             private readonly Dictionary<TKey, ItemState> _itemStatesByKey;
+
+            /// <summary>
+            /// The _predicate field.
+            /// </summary>
             private readonly Func<TState, TObject, bool> _predicate;
+
+            /// <summary>
+            /// The _predicateStateSubscription field.
+            /// </summary>
             private readonly IDisposable? _predicateStateSubscription;
+
+            /// <summary>
+            /// The _reapplyFilterSubscription field.
+            /// </summary>
             private readonly IDisposable? _reapplyFilterSubscription;
+
+            /// <summary>
+            /// The _sourceSubscription field.
+            /// </summary>
             private readonly IDisposable? _sourceSubscription;
+
+            /// <summary>
+            /// The _suppressEmptyChangeSets field.
+            /// </summary>
             private readonly bool _suppressEmptyChangeSets;
 
-#if NET9_0_OR_GREATER
+            /// <summary>
+            /// The _downstreamGate field.
+            /// </summary>
             private readonly Lock _downstreamGate = new();
-            private readonly Lock _upstreamGate = new();
-#endif
 
+            /// <summary>
+            /// The _upstreamGate field.
+            /// </summary>
+            private readonly Lock _upstreamGate = new();
+
+            /// <summary>
+            /// The _hasInitialized field.
+            /// </summary>
             private bool _hasInitialized;
+
+            /// <summary>
+            /// The _hasPredicateStateCompleted field.
+            /// </summary>
             private bool _hasPredicateStateCompleted;
+
+            /// <summary>
+            /// The _hasReapplyFilterCompleted field.
+            /// </summary>
             private bool _hasReapplyFilterCompleted;
+
+            /// <summary>
+            /// The _hasSourceCompleted field.
+            /// </summary>
             private bool _hasSourceCompleted;
+
+            /// <summary>
+            /// The _isLatestPredicateStateValid field.
+            /// </summary>
             private bool _isLatestPredicateStateValid;
+
+            /// <summary>
+            /// The _latestPredicateState field.
+            /// </summary>
             private TState _latestPredicateState;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Subscription"/> class.
+            /// </summary>
+            /// <param name="downstreamObserver">The downstreamObserver value.</param>
+            /// <param name="predicate">The predicate value.</param>
+            /// <param name="predicateState">The predicateState value.</param>
+            /// <param name="reapplyFilter">The reapplyFilter value.</param>
+            /// <param name="source">The source value.</param>
+            /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
             public Subscription(
                 IObserver<IChangeSet<TObject, TKey>> downstreamObserver,
                 Func<TState, TObject, bool> predicate,
@@ -80,23 +170,22 @@ internal static partial class Filter
 
                 using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
 
-                _predicateStateSubscription = predicateState
-                    .SubscribeSafe(
-                        onNext: OnPredicateStateNext,
-                        onError: onError,
-                        onCompleted: OnPredicateStateCompleted);
+                _predicateStateSubscription = predicateState.SubscribeSafe(Observer.Create<TState>(
+                    onNext: OnPredicateStateNext,
+                    onError: onError,
+                    onCompleted: OnPredicateStateCompleted));
 
-                _reapplyFilterSubscription = reapplyFilter
-                    .SubscribeSafe(
-                        onNext: OnReapplyFilterNext,
-                        onError: onError,
-                        onCompleted: OnReapplyFilterCompleted);
+                _reapplyFilterSubscription = PrimitivesLinqExtensions.SubscribeSafe(
+                    reapplyFilter,
+                    OnReapplyFilterNext,
+                    onError,
+                    OnReapplyFilterCompleted);
 
-                _sourceSubscription = source
-                    .SubscribeSafe(
-                        onNext: OnSourceNext,
-                        onError: onError,
-                        onCompleted: OnSourceCompleted);
+                _sourceSubscription = PrimitivesLinqExtensions.SubscribeSafe(
+                    source,
+                    OnSourceNext,
+                    onError,
+                    OnSourceCompleted);
 
                 _hasInitialized = true;
 
@@ -114,6 +203,9 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the Dispose operation.
+            /// </summary>
             public void Dispose()
             {
                 _predicateStateSubscription?.Dispose();
@@ -121,20 +213,22 @@ internal static partial class Filter
                 _sourceSubscription?.Dispose();
             }
 
-#if NET9_0_OR_GREATER
+            /// <summary>
+            /// Gets the DownstreamSynchronizationGate value.
+            /// </summary>
             private Lock DownstreamSynchronizationGate
                 => _downstreamGate;
 
+            /// <summary>
+            /// Gets the UpstreamSynchronizationGate value.
+            /// </summary>
             private Lock UpstreamSynchronizationGate
                 => _upstreamGate;
-#else
-            private object DownstreamSynchronizationGate
-                => _downstreamChangesBuffer;
 
-            private object UpstreamSynchronizationGate
-                => _itemStatesByKey;
-#endif
-
+            /// <summary>
+            /// Executes the AssembleDownstreamChanges operation.
+            /// </summary>
+            /// <returns>The result of the operation.</returns>
             private ChangeSet<TObject, TKey> AssembleDownstreamChanges()
             {
                 if (_downstreamChangesBuffer.Count is 0)
@@ -146,6 +240,10 @@ internal static partial class Filter
                 return downstreamChanges;
             }
 
+            /// <summary>
+            /// Executes the OnError operation.
+            /// </summary>
+            /// <param name="error">The error value.</param>
             private void OnError(Exception error)
             {
                 using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
@@ -158,6 +256,9 @@ internal static partial class Filter
                 _downstreamObserver.OnError(error);
             }
 
+            /// <summary>
+            /// Executes the OnPredicateStateCompleted operation.
+            /// </summary>
             private void OnPredicateStateCompleted()
             {
                 using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
@@ -176,6 +277,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the OnPredicateStateNext operation.
+            /// </summary>
+            /// <param name="predicateState">The predicateState value.</param>
             private void OnPredicateStateNext(TState predicateState)
             {
                 using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
@@ -194,6 +299,9 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the OnReapplyFilterCompleted operation.
+            /// </summary>
             private void OnReapplyFilterCompleted()
             {
                 using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
@@ -209,6 +317,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the OnReapplyFilterNext operation.
+            /// </summary>
+            /// <param name="value">The value value.</param>
             private void OnReapplyFilterNext(Unit value)
             {
                 using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
@@ -225,6 +337,9 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the OnSourceCompleted operation.
+            /// </summary>
             private void OnSourceCompleted()
             {
                 using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
@@ -244,6 +359,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the OnSourceNext operation.
+            /// </summary>
+            /// <param name="upstreamChanges">The upstreamChanges value.</param>
             private void OnSourceNext(IChangeSet<TObject, TKey> upstreamChanges)
             {
                 using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
@@ -376,6 +495,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the ReFilter operation.
+            /// </summary>
+            /// <param name="predicateState">The predicateState value.</param>
             private void ReFilter(TState predicateState)
             {
                 #if SUPPORTS_DICTIONARY_MUTATION_DURING_ENUMERATION
@@ -412,10 +535,19 @@ internal static partial class Filter
             }
         }
 
-        private readonly struct ItemState
+/// <summary>
+/// Represents the ItemState value.
+/// </summary>
+private readonly struct ItemState
         {
+            /// <summary>
+            /// Gets or sets the IsIncluded value.
+            /// </summary>
             public required bool IsIncluded { get; init; }
 
+            /// <summary>
+            /// Gets or sets the Item value.
+            /// </summary>
             public required TObject Item { get; init; }
         }
     }

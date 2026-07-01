@@ -1,17 +1,29 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.ComponentModel;
 using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Linq;
 using System.Reflection;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
+/// <summary>
+/// Provides members for the ExpressionBuilder class.
+/// </summary>
 internal static class ExpressionBuilder
 {
+    /// <summary>
+    /// Executes the GetMembers operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TProperty">The type of the TProperty value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     public static IEnumerable<MemberExpression> GetMembers<TObject, TProperty>(this Expression<Func<TObject, TProperty>> source)
     {
         var memberExpression = source.Body as MemberExpression;
@@ -22,6 +34,11 @@ internal static class ExpressionBuilder
         }
     }
 
+    /// <summary>
+    /// Executes the CreatePropertyChangedFactory operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static Func<object, IObservable<Unit>> CreatePropertyChangedFactory(this Expression source)
     {
         if ((source is not MemberExpression { Member: PropertyInfo property })
@@ -37,6 +54,11 @@ internal static class ExpressionBuilder
             .Select(static _ => Unit.Default);
     }
 
+    /// <summary>
+    /// Executes the CreateInvoker operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static Func<object, object?> CreateInvoker(this Expression source)
     {
         switch (source)
@@ -69,6 +91,13 @@ internal static class ExpressionBuilder
         }
     }
 
+    /// <summary>
+    /// Executes the GetMember operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TProperty">The type of the TProperty value.</typeparam>
+    /// <param name="expression">The expression value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static MemberInfo GetMember<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
     {
         if (expression is null)
@@ -79,6 +108,13 @@ internal static class ExpressionBuilder
         return GetMemberInfo(expression);
     }
 
+    /// <summary>
+    /// Executes the SplitIntoSteps operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TProperty">The type of the TProperty value.</typeparam>
+    /// <param name="expression">The expression value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static IEnumerable<Expression> SplitIntoSteps<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
     {
         var currentStep = expression.Body;
@@ -105,6 +141,13 @@ internal static class ExpressionBuilder
         }
     }
 
+    /// <summary>
+    /// Executes the GetProperty operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TProperty">The type of the TProperty value.</typeparam>
+    /// <param name="expression">The expression value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static PropertyInfo GetProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
     {
         if (expression.GetMember() is not PropertyInfo property)
@@ -115,6 +158,11 @@ internal static class ExpressionBuilder
         return property;
     }
 
+    /// <summary>
+    /// Executes the GetProperty operation.
+    /// </summary>
+    /// <param name="expression">The expression value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static PropertyInfo GetProperty(this MemberExpression expression)
     {
         if (expression.Member is not PropertyInfo property)
@@ -125,6 +173,13 @@ internal static class ExpressionBuilder
         return property;
     }
 
+    /// <summary>
+    /// Executes the ToCacheKey operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TProperty">The type of the TProperty value.</typeparam>
+    /// <param name="expression">The expression value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static string ToCacheKey<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         where TObject : INotifyPropertyChanged
     {
@@ -145,6 +200,11 @@ internal static class ExpressionBuilder
         return string.Join(".", GetNames());
     }
 
+    /// <summary>
+    /// Executes the GetMemberInfo operation.
+    /// </summary>
+    /// <param name="lambda">The lambda value.</param>
+    /// <returns>The result of the operation.</returns>
     private static MemberInfo GetMemberInfo(LambdaExpression lambda)
     {
         if (lambda is null)

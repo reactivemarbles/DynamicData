@@ -1,8 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Kernel;
+#else
 
 namespace DynamicData.Kernel;
+#endif
 
 /// <summary>
 /// Extensions for optional.
@@ -18,13 +23,13 @@ public static class OptionExtensions
     /// <param name="converter">The converter.</param>
     /// <returns>The converted value.</returns>
     /// <exception cref="ArgumentNullException">converter.</exception>
-    public static Optional<TDestination> Convert<TSource, TDestination>(this in Optional<TSource> source, Func<TSource, TDestination> converter)
+    public static ReactiveUI.Primitives.Optional<TDestination> Convert<TSource, TDestination>(this in ReactiveUI.Primitives.Optional<TSource> source, Func<TSource, TDestination> converter)
         where TSource : notnull
         where TDestination : notnull
     {
-        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
+        ArgumentExceptionHelper.ThrowIfNull(converter);
 
-        return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
+        return source.HasValue ? converter(source.Value) : ReactiveUI.Primitives.Optional<TDestination>.None;
     }
 
     /// <summary>
@@ -36,13 +41,13 @@ public static class OptionExtensions
     /// <param name="converter">The converter that returns an optional value.</param>
     /// <returns>The converted value.</returns>
     /// <exception cref="ArgumentNullException">converter.</exception>
-    public static Optional<TDestination> Convert<TSource, TDestination>(this in Optional<TSource> source, Func<TSource, Optional<TDestination>> converter)
+    public static ReactiveUI.Primitives.Optional<TDestination> Convert<TSource, TDestination>(this in ReactiveUI.Primitives.Optional<TSource> source, Func<TSource, ReactiveUI.Primitives.Optional<TDestination>> converter)
         where TSource : notnull
         where TDestination : notnull
     {
-        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
+        ArgumentExceptionHelper.ThrowIfNull(converter);
 
-        return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
+        return source.HasValue ? converter(source.Value) : ReactiveUI.Primitives.Optional<TDestination>.None;
     }
 
     /// <summary>
@@ -59,11 +64,11 @@ public static class OptionExtensions
     /// or
     /// fallbackConverter.
     /// </exception>
-    public static TDestination? ConvertOr<TSource, TDestination>(this in Optional<TSource> source, Func<TSource?, TDestination?> converter, Func<TDestination?> fallbackConverter)
+    public static TDestination? ConvertOr<TSource, TDestination>(this in ReactiveUI.Primitives.Optional<TSource> source, Func<TSource?, TDestination?> converter, Func<TDestination?> fallbackConverter)
         where TSource : notnull
     {
-        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
-        fallbackConverter.ThrowArgumentNullExceptionIfNull(nameof(fallbackConverter));
+        ArgumentExceptionHelper.ThrowIfNull(converter);
+        ArgumentExceptionHelper.ThrowIfNull(fallbackConverter);
 
         return source.HasValue ? converter(source.Value) : fallbackConverter();
     }
@@ -80,16 +85,16 @@ public static class OptionExtensions
     /// or
     /// fallbackOperation.
     /// </exception>
-    public static Optional<T> OrElse<T>(this in Optional<T> source, Func<Optional<T>> fallbackOperation)
+    public static ReactiveUI.Primitives.Optional<T> OrElse<T>(this in ReactiveUI.Primitives.Optional<T> source, Func<ReactiveUI.Primitives.Optional<T>> fallbackOperation)
         where T : notnull
     {
-        fallbackOperation.ThrowArgumentNullExceptionIfNull(nameof(fallbackOperation));
+        ArgumentExceptionHelper.ThrowIfNull(fallbackOperation);
 
         return source.HasValue ? source : fallbackOperation();
     }
 
     /// <summary>
-    /// Overloads Enumerable.FirstOrDefault() and wraps the result in a Optional<typeparam>
+    /// Overloads Enumerable.FirstOrDefault() and wraps the result in a ReactiveUI.Primitives.Optional<typeparam>
     ///         <name>&amp;gt;T</name>
     ///     </typeparam> container.
     /// </summary>
@@ -97,18 +102,18 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <param name="selector">The selector.</param>
     /// <returns>The first value or none.</returns>
-    public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
+    public static ReactiveUI.Primitives.Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        selector.ThrowArgumentNullExceptionIfNull(nameof(selector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(selector);
 
         foreach (var item in source.Where(item => selector(item)))
         {
-            return Optional<T>.Create(item);
+            return ReactiveUI.Primitives.Optional<T>.Create(item);
         }
 
-        return Optional.None<T>();
+        return ReactiveUI.Primitives.Optional<T>.None;
     }
 
     /// <summary>
@@ -118,7 +123,7 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <param name="action">The action.</param>
     /// <returns>The optional else extension.</returns>
-    public static OptionElse IfHasValue<T>(this in Optional<T> source, Action<T> action)
+    public static OptionElse IfHasValue<T>(this in ReactiveUI.Primitives.Optional<T> source, Action<T> action)
         where T : notnull
     {
         if (!source.HasValue || source.Value is null)
@@ -126,7 +131,7 @@ public static class OptionExtensions
             return new OptionElse();
         }
 
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentExceptionHelper.ThrowIfNull(action);
 
         action(source.Value);
         return OptionElse.NoAction;
@@ -139,7 +144,7 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <param name="action">The action.</param>
     /// <returns>The optional else extension.</returns>
-    public static OptionElse IfHasValue<T>(this Optional<T>? source, Action<T> action)
+    public static OptionElse IfHasValue<T>(this ReactiveUI.Primitives.Optional<T>? source, Action<T> action)
         where T : notnull
     {
         if (!source.HasValue)
@@ -152,14 +157,14 @@ public static class OptionExtensions
             return new OptionElse();
         }
 
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentExceptionHelper.ThrowIfNull(action);
 
         action(source.Value.Value);
         return OptionElse.NoAction;
     }
 
     /// <summary>
-    /// Overloads a TryGetValue of the dictionary wrapping the result as an Optional.<typeparam>
+    /// Overloads a TryGetValue of the dictionary wrapping the result as an ReactiveUI.Primitives.Optional.<typeparam>
     ///         <name>&amp;gt;TValue</name>
     ///     </typeparam>
     /// </summary>
@@ -168,13 +173,13 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <param name="key">The key.</param>
     /// <returns>The option of the looked up value.</returns>
-    public static Optional<TValue> Lookup<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
+    public static ReactiveUI.Primitives.Optional<TValue> Lookup<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
         where TValue : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         var result = source.TryGetValue(key, out var contained);
-        return result ? contained : Optional.None<TValue>();
+        return result ? contained : ReactiveUI.Primitives.Optional<TValue>.None;
     }
 
     /// <summary>
@@ -187,7 +192,7 @@ public static class OptionExtensions
     /// <returns>If the item was removed.</returns>
     public static bool RemoveIfContained<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.ContainsKey(key) && source.Remove(key);
     }
@@ -199,7 +204,7 @@ public static class OptionExtensions
     /// <typeparam name="T">The type of item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An enumerable of the selected items.</returns>
-    public static IEnumerable<T> SelectValues<T>(this IEnumerable<Optional<T>> source)
+    public static IEnumerable<T> SelectValues<T>(this IEnumerable<ReactiveUI.Primitives.Optional<T>> source)
         where T : notnull => source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
 
     /// <summary>
@@ -220,10 +225,10 @@ public static class OptionExtensions
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>If the value or a provided default.</returns>
     /// <exception cref="ArgumentNullException">valueSelector.</exception>
-    public static T ValueOr<T>(this in Optional<T> source, Func<T> valueSelector)
+    public static T ValueOr<T>(this in ReactiveUI.Primitives.Optional<T> source, Func<T> valueSelector)
         where T : notnull
     {
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentExceptionHelper.ThrowIfNull(valueSelector);
 
         return source.HasValue ? source.Value : valueSelector();
     }
@@ -234,7 +239,7 @@ public static class OptionExtensions
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>The value or default.</returns>
-    public static T? ValueOrDefault<T>(this in Optional<T> source)
+    public static T? ValueOrDefault<T>(this in ReactiveUI.Primitives.Optional<T> source)
         where T : notnull
     {
         if (source.HasValue)
@@ -253,10 +258,10 @@ public static class OptionExtensions
     /// <param name="exceptionGenerator">The exception generator.</param>
     /// <returns>The value.</returns>
     /// <exception cref="ArgumentNullException">exceptionGenerator.</exception>
-    public static T ValueOrThrow<T>(this in Optional<T> source, Func<Exception> exceptionGenerator)
+    public static T ValueOrThrow<T>(this in ReactiveUI.Primitives.Optional<T> source, Func<Exception> exceptionGenerator)
         where T : notnull
     {
-        exceptionGenerator.ThrowArgumentNullExceptionIfNull(nameof(exceptionGenerator));
+        ArgumentExceptionHelper.ThrowIfNull(exceptionGenerator);
 
         if (source.HasValue && source.Value is not null)
         {

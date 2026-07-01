@@ -1,69 +1,96 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
 /// </summary>
 public static partial class ObservableCacheEx
 {
-    /// <inheritdoc cref="TransformWithInlineUpdate{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, TDestination}, Action{TDestination, TSource}, Action{Error{TSource, TKey}}, bool)"/>
+    /// <summary>
+    /// Provides an overload of <c>TransformWithInlineUpdate</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="updateAction">The updateAction value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>This overload defaults to <c>transformOnRefresh: false</c> and does not provide an error handler (factory exceptions propagate as OnError).</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<TDestination, TSource> updateAction)
         where TDestination : class
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
         return source.TransformWithInlineUpdate(transformFactory, updateAction, false);
     }
 
-    /// <inheritdoc cref="TransformWithInlineUpdate{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, TDestination}, Action{TDestination, TSource}, Action{Error{TSource, TKey}}, bool)"/>
+    /// <summary>
+    /// Provides an overload of <c>TransformWithInlineUpdate</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="updateAction">The updateAction value.</param>
+    /// <param name="transformOnRefresh">The transformOnRefresh value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>This overload does not provide an error handler (factory exceptions propagate as OnError). The <c>transformOnRefresh</c> parameter controls Refresh behavior.</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<TDestination, TSource> updateAction, bool transformOnRefresh)
         where TDestination : class
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
         return new TransformWithInlineUpdate<TDestination, TSource, TKey>(source, transformFactory, updateAction, transformOnRefresh: transformOnRefresh).Run();
     }
 
-    /// <inheritdoc cref="TransformWithInlineUpdate{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, TDestination}, Action{TDestination, TSource}, Action{Error{TSource, TKey}}, bool)"/>
+    /// <summary>
+    /// Provides an overload of <c>TransformWithInlineUpdate</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <param name="updateAction">The updateAction value.</param>
+    /// <param name="errorHandler">The errorHandler value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>This overload defaults to <c>transformOnRefresh: false</c> but includes an error handler for factory/update action exceptions.</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<TDestination, TSource> updateAction, Action<Error<TSource, TKey>> errorHandler)
         where TDestination : class
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
+        ArgumentExceptionHelper.ThrowIfNull(errorHandler);
 
         return source.TransformWithInlineUpdate(transformFactory, updateAction, errorHandler, false);
     }
@@ -75,10 +102,10 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TDestination">The type of the transformed items. Must be a reference type since items are mutated in place.</typeparam>
     /// <typeparam name="TSource">The type of the source items.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TSource, TKey}}"/> to transform with in-place mutation on updates.</param>
-    /// <param name="transformFactory">A <see cref="Func{T, TResult}"/> that called on Add (and optionally Refresh) to create a new <typeparamref name="TDestination"/>.</param>
-    /// <param name="updateAction">A <see cref="Action{T}"/> that called on Update. Receives <c>(existingTransformed, newSource)</c>. Mutate the existing transformed item to reflect the new source value. Example: <c>(vm, model) =&gt; vm.Value = model.Value</c>.</param>
-    /// <param name="errorHandler">A <see cref="Action{T}"/> that called when <paramref name="transformFactory"/> or <paramref name="updateAction"/> throws. The faulting item is skipped.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TSource, TKey&gt;&gt;</c> to transform with in-place mutation on updates.</param>
+    /// <param name="transformFactory">A <c>Func&lt;T, TResult&gt;</c> that called on Add (and optionally Refresh) to create a new <typeparamref name="TDestination"/>.</param>
+    /// <param name="updateAction">A <c>Action&lt;T&gt;</c> that called on Update. Receives <c>(existingTransformed, newSource)</c>. Mutate the existing transformed item to reflect the new source value. Example: <c>(vm, model) =&gt; vm.Value = model.Value</c>.</param>
+    /// <param name="errorHandler">A <c>Action&lt;T&gt;</c> that called when <paramref name="transformFactory"/> or <paramref name="updateAction"/> throws. The faulting item is skipped.</param>
     /// <param name="transformOnRefresh">When <see langword="true"/>, Refresh changes call <paramref name="updateAction"/> on the existing item.</param>
     /// <returns>An observable changeset of transformed items.</returns>
     /// <remarks>
@@ -101,10 +128,10 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
+        ArgumentExceptionHelper.ThrowIfNull(errorHandler);
 
         return new TransformWithInlineUpdate<TDestination, TSource, TKey>(source, transformFactory, updateAction, errorHandler, transformOnRefresh).Run();
     }
