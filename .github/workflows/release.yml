@@ -40,7 +40,7 @@ jobs:
         Write-Host "OK: publishing from '$env:REF_NAME'."
 
     - name: Setup .NET (With cache)
-      uses: actions/setup-dotnet@v5.0.1
+      uses: actions/setup-dotnet@v5.3.0
       with:
         dotnet-version: |
             6.0.x
@@ -56,11 +56,19 @@ jobs:
             **/global.json
             **/nuget.config
 
-    - name: NBGV
+    - name: Install (or update) nbgv tool
+      run: dotnet tool update --global nbgv
+
+    - name: Set NBGV cloud variables
+      run: nbgv cloud -a
+
+    - name: Expose NBGV version as step outputs
       id: nbgv
-      uses: dotnet/nbgv@v0.5.1
-      with:
-        setAllVars: true
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = 'Stop'
+        "SemVer2=$env:NBGV_SemVer2" >> $env:GITHUB_OUTPUT
+        "PrereleaseVersion=$env:NBGV_PrereleaseVersion" >> $env:GITHUB_OUTPUT
 
     - name: Verify version matches branch policy
       shell: pwsh
@@ -119,28 +127,31 @@ jobs:
       shell: pwsh
       run: |
         $ErrorActionPreference = 'Stop'
-        $packages = Get-ChildItem -Path src -Recurse -Filter '*.nupkg' | Where-Object { $_.FullName -like '*\bin\Release\*' }
+        $packages = Get-ChildItem -Path src -Recurse -Filter 'DynamicData.*.nupkg' | Where-Object { $_.FullName -like '*\bin\Release\*' }
         if (-not $packages) { throw "No .nupkg files found under src/**/bin/Release/." }
         foreach ($pkg in $packages) {
           dotnet nuget push -s $env:SOURCE_URL -k $env:NUGET_AUTH_TOKEN --skip-duplicate $pkg.FullName
           if ($LASTEXITCODE -ne 0) { throw "dotnet nuget push failed for $($pkg.Name) (exit $LASTEXITCODE)." }
         }
 
-    - name: Changelog
-      uses: glennawatson/ChangeLog@0464dd89b26f61fecf24b41d675f8ffdb11c4c3f # v1
-      id: changelog
+    - name: Install GitReleaseNoteGenerator
+      run: dotnet tool install -g GitReleaseNoteGenerator
+
+    - name: Generate release notes
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        RELEASE_VERSION: ${{ steps.nbgv.outputs.SemVer2 }}
+      shell: pwsh
+      run: git-release-notes --release-version "$env:RELEASE_VERSION" --output-file release-notes.md
 
     - name: Create GitHub Release
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TAG: ${{ steps.nbgv.outputs.SemVer2 }}
         IS_PRERELEASE: ${{ steps.nbgv.outputs.PrereleaseVersion != '' }}
-        BODY: ${{ steps.changelog.outputs.commitLog }}
       shell: pwsh
       run: |
         $ErrorActionPreference = 'Stop'
-        $notesPath = Join-Path $env:RUNNER_TEMP 'release-notes.md'
-        Set-Content -Path $notesPath -Value $env:BODY -Encoding utf8 -NoNewline
-        $cmd = @('release', 'create', $env:TAG, '--title', $env:TAG, '--notes-file', $notesPath, '--target', $env:GITHUB_SHA)
+        $cmd = @('release', 'create', $env:TAG, '--title', $env:TAG, '--notes-file', 'release-notes.md', '--target', $env:GITHUB_SHA)
         if ($env:IS_PRERELEASE -eq 'true') { $cmd += '--prerelease' }
         gh @cmd
