@@ -1,5 +1,5 @@
 {
-    "version": "9.5-preview.{height}",
+    "version": "10.0-preview.{height}",
     "publicReleaseRefSpec": [
         "^refs/heads/main$", // main publishes pre-release packages
         "^refs/heads/release/\\d+\\.x$" // release/<major>.x branches publish stable packages
