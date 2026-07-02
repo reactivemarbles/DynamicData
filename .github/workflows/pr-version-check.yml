@@ -35,7 +35,7 @@ jobs:
         $isBotBumpPr = ($env:PR_AUTHOR -eq 'github-actions[bot]') -and ($env:HEAD_REF -like 'bot/bump-*' -or $env:HEAD_REF -like 'bot/promote-*')
 
         $labels = $env:LABELS_JSON | ConvertFrom-Json
-        $isBreaking = $labels -contains 'breaking-change'
+        $isBreaking = $labels -contains 'breaking change'
         $isManualEdit = $labels -contains 'manual-version-edit'
 
         # Reject any human-authored PR that touches version.json unless explicitly
@@ -84,11 +84,11 @@ jobs:
         # Unconditional check: if this PR changes the major in version.json, it MUST be
         # labeled breaking-change. Catches unlabeled major-version edits.
         if ($headMajor -ne $baseMajor -and -not $isBreaking) {
-          throw "This PR changes version.json's major from $baseMajor to $headMajor but is not labeled 'breaking-change'. Major-version changes must be tagged."
+          throw "This PR changes version.json's major from $baseMajor to $headMajor but is not labeled 'breaking change'. Major-version changes must be tagged."
         }
 
         if (-not $isBreaking) {
-          Write-Host "PR is not labeled 'breaking-change' and does not change the major; no further checks."
+          Write-Host "PR is not labeled 'breaking change' and does not change the major; no further checks."
           exit 0
         }
 
@@ -122,9 +122,9 @@ jobs:
         $expectedMajor = $latestMajor + 1
         if ($headMajor -ne $expectedMajor) {
           if ($headMajor -le $latestMajor) {
-            $msg = "PR is labeled breaking-change but its version.json major ($headMajor) is not greater than the latest stable release major ($latestMajor; tag '$latestStable'). Run the 'Bump main to next major preview' workflow with next_major=$expectedMajor first, then rebase this PR onto the updated main."
+            $msg = "PR is labeled 'breaking change' but its version.json major ($headMajor) is not greater than the latest stable release major ($latestMajor; tag '$latestStable'). Run the 'Bump main to next major preview' workflow with next_major=$expectedMajor first, then rebase this PR onto the updated main."
           } else {
-            $msg = "PR is labeled breaking-change but its version.json major ($headMajor) skips past major $expectedMajor. Main must be at exactly latest_stable_major + 1 ($latestMajor + 1 = $expectedMajor). Reset main to $expectedMajor.0-preview.{height} before merging this PR."
+            $msg = "PR is labeled 'breaking change' but its version.json major ($headMajor) skips past major $expectedMajor. Main must be at exactly latest_stable_major + 1 ($latestMajor + 1 = $expectedMajor). Reset main to $expectedMajor.0-preview.{height} before merging this PR."
           }
           throw $msg
         }
