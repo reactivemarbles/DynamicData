@@ -6,6 +6,8 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal class TransformAsync<TDestination, TSource, TKey>(
@@ -32,7 +34,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
                 var forced = forceTransform.SynchronizeSafe(queue)
                     .Select(shouldTransform => DoTransform(cache, shouldTransform)).Concat();
 
-                transformer = transformer.SynchronizeSafe(queue).Merge(forced);
+                transformer = transformer.SynchronizeSafe(queue).UnsynchronizedMerge(forced);
 
                 return new CompositeDisposable(transformer.SubscribeSafe(observer), queue);
             }

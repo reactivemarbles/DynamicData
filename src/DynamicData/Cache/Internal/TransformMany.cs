@@ -8,6 +8,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 using DynamicData.Binding;
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -122,7 +123,7 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
 
                 var subsequent = transformed.MergeMany(x => x.Changes).SynchronizeSafe(queue);
 
-                var allChanges = initial.Merge(subsequent).Select(
+                var allChanges = initial.UnsynchronizedMerge(subsequent).Select(
                     changes =>
                     {
                         result.Clone(changes);

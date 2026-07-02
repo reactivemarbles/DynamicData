@@ -6,6 +6,8 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class GroupOnDynamic<TObject, TKey, TGroupKey>(IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, TKey, TGroupKey>> selectGroupObservable, IObservable<Unit>? regrouper = null)
@@ -71,8 +73,11 @@ internal sealed class GroupOnDynamic<TObject, TKey, TGroupKey>(IObservable<IChan
                 },
                 onError: observer.OnError);
 
-        // Create an observable that completes when all 3 inputs complete so the downstream can be completed as well
-        var subOnComplete = Observable.Merge(sharedSource.ToUnit(), sharedGroupSelector.ToUnit(), sharedRegrouper)
+        // All three inputs are routed through the same SharedDeliveryQueue so their notifications
+        // are already serialized; the merge is only here to coalesce their completion into a single
+        // downstream OnCompleted. UnsynchronizedMerge avoids the ABBA-prone gate that Observable.Merge
+        // would hold across the downstream observer.OnCompleted/observer.OnError call.
+        var subOnComplete = sharedSource.ToUnit().UnsynchronizedMerge(sharedGroupSelector.ToUnit(), sharedRegrouper)
             .IgnoreElements()
             .SubscribeSafe(observer.OnError, observer.OnCompleted);
 
