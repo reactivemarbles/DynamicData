@@ -89,25 +89,25 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             }
         }
 
-        // Reads the current property value and forwards it through the queue. The accessor is
-        // user code and may throw; that exception routes to OnError. The downstream OnNext call
-        // is NOT wrapped: per the Rx contract, if the user observer throws, the exception
-        // propagates back to whoever invoked the PropertyChanged setter, matching what a plain
-        // Subject<T>.OnNext would do.
+        // Wraps both the accessor read AND the queue OnNext (which may invoke the downstream
+        // observer synchronously via the DeliveryQueue drain) so that exceptions from either are
+        // routed through OnError rather than escaping raw into the PropertyChanged setter that
+        // fired the event. These emissions originate from an INotifyPropertyChanged callback, so a
+        // raw escaping exception would bypass the subscriber's error handler and surface out of the
+        // property setter. Routing through OnError gives a subscriber that supplied an onError
+        // handler the chance to observe and absorb the failure. We deliberately do NOT swallow a
+        // throw from OnError itself: if the downstream error is unhandled (or the error handler
+        // rethrows) it propagates to the setter, matching Subject<T>.OnNext semantics.
         private void EmitCurrent()
         {
-            PropertyValue<TObject, TProperty> value;
             try
             {
-                value = new PropertyValue<TObject, TProperty>(_source, _accessor(_source));
+                _queue.OnNext(new PropertyValue<TObject, TProperty>(_source, _accessor(_source)));
             }
             catch (Exception ex)
             {
                 _queue.OnError(ex);
-                return;
             }
-
-            _queue.OnNext(value);
         }
     }
 
@@ -208,35 +208,31 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
 
         private void ProcessSignal(int level)
         {
-            // Drainer thread. The chain walk (Invoker / notifier Factory / ReadCurrent's accessor)
-            // is user code and may throw; those exceptions route to OnError. The downstream
-            // OnNext call is NOT wrapped: per the Rx contract, if the user observer throws, the
-            // exception propagates back through the drainer, matching what a plain Subject<T>
-            // would do.
+            // Drainer thread. Wraps the entire signal processing so that exceptions from any
+            // user-provided invoker, notifier factory, value accessor, or downstream observer are
+            // routed through OnError rather than escaping raw into the SharedDeliveryQueue drainer
+            // (and ultimately the INotifyPropertyChanged setter that raised the event). Routing
+            // through OnError gives a subscriber that supplied an onError handler the chance to
+            // observe and absorb the failure. We deliberately do NOT swallow a throw from OnError
+            // itself: an unhandled downstream error (or a rethrowing error handler) propagates,
+            // matching Subject<T>.OnNext semantics.
             //
             // The two cases (initial setup vs level-fire) collapse to:
             //   startLevel = (initial) ? 0 : level + 1
             //   emit       = (level-fire) || _notifyInitial
-            var isInitial = level == InitialSetupSignal;
-            var shouldEmit = !isInitial || _notifyInitial;
-            PropertyValue<TObject, TProperty> value;
             try
             {
+                var isInitial = level == InitialSetupSignal;
                 ResubscribeFrom(isInitial ? 0 : level + 1);
-                if (!shouldEmit)
+                if (!isInitial || _notifyInitial)
                 {
-                    return;
+                    _userSub.OnNext(ReadCurrent());
                 }
-
-                value = ReadCurrent();
             }
             catch (Exception ex)
             {
                 _userSub.OnError(ex);
-                return;
             }
-
-            _userSub.OnNext(value);
         }
 
         private void ResubscribeFrom(int startLevel)

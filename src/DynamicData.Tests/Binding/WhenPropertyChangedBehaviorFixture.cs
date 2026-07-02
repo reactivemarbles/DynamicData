@@ -154,6 +154,109 @@ public sealed class WhenPropertyChangedBehaviorFixture
         emissions.Should().Equal(new[] { 10, 20, 30 }, "leaf event on detached subtree is ignored");
     }
 
+    [Fact]
+    public void Shallow_ObserverThrowsInOnNext_RoutedToOnError_DoesNotEscapeSetter()
+    {
+        // Emissions originate from an INotifyPropertyChanged callback. A subscriber whose OnNext
+        // throws must not surface that exception raw out of the property setter; it is routed
+        // through OnError so a subscriber that supplied an error handler can observe it, and the
+        // setter that raised PropertyChanged stays safe.
+        var model = new TestModel { Value = 10 };
+
+        using var sub = model.WhenPropertyChanged(m => m.Value, notifyOnInitialValue: false)
+            .Subscribe(_ => throw new InvalidOperationException("boom"));
+
+        var setter = () => model.Value = 20;
+        var laterSetter = () => model.Value = 30;
+
+        setter.Should().NotThrow("a PropertyChanged-sourced OnNext throw is routed to OnError, not escaped to the setter");
+        laterSetter.Should().NotThrow("the terminated subscription must not resurface the exception on a later setter");
+    }
+
+    [Fact]
+    public void Shallow_AccessorThrows_ErrorHandlerRethrows_PropagatesToSetter()
+    {
+        // We route accessor/OnNext failures to OnError but do NOT swallow a throw from OnError
+        // itself: an unhandled downstream error (here a rethrowing error handler) propagates to
+        // the setter, matching Subject<T>.OnNext semantics. Locks in the non-swallow decision.
+        var model = new ThrowingGetterModel { Value = 10 };
+
+        using var sub = model.WhenPropertyChanged(m => m.Value, notifyOnInitialValue: false)
+            .Subscribe(_ => { }, _ => throw new InvalidOperationException("onerror"));
+
+        model.ThrowOnGet = true;
+        var setter = () => model.Value = 20;
+
+        setter.Should().Throw<InvalidOperationException>()
+            .WithMessage("onerror", "a rethrowing error handler must not be swallowed");
+    }
+
+    [Fact]
+    public void DeepChain_ObserverThrowsInOnNext_RoutedToOnError_DoesNotEscapeSetter()
+    {
+        var parent = new ParentModel { Child = new ChildModel { Age = 10 } };
+
+        using var sub = parent.WhenPropertyChanged(p => p.Child!.Age, notifyOnInitialValue: false)
+            .Subscribe(_ => throw new InvalidOperationException("boom"));
+
+        var setter = () => parent.Child!.Age = 20;
+        var laterSetter = () => parent.Child!.Age = 30;
+
+        setter.Should().NotThrow("a PropertyChanged-sourced OnNext throw is routed to OnError, not escaped to the setter");
+        laterSetter.Should().NotThrow("the terminated subscription must not resurface the exception on a later setter");
+    }
+
+    [Fact]
+    public void DeepChain_AccessorThrows_ErrorHandlerRethrows_PropagatesToSetter()
+    {
+        var parent = new ThrowingLeafParent { Child = new ThrowingGetterModel { Value = 10 } };
+
+        using var sub = parent.WhenPropertyChanged(p => p.Child!.Value, notifyOnInitialValue: false)
+            .Subscribe(_ => { }, _ => throw new InvalidOperationException("onerror"));
+
+        parent.Child!.ThrowOnGet = true;
+        var setter = () => parent.Child!.Value = 20;
+
+        setter.Should().Throw<InvalidOperationException>()
+            .WithMessage("onerror", "a rethrowing error handler must not be swallowed");
+    }
+
+    private sealed class ThrowingGetterModel : INotifyPropertyChanged
+    {
+        private int _value;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public bool ThrowOnGet { get; set; }
+
+        public int Value
+        {
+            get => ThrowOnGet ? throw new InvalidOperationException("getter") : _value;
+            set
+            {
+                _value = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
+            }
+        }
+    }
+
+    private sealed class ThrowingLeafParent : INotifyPropertyChanged
+    {
+        private ThrowingGetterModel? _child;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public ThrowingGetterModel? Child
+        {
+            get => _child;
+            set
+            {
+                _child = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Child)));
+            }
+        }
+    }
+
     private sealed class TestModel : INotifyPropertyChanged
     {
         private int _value;
