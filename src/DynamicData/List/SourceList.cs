@@ -36,6 +36,9 @@ public sealed class SourceList<T> : ISourceList<T>
 
     private readonly ReaderWriter<T> _readerWriter = new();
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposal is superfluous after completion, and causes a bunch of test failures")]
+    private readonly BehaviorSubject<bool> _isEditInProgress;
+
     private int _editLevel;
 
     /// <summary>
@@ -44,6 +47,8 @@ public sealed class SourceList<T> : ISourceList<T>
     /// <param name="source">The source.</param>
     public SourceList(IObservable<IChangeSet<T>>? source = null)
     {
+        _isEditInProgress = new(false);
+
         var loader = source is null ? Disposable.Empty : LoadFromSource(source);
 
         _cleanUp = Disposable.Create(
@@ -78,6 +83,79 @@ public sealed class SourceList<T> : ISourceList<T>
 
     /// <inheritdoc />
     public IObservable<IChangeSet<T>> Connect(Func<T, bool>? predicate = null)
+        => Observable.Create<IChangeSet<T>>(observer =>
+        {
+            lock (_locker)
+            {
+                var observable = !_isEditInProgress.Value
+
+                    // Create the Connection Observable
+                    ? CreateConnectObservable(predicate)
+
+                    // Defer until notifications are no longer suspended
+                    : _isEditInProgress
+                        .Where(static isEditInProgress => !isEditInProgress)
+                        .Take(1)
+                        .SelectMany(_ => CreateConnectObservable(predicate));
+
+                return observable.SubscribeSafe(observer);
+            }
+        });
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _cleanUp.Dispose();
+        _changesPreview.Dispose();
+        _isEditInProgress.OnCompleted();
+    }
+
+    /// <inheritdoc />
+    public void Edit(Action<IExtendedList<T>> updateAction)
+    {
+        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+
+        lock (_locker)
+        {
+            IChangeSet<T>? changes = null;
+
+            _editLevel++;
+            _isEditInProgress.OnNext(_editLevel is not 0);
+
+            if (_editLevel == 1)
+            {
+                changes = _changesPreview.HasObservers ? _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview) : _readerWriter.Write(updateAction);
+            }
+            else
+            {
+                _readerWriter.WriteNested(updateAction);
+            }
+
+            _editLevel--;
+
+            if (changes is not null && _editLevel == 0)
+            {
+                InvokeNext(changes);
+            }
+
+            _isEditInProgress.OnNext(_editLevel is not 0);
+        }
+    }
+
+    /// <inheritdoc />
+    public IObservable<IChangeSet<T>> Preview(Func<T, bool>? predicate = null)
+    {
+        IObservable<IChangeSet<T>> observable = _changesPreview;
+
+        if (predicate is not null)
+        {
+            observable = new FilterStatic<T>(observable, predicate).Run();
+        }
+
+        return observable;
+    }
+
+    private IObservable<IChangeSet<T>> CreateConnectObservable(Func<T, bool>? predicate)
     {
         var observable = Observable.Create<IChangeSet<T>>(
             observer =>
@@ -98,55 +176,6 @@ public sealed class SourceList<T> : ISourceList<T>
                     return source.SubscribeSafe(observer);
                 }
             });
-
-        if (predicate is not null)
-        {
-            observable = new FilterStatic<T>(observable, predicate).Run();
-        }
-
-        return observable;
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        _cleanUp.Dispose();
-        _changesPreview.Dispose();
-    }
-
-    /// <inheritdoc />
-    public void Edit(Action<IExtendedList<T>> updateAction)
-    {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
-
-        lock (_locker)
-        {
-            IChangeSet<T>? changes = null;
-
-            _editLevel++;
-
-            if (_editLevel == 1)
-            {
-                changes = _changesPreview.HasObservers ? _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview) : _readerWriter.Write(updateAction);
-            }
-            else
-            {
-                _readerWriter.WriteNested(updateAction);
-            }
-
-            _editLevel--;
-
-            if (changes is not null && _editLevel == 0)
-            {
-                InvokeNext(changes);
-            }
-        }
-    }
-
-    /// <inheritdoc />
-    public IObservable<IChangeSet<T>> Preview(Func<T, bool>? predicate = null)
-    {
-        IObservable<IChangeSet<T>> observable = _changesPreview;
 
         if (predicate is not null)
         {
@@ -195,6 +224,7 @@ public sealed class SourceList<T> : ISourceList<T>
         {
             _changesPreview.OnCompleted();
             _changes.OnCompleted();
+            _isEditInProgress.OnCompleted();
         }
     }
 
@@ -204,6 +234,7 @@ public sealed class SourceList<T> : ISourceList<T>
         {
             _changesPreview.OnError(exception);
             _changes.OnError(exception);
+            _isEditInProgress.OnError(exception);
         }
     }
 }
