@@ -6,6 +6,9 @@ using FluentAssertions;
 using Xunit;
 
 using DynamicData.Tests.Utilities;
+using DynamicData.Tests.Domain;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace DynamicData.Tests.Cache;
 
@@ -86,5 +89,55 @@ public static partial class FilterFixture
             => source.Filter(
                 filter:                     predicate,
                 suppressEmptyChangeSets:    suppressEmptyChangeSets);
+        [Fact]
+        public void AutoRefreshRemoveKeyFilterUpdate_CollectionUpdated()
+        {
+            RandomPersonGenerator generator = new();
+            using var source = new SourceCache<Person, string>(p => p.Key);
+            var people = generator.Take(100).ToArray();
+            var average = people.Average(x => x.Age);
+            ReadOnlyObservableCollection<Person> collection;
+            using var subscription = source.Connect()
+                .AutoRefresh(x => x.Age)
+                .RemoveKey()
+                .Filter(x => x.Age < average)
+                .Bind(out collection)
+                .Subscribe();
+            source.AddOrUpdate(people);
+
+            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+
+            foreach (var person in people)
+            {
+                person.Age = person.Age + 1;
+            }
+            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+        }
+
+        [Fact]
+        public void AutoRefreshFilterRemoveKeyUpdate_CollectionUpdated()
+        {
+            RandomPersonGenerator generator = new();
+            using var source = new SourceCache<Person, string>(p => p.Key);
+            var people = generator.Take(100).ToArray();
+            var average = people.Average(x => x.Age);
+            ReadOnlyObservableCollection<Person> collection;
+            using var subscription = source.Connect()
+                .AutoRefresh(x => x.Age)
+                .Filter(x => x.Age < average)
+                .RemoveKey()
+                .Bind(out collection)
+                .Subscribe();
+            source.AddOrUpdate(people);
+
+            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+
+            foreach (var person in people)
+            {
+                person.Age = person.Age + 1;
+            }
+            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+        }
     }
+
 }
