@@ -166,7 +166,13 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         lock (_locker)
         {
             _suspensionTracker.Value.SuspendNotifications();
-            return Disposable.Create(this, static cache => cache.ResumeNotifications());
+            return Disposable.Create(this, static cache =>
+            {
+                lock (cache._locker)
+                {
+                    cache.ResumeNotifications();
+                }
+            });
         }
     }
 
