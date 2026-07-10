@@ -166,13 +166,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         lock (_locker)
         {
             _suspensionTracker.Value.SuspendNotifications();
-            return Disposable.Create(this, static cache =>
-            {
-                lock (cache._locker)
-                {
-                    cache.ResumeNotifications();
-                }
-            });
+            return Disposable.Create(this, static cache => cache.ResumeNotifications());
         }
     }
 
@@ -358,11 +352,18 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         }
 
         // Emit the resume signal after releasing the delivery scope so that
-        // accumulated changes are delivered first
+        // accumulated changes are delivered first. Re-check the suspend count
+        // under the lock: a concurrent SuspendNotifications() may have run in the
+        // window since the count was decremented, and its state must win. Emitting
+        // the signal only when still unsuspended keeps _notifySuspendCount and the
+        // suspended-notification subject from diverging.
         if (emitResume)
         {
             using var readLock = _notifications.AcquireReadLock();
-            _suspensionTracker.Value.EmitResumeNotification();
+            if (!_suspensionTracker.Value.AreNotificationsSuspended)
+            {
+                _suspensionTracker.Value.EmitResumeNotification();
+            }
         }
     }
 
@@ -482,10 +483,16 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         public void SuspendNotifications()
         {
-            if (++_notifySuspendCount == 1)
+            ++_notifySuspendCount;
+
+            // Signal suspension based on the subject's own state rather than the count.
+            // ResumeNotifications() decrements the count and emits its resume signal in
+            // separate steps, so the count can briefly reach zero before the 'false' signal
+            // is emitted. Gating on the subject keeps the signal monotonic and avoids a
+            // redundant 'true' when a suspend interleaves in that window.
+            if (!_areNotificationsSuspended.IsDisposed && !_areNotificationsSuspended.Value)
             {
                 Debug.Assert(_pendingChanges.Count == 0, "Shouldn't be any pending values if suspend was just started");
-                Debug.Assert(!_areNotificationsSuspended.Value, "SuspendSubject should be false for the first suspend call");
                 _areNotificationsSuspended.OnNext(true);
             }
         }
