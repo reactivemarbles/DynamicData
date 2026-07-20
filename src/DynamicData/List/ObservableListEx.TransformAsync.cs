@@ -102,12 +102,30 @@ public static partial class ObservableListEx
 
     /// <inheritdoc cref="TransformAsync{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, Task{TDestination}}, bool)"/>
     /// <summary>
-    /// Async transform overload receiving the source item, previously transformed value, and index. This is the terminal overload that all other TransformAsync overloads delegate to.
+    /// Async transform overload receiving the source item, previously transformed value, and index.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
         Func<TSource, Optional<TDestination>, int, Task<TDestination>> transformFactory,
+        bool transformOnRefresh = false)
+        where TSource : notnull
+        where TDestination : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+
+        return new TransformAsync<TSource, TDestination>(source, (t, d, i, _) => transformFactory(t, d, i), transformOnRefresh).Run();
+    }
+
+    /// <inheritdoc cref="TransformAsync{TSource, TDestination}(IObservable{IChangeSet{TSource}}, Func{TSource, Task{TDestination}}, bool)"/>
+    /// <summary>
+    /// Async transform overload receiving the source item, previously transformed value, index, and CancellationToken attached to the underlying subscription. This is the terminal overload that all other TransformAsync overloads delegate to.
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
+        this IObservable<IChangeSet<TSource>> source,
+        Func<TSource, Optional<TDestination>, int, CancellationToken, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
