@@ -54,6 +54,20 @@ public static partial class ObservableCacheEx
         return source.TransformAsync((current, _, key) => transformFactory(current, key), forceTransform);
     }
 
+    /// <inheritdoc cref="TransformAsync{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, Task{TDestination}}, IObservable{Func{TSource, TKey, bool}}?)"/>
+    /// <remarks>This overload takes a factory that receives the current item the previous item and key.</remarks>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
+        where TDestination : notnull
+        where TSource : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+
+        return source.TransformAsync((current, previous, key, _) => transformFactory(current, previous, key), forceTransform);
+    }
+
     /// <summary>
     /// Async version of <see cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, TDestination}, IObservable{Func{TSource, TKey, bool}}?)"/>.
     /// Projects each item using an async factory that returns <see cref="Task{TResult}"/>.
@@ -88,7 +102,7 @@ public static partial class ObservableCacheEx
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <see langword="null"/>.</exception>
     [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
-    public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, CancellationToken, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
         where TSource : notnull
         where TKey : notnull
@@ -124,13 +138,27 @@ public static partial class ObservableCacheEx
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
 
-        return source.TransformAsync((current, _, key) => transformFactory(current, key), options);
+        return TransformAsync(source, (current, _, key, _) => transformFactory(current, key), options);
     }
 
     /// <inheritdoc cref="TransformAsync{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, Task{TDestination}}, IObservable{Func{TSource, TKey, bool}}?)"/>
     /// <remarks>This overload accepts <see cref="TransformAsyncOptions"/> to control concurrency and Refresh handling.</remarks>
     [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, TransformAsyncOptions options)
+        where TDestination : notnull
+        where TSource : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+
+        return TransformAsync(source, (current, previous, key, _) => transformFactory(current, previous, key), options);
+    }
+
+    /// <inheritdoc cref="TransformAsync{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, Optional{TSource}, TKey, CancellationToken, Task{TDestination}}, IObservable{Func{TSource, TKey, bool}}?)"/>
+    /// <remarks>This overload accepts <see cref="TransformAsyncOptions"/> to control concurrency and Refresh handling.</remarks>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, CancellationToken, Task<TDestination>> transformFactory, TransformAsyncOptions options)
         where TDestination : notnull
         where TSource : notnull
         where TKey : notnull
