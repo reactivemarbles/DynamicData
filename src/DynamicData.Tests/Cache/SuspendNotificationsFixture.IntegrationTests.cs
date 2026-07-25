@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -129,6 +131,28 @@ public static partial class SuspendNotificationsFixture
             suspend2.Dispose();
             lateResults.Data.Count.Should().Be(dataSet.Count, "all data should arrive once truly resumed");
             lateResults.Messages.Count.Should().Be(1, "a single changeset on the real resume");
+        }
+
+        [Fact]
+        public async Task SuspensionsAreThreadSafe()
+        {
+            // Arrange
+            using var source = new SourceCache<int, int>(static x => x);
+            var results = source.Connect().AsAggregator();
+            var countChangeHistory = new List<int>();
+            using var countChangeSubscription = source.CountChanged.Do(countChangeHistory.Add).Subscribe();
+
+            // Act
+            using var suspend = source.SuspendNotifications();
+            var tasks = Enumerable.Range(1, 100).Select(x => Task.Run(() => source.AddOrUpdate(x))).ToArray();
+            await Task.WhenAll(tasks);
+
+            await Task.Run(suspend.Dispose);
+
+            // Assert
+            results.Data.Count.Should().Be(100, "Should receive data after resume");
+            results.Messages.Count.Should().Be(1, "Should receive single changeset on resume");
+            results.Messages[0].Adds.Should().Be(100, "Should have 100 adds");
         }
 
         [Fact]
