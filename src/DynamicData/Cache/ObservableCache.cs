@@ -198,24 +198,29 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         _editLevel++;
         _isEditInProgress.OnNext(_editLevel is not 0);
-        if (_editLevel == 1)
+        try
         {
-            var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
-            changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
+            if (_editLevel == 1)
+            {
+                var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
+                changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
+            }
+            else
+            {
+                _readerWriter.WriteNested(updateAction);
+            }
         }
-        else
+        finally
         {
-            _readerWriter.WriteNested(updateAction);
+            _editLevel--;
+
+            if (changes is not null && _editLevel == 0)
+            {
+                notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+            }
+
+            _isEditInProgress.OnNext(_editLevel is not 0);
         }
-
-        _editLevel--;
-
-        if (changes is not null && _editLevel == 0)
-        {
-            notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
-        }
-
-        _isEditInProgress.OnNext(_editLevel is not 0);
     }
 
     internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction)
@@ -228,24 +233,29 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         _editLevel++;
         _isEditInProgress.OnNext(_editLevel is not 0);
-        if (_editLevel == 1)
+        try
         {
-            var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
-            changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
+            if (_editLevel == 1)
+            {
+                var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
+                changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
+            }
+            else
+            {
+                _readerWriter.WriteNested(updateAction);
+            }
         }
-        else
+        finally
         {
-            _readerWriter.WriteNested(updateAction);
+            _editLevel--;
+
+            if (changes is not null && _editLevel == 0)
+            {
+                notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+            }
+
+            _isEditInProgress.OnNext(_editLevel is not 0);
         }
-
-        _editLevel--;
-
-        if (changes is not null && _editLevel == 0)
-        {
-            notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
-        }
-
-        _isEditInProgress.OnNext(_editLevel is not 0);
     }
 
     private IObservable<IChangeSet<TObject, TKey>> CreateConnectObservable(Func<TObject, bool>? predicate, bool suppressEmptyChangeSets) =>

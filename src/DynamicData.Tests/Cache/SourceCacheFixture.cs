@@ -163,8 +163,6 @@ public class SourceCacheFixture : IDisposable
         change!.Count.Should().Be(0);
     }
 
-
-
     [Fact]
     public void StaticFilterRemove()
     {
@@ -191,7 +189,6 @@ public class SourceCacheFixture : IDisposable
     }
 
     public record class SomeObject(int Id, int Value);
-
 
     [Fact]
     public async Task MultiCacheFanInDoesNotDeadlock()
@@ -403,6 +400,23 @@ public class SourceCacheFixture : IDisposable
             "all items in the source should have propagated downstream");
 
         results.HasCompleted.Should().BeFalse("the source has not yet completed");
+    }
+
+    [Fact]
+    public void ConnectContinuesToWorkNormallyAfterAFailedEdit()
+    {
+        using var source = new SourceCache<int, int>(static item => item);
+    
+        source.AddOrUpdate(1);
+
+        source.Invoking(source => source.Edit(_ => throw new Exception("Test")))
+            .Should().Throw<Exception>()
+            .WithMessage("Test");
+
+        using var subscription = source.Connect().RecordCacheItems(out var results);
+
+        results.Error.Should().BeNull("new subscribers should not receive previous errors");
+        results.RecordedChangeSets.Should().ContainSingle("an initial changeset should have been published.");
     }
 
     private sealed record TestItem(string Key, string Value);

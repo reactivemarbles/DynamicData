@@ -121,24 +121,33 @@ public sealed class SourceList<T> : ISourceList<T>
 
             _editLevel++;
             _isEditInProgress.OnNext(_editLevel is not 0);
-
-            if (_editLevel == 1)
+            try
             {
-                changes = _changesPreview.HasObservers ? _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview) : _readerWriter.Write(updateAction);
+                try
+                {
+                    if (_editLevel == 1)
+                    {
+                        changes = _changesPreview.HasObservers ? _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview) : _readerWriter.Write(updateAction);
+                    }
+                    else
+                    {
+                        _readerWriter.WriteNested(updateAction);
+                    }
+                }
+                finally
+                {
+                    _editLevel--;
+                }
+
+                if (changes is not null && (_editLevel is 0))
+                {
+                    InvokeNext(changes);
+                }
             }
-            else
+            finally
             {
-                _readerWriter.WriteNested(updateAction);
+                _isEditInProgress.OnNext(_editLevel is not 0);
             }
-
-            _editLevel--;
-
-            if (changes is not null && _editLevel == 0)
-            {
-                InvokeNext(changes);
-            }
-
-            _isEditInProgress.OnNext(_editLevel is not 0);
         }
     }
 

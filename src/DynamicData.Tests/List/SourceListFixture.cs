@@ -71,4 +71,21 @@ public class SourceListFixture
         changeSets[0].First().Type.Should().Be(ChangeType.Range);
         changeSets[0].First().Range.Index.Should().Be(0);
     }
+
+    [Fact]
+    public void ConnectContinuesToWorkNormallyAfterAFailedEdit()
+    {
+        using var source = new SourceList<int>();
+    
+        source.Add(1);
+
+        source.Invoking(source => source.Edit(_ => throw new Exception("Test")))
+            .Should().Throw<Exception>()
+            .WithMessage("Test");
+
+        using var subscription = source.Connect().RecordListItems(out var results);
+
+        results.Error.Should().BeNull("new subscribers should not receive previous errors");
+        results.RecordedChangeSets.Should().ContainSingle("an initial changeset should have been published.");
+    }
 }
