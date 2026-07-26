@@ -119,22 +119,41 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         {
             lock (_locker)
             {
-                var observable = ((!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.AreNotificationsSuspended)
-                        && (!_isEditInProgress.Value))
+                var observable = (
+                        _suspensionTracker.IsValueCreated,
+                        _isEditInProgress.Value)
+                    switch
+                    {
+                        // No suspensions or edits active, create the connection immediately.
+                        (false, false) => CreateConnectObservable(predicate, suppressEmptyChangeSets),
 
-                    // Create the Connection Observable
-                    ? CreateConnectObservable(predicate, suppressEmptyChangeSets)
+                        // Edit in progress, but suspension system is inactive
+                        // Need to avoid activating the suspension system if we don't absolutely need to, as it adds
+                        // locking overhead to edit operations. But then when the edit is done, we need to check if a
+                        // suspension came in. If so, do a followup wait with the full logic for both systems. It
+                        // needs to be the full logic, in case an edit comes in during the suspension, and so on.
+                        (false, true) => _isEditInProgress
+                            .Where(static shouldConnectionBeDeferred => !shouldConnectionBeDeferred)
+                            .Take(1)
+                            .Select(_ => CreateFullyDeferredConnection())
+                            .Switch(),
 
-                    // Defer until notifications are no longer suspended
-                    : Observable.CombineLatest(
+                        // If the suspension system is already active, we can monitor both systems simultaneously, and
+                        // make the connection as soon as both are idle at the same time.
+                        _ => CreateFullyDeferredConnection()
+                    };
+
+                return observable.SubscribeSafe(observer);
+
+                IObservable<IChangeSet<TObject, TKey>> CreateFullyDeferredConnection()
+                    => Observable.CombineLatest(
                             _suspensionTracker.Value.NotificationsSuspendedObservable,
                             _isEditInProgress,
                             static (areNotificationsSuspended, isEditInProgress) => areNotificationsSuspended || isEditInProgress)
+                        .Do(static _ => { }, observer.OnCompleted)
                         .Where(static shouldConnectionBeDeferred => !shouldConnectionBeDeferred)
                         .Take(1)
                         .SelectMany(_ => CreateConnectObservable(predicate, suppressEmptyChangeSets));
-
-                return observable.SubscribeSafe(observer);
             }
         });
 
