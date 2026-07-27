@@ -70,7 +70,17 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
                                     scope.EnqueueNext(changes);
                                 }
                             },
-                            queue.OnError,
+                            error =>
+                            {
+                                using var scope = queue.AcquireLock();
+
+                                if (id != active)
+                                {
+                                    return;
+                                }
+
+                                scope.EnqueueError(error);
+                            },
                             () =>
                             {
                                 using var scope = queue.AcquireLock();

@@ -232,4 +232,27 @@ public class SwitchFixture
 
         producerFinished.Should().BeTrue("writing to the source must not block while a subscriber holds onto a notification");
     }
+
+    [Fact]
+    public void IgnoresErrorsFromASupersededSource()
+    {
+        // Switching away from a source means everything it produces afterwards belongs to a source
+        // that is no longer selected, and that includes its failures.
+        using var switchable = new Subject<IObservable<IChangeSet<Person, string>>>();
+        using var superseded = new Subject<IChangeSet<Person, string>>();
+        using var current = new Subject<IChangeSet<Person, string>>();
+
+        using var results = switchable.Switch().AsAggregator();
+
+        switchable.OnNext(superseded);
+        switchable.OnNext(current);
+
+        superseded.OnError(new Exception("Test"));
+
+        results.Error.Should().BeNull("the failed source had already been switched away from");
+
+        current.OnNext(new ChangeSet<Person, string> { new(ChangeReason.Add, "a", new Person("a", 1)) });
+
+        results.Data.Count.Should().Be(1, "the selected source should still be delivering");
+    }
 }
