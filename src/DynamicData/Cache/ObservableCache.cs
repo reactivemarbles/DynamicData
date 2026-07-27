@@ -157,8 +157,8 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         ChangeSet<TObject, TKey>? changes = null;
 
         _editLevel++;
-        if (_isEditInProgress.IsValueCreated)
-            _isEditInProgress.Value.OnNext(_editLevel is not 0);
+        if (_isEditInProgress.IsValueCreated && (_editLevel is 1))
+            _isEditInProgress.Value.OnNext(true);
         try
         {
             if (_editLevel == 1)
@@ -180,8 +180,8 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                 notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
             }
 
-            if (_isEditInProgress.IsValueCreated)
-                _isEditInProgress.Value.OnNext(_editLevel is not 0);
+            if (_isEditInProgress.IsValueCreated && (_editLevel is 0))
+                _isEditInProgress.Value.OnNext(false);
         }
     }
 
@@ -194,8 +194,8 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         ChangeSet<TObject, TKey>? changes = null;
 
         _editLevel++;
-        if (_isEditInProgress.IsValueCreated)
-            _isEditInProgress.Value.OnNext(_editLevel is not 0);
+        if (_isEditInProgress.IsValueCreated && (_editLevel is 1))
+            _isEditInProgress.Value.OnNext(true);
         try
         {
             if (_editLevel == 1)
@@ -217,8 +217,8 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                 notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
             }
 
-            if (_isEditInProgress.IsValueCreated)
-                _isEditInProgress.Value.OnNext(_editLevel is not 0);
+            if (_isEditInProgress.IsValueCreated && (_editLevel is 0))
+                _isEditInProgress.Value.OnNext(false);
         }
     }
 
