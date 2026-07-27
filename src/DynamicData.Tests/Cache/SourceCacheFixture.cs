@@ -354,7 +354,7 @@ public class SourceCacheFixture : IDisposable
 
     // Covers https://github.com/reactivemarbles/DynamicData/issues/1129
     [Fact]
-    public void ConnectDuringEditDoesNotDuplicate()
+    public void ConnectDuringEditsDoesNotDuplicate()
     {
         using var items = new SourceCache<int, int>(static item => item);
         
@@ -385,17 +385,20 @@ public class SourceCacheFixture : IDisposable
 
             results.Error.Should().BeNull("no errors should have occurred");
             results.RecordedChangeSets.Should().BeEmpty("no changes should be published in the middle of an edit");
+
+            // Explicitly doing a nested edit, as that system is closely intertwined with the edit-tracking system that
+            // .Connect() uses.
+            items.Remove(item: 1);
+
+            results.Error.Should().BeNull("no errors should have occurred");
+            results.RecordedChangeSets.Should().BeEmpty("no changes should be published in the middle of an edit");
         });
         
         results.Should().NotBeNull("the edit delegate should have been invoked");
         results.Error.Should().BeNull("no errors should have occurred");
         results.RecordedChangeSets.Should().ContainSingle("subscribers should only receive a single initial changeset");
         results.RecordedItemsByKey.Should().BeEquivalentTo(
-            new Dictionary<int, int>()
-            {
-                [1] = 1,
-                [2] = 2
-            },
+            new Dictionary<int, int>() { [2] = 2 },
             options => options.WithoutStrictOrdering(),
             "all items in the source should have propagated downstream");
 
