@@ -14,6 +14,10 @@ using DynamicData.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
+// Aliased rather than importing Bogus wholesale, which would make Person ambiguous against the
+// domain type of the same name.
+using Randomizer = Bogus.Randomizer;
+
 namespace DynamicData.Tests.Cache;
 
 public class TransformAsyncFixture
@@ -368,6 +372,86 @@ public class TransformAsyncFixture
             outstanding[name].TryDequeue(out var release).Should().BeTrue($"a transform for {name} should be outstanding");
             release!.SetResult();
         }
+    }
+
+    // Serialization has to hold under arbitrary interleaving, not only the one scripted collision
+    // above. Several writers drive the source while another drives forced passes, and every
+    // notification is checked both for overlap and for structural integrity, since the two chains
+    // also share the cache that produces those change sets.
+    [Fact]
+    public async Task ForcedTransformsUnderConcurrentLoad_AreDeliveredSerially()
+    {
+        const int writerCount = 3;
+        const int seedCount = 5;
+
+        var randomizer = new Randomizer(0x1097);
+        var iterations = randomizer.Int(150, 250);
+        var timeout = TimeSpan.FromMinutes(2);
+
+        using var source = new SourceCache<Person, string>(p => p.Name);
+        using var force = new Subject<Func<Person, string, bool>>();
+
+        var published = source.Connect()
+            .TransformAsync(
+                async person =>
+                {
+                    await Task.Yield();
+                    return new PersonWithGender(person, person.Age % 2 == 0 ? "M" : "F");
+                },
+                force)
+            .ValidateSynchronization()
+            .ValidateChangeSets(static personWithGender => personWithGender.Name)
+
+            // Each notification is held for a moment so that an overlapping delivery is actually
+            // observed, rather than passing through a window too narrow to catch.
+            .Do(static _ => Thread.SpinWait(2_000))
+            .Publish();
+
+        var terminal = published.Materialize().LastAsync().ToTask();
+        using var connection = published.Connect();
+
+        var names = Enumerable.Range(1, seedCount).Select(i => "Name" + i).ToArray();
+        source.AddOrUpdate(names.Select((name, i) => new Person(name, i + 1)));
+
+        // The main thread joins the barrier so every writer starts at the same moment.
+        using var barrier = new Barrier(writerCount + 2);
+
+        var writers = Enumerable.Range(0, writerCount)
+            .Select(writer => Task.Run(() =>
+            {
+                var writerRandomizer = new Randomizer(0x1097 + writer + 1);
+                barrier.SignalAndWait();
+
+                for (var i = 0; i < iterations; i++)
+                {
+                    source.AddOrUpdate(new Person(writerRandomizer.ArrayElement(names), writerRandomizer.Int(1, 80)));
+                }
+            }))
+            .ToArray();
+
+        var forcer = Task.Run(() =>
+        {
+            barrier.SignalAndWait();
+
+            for (var i = 0; i < iterations; i++)
+            {
+                force.OnNext(static (_, _) => true);
+            }
+        });
+
+        barrier.SignalAndWait();
+        await Task.WhenAll(writers.Append(forcer));
+
+        // Both merge inputs have to complete before the merged sequence does.
+        force.OnCompleted();
+        source.Dispose();
+
+        (await Task.WhenAny(terminal, Task.Delay(timeout))).Should().BeSameAs(terminal, "the pipeline should drain rather than deadlock");
+
+        var lastNotification = await terminal;
+
+        lastNotification.Exception.Should().BeNull("deliveries must neither overlap nor carry inconsistent change sets, however the writers interleave");
+        lastNotification.Kind.Should().Be(NotificationKind.OnCompleted, "the sequence should end by completing, not by faulting");
     }
 
     private class TransformStub : IDisposable
