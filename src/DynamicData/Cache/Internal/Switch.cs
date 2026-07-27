@@ -4,7 +4,6 @@
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 namespace DynamicData.Cache.Internal;
 
@@ -17,30 +16,93 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
-                var queue = new SharedDeliveryQueue();
+                // Switching is done by hand rather than with Observable.Switch, which holds its gate for
+                // the whole of downstream delivery. The queue enqueues and returns instead, so a producer
+                // is never held up by whatever a subscriber does with the notification, and a pipeline
+                // crossing into another cache cannot deadlock against it.
+                var queue = new DeliveryQueue<IChangeSet<TObject, TKey>>(observer);
 
-                var destination = new LockFreeObservableCache<TObject, TKey>();
+                // What the current source has contributed, so that switching away can take it back out.
+                var current = new Cache<TObject, TKey>();
+                var subscription = new SerialDisposable();
 
-                var errors = new Subject<IChangeSet<TObject, TKey>>();
+                // Identifies the current source. A superseded one may still be mid-delivery, and anything
+                // it produces after this point belongs to a source that has already been switched away from.
+                var active = 0;
+                var isSourceRunning = false;
+                var areSourcesComplete = false;
 
-                var populator = Observable.Switch(
-                        _sources
-                            .SynchronizeSafe(queue)
-                            .Do(onNext: _ => destination.Clear(),
-                                onError: error => errors.OnError(error)))
-                    .SynchronizeSafe(queue)
-                    .Do(onNext: static _ => { },
-                        onError: error => errors.OnError(error))
-                    .PopulateInto(destination);
+                var outer = _sources.Subscribe(
+                    source =>
+                    {
+                        int id;
 
-                return new CompositeDisposable(
-                    destination,
-                    errors,
-                    populator,
-                    destination
-                        .Connect()
-                        .Merge(errors)
-                        .SubscribeSafe(observer),
-                    queue);
+                        using (var scope = queue.AcquireLock())
+                        {
+                            id = ++active;
+                            isSourceRunning = true;
+
+                            if (current.Count != 0)
+                            {
+                                scope.EnqueueNext(new ChangeSet<TObject, TKey>(
+                                    current.KeyValues.Select(static pair => new Change<TObject, TKey>(ChangeReason.Remove, pair.Key, pair.Value))));
+
+                                current.Clear();
+                            }
+                        }
+
+                        // Subscribed outside the lock. The source may deliver synchronously, and that
+                        // delivery takes the lock for itself.
+                        subscription.Disposable = source.Subscribe(
+                            changes =>
+                            {
+                                using var scope = queue.AcquireLock();
+
+                                if (id != active)
+                                {
+                                    return;
+                                }
+
+                                current.Clone(changes);
+
+                                if (changes.Count != 0)
+                                {
+                                    scope.EnqueueNext(changes);
+                                }
+                            },
+                            queue.OnError,
+                            () =>
+                            {
+                                using var scope = queue.AcquireLock();
+
+                                if (id != active)
+                                {
+                                    return;
+                                }
+
+                                isSourceRunning = false;
+
+                                if (areSourcesComplete)
+                                {
+                                    scope.EnqueueCompleted();
+                                }
+                            });
+                    },
+                    queue.OnError,
+                    () =>
+                    {
+                        using var scope = queue.AcquireLock();
+
+                        areSourcesComplete = true;
+
+                        // The current source may still be running, and the result ends only once both have.
+                        if (!isSourceRunning)
+                        {
+                            scope.EnqueueCompleted();
+                        }
+                    });
+
+                // Queue first, so that delivery is finished before the subscriptions are torn down.
+                return new CompositeDisposable(queue, outer, subscription);
             });
 }

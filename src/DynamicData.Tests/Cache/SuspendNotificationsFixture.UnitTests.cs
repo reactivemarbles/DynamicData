@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -451,6 +452,67 @@ public static partial class SuspendNotificationsFixture
             results.Data.Count.Should().Be(allData.Count, $"{allData.Count} items in final state");
             results.Error.Should().BeNull();
             results.IsCompleted.Should().BeFalse();
+        }
+
+        [Fact]
+        public void OnCompletedFiresIfCacheDisposedAfterConnectingWhileSuspended()
+        {
+            // A connection made while suspended is deferred until the suspension lifts. Once it
+            // activates it must behave exactly like any other subscriber, including terminating
+            // when the source does. Previously the deferral dropped the completion, leaving the
+            // subscriber alive forever.
+            var suspend = _source.SuspendNotifications();
+            using var results = _source.Connect().AsAggregator();
+            Enumerable.Range(101, 37).ForEach(_source.AddOrUpdate);
+
+            // Act
+            suspend.Dispose();
+            _source.AddOrUpdate(1000);
+            _source.Dispose();
+
+            // Assert
+            results.IsCompleted.Should().BeTrue("a connection deferred by a suspension should still complete when the source does");
+            results.Error.Should().BeNull("no error should have occurred");
+            results.Data.Count.Should().Be(38, "all data written before disposal should have arrived");
+        }
+
+        [Fact]
+        public void OnErrorFiresIfCacheFailsAfterConnectingWhileSuspended()
+        {
+            // The same applies to the error case: a deferred connection that has activated must
+            // still see a failure of the source.
+            using var source = new Subject<IChangeSet<int, int>>();
+            using var cache = new ObservableCache<int, int>(source);
+
+            var suspend = cache.SuspendNotifications();
+            using var results = cache.Connect().AsAggregator();
+            source.OnNext(new ChangeSet<int, int> { new(ChangeReason.Add, 1, 1) });
+
+            // Act
+            suspend.Dispose();
+            var expectedError = new Exception("Test Exception");
+            source.OnError(expectedError);
+
+            // Assert
+            results.Error.Should().Be(expectedError, "a connection deferred by a suspension should still see the source fail");
+            results.Data.Count.Should().Be(1, "the data written before the failure should have arrived");
+        }
+
+        [Fact]
+        public void OnCompletedFiresIfCacheDisposedAfterWatchingWhileSuspended()
+        {
+            // Watch() defers the same way Connect() does, and has the same obligation.
+            var suspend = _source.SuspendNotifications();
+            var isCompleted = false;
+            using var subscription = _source.Watch(1).Subscribe(static _ => { }, () => isCompleted = true);
+            _source.AddOrUpdate(1);
+
+            // Act
+            suspend.Dispose();
+            _source.Dispose();
+
+            // Assert
+            isCompleted.Should().BeTrue("a watch deferred by a suspension should still complete when the source does");
         }
 
         public void Dispose()
