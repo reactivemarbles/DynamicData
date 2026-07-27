@@ -104,10 +104,11 @@ public class MonitorStatusFixture
         using var source = new Subject<int>();
         using var subscription = source.MonitorStatus().Subscribe(statuses.Add, () => completed = true);
 
+        source.OnNext(1);
         source.OnCompleted();
 
         completed.Should().BeTrue("the status stream is finished once the source is");
-        statuses.Should().EndWith(ConnectionStatus.Completed);
+        statuses.Should().Equal(ConnectionStatus.Pending, ConnectionStatus.Loaded, ConnectionStatus.Completed);
     }
 
     [Fact]
