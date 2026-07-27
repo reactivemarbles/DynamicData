@@ -88,7 +88,10 @@ public static partial class ObservableCacheEx
                 long orderItemWasAdded = -1;
                 var sizeLimiter = new SizeLimiter<TObject, TKey>(sizeLimit);
 
-                return source.Connect().Finally(observer.OnCompleted).ObserveOn(scheduler ?? GlobalConfig.DefaultScheduler).Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded))).Select(sizeLimiter.CloneAndReturnExpiredOnly).Where(expired => expired.Length != 0).Subscribe(
+                // Finally would fire on failure as well, reporting a source error downstream as a
+                // successful completion, and without an error handler the exception would be rethrown
+                // out of the delivery instead of reaching the observer.
+                return source.Connect().ObserveOn(scheduler ?? GlobalConfig.DefaultScheduler).Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded))).Select(sizeLimiter.CloneAndReturnExpiredOnly).Where(expired => expired.Length != 0).Subscribe(
                     toRemove =>
                     {
                         try
@@ -100,7 +103,9 @@ public static partial class ObservableCacheEx
                         {
                             observer.OnError(ex);
                         }
-                    });
+                    },
+                    observer.OnError,
+                    observer.OnCompleted);
             });
     }
 }
