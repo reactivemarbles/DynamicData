@@ -9,6 +9,10 @@ using DynamicData.Tests.Domain;
 using FluentAssertions;
 
 using Xunit;
+using System.Collections.Generic;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
+using DynamicData.Binding;
 
 namespace DynamicData.Tests.List;
 
@@ -180,5 +184,18 @@ public class GroupImmutableFixture : IDisposable
 
         var group = _results.Data.Items[0];
         group.Count.Should().Be(2);
+    }
+
+    [Fact]
+    public void CompletesWhenNoRegrouperIsSupplied()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var subscription = source.GroupWithImmutableState(p => p.Age).Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue("an absent regrouper can never fire and so must not hold the result open");
     }
 }

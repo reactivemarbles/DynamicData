@@ -1,7 +1,14 @@
-using System.Linq;
+﻿using System.Linq;
 using FluentAssertions;
 
 using Xunit;
+using System;
+using System.Collections.Generic;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using DynamicData.Binding;
+using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.List;
 
@@ -51,5 +58,20 @@ public class MergeManyChangeSetsFixture
 
 
         new[] { 2, 100, 10,11,12,13,14 }.Should().BeEquivalentTo(d.Items);
+    }
+
+    [Fact]
+    public void DeliversTheErrorWithoutThrowing()
+    {
+        Exception? error = null;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var subscription = source
+            .MergeManyChangeSets(_ => Observable.Empty<IChangeSet<Person>>(), EqualityComparer<Person>.Default)
+            .Subscribe(_ => { }, ex => error = ex, () => { });
+
+        source.OnError(new InvalidOperationException("boom"));
+
+        error.Should().BeOfType<InvalidOperationException>();
     }
 }

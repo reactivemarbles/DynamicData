@@ -1,10 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
 using FluentAssertions;
 
 using Xunit;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using DynamicData.Binding;
+using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.List;
 
@@ -108,4 +113,20 @@ public abstract class XOrFixtureBase : IDisposable
     }
 
     protected abstract IObservable<IChangeSet<int>> CreateObservable();
+
+    [Fact]
+    public void CompletesOnlyWhenEverySourceCompletes()
+    {
+        var completed = false;
+
+        using var first = new Subject<IChangeSet<Person>>();
+        using var second = new Subject<IChangeSet<Person>>();
+        using var subscription = first.Xor(second).Subscribe(_ => { }, () => completed = true);
+
+        first.OnCompleted();
+        completed.Should().BeFalse("the second source is still live");
+
+        second.OnCompleted();
+        completed.Should().BeTrue("every source has now finished");
+    }
 }

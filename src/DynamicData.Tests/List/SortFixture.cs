@@ -8,6 +8,9 @@ using DynamicData.Tests.Domain;
 using FluentAssertions;
 
 using Xunit;
+using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 
 namespace DynamicData.Tests.List;
 
@@ -181,5 +184,20 @@ public class SortFixture : IDisposable
         var actualResult = _results.Data.Items;
 
         actualResult.Should().BeEquivalentTo(expectedResult);
+    }
+
+    [Fact]
+    public void CompletesWhenGivenAComparerObservable()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var subscription = source
+            .Sort(Observable.Return(SortExpressionComparer<Person>.Ascending(p => p.Name)))
+            .Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue("an absent resort signal can never fire and so must not hold the result open");
     }
 }
