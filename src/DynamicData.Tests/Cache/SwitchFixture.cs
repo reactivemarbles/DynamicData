@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
-
 using DynamicData.Tests.Domain;
-
+using DynamicData.Tests.Utilities;
 using FluentAssertions;
-
 using Xunit;
 
 namespace DynamicData.Tests.Cache;
@@ -236,10 +235,20 @@ public class SwitchFixture
     [Fact]
     public void IgnoresErrorsFromASupersededSource()
     {
-        // Switching away from a source means everything it produces afterwards belongs to a source
-        // that is no longer selected, and that includes its failures.
+        // Switching away from a source means anything it produces afterwards belongs to a source that
+        // is no longer selected, and that includes its failures. Ordinarily disposal stops a
+        // superseded source being heard from again, but disposal cannot reach a notification that is
+        // already in flight, so the operator has to discard it on arrival. The raw observable hands
+        // back the observer directly, which is how that in-flight failure is reproduced here without
+        // needing a race to land.
+        var supersededObserver = default(IObserver<IChangeSet<Person, string>>);
+        var superseded = RawAnonymousObservable.Create<IChangeSet<Person, string>>(observer =>
+        {
+            supersededObserver = observer;
+            return Disposable.Empty;
+        });
+
         using var switchable = new Subject<IObservable<IChangeSet<Person, string>>>();
-        using var superseded = new Subject<IChangeSet<Person, string>>();
         using var current = new Subject<IChangeSet<Person, string>>();
 
         using var results = switchable.Switch().AsAggregator();
@@ -247,7 +256,8 @@ public class SwitchFixture
         switchable.OnNext(superseded);
         switchable.OnNext(current);
 
-        superseded.OnError(new Exception("Test"));
+        supersededObserver.Should().NotBeNull("the superseded source should have been subscribed");
+        supersededObserver!.OnError(new Exception("Test"));
 
         results.Error.Should().BeNull("the failed source had already been switched away from");
 
