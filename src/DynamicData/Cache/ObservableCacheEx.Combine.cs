@@ -94,7 +94,6 @@ public static partial class ObservableCacheEx
                 catch (Exception ex)
                 {
                     observer.OnError(ex);
-                    observer.OnCompleted();
                 }
 
                 return subscriber;
@@ -119,7 +118,6 @@ public static partial class ObservableCacheEx
                     catch (Exception ex)
                     {
                         observer.OnError(ex);
-                        observer.OnCompleted();
                     }
                 }
 
@@ -135,7 +133,6 @@ public static partial class ObservableCacheEx
                 catch (Exception ex)
                 {
                     observer.OnError(ex);
-                    observer.OnCompleted();
                 }
 
                 return subscriber;

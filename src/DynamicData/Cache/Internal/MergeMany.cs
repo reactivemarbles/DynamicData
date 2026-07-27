@@ -48,7 +48,7 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
                             .Finally(() => CheckCompleted(counter, queue))
                             .Subscribe(queue.OnNext, queue.OnError);
                     })
-                    .Subscribe(static _ => { }, observer.OnError));
+                    .Subscribe(static _ => { }, queue.OnError));
             });
 
     private static void CheckCompleted(StrongBox<int> counter, DeliveryQueue<TDestination> queue)

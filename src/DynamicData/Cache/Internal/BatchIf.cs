@@ -55,7 +55,8 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                             {
                                 paused = true;
                             }
-                        });
+                        },
+                        observer.OnError);
 
                 if (intervalTimer is not null)
                 {
@@ -83,9 +84,11 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                                 {
                                     paused = false;
                                     ResumeAction();
-                                });
+                                },
+                                observer.OnError);
                         }
-                    });
+                    },
+                    observer.OnError);
 
                 var publisher = _source.SynchronizeSafe(queue).Subscribe(
                     changes =>
