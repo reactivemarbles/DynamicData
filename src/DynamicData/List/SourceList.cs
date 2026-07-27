@@ -107,7 +107,10 @@ public sealed class SourceList<T> : ISourceList<T>
     {
         _cleanUp.Dispose();
         _changesPreview.Dispose();
-        _isEditInProgress.OnCompleted();
+        // Intentionally skipping disposal for _isEditInProgress, as it's technically redundant after _cleanUp.Dispose()
+        // calls .OnCompleted(), and doing disposal anyway causes a whole bunch of test failures. That really suggests
+        // we need to rework the lifecycle mechanics of this class, as a whole, but that's probably going to involve
+        // breaking changes.
     }
 
     /// <inheritdoc />
