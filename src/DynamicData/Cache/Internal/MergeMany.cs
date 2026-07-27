@@ -46,7 +46,7 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
                         Interlocked.Increment(ref counter.Value);
                         return _observableSelector(t, key)
                             .Finally(() => CheckCompleted(counter, queue))
-                            .Subscribe(queue.OnNext, static _ => { });
+                            .Subscribe(queue.OnNext, queue.OnError);
                     })
                     .Subscribe(static _ => { }, observer.OnError));
             });

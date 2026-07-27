@@ -6,6 +6,9 @@ using System.Reactive.Subjects;
 using FluentAssertions;
 
 using Xunit;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
+using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
 
@@ -304,5 +307,31 @@ public class TransformTreeFixture : IDisposable
         public override int GetHashCode() => Id;
 
         public override string ToString() => $"Name: {Name}, Id: {Id}, BossId: {BossId}";
+    }
+
+    [Fact]
+    public void CompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source.TransformToTree(p => p.Name).Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue("the intermediate caches must not swallow the terminal event");
+    }
+
+    [Fact]
+    public void DeliversTheError()
+    {
+        Exception? error = null;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source.TransformToTree(p => p.Name).Subscribe(_ => { }, ex => error = ex, () => { });
+
+        source.OnError(new InvalidOperationException("boom"));
+
+        error.Should().BeOfType<InvalidOperationException>();
     }
 }

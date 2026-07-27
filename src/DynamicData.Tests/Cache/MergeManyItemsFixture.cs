@@ -1,10 +1,14 @@
-using System;
+﻿using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 using FluentAssertions;
 
 using Xunit;
+using System.Collections.Generic;
+using System.Reactive;
+using System.Reactive.Concurrency;
+using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
 
@@ -94,5 +98,46 @@ public class MergeManyItemsFixture : IDisposable
             _value = value;
             _changed.OnNext(value);
         }
+    }
+
+    [Fact]
+    public void CompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source.MergeManyItems(_ => Observable.Empty<int>()).Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void StaysOpenWhenOnlyAChildCompletes()
+    {
+        var completed = false;
+
+        using var source = new SourceCache<Person, string>(p => p.Name);
+        using var subscription = source.Connect().MergeManyItems(_ => Observable.Return(1)).Subscribe(_ => { }, () => completed = true);
+
+        source.AddOrUpdate(new Person("a", 1));
+
+        completed.Should().BeFalse("one child finishing does not finish the merge");
+    }
+
+    [Fact]
+    public void DeliversAnErrorRaisedByAChild()
+    {
+        Exception? error = null;
+
+        using var source = new SourceCache<Person, string>(p => p.Name);
+        using var child = new Subject<int>();
+        using var subscription = source.Connect().MergeManyItems(_ => child).Subscribe(_ => { }, ex => error = ex, () => { });
+
+        source.AddOrUpdate(new Person("a", 1));
+        child.OnError(new InvalidOperationException("boom"));
+
+        error.Should().BeOfType<InvalidOperationException>();
     }
 }

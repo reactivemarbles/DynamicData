@@ -39,7 +39,9 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
                         {
                             observer.OnNext(notifications);
                         }
-                    });
+                    },
+                    observer.OnError,
+                    observer.OnCompleted);
 
                 // when an list is removed, need to
                 var removedItem = sharedLists.OnItemRemoved(
@@ -59,7 +61,10 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
                         {
                             observer.OnNext(notifications);
                         }
-                    }).Subscribe();
+                    })
+                    // The merge subscription above reports errors to the observer. Without a handler here Rx
+                    // would rethrow them out of the subscription as well.
+                    .Subscribe(static _ => { }, static _ => { });
 
                 // when an list is added or removed, need to
                 var sourceChanged = sharedLists.WhereReasonsAre(ListChangeReason.Add, ListChangeReason.AddRange).ForEachItemChange(
@@ -77,7 +82,10 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
                         {
                             observer.OnNext(notifications);
                         }
-                    }).Subscribe();
+                    })
+                    // The merge subscription above reports errors to the observer. Without a handler here Rx
+                    // would rethrow them out of the subscription as well.
+                    .Subscribe(static _ => { }, static _ => { });
 
                 return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged, sharedLists.Connect(), queue);
             });

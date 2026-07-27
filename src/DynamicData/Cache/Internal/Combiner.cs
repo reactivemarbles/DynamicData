@@ -23,8 +23,16 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
 
     private readonly IList<Cache<TObject, TKey>> _sourceCaches = [];
 
-    public IDisposable Subscribe(IObservable<IChangeSet<TObject, TKey>>[] source)
+    public IDisposable Subscribe(IObservable<IChangeSet<TObject, TKey>>[] source, Action<Exception> onError, Action onCompleted)
     {
+        // Merging semantics: the result finishes only once every source has.
+        var pending = source.Length;
+        if (pending == 0)
+        {
+            onCompleted();
+            return Disposable.Empty;
+        }
+
         // subscribe
         var disposable = new CompositeDisposable();
         lock (_locker)
@@ -34,7 +42,17 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
 
             foreach (var pair in source.Zip(_sourceCaches, (item, cache) => new { Item = item, Cache = cache }))
             {
-                var subscription = pair.Item.Subscribe(updates => Update(pair.Cache, updates));
+                var subscription = pair.Item.Subscribe(
+                    updates => Update(pair.Cache, updates),
+                    onError,
+                    () =>
+                    {
+                        if (Interlocked.Decrement(ref pending) == 0)
+                        {
+                            onCompleted();
+                        }
+                    });
+
                 disposable.Add(subscription);
             }
         }

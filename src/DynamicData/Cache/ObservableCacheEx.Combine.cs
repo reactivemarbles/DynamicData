@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -89,7 +89,7 @@ public static partial class ObservableCacheEx
                 try
                 {
                     var combiner = new Combiner<TObject, TKey>(type, UpdateAction);
-                    subscriber = combiner.Subscribe([.. sources]);
+                    subscriber = combiner.Subscribe([.. sources], observer.OnError, observer.OnCompleted);
                 }
                 catch (Exception ex)
                 {
@@ -130,7 +130,7 @@ public static partial class ObservableCacheEx
                     list.Insert(0, source);
 
                     var combiner = new Combiner<TObject, TKey>(type, UpdateAction);
-                    subscriber = combiner.Subscribe([.. list]);
+                    subscriber = combiner.Subscribe([.. list], observer.OnError, observer.OnCompleted);
                 }
                 catch (Exception ex)
                 {
