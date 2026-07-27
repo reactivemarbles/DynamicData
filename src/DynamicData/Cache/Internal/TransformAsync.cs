@@ -26,23 +26,33 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         {
             var cache = new ChangeAwareCache<TransformedItemContainer, TKey>();
 
-            var transformer = source.Select(changes => DoTransform(cache, changes)).Concat();
-
-            if (forceTransform is not null)
+            if (forceTransform is null)
             {
-                var queue = new SharedDeliveryQueue();
-                var forced = forceTransform.SynchronizeSafe(queue)
-                    .Select(shouldTransform => DoTransform(cache, shouldTransform)).Concat();
-
-                transformer = transformer.SynchronizeSafe(queue).UnsynchronizedMerge(forced);
-
-                return new CompositeDisposable(transformer.SubscribeSafe(observer), queue);
+                // A single Concat chain serializes itself: the next transform is not subscribed
+                // until the previous one has completed, so nothing else can be touching the cache.
+                return source.Select(changes => DoTransform(cache, changes)).Concat().SubscribeSafe(observer);
             }
 
-            return transformer.SubscribeSafe(observer);
+            // Two independent Concat chains share the cache, and each applies its updates when its
+            // async transforms finish, on whichever thread happens to complete them. So the cache
+            // mutation, and the emission that immediately follows it, both have to run on the shared
+            // queue. That serializes the two chains against each other, and it is also what
+            // UnsynchronizedMerge requires of its inputs: without it the merge has no gate of its
+            // own and the two chains can call the observer concurrently.
+            var queue = new SharedDeliveryQueue();
+
+            var transformer = source.Select(changes => DoTransform(cache, changes, queue)).Concat();
+
+            // The forced predicate reads the cache to decide what to re-transform. That read runs
+            // during this gated delivery, which keeps it exclusive with the updates applied by
+            // either chain.
+            var forced = forceTransform.SynchronizeSafe(queue)
+                .Select(shouldTransform => DoTransform(cache, shouldTransform, queue)).Concat();
+
+            return new CompositeDisposable(transformer.UnsynchronizedMerge(forced).SubscribeSafe(observer), queue);
         });
 
-    private IObservable<IChangeSet<TDestination, TKey>> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey> cache, Func<TSource, TKey, bool> shouldTransform)
+    private IObservable<IChangeSet<TDestination, TKey>> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey> cache, Func<TSource, TKey, bool> shouldTransform, SharedDeliveryQueue queue)
     {
         var toTransform = cache.KeyValues.Where(kvp => shouldTransform(kvp.Value.Source, kvp.Key)).Select(kvp =>
             new Change<TSource, TKey>(ChangeReason.Update, kvp.Key, kvp.Value.Source, kvp.Value.Source)).ToArray();
@@ -50,15 +60,19 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         return toTransform.Select(change => Observable.FromAsync(t => Transform(change, t)))
             .Merge(maximumConcurrency ?? int.MaxValue)
             .ToArray()
+            .SynchronizeSafe(queue)
             .Select(transformed => ProcessUpdates(cache, transformed));
     }
 
     private IObservable<IChangeSet<TDestination, TKey>> DoTransform(
-        ChangeAwareCache<TransformedItemContainer, TKey> cache, IChangeSet<TSource, TKey> changes)
+        ChangeAwareCache<TransformedItemContainer, TKey> cache, IChangeSet<TSource, TKey> changes, SharedDeliveryQueue? queue = null)
     {
-        return changes.Select(change => Observable.FromAsync(t => Transform(change, t)))
+        var results = changes.Select(change => Observable.FromAsync(t => Transform(change, t)))
             .Merge(maximumConcurrency ?? int.MaxValue)
-            .ToArray()
+            .ToArray();
+
+        // Gated only when a forced-transform chain is also writing to the same cache.
+        return (queue is null ? results : results.SynchronizeSafe(queue))
             .Select(transformed => ProcessUpdates(cache, transformed));
     }
 
