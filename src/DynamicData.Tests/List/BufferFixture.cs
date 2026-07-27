@@ -81,4 +81,21 @@ public class BufferFixture : IDisposable
         received.Should().Be(1, "changes held back by the pause would otherwise be lost");
         completed.Should().BeTrue();
     }
+
+    [Fact]
+    public void BufferIfFailsWhenThePauseSelectorFails()
+    {
+        var expectedError = new Exception("Test Exception");
+        var actualError = default(Exception);
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var pause = new Subject<bool>();
+        using var subscription = source.BufferIf(pause, Scheduler.Immediate).Subscribe(_ => { }, error => actualError = error, () => completed = true);
+
+        pause.OnError(expectedError);
+
+        actualError.Should().BeSameAs(expectedError, "a failure of the pause selector belongs to the subscriber, not to whichever thread happened to raise it");
+        completed.Should().BeFalse("the pause selector failed, it did not complete");
+    }
 }
