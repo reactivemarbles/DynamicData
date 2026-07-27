@@ -67,7 +67,17 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
                                     scope.EnqueueNext(changes);
                                 }
                             },
-                            queue.OnError,
+                            error =>
+                            {
+                                using var scope = queue.AcquireLock();
+
+                                if (id != active)
+                                {
+                                    return;
+                                }
+
+                                scope.EnqueueError(error);
+                            },
                             () =>
                             {
                                 using var scope = queue.AcquireLock();
