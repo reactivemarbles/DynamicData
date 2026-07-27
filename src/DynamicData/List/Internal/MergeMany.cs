@@ -24,7 +24,7 @@ internal sealed class MergeMany<T, TDestination>(IObservable<IChangeSet<T>> sour
                                                 .SubscribeMany(t =>
                                                 {
                                                     counter.Added();
-                                                    return _observableSelector(t).Synchronize(locker).Finally(() => counter.Finally()).Subscribe(observer.OnNext, _ => { }, () => { });
+                                                    return _observableSelector(t).Synchronize(locker).Finally(() => counter.Finally()).Subscribe(observer.OnNext, observer.OnError, () => { });
                                                 })
                                                 .Subscribe(_ => { }, observer.OnError, observer.OnCompleted);
 

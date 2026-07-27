@@ -72,6 +72,18 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
                         {
                             observer.OnNext(updates);
                         }
+                    },
+                    observer.OnError,
+                    () =>
+                    {
+                        // Anything still buffered would otherwise be lost, so flush before finishing.
+                        if (buffer.Count > 0)
+                        {
+                            observer.OnNext(buffer);
+                            buffer = [];
+                        }
+
+                        observer.OnCompleted();
                     });
 
                 var connected = bufferSelector.Connect();

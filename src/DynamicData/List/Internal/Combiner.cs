@@ -27,6 +27,14 @@ internal sealed class Combiner<T>(ICollection<IObservable<IChangeSet<T>>> source
 
                 var resultList = new ChangeAwareListWithRefCounts<T>();
 
+                // Merging semantics: the result finishes only once every source has.
+                var pending = _source.Count;
+                if (pending == 0)
+                {
+                    observer.OnCompleted();
+                    return disposable;
+                }
+
                 lock (_locker)
                 {
                     var sourceLists = Enumerable.Range(0, _source.Count).Select(_ => new ReferenceCountTracker<T>()).ToList();
@@ -43,6 +51,14 @@ internal sealed class Combiner<T>(ICollection<IObservable<IChangeSet<T>>> source
                                     if (notifications.Count != 0)
                                     {
                                         observer.OnNext(notifications);
+                                    }
+                                },
+                                observer.OnError,
+                                () =>
+                                {
+                                    if (Interlocked.Decrement(ref pending) == 0)
+                                    {
+                                        observer.OnCompleted();
                                     }
                                 }));
                     }

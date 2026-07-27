@@ -196,7 +196,9 @@ public static partial class ObservableListEx
     {
         comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
 
-        return source.MergeChangeSets(comparer);
+        // Named arguments are required: a lone IComparer<TObject> is an exact match for this method's own
+        // signature, so an unnamed call binds here again and recurses until the stack is exhausted.
+        return source.MergeChangeSets(equalityComparer: null, comparer: comparer);
     }
 
     /// <inheritdoc cref="MergeChangeSets{TObject, TKey}(IObservableList{IObservable{IChangeSet{TObject, TKey}}}, IComparer{TObject})"/>
