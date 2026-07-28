@@ -105,7 +105,6 @@ internal sealed class BindVirtualized<[DynamicallyAccessedMembers(DynamicallyAcc
                     comparerSubject.OnNext(changesWithContext.Context.Comparer);
                     changesSubject.OnNext(changesWithContext);
                 },
-                // 'subsequent' above relays the error. Without a handler here Rx would rethrow it as well.
                 static _ => { });
 
             return new CompositeDisposable(initial, subscriber, subsequent, shared.Connect());

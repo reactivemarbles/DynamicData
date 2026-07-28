@@ -276,9 +276,6 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                     ? _changes.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
                     : _changes;
 
-                // Finally would fire on failure as well, reporting a source error to the watcher as a
-                // successful completion, and without an error handler the exception would be rethrown
-                // out of the delivery instead of reaching the observer.
                 return changes.Subscribe(
                     changes =>
                     {

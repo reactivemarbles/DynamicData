@@ -62,8 +62,6 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
                             observer.OnNext(notifications);
                         }
                     })
-                    // The merge subscription above reports errors to the observer. Without a handler here Rx
-                    // would rethrow them out of the subscription as well.
                     .Subscribe(static _ => { }, static _ => { });
 
                 // when an list is added or removed, need to
@@ -83,8 +81,6 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
                             observer.OnNext(notifications);
                         }
                     })
-                    // The merge subscription above reports errors to the observer. Without a handler here Rx
-                    // would rethrow them out of the subscription as well.
                     .Subscribe(static _ => { }, static _ => { });
 
                 return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged, sharedLists.Connect(), queue);

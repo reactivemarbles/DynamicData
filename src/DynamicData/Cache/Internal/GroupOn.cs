@@ -34,8 +34,6 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
                 var published = groups.Merge(regroup).Publish();
                 var subscriber = published.SubscribeSafe(observer);
 
-                // The observer above already receives any error. Without a handler here Rx would rethrow it
-                // out of the subscription instead.
                 var disposer = published.DisposeMany().Subscribe(static _ => { }, static _ => { });
 
                 var connected = published.Connect();

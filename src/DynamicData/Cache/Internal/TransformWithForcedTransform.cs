@@ -20,8 +20,6 @@ internal sealed class TransformWithForcedTransform<TDestination, TSource, TKey>(
 
                 // capture all items so we can apply a forced transform
                 var cache = new Cache<TSource, TKey>();
-                // The transform subscription below reports errors to the observer. Without a handler here
-                // Rx would rethrow them out of this subscription as well.
                 var cacheLoader = shared.Subscribe(changes => cache.Clone(changes), static _ => { });
 
                 // create change set of items where force refresh is applied
