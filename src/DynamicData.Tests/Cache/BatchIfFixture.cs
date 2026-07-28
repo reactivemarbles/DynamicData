@@ -1,4 +1,5 @@
 using System;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -139,5 +140,39 @@ public class BatchIfFixture : IDisposable
         //go forward an arbitary amount of time
         _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
         _results.Messages.Count.Should().Be(1, "Should be 1 update");
+    }
+
+    [Fact]
+    public void EveryOverloadShapeResolves()
+    {
+        // Defaults on the parameters that tell the overloads apart made the two shortest of these
+        // ambiguous, so they did not compile at all. The assertion is almost incidental here: the
+        // point is that the method builds.
+        using var pause = new Subject<bool>();
+        using var timer = new Subject<Unit>();
+
+        using var pauseOnly = _source.Connect().BatchIf(pause).Subscribe();
+        using var withScheduler = _source.Connect().BatchIf(pause, _scheduler).Subscribe();
+        using var withInitialState = _source.Connect().BatchIf(pause, true).Subscribe();
+        using var withInitialStateAndScheduler = _source.Connect().BatchIf(pause, true, _scheduler).Subscribe();
+        using var withTimeOut = _source.Connect().BatchIf(pause, TimeSpan.FromSeconds(1)).Subscribe();
+        using var withTimeOutAndScheduler = _source.Connect().BatchIf(pause, TimeSpan.FromSeconds(1), _scheduler).Subscribe();
+        using var withInitialStateAndTimeOut = _source.Connect().BatchIf(pause, true, TimeSpan.FromSeconds(1)).Subscribe();
+        using var withTimer = _source.Connect().BatchIf(pause, true, timer).Subscribe();
+
+        _source.Invoking(source => source.AddOrUpdate(new Person("A", 1))).Should().NotThrow();
+    }
+
+    [Fact]
+    public void PauseSelectorOnlyStartsUnpaused()
+    {
+        // The shortest form has to keep delegating with initialPauseState false, rather than binding
+        // to an overload that starts paused.
+        using var pause = new Subject<bool>();
+        using var results = _source.Connect().BatchIf(pause).AsAggregator();
+
+        _source.AddOrUpdate(new Person("A", 1));
+
+        results.Data.Count.Should().Be(1, "nothing has asked for buffering yet");
     }
 }
