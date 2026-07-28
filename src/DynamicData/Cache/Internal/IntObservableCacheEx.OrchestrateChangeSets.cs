@@ -22,26 +22,26 @@ internal static partial class IntObservableCacheEx
     /// <param name="source">The keyed source changeset stream.</param>
     /// <param name="innerFactory">Builds the per-key inner observable from the source item and its key.</param>
     /// <param name="onSourceChange">Invoked once per source change with the output cache. The caller decides how the source event mutates the cache. Invoked before the corresponding inner subscription is created or torn down.</param>
-    /// <param name="onInner">Invoked once per inner emission with the output cache, source key, source item, and emitted value.</param>
+    /// <param name="onItemSourceNext">Invoked once per inner emission with the output cache, source key, source item, and emitted value.</param>
     /// <returns>An observable changeset where every emission is the captured changes from one drain cycle.</returns>
     public static IObservable<IChangeSet<TOutput, TKey>> OrchestrateChangeSets<TSource, TKey, TInner, TOutput>(
             this IObservable<IChangeSet<TSource, TKey>> source,
             Func<TSource, TKey, IObservable<TInner>> innerFactory,
             Action<ChangeAwareCache<TOutput, TKey>, Change<TSource, TKey>> onSourceChange,
-            Action<ChangeAwareCache<TOutput, TKey>, TKey, TSource, TInner> onInner)
+            Action<ChangeAwareCache<TOutput, TKey>, TKey, TSource, TInner> onItemSourceNext)
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull
         where TOutput : notnull =>
-        source.Orchestrate<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>, ChangeSetOrchestrator<TSource, TKey, TInner, TOutput>>(
-            (context, emitter) => new ChangeSetOrchestrator<TSource, TKey, TInner, TOutput>(context, emitter, innerFactory, onSourceChange, onInner));
+        source.OrchestrateSubscriptions<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>, ChangeSetOrchestrator<TSource, TKey, TInner, TOutput>>(
+            (context, emitter) => new ChangeSetOrchestrator<TSource, TKey, TInner, TOutput>(context, emitter, innerFactory, onSourceChange, onItemSourceNext));
 
     internal sealed class ChangeSetOrchestrator<TSource, TKey, TInner, TOutput>(
             ICacheOrchestratorContext<TKey, (TSource Item, TInner Value)> context,
             IObserver<IChangeSet<TOutput, TKey>> emitter,
             Func<TSource, TKey, IObservable<TInner>> innerFactory,
             Action<ChangeAwareCache<TOutput, TKey>, Change<TSource, TKey>> onSourceChange,
-            Action<ChangeAwareCache<TOutput, TKey>, TKey, TSource, TInner> onInner)
+            Action<ChangeAwareCache<TOutput, TKey>, TKey, TSource, TInner> onItemSourceNext)
         : CacheOrchestratorBase<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>>(context, emitter)
         where TSource : notnull
         where TKey : notnull
@@ -50,7 +50,7 @@ internal static partial class IntObservableCacheEx
     {
         private readonly ChangeAwareCache<TOutput, TKey> _cache = new();
 
-        public override void OnInner((TSource Item, TInner Value) value, TKey key) => onInner(_cache, key, value.Item, value.Value);
+        public override void OnItemSourceNext((TSource Item, TInner Value) value, TKey key) => onItemSourceNext(_cache, key, value.Item, value.Value);
 
         public override void OnDrainComplete(bool isFinal, bool wasReentrant)
         {

@@ -19,7 +19,7 @@ public sealed class ChangeSetOrchestratorFixture
     private sealed record Source(int Id);
 
     [Fact]
-    public void OnSourceChangeSet_InvokesOnSourceChangeForEachChange()
+    public void OnSourceNext_InvokesOnSourceChangeForEachChange()
     {
         var context = new FakeOrchestratorContext<int, (Source Item, string Value)>();
         var emitter = new CollectingObserver<IChangeSet<string, int>>();
@@ -29,9 +29,9 @@ public sealed class ChangeSetOrchestratorFixture
             context, emitter,
             innerFactory: (item, key) => Observable.Empty<string>(),
             onSourceChange: (cache, change) => reasons.Add(change.Reason),
-            onInner: (cache, key, item, value) => cache.AddOrUpdate(value, key));
+            onItemSourceNext: (cache, key, item, value) => cache.AddOrUpdate(value, key));
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Source, int>
+        orchestrator.OnSourceNext(new ChangeSet<Source, int>
         {
             new(ChangeReason.Add, 1, new Source(1)),
             new(ChangeReason.Refresh, 2, new Source(2)),
@@ -51,10 +51,10 @@ public sealed class ChangeSetOrchestratorFixture
             context, emitter,
             innerFactory: (item, key) => Observable.Empty<string>(),
             onSourceChange: (cache, change) => { },
-            onInner: (cache, key, item, value) => cache.AddOrUpdate(value, key));
+            onItemSourceNext: (cache, key, item, value) => cache.AddOrUpdate(value, key));
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, source) });
-        orchestrator.OnInner((source, "v"), 1);
+        orchestrator.OnSourceNext(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, source) });
+        orchestrator.OnItemSourceNext((source, "v"), 1);
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         emitter.Values.Should().HaveCount(1);
@@ -70,10 +70,10 @@ public sealed class ChangeSetOrchestratorFixture
             context, emitter,
             innerFactory: (item, key) => Observable.Empty<string>(),
             onSourceChange: (cache, change) => { },
-            onInner: (cache, key, item, value) => { });
+            onItemSourceNext: (cache, key, item, value) => { });
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, new Source(1)) });
-        orchestrator.OnSourceChangeSet(new ChangeSet<Source, int> { new(ChangeReason.Remove, 1, new Source(1)) });
+        orchestrator.OnSourceNext(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, new Source(1)) });
+        orchestrator.OnSourceNext(new ChangeSet<Source, int> { new(ChangeReason.Remove, 1, new Source(1)) });
 
         context.UntrackCalls.Should().Equal(new[] { 1 });
     }
@@ -87,9 +87,9 @@ public sealed class ChangeSetOrchestratorFixture
             context, emitter,
             innerFactory: (item, key) => Observable.Empty<string>(),
             onSourceChange: (cache, change) => { },
-            onInner: (cache, key, item, value) => { });
+            onItemSourceNext: (cache, key, item, value) => { });
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, new Source(1)) });
+        orchestrator.OnSourceNext(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, new Source(1)) });
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         emitter.Values.Should().BeEmpty("drain end with an empty ChangeAwareCache must not emit");

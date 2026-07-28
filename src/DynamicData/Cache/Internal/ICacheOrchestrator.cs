@@ -5,8 +5,8 @@
 namespace DynamicData.Cache.Internal;
 
 /// <summary>
-/// Contract for orchestrators driven by <c>Orchestrate</c>. A fresh instance is constructed
-/// per subscription (via the factory passed to <c>Orchestrate</c>), so per-subscription state
+/// Contract for orchestrators driven by <c>OrchestrateSubscriptions</c>. A fresh instance is constructed
+/// per subscription (via the factory passed to <c>OrchestrateSubscriptions</c>), so per-subscription state
 /// can live as fields with no isolation concerns.
 /// </summary>
 /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
@@ -22,14 +22,14 @@ internal interface ICacheOrchestrator<TSource, TKey, TInner, TResult>
     /// Invoked for each source changeset.
     /// </summary>
     /// <param name="changes">The source changeset.</param>
-    void OnSourceChangeSet(IChangeSet<TSource, TKey> changes);
+    void OnSourceNext(IChangeSet<TSource, TKey> changes);
 
     /// <summary>
     /// Invoked for each value emitted by a tracked inner observable, paired with its source key.
     /// </summary>
     /// <param name="value">The value emitted by the inner observable.</param>
     /// <param name="key">The source key the inner observable was registered against.</param>
-    void OnInner(TInner value, TKey key);
+    void OnItemSourceNext(TInner value, TKey key);
 
     /// <summary>
     /// Invoked at the end of each drain cycle of the shared delivery queue. Implementations that

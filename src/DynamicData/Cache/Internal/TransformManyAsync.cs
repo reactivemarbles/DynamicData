@@ -19,7 +19,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
     where TDestinationKey : notnull
 {
     public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() =>
-        source.Orchestrate<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>, Orchestrator>(
+        source.OrchestrateSubscriptions<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>, Orchestrator>(
             (context, emitter) => new Orchestrator(context, emitter, transformer, equalityComparer, comparer, errorHandler));
 
     internal sealed class Orchestrator : CacheOrchestratorBase<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
@@ -43,7 +43,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
             _tracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => _cache.Items, comparer, equalityComparer);
         }
 
-        public override void OnInner(IChangeSet<TDestination, TDestinationKey> child, TKey parentKey)
+        public override void OnItemSourceNext(IChangeSet<TDestination, TDestinationKey> child, TKey parentKey)
         {
             if (_cache.Lookup(parentKey) is { HasValue: true } entry)
             {

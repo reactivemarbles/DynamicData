@@ -21,7 +21,7 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
     public IObservable<IChangeSet<TObject, TKey>> Run()
     {
         var sched = buffer is null ? null : scheduler ?? GlobalConfig.DefaultScheduler;
-        return source.Orchestrate<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>, Orchestrator>(
+        return source.OrchestrateSubscriptions<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>, Orchestrator>(
             (context, emitter) => new Orchestrator(context, emitter, reEvaluator, buffer, sched));
     }
 
@@ -45,16 +45,16 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
 
         public void Dispose() => _timerSubscription.Dispose();
 
-        public override void OnSourceChangeSet(IChangeSet<TObject, TKey> changes)
+        public override void OnSourceNext(IChangeSet<TObject, TKey> changes)
         {
-            base.OnSourceChangeSet(changes);
+            base.OnSourceNext(changes);
             if (changes.Count > 0)
             {
                 Emitter.OnNext(changes);
             }
         }
 
-        public override void OnInner(Change<TObject, TKey> refresh, TKey key)
+        public override void OnItemSourceNext(Change<TObject, TKey> refresh, TKey key)
         {
             if (_sourceTouched.Contains(key))
             {

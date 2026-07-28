@@ -54,7 +54,7 @@ internal static partial class IntObservableCacheEx
     /// <param name="source">The keyed source changeset stream.</param>
     /// <param name="factory">Builds the per-subscription orchestrator from its runtime context and emitter.</param>
     /// <returns>An observable that orchestrates source and inner activity into a single result stream.</returns>
-    public static IObservable<TResult> Orchestrate<TSource, TKey, TInner, TResult, TOrch>(
+    public static IObservable<TResult> OrchestrateSubscriptions<TSource, TKey, TInner, TResult, TOrch>(
             this IObservable<IChangeSet<TSource, TKey>> source,
             Func<ICacheOrchestratorContext<TKey, TInner>, IObserver<TResult>, TOrch> factory)
         where TSource : notnull
@@ -74,35 +74,35 @@ internal static partial class IntObservableCacheEx
     /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
     /// <typeparam name="TResult">Type delivered downstream.</typeparam>
     /// <param name="source">The keyed source changeset stream.</param>
-    /// <param name="onSourceChangeSet">Invoked for each source changeset with the runtime context.</param>
-    /// <param name="onInner">Invoked for each value emitted by a tracked inner observable, with its key and the downstream emitter.</param>
+    /// <param name="onSourceNext">Invoked for each source changeset with the runtime context.</param>
+    /// <param name="onItemSourceNext">Invoked for each value emitted by a tracked inner observable, with its key and the downstream emitter.</param>
     /// <param name="onDrainComplete">Optional. Invoked once per drain cycle to flush aggregated state to the emitter. Defaults to a no-op.</param>
     /// <returns>An observable that orchestrates source and inner activity into a single result stream.</returns>
-    public static IObservable<TResult> Orchestrate<TSource, TKey, TInner, TResult>(
+    public static IObservable<TResult> OrchestrateSubscriptions<TSource, TKey, TInner, TResult>(
             this IObservable<IChangeSet<TSource, TKey>> source,
-            Action<IChangeSet<TSource, TKey>, ICacheOrchestratorContext<TKey, TInner>> onSourceChangeSet,
-            Action<TInner, TKey, IObserver<TResult>> onInner,
+            Action<IChangeSet<TSource, TKey>, ICacheOrchestratorContext<TKey, TInner>> onSourceNext,
+            Action<TInner, TKey, IObserver<TResult>> onItemSourceNext,
             Action<IObserver<TResult>>? onDrainComplete = null)
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull =>
-        source.Orchestrate<TSource, TKey, TInner, TResult, LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>>(
-            (context, emitter) => new LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(context, emitter, onSourceChangeSet, onInner, onDrainComplete));
+        source.OrchestrateSubscriptions<TSource, TKey, TInner, TResult, LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>>(
+            (context, emitter) => new LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(context, emitter, onSourceNext, onItemSourceNext, onDrainComplete));
 
     internal sealed class LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(
             ICacheOrchestratorContext<TKey, TInner> context,
             IObserver<TResult> emitter,
-            Action<IChangeSet<TSource, TKey>, ICacheOrchestratorContext<TKey, TInner>> onSourceChangeSet,
-            Action<TInner, TKey, IObserver<TResult>> onInner,
+            Action<IChangeSet<TSource, TKey>, ICacheOrchestratorContext<TKey, TInner>> onSourceNext,
+            Action<TInner, TKey, IObserver<TResult>> onItemSourceNext,
             Action<IObserver<TResult>>? onDrainComplete)
         : ICacheOrchestrator<TSource, TKey, TInner, TResult>
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull
     {
-        public void OnSourceChangeSet(IChangeSet<TSource, TKey> changes) => onSourceChangeSet(changes, context);
+        public void OnSourceNext(IChangeSet<TSource, TKey> changes) => onSourceNext(changes, context);
 
-        public void OnInner(TInner value, TKey key) => onInner(value, key, emitter);
+        public void OnItemSourceNext(TInner value, TKey key) => onItemSourceNext(value, key, emitter);
 
         public void OnDrainComplete(bool isFinal, bool wasReentrant) => onDrainComplete?.Invoke(emitter);
     }

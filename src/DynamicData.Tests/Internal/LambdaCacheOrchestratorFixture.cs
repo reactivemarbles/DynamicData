@@ -19,7 +19,7 @@ public sealed class LambdaCacheOrchestratorFixture
     private sealed record Item(int Id);
 
     [Fact]
-    public void OnSourceChangeSet_ForwardsChangesToLambda()
+    public void OnSourceNext_ForwardsChangesToLambda()
     {
         var context = new FakeOrchestratorContext<int, string>();
         var emitter = new CollectingObserver<int>();
@@ -27,18 +27,18 @@ public sealed class LambdaCacheOrchestratorFixture
 
         var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
             context, emitter,
-            onSourceChangeSet: (changes, _) => receivedChanges.Add(changes),
-            onInner: (value, key, _) => { },
+            onSourceNext: (changes, _) => receivedChanges.Add(changes),
+            onItemSourceNext: (value, key, _) => { },
             onDrainComplete: obs => { });
 
         var changeset = new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) };
-        orchestrator.OnSourceChangeSet(changeset);
+        orchestrator.OnSourceNext(changeset);
 
         receivedChanges.Should().ContainSingle().Which.Should().BeSameAs(changeset);
     }
 
     [Fact]
-    public void OnSourceChangeSet_ForwardsContextToLambda()
+    public void OnSourceNext_ForwardsContextToLambda()
     {
         var context = new FakeOrchestratorContext<int, string>();
         var emitter = new CollectingObserver<int>();
@@ -46,11 +46,11 @@ public sealed class LambdaCacheOrchestratorFixture
 
         var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
             context, emitter,
-            onSourceChangeSet: (_, ctx) => receivedContext = ctx,
-            onInner: (value, key, _) => { },
+            onSourceNext: (_, ctx) => receivedContext = ctx,
+            onItemSourceNext: (value, key, _) => { },
             onDrainComplete: obs => { });
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
 
         receivedContext.Should().BeSameAs(context, "the lambda overload forwards the captured context as-is");
     }
@@ -64,11 +64,11 @@ public sealed class LambdaCacheOrchestratorFixture
 
         var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
             context, emitter,
-            onSourceChangeSet: (_, _) => { },
-            onInner: (v, k, _) => received.Add((v, k)),
+            onSourceNext: (_, _) => { },
+            onItemSourceNext: (v, k, _) => received.Add((v, k)),
             onDrainComplete: _ => { });
 
-        orchestrator.OnInner("hello", 42);
+        orchestrator.OnItemSourceNext("hello", 42);
 
         received.Should().Equal(new[] { ("hello", 42) });
     }
@@ -82,13 +82,13 @@ public sealed class LambdaCacheOrchestratorFixture
 
         var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
             context, emitter,
-            onSourceChangeSet: (_, _) => { },
-            onInner: (_, _, em) => receivedEmitter = em,
+            onSourceNext: (_, _) => { },
+            onItemSourceNext: (_, _, em) => receivedEmitter = em,
             onDrainComplete: _ => { });
 
-        orchestrator.OnInner("hello", 42);
+        orchestrator.OnItemSourceNext("hello", 42);
 
-        receivedEmitter.Should().BeSameAs(emitter, "the lambda overload forwards the emitter as-is to onInner");
+        receivedEmitter.Should().BeSameAs(emitter, "the lambda overload forwards the emitter as-is to onItemSourceNext");
     }
 
     [Fact]
@@ -100,8 +100,8 @@ public sealed class LambdaCacheOrchestratorFixture
 
         var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
             context, emitter,
-            onSourceChangeSet: (_, _) => { },
-            onInner: (_, _, _) => { },
+            onSourceNext: (_, _) => { },
+            onItemSourceNext: (_, _, _) => { },
             onDrainComplete: obs => receivedObserver = obs);
 
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);

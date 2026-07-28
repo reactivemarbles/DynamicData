@@ -15,8 +15,8 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
     public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() =>
         Observable.Using(
             resourceFactory: () => new DynamicGrouper<TObject, TKey, TGroupKey>(),
-            observableFactory: grouper => source.Orchestrate<TObject, TKey, (TGroupKey GroupKey, TObject Item), IGroupChangeSet<TObject, TKey, TGroupKey>>(
-                onSourceChangeSet: (changes, context) =>
+            observableFactory: grouper => source.OrchestrateSubscriptions<TObject, TKey, (TGroupKey GroupKey, TObject Item), IGroupChangeSet<TObject, TKey, TGroupKey>>(
+                onSourceNext: (changes, context) =>
                 {
                     foreach (var change in changes.ToConcreteType())
                     {
@@ -36,6 +36,6 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
                         }
                     }
                 },
-                onInner: (value, parentKey, _) => grouper.AddOrUpdate(parentKey, value.GroupKey, value.Item),
+                onItemSourceNext: (value, parentKey, _) => grouper.AddOrUpdate(parentKey, value.GroupKey, value.Item),
                 onDrainComplete: observer => grouper.EmitChanges(observer)));
 }

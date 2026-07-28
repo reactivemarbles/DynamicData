@@ -16,8 +16,8 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
     {
         var cache = new ChangeAwareCache<TDestination, TKey>();
 
-        return source.Orchestrate<TSource, TKey, TDestination, IChangeSet<TDestination, TKey>>(
-            onSourceChangeSet: (changes, context) =>
+        return source.OrchestrateSubscriptions<TSource, TKey, TDestination, IChangeSet<TDestination, TKey>>(
+            onSourceNext: (changes, context) =>
             {
                 foreach (var change in changes.ToConcreteType())
                 {
@@ -47,7 +47,7 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
                     }
                 }
             },
-            onInner: (value, key, _) => cache.AddOrUpdate(value, key),
+            onItemSourceNext: (value, key, _) => cache.AddOrUpdate(value, key),
             onDrainComplete: observer =>
             {
                 var captured = cache.CaptureChanges();

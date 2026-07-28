@@ -34,12 +34,12 @@ public sealed class AutoRefreshOrchestratorFixture
             scheduler: null);
 
         var item = new Item(1);
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
         emitter.Values.Should().HaveCount(1);
 
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
-        orchestrator.OnInner(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
+        orchestrator.OnItemSourceNext(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         emitter.Values.Should().HaveCount(2, "unbuffered drain should flush the pending refresh");
@@ -58,8 +58,8 @@ public sealed class AutoRefreshOrchestratorFixture
             scheduler: null);
 
         var item = new Item(1);
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
-        orchestrator.OnInner(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
+        orchestrator.OnItemSourceNext(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         emitter.Values.Should().HaveCount(1, "the synchronous inner refresh on a source-touched key must be suppressed");
@@ -79,11 +79,11 @@ public sealed class AutoRefreshOrchestratorFixture
             scheduler: scheduler);
 
         var item = new Item(1);
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         var preInnerCount = emitter.Values.Count;
-        orchestrator.OnInner(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
+        orchestrator.OnItemSourceNext(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         emitter.Values.Count.Should().Be(preInnerCount,
@@ -103,11 +103,11 @@ public sealed class AutoRefreshOrchestratorFixture
             scheduler: scheduler);
 
         var item = new Item(1);
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         var preInnerCount = emitter.Values.Count;
-        orchestrator.OnInner(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
+        orchestrator.OnItemSourceNext(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
         orchestrator.OnDrainComplete(isFinal: true, wasReentrant: false);
 
         emitter.Values.Count.Should().Be(preInnerCount + 1,
@@ -127,13 +127,13 @@ public sealed class AutoRefreshOrchestratorFixture
             scheduler: null);
 
         var item = new Item(1);
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         var preInnerCount = emitter.Values.Count;
-        orchestrator.OnInner(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
+        orchestrator.OnItemSourceNext(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Remove, 1, item) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Remove, 1, item) });
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         context.UntrackCalls.Should().Contain(1);
@@ -163,15 +163,15 @@ public sealed class AutoRefreshOrchestratorFixture
             scheduler: scheduler);
 
         var item = new Item(1);
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, item) });
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
-        orchestrator.OnInner(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
+        orchestrator.OnItemSourceNext(new Change<Item, int>(ChangeReason.Refresh, 1, item), 1);
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         var preSourceRefreshCount = emitter.Values.Count;
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Refresh, 1, item) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Refresh, 1, item) });
         orchestrator.OnDrainComplete(isFinal: true, wasReentrant: false);
 
         emitter.Values.Count.Should().Be(preSourceRefreshCount + 1,

@@ -33,7 +33,7 @@ internal static partial class IntObservableCacheEx
         where TKey : notnull
         where TDest : notnull
         where TDestKey : notnull =>
-        source.Orchestrate<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>, MergedOrchestrator<TSource, TKey, TDest, TDestKey>>(
+        source.OrchestrateSubscriptions<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>, MergedOrchestrator<TSource, TKey, TDest, TDestKey>>(
             (context, emitter) => new MergedOrchestrator<TSource, TKey, TDest, TDestKey>(context, emitter, changeSetSelector, equalityComparer, comparer, reevalOnRefresh));
 
     /// <summary>
@@ -54,7 +54,7 @@ internal static partial class IntObservableCacheEx
         where TSource : notnull
         where TKey : notnull
         where TDest : notnull =>
-        source.Orchestrate<TSource, TKey, IChangeSet<TDest>, IChangeSet<TDest>, MergedListOrchestrator<TSource, TKey, TDest>>(
+        source.OrchestrateSubscriptions<TSource, TKey, IChangeSet<TDest>, IChangeSet<TDest>, MergedListOrchestrator<TSource, TKey, TDest>>(
             (context, emitter) => new MergedListOrchestrator<TSource, TKey, TDest>(context, emitter, changeSetSelector, equalityComparer));
 
     internal sealed class MergedOrchestrator<TSource, TKey, TDest, TDestKey> : CacheOrchestratorBase<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>>
@@ -82,7 +82,7 @@ internal static partial class IntObservableCacheEx
             _tracker = new ChangeSetMergeTracker<TDest, TDestKey>(() => _cache.Items, comparer, equalityComparer);
         }
 
-        public override void OnInner(IChangeSet<TDest, TDestKey> child, TKey parentKey)
+        public override void OnItemSourceNext(IChangeSet<TDest, TDestKey> child, TKey parentKey)
         {
             if (_cache.Lookup(parentKey) is { HasValue: true } entry)
             {
@@ -156,7 +156,7 @@ internal static partial class IntObservableCacheEx
             _equalityComparer = equalityComparer;
         }
 
-        public override void OnInner(IChangeSet<TDest> child, TKey parentKey)
+        public override void OnItemSourceNext(IChangeSet<TDest> child, TKey parentKey)
         {
             if (_entries.TryGetValue(parentKey, out var entry))
             {

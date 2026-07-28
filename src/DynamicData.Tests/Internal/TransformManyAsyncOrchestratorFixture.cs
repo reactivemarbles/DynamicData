@@ -33,7 +33,7 @@ public sealed class TransformManyAsyncOrchestratorFixture
             comparer: null,
             errorHandler: null);
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
 
         context.TrackCalls.Should().HaveCount(1);
         context.TrackCalls[0].Key.Should().Be(1);
@@ -52,8 +52,8 @@ public sealed class TransformManyAsyncOrchestratorFixture
             comparer: null,
             errorHandler: null);
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Remove, 1, new Item(1)) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Remove, 1, new Item(1)) });
 
         context.UntrackCalls.Should().Equal(new[] { 1 });
     }
@@ -71,8 +71,8 @@ public sealed class TransformManyAsyncOrchestratorFixture
             comparer: null,
             errorHandler: null);
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
-        orchestrator.OnInner(new ChangeSet<string, string> { new(ChangeReason.Add, "x", "value-x") }, 1);
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
+        orchestrator.OnItemSourceNext(new ChangeSet<string, string> { new(ChangeReason.Add, "x", "value-x") }, 1);
 
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
@@ -94,7 +94,7 @@ public sealed class TransformManyAsyncOrchestratorFixture
             comparer: null,
             errorHandler: err => capturedError = err);
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
 
         var trackedObs = context.Tracked[1];
         await trackedObs.DefaultIfEmpty().LastOrDefaultAsync();

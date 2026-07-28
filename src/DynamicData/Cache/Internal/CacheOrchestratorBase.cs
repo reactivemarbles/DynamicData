@@ -24,7 +24,7 @@ internal abstract class CacheOrchestratorBase<TSource, TKey, TInner, TResult>(
 
     protected IObserver<TResult> Emitter => emitter;
 
-    public virtual void OnSourceChangeSet(IChangeSet<TSource, TKey> changes)
+    public virtual void OnSourceNext(IChangeSet<TSource, TKey> changes)
     {
         foreach (var change in changes.ToConcreteType())
         {
@@ -49,7 +49,7 @@ internal abstract class CacheOrchestratorBase<TSource, TKey, TInner, TResult>(
         }
     }
 
-    public abstract void OnInner(TInner value, TKey key);
+    public abstract void OnItemSourceNext(TInner value, TKey key);
 
     public virtual void OnDrainComplete(bool isFinal, bool wasReentrant)
     {

@@ -22,7 +22,7 @@ using Xunit;
 namespace DynamicData.Tests.Internal;
 
 /// <summary>
-/// Behavioral contract tests for the <c>Orchestrate</c> primitive: source/inner serialization,
+/// Behavioral contract tests for the <c>OrchestrateSubscriptions</c> primitive: source/inner serialization,
 /// per-drain coalesced emission, completion counting, error propagation, and cross-cache safety.
 /// </summary>
 public sealed class OrchestrateFixture
@@ -43,7 +43,7 @@ public sealed class OrchestrateFixture
             Action? onChild = null)
     {
         TestOrchestrator? captured = null;
-        var observable = source.Orchestrate<TestItem, int, string, IChangeSet<TestItem, int>, TestOrchestrator>(
+        var observable = source.OrchestrateSubscriptions<TestItem, int, string, IChangeSet<TestItem, int>, TestOrchestrator>(
             (ctx, em) => captured = new TestOrchestrator(ctx, em, childFactory, onParent, onChild));
         return (observable, () => captured ?? throw new InvalidOperationException("Subscribe to the returned observable first."));
     }
@@ -64,7 +64,7 @@ public sealed class OrchestrateFixture
         foreach (var item in items)
             source.AddOrUpdate(item);
 
-        getOrchestrator().ParentCallCount.Should().Be(items.Count, "OnSourceChangeSet should fire once per changeset");
+        getOrchestrator().ParentCallCount.Should().Be(items.Count, "OnSourceNext should fire once per changeset");
         observer.EmitCount.Should().Be(items.Count, "Emit should fire after each parent update");
     }
 
@@ -109,7 +109,7 @@ public sealed class OrchestrateFixture
         });
 
         var orchestrator = getOrchestrator();
-        orchestrator.ParentCallCount.Should().Be(1, "single batch = single OnSourceChangeSet");
+        orchestrator.ParentCallCount.Should().Be(1, "single batch = single OnSourceNext");
         orchestrator.EmitCallCount.Should().Be(1, "single batch = single Emit");
     }
 
@@ -431,12 +431,12 @@ public sealed class OrchestrateFixture
         SpinWait.SpinUntil(
             () => { lock (orchestrator.ChildCalls) return orchestrator.ChildCalls.Count >= totalEmissions; },
             TimeSpan.FromSeconds(5))
-            .Should().BeTrue($"all {totalEmissions} emissions must reach OnInner within 5 seconds");
+            .Should().BeTrue($"all {totalEmissions} emissions must reach OnItemSourceNext within 5 seconds");
 
         lock (orchestrator.ChildCalls)
         {
             orchestrator.ChildCalls.Count.Should().Be(totalEmissions,
-                "every concurrent inner emission must reach OnInner; reentrant drain during emit must not drop items");
+                "every concurrent inner emission must reach OnItemSourceNext; reentrant drain during emit must not drop items");
         }
 
         foreach (var subj in innerSubjects.Values)
@@ -453,15 +453,15 @@ public sealed class OrchestrateFixture
         var emitCalls = 0;
         var contexts = new List<int>();
 
-        var observable = source.Connect().Orchestrate<TestItem, int, string, int>(
-            onSourceChangeSet: (changes, context) =>
+        var observable = source.Connect().OrchestrateSubscriptions<TestItem, int, string, int>(
+            onSourceNext: (changes, context) =>
             {
                 lock (contexts)
                 {
                     contexts.Add(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(context));
                 }
             },
-            onInner: (_, _, _) => { },
+            onItemSourceNext: (_, _, _) => { },
             onDrainComplete: _ => Interlocked.Increment(ref emitCalls));
 
         using var subA = observable.Subscribe();
@@ -509,7 +509,7 @@ public sealed class OrchestrateFixture
         public readonly List<bool> IsFinalLog = [];
         public readonly List<bool> WasReentrantLog = [];
 
-        public void OnSourceChangeSet(IChangeSet<TestItem, int> changes)
+        public void OnSourceNext(IChangeSet<TestItem, int> changes)
         {
             Interlocked.Increment(ref ParentCallCount);
             onParent?.Invoke();
@@ -527,7 +527,7 @@ public sealed class OrchestrateFixture
             }
         }
 
-        public void OnInner(string child, int parentKey)
+        public void OnItemSourceNext(string child, int parentKey)
         {
             onChild?.Invoke();
             ChildCalls.Add((child, parentKey));

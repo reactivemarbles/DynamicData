@@ -35,8 +35,8 @@ public sealed class MergedOrchestratorFixture
         var emitter = new CollectingObserver<IChangeSet<string, string>>();
         var orchestrator = Build(context, emitter);
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1, "a")) });
-        orchestrator.OnInner(new ChangeSet<string, string> { new(ChangeReason.Add, "key-1", "v") }, 1);
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1, "a")) });
+        orchestrator.OnItemSourceNext(new ChangeSet<string, string> { new(ChangeReason.Add, "key-1", "v") }, 1);
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         context.TrackCalls.Should().HaveCount(1);
@@ -51,8 +51,8 @@ public sealed class MergedOrchestratorFixture
         var emitter = new CollectingObserver<IChangeSet<string, string>>();
         var orchestrator = Build(context, emitter);
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1, "a")) });
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Remove, 1, new Item(1, "a")) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1, "a")) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Remove, 1, new Item(1, "a")) });
 
         context.UntrackCalls.Should().Contain(1, "Remove must propagate as Untrack on the orchestrator's context");
     }
@@ -64,10 +64,10 @@ public sealed class MergedOrchestratorFixture
         var emitter = new CollectingObserver<IChangeSet<string, string>>();
         var orchestrator = Build(context, emitter);
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1, "first")) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1, "first")) });
         var preTrackCount = context.TrackCalls.Count;
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Update, 1, new Item(1, "second"), new Item(1, "first")) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Update, 1, new Item(1, "second"), new Item(1, "first")) });
 
         context.TrackCalls.Count.Should().Be(preTrackCount + 1, "Update must re-Track with the new item's inner observable");
     }
@@ -79,13 +79,13 @@ public sealed class MergedOrchestratorFixture
         var emitter = new CollectingObserver<IChangeSet<string, string>>();
         var orchestrator = Build(context, emitter, reevalOnRefresh: false);
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1, "a")) });
-        orchestrator.OnInner(new ChangeSet<string, string> { new(ChangeReason.Add, "key-a", "v") }, 1);
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1, "a")) });
+        orchestrator.OnItemSourceNext(new ChangeSet<string, string> { new(ChangeReason.Add, "key-a", "v") }, 1);
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         var preCount = emitter.Values.Count;
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Refresh, 1, new Item(1, "a")) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Refresh, 1, new Item(1, "a")) });
         orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
 
         emitter.Values.Count.Should().Be(preCount, "Refresh with reevalOnRefresh=false must not emit");
@@ -98,7 +98,7 @@ public sealed class MergedOrchestratorFixture
         var emitter = new CollectingObserver<IChangeSet<string, string>>();
         var orchestrator = Build(context, emitter);
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int>
+        orchestrator.OnSourceNext(new ChangeSet<Item, int>
         {
             new(ChangeReason.Add, 1, new Item(1, "a")),
             new(ChangeReason.Add, 2, new Item(2, "b")),
@@ -107,7 +107,7 @@ public sealed class MergedOrchestratorFixture
         context.TrackCalls.Select(t => t.Key).Should().BeEquivalentTo(new[] { 1, 2 });
         context.Tracked.Keys.Should().BeEquivalentTo(new[] { 1, 2 });
 
-        orchestrator.OnSourceChangeSet(new ChangeSet<Item, int> { new(ChangeReason.Remove, 1, new Item(1, "a")) });
+        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Remove, 1, new Item(1, "a")) });
 
         context.UntrackCalls.Should().Equal(new[] { 1 });
         context.Tracked.Keys.Should().Equal(new[] { 2 }, "Remove on key 1 must not affect key 2");

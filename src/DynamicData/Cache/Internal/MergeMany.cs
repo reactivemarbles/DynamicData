@@ -26,8 +26,8 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
     }
 
     public IObservable<TDestination> Run() =>
-        _source.Orchestrate<TObject, TKey, TDestination, TDestination>(
-            onSourceChangeSet: (changes, context) =>
+        _source.OrchestrateSubscriptions<TObject, TKey, TDestination, TDestination>(
+            onSourceNext: (changes, context) =>
             {
                 foreach (var change in changes.ToConcreteType())
                 {
@@ -41,5 +41,5 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
                     }
                 }
             },
-            onInner: (value, _, emitter) => emitter.OnNext(value));
+            onItemSourceNext: (value, _, emitter) => emitter.OnNext(value));
 }

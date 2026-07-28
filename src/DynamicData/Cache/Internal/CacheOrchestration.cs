@@ -56,12 +56,11 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
                 _emitter = _queue.CreateQueue(observer);
 
                 _orchestrator = factory(this, _emitter);
-                Debug.Assert(_orchestrator is not null, "Factory must not return null");
 
                 _sourceSubscription.Disposable = source
                     .SynchronizeSafe(_queue)
                     .SubscribeSafe(
-                        onNext: OnSourceChangeSet,
+                        onNext: OnSourceNext,
                         onError: _emitter.OnError,
                         onCompleted: DecrementSubscriptionCount);
             }
@@ -111,7 +110,7 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
                 .SynchronizeSafe(_queue)
                 .Finally(DecrementSubscriptionCount)
                 .SubscribeSafe(
-                    onNext: value => OnInner(value, key),
+                    onNext: value => OnItemSourceNext(value, key),
                     onError: _emitter.OnError,
                     onCompleted: () => _innerSubscriptions.Remove(key));
         }
@@ -120,11 +119,11 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
 
         public IObservable<T> Serialize<T>(IObservable<T> observable) => observable.SynchronizeSafe(_queue);
 
-        private void OnSourceChangeSet(IChangeSet<TSource, TKey> changes)
+        private void OnSourceNext(IChangeSet<TSource, TKey> changes)
         {
             try
             {
-                _orchestrator.OnSourceChangeSet(changes);
+                _orchestrator.OnSourceNext(changes);
             }
             catch (Exception error)
             {
@@ -132,11 +131,11 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
             }
         }
 
-        private void OnInner(TInner value, TKey key)
+        private void OnItemSourceNext(TInner value, TKey key)
         {
             try
             {
-                _orchestrator.OnInner(value, key);
+                _orchestrator.OnItemSourceNext(value, key);
             }
             catch (Exception error)
             {

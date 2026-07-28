@@ -30,7 +30,7 @@ internal sealed class FilterOnObservable<TObject, TKey>(IObservable<IChangeSet<T
                     cache.Refresh(change.Key);
                 }
             },
-            onInner: static (cache, key, item, passes) =>
+            onItemSourceNext: static (cache, key, item, passes) =>
             {
                 if (passes)
                 {
