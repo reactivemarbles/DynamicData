@@ -28,18 +28,18 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
 
                 // Identifies the current source. A superseded one may still be mid-delivery, and anything
                 // it produces after this point belongs to a source that has already been switched away from.
-                var active = 0;
+                var activeSourceId = 0;
                 var isSourceRunning = false;
                 var areSourcesComplete = false;
 
-                var outer = _sources.Subscribe(
+                var outer = _sources.SubscribeSafe(
                     source =>
                     {
-                        int id;
+                        int sourceId;
 
                         using (var scope = queue.AcquireLock())
                         {
-                            id = ++active;
+                            sourceId = ++activeSourceId;
                             isSourceRunning = true;
 
                             if (current.Count != 0)
@@ -53,12 +53,12 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
 
                         // Subscribed outside the lock. The source may deliver synchronously, and that
                         // delivery takes the lock for itself.
-                        subscription.Disposable = source.Subscribe(
+                        subscription.Disposable = source.SubscribeSafe(
                             changes =>
                             {
                                 using var scope = queue.AcquireLock();
 
-                                if (id != active)
+                                if (sourceId != activeSourceId)
                                 {
                                     return;
                                 }
@@ -74,7 +74,7 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
                             {
                                 using var scope = queue.AcquireLock();
 
-                                if (id != active)
+                                if (sourceId != activeSourceId)
                                 {
                                     return;
                                 }
@@ -85,7 +85,7 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
                             {
                                 using var scope = queue.AcquireLock();
 
-                                if (id != active)
+                                if (sourceId != activeSourceId)
                                 {
                                     return;
                                 }
@@ -112,7 +112,13 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
                         }
                     });
 
-                // Queue first, so that delivery is finished before the subscriptions are torn down.
-                return new CompositeDisposable(queue, outer, subscription);
+                // Disposal order matters and CompositeDisposable does not specify one. The queue goes first
+                // so that any delivery in flight is finished before the subscriptions feeding it are torn down.
+                return Disposable.Create(() =>
+                {
+                    queue.Dispose();
+                    outer.Dispose();
+                    subscription.Dispose();
+                });
             });
 }

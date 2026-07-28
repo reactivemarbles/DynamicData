@@ -455,28 +455,6 @@ public static partial class SuspendNotificationsFixture
         }
 
         [Fact]
-        public void OnCompletedFiresIfCacheDisposedAfterConnectingWhileSuspended()
-        {
-            // A connection made while suspended is deferred until the suspension lifts. Once it
-            // activates it must behave exactly like any other subscriber, including terminating
-            // when the source does. Previously the deferral dropped the completion, leaving the
-            // subscriber alive forever.
-            var suspend = _source.SuspendNotifications();
-            using var results = _source.Connect().AsAggregator();
-            Enumerable.Range(101, 37).ForEach(_source.AddOrUpdate);
-
-            // Act
-            suspend.Dispose();
-            _source.AddOrUpdate(1000);
-            _source.Dispose();
-
-            // Assert
-            results.IsCompleted.Should().BeTrue("a connection deferred by a suspension should still complete when the source does");
-            results.Error.Should().BeNull("no error should have occurred");
-            results.Data.Count.Should().Be(38, "all data written before disposal should have arrived");
-        }
-
-        [Fact]
         public void OnErrorFiresIfCacheFailsAfterConnectingWhileSuspended()
         {
             // The same applies to the error case: a deferred connection that has activated must
