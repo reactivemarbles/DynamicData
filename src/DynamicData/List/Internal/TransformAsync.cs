@@ -10,23 +10,23 @@ internal sealed class TransformAsync<TSource, TDestination>
     where TSource : notnull
     where TDestination : notnull
 {
-    private readonly Func<TSource, Optional<TDestination>, int, Task<Transformer<TSource, TDestination>.TransformedItemContainer>> _containerFactory;
+    private readonly Func<TSource, Optional<TDestination>, int, CancellationToken, Task<Transformer<TSource, TDestination>.TransformedItemContainer>> _containerFactory;
 
     private readonly IObservable<IChangeSet<TSource>> _source;
     private readonly bool _transformOnRefresh;
 
     public TransformAsync(
         IObservable<IChangeSet<TSource>> source,
-        Func<TSource, Optional<TDestination>, int, Task<TDestination>> factory,
+        Func<TSource, Optional<TDestination>, int, CancellationToken, Task<TDestination>> factory,
         bool transformOnRefresh)
     {
         factory.ThrowArgumentNullExceptionIfNull(nameof(factory));
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _transformOnRefresh = transformOnRefresh;
-        _containerFactory = async (item, prev, index) =>
+        _containerFactory = async (item, prev, index, cancel) =>
         {
-            var destination = await factory(item, prev, index).ConfigureAwait(false);
+            var destination = await factory(item, prev, index, cancel).ConfigureAwait(false);
             return new Transformer<TSource, TDestination>.TransformedItemContainer(item, destination);
         };
     }
@@ -35,33 +35,59 @@ internal sealed class TransformAsync<TSource, TDestination>
 
     private IObservable<IChangeSet<TDestination>> RunImpl()
     {
-        var state = new ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>();
-        var asyncLock = new SemaphoreSlim(1, 1);
-
-        return _source.Select(async changes =>
-                {
-                    try
-                    {
-                        await asyncLock.WaitAsync();
-                        await Transform(state, changes);
-                        return state;
-                    }
-                    finally
-                    {
-                        asyncLock.Release();
-                    }
-                })
-            .Concat()
-            .Select(transformed =>
+        return Observable.Using(
+            () => new SemaphoreSlim(1, 1),
+            asyncLock =>
             {
-                var changed = transformed.CaptureChanges();
-                return changed.Transform(container => container.Destination);
+                var state = new ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>();
+
+                return _source.Select(changes => Observable.FromAsync(async cancel =>
+                        {
+                            // NOTE: lock outside of the try to avoid releasing another scope's lock if the token is canceled before we acquire the lock.
+                            try
+                            {
+                                await asyncLock.WaitAsync(cancel);
+                            }
+                            catch (Exception e) when (e is ObjectDisposedException)
+                            {
+                                return Optional.None<ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>>();
+                            }
+
+                            try
+                            {
+                                await Transform(state, changes, cancel);
+                                return Optional.Some(state);
+                            }
+                            finally
+                            {
+                                try
+                                {
+                                    // token is canceled when outer stream is disposed which is attached to the lock's lifetime.
+                                    if (!cancel.IsCancellationRequested)
+                                    {
+                                        asyncLock.Release();
+                                    }
+                                }
+                                catch (ObjectDisposedException)
+                                {
+                                    // outer stream was disposed during inner transform.
+                                }
+                            }
+                        }))
+                    .Concat()
+                    .SelectValues()
+                    .Select(transformed =>
+                    {
+                        var changed = transformed.CaptureChanges();
+                        return changed.Transform(container => container.Destination);
+                    });
             });
     }
 
     private async Task Transform(
         ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer> transformed,
-        IChangeSet<TSource> changes)
+        IChangeSet<TSource> changes,
+        CancellationToken cancel)
     {
         changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
 
@@ -78,7 +104,8 @@ internal sealed class TransformAsync<TSource, TDestination>
                                 await _containerFactory(
                                     item.Item.Current,
                                     Optional<TDestination>.None,
-                                    transformed.Count).ConfigureAwait(false);
+                                    transformed.Count,
+                                    cancel).ConfigureAwait(false);
                             transformed.Add(container);
                         }
                         else
@@ -87,7 +114,8 @@ internal sealed class TransformAsync<TSource, TDestination>
                                 await _containerFactory(
                                     item.Item.Current,
                                     Optional<TDestination>.None,
-                                    change.CurrentIndex).ConfigureAwait(false);
+                                    change.CurrentIndex,
+                                    cancel).ConfigureAwait(false);
                             transformed.Insert(change.CurrentIndex, container);
                         }
 
@@ -97,7 +125,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                 case ListChangeReason.AddRange:
                     {
                         var startIndex = item.Range.Index < 0 ? transformed.Count : item.Range.Index;
-                        var tasks = item.Range.Select((t, idx) => _containerFactory(t, Optional<TDestination>.None, idx + startIndex));
+                        var tasks = item.Range.Select((t, idx) => _containerFactory(t, Optional<TDestination>.None, idx + startIndex, cancel));
                         var containers = await Task.WhenAll(tasks).ConfigureAwait(false);
                         transformed.AddOrInsertRange(containers, item.Range.Index);
                         break;
@@ -109,7 +137,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                         if (_transformOnRefresh)
                         {
                             Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
-                            var container = await _containerFactory(change.Current, previous, change.CurrentIndex)
+                            var container = await _containerFactory(change.Current, previous, change.CurrentIndex, cancel)
                                 .ConfigureAwait(false);
                             transformed[change.CurrentIndex] = container;
                         }
@@ -128,12 +156,12 @@ internal sealed class TransformAsync<TSource, TDestination>
                         Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
                         if (change.CurrentIndex == change.PreviousIndex)
                         {
-                            transformed[change.CurrentIndex] = await _containerFactory(change.Current, previous, change.CurrentIndex);
+                            transformed[change.CurrentIndex] = await _containerFactory(change.Current, previous, change.CurrentIndex, cancel);
                         }
                         else
                         {
                             transformed.RemoveAt(change.PreviousIndex);
-                            transformed.Insert(change.CurrentIndex, await _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex));
+                            transformed.Insert(change.CurrentIndex, await _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex, cancel));
                         }
 
                         break;

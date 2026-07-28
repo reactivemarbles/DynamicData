@@ -25,16 +25,6 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
     </Description>
   </PropertyGroup>
 
-  <ItemGroup>
-
-    <!-- Group nested ObservableCacheEx.x.cs classes with ObservableCacheEx.cs -->
-    <Compile Remove="**\ObservableCacheEx.*.cs" />
-  
-    <Compile Include="**\ObservableCacheEx.*.cs">
-      <DependentUpon>ObservableCacheEx.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
   <!-- AsyncDisposeMany is only supported on platforms that have IAsyncDisposable. -->
   <ItemGroup Condition="!$(DefineConstants.Contains('SUPPORTS_ASYNC_DISPOSABLE'))">
     <Compile Remove="Cache\ObservableCacheEx.AsyncDisposeMany.cs" />
