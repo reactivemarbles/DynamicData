@@ -1,14 +1,4 @@
-#if SUPPORTS_BINDINGLIST
-
-using System;
-using System.ComponentModel;
-using System.Linq;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+﻿#if SUPPORTS_BINDINGLIST
 
 namespace DynamicData.Tests.Binding
 {
@@ -61,8 +51,6 @@ namespace DynamicData.Tests.Binding
             _collection.Count.Should().Be(0, "Should be 100 items in the collection");
         }
 
-
-        
         [Fact]
         public void Refresh()
         {
@@ -82,7 +70,6 @@ namespace DynamicData.Tests.Binding
             args.ListChangedType.Should().Be(ListChangedType.ItemChanged);
             args.NewIndex.Should().Be(10);
         }
-
 
         [Fact]
         public void RemoveSourceRemovesFromTheDestination()

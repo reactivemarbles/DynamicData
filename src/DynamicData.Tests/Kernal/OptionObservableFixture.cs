@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using DynamicData.Kernel;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Kernal;
+﻿namespace DynamicData.Tests.Kernal;
 
 public class OptionObservableFixture
 {

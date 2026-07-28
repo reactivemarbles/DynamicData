@@ -1,12 +1,4 @@
-using System;
-using System.Linq;
-
-using DynamicData.Aggregation;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
+﻿using DynamicData.Aggregation;
 
 namespace DynamicData.Tests.AggregationTests;
 

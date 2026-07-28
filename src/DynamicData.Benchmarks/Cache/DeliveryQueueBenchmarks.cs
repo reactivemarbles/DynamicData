@@ -1,16 +1,6 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-
-using System;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using BenchmarkDotNet.Attributes;
-
-using DynamicData.Binding;
 
 namespace DynamicData.Benchmarks.Cache;
 

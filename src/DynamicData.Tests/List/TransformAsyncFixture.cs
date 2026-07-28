@@ -1,13 +1,4 @@
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 [Obsolete("Not obsolete - test commented out due to test run freezing on Appveyor")]
 public class TransformAsyncFixture : IDisposable

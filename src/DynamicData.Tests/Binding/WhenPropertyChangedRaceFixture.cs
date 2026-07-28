@@ -2,23 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using DynamicData.Binding;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Binding;
 
 /// <summary>
@@ -315,10 +298,10 @@ public sealed class WhenPropertyChangedRaceFixture
 
             await Task.WhenAll(adder, flipper).WaitAsync(ConditionTimeout);
 
-            var expected = items.Select(x => x.Id).ToHashSet();
-            WaitForCondition(() => results.Data.Keys.ToHashSet().SetEquals(expected));
+            var expected = Enumerable.ToHashSet(items.Select(x => x.Id));
+            WaitForCondition(() => Enumerable.ToHashSet(results.Data.Keys).SetEquals(expected));
 
-            var actual = results.Data.Keys.ToHashSet();
+            var actual = Enumerable.ToHashSet(results.Data.Keys);
             actual.Should().BeEquivalentTo(expected, $"iter {iter}: every item ends Activated=true and must appear in the filter (missing: {string.Join(",", expected.Except(actual))})");
             results.Error.Should().BeNull($"iter {iter}: pipeline must not error");
         }
@@ -365,10 +348,10 @@ public sealed class WhenPropertyChangedRaceFixture
 
             foreach (var item in items) cache.AddOrUpdate(item);
 
-            var expected = items.Select(x => x.Id).ToHashSet();
-            WaitForCondition(() => results.Data.Keys.ToHashSet().SetEquals(expected));
+            var expected = Enumerable.ToHashSet(items.Select(x => x.Id));
+            WaitForCondition(() => Enumerable.ToHashSet(results.Data.Keys).SetEquals(expected));
 
-            var actual = results.Data.Keys.ToHashSet();
+            var actual = Enumerable.ToHashSet(results.Data.Keys);
             actual.Should().BeEquivalentTo(expected, $"iter {iter}: every item was flipped to Activated=true by the mutator and must appear in the filter (missing: {string.Join(",", expected.Except(actual))})");
             results.Error.Should().BeNull($"iter {iter}: pipeline must not error");
         }

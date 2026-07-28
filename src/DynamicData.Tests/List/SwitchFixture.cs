@@ -1,12 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class SwitchFixture : IDisposable
 {

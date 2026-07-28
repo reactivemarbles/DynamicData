@@ -1,12 +1,4 @@
-﻿using System;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class ListCreationFixtures
 {

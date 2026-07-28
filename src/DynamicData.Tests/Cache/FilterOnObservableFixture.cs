@@ -1,15 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Microsoft.Reactive.Testing;
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 /// <summary>
 /// Test Fixture for the FilterOnObservable extension method.

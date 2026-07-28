@@ -1,15 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-using DynamicData.Kernel;
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class ToObservableOptionalFixture : IDisposable
 {
@@ -306,4 +295,3 @@ public class ToObservableOptionalFixture : IDisposable
         public string Value { get; } = value;
     }
 }
-

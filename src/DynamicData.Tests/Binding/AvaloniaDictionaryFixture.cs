@@ -1,17 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-
-using  DynamicData.Binding;
-using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
-
-namespace DynamicData.Tests.Binding;
+﻿namespace DynamicData.Tests.Binding;
 
 public class AvaloniaDictionaryFixture
 {
@@ -51,7 +38,6 @@ public class AvaloniaDictionaryFixture
         _results.Data.Items[0].Should().Be(person2);
     }
 
-
     [Fact]
     public void Remove()
     {
@@ -64,7 +50,6 @@ public class AvaloniaDictionaryFixture
     }
 }
 
-
 public interface IAvaloniaDictionary<TKey, TValue>
     : IDictionary<TKey, TValue>,
         IAvaloniaReadOnlyDictionary<TKey, TValue>,
@@ -73,7 +58,6 @@ public interface IAvaloniaDictionary<TKey, TValue>
 {
 }
 
-
 public interface IAvaloniaReadOnlyDictionary<TKey, TValue>
     : IReadOnlyDictionary<TKey, TValue>,
         INotifyCollectionChanged,
@@ -81,7 +65,6 @@ public interface IAvaloniaReadOnlyDictionary<TKey, TValue>
     where TKey : notnull
 {
 }
-
 
 /*
   Copied from Avalionia because an issue was raised due to compatibility issues with ToObservableChangeSet().
@@ -202,7 +185,6 @@ public class AvaloniaDictionary<TKey, TValue> : IAvaloniaDictionary<TKey, TValue
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(CommonPropertyNames.IndexerName));
 
-
         if (CollectionChanged != null)
         {
             var e = new NotifyCollectionChangedEventArgs(
@@ -293,7 +275,6 @@ public class AvaloniaDictionary<TKey, TValue> : IAvaloniaDictionary<TKey, TValue
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs($"{CommonPropertyNames.IndexerName}[{key}]"));
-
 
         if (CollectionChanged != null)
         {

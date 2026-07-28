@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net462;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -12,8 +12,32 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="DynamicData.Kernel" />
+    <Using Include="DynamicData.Binding" />
+    <Using Include="DynamicData.Cache" />
+    <Using Include="DynamicData.Cache.Internal" />
+    <Using Include="DynamicData.Diagnostics" />
     <Using Include="DynamicData.Internal" />
+    <Using Include="DynamicData.Kernel" />
+    <Using Include="DynamicData.List.Internal" />
+    <Using Include="DynamicData.List.Linq" />
+    <Using Include="DynamicData.Operators" />
+    <Using Include="System.Collections" />
+    <Using Include="System.Collections.Concurrent" />
+    <Using Include="System.Collections.ObjectModel" />
+    <Using Include="System.Collections.Specialized" />
+    <Using Include="System.ComponentModel" />
+    <Using Include="System.Diagnostics" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.Linq.Expressions" />
+    <Using Include="System.Numerics" />
+    <Using Include="System.Reactive" />
+    <Using Include="System.Reactive.Concurrency" />
+    <Using Include="System.Reactive.Disposables" />
+    <Using Include="System.Reactive.Linq" />
+    <Using Include="System.Reactive.Subjects" />
+    <Using Include="System.Reactive.Threading.Tasks" />
+    <Using Include="System.Reflection" />
+    <Using Include="System.Runtime.CompilerServices" />
   </ItemGroup>
 
   <PropertyGroup>

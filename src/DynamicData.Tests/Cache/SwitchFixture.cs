@@ -1,14 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class SwitchFixture
 {
@@ -18,7 +8,6 @@ public class SwitchFixture
         using var source = new SourceCache<Person, string>(p => p.Name);
         using var switchable = new BehaviorSubject<ISourceCache<Person, string>>(source);
         var results = switchable.Switch().AsAggregator();
-
 
         var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
         source.AddOrUpdate(inital);
@@ -45,7 +34,6 @@ public class SwitchFixture
         using var switchable = new BehaviorSubject<ISourceCache<Person, string>>(source);
         var results = switchable.Switch().AsAggregator();
 
-
         var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
         source.AddOrUpdate(inital);
 
@@ -58,7 +46,6 @@ public class SwitchFixture
         using var source = new SourceCache<Person, string>(p => p.Name);
         using var switchable = new BehaviorSubject<ISourceCache<Person, string>>(source);
         var results = switchable.Switch().AsAggregator();
-
 
         var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
         source.AddOrUpdate(inital);
@@ -75,7 +62,6 @@ public class SwitchFixture
         using var source = new SourceCache<Person, string>(p => p.Name);
         using var switchable = new BehaviorSubject<IObservable<IChangeSet<Person, string>>>(source.Connect());
         var results = switchable.Switch().AsAggregator();
-
 
         var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
         source.AddOrUpdate(inital);

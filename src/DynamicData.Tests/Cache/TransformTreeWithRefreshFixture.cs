@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-using DynamicData.Binding;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class TransformTreeWithRefreshFixture : IDisposable
 {

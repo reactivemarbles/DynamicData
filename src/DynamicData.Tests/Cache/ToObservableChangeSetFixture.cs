@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public static partial class ToObservableChangeSetFixture
 {

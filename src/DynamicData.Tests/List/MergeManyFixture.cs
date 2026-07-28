@@ -1,12 +1,4 @@
-using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class MergeManyFixture : IDisposable
 {

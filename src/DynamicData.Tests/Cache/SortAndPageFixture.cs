@@ -1,15 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
-using DynamicData.Binding;
-using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public sealed class SortAndPageWithComparerChangesFixture : SortAndPageFixtureBase
 {
@@ -87,7 +76,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
 
     protected readonly ChangeSetAggregator<Person, string, PageContext<Person>> Aggregator;
 
-
     protected SortAndPageFixtureBase()
     {
         // It's ok in this case to call VirtualMemberCallInConstructor
@@ -98,9 +86,7 @@ public abstract class SortAndPageFixtureBase : IDisposable
 #pragma warning restore CA2214
     }
 
-
     protected abstract ChangeSetAggregator<Person, string, PageContext<Person>> SetUpTests();
-
 
     [Fact]
     public void InitialBatches()
@@ -112,7 +98,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.Should().BeEquivalentTo(expectedResult);
-
 
         PageRequests.OnNext(new PageRequest(3, 25));
 
@@ -127,8 +112,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
     [Fact]
     public void ThrowsForNegativeSizeParameters() => Assert.Throws<ArgumentException>(() => PageRequests.OnNext(new PageRequest(1, -1)));
 
-
-
     [Fact]
     public void PageGreaterThanNumberOfPagesAvailable()
     {
@@ -142,7 +125,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.Should().BeEquivalentTo(expectedResult);
     }
-
 
     [Fact]
     public void OverlappingShift()
@@ -189,7 +171,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         actualResult.SequenceEqual(expectedResult).Should().Be(true);
     }
 
-
     [Fact]
     public void AddOutsideOfRange()
     {
@@ -202,7 +183,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
 
         // only the initials message should have been received
         Aggregator.Messages.Count.Should().Be(1);
-
 
         people.Add(person);
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
@@ -224,7 +204,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
 
         var changes = Aggregator.Messages[1];
         changes.Count.Should().Be(2);
-
 
         var firstChange = changes.First();
         firstChange.Reason.Should().Be(ChangeReason.Remove);
@@ -271,8 +250,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         actualResult.SequenceEqual(expectedResult).Should().Be(true);
     }
 
-
-
     [Fact]
     public void UpdateOutOfRange()
     {
@@ -290,7 +267,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.SequenceEqual(expectedResult).Should().Be(true);
     }
-
 
     [Fact]
     public void RemoveRange()
@@ -340,7 +316,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.SequenceEqual(expectedResult).Should().Be(true);
     }
-
 
     [Fact]
     public void RefreshInRange()
@@ -409,7 +384,6 @@ public abstract class SortAndPageFixtureBase : IDisposable
         var secondChange = changes.Skip(1).First();
         secondChange.Reason.Should().Be(ChangeReason.Add);
         secondChange.Current.Should().Be(new Person("P026", 26));
-
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);

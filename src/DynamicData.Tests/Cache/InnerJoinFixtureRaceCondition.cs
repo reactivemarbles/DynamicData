@@ -1,10 +1,4 @@
-using System;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class InnerJoinFixtureRaceCondition
 {

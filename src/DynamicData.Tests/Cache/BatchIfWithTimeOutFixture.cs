@@ -1,17 +1,4 @@
-using System;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class BatchIfWithTimeoutFixture : IDisposable
 {

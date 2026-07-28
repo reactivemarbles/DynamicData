@@ -1,15 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class VirtualisationFixture : IDisposable
 {
@@ -129,7 +118,6 @@ public class VirtualisationFixture : IDisposable
 
         _results.Data.Items.Should().BeEquivalentTo(expected);
     }
-
 
     [Fact]
     public void DoesNotThrowWithDuplicates()

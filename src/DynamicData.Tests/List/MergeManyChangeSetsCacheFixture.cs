@@ -1,20 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-using Bogus;
-using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public sealed class MergeManyChangeSetsCacheFixture : IDisposable
 {
@@ -47,7 +31,6 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         _marketFaker = Fakers.Market.WithSeed(_randomizer);
         _marketListResults = _marketList.Connect().AsAggregator();
     }
-
 
     [Theory]
     [InlineData(5, 7)]

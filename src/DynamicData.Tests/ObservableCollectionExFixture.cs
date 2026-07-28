@@ -1,13 +1,4 @@
-﻿
-using System.Collections.ObjectModel;
-using DynamicData.Binding;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests;
+﻿namespace DynamicData.Tests;
 
 public class ObservableCollectionExFixture
 {
@@ -34,7 +25,6 @@ public class ObservableCollectionExFixture
         var one = changeSet.Lookup("One").Value;
         one.Should().BeEquivalentTo(_person1);
     }
-
 
     [Fact]
     public void ReplacingAnItemWithSameProducesUpdate()

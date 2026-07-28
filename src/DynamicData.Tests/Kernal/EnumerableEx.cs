@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public static class EnumerableEx
 {

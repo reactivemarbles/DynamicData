@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public static partial class AutoRefreshFixture
 {

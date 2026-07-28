@@ -1,12 +1,4 @@
-using System;
-using System.Linq;
-using System.Reactive.Disposables;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class SubscribeManyFixture : IDisposable
 {

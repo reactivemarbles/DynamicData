@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reactive.Subjects;
-
-namespace DynamicData.Tests.Domain;
+﻿namespace DynamicData.Tests.Domain;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Acceptable in test.")]
 public class PersonObs(string name, int age, string gender = "F", string? parentName = null) : IEquatable<PersonObs>

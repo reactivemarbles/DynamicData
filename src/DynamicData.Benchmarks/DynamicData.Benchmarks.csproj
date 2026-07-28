@@ -5,9 +5,28 @@
     <TargetFramework>net9.0</TargetFramework>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <IsPackable>false</IsPackable>
+    <ImplicitUsings>enable</ImplicitUsings>
     <NoWarn>;1591;1701;1702;1705;CA1822;CA1001</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Using Include="BenchmarkDotNet.Attributes" />
+    <Using Include="BenchmarkDotNet.Columns" />
+    <Using Include="BenchmarkDotNet.Configs" />
+    <Using Include="BenchmarkDotNet.Jobs" />
+    <Using Include="BenchmarkDotNet.Running" />
+    <Using Include="Bogus" />
+    <Using Include="DynamicData.Binding" />
+    <Using Include="DynamicData.Kernel" />
+    <Using Include="System.Collections.Immutable" />
+    <Using Include="System.Collections.ObjectModel" />
+    <Using Include="System.ComponentModel" />
+    <Using Include="System.Reactive.Disposables" />
+    <Using Include="System.Reactive.Linq" />
+    <Using Include="System.Reactive.Subjects" />
+    <Using Include="System.Reflection" />
+    <Using Include="System.Runtime.CompilerServices" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="*" />

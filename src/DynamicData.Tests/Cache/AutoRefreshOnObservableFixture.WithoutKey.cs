@@ -1,12 +1,4 @@
-using System;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-
-using FluentAssertions;
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public static partial class AutoRefreshOnObservableFixture
 {

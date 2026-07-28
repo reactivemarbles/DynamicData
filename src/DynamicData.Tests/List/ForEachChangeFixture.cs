@@ -1,14 +1,4 @@
-using System;
-using System.Collections.Generic;
-
-using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class ForEachChangeFixture : IDisposable
 {

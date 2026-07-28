@@ -1,21 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Management;
-using System.Reflection;
-using System.Threading.Channels;
-
-using Argon;
-
-using Bogus;
-
-using FluentAssertions;
-
-using Xunit;
-using Xunit.Abstractions;
-using Xunit.Sdk;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class ChangeSetFixture
 {

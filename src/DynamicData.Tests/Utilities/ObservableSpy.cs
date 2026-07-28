@@ -1,12 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
-using Xunit.Abstractions;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 internal static class ObservableSpy
 {

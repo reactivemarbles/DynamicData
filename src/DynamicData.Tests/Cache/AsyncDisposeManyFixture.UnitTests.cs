@@ -1,19 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Cache.Internal;
-using DynamicData.Kernel;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public static partial class AsyncDisposeManyFixture
 {
@@ -42,7 +27,6 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-        
             // Addition
             var items = new List<ItemBase>()
             {
@@ -72,7 +56,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
 
-
             // Movement
             items.Move(2, 0, items[2]);
             items.Move(2, 1, items[2]);
@@ -95,7 +78,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.Error.Should().BeNull();
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // Refreshing
             source.OnNext(new ChangeSet<ItemBase, int>(items
@@ -150,7 +132,6 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-
             source.AddOrUpdate(new[]
             {
                 ItemBase.Create(type: itemType, id: 1, version: 1),
@@ -166,7 +147,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.Error.Should().BeNull();
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             var items = source.Items.ToArray();
             source.Clear();
@@ -213,7 +193,6 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-
             source.AddOrUpdate(new[]
             {
                 ItemBase.Create(type: itemType, id: 1, version: 1),
@@ -229,7 +208,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.Error.Should().BeNull();
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             var previousItems = source.Items.ToArray();
             source.AddOrUpdate(new[]
@@ -278,7 +256,6 @@ public static partial class AsyncDisposeManyFixture
                 ? Observable.Return(changeSet)
                 : new Subject<IChangeSet<ImmediateAsyncDisposableItem, int>>();
 
-
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
             using var subscription = source
@@ -292,7 +269,6 @@ public static partial class AsyncDisposeManyFixture
                 .RecordCacheItems(out var results);
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
-
 
             if (source is Subject<IChangeSet<ImmediateAsyncDisposableItem, int>> subject)
             {
@@ -334,7 +310,6 @@ public static partial class AsyncDisposeManyFixture
                     .Concat(Observable.Throw<IChangeSet<ImmediateAsyncDisposableItem, int>>(error))
                 : new Subject<IChangeSet<ImmediateAsyncDisposableItem, int>>();
 
-
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
             using var subscription = source
@@ -348,7 +323,6 @@ public static partial class AsyncDisposeManyFixture
                 .RecordCacheItems(out var results);
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
-
 
             if (source is Subject<IChangeSet<ImmediateAsyncDisposableItem, int>> subject)
             {
