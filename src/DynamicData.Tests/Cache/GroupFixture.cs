@@ -308,4 +308,30 @@ public class GroupFixture : IDisposable
 
         error.Should().BeOfType<InvalidOperationException>();
     }
+
+    [Fact]
+    public void DeliversTerminalEventsFromTheResultGroupSource()
+    {
+        var completed = false;
+
+        using (var source = new Subject<IChangeSet<Person, string>>())
+        using (var groups = new Subject<IDistinctChangeSet<int>>())
+        using (source.Group(p => p.Age, groups).Subscribe(_ => { }, () => completed = true))
+        {
+            groups.OnCompleted();
+        }
+
+        completed.Should().BeTrue("no group can appear once the result group source is finished");
+
+        Exception? error = null;
+
+        using (var source = new Subject<IChangeSet<Person, string>>())
+        using (var groups = new Subject<IDistinctChangeSet<int>>())
+        using (source.Group(p => p.Age, groups).Subscribe(_ => { }, ex => error = ex, () => { }))
+        {
+            groups.OnError(new InvalidOperationException("boom"));
+        }
+
+        error.Should().BeOfType<InvalidOperationException>();
+    }
 }
