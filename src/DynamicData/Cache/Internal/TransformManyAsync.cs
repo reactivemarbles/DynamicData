@@ -24,7 +24,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
 
     internal sealed class Orchestrator : CacheOrchestratorBase<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
     {
-        private readonly Cache<ChangeSetCache<TDestination, TDestinationKey>, TKey> _cache = new();
+        private readonly Cache<ChangeSetMirror<TDestination, TDestinationKey>, TKey> _cache = new();
         private readonly ChangeSetMergeTracker<TDestination, TDestinationKey> _tracker;
         private readonly Func<TSource, TKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> _transformer;
         private readonly Action<Error<TSource, TKey>>? _errorHandler;
@@ -80,7 +80,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
 
         private void SubscribeChild(TSource item, TKey key)
         {
-            var entry = new ChangeSetCache<TDestination, TDestinationKey>(BuildInner(item, key));
+            var entry = new ChangeSetMirror<TDestination, TDestinationKey>(BuildInner(item, key));
             _cache.AddOrUpdate(entry, key);
             Context.Track(key, entry.Source);
         }

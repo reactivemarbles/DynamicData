@@ -63,7 +63,7 @@ internal static partial class IntObservableCacheEx
         where TDest : notnull
         where TDestKey : notnull
     {
-        private readonly Cache<ChangeSetCache<TDest, TDestKey>, TKey> _cache = new();
+        private readonly Cache<ChangeSetMirror<TDest, TDestKey>, TKey> _cache = new();
         private readonly ChangeSetMergeTracker<TDest, TDestKey> _tracker;
         private readonly Func<TSource, TKey, IObservable<IChangeSet<TDest, TDestKey>>> _changeSetSelector;
         private readonly bool _reevalOnRefresh;
@@ -129,7 +129,7 @@ internal static partial class IntObservableCacheEx
 
         private void SubscribeChild(TSource item, TKey key)
         {
-            var entry = new ChangeSetCache<TDest, TDestKey>(_changeSetSelector(item, key).IgnoreSameReferenceUpdate());
+            var entry = new ChangeSetMirror<TDest, TDestKey>(_changeSetSelector(item, key).IgnoreSameReferenceUpdate());
             _cache.AddOrUpdate(entry, key);
             Context.Track(key, entry.Source);
         }

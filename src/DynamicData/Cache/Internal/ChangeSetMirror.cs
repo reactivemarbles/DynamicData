@@ -5,12 +5,14 @@
 namespace DynamicData.Cache.Internal;
 
 /// <summary>
-/// Holds an observable changeset alongside an aggregated mirror cache.
-/// <see cref="Process"/> applies a changeset to <see cref="Cache"/>.
+/// Pairs a child changeset stream with a live mirror of the items it currently holds.
+/// Merge operators keep one of these per child so they can answer "what does this child
+/// hold right now?" when resolving a key that more than one child publishes.
+/// <see cref="Process"/> applies an incoming changeset to <see cref="Cache"/>.
 /// </summary>
 /// <typeparam name="TObject">ChangeSet Object Type.</typeparam>
 /// <typeparam name="TKey">ChangeSet Key Type.</typeparam>
-internal sealed class ChangeSetCache<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source)
+internal sealed class ChangeSetMirror<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source)
     where TObject : notnull
     where TKey : notnull
 {

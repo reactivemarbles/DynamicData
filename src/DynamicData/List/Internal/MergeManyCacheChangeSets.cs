@@ -21,7 +21,7 @@ internal sealed class MergeManyCacheChangeSets<TObject, TDestination, TDestinati
         observer =>
         {
             var locker = InternalEx.NewLock();
-            var list = new List<ChangeSetCache<TDestination, TDestinationKey>>();
+            var list = new List<ChangeSetMirror<TDestination, TDestinationKey>>();
             var parentUpdate = false;
 
             // This is manages all of the changes
@@ -29,7 +29,7 @@ internal sealed class MergeManyCacheChangeSets<TObject, TDestination, TDestinati
 
             // Transform to a list changeset of child caches, synchronize, update the local copy, and publish.
             var shared = source
-                .Transform(obj => new ChangeSetCache<TDestination, TDestinationKey>(changeSetSelector(obj).Synchronize(locker)))
+                .Transform(obj => new ChangeSetMirror<TDestination, TDestinationKey>(changeSetSelector(obj).Synchronize(locker)))
                 .Synchronize(locker)
                 .Do(list.Clone)
                 .Do(_ => parentUpdate = true)
