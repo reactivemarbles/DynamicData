@@ -67,6 +67,7 @@ These instruction files are living documentation. **They must be kept in sync wi
 - When an **operator's behavior changes**, update its table in the instruction file.
 - When a **new test utility** is added, update the test utilities reference in the main instructions and the appropriate `testing-*.instructions.md`.
 - When a **new domain type** is added to `Tests/Domain/`, add it to the Domain Types section.
+- When a **namespace is added to or removed from** `Directory.Build.props` or a csproj `<Using>` block, update the Usings and Namespaces section.
 
 ## Repository Structure
 
@@ -88,6 +89,48 @@ src/
 │   ├── List/                       # List operator tests
 │   └── Domain/                     # Test domain types using Bogus fakers
 ```
+
+## Usings and Namespaces
+
+**Do not add `using` directives to source files.** Every project has `ImplicitUsings` enabled and declares its namespaces through `<Using>` items in MSBuild. New code should compile against the namespaces that are already in scope.
+
+Where the declarations live:
+
+| File | What it declares |
+|---|---|
+| `src/Directory.Build.props` | Namespaces every project needs: `DynamicData.Binding`, `DynamicData.Kernel`, `System.Reactive.Linq`, `System.Reactive.Disposables`, `System.Reactive.Subjects`, `System.Collections.ObjectModel`, `System.ComponentModel`, `System.Reflection`, `System.Runtime.CompilerServices` |
+| `src/DynamicData/DynamicData.csproj` | The rest of what the library needs: `DynamicData.Cache`, `DynamicData.Internal`, `DynamicData.List.Internal`, `DynamicData.Operators`, `System.Numerics`, etc. |
+| `src/DynamicData.Tests/DynamicData.Tests.csproj` | The rest of what the tests need: `Xunit`, `FluentAssertions`, `Bogus`, `DynamicData.Tests.Domain`, `DynamicData.Tests.Utilities`, etc. |
+| `src/DynamicData.Benchmarks/DynamicData.Benchmarks.csproj` | The rest of what the benchmarks need: `BenchmarkDotNet.*`, `System.Collections.Immutable`, etc. |
+
+If you need a namespace that is not already global, add a `<Using Include="..." />` to the project file that needs it. Put it in `Directory.Build.props` only when all three projects need it. Never add the `using` to the source file.
+
+Note that the internals namespaces (`DynamicData.Internal`, `DynamicData.Cache.Internal`) are declared in the library and the tests but deliberately not in the benchmarks project, which has no `InternalsVisibleTo`.
+
+### The exception: opt-in namespaces
+
+Four namespaces **must** stay as file-level `using` directives:
+
+| Namespace | Why it stays local |
+|---|---|
+| `DynamicData.Alias` | Provides `Select`, `SelectMany`, `SelectSafe`, `SelectTree` and `Where` as aliases for DynamicData operators. Importing it changes what LINQ-looking code means. |
+| `DynamicData.PLinq` | Provides `Filter`, `Transform`, `TransformSafe` and `SubscribeMany` as *parallel* implementations under the same names as the core operators. Importing it silently swaps the sequential operator for a parallel one. |
+| `DynamicData.Aggregation` | Provides `Count`, `Sum`, `Avg`, `Maximum`, `Minimum`, `StdDev` and friends, several of which overlap with Rx and LINQ names. |
+| `DynamicData.Experimental` | Provides `AsWatcher`. Nothing shadows here, but the API is explicitly unstable, so a call site should have to opt in visibly. |
+
+The first three would change the behaviour of every file in the project if made global, without anything at the call site to signal it. A reader has to be able to see at the top of the file that `Transform` is the parallel version and not the ordinary one.
+
+If new code needs one of these, add the `using` to that file and only that file.
+
+### Name collisions
+
+Globalising namespaces can make a previously unambiguous name ambiguous. When that happens, qualify the call site or add a global alias. Do not solve it by moving the namespace back into the file.
+
+Cases already handled, so you do not trip over them again:
+
+- `Notification<T>` exists in both `System.Reactive` and `DynamicData.Internal`. Test utilities that want the Rx one write `System.Reactive.Notification<T>`.
+- `ToHashSet()` is offered by both `DynamicData.Kernel.EnumerableEx` and `System.Linq.Enumerable`. Call `Enumerable.ToHashSet(...)` explicitly.
+- `Bogus.Person` collides with `DynamicData.Tests.Domain.Person`. The tests project pins the name with `<Using Include="DynamicData.Tests.Domain.Person" Alias="Person" />`, so a bare `Person` is always the domain type. Write `Bogus.Person` if you ever need the other one.
 
 ## Operator Architecture Pattern
 
