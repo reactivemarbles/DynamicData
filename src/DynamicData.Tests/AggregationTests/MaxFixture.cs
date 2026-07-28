@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive.Subjects;
 
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
@@ -6,11 +7,6 @@ using DynamicData.Tests.Domain;
 using FluentAssertions;
 
 using Xunit;
-using System.Collections.Generic;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using DynamicData.Binding;
 
 namespace DynamicData.Tests.AggregationTests;
 

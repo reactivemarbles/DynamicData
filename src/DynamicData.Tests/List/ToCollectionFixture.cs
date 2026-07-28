@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
-using FluentAssertions;
-using Xunit;
-using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
+using Xunit;
 
 namespace DynamicData.Tests.List;
 
