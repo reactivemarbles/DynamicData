@@ -2,7 +2,10 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive;
 using System.Reactive.Disposables;
+
+using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -33,6 +36,15 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
             return Disposable.Empty;
         }
 
+        // Each source updates shared state under _locker, but delivery has to be serialized too:
+        // without this, two sources can compute their notifications, leave the lock, and then both
+        // be inside updatedCallback at the same time. The queue takes the notification while the
+        // lock is held and drains it after the lock is released, so deliveries stay ordered and
+        // one at a time without a subscriber being able to block a producer.
+        var queue = new DeliveryQueue<IChangeSet<TObject, TKey>>(
+            _locker,
+            Observer.Create(updatedCallback, onError, onCompleted));
+
         // subscribe
         var disposable = new CompositeDisposable();
         lock (_locker)
@@ -43,19 +55,23 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
             foreach (var pair in source.Zip(_sourceCaches, (item, cache) => new { Item = item, Cache = cache }))
             {
                 var subscription = pair.Item.Subscribe(
-                    updates => Update(pair.Cache, updates),
-                    onError,
+                    updates => Update(queue, pair.Cache, updates),
+                    queue.OnError,
                     () =>
                     {
                         if (Interlocked.Decrement(ref pending) == 0)
                         {
-                            onCompleted();
+                            queue.OnCompleted();
                         }
                     });
 
                 disposable.Add(subscription);
             }
         }
+
+        // Queue last: the subscriptions are torn down first, so any terminal notification still in
+        // flight is delivered through a queue that is still running.
+        disposable.Add(queue);
 
         return disposable;
     }
@@ -91,22 +107,19 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
         }
     }
 
-    private void Update(Cache<TObject, TKey> cache, IChangeSet<TObject, TKey> updates)
+    private void Update(DeliveryQueue<IChangeSet<TObject, TKey>> queue, Cache<TObject, TKey> cache, IChangeSet<TObject, TKey> updates)
     {
-        ChangeSet<TObject, TKey> notifications;
+        using var scope = queue.AcquireLock();
 
-        lock (_locker)
-        {
-            // update cache for the individual source
-            cache.Clone(updates);
+        // update cache for the individual source
+        cache.Clone(updates);
 
-            // update combined
-            notifications = UpdateCombined(updates);
-        }
+        // update combined
+        var notifications = UpdateCombined(updates);
 
         if (notifications.Count != 0)
         {
-            updatedCallback(notifications);
+            scope.EnqueueNext(notifications);
         }
     }
 
