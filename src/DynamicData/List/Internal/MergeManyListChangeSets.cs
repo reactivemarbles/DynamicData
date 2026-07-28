@@ -47,8 +47,6 @@ internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable
                     changeTracker.EmitChanges(observer);
                     parentUpdate = false;
                 })
-                // The subscription above already reports errors to the observer. Without a handler here Rx
-                // would rethrow them out of the subscription as well.
                 .Subscribe(static _ => { }, static _ => { });
 
             return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove);
