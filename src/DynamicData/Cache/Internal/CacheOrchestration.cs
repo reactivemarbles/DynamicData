@@ -35,8 +35,8 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
     {
         private readonly KeyedDisposable<TKey> _innerSubscriptions = new();
         private readonly SingleAssignmentDisposable _sourceSubscription = new();
-        private readonly SharedDeliveryQueue _queue;
-        private readonly DeliverySubQueue<TResult> _emitter;
+        private readonly SharedDeliveryQueue _upstreamQueue;
+        private readonly DeliverySubQueue<TResult> _innerQueue;
         private readonly TOrch _orchestrator = default!;
         private int _subscriptionCounter = 1;   // Includes the source subscription, so starts at 1 and not 0.
         private int _completionEmitted;
@@ -47,29 +47,29 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
                 IObserver<TResult> observer,
                 Func<ICacheOrchestratorContext<TKey, TInner>, IObserver<TResult>, TOrch> factory)
         {
-            _queue = new SharedDeliveryQueue(onDrainComplete: OnDrainComplete);
+            _upstreamQueue = new SharedDeliveryQueue(onDrainComplete: OnDrainComplete);
 
             try
             {
                 // Emitter sub-queue is allocated first so it drains last (LIFO); source-triggered
                 // sync inner emissions land on later-indexed queues and deliver before it.
-                _emitter = _queue.CreateQueue(observer);
+                _innerQueue = _upstreamQueue.CreateQueue(observer);
 
-                _orchestrator = factory(this, _emitter);
+                _orchestrator = factory(this, _innerQueue);
 
                 _sourceSubscription.Disposable = source
-                    .SynchronizeSafe(_queue)
+                    .SynchronizeSafe(_upstreamQueue)
                     .SubscribeSafe(
                         onNext: OnSourceNext,
-                        onError: _emitter.OnError,
+                        onError: _innerQueue.OnError,
                         onCompleted: DecrementSubscriptionCount);
             }
             catch
             {
                 _sourceSubscription.Dispose();
                 _innerSubscriptions.Dispose();
-                _queue.Dispose();
-                _emitter?.Dispose();
+                _upstreamQueue.Dispose();
+                _innerQueue?.Dispose();
                 (_orchestrator as IDisposable)?.Dispose();
                 throw;
             }
@@ -88,8 +88,8 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
             // a terminating queue.
             _sourceSubscription.Dispose();
             _innerSubscriptions.Dispose();
-            _queue.Dispose();
-            _emitter.Dispose();
+            _upstreamQueue.Dispose();
+            _innerQueue.Dispose();
             (_orchestrator as IDisposable)?.Dispose();
         }
 
@@ -107,17 +107,17 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
             // onCompleted only fires on normal completion, so a subscription disposed by Track
             // replacing it (or by Dispose) does not trigger Remove from inside.
             container.Disposable = observable!
-                .SynchronizeSafe(_queue)
+                .SynchronizeSafe(_upstreamQueue)
                 .Finally(DecrementSubscriptionCount)
                 .SubscribeSafe(
                     onNext: value => OnItemSourceNext(value, key),
-                    onError: _emitter.OnError,
+                    onError: _innerQueue.OnError,
                     onCompleted: () => _innerSubscriptions.Remove(key));
         }
 
         public void Untrack(TKey key) => _innerSubscriptions.Remove(key);
 
-        public IObservable<T> Serialize<T>(IObservable<T> observable) => observable.SynchronizeSafe(_queue);
+        public IObservable<T> Serialize<T>(IObservable<T> observable) => observable.SynchronizeSafe(_upstreamQueue);
 
         private void OnSourceNext(IChangeSet<TSource, TKey> changes)
         {
@@ -127,7 +127,7 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
             }
             catch (Exception error)
             {
-                _emitter.OnError(error);
+                _innerQueue.OnError(error);
             }
         }
 
@@ -139,7 +139,7 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
             }
             catch (Exception error)
             {
-                _emitter.OnError(error);
+                _innerQueue.OnError(error);
             }
         }
 
@@ -155,7 +155,7 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
             }
             catch (Exception error)
             {
-                _emitter.OnError(error);
+                _innerQueue.OnError(error);
                 return;
             }
 
@@ -163,7 +163,7 @@ internal sealed class CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(
             // don't complete. CAS ensures exactly one OnCompleted across repeated drains seeing 0.
             if (Volatile.Read(ref _subscriptionCounter) == 0 && Interlocked.CompareExchange(ref _completionEmitted, 1, 0) == 0)
             {
-                _emitter.OnCompleted();
+                _innerQueue.OnCompleted();
             }
         }
 
