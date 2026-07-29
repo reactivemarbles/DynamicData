@@ -26,6 +26,12 @@ namespace DynamicData;
 public static partial class ObservableCacheEx
 {
     /// <inheritdoc cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
+    /// <remarks>This overload delegates to the primary overload with <c>initialPauseState: false</c> and no scheduler.</remarks>
+    public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector)
+        where TObject : notnull
+        where TKey : notnull => BatchIf(source, pauseIfTrueSelector, false, (IScheduler?)null);
+
+    /// <inheritdoc cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
     /// <remarks>This overload delegates to the primary overload with <c>initialPauseState: false</c>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, IScheduler? scheduler = null)
         where TObject : notnull

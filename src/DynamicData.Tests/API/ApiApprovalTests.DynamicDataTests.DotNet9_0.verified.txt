@@ -1,4 +1,4 @@
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Profile")]
+﻿[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Profile")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.ReactiveUI")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Tests")]
 [assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v9.0", FrameworkDisplayName=".NET 9.0")]
@@ -1148,6 +1148,9 @@ namespace DynamicData
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Batch<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.TimeSpan timeSpan, System.Reactive.Concurrency.IScheduler? scheduler = null)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, System.Reactive.Concurrency.IScheduler? scheduler = null)
