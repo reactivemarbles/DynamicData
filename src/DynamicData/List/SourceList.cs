@@ -37,7 +37,7 @@ public sealed class SourceList<T> : ISourceList<T>
     private readonly ReaderWriter<T> _readerWriter = new();
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposal is superfluous after completion, and causes a bunch of test failures")]
-    private readonly BehaviorSubject<bool> _isEditInProgress;
+    private readonly Lazy<BehaviorSubject<bool>> _isEditInProgress;
 
     private int _editLevel;
 
@@ -47,7 +47,7 @@ public sealed class SourceList<T> : ISourceList<T>
     /// <param name="source">The source.</param>
     public SourceList(IObservable<IChangeSet<T>>? source = null)
     {
-        _isEditInProgress = new(false);
+        _isEditInProgress = new(() => new(_editLevel is not 0));
 
         var loader = source is null ? Disposable.Empty : LoadFromSource(source);
 
@@ -87,16 +87,16 @@ public sealed class SourceList<T> : ISourceList<T>
         {
             lock (_locker)
             {
-                var observable = !_isEditInProgress.Value
+                var observable = _isEditInProgress.IsValueCreated || (_editLevel is not 0)
 
-                    // Create the Connection Observable
-                    ? CreateConnectObservable(predicate)
-
-                    // Defer until notifications are no longer suspended
-                    : _isEditInProgress
+                    // Defer connection until there is no longer an in-progress edit.
+                    ? _isEditInProgress.Value
                         .Where(static isEditInProgress => !isEditInProgress)
                         .Take(1)
-                        .SelectMany(_ => CreateConnectObservable(predicate));
+                        .SelectMany(_ => CreateConnectObservable(predicate))
+
+                    // Otherwise, just connect immediately, and avoid forcing the edit-tracking system to initialize.
+                    : CreateConnectObservable(predicate);
 
                 return observable.SubscribeSafe(observer);
             }
@@ -123,7 +123,8 @@ public sealed class SourceList<T> : ISourceList<T>
             IChangeSet<T>? changes = null;
 
             _editLevel++;
-            _isEditInProgress.OnNext(_editLevel is not 0);
+            if (_isEditInProgress.IsValueCreated && (_editLevel is 1))
+                _isEditInProgress.Value.OnNext(true);
             try
             {
                 try
@@ -149,7 +150,8 @@ public sealed class SourceList<T> : ISourceList<T>
             }
             finally
             {
-                _isEditInProgress.OnNext(_editLevel is not 0);
+                if (_isEditInProgress.IsValueCreated && (_editLevel is 0))
+                    _isEditInProgress.Value.OnNext(false);
             }
         }
     }
@@ -236,7 +238,8 @@ public sealed class SourceList<T> : ISourceList<T>
         {
             _changesPreview.OnCompleted();
             _changes.OnCompleted();
-            _isEditInProgress.OnCompleted();
+            if (_isEditInProgress.IsValueCreated)
+                _isEditInProgress.Value.OnCompleted();
         }
     }
 
@@ -246,7 +249,8 @@ public sealed class SourceList<T> : ISourceList<T>
         {
             _changesPreview.OnError(exception);
             _changes.OnError(exception);
-            _isEditInProgress.OnError(exception);
+            if (_isEditInProgress.IsValueCreated)
+                _isEditInProgress.Value.OnError(exception);
         }
     }
 }
