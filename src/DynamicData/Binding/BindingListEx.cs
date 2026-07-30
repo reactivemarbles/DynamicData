@@ -1,14 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Reactive;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 /// <summary>
 /// Extensions to convert an binding list into a dynamic stream.
@@ -34,7 +33,7 @@ public static class BindingListEx
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this BindingList<T> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return ToObservableChangeSet<BindingList<T>, T>(source);
     }
@@ -55,8 +54,8 @@ public static class BindingListEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return ToObservableChangeSet<BindingList<TObject>, TObject>(source).AddKey(keySelector);
     }
@@ -74,7 +73,7 @@ public static class BindingListEx
         where TCollection : IBindingList, IEnumerable<T>
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return Observable.Create<IChangeSet<T>>(
             observer =>
@@ -133,12 +132,18 @@ public static class BindingListEx
             });
     }
 
+    /// <summary>
+    /// Executes the Clone operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="changes">The changes value.</param>
     internal static void Clone<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this BindingList<T> source, IEnumerable<Change<T>> changes)
         where T : notnull
     {
         // ** Copied from ListEx for binding list specific changes
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(changes);
 
         foreach (var item in changes)
         {
@@ -146,6 +151,13 @@ public static class BindingListEx
         }
     }
 
+    /// <summary>
+    /// Executes the Clone operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="item">The item value.</param>
+    /// <param name="equalityComparer">The equalityComparer value.</param>
     private static void Clone<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this BindingList<T> source, Change<T> item, IEqualityComparer<T> equalityComparer)
         where T : notnull
     {

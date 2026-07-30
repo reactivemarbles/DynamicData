@@ -1,23 +1,34 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+#if REACTIVE_SHIM
 
-using DynamicData.Internal;
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
+/// <summary>
+/// Provides members for the ObservablePropertyFactory class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TProperty">The type of the TProperty value.</typeparam>
 internal sealed class ObservablePropertyFactory<TObject, TProperty>
     where TObject : INotifyPropertyChanged
 {
+    /// <summary>
+    /// The _factory field.
+    /// </summary>
     private readonly Func<TObject, bool, IObservable<PropertyValue<TObject, TProperty>>> _factory;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ObservablePropertyFactory{TObject, TProperty}"/> class.
+    /// </summary>
+    /// <param name="valueAccessor">The valueAccessor value.</param>
+    /// <param name="chain">The chain value.</param>
     public ObservablePropertyFactory(Func<TObject, TProperty> valueAccessor, ObservablePropertyPart[] chain)
     {
         // chain is leaf-first (output of SplitIntoSteps). Reverse once to root-to-leaf order.
@@ -26,6 +37,10 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             observer => new DeepChainSubscription(observer, source, rootToLeaf, valueAccessor, notifyInitial));
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ObservablePropertyFactory{TObject, TProperty}"/> class.
+    /// </summary>
+    /// <param name="expression">The expression value.</param>
     public ObservablePropertyFactory(Expression<Func<TObject, TProperty>> expression)
     {
         // Shallow form: single property, no chain. Used when depth == 1. Skips SharedDeliveryQueue
@@ -37,8 +52,13 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             observer => new SinglePropertySubscription(observer, source, memberName, accessor, notifyInitial));
     }
 
+    /// <summary>
+    /// Executes the Create operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="notifyInitial">The notifyInitial value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<PropertyValue<TObject, TProperty>> Create(TObject source, bool notifyInitial) => _factory(source, notifyInitial);
-
     // Single-property subscription. Attaches a direct PropertyChanged handler and forwards every
     // event through a DeliveryQueue. Used for x => x.Prop (depth == 1) where SharedDeliveryQueue
     // and Observable.FromEventPattern would be needless overhead on the hot path.
@@ -47,13 +67,40 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
     // is no equality dedup at the subscribe seam: a same-valued PropertyChanged firing in the
     // subscribe window is a legitimate event and must be delivered. The "never drop events"
     // contract takes precedence over avoiding a benign duplicate.
-    private sealed class SinglePropertySubscription : IDisposable
+
+/// <summary>
+/// Provides members for the SinglePropertySubscription class.
+/// </summary>
+private sealed class SinglePropertySubscription : IDisposable
     {
+        /// <summary>
+        /// The _source field.
+        /// </summary>
         private readonly TObject _source;
+
+        /// <summary>
+        /// The _memberName field.
+        /// </summary>
         private readonly string _memberName;
+
+        /// <summary>
+        /// The _accessor field.
+        /// </summary>
         private readonly Func<TObject, TProperty> _accessor;
+
+        /// <summary>
+        /// The _queue field.
+        /// </summary>
         private readonly DeliveryQueue<PropertyValue<TObject, TProperty>> _queue;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SinglePropertySubscription"/> class.
+        /// </summary>
+        /// <param name="observer">The observer value.</param>
+        /// <param name="source">The source value.</param>
+        /// <param name="memberName">The memberName value.</param>
+        /// <param name="accessor">The accessor value.</param>
+        /// <param name="notifyInitial">The notifyInitial value.</param>
         public SinglePropertySubscription(
             IObserver<PropertyValue<TObject, TProperty>> observer,
             TObject source,
@@ -75,12 +122,20 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             }
         }
 
+        /// <summary>
+        /// Executes the Dispose operation.
+        /// </summary>
         public void Dispose()
         {
             _source.PropertyChanged -= OnPropertyChanged;
             _queue.Dispose();
         }
 
+        /// <summary>
+        /// Executes the OnPropertyChanged operation.
+        /// </summary>
+        /// <param name="sender">The sender value.</param>
+        /// <param name="args">The args value.</param>
         private void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
         {
             if (args.PropertyName == _memberName)
@@ -88,12 +143,15 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
                 EmitCurrent();
             }
         }
-
         // Reads the current property value and forwards it through the queue. The accessor is
         // user code and may throw; that exception routes to OnError. The downstream OnNext call
         // is NOT wrapped: per the Rx contract, if the user observer throws, the exception
         // propagates back to whoever invoked the PropertyChanged setter, matching what a plain
-        // Subject<T>.OnNext would do.
+        // Signal<T>.OnNext would do.
+
+        /// <summary>
+        /// Executes the EmitCurrent operation.
+        /// </summary>
         private void EmitCurrent()
         {
             PropertyValue<TObject, TProperty> value;
@@ -110,7 +168,6 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             _queue.OnNext(value);
         }
     }
-
     // Deep-chain subscription. Encapsulates the SharedDeliveryQueue + sub-queues + per-level
     // SerialDisposable slots so fields are assigned in well-defined order and the signal sub-queue
     // never needs a forward null bootstrap.
@@ -137,25 +194,75 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
     // notifyInitial only controls whether ProcessSignal emits the current chain value during
     // the InitialSetupSignal pass. There is no equality dedup at the subscribe seam: every
     // chain event is delivered.
-    private sealed class DeepChainSubscription : IDisposable
+
+/// <summary>
+/// Provides members for the DeepChainSubscription class.
+/// </summary>
+private sealed class DeepChainSubscription : IDisposable
     {
         // Sentinel signal value enqueued during subscribe to perform the initial chain setup
         // from inside the SharedDeliveryQueue drainer.
+
+        /// <summary>
+        /// The InitialSetupSignal field.
+        /// </summary>
         private const int InitialSetupSignal = -1;
 
+        /// <summary>
+        /// The _source field.
+        /// </summary>
         private readonly TObject _source;
-        private readonly ObservablePropertyPart[] _rootToLeaf;
-        private readonly Func<TObject, TProperty> _valueAccessor;
-        private readonly bool _notifyInitial;
-        private readonly SharedDeliveryQueue _sharedQueue;
-        private readonly DeliverySubQueue<PropertyValue<TObject, TProperty>> _userSub;
-        private readonly DeliverySubQueue<int> _signalSub;
-        private readonly SerialDisposable[] _levelSlots;
 
+        /// <summary>
+        /// The _rootToLeaf field.
+        /// </summary>
+        private readonly ObservablePropertyPart[] _rootToLeaf;
+
+        /// <summary>
+        /// The _valueAccessor field.
+        /// </summary>
+        private readonly Func<TObject, TProperty> _valueAccessor;
+
+        /// <summary>
+        /// The _notifyInitial field.
+        /// </summary>
+        private readonly bool _notifyInitial;
+
+        /// <summary>
+        /// The _sharedQueue field.
+        /// </summary>
+        private readonly SharedDeliveryQueue _sharedQueue;
+
+        /// <summary>
+        /// The _userSub field.
+        /// </summary>
+        private readonly DeliverySubQueue<PropertyValue<TObject, TProperty>> _userSub;
+
+        /// <summary>
+        /// The _signalSub field.
+        /// </summary>
+        private readonly DeliverySubQueue<int> _signalSub;
+
+        /// <summary>
+        /// The _levelSlots field.
+        /// </summary>
+        private readonly SerialDisposable[] _levelSlots;
         // Pre-allocated per-level notifier callbacks. Indexed by level. ResubscribeFrom reuses
         // these instead of allocating a fresh closure per re-walk.
+
+        /// <summary>
+        /// The _levelCallbacks field.
+        /// </summary>
         private readonly Action<Unit>[] _levelCallbacks;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DeepChainSubscription"/> class.
+        /// </summary>
+        /// <param name="observer">The observer value.</param>
+        /// <param name="source">The source value.</param>
+        /// <param name="rootToLeaf">The rootToLeaf value.</param>
+        /// <param name="valueAccessor">The valueAccessor value.</param>
+        /// <param name="notifyInitial">The notifyInitial value.</param>
         public DeepChainSubscription(
             IObserver<PropertyValue<TObject, TProperty>> observer,
             TObject source,
@@ -194,6 +301,9 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             _signalSub.OnNext(InitialSetupSignal);
         }
 
+        /// <summary>
+        /// Executes the Dispose operation.
+        /// </summary>
         public void Dispose()
         {
             foreach (var slot in _levelSlots)
@@ -206,12 +316,16 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             _sharedQueue.Dispose();
         }
 
+        /// <summary>
+        /// Executes the ProcessSignal operation.
+        /// </summary>
+        /// <param name="level">The level value.</param>
         private void ProcessSignal(int level)
         {
             // Drainer thread. The chain walk (Invoker / notifier Factory / ReadCurrent's accessor)
             // is user code and may throw; those exceptions route to OnError. The downstream
             // OnNext call is NOT wrapped: per the Rx contract, if the user observer throws, the
-            // exception propagates back through the drainer, matching what a plain Subject<T>
+            // exception propagates back through the drainer, matching what a plain Signal<T>
             // would do.
             //
             // The two cases (initial setup vs level-fire) collapse to:
@@ -239,6 +353,10 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             _userSub.OnNext(value);
         }
 
+        /// <summary>
+        /// Executes the ResubscribeFrom operation.
+        /// </summary>
+        /// <param name="startLevel">The startLevel value.</param>
         private void ResubscribeFrom(int startLevel)
         {
             var depth = _rootToLeaf.Length;
@@ -276,8 +394,12 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
                 value = _rootToLeaf[i].Invoker(value);
             }
         }
-
         // Root-to-leaf chain walk. Stops at null and returns an unobtainable PropertyValue.
+
+        /// <summary>
+        /// Executes the ReadCurrent operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         private PropertyValue<TObject, TProperty> ReadCurrent()
         {
             object? value = _source;

@@ -1,20 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
 public class SortChangedFixture
 {
     private static readonly IComparer<ListItem> DefaultComparer = SortExpressionComparer<ListItem>.Ascending(x => x.Number);
-
 
     /// <summary>
     /// See https://github.com/reactivemarbles/DynamicData/issues/473
@@ -23,7 +14,7 @@ public class SortChangedFixture
     public void SortsWithoutError()
     {
         var source = new SourceList<ListItem>();
-        var sorter = new Subject<IComparer<ListItem>>();
+        var sorter = new Signal<IComparer<ListItem>>();
 
         source.AddRange(Enumerable.Range(1, 10).Select(i => new ListItem(i)));
 
@@ -36,10 +27,8 @@ public class SortChangedFixture
 
         sorter.OnNext(SortExpressionComparer<ListItem>.Descending(x => x.Number));
 
-
         bound.Select(x => x.Number).Should().BeInDescendingOrder();
     }
-
 
     private class ListItem(int number) : IComparable<ListItem>
     {

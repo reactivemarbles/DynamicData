@@ -1,16 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using Microsoft.Reactive.Testing;
-
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
 namespace DynamicData.Tests.Cache;
 
 public static partial class ToObservableChangeSetFixture
@@ -23,10 +10,9 @@ public static partial class ToObservableChangeSetFixture
             public void ExpireAfterThrows_ErrorPropagates()
             {
                 // Setup
-                using var source = new Subject<IEnumerable<Item>>();
+                using var source = new Signal<IEnumerable<Item>>();
 
                 var error = new Exception("Test Exception");
-
 
                 // UUT Initialization
                 using var subscription = source
@@ -44,7 +30,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Should().BeEmpty("no items have been emitted by the source");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 var item1 = new Item() { Id = 1 };
                 source.OnNext(new[]
@@ -58,14 +43,13 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Skip(1).Should().BeEmpty("an error occurred during processing of the sequence");
                 results.RecordedItemsByKey.Values.Should().BeEmpty("an error occurred during processing of the sequence");
 
-
                 results.ShouldNotSupportSorting($"Cache source operators do not support sorting");
             }
 
             [Fact]
             public void KeySelectorIsNull_ThrowsException()
                 => FluentActions.Invoking(() => ObservableCacheEx.ToObservableChangeSet<Item, int>(
-                        source:         new Subject<IEnumerable<Item>>(),
+                        source:         new Signal<IEnumerable<Item>>(),
                         keySelector:    null!))
                     .Should().Throw<ArgumentNullException>();
 
@@ -73,10 +57,9 @@ public static partial class ToObservableChangeSetFixture
             public void KeySelectorThrows_ErrorPropagates()
             {
                 // Setup
-                using var source = new Subject<IEnumerable<Item>>();
+                using var source = new Signal<IEnumerable<Item>>();
 
                 var error = new Exception("Test Exception");
-
 
                 // UUT Initialization
                 using var subscription = source
@@ -92,7 +75,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Should().BeEmpty("no items have been emitted by the source");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 var item1 = new Item() { Id = 1 };
                 source.OnNext(new[]
@@ -106,7 +88,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Skip(1).Should().BeEmpty("an error occurred during processing of the sequence");
                 results.RecordedItemsByKey.Values.Should().BeEmpty("an error occurred during processing of the sequence");
 
-
                 results.ShouldNotSupportSorting($"Cache source operators do not support sorting");
             }
 
@@ -114,8 +95,7 @@ public static partial class ToObservableChangeSetFixture
             public void SizeLimitIsExceeded_OldestItemsAreRemoved()
             {
                 // Setup
-                using var source = new Subject<IEnumerable<Item>>();
-
+                using var source = new Signal<IEnumerable<Item>>();
 
                 // UUT Initialization
                 using var subscription = source
@@ -130,7 +110,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
                 results.RecordedItemsByKey.Values.Should().BeEmpty("no source items have been emitted");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action: Not enough items to reach the limit
                 var item1 = new Item() { Id = 1 };
@@ -150,7 +129,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item2, item3, item4 }, "4 source items were emitted");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action: Limit is reached
                 var item5 = new Item() { Id = 5 };
                 source.OnNext(new[] { item5 });
@@ -160,7 +138,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item2, item3, item4, item5 }, "1 source item was emitted");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action: New item exceeds the limit
                 var item6 = new Item() { Id = 6 };
                 source.OnNext(new[] { item6 });
@@ -169,7 +146,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "1 source operation was performed");
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item2, item3, item4, item5, item6 }, "1 source item was emitted, and 1 was evicted");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action: Replacement leaves all other items in-place
                 var item7 = new Item() { Id = 4 };
@@ -196,13 +172,12 @@ public static partial class ToObservableChangeSetFixture
 
                 var source = sourceType switch
                 {
-                    SourceType.Asynchronous => new Subject<IEnumerable<Item>>(),
+                    SourceType.Asynchronous => new Signal<IEnumerable<Item>>(),
                     SourceType.Immediate    => Observable.Return<IEnumerable<Item>>(items),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
             
                 var scheduler = new TestScheduler();
-
 
                 // UUT Initialization & Action
                 using var subscription = source
@@ -214,7 +189,7 @@ public static partial class ToObservableChangeSetFixture
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results);
 
-                if (source is Subject<IEnumerable<Item>> subject)
+                if (source is Signal<IEnumerable<Item>> subject)
                 {
                     subject.OnNext(items);
                     subject.OnCompleted();
@@ -228,7 +203,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(items, "3 items were emitted");
                 results.HasCompleted.Should().BeFalse("2 items have yet to expire");
 
-
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(30).Ticks);
 
@@ -239,7 +213,6 @@ public static partial class ToObservableChangeSetFixture
                     results.RecordedChangeSets.Skip(1).Count().Should().Be(2, "2 items should have expired, at different times");
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(items.Where(static item => item.Lifetime is null), "all expirable items have expired");
                 results.HasCompleted.Should().BeTrue("the source, and all outstanding expirations, have completed");
-
 
                 results.ShouldNotSupportSorting();
             }
@@ -259,13 +232,12 @@ public static partial class ToObservableChangeSetFixture
 
                 var source = sourceType switch
                 {
-                    SourceType.Asynchronous => new Subject<IEnumerable<Item>>(),
+                    SourceType.Asynchronous => new Signal<IEnumerable<Item>>(),
                     SourceType.Immediate    => Observable.Return<IEnumerable<Item>>(items),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
             
                 var scheduler = new TestScheduler();
-
 
                 // UUT Initialization & Action
                 using var subscription = source
@@ -277,7 +249,7 @@ public static partial class ToObservableChangeSetFixture
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results);
 
-                if (source is Subject<IEnumerable<Item>> subject)
+                if (source is Signal<IEnumerable<Item>> subject)
                 {
                     subject.OnNext(items);
                     subject.OnCompleted();
@@ -291,7 +263,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(items, "3 items were emitted");
                 results.HasCompleted.Should().BeTrue("the source has completed, and no items remain to be expired");
 
-
                 results.ShouldNotSupportSorting();
             }
 
@@ -299,10 +270,9 @@ public static partial class ToObservableChangeSetFixture
             public void SourceEmitsRepeatedItems_RepeatedItemsAreUpdatedAndExpirationIsRescheduled()
             {
                 // Setup
-                using var source = new Subject<IEnumerable<Item>>();
+                using var source = new Signal<IEnumerable<Item>>();
 
                 var scheduler = new TestScheduler();
-
 
                 // UUT Initialization
                 using var subscription = source
@@ -318,7 +288,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
                 results.RecordedItemsByKey.Values.Should().BeEmpty("no source items have been emitted");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 var item1 = new Item() { Id = 1, Lifetime = TimeSpan.FromSeconds(1) };
@@ -332,7 +301,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item2, item3 }, "3 items were emitted");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 var item4 = new Item() { Id = 1, Lifetime = TimeSpan.FromSeconds(1) };
                 var item5 = new Item() { Id = 2 };
@@ -345,7 +313,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item4, item5, item6 }, "3 items were emitted, and replaced existing items");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(1).Ticks);
 
@@ -353,7 +320,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "1 expiration should have occurred");
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item5, item6 }, "1 source item reached its expiration");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(2).Ticks);
@@ -363,7 +329,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item5, item6 }, "no changes were made");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(3).Ticks);
 
@@ -371,7 +336,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Skip(4).Count().Should().Be(1, "1 expiration should have occurred");
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item5 }, "1 source item reached its expiration");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(4).Ticks);
@@ -381,7 +345,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item5 }, "no changes were made");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 results.ShouldNotSupportSorting();
             }
 
@@ -389,10 +352,9 @@ public static partial class ToObservableChangeSetFixture
             public void SourceEmitsUniqueItems_ItemsAreAddedAndRemovedWhenExpired()
             {
                 // Setup
-                using var source = new Subject<IEnumerable<Item>>();
+                using var source = new Signal<IEnumerable<Item>>();
 
                 var scheduler = new TestScheduler();
-
 
                 // UUT Initialization
                 using var subscription = source
@@ -409,7 +371,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Values.Should().BeEmpty("no source items have been emitted");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 var item1 = new Item() { Id = 1, Lifetime = TimeSpan.FromSeconds(3) };
                 var item2 = new Item() { Id = 2 };
@@ -422,7 +383,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item2, item3 }, "3 items were emitted");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(1).Ticks);
 
@@ -430,7 +390,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "1 expiration should have occurred");
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item2 }, "1 item expired, and 1 had its lifetime extended");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(2).Ticks);
@@ -440,7 +399,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item2 }, "no changes were made");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(3).Ticks);
 
@@ -449,7 +407,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item2 }, "1 item reached its expiration");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(4).Ticks);
 
@@ -457,7 +414,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Skip(4).Should().BeEmpty("no expirations should have occurred");
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item2 }, "no changes were made");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 results.ShouldNotSupportSorting();
             }
@@ -472,11 +428,10 @@ public static partial class ToObservableChangeSetFixture
 
                 var source = sourceType switch
                 { 
-                    SourceType.Asynchronous => new Subject<IEnumerable<Item>>(),
+                    SourceType.Asynchronous => new Signal<IEnumerable<Item>>(),
                     SourceType.Immediate    => Observable.Throw<IEnumerable<Item>>(error),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
-
 
                 // UUT Initialization & Action
                 using var subscription = source
@@ -485,7 +440,7 @@ public static partial class ToObservableChangeSetFixture
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results);
 
-                if (source is Subject<IEnumerable<Item>> subject)
+                if (source is Signal<IEnumerable<Item>> subject)
                     subject.OnError(error);
 
                 results.Error.Should().BeSameAs(error, "errors should propagate");

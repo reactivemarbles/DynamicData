@@ -1,24 +1,52 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the Filter class.
+/// </summary>
 internal static partial class Filter
 {
-    internal sealed class Dynamic<T>
+/// <summary>
+/// Provides members for the Dynamic class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+internal sealed class Dynamic<T>
         where T : notnull
     {
+        /// <summary>
+        /// The _policy field.
+        /// </summary>
         private readonly ListFilterPolicy _policy;
 
+        /// <summary>
+        /// The _predicate field.
+        /// </summary>
         private readonly Func<T, bool>? _predicate;
 
+        /// <summary>
+        /// The _predicates field.
+        /// </summary>
         private readonly IObservable<Func<T, bool>>? _predicates;
 
+        /// <summary>
+        /// The _source field.
+        /// </summary>
         private readonly IObservable<IChangeSet<T>> _source;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Dynamic{T}"/> class.
+        /// </summary>
+        /// <param name="source">The source value.</param>
+        /// <param name="predicates">The predicates value.</param>
+        /// <param name="policy">The policy value.</param>
         public Dynamic(IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicates, ListFilterPolicy policy = ListFilterPolicy.CalculateDiff)
         {
             _policy = policy;
@@ -26,6 +54,12 @@ internal static partial class Filter
             _predicates = predicates ?? throw new ArgumentNullException(nameof(predicates));
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Dynamic{T}"/> class.
+        /// </summary>
+        /// <param name="source">The source value.</param>
+        /// <param name="predicate">The predicate value.</param>
+        /// <param name="policy">The policy value.</param>
         public Dynamic(IObservable<IChangeSet<T>> source, Func<T, bool> predicate, ListFilterPolicy policy = ListFilterPolicy.CalculateDiff)
         {
             _policy = policy;
@@ -33,6 +67,10 @@ internal static partial class Filter
             _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
         }
 
+        /// <summary>
+        /// Executes the Run operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
                 observer =>
                 {
@@ -95,6 +133,12 @@ internal static partial class Filter
                         .SubscribeSafe(observer);
                 });
 
+        /// <summary>
+        /// Executes the Process operation.
+        /// </summary>
+        /// <param name="filtered">The filtered value.</param>
+        /// <param name="changes">The changes value.</param>
+        /// <returns>The result of the operation.</returns>
         private static IChangeSet<ItemWithMatch> Process(ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
         {
             // Maintain all items as well as filtered list. This enables us to a) re-query when the predicate changes b) check the previous state when Refresh is called
@@ -198,6 +242,13 @@ internal static partial class Filter
             return filtered.CaptureChanges();
         }
 
+        /// <summary>
+        /// Executes the Requery operation.
+        /// </summary>
+        /// <param name="predicate">The predicate value.</param>
+        /// <param name="all">The all value.</param>
+        /// <param name="filtered">The filtered value.</param>
+        /// <returns>The result of the operation.</returns>
         private IChangeSet<ItemWithMatch> Requery(Func<T, bool> predicate, List<ItemWithMatch> all, ChangeAwareList<ItemWithMatch> filtered)
         {
             if (all.Count == 0)
@@ -248,20 +299,52 @@ internal static partial class Filter
             return filtered.CaptureChanges();
         }
 
-        private sealed class ItemWithMatch(T item, bool isMatch, bool wasMatch = false) : IEquatable<ItemWithMatch>
+/// <summary>
+/// Provides members for the ItemWithMatch class.
+/// </summary>
+/// <param name="item">The item value.</param>
+/// <param name="isMatch">The isMatch value.</param>
+/// <param name="wasMatch">The wasMatch value.</param>
+private sealed class ItemWithMatch(T item, bool isMatch, bool wasMatch = false) : IEquatable<ItemWithMatch>
         {
+            /// <summary>
+            /// Gets the Item value.
+            /// </summary>
             public T Item { get; } = item;
 
+            /// <summary>
+            /// Gets or sets the IsMatch value.
+            /// </summary>
             public bool IsMatch { get; set; } = isMatch;
 
+            /// <summary>
+            /// Gets or sets the WasMatch value.
+            /// </summary>
             public bool WasMatch { get; set; } = wasMatch;
 
+            /// <summary>
+            /// Executes the operator operation.
+            /// </summary>
+            /// <param name="left">The left value.</param>
+            /// <param name="right">The right value.</param>
+            /// <returns>The result of the operation.</returns>
             public static bool operator ==(ItemWithMatch? left, ItemWithMatch? right) =>
                 Equals(left, right);
 
+            /// <summary>
+            /// Executes the operator operation.
+            /// </summary>
+            /// <param name="left">The left value.</param>
+            /// <param name="right">The right value.</param>
+            /// <returns>The result of the operation.</returns>
             public static bool operator !=(ItemWithMatch? left, ItemWithMatch? right) =>
                 !Equals(left, right);
 
+            /// <summary>
+            /// Executes the Equals operation.
+            /// </summary>
+            /// <param name="other">The other value.</param>
+            /// <returns>The result of the operation.</returns>
             public bool Equals(ItemWithMatch? other)
             {
                 if (other is null)
@@ -277,6 +360,11 @@ internal static partial class Filter
                 return EqualityComparer<T>.Default.Equals(Item, other.Item);
             }
 
+            /// <summary>
+            /// Executes the Equals operation.
+            /// </summary>
+            /// <param name="obj">The obj value.</param>
+            /// <returns>The result of the operation.</returns>
             public override bool Equals(object? obj)
             {
                 if (obj is null)
@@ -297,8 +385,16 @@ internal static partial class Filter
                 return Equals((ItemWithMatch)obj);
             }
 
+            /// <summary>
+            /// Executes the GetHashCode operation.
+            /// </summary>
+            /// <returns>The result of the operation.</returns>
             public override int GetHashCode() => EqualityComparer<T>.Default.GetHashCode(Item!);
 
+            /// <summary>
+            /// Executes the ToString operation.
+            /// </summary>
+            /// <returns>The result of the operation.</returns>
             public override string ToString() => $"{Item}, (was {IsMatch} is {WasMatch}";
         }
     }

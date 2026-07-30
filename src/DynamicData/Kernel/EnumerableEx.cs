@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Kernel;
+#else
 
 namespace DynamicData.Kernel;
+#endif
 
 /// <summary>
 /// Enumerable extensions.
@@ -17,7 +22,7 @@ public static class EnumerableEx
     /// <returns>The array of items.</returns>
     public static T[] AsArray<T>(this IEnumerable<T> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source as T[] ?? source.ToArray();
     }
@@ -30,7 +35,7 @@ public static class EnumerableEx
     /// <returns>The list.</returns>
     public static List<T> AsList<T>(this IEnumerable<T> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source as List<T> ?? source.ToList();
     }
@@ -45,8 +50,8 @@ public static class EnumerableEx
     /// <returns>The enumerable of items.</returns>
     public static IEnumerable<T> Duplicates<T, TValue>(this IEnumerable<T> source, Func<T, TValue> valueSelector)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(valueSelector);
 
         return source.GroupBy(valueSelector).Where(group => group.Count() > 1).SelectMany(t => t);
     }
@@ -73,21 +78,39 @@ public static class EnumerableEx
     /// <returns>A result as specified by the result selector.</returns>
     public static IEnumerable<TResult> IndexOfMany<TObject, TResult>(this IEnumerable<TObject> source, IEnumerable<TObject> itemsToFind, Func<TObject, int, TResult> resultSelector)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        itemsToFind.ThrowArgumentNullExceptionIfNull(nameof(itemsToFind));
-        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(itemsToFind);
+        ArgumentExceptionHelper.ThrowIfNull(resultSelector);
 
         var indexed = source.Select((element, index) => new { Element = element, Index = index });
         return itemsToFind.Join(indexed, left => left, right => right.Element, (_, right) => right).Select(x => resultSelector(x.Element, x.Index));
     }
 
+    /// <summary>
+    /// Executes the EmptyIfNull operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source) => source ?? Enumerable.Empty<T>();
 
+    /// <summary>
+    /// Executes the EnumerateOne operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static IEnumerable<T> EnumerateOne<T>(this T source)
     {
         yield return source;
     }
 
+    /// <summary>
+    /// Executes the ForEach operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="action">The action value.</param>
     internal static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
     {
         foreach (var item in source)
@@ -96,6 +119,12 @@ public static class EnumerableEx
         }
     }
 
+    /// <summary>
+    /// Executes the ForEach operation.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="action">The action value.</param>
     internal static void ForEach<TObject>(this IEnumerable<TObject> source, Action<TObject, int> action)
     {
         var i = 0;
@@ -106,6 +135,12 @@ public static class EnumerableEx
         }
     }
 
+    /// <summary>
+    /// Executes the ToHashSet operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => new(source);
 
     /// <summary>

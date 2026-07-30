@@ -1,24 +1,22 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -30,8 +28,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort.</param>
-    /// <param name="comparer">The <see cref="IComparer{TObject}"/> used to determine sort order.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort.</param>
+    /// <param name="comparer">The <c>IComparer&lt;TObject&gt;</c> used to determine sort order.</param>
     /// <param name="sortOptimisations">A <see cref="SortOptimisations"/> that sort optimisation flags. Specify one or more sort optimisations.</param>
     /// <param name="resetThreshold">The number of updates before the entire list is resorted (rather than inline sort).</param>
     /// <returns>An observable which emits change sets.</returns>
@@ -40,14 +38,14 @@ public static partial class ObservableCacheEx
     /// or
     /// comparer.
     /// </exception>
-    /// <seealso cref="ObservableListEx.Sort"/>
+    /// <seealso><c>ObservableListEx.Sort</c></seealso>
     [Obsolete(Constants.SortIsObsolete)]
     public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(comparer);
 
         return new Sort<TObject, TKey>(source, comparer, sortOptimisations, resetThreshold: resetThreshold).Run();
     }
@@ -57,8 +55,8 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort.</param>
-    /// <param name="comparerObservable">The <see cref="IObservable{IComparer{TObject}}"/> comparer observable.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort.</param>
+    /// <param name="comparerObservable">The <c>IObservable&lt;IComparer&lt;TObject&gt;&gt;</c> comparer observable.</param>
     /// <param name="sortOptimisations">The <see cref="SortOptimisations"/> sort optimisations.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits change sets.</returns>
@@ -67,8 +65,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        comparerObservable.ThrowArgumentNullExceptionIfNull(nameof(comparerObservable));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(comparerObservable);
 
         return new Sort<TObject, TKey>(source, null, sortOptimisations, comparerObservable, resetThreshold: resetThreshold).Run();
     }
@@ -78,9 +76,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort.</param>
-    /// <param name="comparerObservable">The <see cref="IObservable{IComparer{TObject}}"/> comparer observable.</param>
-    /// <param name="resorter">An <see cref="IObservable{Unit}"/> that signals the algorithm to re-sort the entire data set.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort.</param>
+    /// <param name="comparerObservable">The <c>IObservable&lt;IComparer&lt;TObject&gt;&gt;</c> comparer observable.</param>
+    /// <param name="resorter">An <c>IObservable&lt;Unit&gt;</c> that signals the algorithm to re-sort the entire data set.</param>
     /// <param name="sortOptimisations">The <see cref="SortOptimisations"/> sort optimisations.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits change sets.</returns>
@@ -89,8 +87,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        comparerObservable.ThrowArgumentNullExceptionIfNull(nameof(comparerObservable));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(comparerObservable);
 
         return new Sort<TObject, TKey>(source, null, sortOptimisations, comparerObservable, resorter, resetThreshold).Run();
     }
@@ -100,9 +98,9 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to sort.</param>
-    /// <param name="comparer">The <see cref="IComparer{TObject}"/> used to determine sort order.</param>
-    /// <param name="resorter">An <see cref="IObservable{Unit}"/> that signals the algorithm to re-sort the entire data set.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to sort.</param>
+    /// <param name="comparer">The <c>IComparer&lt;TObject&gt;</c> used to determine sort order.</param>
+    /// <param name="resorter">An <c>IObservable&lt;Unit&gt;</c> that signals the algorithm to re-sort the entire data set.</param>
     /// <param name="sortOptimisations">The <see cref="SortOptimisations"/> sort optimisations.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits change sets.</returns>
@@ -111,8 +109,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        resorter.ThrowArgumentNullExceptionIfNull(nameof(resorter));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(resorter);
 
         return new Sort<TObject, TKey>(source, comparer, sortOptimisations, null, resorter, resetThreshold).Run();
     }

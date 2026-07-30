@@ -1,12 +1,5 @@
-﻿using System;
-using System.Linq;
-
-using DynamicData.Alias;
+﻿using DynamicData.Alias;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 

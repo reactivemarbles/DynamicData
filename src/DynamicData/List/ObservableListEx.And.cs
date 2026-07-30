@@ -1,22 +1,20 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for ObservableList.
@@ -28,8 +26,8 @@ public static partial class ObservableListEx
     /// Only items present in ALL sources appear in the result.
     /// </summary>
     /// <typeparam name="T">The type of items in the lists.</typeparam>
-    /// <param name="source">The first source <see cref="IObservable{IChangeSet{T}}"/> to intersect.</param>
-    /// <param name="others">The additional <see cref="IObservable{IChangeSet{T}}"/> changeset streams to intersect with.</param>
+    /// <param name="source">The first source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to intersect.</param>
+    /// <param name="others">The additional <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> changeset streams to intersect with.</param>
     /// <returns>A list changeset stream containing items that exist in every source.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="others"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -47,50 +45,66 @@ public static partial class ObservableListEx
     /// </list>
     /// <para><b>Worth noting:</b> Item identity uses object equality, not position. Duplicate items in a single source are reference-counted independently.</para>
     /// </remarks>
-    /// <seealso cref="Or{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <seealso cref="Except{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <seealso cref="Xor{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <seealso cref="ObservableCacheEx.And{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{IChangeSet{TObject, TKey}}[])"/>
+    /// <seealso><c>Or&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservable&lt;IChangeSet&lt;T&gt;&gt;[])</c></seealso>
+    /// <seealso><c>Except&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservable&lt;IChangeSet&lt;T&gt;&gt;[])</c></seealso>
+    /// <seealso><c>Xor&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, IObservable&lt;IChangeSet&lt;T&gt;&gt;[])</c></seealso>
+    /// <seealso><c>ObservableCacheEx.And&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;[])</c></seealso>
     public static IObservable<IChangeSet<T>> And<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
         where T : notnull
     {
-        others.ThrowArgumentNullExceptionIfNull(nameof(others));
+        ArgumentExceptionHelper.ThrowIfNull(others);
 
         return source.Combine(CombineOperator.And, others);
     }
 
-    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <param name="sources">A <see cref="ICollection{T}"/> of changeset streams to intersect.</param>
+    /// <summary>
+    /// Provides an overload of <c>Combine</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">A <c>ICollection&lt;T&gt;</c> of changeset streams to intersect.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>
-    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <para>This overload accepts a pre-built collection of sources instead of a params array.</para>
     /// </remarks>
     public static IObservable<IChangeSet<T>> And<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.And);
 
-    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <param name="sources">An <see cref="IObservableList{T}"/> of changeset streams. Sources can be added or removed dynamically.</param>
+    /// <summary>
+    /// Provides an overload of <c>Combine</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">An <c>IObservableList&lt;T&gt;</c> of changeset streams. Sources can be added or removed dynamically.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>
-    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
     /// <para>This overload supports dynamic source management: adding or removing changeset streams from the observable list triggers re-evaluation.</para>
     /// </remarks>
     public static IObservable<IChangeSet<T>> And<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
         where T : notnull => sources.Combine(CombineOperator.And);
 
-    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <param name="sources">An <see cref="IObservableList{IObservableList{T}}"/> of <see cref="IObservableList{IObservableList{T}}"/>. Each inner list's changes are connected automatically.</param>
+    /// <summary>
+    /// Provides an overload of <c>Combine</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">An <c>IObservableList&lt;IObservableList&lt;T&gt;&gt;</c> of <c>IObservableList&lt;IObservableList&lt;T&gt;&gt;</c>. Each inner list's changes are connected automatically.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>
-    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <para>This overload accepts <see cref="IObservableList{T}"/> instances directly, calling <c>Connect()</c> internally.</para>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
+    /// <para>This overload accepts <c>IObservableList&lt;T&gt;</c> instances directly, calling <c>Connect()</c> internally.</para>
     /// </remarks>
     public static IObservable<IChangeSet<T>> And<T>(this IObservableList<IObservableList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.And);
 
-    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <param name="sources">An <see cref="IObservableList{ISourceList{T}}"/> of <see cref="ISourceList{T}"/>. Each inner list's changes are connected automatically.</param>
+    /// <summary>
+    /// Provides an overload of <c>Combine</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="sources">An <c>IObservableList&lt;ISourceList&lt;T&gt;&gt;</c> of <c>ISourceList&lt;T&gt;</c>. Each inner list's changes are connected automatically.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>
-    /// <inheritdoc cref="And{T}(IObservable{IChangeSet{T}}, IObservable{IChangeSet{T}}[])"/>
-    /// <para>This overload accepts <see cref="ISourceList{T}"/> instances directly, calling <c>Connect()</c> internally.</para>
+    /// <para>This overload follows the same core behavior as the related overload.</para>
+    /// <para>This overload accepts <c>ISourceList&lt;T&gt;</c> instances directly, calling <c>Connect()</c> internally.</para>
     /// </remarks>
     public static IObservable<IChangeSet<T>> And<T>(this IObservableList<ISourceList<T>> sources)
         where T : notnull => sources.Combine(CombineOperator.And);

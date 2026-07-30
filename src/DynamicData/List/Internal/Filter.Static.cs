@@ -1,23 +1,40 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the Filter class.
+/// </summary>
 internal static partial class Filter
 {
-    public static class Static<T>
+/// <summary>
+/// Provides members for the Static class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+public static class Static<T>
         where T : notnull
     {
+        /// <summary>
+        /// Executes the Create operation.
+        /// </summary>
+        /// <param name="source">The source value.</param>
+        /// <param name="predicate">The predicate value.</param>
+        /// <param name="suppressEmptyChangesets">The suppressEmptyChangesets value.</param>
+        /// <returns>The result of the operation.</returns>
         public static IObservable<IChangeSet<T>> Create(
             IObservable<IChangeSet<T>> source,
             Func<T, bool> predicate,
             bool suppressEmptyChangesets)
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(predicate);
 
             return Observable.Create<IChangeSet<T>>(downstreamObserver =>
             {

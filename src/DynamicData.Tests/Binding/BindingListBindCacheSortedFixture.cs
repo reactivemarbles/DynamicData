@@ -1,16 +1,7 @@
 #if SUPPORTS_BINDINGLIST
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
@@ -70,7 +61,6 @@ namespace DynamicData.Tests.Binding
             sorted.Should().BeEquivalentTo(_collection.ToList());
         }
 
-
         [Fact]
         public void LargeUpdateInvokesAReset()
         {
@@ -108,7 +98,6 @@ namespace DynamicData.Tests.Binding
 
             _collection[args.NewIndex].Should().Be(people[10]);
         }
-
 
         [Fact]
         public void RemoveSourceRemovesFromTheDestination()
@@ -197,14 +186,12 @@ namespace DynamicData.Tests.Binding
             _collection.First().Should().Be(personUpdated, "Should be updated person");
         }
 
-        
         public void Dispose()
         {
             _binder.Dispose();
             _source.Dispose();
         }
     }
-
 
 }
 #endif

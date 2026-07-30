@@ -1,15 +1,4 @@
-using System;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -30,7 +19,7 @@ public class BatchIfWithTimeoutFixture : IDisposable
     [Fact]
     public void InitialPause()
     {
-        var pausingSubject = new Subject<bool>();
+        var pausingSubject = new Signal<bool>();
         using var results = _source.Connect().BatchIf(pausingSubject, true, _scheduler).AsAggregator();
         // no results because the initial pause state is pause
         _source.AddOrUpdate(new Person("A", 1));
@@ -57,7 +46,7 @@ public class BatchIfWithTimeoutFixture : IDisposable
     [Fact]
     public void Timeout()
     {
-        var pausingSubject = new Subject<bool>();
+        var pausingSubject = new Signal<bool>();
         using var results = _source.Connect().BatchIf(pausingSubject, TimeSpan.FromSeconds(1), _scheduler).AsAggregator();
         // no results because the initial pause state is pause
         _source.AddOrUpdate(new Person("A", 1));
@@ -88,7 +77,7 @@ public class BatchIfWithTimeoutFixture : IDisposable
 
 public class BatchIfWithTimeOutFixture : IDisposable
 {
-    private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
+    private readonly ISignal<bool> _pausingSubject = new Signal<bool>();
 
     private readonly ChangeSetAggregator<Person, string> _results;
 
@@ -128,6 +117,7 @@ public class BatchIfWithTimeOutFixture : IDisposable
         _results.Dispose();
         _source.Dispose();
         _pausingSubject.OnCompleted();
+        _pausingSubject.Dispose();
     }
 
     [Fact]

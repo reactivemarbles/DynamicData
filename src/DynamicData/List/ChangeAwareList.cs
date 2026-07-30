@@ -1,21 +1,31 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections;
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// <para>A list which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point the changes are cleared.</para>
 /// <para>Used for creating custom operators.</para>
 /// </summary>
 /// <typeparam name="T">The item type.</typeparam>
-/// <seealso cref="IExtendedList{T}" />
+/// <seealso><c>IExtendedList&lt;T&gt;</c></seealso>
 public class ChangeAwareList<T> : IExtendedList<T>
     where T : notnull
 {
+    /// <summary>
+    /// The _innerList field.
+    /// </summary>
     private readonly List<T> _innerList;
+
+    /// <summary>
+    /// The _changes field.
+    /// </summary>
     private ChangeSet<T> _changes = [];
 
     /// <summary>
@@ -33,7 +43,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <param name="items">The items to seed the change aware list with.</param>
     public ChangeAwareList(IEnumerable<T> items)
     {
-        items.ThrowArgumentNullExceptionIfNull(nameof(items));
+        ArgumentExceptionHelper.ThrowIfNull(items);
 
         var list = items.ToList();
 
@@ -53,7 +63,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <param name="copyChanges">Should the list of changes also be copied over?.</param>
     public ChangeAwareList(ChangeAwareList<T> list, bool copyChanges)
     {
-        list.ThrowArgumentNullExceptionIfNull(nameof(list));
+        ArgumentExceptionHelper.ThrowIfNull(list);
 
         _innerList = new List<T>(list._innerList);
 
@@ -85,7 +95,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <summary>
     /// Gets the last change in the collection.
     /// </summary>
-    private Optional<Change<T>> Last => _changes.Count == 0 ? Optional.None<Change<T>>() : _changes[_changes.Count - 1];
+    private ReactiveUI.Primitives.Optional<Change<T>> Last => _changes.Count == 0 ? ReactiveUI.Primitives.Optional<Change<T>>.None : _changes[_changes.Count - 1];
 
     /// <summary>
     /// Gets or sets the item at the specified index.
@@ -177,6 +187,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     public void CopyTo(T[] array, int arrayIndex) => _innerList.CopyTo(array, arrayIndex);
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public IEnumerator<T> GetEnumerator() => _innerList.ToList().GetEnumerator();
 
     /// <summary>
@@ -215,12 +226,12 @@ public class ChangeAwareList<T> : IExtendedList<T>
     }
 
     /// <summary>
-    /// Inserts the elements of a collection into the <see cref="List{T}" /> at the specified index.
+    /// Inserts the elements of a collection into the <c>List&lt;T&gt;</c> at the specified index.
     /// </summary>
     /// <param name="collection">Inserts the specified items.</param>
     /// <param name="index">The zero-based index at which the new elements should be inserted.</param>
     /// <exception cref="ArgumentNullException"><paramref name="collection" /> is null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="index" /> is greater than <see cref="List{T}.Count" />.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="index" /> is greater than <c>List&lt;T&gt;.Count</c>.</exception>
     public void InsertRange(IEnumerable<T> collection, int index)
     {
         var args = new Change<T>(ListChangeReason.AddRange, collection, index);
@@ -389,9 +400,9 @@ public class ChangeAwareList<T> : IExtendedList<T>
     }
 
     /// <summary>
-    /// Removes a range of elements from the <see cref="List{T}"/>.
+    /// Removes a range of elements from the <c>List&lt;T&gt;</c>.
     /// </summary>
-    /// <param name="index">The zero-based starting index of the range of elements to remove.</param><param name="count">The number of elements to remove.</param><exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is less than 0.-or-<paramref name="count"/> is less than 0.</exception><exception cref="ArgumentException"><paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <see cref="List{T}"/>.</exception>
+    /// <param name="index">The zero-based starting index of the range of elements to remove.</param><param name="count">The number of elements to remove.</param><exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is less than 0.-or-<paramref name="count"/> is less than 0.</exception><exception cref="ArgumentException"><paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <c>List&lt;T&gt;</c>.</exception>
     public void RemoveRange(int index, int count)
     {
         if (index >= _innerList.Count || index + count > _innerList.Count)
@@ -414,6 +425,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     /// <summary>

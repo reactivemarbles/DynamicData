@@ -1,11 +1,3 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Subjects;
-using BenchmarkDotNet.Attributes;
-using DynamicData.Binding;
-
 namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
@@ -19,11 +11,10 @@ public class SortAndBindChange: IDisposable
         .Ascending(i => i.Ranking)
         .ThenByAscending(i => i.Name);
 
- 
-    Subject<IChangeSet<Item, int>> _newSubject = new();
-    Subject<IChangeSet<Item, int>> _newSubjectOptimised = new();
-    Subject<IChangeSet<Item, int>> _oldSubject = new();
-    Subject<IChangeSet<Item, int>> _oldSubjectOptimised = new();
+    Signal<IChangeSet<Item, int>> _newSubject = new();
+    Signal<IChangeSet<Item, int>> _newSubjectOptimised = new();
+    Signal<IChangeSet<Item, int>> _oldSubject = new();
+    Signal<IChangeSet<Item, int>> _oldSubjectOptimised = new();
 
     private IDisposable? _cleanUp;
 
@@ -32,22 +23,18 @@ public class SortAndBindChange: IDisposable
     private ReadOnlyObservableCollection<Item>? _oldList;
     private ReadOnlyObservableCollection<Item>? _oldListOptimised;
 
-
-
     [Params(10, 100, 1_000, 10_000, 50_000)]
     public int Count { get; set; }
-
 
     [GlobalSetup]
     public void SetUp()
     {
-        _oldSubject = new Subject<IChangeSet<Item, int>>();
-        _oldSubjectOptimised = new Subject<IChangeSet<Item, int>>();
-        _newSubject = new Subject<IChangeSet<Item, int>>();
-        _newSubjectOptimised = new Subject<IChangeSet<Item, int>>();
+        _oldSubject = new Signal<IChangeSet<Item, int>>();
+        _oldSubjectOptimised = new Signal<IChangeSet<Item, int>>();
+        _newSubject = new Signal<IChangeSet<Item, int>>();
+        _newSubjectOptimised = new Signal<IChangeSet<Item, int>>();
 
-
-        _cleanUp = new CompositeDisposable  
+        _cleanUp = new CompositeDisposable
         (
             _newSubject.SortAndBind(out var newList, _comparer).Subscribe(),
             _newSubjectOptimised.SortAndBind(out var optimisedList, _comparer, new SortAndBindOptions
@@ -64,8 +51,6 @@ public class SortAndBindChange: IDisposable
         _newListOptimised = optimisedList;
         _oldList = oldList;
         _oldListOptimised = oldOptimisedList;
-
-
 
         var changeSet = new ChangeSet<Item, int>(Count);
         foreach (var i in Enumerable.Range(1, Count))
@@ -84,7 +69,6 @@ public class SortAndBindChange: IDisposable
     [Benchmark(Baseline = true)]
     public void Old() => RunTest(_oldSubject, _oldList!);
 
-
     [Benchmark]
     public void OldOptimized() => RunTest(_oldSubjectOptimised, _oldListOptimised!);
 
@@ -94,8 +78,7 @@ public class SortAndBindChange: IDisposable
     [Benchmark]
     public void NewOptimized() => RunTest(_newSubjectOptimised, _newListOptimised!);
 
-
-    void RunTest(Subject<IChangeSet<Item, int>> subject, ReadOnlyObservableCollection<Item> list)
+    void RunTest(Signal<IChangeSet<Item, int>> subject, ReadOnlyObservableCollection<Item> list)
     {
         var original = list[Count / 2];
         var updated = original with { Ranking = _random.Next(1, 1000) };
@@ -105,7 +88,6 @@ public class SortAndBindChange: IDisposable
             new(ChangeReason.Update, original.Id, updated, original)
         });
     }
-
 
     public void Dispose() => _cleanUp?.Dispose();
 }

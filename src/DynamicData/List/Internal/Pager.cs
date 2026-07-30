@@ -1,19 +1,37 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the Pager class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="requests">The requests value.</param>
 internal sealed class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
     where T : notnull
 {
+    /// <summary>
+    /// The _requests field.
+    /// </summary>
     private readonly IObservable<IPageRequest> _requests = requests ?? throw new ArgumentNullException(nameof(requests));
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IPageChangeSet<T>> Run() => Observable.Create<IPageChangeSet<T>>(
             observer =>
             {
@@ -41,6 +59,12 @@ internal sealed class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IP
                     .SubscribeSafe(observer);
             });
 
+    /// <summary>
+    /// Executes the CalculatePages operation.
+    /// </summary>
+    /// <param name="all">The all value.</param>
+    /// <param name="request">The request value.</param>
+    /// <returns>The result of the operation.</returns>
     private static int CalculatePages(ICollection all, IPageRequest? request)
     {
         if (request is null || request.Size >= all.Count || request.Size == 0)
@@ -59,6 +83,13 @@ internal sealed class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IP
         return pages + 1;
     }
 
+    /// <summary>
+    /// Executes the CheckParametersAndPage operation.
+    /// </summary>
+    /// <param name="all">The all value.</param>
+    /// <param name="paged">The paged value.</param>
+    /// <param name="request">The request value.</param>
+    /// <returns>The result of the operation.</returns>
     private static PageChangeSet<T>? CheckParametersAndPage(List<T> all, ChangeAwareList<T> paged, IPageRequest? request)
     {
         if (request is null || request.Page < 0 || request.Size < 1)
@@ -69,6 +100,14 @@ internal sealed class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IP
         return Page(all, paged, request);
     }
 
+    /// <summary>
+    /// Executes the Page operation.
+    /// </summary>
+    /// <param name="all">The all value.</param>
+    /// <param name="paged">The paged value.</param>
+    /// <param name="request">The request value.</param>
+    /// <param name="changeSet">The changeSet value.</param>
+    /// <returns>The result of the operation.</returns>
     private static PageChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IPageRequest request, IChangeSet<T>? changeSet = null)
     {
         if (changeSet is not null)

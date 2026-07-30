@@ -1,22 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
-
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for ObservableList.
@@ -29,7 +20,7 @@ public static partial class ObservableListEx
     /// The exception is when only <see cref="ListChangeReason.Refresh"/> is excluded, since removing Refresh does not affect index calculations.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to filter by excluding change reasons.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to filter by excluding change reasons.</param>
     /// <param name="reasons">The <see cref="ListChangeReason"/> change reasons to exclude. Must specify at least one.</param>
     /// <returns>A list changeset stream with the specified change reasons removed.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="reasons"/> is <see langword="null"/>.</exception>
@@ -40,13 +31,14 @@ public static partial class ObservableListEx
     /// indices are preserved, since removing Refresh does not affect index calculations.
     /// </para>
     /// </remarks>
-    /// <seealso cref="WhereReasonsAre{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
-    /// <seealso cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/>
-    /// <seealso cref="ChangeSetEx.YieldWithoutIndex{T}(IEnumerable{Change{T}})"/>
+    /// <seealso><c>WhereReasonsAre&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, ListChangeReason[])</c></seealso>
+    /// <seealso><c>SuppressRefresh&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>
+    /// <seealso><c>ChangeSetEx.YieldWithoutIndex&lt;T&gt;(IEnumerable&lt;Change&lt;T&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<T>> WhereReasonsAreNot<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
         where T : notnull
     {
-        reasons.ThrowArgumentNullExceptionIfNull(nameof(reasons));
+        ArgumentExceptionHelper.ThrowIfNull(reasons);
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         if (reasons.Length == 0)
         {

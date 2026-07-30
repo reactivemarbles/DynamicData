@@ -3,51 +3,96 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading;
+#if REACTIVE_SHIM
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
-using DynamicData.Cache;
+#endif
+#if REACTIVE_SHIM
+using DynamicData.Reactive.Cache.Internal;
+#else
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
+/// <summary>
+/// Provides members for the ObservableCache class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 [DebuggerDisplay("ObservableCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>, INotifyCollectionChangedSuspender
     where TObject : notnull
     where TKey : notnull
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<ChangeSet<TObject, TKey>> _changes = new();
+    /// <summary>
+    /// The _changes field.
+    /// </summary>
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Signal<ChangeSet<TObject, TKey>> _changes = new();
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<ChangeSet<TObject, TKey>> _changesPreview = new();
+    /// <summary>
+    /// The _changesPreview field.
+    /// </summary>
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Signal<ChangeSet<TObject, TKey>> _changesPreview = new();
 
+    /// <summary>
+    /// The _cleanUp field.
+    /// </summary>
     private readonly IDisposable _cleanUp;
 
-    private readonly Lazy<ISubject<int>> _countChanged = new(() => new Subject<int>());
+    /// <summary>
+    /// The _countChanged field.
+    /// </summary>
+    private readonly Lazy<ISignal<int>> _countChanged = new(() => new Signal<int>());
 
+    /// <summary>
+    /// The _suspensionTracker field.
+    /// </summary>
     private readonly Lazy<SuspensionTracker> _suspensionTracker;
 
-#if NET9_0_OR_GREATER
+    /// <summary>
+    /// The _locker field.
+    /// </summary>
     private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
 
+    /// <summary>
+    /// The _readerWriter field.
+    /// </summary>
     private readonly ReaderWriter<TObject, TKey> _readerWriter;
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Terminated via NotifyCompleted in _cleanUp")]
+    /// <summary>
+    /// The _notifications field.
+    /// </summary>
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Terminated via NotifyCompleted in _cleanUp")]
     private readonly DeliveryQueue<CacheUpdate> _notifications;
 
+    /// <summary>
+    /// The _editLevel field.
+    /// </summary>
     private int _editLevel; // The level of recursion in editing.
 
+    /// <summary>
+    /// The _currentVersion field.
+    /// </summary>
     private long _currentVersion; // Monotonic counter incremented under lock for each enqueued change notification.
 
+    /// <summary>
+    /// The _currentDeliveryVersion field.
+    /// </summary>
     private long _currentDeliveryVersion; // Version of the item currently being delivered. Set before _changes.OnNext.
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ObservableCache{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
     public ObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
         _readerWriter = new ReaderWriter<TObject, TKey>();
@@ -78,6 +123,10 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             });
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ObservableCache{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="keySelector">The keySelector value.</param>
     public ObservableCache(Func<TObject, TKey>? keySelector = null)
     {
         _readerWriter = new ReaderWriter<TObject, TKey>(keySelector);
@@ -87,8 +136,14 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         _cleanUp = Disposable.Create(NotifyCompleted);
     }
 
+    /// <summary>
+    /// Gets the Count value.
+    /// </summary>
     public int Count => _readerWriter.Count;
 
+    /// <summary>
+    /// Gets the CountChanged value.
+    /// </summary>
     public IObservable<int> CountChanged =>
         Observable.Create<int>(
             observer =>
@@ -104,12 +159,27 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                 return source.SubscribeSafe(observer);
             });
 
+    /// <summary>
+    /// Gets the Items value.
+    /// </summary>
     public IReadOnlyList<TObject> Items => _readerWriter.Items;
 
+    /// <summary>
+    /// Gets the Keys value.
+    /// </summary>
     public IReadOnlyList<TKey> Keys => _readerWriter.Keys;
 
+    /// <summary>
+    /// Gets the KeyValues value.
+    /// </summary>
     public IReadOnlyDictionary<TKey, TObject> KeyValues => _readerWriter.KeyValues;
 
+    /// <summary>
+    /// Executes the Connect operation.
+    /// </summary>
+    /// <param name="predicate">The predicate value.</param>
+    /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) =>
         Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
@@ -133,12 +203,30 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             }
         });
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose() => _cleanUp.Dispose();
 
-    public Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
+    /// <summary>
+    /// Executes the Lookup operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
 
+    /// <summary>
+    /// Executes the Preview operation.
+    /// </summary>
+    /// <param name="predicate">The predicate value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
 
+    /// <summary>
+    /// Executes the Watch operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<Change<TObject, TKey>> Watch(TKey key) =>
         Observable.Create<Change<TObject, TKey>>(observer =>
         {
@@ -160,6 +248,10 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             }
         });
 
+    /// <summary>
+    /// Executes the SuspendCount operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IDisposable SuspendCount()
     {
         lock (_locker)
@@ -169,6 +261,10 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         }
     }
 
+    /// <summary>
+    /// Executes the SuspendNotifications operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IDisposable SuspendNotifications()
     {
         lock (_locker)
@@ -178,11 +274,20 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         }
     }
 
+    /// <summary>
+    /// Executes the GetInitialUpdates operation.
+    /// </summary>
+    /// <param name="filter">The filter value.</param>
+    /// <returns>The result of the operation.</returns>
     internal ChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool>? filter = null) => _readerWriter.GetInitialUpdates(filter);
 
+    /// <summary>
+    /// Executes the UpdateFromIntermediate operation.
+    /// </summary>
+    /// <param name="updateAction">The updateAction value.</param>
     internal void UpdateFromIntermediate(Action<ICacheUpdater<TObject, TKey>> updateAction)
     {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
         using var notifications = _notifications.AcquireLock();
 
@@ -207,9 +312,13 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         }
     }
 
+    /// <summary>
+    /// Executes the UpdateFromSource operation.
+    /// </summary>
+    /// <param name="updateAction">The updateAction value.</param>
     internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction)
     {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
         using var notifications = _notifications.AcquireLock();
 
@@ -234,6 +343,12 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         }
     }
 
+    /// <summary>
+    /// Executes the CreateConnectObservable operation.
+    /// </summary>
+    /// <param name="predicate">The predicate value.</param>
+    /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TObject, TKey>> CreateConnectObservable(Func<TObject, bool>? predicate, bool suppressEmptyChangeSets) =>
         Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
@@ -264,6 +379,11 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                 return changes.SubscribeSafe(observer);
             });
 
+    /// <summary>
+    /// Executes the CreateWatchObservable operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
     private IObservable<Change<TObject, TKey>> CreateWatchObservable(TKey key) =>
         Observable.Create<Change<TObject, TKey>>(
             observer =>
@@ -303,6 +423,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     /// called by ReaderWriter during a write, between two data swaps, so it MUST
     /// fire under the lock with the pre-write state visible to subscribers.
     /// </summary>
+    /// <param name="changes">The changes value.</param>
     private void InvokePreview(ChangeSet<TObject, TKey> changes)
     {
         if (changes.Count != 0 && !_notifications.IsTerminated)
@@ -311,12 +432,19 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         }
     }
 
+    /// <summary>
+    /// Executes the NotifyCompleted operation.
+    /// </summary>
     private void NotifyCompleted()
     {
         using var notifications = _notifications.AcquireLock();
         notifications.EnqueueCompleted();
     }
 
+    /// <summary>
+    /// Executes the NotifyError operation.
+    /// </summary>
+    /// <param name="ex">The ex value.</param>
     private void NotifyError(Exception ex)
     {
         using var notifications = _notifications.AcquireLock();
@@ -326,7 +454,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     /// <summary>
     /// Delivers a single notification to subscribers. This method is the delivery
     /// callback for <see cref="_notifications"/> and must never be called directly.
-    /// It is invoked by the <see cref="DeliveryQueue{TItem}"/> after releasing the
+    /// It is invoked by the <c>DeliveryQueue&lt;TItem&gt;</c> after releasing the
     /// lock, which guarantees that no lock is held when subscriber code runs. The
     /// queue's single-deliverer token ensures this method is never called concurrently,
     /// preserving the Rx serialization contract across all subjects.
@@ -344,10 +472,12 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         }
     }
 
+    /// <summary>
+    /// Executes the ResumeNotifications operation.
+    /// </summary>
     private void ResumeNotifications()
     {
         using var notifications = _notifications.AcquireLock();
-
         Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Notifications without Suspend Notifications instance");
 
         var (changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
@@ -371,14 +501,22 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     /// <summary>
     /// The notification payload for cache delivery. Null Changes = count-only notification.
     /// </summary>
+    /// <param name="Changes">The Changes value.</param>
+    /// <param name="Count">The Count value.</param>
+    /// <param name="Version">The Version value.</param>
     private readonly record struct CacheUpdate(ChangeSet<TObject, TKey>? Changes, int Count, long Version = 0);
 
-    /// <summary>
-    /// Observer that dispatches <see cref="CacheUpdate"/> items to the cache's
-    /// downstream subjects. Used as the delivery target for <see cref="_notifications"/>.
-    /// </summary>
-    private sealed class CacheUpdateObserver(ObservableCache<TObject, TKey> cache) : IObserver<CacheUpdate>
+/// <summary>
+/// Observer that dispatches <see cref="CacheUpdate"/> items to the cache's
+/// downstream subjects. Used as the delivery target for <see cref="_notifications"/>.
+/// </summary>
+/// <param name="cache">The cache value.</param>
+private sealed class CacheUpdateObserver(ObservableCache<TObject, TKey> cache) : IObserver<CacheUpdate>
     {
+        /// <summary>
+        /// Executes the OnNext operation.
+        /// </summary>
+        /// <param name="value">The value value.</param>
         public void OnNext(CacheUpdate value)
         {
             if (value.Changes is not null)
@@ -390,6 +528,10 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             EmitCount(value.Count);
         }
 
+        /// <summary>
+        /// Executes the OnError operation.
+        /// </summary>
+        /// <param name="error">The error value.</param>
         public void OnError(Exception error)
         {
             cache._changesPreview.OnError(error);
@@ -406,6 +548,9 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             }
         }
 
+        /// <summary>
+        /// Executes the OnCompleted operation.
+        /// </summary>
         public void OnCompleted()
         {
             cache._changes.OnCompleted();
@@ -422,6 +567,10 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             }
         }
 
+        /// <summary>
+        /// Executes the EmitChanges operation.
+        /// </summary>
+        /// <param name="changes">The changes value.</param>
         private void EmitChanges(ChangeSet<TObject, TKey> changes)
         {
             if (cache._suspensionTracker.IsValueCreated)
@@ -439,6 +588,10 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             cache._changes.OnNext(changes);
         }
 
+        /// <summary>
+        /// Executes the EmitCount operation.
+        /// </summary>
+        /// <param name="count">The count value.</param>
         private void EmitCount(int count)
         {
             if (cache._suspensionTracker.IsValueCreated)
@@ -459,22 +612,50 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         }
     }
 
-    private sealed class SuspensionTracker : IDisposable
+/// <summary>
+/// Provides members for the SuspensionTracker class.
+/// </summary>
+private sealed class SuspensionTracker : IDisposable
     {
-        private readonly BehaviorSubject<bool> _areNotificationsSuspended = new(false);
+        /// <summary>
+        /// The _areNotificationsSuspended field.
+        /// </summary>
+        private readonly BehaviorSignal<bool> _areNotificationsSuspended = new(false);
 
+        /// <summary>
+        /// The _pendingChanges field.
+        /// </summary>
         private List<Change<TObject, TKey>> _pendingChanges = [];
 
+        /// <summary>
+        /// The _countSuspendCount field.
+        /// </summary>
         private int _countSuspendCount;
 
+        /// <summary>
+        /// The _notifySuspendCount field.
+        /// </summary>
         private int _notifySuspendCount;
 
+        /// <summary>
+        /// Gets the IsCountSuspended value.
+        /// </summary>
         public bool IsCountSuspended => _countSuspendCount > 0;
 
+        /// <summary>
+        /// Gets the AreNotificationsSuspended value.
+        /// </summary>
         public bool AreNotificationsSuspended => _notifySuspendCount > 0;
 
+        /// <summary>
+        /// Gets the NotificationsSuspendedObservable value.
+        /// </summary>
         public IObservable<bool> NotificationsSuspendedObservable => _areNotificationsSuspended;
 
+        /// <summary>
+        /// Executes the EnqueueChanges operation.
+        /// </summary>
+        /// <param name="changes">The changes value.</param>
         public void EnqueueChanges(IEnumerable<Change<TObject, TKey>> changes)
         {
             Debug.Assert(changes is not null, "Don't pass in a null Enumerable");
@@ -482,6 +663,9 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             _pendingChanges.AddRange(changes);
         }
 
+        /// <summary>
+        /// Executes the SuspendNotifications operation.
+        /// </summary>
         public void SuspendNotifications()
         {
             if ((++_notifySuspendCount == 1) && !_areNotificationsSuspended.IsDisposed)
@@ -492,10 +676,21 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             }
         }
 
+        /// <summary>
+        /// Executes the SuspendCount operation.
+        /// </summary>
         public void SuspendCount() => ++_countSuspendCount;
 
+        /// <summary>
+        /// Executes the ResumeCount operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         public bool ResumeCount() => --_countSuspendCount == 0;
 
+        /// <summary>
+        /// Executes the ResumeNotifications operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         public (ChangeSet<TObject, TKey>? Changes, bool EmitResume) ResumeNotifications()
         {
             if (--_notifySuspendCount == 0 && !_areNotificationsSuspended.IsDisposed)
@@ -531,6 +726,9 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             _areNotificationsSuspended.Dispose();
         }
 
+        /// <summary>
+        /// Executes the Dispose operation.
+        /// </summary>
         public void Dispose()
         {
             _areNotificationsSuspended.OnCompleted();

@@ -1,12 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CS0618;CA1801;CA1812;CA1816;CA1062;CA1063;CS8767;CS8602;CS8618;IDE1006</NoWarn>
     <XunitVersion>2.*</XunitVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DynamicData\DynamicData.csproj" />
+    <ProjectReference Include="..\DynamicData.Reactive\DynamicData.Reactive.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,11 +18,41 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.*" />
     <PackageReference Include="Verify.Xunit" Version="30.*" />
     <PackageReference Include="AwesomeAssertions" Version="8.*" />
-    <PackageReference Include="Microsoft.Reactive.Testing" Version="6.*" />
     <PackageReference Include="PublicApiGenerator" Version="11.*" />
-    <PackageReference Include="coverlet.collector" Version="6.*">
+    <PackageReference Include="coverlet.collector" Version="10.*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="System.Collections.ObjectModel" />
+    <Using Include="System.ComponentModel" />
+    <Using Include="System.Collections" />
+    <Using Include="System.Collections.Specialized" />
+    <Using Include="DynamicData.Internal" />
+    <Using Include="DynamicData.Tests.Utilities" />
+    <Using Include="FluentAssertions" />
+    <Using Include="ReactiveUI.Primitives" />
+    <Using Include="ReactiveUI.Primitives.Advanced" />
+    <Using Include="ReactiveUI.Primitives.Advanced.Witness" Alias="Observer" />
+    <Using Include="ReactiveUI.Primitives.Concurrency" />
+    <Using Include="ReactiveUI.Primitives.RxVoid" Alias="Unit" />
+    <Using Include="ReactiveUI.Primitives.Signals" />
+    <Using Include="ReactiveUI.Primitives.Signals.Signal" Alias="Observable" />
+    <Using Include="ReactiveUI.Primitives.Disposables.Scope" Alias="Disposable" />
+    <Using Include="ReactiveUI.Primitives.Disposables.MultipleDisposable" Alias="CompositeDisposable" />
+    <Using Include="ReactiveUI.Primitives.Disposables.SwapDisposable" Alias="SerialDisposable" />
+    <Using Include="ReactiveUI.Primitives.Concurrency.ISequencer" Alias="IScheduler" />
+    <Using Include="ReactiveUI.Primitives.Concurrency.Sequencer" Alias="Scheduler" />
+    <Using Include="ReactiveUI.Primitives.Concurrency.TaskPoolSequencer" Alias="TaskPoolScheduler" />
+    <Using Include="ReactiveUI.Primitives.Concurrency.ThreadPoolSequencer" Alias="ThreadPoolScheduler" />
+  </ItemGroup>
+
+  <Target Name="CopyDynamicDataReactiveOutput" AfterTargets="Build">
+    <ItemGroup>
+      <DynamicDataReactiveRuntimeFile Include="..\DynamicData.Reactive\bin\$(Configuration)\$(TargetFramework)\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DynamicDataReactiveRuntimeFile)" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" Condition="'$(TargetDir)' != '' and '@(DynamicDataReactiveRuntimeFile)' != ''" />
+  </Target>
 </Project>

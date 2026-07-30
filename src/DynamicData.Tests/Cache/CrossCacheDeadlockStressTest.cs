@@ -1,26 +1,10 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Reactive.Threading.Tasks;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Bogus;
 
 using DynamicData.Binding;
-using DynamicData.Kernel;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -217,16 +201,16 @@ public sealed class CrossCacheDeadlockStressTest
         using var treeSource = new SourceCache<StressMarket, int>(m => m.Id);
 
         // ── Subjects for dynamic parameters ─────────────────────────
-        using var pageRequests = new BehaviorSubject<IPageRequest>(new PageRequest(1, pageSize));
-        using var virtualRequests = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, virtualSize));
-        using var pauseBatch = new BehaviorSubject<bool>(false);
-        using var forceTransform = new Subject<Func<StressMarket, bool>>();
-        using var switchSource = new BehaviorSubject<IObservable<IChangeSet<StressMarket, int>>>(sourceA.Connect());
-        using var comparerSubject = new BehaviorSubject<IComparer<StressMarket>>(RatingDescComparer.Instance);
+        using var pageRequests = new StateSignal<IPageRequest>(new PageRequest(1, pageSize));
+        using var virtualRequests = new StateSignal<IVirtualRequest>(new VirtualRequest(0, virtualSize));
+        using var pauseBatch = new StateSignal<bool>(false);
+        using var forceTransform = new Signal<Func<StressMarket, bool>>();
+        using var switchSource = new StateSignal<IObservable<IChangeSet<StressMarket, int>>>(sourceA.Connect());
+        using var comparerSubject = new StateSignal<IComparer<StressMarket>>(RatingDescComparer.Instance);
 
         // Stop signal for operators with a library gap — they don't forward OnCompleted:
         // Static Combiner (Or/And/Except), BatchIf, TransformToTree, Switch
-        using var stopSignal = new Subject<Unit>();
+        using var stopSignal = new Signal<Unit>();
 
         // ── Completion tracking ─────────────────────────────────────
         var completionTasks = new List<Task>();
@@ -476,8 +460,8 @@ public sealed class CrossCacheDeadlockStressTest
                 .TakeUntil(stopSignal));
 
         // Second Page + Virtualise + BatchIf uses on sourceB
-        using var pageBSubject = new BehaviorSubject<IPageRequest>(new PageRequest(1, pageSize));
-        using var pauseB = new BehaviorSubject<bool>(false);
+        using var pageBSubject = new StateSignal<IPageRequest>(new PageRequest(1, pageSize));
+        using var pauseB = new StateSignal<bool>(false);
 
         var pageBCache = TrackCache(
             sourceB.Connect()
@@ -486,7 +470,7 @@ public sealed class CrossCacheDeadlockStressTest
                 .BatchIf(pauseB, false, (TimeSpan?)null)                       // BatchIf [2]
                 .TakeUntil(stopSignal));
 
-        using var virtBRequests = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, virtualSize));
+        using var virtBRequests = new StateSignal<IVirtualRequest>(new VirtualRequest(0, virtualSize));
         var virtBCache = TrackCache(
             sourceB.Connect()
                 .Sort(PriorityAscComparer.Instance)                            // Sort [4]
@@ -538,7 +522,7 @@ public sealed class CrossCacheDeadlockStressTest
         completionNames.Add("QueryWhenChanged-A");
 
         // Second Switch + GroupOnImmutable + GroupOnObservable
-        using var switchSource2 = new BehaviorSubject<IObservable<IChangeSet<StressMarket, int>>>(sourceB.Connect());
+        using var switchSource2 = new StateSignal<IObservable<IChangeSet<StressMarket, int>>>(sourceB.Connect());
         var switchCache2 = TrackCache(
             switchSource2.Switch()                                             // Switch [2]
                 .TakeUntil(stopSignal));
@@ -657,7 +641,7 @@ public sealed class CrossCacheDeadlockStressTest
         var finalAKeys = new HashSet<int>(sourceA.Keys);
         var finalBKeys = new HashSet<int>(sourceB.Keys);
 
-        // 2. Complete all BehaviorSubjects so multi-source operators can complete
+        // 2. Complete all StateSignals so multi-source operators can complete
         forceTransform.OnCompleted();
         pageRequests.OnCompleted();
         pageBSubject.OnCompleted();
@@ -796,8 +780,6 @@ public sealed class CrossCacheDeadlockStressTest
         CountAll(treeCache.Items).Should().Be(treeCount, "Tree has all markets across depths");
         treeCache.Items.Any(n => n.Children.Count > 0).Should().BeTrue("Tree has child nodes");
         treeCache2.Count.Should().BeGreaterThan(0, "Tree2 produces results");
-
-        
 
         // Side chains
         lastQuery.Should().NotBeNull("QueryWhenChanged(B) fired");

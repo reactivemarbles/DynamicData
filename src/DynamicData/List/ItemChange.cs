@@ -3,7 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Container to describe a single change to a cache.
@@ -18,14 +22,14 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     public static readonly ItemChange<T> Empty;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ItemChange{T}" /> struct.
+    /// Initializes a new instance of the <see cref="ItemChange{T}"/> struct.
     /// </summary>
     /// <param name="reason">The reason.</param>
     /// <param name="current">The current.</param>
     /// <param name="previous">The previous.</param>
     /// <param name="currentIndex">Value of the current.</param>
     /// <param name="previousIndex">Value of the previous.</param>
-    public ItemChange(ListChangeReason reason, T current, in Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
+    public ItemChange(ListChangeReason reason, T current, in ReactiveUI.Primitives.Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
         : this()
     {
         Reason = reason;
@@ -48,7 +52,7 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
         Current = current;
         CurrentIndex = currentIndex;
         PreviousIndex = -1;
-        Previous = Optional<T>.None;
+        Previous = ReactiveUI.Primitives.Optional<T>.None;
     }
 
     /// <summary>
@@ -70,7 +74,7 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     /// <para>Gets the item from before the change.</para>
     /// <para>This is only when <see cref="Reason"/> is <see cref="ListChangeReason.Replace"/>.</para>
     /// </summary>
-    public Optional<T> Previous { get; }
+    public ReactiveUI.Primitives.Optional<T> Previous { get; }
 
     /// <summary>
     /// <para>Gets the previous index.</para>

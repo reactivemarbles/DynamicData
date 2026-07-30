@@ -4,12 +4,16 @@
 
 #if P_LINQ
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.PLinq
+#else
 namespace DynamicData.PLinq
+#endif
 {
-    /// <summary>
-    /// The type of parallelisation.
-    /// </summary>
-    public enum ParallelType
+/// <summary>
+/// The type of parallelisation.
+/// </summary>
+public enum ParallelType
     {
         /// <summary>
         /// No parallelisation will take place.

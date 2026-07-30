@@ -1,23 +1,31 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+// Polyfill implementation adapted from SimonCropp/Polyfill (https://github.com/SimonCropp/Polyfill).
 #if !NET7_0_OR_GREATER
+using System.Diagnostics;
+
 namespace System.Runtime.CompilerServices;
 
-// Allows use of the C#11 `required` keyword, internally within this library, when targeting frameworks older than .NET 7.
+/// <summary>Indicates that compiler support for a particular feature is required for the location where it is applied.</summary>
+[ExcludeFromCodeCoverage]
+[DebuggerNonUserCode]
 [AttributeUsage(AttributeTargets.All, AllowMultiple = true, Inherited = false)]
-internal sealed class CompilerFeatureRequiredAttribute(string featureName)
-        : Attribute
+internal sealed class CompilerFeatureRequiredAttribute : Attribute
 {
-    public const string RefStructs
-        = nameof(RefStructs);
+    /// <summary>The <see cref="FeatureName"/> used for the ref structs C# feature.</summary>
+    public const string RefStructs = nameof(RefStructs);
 
-    public const string RequiredMembers
-        = nameof(RequiredMembers);
+    /// <summary>The <see cref="FeatureName"/> used for the required members C# feature.</summary>
+    public const string RequiredMembers = nameof(RequiredMembers);
 
-    public string FeatureName { get; } = featureName;
+    /// <summary>Initializes a new instance of the <see cref="CompilerFeatureRequiredAttribute"/> class.</summary>
+    /// <param name="featureName">The name of the required compiler feature.</param>
+    public CompilerFeatureRequiredAttribute(string featureName) =>
+        FeatureName = featureName;
 
-    public bool IsOptional { get; init; }
+    /// <summary>Gets the name of the required compiler feature.</summary>
+    public string FeatureName { get; }
 }
 #endif

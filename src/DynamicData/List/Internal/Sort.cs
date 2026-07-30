@@ -1,21 +1,51 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the Sort class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="comparer">The comparer value.</param>
+/// <param name="sortOptions">The sortOptions value.</param>
+/// <param name="resort">The resort value.</param>
+/// <param name="comparerObservable">The comparerObservable value.</param>
+/// <param name="resetThreshold">The resetThreshold value.</param>
 internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? comparer, SortOptions sortOptions, IObservable<Unit>? resort, IObservable<IComparer<T>>? comparerObservable, int resetThreshold)
     where T : notnull
 {
+    /// <summary>
+    /// The _comparerObservable field.
+    /// </summary>
     private readonly IObservable<IComparer<T>> _comparerObservable = comparerObservable ?? Observable.Never<IComparer<T>>();
+
+    /// <summary>
+    /// The _resort field.
+    /// </summary>
     private readonly IObservable<Unit> _resort = resort ?? Observable.Never<Unit>();
+
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// The _comparer field.
+    /// </summary>
     private IComparer<T> _comparer = comparer ?? Comparer<T>.Default;
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
@@ -39,6 +69,12 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
                 return changeComparer.Merge(resortSync).Merge(dataChanged).Where(changes => changes.Count != 0).SubscribeSafe(observer);
             });
 
+    /// <summary>
+    /// Executes the ChangeComparer operation.
+    /// </summary>
+    /// <param name="target">The target value.</param>
+    /// <param name="comparer">The comparer value.</param>
+    /// <returns>The result of the operation.</returns>
     private IChangeSet<T> ChangeComparer(ChangeAwareList<T> target, IComparer<T> comparer)
     {
         _comparer = comparer;
@@ -53,6 +89,12 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
         return target.CaptureChanges();
     }
 
+    /// <summary>
+    /// Executes the GetCurrentPosition operation.
+    /// </summary>
+    /// <param name="target">The target value.</param>
+    /// <param name="item">The item value.</param>
+    /// <returns>The result of the operation.</returns>
     private int GetCurrentPosition(ChangeAwareList<T> target, T item)
     {
         var index = sortOptions == SortOptions.UseBinarySearch ? target.BinarySearch(item, _comparer) : target.IndexOf(item);
@@ -65,8 +107,20 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
         return index;
     }
 
+    /// <summary>
+    /// Executes the GetInsertPosition operation.
+    /// </summary>
+    /// <param name="target">The target value.</param>
+    /// <param name="item">The item value.</param>
+    /// <returns>The result of the operation.</returns>
     private int GetInsertPosition(ChangeAwareList<T> target, T item) => sortOptions == SortOptions.UseBinarySearch ? GetInsertPositionBinary(target, item) : GetInsertPositionLinear(target, item);
 
+    /// <summary>
+    /// Executes the GetInsertPositionBinary operation.
+    /// </summary>
+    /// <param name="target">The target value.</param>
+    /// <param name="item">The item value.</param>
+    /// <returns>The result of the operation.</returns>
     private int GetInsertPositionBinary(ChangeAwareList<T> target, T item)
     {
         var index = target.BinarySearch(item, _comparer);
@@ -81,6 +135,12 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
         return insertIndex;
     }
 
+    /// <summary>
+    /// Executes the GetInsertPositionLinear operation.
+    /// </summary>
+    /// <param name="target">The target value.</param>
+    /// <param name="item">The item value.</param>
+    /// <returns>The result of the operation.</returns>
     private int GetInsertPositionLinear(ChangeAwareList<T> target, T item)
     {
         for (var i = 0; i < target.Count; i++)
@@ -94,12 +154,23 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
         return target.Count;
     }
 
+    /// <summary>
+    /// Executes the Insert operation.
+    /// </summary>
+    /// <param name="target">The target value.</param>
+    /// <param name="item">The item value.</param>
     private void Insert(ChangeAwareList<T> target, T item)
     {
         var index = GetInsertPosition(target, item);
         target.Insert(index, item);
     }
 
+    /// <summary>
+    /// Executes the Process operation.
+    /// </summary>
+    /// <param name="target">The target value.</param>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
     private IChangeSet<T> Process(ChangeAwareList<T> target, IChangeSet<T> changes)
     {
         // if all removes and not Clear, then more efficient to try clear range
@@ -113,6 +184,12 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
         return ProcessImpl(target, changes);
     }
 
+    /// <summary>
+    /// Executes the ProcessImpl operation.
+    /// </summary>
+    /// <param name="target">The target value.</param>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
     private IChangeSet<T> ProcessImpl(ChangeAwareList<T> target, IChangeSet<T> changes)
     {
         var refreshes = new List<T>(changes.Refreshes);
@@ -214,12 +291,22 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
         return target.CaptureChanges();
     }
 
+    /// <summary>
+    /// Executes the Remove operation.
+    /// </summary>
+    /// <param name="target">The target value.</param>
+    /// <param name="item">The item value.</param>
     private void Remove(ChangeAwareList<T> target, T item)
     {
         var index = GetCurrentPosition(target, item);
         target.RemoveAt(index);
     }
 
+    /// <summary>
+    /// Executes the Reorder operation.
+    /// </summary>
+    /// <param name="target">The target value.</param>
+    /// <returns>The result of the operation.</returns>
     private IChangeSet<T> Reorder(ChangeAwareList<T> target)
     {
         var index = -1;
@@ -243,6 +330,12 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
         return target.CaptureChanges();
     }
 
+    /// <summary>
+    /// Executes the Reset operation.
+    /// </summary>
+    /// <param name="original">The original value.</param>
+    /// <param name="target">The target value.</param>
+    /// <returns>The result of the operation.</returns>
     private IChangeSet<T> Reset(List<T> original, ChangeAwareList<T> target)
     {
         var sorted = original.OrderBy(t => t, _comparer).ToList();

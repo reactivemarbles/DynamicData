@@ -2,11 +2,12 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.Tests;
+#else
 namespace DynamicData.Tests;
+#endif
 
 /// <summary>
 /// Aggregates all events and statistics for a change set to help assertions when testing.
@@ -15,8 +16,14 @@ namespace DynamicData.Tests;
 public class ChangeSetAggregator<TObject> : IDisposable
     where TObject : notnull
 {
+    /// <summary>
+    /// The _disposer field.
+    /// </summary>
     private readonly IDisposable _disposer;
 
+    /// <summary>
+    /// The _isDisposed field.
+    /// </summary>
     private bool _isDisposed;
 
     /// <summary>
@@ -25,6 +32,8 @@ public class ChangeSetAggregator<TObject> : IDisposable
     /// <param name="source">The source.</param>
     public ChangeSetAggregator(IObservable<IChangeSet<TObject>> source)
     {
+        ArgumentExceptionHelper.ThrowIfNull(source);
+
         var published = source.Publish();
 
         Data = published.AsObservableList();

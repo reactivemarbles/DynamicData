@@ -1,10 +1,3 @@
-﻿using BenchmarkDotNet.Attributes;
-using System;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Subjects;
-using DynamicData.Binding;
-
 namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
@@ -17,27 +10,24 @@ public class SortAndBindInitial: IDisposable
 
     private readonly SortExpressionComparer<Item> _comparer = SortExpressionComparer<Item>.Ascending(i => i.Ranking).ThenByAscending(i => i.Name);
 
-
-    Subject<IChangeSet<Item, int>> _newSubject = new();
-    Subject<IChangeSet<Item, int>> _newSubjectOptimised = new();
-    Subject<IChangeSet<Item, int>> _oldSubject = new();
-    Subject<IChangeSet<Item, int>> _oldSubjectOptimised = new();
+    Signal<IChangeSet<Item, int>> _newSubject = new();
+    Signal<IChangeSet<Item, int>> _newSubjectOptimised = new();
+    Signal<IChangeSet<Item, int>> _oldSubject = new();
+    Signal<IChangeSet<Item, int>> _oldSubjectOptimised = new();
 
     private IDisposable? _cleanUp;
     private ChangeSet<Item, int>? _changeSet;
 
-
     [Params(10, 100, 1_000, 10_000, 50_000)]
     public int Count { get; set; }
-
 
     [GlobalSetup]
     public void SetUp()
     {
-        _oldSubject = new Subject<IChangeSet<Item, int>>();
-        _oldSubjectOptimised = new Subject<IChangeSet<Item, int>>();
-        _newSubject = new Subject<IChangeSet<Item, int>>();
-        _newSubjectOptimised = new Subject<IChangeSet<Item, int>>();
+        _oldSubject = new Signal<IChangeSet<Item, int>>();
+        _oldSubjectOptimised = new Signal<IChangeSet<Item, int>>();
+        _newSubject = new Signal<IChangeSet<Item, int>>();
+        _newSubjectOptimised = new Signal<IChangeSet<Item, int>>();
 
         var changeSet = new ChangeSet<Item, int>(Count);
         foreach (var i in Enumerable.Range(1, Count))
@@ -63,7 +53,6 @@ public class SortAndBindInitial: IDisposable
         );
     }
 
-
     [Benchmark(Baseline = true)]
     public void Old() => _oldSubject.OnNext(_changeSet!);
 
@@ -75,7 +64,6 @@ public class SortAndBindInitial: IDisposable
 
     [Benchmark]
     public void NewOptimized() => _newSubjectOptimised.OnNext(_changeSet!);
-
 
     public void Dispose() => _cleanUp?.Dispose();
 }

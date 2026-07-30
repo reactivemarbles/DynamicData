@@ -1,22 +1,20 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
+using DynamicData.Reactive.List.Internal;
+#else
+
 using DynamicData.List.Internal;
-using DynamicData.List.Linq;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for ObservableList.
@@ -29,7 +27,7 @@ public static partial class ObservableListEx
     /// Returns an observable of the items that were removed.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-    /// <param name="source">The <see cref="ISourceList{T}"/> source list to apply size limits to.</param>
+    /// <param name="source">The <c>ISourceList&lt;T&gt;</c> source list to apply size limits to.</param>
     /// <param name="sizeLimit">The maximum number of items allowed. Must be greater than zero.</param>
     /// <param name="scheduler">The scheduler for scheduling size checks. Defaults to <see cref="GlobalConfig.DefaultScheduler"/>.</param>
     /// <returns>An observable that emits collections of items each time excess items are removed from the source list.</returns>
@@ -37,17 +35,17 @@ public static partial class ObservableListEx
     /// <exception cref="ArgumentException"><paramref name="sizeLimit"/> is zero or negative.</exception>
     /// <remarks>
     /// <para>
-    /// This operator acts directly on an <see cref="ISourceList{T}"/>. It subscribes to the source's changes,
+    /// This operator acts directly on an <c>ISourceList&lt;T&gt;</c>. It subscribes to the source's changes,
     /// tracks insertion order using an internal Transform, and removes the oldest items when the size limit is exceeded.
     /// </para>
     /// <para><b>Worth noting:</b> The returned observable emits the removed items (not changesets). Subscribe to this observable to activate the size-limiting mechanism. Removal is performed synchronously under a lock shared with the change tracking.</para>
     /// </remarks>
-    /// <seealso cref="ExpireAfter{T}(ISourceList{T}, Func{T, TimeSpan?}, TimeSpan?, IScheduler?)"/>
-    /// <seealso cref="Top{T}(IObservable{IChangeSet{T}}, int)"/>
+    /// <seealso><c>ExpireAfter&lt;T&gt;(ISourceList&lt;T&gt;, Func&lt;T, TimeSpan?&gt;, TimeSpan?, IScheduler?)</c></seealso>
+    /// <seealso><c>Top&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, int)</c></seealso>
     public static IObservable<IEnumerable<T>> LimitSizeTo<T>(this ISourceList<T> source, int sizeLimit, IScheduler? scheduler = null)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         if (sizeLimit <= 0)
         {

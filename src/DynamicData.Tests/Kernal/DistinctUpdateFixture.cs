@@ -1,11 +1,4 @@
-﻿using System;
-
-using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Kernal;
 
@@ -20,7 +13,7 @@ public class DistinctUpdateFixture
         update.Key.Should().Be(person);
         update.Reason.Should().Be(ChangeReason.Add);
         update.Current.Should().Be(person);
-        update.Previous.Should().Be(Optional.None<Person>());
+        update.Previous.Should().Be(Optional<Person>.None);
     }
 
     [Fact]
@@ -32,7 +25,7 @@ public class DistinctUpdateFixture
         update.Key.Should().Be(person);
         update.Reason.Should().Be(ChangeReason.Remove);
         update.Current.Should().Be(person);
-        update.Previous.Should().Be(Optional.None<Person>());
+        update.Previous.Should().Be(Optional<Person>.None);
     }
 
     [Fact]

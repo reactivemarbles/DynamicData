@@ -1,7 +1,3 @@
-﻿using System;
-using System.Collections;
-using System.Collections.ObjectModel;
-using System.Reactive.Disposables;
 using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain;

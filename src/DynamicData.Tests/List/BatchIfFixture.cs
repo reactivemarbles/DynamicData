@@ -1,20 +1,10 @@
-using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
 public class BatchIfFixture : IDisposable
 {
-    private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
+    private readonly ISignal<bool> _pausingSubject = new Signal<bool>();
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -24,7 +14,7 @@ public class BatchIfFixture : IDisposable
 
     public BatchIfFixture()
     {
-        _pausingSubject = new Subject<bool>();
+        _pausingSubject = new Signal<bool>();
         _scheduler = new TestScheduler();
         _source = new SourceList<Person>();
         _results = _source.Connect().BufferIf(_pausingSubject, _scheduler).AsAggregator();
@@ -98,6 +88,7 @@ public class BatchIfFixture : IDisposable
     {
         _results.Dispose();
         _source.Dispose();
+        _pausingSubject.Dispose();
     }
 
     [Fact]

@@ -5,9 +5,13 @@
 #if NETCOREAPP3_0_OR_GREATER
 using System.Numerics;
 #endif
-using System.Runtime.CompilerServices;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Internal;
+#else
 
 namespace DynamicData.Internal;
+#endif
 
 /// <summary>
 /// <para>
@@ -24,10 +28,24 @@ namespace DynamicData.Internal;
 /// </summary>
 internal struct Bitset
 {
+    /// <summary>
+    /// The BitsPerWord field.
+    /// </summary>
     private const int BitsPerWord = 64;
+
+    /// <summary>
+    /// The WordShift field.
+    /// </summary>
     private const int WordShift = 6;
+
+    /// <summary>
+    /// The BitMask field.
+    /// </summary>
     private const int BitMask = BitsPerWord - 1;
 
+    /// <summary>
+    /// The _words field.
+    /// </summary>
     private long[] _words;
 
     /// <summary>Initializes a new instance of the <see cref="Bitset"/> struct with capacity for 64 slots.</summary>
@@ -72,6 +90,7 @@ internal struct Bitset
 
     /// <summary>Returns <see langword="true"/> if the bit at <paramref name="index"/> is set.</summary>
     /// <param name="index">The zero-based slot index.</param>
+    /// <returns>The result of the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool IsSet(int index)
     {
@@ -95,6 +114,7 @@ internal struct Bitset
     /// in a single CPU instruction.
     /// </para>
     /// </summary>
+    /// <returns>The result of the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly int FindHighest()
     {
@@ -138,6 +158,7 @@ internal struct Bitset
     /// in a single CPU instruction.
     /// </para>
     /// </summary>
+    /// <returns>The result of the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly int FindLowest()
     {
@@ -160,6 +181,7 @@ internal struct Bitset
     }
 
     /// <summary>Returns <see langword="true"/> if any bit is set.</summary>
+    /// <returns>The result of the operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool HasAny() => Count > 0;
 
@@ -215,7 +237,12 @@ internal struct Bitset
     }
 
 #if !NETCOREAPP3_0_OR_GREATER
-    private static int HighestSetBit(long value)
+        /// <summary>
+    /// Executes the HighestSetBit operation.
+    /// </summary>
+    /// <param name="value">The value value.</param>
+    /// <returns>The result of the operation.</returns>
+private static int HighestSetBit(long value)
     {
         var bit = 0;
         for (var v = (ulong)value; v > 1; v >>= 1)
@@ -226,7 +253,12 @@ internal struct Bitset
         return bit;
     }
 
-    private static int LowestSetBit(long value)
+        /// <summary>
+    /// Executes the LowestSetBit operation.
+    /// </summary>
+    /// <param name="value">The value value.</param>
+    /// <returns>The result of the operation.</returns>
+private static int LowestSetBit(long value)
     {
         var bit = 0;
         var v = (ulong)value;

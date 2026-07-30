@@ -1,10 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.Kernel;
+#else
 
 namespace DynamicData.Kernel;
+#endif
 
 /// <summary>
 /// Extensions for optional.
@@ -21,20 +24,20 @@ public static class OptionObservableExtensions
     /// <param name="converter">The converter.</param>
     /// <returns>Observable Optional of <typeparamref name="TDestination"/>.</returns>
     /// <exception cref="ArgumentNullException">Source or Converter was null.</exception>
-    /// <remarks>Observable version of <seealso cref="OptionExtensions.Convert{TSource, TDestination}(in Optional{TSource}, Func{TSource, TDestination})"/>.</remarks>
-    public static IObservable<Optional<TDestination>> Convert<TSource, TDestination>(this IObservable<Optional<TSource>> source, Func<TSource, TDestination> converter)
+    /// <remarks>Observable version of <seealso><c>OptionExtensions.Convert&lt;TSource, TDestination&gt;(in Optional&lt;TSource&gt;, Func&lt;TSource, TDestination&gt;)</c></seealso>.</remarks>
+    public static IObservable<ReactiveUI.Primitives.Optional<TDestination>> Convert<TSource, TDestination>(this IObservable<ReactiveUI.Primitives.Optional<TSource>> source, Func<TSource, TDestination> converter)
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(converter);
 
-        return source.Select(optional => optional.HasValue ? converter(optional.Value) : Optional.None<TDestination>());
+        return source.Select(optional => optional.HasValue ? converter(optional.Value) : ReactiveUI.Primitives.Optional<TDestination>.None);
     }
 
     /// <summary>
-    /// Overload of <see cref="Convert{TSource, TDestination}(IObservable{Optional{TSource}}, Func{TSource, TDestination})"/> that allows the conversion
-    /// operation to also return an Optional.
+    /// Overload of <c>Convert&lt;TSource, TDestination&gt;(IObservable&lt;Optional&lt;TSource&gt;&gt;, Func&lt;TSource, TDestination&gt;)</c> that allows the conversion
+    /// operation to also return an ReactiveUI.Primitives.Optional.
     /// </summary>
     /// <typeparam name="TSource">The type of the source.</typeparam>
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
@@ -42,15 +45,15 @@ public static class OptionObservableExtensions
     /// <param name="converter">The converter that returns an optional value.</param>
     /// <returns>Observable Optional of <typeparamref name="TDestination"/>.</returns>
     /// <exception cref="ArgumentNullException">Source or Converter was null.</exception>
-    /// <remarks>Observable version of <seealso cref="OptionExtensions.Convert{TSource, TDestination}(in Optional{TSource}, Func{TSource, Optional{TDestination}})"/>.</remarks>
-    public static IObservable<Optional<TDestination>> Convert<TSource, TDestination>(this IObservable<Optional<TSource>> source, Func<TSource, Optional<TDestination>> converter)
+    /// <remarks>Observable version of <seealso><c>OptionExtensions.Convert&lt;TSource, TDestination&gt;(in Optional&lt;TSource&gt;, Func&lt;TSource, Optional&lt;TDestination&gt;&gt;)</c></seealso>.</remarks>
+    public static IObservable<ReactiveUI.Primitives.Optional<TDestination>> Convert<TSource, TDestination>(this IObservable<ReactiveUI.Primitives.Optional<TSource>> source, Func<TSource, ReactiveUI.Primitives.Optional<TDestination>> converter)
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(converter);
 
-        return source.Select(optional => optional.HasValue ? converter(optional.Value) : Optional.None<TDestination>());
+        return source.Select(optional => optional.HasValue ? converter(optional.Value) : ReactiveUI.Primitives.Optional<TDestination>.None);
     }
 
     /// <summary>
@@ -70,12 +73,12 @@ public static class OptionObservableExtensions
     /// or
     /// fallbackConverter.
     /// </exception>
-    public static IObservable<TDestination?> ConvertOr<TSource, TDestination>(this IObservable<Optional<TSource>> source, Func<TSource, TDestination?> converter, Func<TDestination?> fallbackConverter)
+    public static IObservable<TDestination?> ConvertOr<TSource, TDestination>(this IObservable<ReactiveUI.Primitives.Optional<TSource>> source, Func<TSource, TDestination?> converter, Func<TDestination?> fallbackConverter)
         where TSource : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
-        fallbackConverter.ThrowArgumentNullExceptionIfNull(nameof(fallbackConverter));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(converter);
+        ArgumentExceptionHelper.ThrowIfNull(fallbackConverter);
 
         return source.Select(optional => optional.HasValue ? converter(optional.Value) : fallbackConverter());
     }
@@ -92,12 +95,12 @@ public static class OptionObservableExtensions
     /// or
     /// fallbackOperation.
     /// </exception>
-    /// <remarks>Observable version of <seealso cref="OptionExtensions.OrElse{T}(in Optional{T}, Func{Optional{T}})"/>.</remarks>
-    public static IObservable<Optional<T>> OrElse<T>(this IObservable<Optional<T>> source, Func<Optional<T>> fallbackOperation)
+    /// <remarks>Observable version of <seealso><c>OptionExtensions.OrElse&lt;T&gt;(in Optional&lt;T&gt;, Func&lt;Optional&lt;T&gt;&gt;)</c></seealso>.</remarks>
+    public static IObservable<ReactiveUI.Primitives.Optional<T>> OrElse<T>(this IObservable<ReactiveUI.Primitives.Optional<T>> source, Func<ReactiveUI.Primitives.Optional<T>> fallbackOperation)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        fallbackOperation.ThrowArgumentNullExceptionIfNull(nameof(fallbackOperation));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(fallbackOperation);
 
         return source.Select(optional => optional.HasValue ? optional : fallbackOperation());
     }
@@ -109,13 +112,13 @@ public static class OptionObservableExtensions
     /// <param name="source">The source.</param>
     /// <param name="action">The action.</param>
     /// <param name="elseAction">Optional alternative action for the Else case.</param>
-    /// <returns>The same Observable Optional.</returns>
-    /// <remarks>Observable version of <seealso cref="OptionExtensions.IfHasValue{T}(in Optional{T}, Action{T})"/>.</remarks>
-    public static IObservable<Optional<T>> OnHasValue<T>(this IObservable<Optional<T>> source, Action<T> action, Action? elseAction = null)
+    /// <returns>The same Observable ReactiveUI.Primitives.Optional.</returns>
+    /// <remarks>Observable version of <seealso><c>OptionExtensions.IfHasValue&lt;T&gt;(in Optional&lt;T&gt;, Action&lt;T&gt;)</c></seealso>.</remarks>
+    public static IObservable<ReactiveUI.Primitives.Optional<T>> OnHasValue<T>(this IObservable<ReactiveUI.Primitives.Optional<T>> source, Action<T> action, Action? elseAction = null)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(action);
 
         return source.Do(optional => optional.IfHasValue(action).Else(() => elseAction?.Invoke()));
     }
@@ -127,29 +130,34 @@ public static class OptionObservableExtensions
     /// <param name="source">The source.</param>
     /// <param name="action">The action.</param>
     /// <param name="elseAction">Optional alternative action for the Else case.</param>
-    /// <returns>The same Observable Optional.</returns>
-    public static IObservable<Optional<T>> OnHasNoValue<T>(this IObservable<Optional<T>> source, Action action, Action<T>? elseAction = null)
+    /// <returns>The same Observable ReactiveUI.Primitives.Optional.</returns>
+    public static IObservable<ReactiveUI.Primitives.Optional<T>> OnHasNoValue<T>(this IObservable<ReactiveUI.Primitives.Optional<T>> source, Action action, Action<T>? elseAction = null)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(action);
 
         return source.Do(optional => optional.IfHasValue(val => elseAction?.Invoke(val)).Else(action));
     }
 
     /// <summary>
-    /// Converts an Observable of <see cref="Optional{T}"/> into an IObservable of <typeparamref name="T"/> by extracting
+    /// Converts an Observable of <c>Optional&lt;T&gt;</c> into an IObservable of <typeparamref name="T"/> by extracting
     /// the values from Optionals that have one.
     /// </summary>
     /// <typeparam name="T">The type of item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An Observable with the Values.</returns>
-    /// <remarks>Observable version of <seealso cref="OptionExtensions.SelectValues{T}(IEnumerable{Optional{T}})"/>.</remarks>
-    public static IObservable<T> SelectValues<T>(this IObservable<Optional<T>> source)
-        where T : notnull => source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
+    /// <remarks>Observable version of <seealso><c>OptionExtensions.SelectValues&lt;T&gt;(IEnumerable&lt;Optional&lt;T&gt;&gt;)</c></seealso>.</remarks>
+    public static IObservable<T> SelectValues<T>(this IObservable<ReactiveUI.Primitives.Optional<T>> source)
+        where T : notnull
+    {
+        ArgumentExceptionHelper.ThrowIfNull(source);
+
+        return source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
+    }
 
     /// <summary>
-    /// Converts an Observable of <see cref="Optional{T}"/> into an IObservable of <typeparamref name="T"/> by extracting the
+    /// Converts an Observable of <c>Optional&lt;T&gt;</c> into an IObservable of <typeparamref name="T"/> by extracting the
     /// values from the ones that contain a value and then using <paramref name="valueSelector"/> to generate a value for the others.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
@@ -157,11 +165,12 @@ public static class OptionObservableExtensions
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>If the value or a provided default.</returns>
     /// <exception cref="ArgumentNullException">valueSelector.</exception>
-    /// <remarks>Observable version of <seealso cref="OptionExtensions.ValueOr{T}(in Optional{T}, Func{T})"/>.</remarks>
-    public static IObservable<T> ValueOr<T>(this IObservable<Optional<T>> source, Func<T> valueSelector)
+    /// <remarks>Observable version of <seealso><c>OptionExtensions.ValueOr&lt;T&gt;(in Optional&lt;T&gt;, Func&lt;T&gt;)</c></seealso>.</remarks>
+    public static IObservable<T> ValueOr<T>(this IObservable<ReactiveUI.Primitives.Optional<T>> source, Func<T> valueSelector)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(valueSelector);
 
         return source.Select(optional => optional.HasValue ? optional.Value : valueSelector());
     }
@@ -172,17 +181,17 @@ public static class OptionObservableExtensions
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>The value or default.</returns>
-    /// <remarks>Observable version of <seealso cref="OptionExtensions.ValueOrDefault{T}(in Optional{T})"/>.</remarks>
-    public static IObservable<T?> ValueOrDefault<T>(this IObservable<Optional<T>> source)
+    /// <remarks>Observable version of <seealso><c>OptionExtensions.ValueOrDefault&lt;T&gt;(in Optional&lt;T&gt;)</c></seealso>.</remarks>
+    public static IObservable<T?> ValueOrDefault<T>(this IObservable<ReactiveUI.Primitives.Optional<T>> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.Select(optional => optional.ValueOrDefault());
     }
 
     /// <summary>
-    /// Converts an Observable of <see cref="Optional{T}"/> into an IObservable of <typeparamref name="T"/> by extracting the values.
+    /// Converts an Observable of <c>Optional&lt;T&gt;</c> into an IObservable of <typeparamref name="T"/> by extracting the values.
     /// If it has no value, <paramref name="exceptionGenerator"/> is used to generate an exception that is injected into the stream as error.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
@@ -190,13 +199,12 @@ public static class OptionObservableExtensions
     /// <param name="exceptionGenerator">The exception generator.</param>
     /// <returns>The value.</returns>
     /// <exception cref="ArgumentNullException">exceptionGenerator.</exception>
-    /// <remarks>Observable version of <seealso cref="OptionExtensions.ValueOrThrow{T}(in Optional{T}, Func{Exception})"/>.</remarks>
-    public static IObservable<T> ValueOrThrow<T>(this IObservable<Optional<T>> source, Func<Exception> exceptionGenerator)
+    /// <remarks>Observable version of <seealso><c>OptionExtensions.ValueOrThrow&lt;T&gt;(in Optional&lt;T&gt;, Func&lt;Exception&gt;)</c></seealso>.</remarks>
+    public static IObservable<T> ValueOrThrow<T>(this IObservable<ReactiveUI.Primitives.Optional<T>> source, Func<Exception> exceptionGenerator)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        exceptionGenerator.ThrowArgumentNullExceptionIfNull(nameof(exceptionGenerator));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(exceptionGenerator);
 
         return Observable.Create<T>(observer =>
             source.Subscribe(

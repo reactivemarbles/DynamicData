@@ -1,14 +1,20 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if SUPPORTS_BINDINGLIST
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using DynamicData.Cache;
+#if REACTIVE_SHIM
+using DynamicData.Reactive.Cache.Internal;
+#else
 using DynamicData.Cache.Internal;
+#endif
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 /// <summary>
 /// Adaptor to reflect a change set into a binding list.
@@ -22,13 +28,21 @@ namespace DynamicData.Binding;
 public class BindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(BindingList<T> list, int refreshThreshold = BindingOptions.DefaultResetThreshold) : IChangeSetAdaptor<T>
     where T : notnull
 {
+    /// <summary>
+    /// The _list field.
+    /// </summary>
     private readonly BindingList<T> _list = list ?? throw new ArgumentNullException(nameof(list));
+
+    /// <summary>
+    /// The _loaded field.
+    /// </summary>
     private bool _loaded;
 
     /// <inheritdoc />
+    /// <param name="changes">The changes value.</param>
     public void Adapt(IChangeSet<T> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
 
         if (changes.TotalChanges - changes.Refreshes > refreshThreshold || !_loaded)
         {
@@ -60,15 +74,26 @@ public class BindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAccessedM
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _cache field.
+    /// </summary>
     private readonly Cache<TObject, TKey> _cache = new();
 
+    /// <summary>
+    /// The _list field.
+    /// </summary>
     private readonly BindingList<TObject> _list = list ?? throw new ArgumentNullException(nameof(list));
+
+    /// <summary>
+    /// The _loaded field.
+    /// </summary>
     private bool _loaded;
 
     /// <inheritdoc />
+    /// <param name="changes">The changes value.</param>
     public void Adapt(IChangeSet<TObject, TKey> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
         _cache.Clone(changes);
 
         if (changes.Count - changes.Refreshes > refreshThreshold || !_loaded)
@@ -86,6 +111,11 @@ public class BindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAccessedM
         }
     }
 
+    /// <summary>
+    /// Executes the DoUpdate operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    /// <param name="list">The list value.</param>
     private static void DoUpdate(IChangeSet<TObject, TKey> changes, BindingList<TObject> list)
     {
         foreach (var update in changes.ToConcreteType())

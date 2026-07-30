@@ -1,27 +1,57 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
-internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TRightKey, Optional<TLeft>, TRight, TDestination> resultSelector)
+/// <summary>
+/// Provides members for the RightJoin class.
+/// </summary>
+/// <typeparam name="TLeft">The type of the TLeft value.</typeparam>
+/// <typeparam name="TLeftKey">The type of the TLeftKey value.</typeparam>
+/// <typeparam name="TRight">The type of the TRight value.</typeparam>
+/// <typeparam name="TRightKey">The type of the TRightKey value.</typeparam>
+/// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+/// <param name="left">The left value.</param>
+/// <param name="right">The right value.</param>
+/// <param name="rightKeySelector">The rightKeySelector value.</param>
+/// <param name="resultSelector">The resultSelector value.</param>
+internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TRightKey, ReactiveUI.Primitives.Optional<TLeft>, TRight, TDestination> resultSelector)
     where TLeft : notnull
     where TLeftKey : notnull
     where TRight : notnull
     where TRightKey : notnull
     where TDestination : notnull
 {
+    /// <summary>
+    /// The _left field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left = left ?? throw new ArgumentNullException(nameof(left));
 
-    private readonly Func<TRightKey, Optional<TLeft>, TRight, TDestination> _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
+    /// <summary>
+    /// The _resultSelector field.
+    /// </summary>
+    private readonly Func<TRightKey, ReactiveUI.Primitives.Optional<TLeft>, TRight, TDestination> _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
 
+    /// <summary>
+    /// The _right field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TRight, TRightKey>> _right = right ?? throw new ArgumentNullException(nameof(right));
 
+    /// <summary>
+    /// The _rightKeySelector field.
+    /// </summary>
     private readonly Func<TRight, TLeftKey> _rightKeySelector = rightKeySelector ?? throw new ArgumentNullException(nameof(rightKeySelector));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TDestination, TRightKey>> Run() => Observable.Create<IChangeSet<TDestination, TRightKey>>(
             observer =>
             {
@@ -113,7 +143,7 @@ internal sealed class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
                                     case ChangeReason.Remove:
                                         if (right.HasValue)
                                         {
-                                            joinedCache.AddOrUpdate(_resultSelector(right.Value.key, Optional<TLeft>.None, right.Value.item), right.Value.key);
+                                            joinedCache.AddOrUpdate(_resultSelector(right.Value.key, ReactiveUI.Primitives.Optional<TLeft>.None, right.Value.item), right.Value.key);
                                         }
 
                                         break;

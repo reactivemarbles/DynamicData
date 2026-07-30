@@ -1,26 +1,37 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-
-using DynamicData.Internal;
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the ExpireAfter class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
 internal sealed class ExpireAfter<T>
     where T : notnull
 {
+    /// <summary>
+    /// Executes the Create operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="timeSelector">The timeSelector value.</param>
+    /// <param name="pollingInterval">The pollingInterval value.</param>
+    /// <param name="scheduler">The scheduler value.</param>
+    /// <returns>The result of the operation.</returns>
     public static IObservable<IEnumerable<T>> Create(
         ISourceList<T> source,
         Func<T, TimeSpan?> timeSelector,
         TimeSpan? pollingInterval = null,
         IScheduler? scheduler = null)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(timeSelector);
 
         return Observable.Create<IEnumerable<T>>(observer => (pollingInterval is { } pollingIntervalValue)
             ? new PollingSubscription(
@@ -36,21 +47,74 @@ internal sealed class ExpireAfter<T>
                 timeSelector: timeSelector));
     }
 
-    private abstract class SubscriptionBase
+/// <summary>
+/// Provides members for the SubscriptionBase class.
+/// </summary>
+private abstract class SubscriptionBase
         : IDisposable
     {
+        /// <summary>
+        /// The _expirationDueTimes field.
+        /// </summary>
         private readonly List<DateTimeOffset?> _expirationDueTimes;
-        private readonly List<int> _expiringIndexesBuffer;
+
+        /// <summary>
+        /// The _items field.
+        /// </summary>
+        private readonly List<T> _items;
+
+        /// <summary>
+        /// The _expiringItemsBuffer field.
+        /// </summary>
+        private readonly List<ExpiringItem> _expiringItemsBuffer;
+
+        /// <summary>
+        /// The _observer field.
+        /// </summary>
         private readonly IObserver<IEnumerable<T>> _observer;
+
+        /// <summary>
+        /// The _onEditingSource field.
+        /// </summary>
         private readonly Action<IExtendedList<T>> _onEditingSource;
+
+        /// <summary>
+        /// The _scheduler field.
+        /// </summary>
         private readonly IScheduler _scheduler;
+
+        /// <summary>
+        /// The _source field.
+        /// </summary>
         private readonly ISourceList<T> _source;
+
+        /// <summary>
+        /// The _sourceSubscription field.
+        /// </summary>
         private readonly IDisposable _sourceSubscription;
+
+        /// <summary>
+        /// The _timeSelector field.
+        /// </summary>
         private readonly Func<T, TimeSpan?> _timeSelector;
 
+        /// <summary>
+        /// The _hasSourceCompleted field.
+        /// </summary>
         private bool _hasSourceCompleted;
+
+        /// <summary>
+        /// The _nextScheduledManagement field.
+        /// </summary>
         private ScheduledManagement? _nextScheduledManagement;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SubscriptionBase"/> class.
+        /// </summary>
+        /// <param name="observer">The observer value.</param>
+        /// <param name="scheduler">The scheduler value.</param>
+        /// <param name="source">The source value.</param>
+        /// <param name="timeSelector">The timeSelector value.</param>
         protected SubscriptionBase(
             IObserver<IEnumerable<T>> observer,
             IScheduler? scheduler,
@@ -66,19 +130,23 @@ internal sealed class ExpireAfter<T>
             _onEditingSource = OnEditingSource;
 
             _expirationDueTimes = new();
-            _expiringIndexesBuffer = new();
+            _items = new();
+            _expiringItemsBuffer = new();
 
-            _sourceSubscription = source
-                .Connect()
-                // It's important to set this flag outside the context of a lock, because it'll be read outside of lock as well.
-                .Finally(() => _hasSourceCompleted = true)
-                .Synchronize(SynchronizationGate)
-                .SubscribeSafe(
-                    onNext: OnSourceNext,
-                    onError: OnSourceError,
-                    onCompleted: OnSourceCompleted);
+            _sourceSubscription = PrimitivesLinqExtensions.SubscribeSafe(
+                source
+                    .Connect()
+                    // It's important to set this flag outside the context of a lock, because it'll be read outside of lock as well.
+                    .Finally(() => _hasSourceCompleted = true)
+                    .Synchronize(SynchronizationGate),
+                onNext: OnSourceNext,
+                onError: OnSourceError,
+                onCompleted: OnSourceCompleted);
         }
 
+        /// <summary>
+        /// Executes the Dispose operation.
+        /// </summary>
         public void Dispose()
         {
             lock (SynchronizationGate)
@@ -89,15 +157,29 @@ internal sealed class ExpireAfter<T>
             }
         }
 
+        /// <summary>
+        /// Gets the Scheduler value.
+        /// </summary>
         protected IScheduler Scheduler
             => _scheduler;
-
         // Instead of using a dedicated _synchronizationGate object, we can save an allocation by using any object that is never exposed to public consumers.
+
+        /// <summary>
+        /// Gets the SynchronizationGate value.
+        /// </summary>
         protected object SynchronizationGate
             => _expirationDueTimes;
 
+        /// <summary>
+        /// Executes the GetNextManagementDueTime operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         protected abstract DateTimeOffset? GetNextManagementDueTime();
 
+        /// <summary>
+        /// Executes the GetNextProposedExpirationDueTime operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         protected DateTimeOffset? GetNextProposedExpirationDueTime()
         {
             var result = null as DateTimeOffset?;
@@ -111,8 +193,15 @@ internal sealed class ExpireAfter<T>
             return result;
         }
 
+        /// <summary>
+        /// Executes the OnExpirationsManaged operation.
+        /// </summary>
+        /// <param name="dueTime">The dueTime value.</param>
         protected abstract void OnExpirationsManaged(DateTimeOffset dueTime);
 
+        /// <summary>
+        /// Executes the ManageExpirations operation.
+        /// </summary>
         private void ManageExpirations()
         {
             // This check is needed, to make sure we don't try and call .Edit() on a disposed _source,
@@ -129,6 +218,10 @@ internal sealed class ExpireAfter<T>
             _source.Edit(_onEditingSource);
         }
 
+        /// <summary>
+        /// Executes the OnEditingSource operation.
+        /// </summary>
+        /// <param name="updater">The updater value.</param>
         private void OnEditingSource(IExtendedList<T> updater)
         {
             lock (SynchronizationGate)
@@ -150,7 +243,7 @@ internal sealed class ExpireAfter<T>
                 {
                     if ((_expirationDueTimes[i] is { } dueTime) && (dueTime <= now))
                     {
-                        _expiringIndexesBuffer.Add(i);
+                        _expiringItemsBuffer.Add(new ExpiringItem(i, _items[i]));
 
                         // This shouldn't be necessary, but it guarantees we don't accidentally expire an item more than once,
                         // in the event of a race condition or something we haven't predicted.
@@ -159,22 +252,30 @@ internal sealed class ExpireAfter<T>
                 }
 
                 // I'm pretty sure it shouldn't be possible to end up with no removals here, but it costs basically nothing to check.
-                if (_expiringIndexesBuffer.Count is not 0)
+                if (_expiringItemsBuffer.Count is not 0)
                 {
                     // Processing removals in reverse-index order eliminates the need for us to adjust index of each .RemoveAt() call, as we go.
-                    _expiringIndexesBuffer.Sort(static (x, y) => y.CompareTo(x));
+                    _expiringItemsBuffer.Sort(static (x, y) => y.Index.CompareTo(x.Index));
 
-                    var removedItems = new T[_expiringIndexesBuffer.Count];
-                    for (var i = 0; i < _expiringIndexesBuffer.Count; ++i)
+                    var removedItems = new List<T>(_expiringItemsBuffer.Count);
+                    for (var i = 0; i < _expiringItemsBuffer.Count; ++i)
                     {
-                        var removedIndex = _expiringIndexesBuffer[i];
-                        removedItems[i] = updater[removedIndex];
+                        var expiringItem = _expiringItemsBuffer[i];
+                        if (!TryGetCurrentIndex(updater, expiringItem, out var removedIndex))
+                        {
+                            continue;
+                        }
+
+                        removedItems.Add(updater[removedIndex]);
                         updater.RemoveAt(removedIndex);
                     }
 
-                    _observer.OnNext(removedItems);
+                    if (removedItems.Count != 0)
+                    {
+                        _observer.OnNext(removedItems);
+                    }
 
-                    _expiringIndexesBuffer.Clear();
+                    _expiringItemsBuffer.Clear();
                 }
 
                 OnExpirationsManaged(thisScheduledManagement.DueTime);
@@ -184,6 +285,9 @@ internal sealed class ExpireAfter<T>
             }
         }
 
+        /// <summary>
+        /// Executes the OnExpirationDueTimesChanged operation.
+        /// </summary>
         private void OnExpirationDueTimesChanged()
         {
             // Check if we need to re-schedule the next management operation
@@ -219,6 +323,9 @@ internal sealed class ExpireAfter<T>
             }
         }
 
+        /// <summary>
+        /// Executes the OnSourceCompleted operation.
+        /// </summary>
         private void OnSourceCompleted()
         {
             // If the source completes, we can no longer remove items from it, so any pending expirations are moot.
@@ -227,6 +334,10 @@ internal sealed class ExpireAfter<T>
             _observer.OnCompleted();
         }
 
+        /// <summary>
+        /// Executes the OnSourceError operation.
+        /// </summary>
+        /// <param name="error">The error value.</param>
         private void OnSourceError(Exception error)
         {
             TryCancelNextScheduledManagement();
@@ -234,6 +345,10 @@ internal sealed class ExpireAfter<T>
             _observer.OnError(error);
         }
 
+        /// <summary>
+        /// Executes the OnSourceNext operation.
+        /// </summary>
+        /// <param name="changes">The changes value.</param>
         private void OnSourceNext(IChangeSet<T> changes)
         {
             try
@@ -249,6 +364,10 @@ internal sealed class ExpireAfter<T>
                         case ListChangeReason.Add:
                             {
                                 var dueTime = now + _timeSelector.Invoke(change.Item.Current);
+
+                                _items.Insert(
+                                    index: change.Item.CurrentIndex,
+                                    item: change.Item.Current);
 
                                 _expirationDueTimes.Insert(
                                     index: change.Item.CurrentIndex,
@@ -266,6 +385,10 @@ internal sealed class ExpireAfter<T>
                                 foreach (var item in change.Range)
                                 {
                                     var dueTime = now + _timeSelector.Invoke(item);
+
+                                    _items.Insert(
+                                        index: itemIndex,
+                                        item: item);
 
                                     _expirationDueTimes.Insert(
                                         index: itemIndex,
@@ -289,11 +412,18 @@ internal sealed class ExpireAfter<T>
                             }
 
                             _expirationDueTimes.Clear();
+                            _items.Clear();
                             break;
 
                         case ListChangeReason.Moved:
                             {
+                                var item = _items[change.Item.PreviousIndex];
                                 var expirationDueTime = _expirationDueTimes[change.Item.PreviousIndex];
+
+                                _items.RemoveAt(change.Item.PreviousIndex);
+                                _items.Insert(
+                                    index: change.Item.CurrentIndex,
+                                    item: item);
 
                                 _expirationDueTimes.RemoveAt(change.Item.PreviousIndex);
                                 _expirationDueTimes.Insert(
@@ -310,6 +440,7 @@ internal sealed class ExpireAfter<T>
                                 }
 
                                 _expirationDueTimes.RemoveAt(change.Item.CurrentIndex);
+                                _items.RemoveAt(change.Item.CurrentIndex);
                             }
                             break;
 
@@ -326,6 +457,7 @@ internal sealed class ExpireAfter<T>
                                 }
 
                                 _expirationDueTimes.RemoveRange(change.Range.Index, change.Range.Count);
+                                _items.RemoveRange(change.Range.Index, change.Range.Count);
                             }
                             break;
 
@@ -337,6 +469,7 @@ internal sealed class ExpireAfter<T>
                                 // Ignoring the possibility that the item's index has changed as well, because ISourceList<T> does not allow for this.
 
                                 _expirationDueTimes[change.Item.CurrentIndex] = newDueTime;
+                                _items[change.Item.CurrentIndex] = change.Item.Current;
 
                                 haveExpirationDueTimesChanged |= newDueTime != oldDueTime;
                             }
@@ -357,23 +490,82 @@ internal sealed class ExpireAfter<T>
             }
         }
 
+        /// <summary>
+        /// Executes the TryCancelNextScheduledManagement operation.
+        /// </summary>
         private void TryCancelNextScheduledManagement()
         {
             _nextScheduledManagement?.Cancellation.Dispose();
             _nextScheduledManagement = null;
         }
 
-        private readonly record struct ScheduledManagement
+        /// <summary>
+        /// Attempts to find the current source index for an item scheduled for expiration.
+        /// </summary>
+        /// <param name="updater">The updater value.</param>
+        /// <param name="expiringItem">The expiringItem value.</param>
+        /// <param name="index">The index value.</param>
+        /// <returns><see langword="true"/> when the item is still present in the source list.</returns>
+        private static bool TryGetCurrentIndex(IExtendedList<T> updater, ExpiringItem expiringItem, out int index)
         {
+            if (expiringItem.Index >= 0 &&
+                expiringItem.Index < updater.Count &&
+                EqualityComparer<T>.Default.Equals(updater[expiringItem.Index], expiringItem.Item))
+            {
+                index = expiringItem.Index;
+                return true;
+            }
+
+            for (var i = 0; i < updater.Count; ++i)
+            {
+                if (EqualityComparer<T>.Default.Equals(updater[i], expiringItem.Item))
+                {
+                    index = i;
+                    return true;
+                }
+            }
+
+            index = -1;
+            return false;
+        }
+
+/// <summary>
+/// The source item and index captured when an expiration becomes due.
+/// </summary>
+/// <param name="Index">The Index value.</param>
+/// <param name="Item">The Item value.</param>
+private readonly record struct ExpiringItem(int Index, T Item);
+
+/// <summary>
+/// Represents the ScheduledManagement record.
+/// </summary>
+private readonly record struct ScheduledManagement
+        {
+            /// <summary>
+            /// Gets or sets the Cancellation value.
+            /// </summary>
             public required IDisposable Cancellation { get; init; }
 
+            /// <summary>
+            /// Gets or sets the DueTime value.
+            /// </summary>
             public required DateTimeOffset DueTime { get; init; }
         }
     }
 
-    private sealed class OnDemandSubscription
+/// <summary>
+/// Provides members for the OnDemandSubscription class.
+/// </summary>
+private sealed class OnDemandSubscription
         : SubscriptionBase
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OnDemandSubscription"/> class.
+        /// </summary>
+        /// <param name="observer">The observer value.</param>
+        /// <param name="scheduler">The scheduler value.</param>
+        /// <param name="source">The source value.</param>
+        /// <param name="timeSelector">The timeSelector value.</param>
         public OnDemandSubscription(
                 IObserver<IEnumerable<T>> observer,
                 IScheduler? scheduler,
@@ -387,21 +579,46 @@ internal sealed class ExpireAfter<T>
         {
         }
 
+        /// <summary>
+        /// Executes the GetNextManagementDueTime operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         protected override DateTimeOffset? GetNextManagementDueTime()
             => GetNextProposedExpirationDueTime();
 
+        /// <summary>
+        /// Executes the OnExpirationsManaged operation.
+        /// </summary>
+        /// <param name="dueTime">The dueTime value.</param>
         protected override void OnExpirationsManaged(DateTimeOffset dueTime)
         {
         }
     }
 
-    private sealed class PollingSubscription
+/// <summary>
+/// Provides members for the PollingSubscription class.
+/// </summary>
+private sealed class PollingSubscription
         : SubscriptionBase
     {
+        /// <summary>
+        /// The _pollingInterval field.
+        /// </summary>
         private readonly TimeSpan _pollingInterval;
 
+        /// <summary>
+        /// The _lastManagementDueTime field.
+        /// </summary>
         private DateTimeOffset _lastManagementDueTime;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PollingSubscription"/> class.
+        /// </summary>
+        /// <param name="observer">The observer value.</param>
+        /// <param name="pollingInterval">The pollingInterval value.</param>
+        /// <param name="scheduler">The scheduler value.</param>
+        /// <param name="source">The source value.</param>
+        /// <param name="timeSelector">The timeSelector value.</param>
         public PollingSubscription(
                 IObserver<IEnumerable<T>> observer,
                 TimeSpan pollingInterval,
@@ -419,6 +636,10 @@ internal sealed class ExpireAfter<T>
             _lastManagementDueTime = Scheduler.Now;
         }
 
+        /// <summary>
+        /// Executes the GetNextManagementDueTime operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         protected override DateTimeOffset? GetNextManagementDueTime()
         {
             var now = Scheduler.Now;
@@ -430,6 +651,10 @@ internal sealed class ExpireAfter<T>
                 : now;
         }
 
+        /// <summary>
+        /// Executes the OnExpirationsManaged operation.
+        /// </summary>
+        /// <param name="dueTime">The dueTime value.</param>
         protected override void OnExpirationsManaged(DateTimeOffset dueTime)
             => _lastManagementDueTime = dueTime;
     }

@@ -1,24 +1,22 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -26,13 +24,13 @@ namespace DynamicData;
 public static partial class ObservableCacheEx
 {
     /// <summary>
-    /// Filters items using a per-item <see cref="IObservable{Boolean}"/> that controls inclusion.
+    /// Filters items using a per-item <c>IObservable&lt;Boolean&gt;</c> that controls inclusion.
     /// Each item's observable is created by <paramref name="filterFactory"/> and toggles the item in or out of the downstream stream.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to filter using per-item observables.</param>
-    /// <param name="filterFactory">A factory that creates an <see cref="IObservable{Boolean}"/> for each item and its key. When the observable emits <see langword="true"/>, the item is included; when <see langword="false"/>, it is excluded.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to filter using per-item observables.</param>
+    /// <param name="filterFactory">A factory that creates an <c>IObservable&lt;Boolean&gt;</c> for each item and its key. When the observable emits <see langword="true"/>, the item is included; when <see langword="false"/>, it is excluded.</param>
     /// <param name="buffer">A <see cref="TimeSpan"/> that optional time window to buffer inclusion changes from per-item observables before re-evaluating.</param>
     /// <param name="scheduler">An <see cref="IScheduler"/> that optional scheduler used for buffering.</param>
     /// <returns>An observable changeset containing only items whose per-item observable most recently emitted <see langword="true"/>.</returns>
@@ -67,19 +65,28 @@ public static partial class ObservableCacheEx
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="filterFactory"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="Filter{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, bool}, bool)"/>
-    /// <seealso cref="ObservableListEx.FilterOnObservable"/>
+    /// <seealso><c>Filter&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, bool&gt;, bool)</c></seealso>
+    /// <seealso><c>ObservableListEx.FilterOnObservable</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> FilterOnObservable<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<bool>> filterFactory, TimeSpan? buffer = null, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        filterFactory.ThrowArgumentNullExceptionIfNull(nameof(filterFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(filterFactory);
 
         return new FilterOnObservable<TObject, TKey>(source, filterFactory, buffer, scheduler).Run();
     }
 
-    /// <inheritdoc cref="FilterOnObservable{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
+    /// <summary>
+    /// Provides an overload of <c>FilterOnObservable</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="filterFactory">The filterFactory value.</param>
+    /// <param name="buffer">The buffer value.</param>
+    /// <param name="scheduler">The scheduler value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>
     /// This overload does not provide the key to <paramref name="filterFactory"/>; only the item is passed.
     /// </remarks>
@@ -87,8 +94,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        filterFactory.ThrowArgumentNullExceptionIfNull(nameof(filterFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(filterFactory);
 
         return source.FilterOnObservable((obj, _) => filterFactory(obj), buffer, scheduler);
     }

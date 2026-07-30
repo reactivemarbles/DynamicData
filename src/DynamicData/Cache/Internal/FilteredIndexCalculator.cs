@@ -1,13 +1,30 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the FilteredIndexCalculator class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 internal static class FilteredIndexCalculator<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// Executes the Calculate operation.
+    /// </summary>
+    /// <param name="currentItems">The currentItems value.</param>
+    /// <param name="previousItems">The previousItems value.</param>
+    /// <param name="sourceUpdates">The sourceUpdates value.</param>
+    /// <returns>The result of the operation.</returns>
     public static IList<Change<TObject, TKey>> Calculate(IKeyValueCollection<TObject, TKey> currentItems, IKeyValueCollection<TObject, TKey> previousItems, IChangeSet<TObject, TKey>? sourceUpdates)
     {
         if (currentItems.SortReason == SortReason.ComparerChanged || currentItems.SortReason == SortReason.InitialLoad)
@@ -130,6 +147,13 @@ internal static class FilteredIndexCalculator<TObject, TKey>
         return result;
     }
 
+    /// <summary>
+    /// Executes the GetInsertPositionLinear operation.
+    /// </summary>
+    /// <param name="list">The list value.</param>
+    /// <param name="item">The item value.</param>
+    /// <param name="comparer">The comparer value.</param>
+    /// <returns>The result of the operation.</returns>
     private static int GetInsertPositionLinear(List<KeyValuePair<TKey, TObject>> list, KeyValuePair<TKey, TObject> item, IComparer<KeyValuePair<TKey, TObject>> comparer)
     {
         for (var i = 0; i < list.Count; i++)

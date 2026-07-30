@@ -1,9 +1,17 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache;
+#else
 
 namespace DynamicData.Cache;
+#endif
 
+/// <summary>
+/// Provides members for the CacheChangeSetEx class.
+/// </summary>
 internal static class CacheChangeSetEx
 {
     /// <summary>
@@ -12,7 +20,7 @@ internal static class CacheChangeSetEx
     /// This extension is a crazy hack to cast to the concrete change set which means we no longer allocate
     /// as change set now inherits from List which has allocation free enumerations.
     /// </para>
-    /// <para>IChangeSet will be removed in a future version and instead <see cref="ChangeSet{TObject, TKey}"/> will be used directly.</para>
+    /// <para>IChangeSet will be removed in a future version and instead <c>ChangeSet&lt;TObject, TKey&gt;</c> will be used directly.</para>
     /// <para>In the mean time I am banking that no-one has implemented a custom change set - personally I think it is very unlikely.</para>
     /// </summary>
     /// <typeparam name="TObject">ChangeSet Object Type.</typeparam>
@@ -44,8 +52,8 @@ internal static class CacheChangeSetEx
         where TDestination : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformer.ThrowArgumentNullExceptionIfNull(nameof(transformer));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformer);
 
         var changes = source.Select(change =>
             new Change<TDestination, TKey>(change.Reason, change.Key, transformer(change.Current), change.Previous.Convert(transformer), change.CurrentIndex, change.PreviousIndex));

@@ -1,29 +1,60 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Linq;
-using DynamicData.Internal;
+using DynamicData.Reactive.List.Internal;
+#else
+
 using DynamicData.List.Internal;
+#endif
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 /// <summary>
 /// Operator that is similiar to MergeMany but intelligently handles List ChangeSets.
 /// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="selector">The selector value.</param>
+/// <param name="equalityComparer">The equalityComparer value.</param>
 internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination>>> selector, IEqualityComparer<TDestination>? equalityComparer)
     where TObject : notnull
     where TKey : notnull
     where TDestination : notnull
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TDestination>> Run() => Observable.Create<IChangeSet<TDestination>>(
         observer => new Subscription(source, selector, observer, equalityComparer));
-
     // Maintains state for a single subscription
-    private sealed class Subscription : CacheParentSubscription<ClonedListChangeSet<TDestination>, TKey, IChangeSet<TDestination>, IChangeSet<TDestination>>
+
+/// <summary>
+/// Provides members for the Subscription class.
+/// </summary>
+private sealed class Subscription : CacheParentSubscription<ClonedListChangeSet<TDestination>, TKey, IChangeSet<TDestination>, IChangeSet<TDestination>>
     {
+        /// <summary>
+        /// The _changeSetMergeTracker field.
+        /// </summary>
         private readonly ChangeSetMergeTracker<TDestination> _changeSetMergeTracker = new();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Subscription"/> class.
+        /// </summary>
+        /// <param name="source">The source value.</param>
+        /// <param name="selector">The selector value.</param>
+        /// <param name="observer">The observer value.</param>
+        /// <param name="equalityComparer">The equalityComparer value.</param>
         public Subscription(
             IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, TKey, IObservable<IChangeSet<TDestination>>> selector,
@@ -36,6 +67,10 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
                 new ClonedListChangeSet<TDestination>(MakeChildObservable(selector(obj, key).RemoveIndex()), equalityComparer)));
         }
 
+        /// <summary>
+        /// Executes the ParentOnNext operation.
+        /// </summary>
+        /// <param name="changes">The changes value.</param>
         protected override void ParentOnNext(IChangeSet<ClonedListChangeSet<TDestination>, TKey> changes)
         {
             // Process all the changes at once to preserve the changeset order
@@ -55,16 +90,25 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
 
                     // Shutdown the existing subscription and remove from the cache
                     case ChangeReason.Remove:
-                        RemoveChildSubscription(change.Key);
                         _changeSetMergeTracker.RemoveItems(change.Current.List);
+                        RemoveChildSubscription(change.Key);
                         break;
                 }
             }
         }
 
+        /// <summary>
+        /// Executes the ChildOnNext operation.
+        /// </summary>
+        /// <param name="child">The child value.</param>
+        /// <param name="parentKey">The parentKey value.</param>
         protected override void ChildOnNext(IChangeSet<TDestination> child, TKey parentKey) =>
             _changeSetMergeTracker.ProcessChangeSet(child, null);
 
+        /// <summary>
+        /// Executes the EmitChanges operation.
+        /// </summary>
+        /// <param name="observer">The observer value.</param>
         protected override void EmitChanges(IObserver<IChangeSet<TDestination>> observer) =>
             _changeSetMergeTracker.EmitChanges(observer);
     }

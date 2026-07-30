@@ -1,22 +1,8 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Bogus;
-
-using DynamicData.Internal;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Internal;
 
@@ -24,6 +10,7 @@ namespace DynamicData.Tests.Internal;
 /// Tests for <see cref="CacheParentSubscription{TParent, TKey, TChild, TObserver}"/>
 /// behavioral contracts using a minimal concrete subclass.
 /// </summary>
+[Collection(IntegrationTestFixtureBase.CollectionName)]
 public sealed class CacheParentSubscriptionFixture
 {
     private const int SeedMin = 1;
@@ -60,11 +47,11 @@ public sealed class CacheParentSubscriptionFixture
     public void ChildOnNext_CalledForEachEmission()
     {
         using var source = new SourceCache<TestItem, int>(x => x.Key);
-        var childSubjects = new List<Subject<string>>();
+        var childSubjects = new List<Signal<string>>();
         var observer = new TestObserver();
         using var sub = new TestSubscription(observer, key =>
         {
-            var subj = new Subject<string>();
+            var subj = new Signal<string>();
             childSubjects.Add(subj);
             return subj;
         });
@@ -110,7 +97,7 @@ public sealed class CacheParentSubscriptionFixture
         using var sub = new TestSubscription(observer, key =>
         {
             Interlocked.Increment(ref childCount);
-            return new BehaviorSubject<string>($"sync-{key}");
+            return new StateSignal<string>($"sync-{key}");
         });
         sub.ExposeCreateParent(source.Connect());
 
@@ -129,11 +116,11 @@ public sealed class CacheParentSubscriptionFixture
     public void Completion_RequiresParentAndAllChildren()
     {
         using var source = new TestSourceCache<TestItem, int>(x => x.Key);
-        var childSubjects = new List<Subject<string>>();
+        var childSubjects = new List<Signal<string>>();
         var observer = new TestObserver();
         using var sub = new TestSubscription(observer, key =>
         {
-            var subj = new Subject<string>();
+            var subj = new Signal<string>();
             childSubjects.Add(subj);
             return subj;
         });
@@ -165,11 +152,11 @@ public sealed class CacheParentSubscriptionFixture
     public void Disposal_StopsAllEmissions()
     {
         using var source = new SourceCache<TestItem, int>(x => x.Key);
-        var childSubjects = new List<Subject<string>>();
+        var childSubjects = new List<Signal<string>>();
         var observer = new TestObserver();
         var sub = new TestSubscription(observer, key =>
         {
-            var subj = new Subject<string>();
+            var subj = new Signal<string>();
             childSubjects.Add(subj);
             return subj;
         });
@@ -211,7 +198,7 @@ public sealed class CacheParentSubscriptionFixture
             observer,
             key =>
             {
-                var subj = new Subject<string>();
+                var subj = new Signal<string>();
                 return subj;
             },
             onParent: () => { lock (callLog) callLog.Add("P-start"); Thread.Sleep(1); lock (callLog) callLog.Add("P-end"); },

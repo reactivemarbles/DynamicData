@@ -1,11 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Creation methods for observable change sets.
@@ -24,8 +26,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return Create(
             cache =>
@@ -48,14 +50,15 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
                 var cache = new SourceCache<TObject, TKey>(keySelector);
                 var disposable = new SingleAssignmentDisposable();
+                var responder = cache.Connect().SubscribeSafe(observer);
 
                 try
                 {
@@ -66,7 +69,7 @@ public static class ObservableChangeSet
                     observer.OnError(e);
                 }
 
-                return new CompositeDisposable(disposable, Disposable.Create(observer.OnCompleted), cache.Connect().SubscribeSafe(observer), cache);
+                return new CompositeDisposable(disposable, Disposable.Create(observer.OnCompleted), responder, cache);
             });
     }
 
@@ -82,8 +85,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return Create(async (cache, _) => await subscribe(cache).ConfigureAwait(false), keySelector);
     }
@@ -100,8 +103,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             async (observer, ct) =>
@@ -135,8 +138,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return Create((cache, _) => subscribe(cache), keySelector);
     }
@@ -153,8 +156,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             async (observer, ct) =>
@@ -197,8 +200,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             async observer =>
@@ -231,8 +234,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
+        ArgumentExceptionHelper.ThrowIfNull(keySelector);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             async (observer, ct) =>
@@ -262,7 +265,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Action> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
 
         return Create<T>(
             list =>
@@ -281,13 +284,14 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, IDisposable> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
 
         return Observable.Create<IChangeSet<T>>(
             observer =>
             {
                 var list = new SourceList<T>();
                 IDisposable? disposeAction = null;
+                var responder = list.Connect().SubscribeSafe(observer);
 
                 try
                 {
@@ -299,7 +303,7 @@ public static class ObservableChangeSet
                 }
 
                 return new CompositeDisposable(
-                    list.Connect().SubscribeSafe(observer),
+                    responder,
                     list,
                     Disposable.Create(
                         () =>
@@ -319,7 +323,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task<IDisposable>> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
 
         return Create<T>((list, _) => subscribe(list));
     }
@@ -333,7 +337,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task<IDisposable>> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
 
         return Observable.Create<IChangeSet<T>>(
             async (observer, ct) =>
@@ -374,7 +378,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task<Action>> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
 
         return Create<T>(async (list, _) => await subscribe(list).ConfigureAwait(false));
     }
@@ -388,7 +392,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task<Action>> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
 
         return Observable.Create<IChangeSet<T>>(
             async (observer, ct) =>
@@ -428,7 +432,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
 
         return Observable.Create<IChangeSet<T>>(
             async observer =>
@@ -458,7 +462,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentExceptionHelper.ThrowIfNull(subscribe);
 
         return Observable.Create<IChangeSet<T>>(
             async (observer, ct) =>

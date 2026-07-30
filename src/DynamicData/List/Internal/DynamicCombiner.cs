@@ -1,25 +1,44 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+using DynamicData.Reactive.Cache.Internal;
+#else
 
 using DynamicData.Cache.Internal;
+#endif
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the DynamicCombiner class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="type">The type value.</param>
 internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<T>>> source, CombineOperator type)
     where T : notnull
 {
-#if NET9_0_OR_GREATER
+    /// <summary>
+    /// The _locker field.
+    /// </summary>
     private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservableList<IObservable<IChangeSet<T>>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
@@ -89,6 +108,12 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
                 return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged);
             });
 
+    /// <summary>
+    /// Executes the MatchesConstraint operation.
+    /// </summary>
+    /// <param name="sourceLists">The sourceLists value.</param>
+    /// <param name="item">The item value.</param>
+    /// <returns>The result of the operation.</returns>
     private bool MatchesConstraint(MergeContainer[] sourceLists, T item)
     {
         if (sourceLists.Length == 0)
@@ -125,6 +150,12 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
         }
     }
 
+    /// <summary>
+    /// Executes the UpdateItemMembership operation.
+    /// </summary>
+    /// <param name="item">The item value.</param>
+    /// <param name="sourceLists">The sourceLists value.</param>
+    /// <param name="resultList">The resultList value.</param>
     private void UpdateItemMembership(T item, MergeContainer[] sourceLists, ChangeAwareListWithRefCounts<T> resultList)
     {
         var isInResult = resultList.Contains(item);
@@ -139,13 +170,27 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
         }
     }
 
+    /// <summary>
+    /// Executes the UpdateItemSetMemberships operation.
+    /// </summary>
+    /// <param name="sourceLists">The sourceLists value.</param>
+    /// <param name="resultingList">The resultingList value.</param>
+    /// <param name="items">The items value.</param>
+    /// <returns>The result of the operation.</returns>
     private IChangeSet<T> UpdateItemSetMemberships(MergeContainer[] sourceLists, ChangeAwareListWithRefCounts<T> resultingList, IEnumerable<T> items)
     {
         items.ForEach(item => UpdateItemMembership(item, sourceLists, resultingList));
         return resultingList.CaptureChanges();
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "By Design.")]
+    /// <summary>
+    /// Executes the UpdateResultList operation.
+    /// </summary>
+    /// <param name="sourceLists">The sourceLists value.</param>
+    /// <param name="resultList">The resultList value.</param>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
+    [SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "By Design.")]
     private IChangeSet<T> UpdateResultList(MergeContainer[] sourceLists, ChangeAwareListWithRefCounts<T> resultList, IChangeSet<T> changes)
     {
         // child caches have been updated before we reached this point.
@@ -185,14 +230,31 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
         return resultList.CaptureChanges();
     }
 
-    private sealed class MergeContainer
+/// <summary>
+/// Provides members for the MergeContainer class.
+/// </summary>
+private sealed class MergeContainer
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MergeContainer"/> class.
+        /// </summary>
+        /// <param name="source">The source value.</param>
         public MergeContainer(IObservable<IChangeSet<T>> source) => Source = source.Do(Clone);
 
+        /// <summary>
+        /// Gets the Source value.
+        /// </summary>
         public IObservable<IChangeSet<T>> Source { get; }
 
+        /// <summary>
+        /// Gets the Tracker value.
+        /// </summary>
         public ReferenceCountTracker<T> Tracker { get; } = new();
 
+        /// <summary>
+        /// Executes the Clone operation.
+        /// </summary>
+        /// <param name="changes">The changes value.</param>
         private void Clone(IChangeSet<T> changes)
         {
             foreach (var change in changes)

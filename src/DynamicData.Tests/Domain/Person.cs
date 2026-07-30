@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-using DynamicData.Binding;
+﻿using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain;
 

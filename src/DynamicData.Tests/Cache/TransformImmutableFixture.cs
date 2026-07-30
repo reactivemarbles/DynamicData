@@ -1,12 +1,3 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public sealed class TransformImmutableFixture
@@ -14,12 +5,11 @@ public sealed class TransformImmutableFixture
     [Fact]
     public void ItemsAreManipulated_ItemsAreTransformed()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var results = source
             .TransformImmutable(transformFactory: Item.NameSelector)
             .AsAggregator();
-
 
         // Additions
         var item1 = new Item() { Id = 1, Name = "Item #1" };
@@ -37,7 +27,6 @@ public sealed class TransformImmutableFixture
         results.Messages.ElementAt(0).Select(change => change.PreviousIndex).Should().BeEquivalentTo(operation1.Select(change => change.PreviousIndex), "indexes should be preserved");
         results.Data.Items.Should().BeEquivalentTo(new[] { item1.Name, item2.Name }, "2 items were added");
 
-
         // Replace items, changing inclusion
         var item3 = new Item() { Id = item1.Id, Name = "Item #3" };
         var item4 = new Item() { Id = item2.Id, Name = "Item #4" };
@@ -54,7 +43,6 @@ public sealed class TransformImmutableFixture
         results.Messages.ElementAt(1).Select(change => change.PreviousIndex).Should().BeEquivalentTo(operation2.Select(change => change.PreviousIndex), "indexes should be preserved");
         results.Data.Items.Should().BeEquivalentTo(new[] { item3.Name, item4.Name }, "2 items were replaced");
 
-
         // Refresh items
         var operation3 = new ChangeSet<Item, int>()
         {
@@ -68,7 +56,6 @@ public sealed class TransformImmutableFixture
         results.Messages.ElementAt(2).Select(change => change.CurrentIndex).Should().BeEquivalentTo(operation3.Select(change => change.CurrentIndex), "indexes should be preserved");
         results.Messages.ElementAt(2).Select(change => change.PreviousIndex).Should().BeEquivalentTo(operation3.Select(change => change.PreviousIndex), "indexes should be preserved");
         results.Data.Items.Should().BeEquivalentTo(new[] { item3.Name, item4.Name }, "2 items were refreshed");
-
 
         // Move items
         var operation4 = new ChangeSet<Item, int>()
@@ -84,7 +71,6 @@ public sealed class TransformImmutableFixture
         results.Messages.ElementAt(3).Select(change => change.PreviousIndex).Should().BeEquivalentTo(operation4.Select(change => change.PreviousIndex), "indexes should be preserved");
         results.Data.Items.Should().BeEquivalentTo(new[] { item4.Name, item3.Name }, "2 items were moved");
 
-
         // Remove items
         var operation5 = new ChangeSet<Item, int>()
         {
@@ -99,19 +85,17 @@ public sealed class TransformImmutableFixture
         results.Messages.ElementAt(4).Select(change => change.PreviousIndex).Should().BeEquivalentTo(operation5.Select(change => change.PreviousIndex), "indexes should be preserved");
         results.Data.Items.Should().BeEmpty("2 items were removed");
 
-
         results.IsCompleted.Should().BeFalse();
     }
 
     [Fact]
     public void SourceCompletes_CompletionIsPropagated()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         using var results = source
             .TransformImmutable(transformFactory: Item.NameSelector)
             .AsAggregator();
-
 
         var item1 = new Item() { Id = 1, Name = "Item #1" };
         source.OnNext(new ChangeSet<Item, int>()
@@ -125,7 +109,6 @@ public sealed class TransformImmutableFixture
         results.Messages.Count.Should().Be(1, "1 source operation was performed");
         results.Data.Items.Should().BeEquivalentTo(new[] { item1.Name }, "1 item was added");
 
-        
         // Make sure no extraneous notifications are published.
         var item2 = new Item() { Id = 2, Name = "Item #2" };
         source.OnNext(new ChangeSet<Item, int>()
@@ -159,7 +142,6 @@ public sealed class TransformImmutableFixture
             .TransformImmutable(transformFactory: Item.NameSelector)
             .AsAggregator();
 
-
         results.Error.Should().BeNull();
         results.IsCompleted.Should().BeTrue();
         results.Messages.Count.Should().Be(1, "1 source operation was performed");
@@ -169,14 +151,13 @@ public sealed class TransformImmutableFixture
     [Fact]
     public void SourceErrors_ErrorIsPropagated()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         var error = new Exception();
 
         using var results = source
             .TransformImmutable(transformFactory: Item.NameSelector)
             .AsAggregator();
-
 
         var item1 = new Item() { Id = 1, Name = "Item #1" };
         source.OnNext(new ChangeSet<Item, int>()
@@ -190,7 +171,6 @@ public sealed class TransformImmutableFixture
         results.Messages.Count.Should().Be(1, "1 source operation was performed");
         results.Data.Items.Should().BeEquivalentTo(new[] { item1.Name }, "1 item was added");
 
-        
         // Make sure no extraneous notifications are published.
         var item2 = new Item() { Id = 2, Name = "Item #2" };
         source.OnNext(new ChangeSet<Item, int>()
@@ -223,7 +203,6 @@ public sealed class TransformImmutableFixture
             .TransformImmutable(transformFactory: Item.NameSelector)
             .AsAggregator();
 
-
         results.Error.Should().Be(error);
         results.IsCompleted.Should().BeFalse();
         results.Messages.Count.Should().Be(1, "1 source operation was performed");
@@ -247,14 +226,13 @@ public sealed class TransformImmutableFixture
     [Fact]
     public void TransformFactoryThrows_ExceptionIsCaptured()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new Signal<IChangeSet<Item, int>>();
 
         var error = new Exception();
 
         using var results = source
             .TransformImmutable<string, Item, int>(transformFactory: _ => throw error)
             .AsAggregator();
-
 
         var item1 = new Item() { Id = 1, Name = "Item #1" };
         source.OnNext(new ChangeSet<Item, int>()
@@ -271,12 +249,11 @@ public sealed class TransformImmutableFixture
     [Fact]
     public void TDestinationIsValueType_DoesNotThrowException()
     {
-        using var source = new Subject<IChangeSet<string, string>>();
+        using var source = new Signal<IChangeSet<string, string>>();
 
         using var results = source
             .TransformImmutable(transformFactory: static value => value.Length)
             .AsAggregator();
-
 
         source.OnNext(new ChangeSet<string, string>()
         {

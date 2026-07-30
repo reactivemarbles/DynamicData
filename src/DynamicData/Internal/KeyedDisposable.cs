@@ -1,8 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Internal;
+#else
 
 namespace DynamicData.Internal;
+#endif
 
 /// <summary>
 /// Manages Disposables by Key:
@@ -14,16 +19,24 @@ namespace DynamicData.Internal;
 internal sealed class KeyedDisposable<TKey> : IDisposable
     where TKey : notnull
 {
+    /// <summary>
+    /// The _disposables field.
+    /// </summary>
     private readonly Dictionary<TKey, IDisposable> _disposables = [];
 
-#if NET9_0_OR_GREATER
+    /// <summary>
+    /// The _gate field.
+    /// </summary>
     private readonly Lock _gate = new();
-#else
-    private readonly object _gate = new();
-#endif
 
+    /// <summary>
+    /// The _disposedValue field.
+    /// </summary>
     private bool _disposedValue;
 
+    /// <summary>
+    /// Gets the Count value.
+    /// </summary>
     public int Count
     {
         get
@@ -33,6 +46,9 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
         }
     }
 
+    /// <summary>
+    /// Gets the Keys value.
+    /// </summary>
     public IEnumerable<TKey> Keys
     {
         get
@@ -42,12 +58,20 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
         }
     }
 
+    /// <summary>
+    /// Executes the ContainsKey operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
     public bool ContainsKey(TKey key)
     {
         lock (_gate)
             return _disposables.ContainsKey(key);
     }
 
+    /// <summary>
+    /// Gets the IsDisposed value.
+    /// </summary>
     public bool IsDisposed
     {
         get
@@ -63,6 +87,10 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
     /// If the item is NOT disposable, any existing entry for the key is removed
     /// and disposed.
     /// </summary>
+    /// <typeparam name="TItem">The type of the TItem value.</typeparam>
+    /// <param name="key">The key value.</param>
+    /// <param name="item">The item value.</param>
+    /// <returns>The result of the operation.</returns>
     public TItem Add<TItem>(TKey key, TItem item)
         where TItem : notnull
     {
@@ -105,6 +133,10 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
         return item;
     }
 
+    /// <summary>
+    /// Executes the Remove operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
     public void Remove(TKey key)
     {
         IDisposable? toDispose;
@@ -123,6 +155,9 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
         toDispose.Dispose();
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose()
     {
         Dictionary<TKey, IDisposable>? snapshot;

@@ -4,18 +4,22 @@
 
 #if P_LINQ
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.PLinq
+#else
 namespace DynamicData.PLinq
+#endif
 {
-    /// <summary>
-    /// Options to specify parallelisation of stream operations.  Only applicable for .Net4 and .Net45 builds.
-    /// </summary>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="ParallelisationOptions"/> class.
-    /// </remarks>
-    /// <param name="type">The type of parallel operation.</param>
-    /// <param name="threshold">The threshold before making the operation parallel.</param>
-    /// <param name="maxDegreeOfParallelisation">The maximum degrees of parallelism.</param>
-    public class ParallelisationOptions(ParallelType type = ParallelType.None, int threshold = 0, int maxDegreeOfParallelisation = 0)
+/// <summary>
+/// Options to specify parallelisation of stream operations.  Only applicable for .Net4 and .Net45 builds.
+/// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="ParallelisationOptions"/> class.
+/// </remarks>
+/// <param name="type">The type of parallel operation.</param>
+/// <param name="threshold">The threshold before making the operation parallel.</param>
+/// <param name="maxDegreeOfParallelisation">The maximum degrees of parallelism.</param>
+public class ParallelisationOptions(ParallelType type = ParallelType.None, int threshold = 0, int maxDegreeOfParallelisation = 0)
     {
         /// <summary>
         /// The default parallelisation options.

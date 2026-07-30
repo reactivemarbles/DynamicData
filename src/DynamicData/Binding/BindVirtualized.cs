@@ -1,17 +1,25 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
-
+#endif
 /*
  * Binding for the result of the SortAndVirtualize operator
  */
+
+/// <summary>
+/// Provides members for the BindVirtualized class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="targetList">The targetList value.</param>
+/// <param name="options">The options value.</param>
 internal sealed class BindVirtualized<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
     IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>> source,
     IList<TObject> targetList,
@@ -19,10 +27,19 @@ internal sealed class BindVirtualized<[DynamicallyAccessedMembers(DynamicallyAcc
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Run() => options is null
         ? UseVirtualSortOptions()
         : UseProvidedOptions(options.Value);
 
+    /// <summary>
+    /// Executes the UseProvidedOptions operation.
+    /// </summary>
+    /// <param name="sortAndBindOptions">The sortAndBindOptions value.</param>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TObject, TKey>> UseProvidedOptions(SortAndBindOptions sortAndBindOptions) =>
         source.Publish(changes =>
         {
@@ -33,6 +50,10 @@ internal sealed class BindVirtualized<[DynamicallyAccessedMembers(DynamicallyAcc
             return changes.SortAndBind(targetList, comparedChanged, sortAndBindOptions);
         });
 
+    /// <summary>
+    /// Executes the UseVirtualSortOptions operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TObject, TKey>> UseVirtualSortOptions() =>
         Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
@@ -42,8 +63,8 @@ internal sealed class BindVirtualized<[DynamicallyAccessedMembers(DynamicallyAcc
 
             // I tried to make this work without subjects but had issues
             // making the comparedChanged observable to fire. Probably a deadlock
-            var changesSubject = new Subject<IChangeSet<TObject, TKey>>();
-            var comparerSubject = new ReplaySubject<IComparer<TObject>>(1);
+            var changesSubject = new Signal<IChangeSet<TObject, TKey>>();
+            var comparerSubject = new ReplaySignal<IComparer<TObject>>(1);
 
             // once we have the initial values, publish as normal.
             var subsequent = shared

@@ -1,9 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reactive.Linq;
-using FluentAssertions;
-using Xunit;
-
 namespace DynamicData.Tests.List;
 
 public class ToCollectionFixture

@@ -1,23 +1,45 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the GroupOnImmutable class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TGroupKey">The type of the TGroupKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="groupSelector">The groupSelector value.</param>
+/// <param name="reGrouper">The reGrouper value.</param>
 internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelector, IObservable<Unit>? reGrouper)
     where TObject : notnull
     where TGroupKey : notnull
 {
+    /// <summary>
+    /// The _groupSelector field.
+    /// </summary>
     private readonly Func<TObject, TGroupKey> _groupSelector = groupSelector ?? throw new ArgumentNullException(nameof(groupSelector));
 
+    /// <summary>
+    /// The _reGrouper field.
+    /// </summary>
     private readonly IObservable<Unit>? _reGrouper = reGrouper;
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TObject>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<IGrouping<TObject, TGroupKey>>> Run() => Observable.Create<IChangeSet<IGrouping<TObject, TGroupKey>>>(
             observer =>
             {
@@ -44,6 +66,13 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
                 return new CompositeDisposable(publisher, shared.Connect());
             });
 
+    /// <summary>
+    /// Executes the CreateChangeSet operation.
+    /// </summary>
+    /// <param name="result">The result value.</param>
+    /// <param name="allGroupings">The allGroupings value.</param>
+    /// <param name="initialStateOfGroups">The initialStateOfGroups value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IChangeSet<IGrouping<TObject, TGroupKey>> CreateChangeSet(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IDictionary<TGroupKey, IGrouping<TObject, TGroupKey>> initialStateOfGroups)
     {
         // Now maintain target list
@@ -77,6 +106,12 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
         return result.CaptureChanges();
     }
 
+    /// <summary>
+    /// Executes the GetGroup operation.
+    /// </summary>
+    /// <param name="groupCaches">The groupCaches value.</param>
+    /// <param name="key">The key value.</param>
+    /// <returns>The result of the operation.</returns>
     private static GroupContainer GetGroup(IDictionary<TGroupKey, GroupContainer> groupCaches, TGroupKey key)
     {
         var cached = groupCaches.Lookup(key);
@@ -90,10 +125,28 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
         return newcache;
     }
 
+    /// <summary>
+    /// Executes the GetGroupState operation.
+    /// </summary>
+    /// <param name="grouping">The grouping value.</param>
+    /// <returns>The result of the operation.</returns>
     private static ImmutableGroup<TObject, TGroupKey> GetGroupState(GroupContainer grouping) => new(grouping.Key, grouping.List);
 
+    /// <summary>
+    /// Executes the GetGroupState operation.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <param name="list">The list value.</param>
+    /// <returns>The result of the operation.</returns>
     private static ImmutableGroup<TObject, TGroupKey> GetGroupState(TGroupKey key, IList<TObject> list) => new(key, list);
 
+    /// <summary>
+    /// Executes the Process operation.
+    /// </summary>
+    /// <param name="result">The result value.</param>
+    /// <param name="allGroupings">The allGroupings value.</param>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
     private static IChangeSet<IGrouping<TObject, TGroupKey>> Process(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IChangeSet<ItemWithGroupKey> changes)
     {
         // need to keep track of effected groups to calculate correct notifications
@@ -211,6 +264,13 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
         return CreateChangeSet(result, allGroupings, initialStateOfGroups);
     }
 
+    /// <summary>
+    /// Executes the Regroup operation.
+    /// </summary>
+    /// <param name="result">The result value.</param>
+    /// <param name="allGroupings">The allGroupings value.</param>
+    /// <param name="currentItems">The currentItems value.</param>
+    /// <returns>The result of the operation.</returns>
     private IChangeSet<IGrouping<TObject, TGroupKey>> Regroup(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IReadOnlyCollection<ItemWithGroupKey> currentItems)
     {
         var initialStateOfGroups = new Dictionary<TGroupKey, IGrouping<TObject, TGroupKey>>();
@@ -250,25 +310,67 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
         return CreateChangeSet(result, allGroupings, initialStateOfGroups);
     }
 
-    private sealed class GroupContainer(TGroupKey key)
+/// <summary>
+/// Provides members for the GroupContainer class.
+/// </summary>
+/// <param name="key">The key value.</param>
+private sealed class GroupContainer(TGroupKey key)
     {
+        /// <summary>
+        /// Gets the Key value.
+        /// </summary>
         public TGroupKey Key { get; } = key;
 
+        /// <summary>
+        /// Gets the List value.
+        /// </summary>
         public IList<TObject> List { get; } = new List<TObject>();
     }
 
-    private sealed class ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
+/// <summary>
+/// Provides members for the ItemWithGroupKey class.
+/// </summary>
+/// <param name="item">The item value.</param>
+/// <param name="group">The group value.</param>
+/// <param name="previousGroup">The previousGroup value.</param>
+private sealed class ItemWithGroupKey(TObject item, TGroupKey group, ReactiveUI.Primitives.Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
     {
+        /// <summary>
+        /// Gets or sets the Group value.
+        /// </summary>
         public TGroupKey Group { get; set; } = group;
 
+        /// <summary>
+        /// Gets the Item value.
+        /// </summary>
         public TObject Item { get; } = item;
 
-        public Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
+        /// <summary>
+        /// Gets the PreviousGroup value.
+        /// </summary>
+        public ReactiveUI.Primitives.Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
 
+        /// <summary>
+        /// Executes the operator operation.
+        /// </summary>
+        /// <param name="left">The left value.</param>
+        /// <param name="right">The right value.</param>
+        /// <returns>The result of the operation.</returns>
         public static bool operator ==(ItemWithGroupKey left, ItemWithGroupKey right) => Equals(left, right);
 
+        /// <summary>
+        /// Executes the operator operation.
+        /// </summary>
+        /// <param name="left">The left value.</param>
+        /// <param name="right">The right value.</param>
+        /// <returns>The result of the operation.</returns>
         public static bool operator !=(ItemWithGroupKey left, ItemWithGroupKey right) => !Equals(left, right);
 
+        /// <summary>
+        /// Executes the Equals operation.
+        /// </summary>
+        /// <param name="other">The other value.</param>
+        /// <returns>The result of the operation.</returns>
         public bool Equals(ItemWithGroupKey? other)
         {
             if (other is null)
@@ -284,10 +386,23 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
             return EqualityComparer<TObject>.Default.Equals(Item, other.Item);
         }
 
+        /// <summary>
+        /// Executes the Equals operation.
+        /// </summary>
+        /// <param name="obj">The obj value.</param>
+        /// <returns>The result of the operation.</returns>
         public override bool Equals(object? obj) => obj is ItemWithGroupKey value && Equals(value);
 
+        /// <summary>
+        /// Executes the GetHashCode operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         public override int GetHashCode() => Item is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Item);
 
+        /// <summary>
+        /// Executes the ToString operation.
+        /// </summary>
+        /// <returns>The result of the operation.</returns>
         public override string ToString() => $"{Item} ({Group})";
     }
 }

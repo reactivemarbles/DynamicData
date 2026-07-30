@@ -1,14 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading.Tasks;
-
 using Bogus;
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
 
 namespace DynamicData.Tests.Cache;
 
@@ -36,9 +26,8 @@ public static partial class FilterFixture
                     .Select(mask => new Func<Item, bool>(item => Item.FilterByIdInclusionMask(mask, item)))
                     .ToArray();
 
-                using var source            = new Subject<IChangeSet<Item, int>>();
-                using var predicateChanged  = new Subject<Func<Item, bool>>();
-
+                using var source            = new Signal<IChangeSet<Item, int>>();
+                using var predicateChanged  = new Signal<Func<Item, bool>>();
 
                 // UUT Initialization
                 using var subscription = source
@@ -46,7 +35,6 @@ public static partial class FilterFixture
                     .ValidateSynchronization()
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results);
-
 
                 // UUT Action
                 await Task.WhenAll(
@@ -66,7 +54,6 @@ public static partial class FilterFixture
                 results.Error.Should().BeNull();
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(items.Items.Where(finalPredicate), "the source colleciton should be filtered to include only items matching the final predicate");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // Final verification
                 results.ShouldNotSupportSorting("sorting is not supported by filter operators");

@@ -1,11 +1,20 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+using DynamicData.Reactive.List.Internal;
+#else
 
 using DynamicData.List.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Convenience methods for a source list.
@@ -21,7 +30,7 @@ public static class SourceListEditConvenienceEx
     public static void Add<T>(this ISourceList<T> source, T item)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         source.Edit(list => list.Add(item));
     }
@@ -35,7 +44,8 @@ public static class SourceListEditConvenienceEx
     public static void AddRange<T>(this ISourceList<T> source, IEnumerable<T> items)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(items);
 
         source.Edit(list => list.AddRange(items));
     }
@@ -48,7 +58,7 @@ public static class SourceListEditConvenienceEx
     public static void Clear<T>(this ISourceList<T> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         source.Edit(list => list.Clear());
     }
@@ -64,8 +74,8 @@ public static class SourceListEditConvenienceEx
     public static void EditDiff<T>(this ISourceList<T> source, IEnumerable<T> allItems, IEqualityComparer<T>? equalityComparer = null)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        allItems.ThrowArgumentNullExceptionIfNull(nameof(allItems));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(allItems);
 
         var editDiff = new EditDiff<T>(source, equalityComparer);
         editDiff.Edit(allItems);
@@ -81,13 +91,13 @@ public static class SourceListEditConvenienceEx
     public static void Insert<T>(this ISourceList<T> source, int index, T item)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         source.Edit(list => list.Insert(index, item));
     }
 
     /// <summary>
-    /// Inserts the elements of a collection into the <see cref="IExtendedList{T}" /> at the specified index.
+    /// Inserts the elements of a collection into the <c>IExtendedList&lt;T&gt;</c> at the specified index.
     /// </summary>
     /// <typeparam name="T">The item type.</typeparam>
     /// <param name="source">The source.</param>
@@ -96,7 +106,7 @@ public static class SourceListEditConvenienceEx
     public static void InsertRange<T>(this ISourceList<T> source, IEnumerable<T> items, int index)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         source.Edit(list => list.AddRange(items, index));
     }
@@ -111,7 +121,7 @@ public static class SourceListEditConvenienceEx
     public static void Move<T>(this ISourceList<T> source, int original, int destination)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         source.Edit(list => list.Move(original, destination));
     }
@@ -127,7 +137,7 @@ public static class SourceListEditConvenienceEx
         where T : notnull
     {
         var removed = false;
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         source.Edit(list => removed = list.Remove(item));
         return removed;
@@ -142,7 +152,7 @@ public static class SourceListEditConvenienceEx
     public static void RemoveAt<T>(this ISourceList<T> source, int index)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         source.Edit(list => list.RemoveAt(index));
     }
@@ -156,24 +166,24 @@ public static class SourceListEditConvenienceEx
     public static void RemoveMany<T>(this ISourceList<T> source, IEnumerable<T> itemsToRemove)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         source.Edit(list => list.RemoveMany(itemsToRemove));
     }
 
     /// <summary>
-    /// Removes a range of elements from the <see cref="ISourceList{T}" />.
+    /// Removes a range of elements from the <c>ISourceList&lt;T&gt;</c>.
     /// </summary>
     /// <typeparam name="T">The item type.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="index">The zero-based starting index of the range of elements to remove.</param>
     /// <param name="count">The number of elements to remove.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="count" /> is less than 0.</exception>
-    /// <exception cref="ArgumentException"><paramref name="index" /> and <paramref name="count" /> do not denote a valid range of elements in the <see cref="List{T}" />.</exception>
+    /// <exception cref="ArgumentException"><paramref name="index" /> and <paramref name="count" /> do not denote a valid range of elements in the <c>List&lt;T&gt;</c>.</exception>
     public static void RemoveRange<T>(this ISourceList<T> source, int index, int count)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         source.Edit(list => list.RemoveRange(index, count));
     }
@@ -188,7 +198,7 @@ public static class SourceListEditConvenienceEx
     public static void Replace<T>(this ISourceList<T> source, T original, T destination)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         source.Edit(list => list.Replace(original, destination));
     }
@@ -203,7 +213,7 @@ public static class SourceListEditConvenienceEx
     public static void ReplaceAt<T>(this ISourceList<T> source, int index, T item)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         source.Edit(list => list[index] = item);
     }

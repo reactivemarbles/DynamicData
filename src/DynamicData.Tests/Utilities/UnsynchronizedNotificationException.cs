@@ -1,6 +1,3 @@
-﻿using System;
-using System.Reactive;
-
 namespace DynamicData.Tests.Utilities;
 
 public class UnsynchronizedNotificationException<T>

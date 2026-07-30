@@ -1,24 +1,24 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+namespace DynamicData.Reactive.Kernel;
+#else
 
 namespace DynamicData.Kernel;
+#endif
 
 /// <summary>
 /// Extensions associated with times and intervals.
 /// </summary>
 public static class InternalEx
 {
-#if NET9_0_OR_GREATER
+    /// <summary>
+    /// Executes the NewLock operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     internal static Lock NewLock() => new();
-#else
-    internal static object NewLock() => new();
-#endif
 
     /// <summary>
     /// Retries the with back off.
@@ -35,6 +35,9 @@ public static class InternalEx
     public static IObservable<TSource> RetryWithBackOff<TSource, TException>(this IObservable<TSource> source, Func<TException, int, TimeSpan?> backOffStrategy)
         where TException : Exception
     {
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(backOffStrategy);
+
         IObservable<TSource> Retry(int failureCount) =>
             source.Catch<TSource, TException>(
                 error =>
@@ -62,13 +65,25 @@ public static class InternalEx
     /// <param name="interval">The interval.</param>
     /// <param name="action">The action.</param>
     /// <returns>A disposable that will stop the schedule.</returns>
-    public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, TimeSpan interval, Action action) => scheduler.Schedule(
-            interval,
-            scheduleNext =>
-            {
-                action();
-                scheduleNext(interval);
-            });
+    public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, TimeSpan interval, Action action)
+    {
+        ArgumentExceptionHelper.ThrowIfNull(scheduler);
+        ArgumentExceptionHelper.ThrowIfNull(action);
+
+        var disposable = new SerialDisposable();
+
+        void ScheduleNext() =>
+            disposable.Disposable = scheduler.Schedule(
+                interval,
+                () =>
+                {
+                    action();
+                    ScheduleNext();
+                });
+
+        ScheduleNext();
+        return disposable;
+    }
 
     /// <summary>
     /// Schedules a recurring action.
@@ -84,32 +99,58 @@ public static class InternalEx
     /// <returns>A disposable that will stop the schedule.</returns>
     public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, Func<TimeSpan> interval, Action action)
     {
-        interval.ThrowArgumentNullExceptionIfNull(nameof(interval));
+        ArgumentExceptionHelper.ThrowIfNull(interval);
+        ArgumentExceptionHelper.ThrowIfNull(scheduler);
+        ArgumentExceptionHelper.ThrowIfNull(action);
 
-        return scheduler.Schedule(
-            interval(),
-            scheduleNext =>
-            {
-                action();
-                var next = interval();
-                scheduleNext(next);
-            });
+        var disposable = new SerialDisposable();
+
+        void ScheduleNext() =>
+            disposable.Disposable = scheduler.Schedule(
+                interval(),
+                () =>
+                {
+                    action();
+                    ScheduleNext();
+                });
+
+        ScheduleNext();
+        return disposable;
     }
 
-    internal static void OnNext(this ISubject<Unit> source) => source.OnNext(Unit.Default);
+    /// <summary>
+    /// Executes the OnNext operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    internal static void OnNext(this ISignal<Unit> source) => source.OnNext(Unit.Default);
 
+    /// <summary>
+    /// Executes the Swap operation.
+    /// </summary>
+    /// <typeparam name="TSwap">The type of the TSwap value.</typeparam>
+    /// <param name="t1">The t1 value.</param>
+    /// <param name="t2">The t2 value.</param>
     internal static void Swap<TSwap>(ref TSwap t1, ref TSwap t2) => (t2, t1) = (t1, t2);
 
+    /// <summary>
+    /// Executes the ToUnit operation.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static IObservable<Unit> ToUnit<T>(this IObservable<T> source) => source.Select(_ => Unit.Default);
 
     /// <summary>
     /// Observable.Return without the memory leak.
     /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <returns>The result of the operation.</returns>
     internal static IObservable<T> Return<T>(Func<T> source) =>
         Observable.Create<T>(o =>
         {
             o.OnNext(source());
             o.OnCompleted();
-            return () => { };
+            return Disposable.Empty;
         });
 }

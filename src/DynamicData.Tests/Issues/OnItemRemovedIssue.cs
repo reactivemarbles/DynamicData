@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using DynamicData.Binding;
-using Xunit;
 
 namespace DynamicData.Tests.Issues
 {
@@ -52,7 +48,6 @@ namespace DynamicData.Tests.Issues
             public Item Item { get; set; }
 
             public bool? Active { get; set; }
-
 
         }
 

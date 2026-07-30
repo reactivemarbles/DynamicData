@@ -1,19 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Management;
-using System.Reflection;
-using System.Threading.Channels;
-
-using Argon;
-
-using Bogus;
-
-using FluentAssertions;
-
-using Xunit;
+﻿using Bogus;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace DynamicData.Tests.List;
 

@@ -1,11 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
-using System.Reactive.Subjects;
+namespace DynamicData.Reactive.Experimental;
+#else
 
 namespace DynamicData.Experimental;
+#endif
 
 /// <summary>
 /// A subject with a count of the number of subscribers.
@@ -15,10 +17,21 @@ namespace DynamicData.Experimental;
 /// Initializes a new instance of the <see cref="SubjectWithRefCount{T}"/> class.
 /// </remarks>
 /// <param name="subject">The subject to perform reference counting on.</param>
-internal sealed class SubjectWithRefCount<T>(ISubject<T>? subject = null) : ISubjectWithRefCount<T>
+internal sealed class SubjectWithRefCount<T>(ISignal<T>? subject = null) : ISubjectWithRefCount<T>
 {
-    private readonly ISubject<T> _subject = subject ?? new Subject<T>();
+    /// <summary>
+    /// The _subject field.
+    /// </summary>
+    private readonly ISignal<T> _subject = subject ?? new Signal<T>();
 
+    /// <summary>
+    /// The _isDisposed field.
+    /// </summary>
+    private bool _isDisposed;
+
+    /// <summary>
+    /// The _refCount field.
+    /// </summary>
     private int _refCount;
 
     /// <summary>Gets number of subscribers.</summary>
@@ -26,6 +39,19 @@ internal sealed class SubjectWithRefCount<T>(ISubject<T>? subject = null) : ISub
     /// The ref count.
     /// </value>
     public int RefCount => _refCount;
+
+    /// <inheritdoc />
+    public bool HasObservers => Volatile.Read(ref _refCount) > 0;
+
+    /// <inheritdoc />
+    public bool IsDisposed => _isDisposed;
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _isDisposed = true;
+        (_subject as IDisposable)?.Dispose();
+    }
 
     /// <summary>
     /// Notifies the observer that the provider has finished sending push-based notifications.

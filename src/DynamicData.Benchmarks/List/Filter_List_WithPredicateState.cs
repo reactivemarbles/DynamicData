@@ -1,10 +1,3 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using BenchmarkDotNet.Attributes;
-
 using Bogus;
 
 namespace DynamicData.Benchmarks.List;
@@ -34,8 +27,8 @@ public class Filter_List_WithPredicateState
     [Benchmark(Baseline = true)]
     public void RandomizedEditsAndStateChanges()
     {
-        using var source            = new Subject<IChangeSet<Item>>();
-        using var predicateState    = new Subject<int>();
+        using var source            = new Signal<IChangeSet<Item>>();
+        using var predicateState    = new Signal<int>();
 
         using var subscription = source
             .Filter(

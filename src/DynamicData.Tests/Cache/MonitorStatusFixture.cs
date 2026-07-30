@@ -1,12 +1,4 @@
-﻿using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
 using DynamicData.Kernel;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -17,7 +9,7 @@ public class MonitorStatusFixture
     {
         var invoked = false;
         var status = ConnectionStatus.Pending;
-        var subscription = new Subject<int>().MonitorStatus().Subscribe(
+        var subscription = new Signal<int>().MonitorStatus().Subscribe(
             s =>
             {
                 invoked = true;
@@ -33,7 +25,7 @@ public class MonitorStatusFixture
     {
         var invoked = false;
         var invocations = 0;
-        var subject = new Subject<int>();
+        var subject = new Signal<int>();
         var subscription = subject.MonitorStatus().Where(status => status == ConnectionStatus.Loaded).Subscribe(
             s =>
             {
@@ -55,7 +47,7 @@ public class MonitorStatusFixture
     {
         var invoked = false;
         var status = ConnectionStatus.Pending;
-        var subject = new Subject<int>();
+        var subject = new Signal<int>();
         Exception exception;
 
         var subscription = subject.MonitorStatus().Subscribe(
@@ -78,7 +70,7 @@ public class MonitorStatusFixture
     {
         var invoked = false;
         var status = ConnectionStatus.Pending;
-        var subject = new Subject<int>();
+        var subject = new Signal<int>();
         var subscription = subject.MonitorStatus().Subscribe(
             s =>
             {

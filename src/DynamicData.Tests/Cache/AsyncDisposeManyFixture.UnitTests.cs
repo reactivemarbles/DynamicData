@@ -1,17 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
 using DynamicData.Cache.Internal;
-using DynamicData.Kernel;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -26,7 +13,7 @@ public static partial class AsyncDisposeManyFixture
         [InlineData(ItemType.ImmediateAsyncDisposable)]
         public void ItemsAreAddedMovedOrRefreshed_ItemsAreNotDisposed(ItemType itemType)
         {
-            using var source = new Subject<IChangeSet<ItemBase, int>>();
+            using var source = new Signal<IChangeSet<ItemBase, int>>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
@@ -42,7 +29,6 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-        
             // Addition
             var items = new List<ItemBase>()
             {
@@ -72,14 +58,13 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
 
-
             // Movement
             items.Move(2, 0, items[2]);
             items.Move(2, 1, items[2]);
             source.OnNext(new ChangeSet<ItemBase, int>()
             {
-                new(reason: ChangeReason.Moved, key: items[0].Id, current: items[0], previous: Optional.None<ItemBase>(), currentIndex: 0, previousIndex: 2),
-                new(reason: ChangeReason.Moved, key: items[1].Id, current: items[1], previous: Optional.None<ItemBase>(), currentIndex: 1, previousIndex: 2)
+                new(reason: ChangeReason.Moved, key: items[0].Id, current: items[0], previous: Optional<ItemBase>.None, currentIndex: 0, previousIndex: 2),
+                new(reason: ChangeReason.Moved, key: items[1].Id, current: items[1], previous: Optional<ItemBase>.None, currentIndex: 1, previousIndex: 2)
             });
 
             results.Error.Should().BeNull();
@@ -95,7 +80,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.Error.Should().BeNull();
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // Refreshing
             source.OnNext(new ChangeSet<ItemBase, int>(items
@@ -150,7 +134,6 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-
             source.AddOrUpdate(new[]
             {
                 ItemBase.Create(type: itemType, id: 1, version: 1),
@@ -166,7 +149,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.Error.Should().BeNull();
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             var items = source.Items.ToArray();
             source.Clear();
@@ -213,7 +195,6 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-
             source.AddOrUpdate(new[]
             {
                 ItemBase.Create(type: itemType, id: 1, version: 1),
@@ -229,7 +210,6 @@ public static partial class AsyncDisposeManyFixture
             disposalsCompletedResults.Error.Should().BeNull();
             disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
             disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             var previousItems = source.Items.ToArray();
             source.AddOrUpdate(new[]
@@ -276,8 +256,7 @@ public static partial class AsyncDisposeManyFixture
 
             IObservable<IChangeSet<ImmediateAsyncDisposableItem, int>> source = (sourceType is SourceType.Immediate)
                 ? Observable.Return(changeSet)
-                : new Subject<IChangeSet<ImmediateAsyncDisposableItem, int>>();
-
+                : new Signal<IChangeSet<ImmediateAsyncDisposableItem, int>>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
@@ -293,8 +272,7 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-
-            if (source is Subject<IChangeSet<ImmediateAsyncDisposableItem, int>> subject)
+            if (source is Signal<IChangeSet<ImmediateAsyncDisposableItem, int>> subject)
             {
                 subject.OnNext(changeSet);
                 subject.OnCompleted();
@@ -332,8 +310,7 @@ public static partial class AsyncDisposeManyFixture
             IObservable<IChangeSet<ImmediateAsyncDisposableItem, int>> source = (sourceType is SourceType.Immediate)
                 ? Observable.Return(changeSet)
                     .Concat(Observable.Throw<IChangeSet<ImmediateAsyncDisposableItem, int>>(error))
-                : new Subject<IChangeSet<ImmediateAsyncDisposableItem, int>>();
-
+                : new Signal<IChangeSet<ImmediateAsyncDisposableItem, int>>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
@@ -349,8 +326,7 @@ public static partial class AsyncDisposeManyFixture
 
             disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
 
-
-            if (source is Subject<IChangeSet<ImmediateAsyncDisposableItem, int>> subject)
+            if (source is Signal<IChangeSet<ImmediateAsyncDisposableItem, int>> subject)
             {
                 subject.OnNext(changeSet);
                 subject.OnError(error);

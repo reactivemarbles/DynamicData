@@ -1,12 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
 namespace DynamicData.Tests.List;
 
 public class OnItemRefreshedFixture
@@ -49,7 +40,6 @@ public class OnItemRefreshedFixture
         
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
         
-
         // UUT Action
         source.Insert(
             index:  insertionIndex,
@@ -101,7 +91,6 @@ public class OnItemRefreshedFixture
         
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
         
-
         // UUT Action
         source.Move(
             original:       originalIndex,
@@ -150,7 +139,6 @@ public class OnItemRefreshedFixture
         
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
         
-
         // UUT Action
         var refreshedItem = source.Items[refreshIndex];
         source.Refresh(refreshIndex);
@@ -199,7 +187,6 @@ public class OnItemRefreshedFixture
         
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
         
-
         // UUT Action
         var removedItem = source.Items[removalIndex];
         source.RemoveAt(removalIndex);
@@ -247,7 +234,6 @@ public class OnItemRefreshedFixture
         
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
         
-
         // UUT Action
         source.ReplaceAt(
             index:  replacementIndex,
@@ -298,7 +284,6 @@ public class OnItemRefreshedFixture
         
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
         
-
         // UUT Action
         source.RemoveRange(
             index: removalIndex,
@@ -343,7 +328,6 @@ public class OnItemRefreshedFixture
         
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
         
-
         // UUT Action
         source.Clear();
         
@@ -389,7 +373,6 @@ public class OnItemRefreshedFixture
         
         refreshActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Action
         source.Complete();
         
@@ -463,7 +446,6 @@ public class OnItemRefreshedFixture
         
         refreshActionInvocations.Should().BeEmpty("no items have been removed from the collection");
         
-
         // UUT Action
         var error = new Exception();
         source.SetError(error);

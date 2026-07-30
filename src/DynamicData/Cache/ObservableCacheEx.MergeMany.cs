@@ -1,24 +1,22 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -27,15 +25,15 @@ public static partial class ObservableCacheEx
 {
     /// <summary>
     /// Subscribes to a child observable for each item in the source cache changeset stream and merges all child
-    /// emissions into a single <see cref="IObservable{T}"/>. When an item is added, <paramref name="observableSelector"/>
+    /// emissions into a single <c>IObservable&lt;T&gt;</c>. When an item is added, <paramref name="observableSelector"/>
     /// creates its child subscription. When updated, the previous child subscription is disposed and a new one is created.
     /// When removed, its child subscription is disposed. Refresh changes have no effect on subscriptions.
     /// </summary>
     /// <typeparam name="TObject">The type of items in the source cache.</typeparam>
     /// <typeparam name="TKey">The type of the key identifying source cache items.</typeparam>
     /// <typeparam name="TDestination">The type of values emitted by child observables.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce an observable.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that produces a child observable for each source item.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce an observable.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that produces a child observable for each source item.</param>
     /// <returns>An observable that emits values from all active child observables, interleaved by arrival order.</returns>
     /// <remarks>
     /// <para>
@@ -51,32 +49,38 @@ public static partial class ObservableCacheEx
     /// <item><term>Refresh</term><description>No effect on subscriptions. The child observable continues unchanged.</description></item>
     /// <item><term>OnError</term><description>Errors from child observables are silently swallowed (the child is unsubscribed). Errors from the source changeset stream terminate the merged output.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> The output is a plain <see cref="IObservable{TDestination}"/>, not a changeset stream. If you need merged changesets, use <see cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IComparer{TDestination}, IEqualityComparer{TDestination})"/> instead.</para>
+    /// <para><b>Worth noting:</b> The output is a plain <c>IObservable&lt;TDestination&gt;</c>, not a changeset stream. If you need merged changesets, use <c>MergeManyChangeSets&lt;TObject, TKey, TDestination, TDestinationKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, TKey, IObservable&lt;IChangeSet&lt;TDestination, TDestinationKey&gt;&gt;&gt;, IComparer&lt;TDestination&gt;, IEqualityComparer&lt;TDestination&gt;)</c> instead.</para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observableSelector"/> is null.</exception>
-    /// <seealso cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IComparer{TDestination}, IEqualityComparer{TDestination})"/>
-    /// <seealso cref="MergeChangeSets{TObject, TKey}(IObservable{IObservable{IChangeSet{TObject, TKey}}})"/>
-    /// <seealso cref="SubscribeMany{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IDisposable})"/>
-    /// <seealso cref="ObservableListEx.MergeMany"/>
+    /// <seealso><c>MergeManyChangeSets&lt;TObject, TKey, TDestination, TDestinationKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, TKey, IObservable&lt;IChangeSet&lt;TDestination, TDestinationKey&gt;&gt;&gt;, IComparer&lt;TDestination&gt;, IEqualityComparer&lt;TDestination&gt;)</c></seealso>
+    /// <seealso><c>MergeChangeSets&lt;TObject, TKey&gt;(IObservable&lt;IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;&gt;)</c></seealso>
+    /// <seealso><c>SubscribeMany&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, TKey, IDisposable&gt;)</c></seealso>
+    /// <seealso><c>ObservableListEx.MergeMany</c></seealso>
     public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
 
         return new MergeMany<TObject, TKey, TDestination>(source, observableSelector).Run();
     }
 
-    /// <inheritdoc cref="MergeMany{TObject, TKey, TDestination}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{TDestination}})"/>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> whose items each produce an observable.</param>
-    /// <param name="observableSelector">A <see cref="Func{T, TResult}"/> factory function that receives both the item and its key, and returns a child observable.</param>
+    /// <summary>
+    /// Provides an overload of <c>MergeMany</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the TObject value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> whose items each produce an observable.</param>
+    /// <param name="observableSelector">A <c>Func&lt;T, TResult&gt;</c> factory function that receives both the item and its key, and returns a child observable.</param>
+    /// <returns>The resulting observable sequence.</returns>
     public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TDestination>> observableSelector)
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(observableSelector);
 
         return new MergeMany<TObject, TKey, TDestination>(source, observableSelector).Run();
     }

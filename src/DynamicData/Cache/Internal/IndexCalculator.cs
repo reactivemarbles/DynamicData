@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 /// <summary>
 /// <para>Calculates a sequential change set.</para>
@@ -16,14 +21,25 @@ namespace DynamicData.Cache.Internal;
 /// </remarks>
 /// <param name="comparer">The comparer to use.</param>
 /// <param name="optimisations">Selected indexing optimisations.</param>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, TKey> comparer, SortOptimisations optimisations)
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _comparer field.
+    /// </summary>
     private KeyValueComparer<TObject, TKey> _comparer = comparer;
 
+    /// <summary>
+    /// Gets the Comparer value.
+    /// </summary>
     public IComparer<KeyValuePair<TKey, TObject>> Comparer => _comparer;
 
+    /// <summary>
+    /// Gets the List value.
+    /// </summary>
     public List<KeyValuePair<TKey, TObject>> List { get; private set; } = [];
 
     /// <summary>
@@ -127,6 +143,11 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
         return new ChangeSet<TObject, TKey>(result);
     }
 
+    /// <summary>
+    /// Executes the ChangeComparer operation.
+    /// </summary>
+    /// <param name="comparer">The comparer value.</param>
+    /// <returns>The result of the operation.</returns>
     public IChangeSet<TObject, TKey> ChangeComparer(KeyValueComparer<TObject, TKey> comparer)
     {
         _comparer = comparer;
@@ -147,6 +168,10 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
         return new ChangeSet<TObject, TKey>(initialItems);
     }
 
+    /// <summary>
+    /// Executes the Reorder operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IChangeSet<TObject, TKey> Reorder()
     {
         var result = new List<Change<TObject, TKey>>();
@@ -189,6 +214,11 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
     /// <param name="cache">The cache.</param>
     public void Reset(ChangeAwareCache<TObject, TKey> cache) => List = [.. cache.KeyValues.OrderBy(kv => kv, _comparer)];
 
+    /// <summary>
+    /// Executes the GetCurrentPosition operation.
+    /// </summary>
+    /// <param name="item">The item value.</param>
+    /// <returns>The result of the operation.</returns>
     private int GetCurrentPosition(KeyValuePair<TKey, TObject> item)
     {
         int index;
@@ -215,6 +245,11 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
         return index;
     }
 
+    /// <summary>
+    /// Executes the GetInsertPositionBinary operation.
+    /// </summary>
+    /// <param name="item">The item value.</param>
+    /// <returns>The result of the operation.</returns>
     private int GetInsertPositionBinary(KeyValuePair<TKey, TObject> item)
     {
         var index = List.BinarySearch(item, _comparer);
@@ -232,6 +267,12 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
         return ~index;
     }
 
+    /// <summary>
+    /// Executes the GetInsertPositionLinear operation.
+    /// </summary>
+    /// <param name="list">The list value.</param>
+    /// <param name="item">The item value.</param>
+    /// <returns>The result of the operation.</returns>
     private int GetInsertPositionLinear(List<KeyValuePair<TKey, TObject>> list, KeyValuePair<TKey, TObject> item)
     {
         for (var i = 0; i < list.Count; i++)

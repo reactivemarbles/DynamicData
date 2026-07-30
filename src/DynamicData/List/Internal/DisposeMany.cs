@@ -1,16 +1,26 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the DisposeMany class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
 internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
     where T : notnull
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<T>> Run()
         => Observable.Create<IChangeSet<T>>(observer =>
         {
@@ -84,6 +94,10 @@ internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
             });
         });
 
+    /// <summary>
+    /// Executes the ProcessFinalization operation.
+    /// </summary>
+    /// <param name="cachedItems">The cachedItems value.</param>
     private static void ProcessFinalization(List<T> cachedItems)
     {
         foreach (var item in cachedItems)

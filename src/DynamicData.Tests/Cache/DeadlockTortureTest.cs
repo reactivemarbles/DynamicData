@@ -2,17 +2,8 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Reactive.Subjects;
-using System.Threading;
-using System.Threading.Tasks;
-
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -26,6 +17,7 @@ namespace DynamicData.Tests.Cache;
 /// On main (Synchronize(lock)): deadlocks reliably within seconds.
 /// On the PR branch (SynchronizeSafe queue-drain): no deadlock possible.
 /// </summary>
+[Collection(IntegrationTestFixtureBase.CollectionName)]
 public sealed class DeadlockTortureTest
 {
     private const int ItemCount = 200;
@@ -66,24 +58,24 @@ public sealed class DeadlockTortureTest
 
     [Fact] public async Task Page_DoesNotDeadlock()
     {
-        using var req = new BehaviorSubject<IPageRequest>(new PageRequest(1, 50));
+        using var req = new StateSignal<IPageRequest>(new PageRequest(1, 50));
         (await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Page(req))).Should().BeTrue();
     }
 
     [Fact] public async Task Virtualise_DoesNotDeadlock()
     {
-        using var req = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 50));
+        using var req = new StateSignal<IVirtualRequest>(new VirtualRequest(0, 50));
         (await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Virtualise(req))).Should().BeTrue();
     }
 
     [Fact] public async Task TransformWithForce_DoesNotDeadlock()
     {
-        using var force = new Subject<Func<Person, string, bool>>();
+        using var force = new Signal<Func<Person, string, bool>>();
         (await RunBidirectionalDeadlockTest(s => s.Transform((p, k) => new Person("T-" + p.Name, p.Age), force))).Should().BeTrue();
     }
 
     [Fact] public async Task BatchIf_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.BatchIf(new BehaviorSubject<bool>(false), false, (TimeSpan?)null))).Should().BeTrue();
+        (await RunBidirectionalDeadlockTest(s => s.BatchIf(new StateSignal<bool>(false), false, (TimeSpan?)null))).Should().BeTrue();
 
     [Fact] public async Task DisposeMany_DoesNotDeadlock() =>
         (await RunBidirectionalDeadlockTest(s => s.DisposeMany())).Should().BeTrue();
@@ -93,8 +85,8 @@ public sealed class DeadlockTortureTest
 
     [Fact] public async Task AllDangerous_Stacked_DoNotDeadlock()
     {
-        using var pageReq = new BehaviorSubject<IPageRequest>(new PageRequest(1, 100));
-        using var force = new Subject<Func<Person, string, bool>>();
+        using var pageReq = new StateSignal<IPageRequest>(new PageRequest(1, 100));
+        using var force = new Signal<Func<Person, string, bool>>();
         (await RunBidirectionalDeadlockTest(
             s => s.AutoRefresh(p => p.Age)
                   .Filter(p => p.Age >= 0)
@@ -108,8 +100,8 @@ public sealed class DeadlockTortureTest
 
     [Fact] public async Task MultiplePairs_Simultaneous_NoDeadlock()
     {
-        using var pageReq = new BehaviorSubject<IPageRequest>(new PageRequest(1, 50));
-        using var virtReq = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 50));
+        using var pageReq = new StateSignal<IPageRequest>(new PageRequest(1, 50));
+        using var virtReq = new StateSignal<IVirtualRequest>(new VirtualRequest(0, 50));
         var results = await Task.WhenAll(
             RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)), 30),
             RunBidirectionalDeadlockTest(s => s.AutoRefresh(p => p.Age), 30),
@@ -118,7 +110,7 @@ public sealed class DeadlockTortureTest
             RunBidirectionalDeadlockTest(s => s.DisposeMany(), 30),
             RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Page(pageReq), 30),
             RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Virtualise(virtReq), 30),
-            RunBidirectionalDeadlockTest(s => s.BatchIf(new BehaviorSubject<bool>(false), false, (TimeSpan?)null), 30));
+            RunBidirectionalDeadlockTest(s => s.BatchIf(new StateSignal<bool>(false), false, (TimeSpan?)null), 30));
         results.Should().AllSatisfy(r => r.Should().BeTrue());
     }
 

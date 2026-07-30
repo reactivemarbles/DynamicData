@@ -1,8 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Kernel;
+#else
 
 namespace DynamicData.Kernel;
+#endif
 
 /// <summary>
 /// An error container used to report errors from within dynamic data operators.
@@ -15,7 +20,7 @@ namespace DynamicData.Kernel;
 /// <param name="exception">The exception that caused the error.</param>
 /// <param name="value">The value for the error.</param>
 /// <param name="key">The key for the error.</param>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "By Design.")]
+[SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "By Design.")]
 public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TKey key) : IKeyValue<TObject, TKey>, IEquatable<Error<TObject, TKey>>
     where TKey : notnull
 {
@@ -34,11 +39,25 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
     /// </summary>
     public TObject Value { get; } = value;
 
+    /// <summary>
+    /// Determines whether two <see cref="Error{TObject, TKey}"/> instances are equal.
+    /// </summary>
+    /// <param name="left">The left error to compare.</param>
+    /// <param name="right">The right error to compare.</param>
+    /// <returns><see langword="true"/> when the values are equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator ==(Error<TObject, TKey> left, Error<TObject, TKey> right) => Equals(left, right);
 
+    /// <summary>
+    /// Determines whether two <see cref="Error{TObject, TKey}"/> instances are not equal.
+    /// </summary>
+    /// <param name="left">The left error to compare.</param>
+    /// <param name="right">The right error to compare.</param>
+    /// <returns><see langword="true"/> when the values are not equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator !=(Error<TObject, TKey> left, Error<TObject, TKey> right) => !Equals(left, right);
 
     /// <inheritdoc />
+    /// <param name="other">The other value.</param>
+    /// <returns>The result of the operation.</returns>
     public bool Equals(Error<TObject, TKey>? other)
     {
         if (other is null)
@@ -55,6 +74,8 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
     }
 
     /// <inheritdoc />
+    /// <param name="obj">The obj value.</param>
+    /// <returns>The result of the operation.</returns>
     public override bool Equals(object? obj)
     {
         if (obj is null)
@@ -71,6 +92,7 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -83,5 +105,6 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"Key: {Key}, Value: {Value}, Exception: {Exception}";
 }

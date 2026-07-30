@@ -1,12 +1,3 @@
-using System;
-using System.Linq;
-using System.Reactive.Concurrency;
-
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
 namespace DynamicData.Tests.Cache;
 
 public static partial class AutoRefreshFixture
@@ -26,7 +17,6 @@ public static partial class AutoRefreshFixture
             
             source.AddOrUpdate(new[] { item1, item2, item3 });
             
-
             // UUT Initialization
             using var subscription = BuildUut(source.Connect())
                 .ValidateSynchronization()
@@ -37,7 +27,6 @@ public static partial class AutoRefreshFixture
             results.RecordedChangeSets.Count.Should().Be(1, "the initial changeset should propagate");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "3 items were added to the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
             // UUT Action
             item2.RaiseAllPropertiesChanged();
