@@ -48,9 +48,9 @@ internal sealed class TransformAsync<TSource, TDestination>
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _transformOnRefresh = transformOnRefresh;
-        _containerFactory = async (item, prev, index) =>
+        _containerFactory = async (item, prev, index, cancel) =>
         {
-            var destination = await factory(item, prev, index).ConfigureAwait(false);
+            var destination = await factory(item, prev, index, cancel).ConfigureAwait(false);
             return new Transformer<TSource, TDestination>.TransformedItemContainer(item, destination);
         };
     }
@@ -67,27 +67,52 @@ internal sealed class TransformAsync<TSource, TDestination>
     /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TDestination>> RunImpl()
     {
-        var state = new ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>();
-        var asyncLock = new SemaphoreSlim(1, 1);
-
-        return _source.Select(async changes =>
-                {
-                    try
-                    {
-                        await asyncLock.WaitAsync();
-                        await Transform(state, changes);
-                        return state;
-                    }
-                    finally
-                    {
-                        asyncLock.Release();
-                    }
-                })
-            .Concat()
-            .Select(transformed =>
+        return Observable.Using(
+            () => new SemaphoreSlim(1, 1),
+            asyncLock =>
             {
-                var changed = transformed.CaptureChanges();
-                return changed.Transform(container => container.Destination);
+                var state = new ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>();
+
+                return _source.Select(changes => Observable.FromAsync(async cancel =>
+                        {
+                            // NOTE: lock outside of the try to avoid releasing another scope's lock if the token is canceled before we acquire the lock.
+                            try
+                            {
+                                await asyncLock.WaitAsync(cancel);
+                            }
+                            catch (Exception e) when (e is ObjectDisposedException)
+                            {
+                                return Optional.None<ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>>();
+                            }
+
+                            try
+                            {
+                                await Transform(state, changes, cancel);
+                                return Optional.Some(state);
+                            }
+                            finally
+                            {
+                                try
+                                {
+                                    // token is canceled when outer stream is disposed which is attached to the lock's lifetime.
+                                    if (!cancel.IsCancellationRequested)
+                                    {
+                                        asyncLock.Release();
+                                    }
+                                }
+                                catch (ObjectDisposedException)
+                                {
+                                    // outer stream was disposed during inner transform.
+                                }
+                            }
+                        }))
+                    .Concat()
+                    .SelectValues()
+                    .Select(transformed =>
+                    {
+                        var changed = transformed.CaptureChanges();
+                        return changed.Transform(container => container.Destination);
+                    });
             });
     }
 
@@ -99,7 +124,8 @@ internal sealed class TransformAsync<TSource, TDestination>
     /// <returns>The result of the operation.</returns>
     private async Task Transform(
         ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer> transformed,
-        IChangeSet<TSource> changes)
+        IChangeSet<TSource> changes,
+        CancellationToken cancel)
     {
         ArgumentExceptionHelper.ThrowIfNull(changes);
 
@@ -166,7 +192,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                         ReactiveUI.Primitives.Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
                         if (change.CurrentIndex == change.PreviousIndex)
                         {
-                            transformed[change.CurrentIndex] = await _containerFactory(change.Current, previous, change.CurrentIndex);
+                            transformed[change.CurrentIndex] = await _containerFactory(change.Current, previous, change.CurrentIndex, cancel);
                         }
                         else
                         {

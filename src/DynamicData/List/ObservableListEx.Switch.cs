@@ -50,10 +50,8 @@ public static partial class ObservableListEx
     /// <returns>A list changeset stream reflecting the most recently received inner changeset stream.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="sources"/> is <see langword="null"/>.</exception>
     /// <remarks>
-    /// <para>
-    /// On each new inner stream, the operator clears the destination, disposes the previous subscription, and subscribes to the new stream.
-    /// This is the changeset-aware equivalent of Rx's <c>Switch()</c>.
-    /// </para>
+    /// <para><b>Worth noting:</b> Each switch clears the entire downstream list before populating from the new source. Subscribers see a full remove-then-add reset on every switch.</para>
+    /// <para><b>Also worth noting:</b>This operator intentionally shadows the native <see cref="Observable.Switch{TSource}(IObservable{IObservable{TSource}})"/> operator, as downstream listeners will generally become corrupt when the native operator is used. This is due to its lack of the automatic-clearing behavior mentioned above.</para>
     /// </remarks>
     /// <seealso><c>Switch&lt;T&gt;(IObservable&lt;IObservableList&lt;T&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservable<IChangeSet<T>>> sources)
