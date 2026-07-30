@@ -140,4 +140,17 @@ public class BatchIfFixture : IDisposable
         _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
         _results.Messages.Count.Should().Be(1, "Should be 1 update");
     }
+
+    [Fact]
+    public void PauseSelectorOnlyStartsUnpaused()
+    {
+        // The shortest form has to keep delegating with initialPauseState false, rather than binding
+        // to an overload that starts paused.
+        using var pause = new Subject<bool>();
+        using var results = _source.Connect().BatchIf(pause).AsAggregator();
+
+        _source.AddOrUpdate(new Person("A", 1));
+
+        results.Data.Count.Should().Be(1, "nothing has asked for buffering yet");
+    }
 }
