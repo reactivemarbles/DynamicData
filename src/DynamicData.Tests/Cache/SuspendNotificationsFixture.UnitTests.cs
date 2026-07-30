@@ -512,6 +512,22 @@ public static partial class SuspendNotificationsFixture
             results.Data.Count.Should().Be(1, "the data written before the failure should have arrived");
         }
 
+        [Fact]
+        public void OnCompletedFiresIfCacheDisposedAfterResumingWhileWatchWasSuspended()
+        {
+            // The tests above cover failure. Completion has to reach an activated watch too, and
+            // this covers the path through the watch itself rather than through the suspension gate.
+            var suspend = _source.SuspendNotifications();
+            var isCompleted = false;
+            using var subscription = _source.Watch(1).Subscribe(static _ => { }, () => isCompleted = true);
+            _source.AddOrUpdate(1);
+
+            suspend.Dispose();
+            _source.Dispose();
+
+            isCompleted.Should().BeTrue("a watch deferred by a suspension should still complete when the source does");
+        }
+
         public void Dispose()
         {
             _source.Dispose();
