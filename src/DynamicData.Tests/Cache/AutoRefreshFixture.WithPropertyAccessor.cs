@@ -1,15 +1,4 @@
-using System;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public static partial class AutoRefreshFixture
 {
@@ -23,7 +12,7 @@ public static partial class AutoRefreshFixture
                     propertyAccessor:   (null as Expression<Func<Item, int>>)!))
                 .Should()
                 .Throw<ArgumentNullException>();
-                
+
         [Fact]
         public void PropertyChangedNotificationDoesNotMatchPropertyAccessor_IgnoresNotification()
         {
@@ -33,9 +22,8 @@ public static partial class AutoRefreshFixture
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
             var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
 
             // UUT Initialization
             using var subscription = BuildUut(source.Connect())
@@ -48,7 +36,6 @@ public static partial class AutoRefreshFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "3 items were added to the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
             // UUT Action
             ++item2.OtherValue;
 
@@ -56,7 +43,7 @@ public static partial class AutoRefreshFixture
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("the property change notification should have been ignored");
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-            
+
         protected override IObservable<IChangeSet<Item, int>> BuildUut(
                 IObservable<IChangeSet<Item, int>>  source,
                 TimeSpan?                           changeSetBuffer         = null,

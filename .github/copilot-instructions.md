@@ -89,6 +89,21 @@ src/
 │   └── Domain/                     # Test domain types using Bogus fakers
 ```
 
+## Usings and Namespaces
+
+**Do not add `using` directives to source files.** Every project has `ImplicitUsings` enabled and declares its namespaces as `<Using>` items: shared ones in `src/Directory.Build.props`, the rest in each csproj. If you need one that is not in scope, add it there rather than to the file.
+
+Four opt-in namespaces are the exception and **must** stay file-level:
+
+| Namespace | Why |
+|---|---|
+| `DynamicData.Alias` | Supplies `Select`, `Where` and `SelectMany` for changesets, so it changes what LINQ-looking code means. |
+| `DynamicData.PLinq` | Supplies `Filter`, `Transform` and `SubscribeMany` under the *same names* as the core operators, but parallel. |
+| `DynamicData.Aggregation` | Supplies `Count`, `Sum`, `Avg` and `Maximum`, which overlap Rx and LINQ names. |
+| `DynamicData.Experimental` | Unstable API. Opting in should be visible at the call site. |
+
+If globalising a namespace makes a name ambiguous, qualify the call site or add a global alias. Do not move the namespace back into the file. Already handled: `System.Reactive.Notification<T>` against `DynamicData.Internal.Notification<T>`, `Enumerable.ToHashSet` against `Kernel.EnumerableEx`, and `Person`, which the tests project aliases to the domain type so it wins over `Bogus.Person`.
+
 ## Operator Architecture Pattern
 
 Most operators follow the same two-part pattern:

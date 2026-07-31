@@ -10,6 +10,7 @@
     <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
     <IsBenchmarkProject>$(MSBuildProjectName.Contains('Benchmarks'))</IsBenchmarkProject>
     <DebugType>embedded</DebugType>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Authors>Roland Pheasant</Authors>
     <Owners>Roland Pheasant</Owners>
     <Copyright>Copyright (c) Roland Pheasant 2011-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
@@ -35,6 +36,19 @@
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
+
+  <!-- Namespaces used by every project. Project specific ones live in the csproj that needs them. -->
+  <ItemGroup>
+    <Using Include="DynamicData.Binding" />
+    <Using Include="DynamicData.Kernel" />
+    <Using Include="System.Collections.ObjectModel" />
+    <Using Include="System.ComponentModel" />
+    <Using Include="System.Reactive.Disposables" />
+    <Using Include="System.Reactive.Linq" />
+    <Using Include="System.Reactive.Subjects" />
+    <Using Include="System.Reflection" />
+    <Using Include="System.Runtime.CompilerServices" />
+  </ItemGroup>
 
   <PropertyGroup Condition="$(IsTestProject) OR $(IsBenchmarkProject)">
     <IsPackable>false</IsPackable>

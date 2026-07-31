@@ -1,13 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class OnItemRefreshedFixture
 {
@@ -28,13 +19,13 @@ public class OnItemRefreshedFixture
             source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var refreshActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRefreshed(refreshActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         if (initialItemCount is 0)
@@ -46,15 +37,14 @@ public class OnItemRefreshedFixture
             config:         options => options.WithStrictOrdering(),
             because:        "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
-        
 
         // UUT Action
         source.Insert(
             index:  insertionIndex,
             item:   initialItemCount);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("an item was refreshed within the collection");
@@ -83,13 +73,13 @@ public class OnItemRefreshedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var refreshActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRefreshed(refreshActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
@@ -98,15 +88,14 @@ public class OnItemRefreshedFixture
             config:         options => options.WithStrictOrdering(),
             because:        "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
-        
 
         // UUT Action
         source.Move(
             original:       originalIndex,
             destination:    destinationIndex);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("an item was moved within the collection");
@@ -132,13 +121,13 @@ public class OnItemRefreshedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var refreshActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRefreshed(refreshActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
@@ -147,14 +136,13 @@ public class OnItemRefreshedFixture
             config:         options => options.WithStrictOrdering(),
             because:        "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
-        
 
         // UUT Action
         var refreshedItem = source.Items[refreshIndex];
         source.Refresh(refreshIndex);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("an item was refreshed within the collection");
@@ -181,13 +169,13 @@ public class OnItemRefreshedFixture
             source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var refreshActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRefreshed(refreshActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
@@ -196,14 +184,13 @@ public class OnItemRefreshedFixture
             config:         options => options.WithStrictOrdering(),
             because:        "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
-        
 
         // UUT Action
         var removedItem = source.Items[removalIndex];
         source.RemoveAt(removalIndex);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("an item was removed from the collection");
@@ -229,13 +216,13 @@ public class OnItemRefreshedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var refreshActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRefreshed(refreshActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
@@ -244,15 +231,14 @@ public class OnItemRefreshedFixture
             config:         options => options.WithStrictOrdering(),
             because:        "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
-        
 
         // UUT Action
         source.ReplaceAt(
             index:  replacementIndex,
             item:   initialItemCount);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("an item was replaced within the collection");
@@ -280,13 +266,13 @@ public class OnItemRefreshedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var refreshActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRefreshed(refreshActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
@@ -295,15 +281,14 @@ public class OnItemRefreshedFixture
             config:         options => options.WithStrictOrdering(),
             because:        "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
-        
 
         // UUT Action
         source.RemoveRange(
             index: removalIndex,
             count: removalCount);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle($"{removalCount} item{((removalCount is 1) ? "" : "s")} should have been removed");
@@ -311,7 +296,7 @@ public class OnItemRefreshedFixture
             expectation:    source.Items,
             config:         options => options.WithStrictOrdering(),
             because:        "all collection changes should propagate downstream");
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
     }
 
@@ -325,13 +310,13 @@ public class OnItemRefreshedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var refreshActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRefreshed(refreshActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
@@ -340,13 +325,12 @@ public class OnItemRefreshedFixture
             config:         options => options.WithStrictOrdering(),
             because:        "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
-        
 
         // UUT Action
         source.Clear();
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("all items in the collection should have been removed");
@@ -354,7 +338,7 @@ public class OnItemRefreshedFixture
             expectation:    source.Items,
             config:         options => options.WithStrictOrdering(),
             because:        "all collection changes should propagate downstream");
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
     }
 
@@ -371,13 +355,13 @@ public class OnItemRefreshedFixture
         });
 
         var refreshActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRefreshed(refreshActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
@@ -386,17 +370,16 @@ public class OnItemRefreshedFixture
             config:         options => options.WithStrictOrdering(),
             because:        "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         refreshActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Action
         source.Complete();
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeTrue("the source has completed");
         results.RecordedChangeSets.Should().BeEmpty("no changes were made to the collection");
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
     }
 
@@ -412,15 +395,15 @@ public class OnItemRefreshedFixture
             3
         });
         source.Complete();
-        
+
         var refreshActionInvocations = new List<int>();
-        
+
         // UUT Construction & Action
         using var subscription = source.Connect()
             .OnItemRefreshed(refreshActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeTrue("the source has completed");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
@@ -428,7 +411,7 @@ public class OnItemRefreshedFixture
             expectation:    source.Items,
             config:         options => options.WithStrictOrdering(),
             because:        "all collection changes should propagate downstream");
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
     }
 
@@ -445,13 +428,13 @@ public class OnItemRefreshedFixture
         });
 
         var refreshActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRefreshed(refreshActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
@@ -460,17 +443,16 @@ public class OnItemRefreshedFixture
             config:         options => options.WithStrictOrdering(),
             because:        "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         refreshActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Action
         var error = new Exception();
         source.SetError(error);
-        
+
         results.Error.Should().BeSameAs(error, "errors within the stream should propagate");
         results.RecordedChangeSets.Should().BeEmpty("no changes were made to the collection");
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
     }
 
@@ -487,18 +469,18 @@ public class OnItemRefreshedFixture
         });
         var error = new Exception();
         source.SetError(error);
-        
+
         var refreshActionInvocations = new List<int>();
-        
+
         // UUT Construction & Action
         using var subscription = source.Connect()
             .OnItemRefreshed(refreshActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeSameAs(error, "errors within the stream should propagate");
         results.RecordedChangeSets.Should().BeEmpty("an error occurred during subscription");
-        
+
         refreshActionInvocations.Should().BeEmpty("no items were refreshed within the collection");
     }
 }

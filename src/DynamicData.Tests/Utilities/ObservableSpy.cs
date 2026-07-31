@@ -1,12 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
-using Xunit.Abstractions;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 internal static class ObservableSpy
 {
@@ -209,9 +201,9 @@ internal static class ObservableSpy
 #endif
 
 #if DEBUG
-    private static void DebugLogger(string str) => System.Diagnostics.Debug.WriteLine(str); 
+    private static void DebugLogger(string str) => System.Diagnostics.Debug.WriteLine(str);
 #elif DEBUG_SPY_ALWAYS
-    private static void DebugLogger(string str) => NativeMethods.OutputDebugString(str); 
+    private static void DebugLogger(string str) => NativeMethods.OutputDebugString(str);
 #endif
 
 }

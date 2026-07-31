@@ -1,21 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
-using System.Threading.Tasks;
-using Bogus;
-using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public sealed class MergeManyChangeSetsCacheFixture : IDisposable
 {
@@ -816,7 +799,6 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         results.Summary.Overall.Removes.Should().Be(PricesPerMarket);
     }
 
-
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -829,7 +811,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         var markets2 = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
         AddUniquePrices(markets2);
         using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.EqualityComparer).AsAggregator();
-        (var firstReason, var nextReason, int expectedChanges) = removeFirst 
+        (var firstReason, var nextReason, int expectedChanges) = removeFirst
             ? (ChangeReason.Remove, ChangeReason.Add, 2 * MarketCount * PricesPerMarket)
             : (ChangeReason.Add, ChangeReason.Remove, 3 * MarketCount * PricesPerMarket);
 

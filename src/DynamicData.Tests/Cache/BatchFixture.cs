@@ -1,14 +1,4 @@
-using System;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class BatchFixture : IDisposable
 {

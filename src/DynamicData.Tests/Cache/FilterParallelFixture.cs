@@ -1,12 +1,4 @@
-using System;
-using System.Linq;
-
-using DynamicData.PLinq;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+﻿using DynamicData.PLinq;
 
 namespace DynamicData.Tests.Cache;
 

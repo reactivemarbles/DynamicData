@@ -1,15 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public static partial class ToObservableChangeSetFixture
 {
@@ -50,7 +39,7 @@ public static partial class ToObservableChangeSetFixture
                     .ValidateSynchronization()
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results1);
-        
+
                 using var subscription2 = Observable.Interval(
                         period:     TimeSpan.FromMilliseconds(5),
                         scheduler:  scheduler)

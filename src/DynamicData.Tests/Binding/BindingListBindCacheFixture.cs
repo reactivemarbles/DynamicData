@@ -1,15 +1,5 @@
 ﻿#if SUPPORTS_BINDINGLIST
 
-using System;
-using System.ComponentModel;
-using System.Linq;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Binding
 {
     public class BindingListCacheFixture : IDisposable
@@ -56,7 +46,6 @@ namespace DynamicData.Tests.Binding
             _source.Clear();
             _collection.Count.Should().Be(0, "Should be 100 items in the collection");
         }
-
 
         [Fact]
         public void RemoveSourceRemovesFromTheDestination()

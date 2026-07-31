@@ -1,16 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Binding;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Binding;
+﻿namespace DynamicData.Tests.Binding;
 
 public class IObservableListBindCacheSortedFixture : IDisposable
 {

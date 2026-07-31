@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 internal sealed class FakeScheduler
     : IScheduler
@@ -31,7 +26,7 @@ internal sealed class FakeScheduler
             state: state,
             dueTime: null,
             action: action);
-    
+
     public IDisposable Schedule<TState>(
             TState state,
             TimeSpan dueTime,
@@ -40,7 +35,7 @@ internal sealed class FakeScheduler
             state: state,
             dueTime: _now + dueTime,
             action: action);
-    
+
     public IDisposable Schedule<TState>(
             TState state,
             DateTimeOffset dueTime,

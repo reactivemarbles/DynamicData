@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 #if NET9_0_OR_GREATER
-using DynamicData.Internal;
 
 namespace System.Reactive.Linq;
 

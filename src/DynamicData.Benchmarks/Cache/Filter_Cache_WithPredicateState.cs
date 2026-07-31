@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using BenchmarkDotNet.Attributes;
-
-using Bogus;
-
-namespace DynamicData.Benchmarks.Cache;
+﻿namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
@@ -99,7 +90,6 @@ public class Filter_Cache_WithPredicateState
         }
         _changeSets = changeSets.MoveToImmutable();
 
-
         var predicateStates = ImmutableArray.CreateBuilder<int>(initialCapacity: 5_000);
         while (predicateStates.Count < predicateStates.Capacity)
             predicateStates.Add(randomizer.Int());
@@ -150,7 +140,7 @@ public class Filter_Cache_WithPredicateState
                 int     idInclusionMask,
                 Item    item)
             => ((item.Id & idInclusionMask) == 0) && item.IsIncluded;
-            
+
         public required int Id { get; init; }
 
         public bool IsIncluded { get; set; }

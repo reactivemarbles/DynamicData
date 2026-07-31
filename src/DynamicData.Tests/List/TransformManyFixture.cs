@@ -1,15 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-
-using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class TransformManyFixture : IDisposable
 {
@@ -94,7 +83,7 @@ public class TransformManyFixture : IDisposable
     [Fact]
     public void Move()
     {
-        //Move should have no effect 
+        //Move should have no effect
 
         var child4 = new PersonWithRelations("Child4", 1);
         var child5 = new PersonWithRelations("Child5", 2);

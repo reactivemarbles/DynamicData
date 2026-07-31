@@ -1,14 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Aggregation;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+﻿using DynamicData.Aggregation;
 
 namespace DynamicData.Tests.List;
 

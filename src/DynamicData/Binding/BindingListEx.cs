@@ -2,12 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Reactive;
-using System.Reactive.Linq;
-
 namespace DynamicData.Binding;
 
 /// <summary>

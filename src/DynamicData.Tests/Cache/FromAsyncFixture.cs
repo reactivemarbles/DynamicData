@@ -1,18 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class FromAsyncFixture
 {
@@ -66,7 +52,7 @@ public class FromAsyncFixture
         var data2 = Observable.FromAsync(Loader).ToObservableChangeSet(p => p.Key).AsObservableCache().Connect().Subscribe(changes => { }, ex => error = ex);
 
         //var subscribed = data.Connect()
-        //    
+        //
 
         error.Should().NotBeNull();
     }

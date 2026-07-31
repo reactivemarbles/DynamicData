@@ -1,19 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading.Tasks;
-
-using Bogus;
-using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-using FluentAssertions;
-using Xunit;
-
-using Person = DynamicData.Tests.Domain.Person;
-
+﻿
 namespace DynamicData.Tests.Cache;
 
 public class GroupOnDynamicFixture : IDisposable
@@ -263,7 +248,6 @@ public class GroupOnDynamicFixture : IDisposable
         _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2, "1 for adds and 1 for regrouping"));
         VerifyGroupingResults();
     }
-
 
     [Theory]
     [InlineData(false, false, false)]

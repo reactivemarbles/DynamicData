@@ -1,9 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 internal static class StressAddRemoveExtensions
 {

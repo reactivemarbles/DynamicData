@@ -2,16 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using DynamicData.Binding;
-using DynamicData.Tests.Utilities;
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Binding;
 
 /// <summary>
@@ -162,7 +152,7 @@ public sealed class WhenPropertyChangedBehaviorFixture
         {
             Age = 10
         };
-        
+
         using var subscription = ObserveAge(child)
             .RecordValues(out var results);
 
@@ -180,7 +170,7 @@ public sealed class WhenPropertyChangedBehaviorFixture
                 where T : IHasAge
             => source.WhenValueChanged(source => source.Age);
     }
-    
+
     private interface IHasAge
         : INotifyPropertyChanged
     {

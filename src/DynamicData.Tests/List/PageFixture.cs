@@ -1,17 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Binding;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class PageFixture : IDisposable
 {
@@ -167,7 +154,6 @@ public class PageFixtureWithNoInitialData
         pager.OnNext(new PageRequest(2, 3));
         sut.Paged.Count.Should().Be(3);
     }
-
 
     [Fact]
     public void DoesNotThrowWithDuplicates()

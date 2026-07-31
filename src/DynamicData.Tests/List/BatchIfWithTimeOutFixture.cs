@@ -1,15 +1,4 @@
-using System;
-using System.Reactive.Subjects;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class BatchIfWithTimeOutFixture : IDisposable
 {
@@ -83,7 +72,7 @@ public class BatchIfWithTimeOutFixture : IDisposable
     {
         _pausingSubject.OnNext(true);
 
-        //should timeout 
+        //should timeout
         _scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
 
         _source.Add(new Person("A", 1));

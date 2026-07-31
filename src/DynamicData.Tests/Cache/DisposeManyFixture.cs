@@ -1,13 +1,4 @@
-using System;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public sealed class DisposeManyFixture : IDisposable
 {
@@ -141,7 +132,7 @@ public sealed class DisposeManyFixture : IDisposable
     public void RemainingItemsAreDisposedAfterError()
     {
         _itemsSource.AddOrUpdate(new DisposableObject(1));
-        
+
         var error = new Exception("Test Exception");
         _changeSetsSource.OnError(error);
 

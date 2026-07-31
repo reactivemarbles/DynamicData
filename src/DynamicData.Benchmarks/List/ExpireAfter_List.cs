@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
-
-using BenchmarkDotNet.Attributes;
-
-using Bogus;
-
-namespace DynamicData.Benchmarks.List;
+﻿namespace DynamicData.Benchmarks.List;
 
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
@@ -101,7 +93,7 @@ public class ExpireAfter_List
     private void PerformRandomizedEdits(SourceList<Item> source)
     {
         var randomizer = new Randomizer(1234567);
-        
+
         var nextItemIndex = 0;
 
         for (var i = 0; i < _editCount; ++i)

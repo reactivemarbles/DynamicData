@@ -1,19 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-
-using Bogus;
-using FluentAssertions;
-using Xunit;
-using Xunit.Abstractions;
-
-using DynamicData.Tests.Utilities;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public static partial class ExpireAfterFixture
 {
@@ -188,7 +173,6 @@ public static partial class ExpireAfterFixture
 
             // Not testing Move changes, since ISourceCache<T> doesn't actually provide an API to generate them.
 
-
             // Verify initial state, after all emissions
             results.Error.Should().BeNull();
             results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
@@ -326,7 +310,6 @@ public static partial class ExpireAfterFixture
 
             // Not testing Move changes, since ISourceCache<T> doesn't actually provide an API to generate them.
 
-
             // Verify initial state, after all emissions
             results.Error.Should().BeNull();
             results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
@@ -410,7 +393,6 @@ public static partial class ExpireAfterFixture
 
             var item1 = new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(10) };
             source.AddOrUpdate(item1);
-
 
             results.Error.Should().BeNull();
             results.RecordedValues.Should().BeEmpty("no expirations should have occurred");
@@ -678,7 +660,7 @@ public static partial class ExpireAfterFixture
             };
 
             var randomizer = new Randomizer(1234567);
-        
+
             var items = Enumerable.Range(1, editCount * maxChangeCount)
                 .Select(id => new StressItem()
                 {

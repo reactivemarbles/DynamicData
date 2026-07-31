@@ -1,17 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-using Bogus;
-using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-using FluentAssertions;
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public sealed class TransformManyAsyncFixture : IDisposable
 {
@@ -223,7 +210,7 @@ public sealed class TransformManyAsyncFixture : IDisposable
         sameId.Animals.AddRange(newOwner.Animals.Items);
         return sameId;
     }
- 
+
     private static void CheckResultContents<T>(IEnumerable<AnimalOwner> owners, ChangeSetAggregator<AnimalOwner, Guid> ownerResults, ChangeSetAggregator<Animal, T> animalResults, Func<Animal, T> keySelector, IComparer<Animal> comparer)
         where T : notnull
     {

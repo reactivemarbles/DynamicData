@@ -1,14 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class OnItemRemovedFixture
 {
@@ -25,7 +15,7 @@ public class OnItemRemovedFixture
                 removeAction:           static _ => { },
                 invokeOnUnsubscribe:    invokeOnUnsubscribe)
             .Subscribe();
-        
+
         var error = new Exception("Test");
 
         FluentActions.Invoking(() => source.SetError(error))
@@ -54,7 +44,7 @@ public class OnItemRemovedFixture
             source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         var subscription = source.Connect()
             .OnItemRemoved(
@@ -62,7 +52,7 @@ public class OnItemRemovedFixture
                 invokeOnUnsubscribe:    true)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         if (initialItemCount is 0)
@@ -71,9 +61,8 @@ public class OnItemRemovedFixture
             results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Setup: Remove some items, to ensure correct tracking of remaining items.
         var removedItems = source.Items
@@ -85,7 +74,7 @@ public class OnItemRemovedFixture
             source.RemoveRange(
                 index: removalIndex,
                 count: removalCount);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         if (removalCount is 0)
@@ -93,13 +82,13 @@ public class OnItemRemovedFixture
         else
             results.RecordedChangeSets.Should().ContainSingle($"{removalCount} item{((removalCount is 1) ? "" : "s")} should have been removed");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
-        
+
         removeActionInvocations.Should().BeEquivalentTo(removedItems, options => options.WithoutStrictOrdering(), "the removal action should be invoked for every removed item");
         removeActionInvocations.Clear();
-        
+
         // UUT Action
         subscription.Dispose();
-        
+
         removeActionInvocations.Should().BeEquivalentTo(source.Items, options => options.WithoutStrictOrdering(), "the removal action should be invoked for all all remaining items");
     }
 
@@ -122,7 +111,7 @@ public class OnItemRemovedFixture
             source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         var subscription = source.Connect()
             .OnItemRemoved(
@@ -130,7 +119,7 @@ public class OnItemRemovedFixture
                 invokeOnUnsubscribe:    false)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         if (initialItemCount is 0)
@@ -139,9 +128,8 @@ public class OnItemRemovedFixture
             results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Setup: Remove some items, to ensure correct tracking of remaining items.
         var removedItems = source.Items
@@ -153,7 +141,7 @@ public class OnItemRemovedFixture
             source.RemoveRange(
                 index: removalIndex,
                 count: removalCount);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         if (removalCount is 0)
@@ -161,13 +149,13 @@ public class OnItemRemovedFixture
         else
             results.RecordedChangeSets.Should().ContainSingle($"{removalCount} item{((removalCount is 1) ? "" : "s")} should have been removed");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
-        
+
         removeActionInvocations.Should().BeEquivalentTo(removedItems, options => options.WithoutStrictOrdering(), "the removal action should be invoked for every removed item");
         removeActionInvocations.Clear();
-        
+
         // UUT Action
         subscription.Dispose();
-        
+
         removeActionInvocations.Should().BeEmpty("the removal action should not be invoked upon unsubscription");
     }
 
@@ -188,13 +176,13 @@ public class OnItemRemovedFixture
             source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(removeActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         if (initialItemCount is 0)
@@ -203,15 +191,14 @@ public class OnItemRemovedFixture
             results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Action
         source.Insert(
             index:  insertionIndex,
             item:   initialItemCount);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("an item was refreshed within the collection");
@@ -237,27 +224,26 @@ public class OnItemRemovedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(removeActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Action
         source.Move(
             original:       originalIndex,
             destination:    destinationIndex);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("an item was moved within the collection");
@@ -281,26 +267,25 @@ public class OnItemRemovedFixture
             source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(removeActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Action
         var removedItem = source.Items[removalIndex];
         source.RemoveAt(removalIndex);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("an item was removed from the collection");
@@ -324,25 +309,24 @@ public class OnItemRemovedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(removeActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Action
         source.Refresh(refreshIndex);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("an item was refreshed within the collection");
@@ -365,28 +349,27 @@ public class OnItemRemovedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(removeActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Action
         var replacedItem = source.Items[replacementIndex];
         source.ReplaceAt(
             index:  replacementIndex,
             item:   initialItemCount);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("an item was replaced within the collection");
@@ -412,7 +395,7 @@ public class OnItemRemovedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(
@@ -420,15 +403,14 @@ public class OnItemRemovedFixture
                 invokeOnUnsubscribe:    true)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Action
         var removedItems = source.Items
@@ -439,12 +421,12 @@ public class OnItemRemovedFixture
         source.RemoveRange(
             index: removalIndex,
             count: removalCount);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle($"{removalCount} item{((removalCount is 1) ? "" : "s")} should have been removed");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
-        
+
         removeActionInvocations.Should().BeEquivalentTo(removedItems, options => options.WithoutStrictOrdering(), "the removal action should be invoked for every removed item");
     }
 
@@ -458,33 +440,32 @@ public class OnItemRemovedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(removeActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Action
         var clearedItems = source.Items
             .ToArray();
 
         source.Clear();
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("all items in the collection should have been removed");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
-        
+
         removeActionInvocations.Should().BeEquivalentTo(clearedItems, options => options.WithoutStrictOrdering(), "the removal action should be invoked for every removed item");
     }
 
@@ -503,7 +484,7 @@ public class OnItemRemovedFixture
         });
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(
@@ -511,23 +492,22 @@ public class OnItemRemovedFixture
                 invokeOnUnsubscribe:    invokeOnUnsubscribe)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Action
         source.Complete();
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeTrue("the source has completed");
         results.RecordedChangeSets.Should().BeEmpty("no changes were made to the collection");
-        
+
         if (invokeOnUnsubscribe)
             removeActionInvocations.Should().BeEquivalentTo(source.Items, options => options.WithoutStrictOrdering(), "the operator was instructed to invoke the removal action all remaining items, upon stream completion");
         else
@@ -548,9 +528,9 @@ public class OnItemRemovedFixture
             3
         });
         source.Complete();
-        
+
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction & Action
         using var subscription = source.Connect()
             .OnItemRemoved(
@@ -558,12 +538,12 @@ public class OnItemRemovedFixture
                 invokeOnUnsubscribe:    invokeOnUnsubscribe)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeTrue("the source has completed");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
-        
+
         if (invokeOnUnsubscribe)
             removeActionInvocations.Should().BeEquivalentTo(source.Items, options => options.WithoutStrictOrdering(), "the operator was instructed to invoke the removal action all remaining items, upon stream completion");
         else
@@ -585,7 +565,7 @@ public class OnItemRemovedFixture
         });
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(
@@ -593,23 +573,22 @@ public class OnItemRemovedFixture
                 invokeOnUnsubscribe:    invokeOnUnsubscribe)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("the source can still publish notifications");
         results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
         results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
+
         removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
 
         // UUT Action
         var error = new Exception();
         source.SetError(error);
-        
+
         results.Error.Should().BeSameAs(error, "errors within the stream should propagate");
         results.RecordedChangeSets.Should().BeEmpty("no changes were made to the collection");
-        
+
         if (invokeOnUnsubscribe)
             removeActionInvocations.Should().BeEquivalentTo(source.Items, options => options.WithoutStrictOrdering(), "the operator was instructed to invoke the removal action all remaining items, upon stream failure");
         else
@@ -631,9 +610,9 @@ public class OnItemRemovedFixture
         });
         var error = new Exception();
         source.SetError(error);
-        
+
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction & Action
         using var subscription = source.Connect()
             .OnItemRemoved(
@@ -641,10 +620,10 @@ public class OnItemRemovedFixture
                 invokeOnUnsubscribe:    invokeOnUnsubscribe)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
+
         results.Error.Should().BeSameAs(error, "errors within the stream should propagate");
         results.RecordedChangeSets.Should().BeEmpty("an error occurred during subscription");
-        
+
         removeActionInvocations.Should().BeEmpty(invokeOnUnsubscribe
             ? "the initial items in the collection were never published"
             : "the operator was instructed to not invoke the removal action, upon stream failure");

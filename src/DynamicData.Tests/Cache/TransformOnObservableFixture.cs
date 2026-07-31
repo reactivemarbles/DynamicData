@@ -1,20 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading.Tasks;
-using Bogus;
-using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class TransformOnObservableFixture : IDisposable
 {
@@ -179,7 +163,7 @@ public class TransformOnObservableFixture : IDisposable
     {
         // Arrange
         using var results = _animalCache.Connect().TransformOnObservable(Observable.Return).AsAggregator();
-        (var firstReason, var nextReason, var expectedChanges) = removeFirst 
+        (var firstReason, var nextReason, var expectedChanges) = removeFirst
             ? (ChangeReason.Remove, ChangeReason.Add, InitialCount * 2)
             : (ChangeReason.Add, ChangeReason.Remove, InitialCount * 3);
 

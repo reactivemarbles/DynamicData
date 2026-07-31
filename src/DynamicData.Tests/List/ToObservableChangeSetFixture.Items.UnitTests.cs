@@ -1,16 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using Microsoft.Reactive.Testing;
-
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public static partial class ToObservableChangeSetFixture
 {
@@ -26,7 +14,6 @@ public static partial class ToObservableChangeSetFixture
 
                 var error = new Exception("Test Exception");
 
-
                 // UUT Initialization
                 using var subscription = source
                     .ToObservableChangeSet(expireAfter: static item => (item.Error is not null)
@@ -40,7 +27,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
                 results.RecordedItems.Should().BeEmpty("no items have been emitted by the source");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 var item1 = new Item() { Id = 1 };
@@ -59,7 +45,6 @@ public static partial class ToObservableChangeSetFixture
                 // Setup
                 using var source = new Subject<Item>();
 
-
                 // UUT Initialization
                 using var subscription = source
                     .ToObservableChangeSet(limitSizeTo: 5)
@@ -71,7 +56,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
                 results.RecordedItems.Should().BeEmpty("no items have been emitted");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action: Not enough items to reach the limit
                 var item1 = new Item() { Id = 1 };
@@ -93,18 +77,16 @@ public static partial class ToObservableChangeSetFixture
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action: Limit is reached
                 var item5 = new Item() { Id = 5 };
                 source.OnNext(item5);
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(5).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2, item3, item4, item5 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2, item3, item4, item5 },
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action: New item exceeds the limit
                 var item6 = new Item() { Id = 6 };
@@ -112,7 +94,7 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(6).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item2, item3, item4, item5, item6 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item2, item3, item4, item5, item6 },
                     because: "1 item was emitted, and 1 was evicted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -132,9 +114,8 @@ public static partial class ToObservableChangeSetFixture
                     SourceType.Immediate    => Observable.Return(item),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
-            
-                var scheduler = new TestScheduler();
 
+                var scheduler = new TestScheduler();
 
                 // UUT Initialization & Action
                 using var subscription = source
@@ -156,11 +137,10 @@ public static partial class ToObservableChangeSetFixture
                     results.RecordedChangeSets.Count.Should().Be(2, "1 item was emitted, after initialization");
                 else
                     results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item },
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("1 item has yet to expire");
-
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(10).Ticks);
@@ -188,9 +168,8 @@ public static partial class ToObservableChangeSetFixture
                     SourceType.Immediate    => Observable.Return(item),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
-            
-                var scheduler = new TestScheduler();
 
+                var scheduler = new TestScheduler();
 
                 // UUT Initialization & Action
                 using var subscription = source
@@ -212,7 +191,7 @@ public static partial class ToObservableChangeSetFixture
                     results.RecordedChangeSets.Count.Should().Be(2, "1 item was emitted, after initialization");
                 else
                     results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item },
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeTrue("the source has completed, and no items remain to be expired");
@@ -225,7 +204,6 @@ public static partial class ToObservableChangeSetFixture
                 using var source = new Subject<Item>();
 
                 var scheduler = new TestScheduler();
-
 
                 // UUT Initialization
                 using var subscription = source
@@ -241,7 +219,6 @@ public static partial class ToObservableChangeSetFixture
                 results.RecordedItems.Should().BeEmpty("no items have been emitted");
                 results.HasCompleted.Should().BeFalse("the source has not completed");
 
-
                 // UUT Action
                 var item1 = new Item() { Id = 1, Lifetime = TimeSpan.FromSeconds(3) };
                 source.OnNext(item1);
@@ -249,11 +226,10 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item1 },
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 var item2 = new Item() { Id = 2 };
@@ -262,11 +238,10 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 },
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 var item3 = new Item() { Id = 3, Lifetime = TimeSpan.FromSeconds(1) };
@@ -275,51 +250,47 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2, item3 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2, item3 },
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(1).Ticks);
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(4).Count().Should().Be(1, "1 expiration should have occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 },
                     because: "1 item expired, and 1 had its lifetime extended",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(2).Ticks);
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(5).Should().BeEmpty("no expirations should have occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 },
                     because: "no changes were made",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(3).Ticks);
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(5).Count().Should().Be(1, "1 expiration should have occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item2 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item2 },
                     because: "1 item reached its expiration",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
-
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(4).Ticks);
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(6).Should().BeEmpty("no expirations should have occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item2 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item2 },
                     because: "no changes were made",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -334,12 +305,11 @@ public static partial class ToObservableChangeSetFixture
                 var error = new Exception("Test Exception");
 
                 var source = sourceType switch
-                { 
+                {
                     SourceType.Asynchronous => new Subject<Item>(),
                     SourceType.Immediate    => Observable.Throw<Item>(error),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
-
 
                 // UUT Initialization & Action
                 using var subscription = source

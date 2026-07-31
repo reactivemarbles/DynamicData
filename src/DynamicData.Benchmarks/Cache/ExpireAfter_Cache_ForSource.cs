@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
-
-using BenchmarkDotNet.Attributes;
-
-using Bogus;
-
-namespace DynamicData.Benchmarks.Cache;
+﻿namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
@@ -79,7 +71,7 @@ public class ExpireAfter_Cache_ForSource
     private void PerformRandomizedEdits(SourceCache<Item, int> source)
     {
         var randomizer = new Randomizer(1234567);
-        
+
         var nextItemIndex = 0;
 
         for (var i = 0; i < _editCount; ++i)

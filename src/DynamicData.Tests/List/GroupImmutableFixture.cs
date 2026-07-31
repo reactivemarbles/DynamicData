@@ -1,16 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Subjects;
-
-using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class GroupImmutableFixture : IDisposable
 {

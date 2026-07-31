@@ -1,15 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public sealed class FilterImmutableFixture
 {
@@ -22,7 +11,6 @@ public sealed class FilterImmutableFixture
             .FilterImmutable(predicate: Item.Predicate)
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
-
 
         // Add items
         var item1 = new Item() { Id = 1, IsIncluded = true };
@@ -37,7 +25,6 @@ public sealed class FilterImmutableFixture
         results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
         results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "2 items were added, with 1 excluded");
 
-
         // Replace items, changing inclusion
         var item3 = new Item() { Id = item1.Id, IsIncluded = false };
         var item4 = new Item() { Id = item2.Id, IsIncluded = true };
@@ -50,7 +37,6 @@ public sealed class FilterImmutableFixture
         results.Error.Should().BeNull();
         results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 source operation was performed");
         results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item4 }, "2 items were replaced, with 1 excluded");
-
 
         // Replace items, not changing inclusion
         var item5 = new Item() { Id = item3.Id, IsIncluded = false };
@@ -65,7 +51,6 @@ public sealed class FilterImmutableFixture
         results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "1 source operation was performed");
         results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item6 }, "2 items were replaced, with 1 excluded");
 
-
         // Refresh items
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -77,7 +62,6 @@ public sealed class FilterImmutableFixture
         results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "1 source operation was performed");
         results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item6 }, "2 items were refreshed, with 1 excluded");
 
-
         // Remove items
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -88,7 +72,6 @@ public sealed class FilterImmutableFixture
         results.Error.Should().BeNull();
         results.RecordedChangeSets.Skip(4).Count().Should().Be(1, "1 source operation was performed");
         results.RecordedItemsByKey.Should().BeEmpty("2 items were removed, with one excluded");
-
 
         results.RecordedChangeSets.SelectMany(static changes => changes).Should().AllSatisfy(
             change =>
@@ -122,7 +105,6 @@ public sealed class FilterImmutableFixture
         });
         var changeSetsBeforeMove = results.RecordedChangeSets.Count;
 
-
         // Move items
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -153,7 +135,6 @@ public sealed class FilterImmutableFixture
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
 
-
         var item1 = new Item() { Id = 1, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -175,7 +156,6 @@ public sealed class FilterImmutableFixture
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
 
-
         var item1 = new Item() { Id = 1, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -187,7 +167,6 @@ public sealed class FilterImmutableFixture
         results.HasCompleted.Should().BeTrue();
         results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
         results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
-
 
         // Make sure no extraneous notifications are published.
         var item2 = new Item() { Id = 2, IsIncluded = true };
@@ -221,7 +200,6 @@ public sealed class FilterImmutableFixture
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
 
-
         results.Error.Should().BeNull();
         results.HasCompleted.Should().BeTrue();
         results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
@@ -240,7 +218,6 @@ public sealed class FilterImmutableFixture
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
 
-
         var item1 = new Item() { Id = 1, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -252,7 +229,6 @@ public sealed class FilterImmutableFixture
         results.HasCompleted.Should().BeFalse();
         results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
         results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
-
 
         // Make sure no extraneous notifications are published.
         var item2 = new Item() { Id = 2, IsIncluded = true };
@@ -287,7 +263,6 @@ public sealed class FilterImmutableFixture
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
 
-
         results.Error.Should().Be(error);
         results.HasCompleted.Should().BeFalse();
         results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
@@ -313,7 +288,6 @@ public sealed class FilterImmutableFixture
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
 
-
         ManipulateExcludedItems(source);
 
         results.Error.Should().BeNull();
@@ -331,7 +305,6 @@ public sealed class FilterImmutableFixture
             .FilterImmutable(predicate: Item.Predicate)
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
-
 
         ManipulateExcludedItems(source);
 

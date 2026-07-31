@@ -1,14 +1,4 @@
-using System;
-using System.Linq;
-
-using DynamicData.Kernel;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class RightJoinFixture : IDisposable
 {
@@ -135,7 +125,6 @@ public class RightJoinFixture : IDisposable
 
         var refreshItem = _right.Lookup(2).Value;
 
-
         // Change pairing
         refreshItem.Name = "Device3";
         _right.Refresh(refreshItem);
@@ -143,7 +132,6 @@ public class RightJoinFixture : IDisposable
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain(("Device2", 2));
         _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device3", 2));
-
 
         // Remove pairing
         refreshItem.Name = "Device4";
@@ -153,7 +141,6 @@ public class RightJoinFixture : IDisposable
         _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain(("Device3", 2));
         _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain((null, 2));
 
-
         // Restore pairing
         refreshItem.Name = "Device2";
         _right.Refresh(refreshItem);
@@ -161,7 +148,6 @@ public class RightJoinFixture : IDisposable
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain((null, 2));
         _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device2", 2));
-
 
         // No change
         _right.Refresh(refreshItem);
@@ -243,14 +229,12 @@ public class RightJoinFixture : IDisposable
                 innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
             });
 
-        
         // Change pairing
         _right.AddOrUpdate(new DeviceMetaData(2,"Device3"));
 
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain(("Device2", 2));
         _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device3", 2));
-
 
         // Remove pairing
         _right.AddOrUpdate(new DeviceMetaData(2,"Device4"));
@@ -259,14 +243,12 @@ public class RightJoinFixture : IDisposable
         _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain(("Device3", 2));
         _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain((null, 2));
 
-
         // Restore pairing
         _right.AddOrUpdate(new DeviceMetaData(2,"Device2"));
 
         _result.Data.Count.Should().Be(3);
         _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain((null, 2));
         _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device2", 2));
-
 
         // No change
         _right.AddOrUpdate(new DeviceMetaData(2,"Device2"));
@@ -315,7 +297,7 @@ public class RightJoinFixture : IDisposable
             innerCache =>
             {
                 innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2")); 
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
                 innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
                 innerCache.AddOrUpdate(new DeviceMetaData(4,"Device4"));
             });

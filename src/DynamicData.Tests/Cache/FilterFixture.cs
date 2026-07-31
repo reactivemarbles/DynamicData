@@ -1,10 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-
-using Bogus;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public static partial class FilterFixture
 {
@@ -36,7 +30,7 @@ public static partial class FilterFixture
 
         public static int SelectId(Item item)
             => item.Id;
-            
+
         public required int Id { get; init; }
 
         public bool IsIncluded { get; set; }

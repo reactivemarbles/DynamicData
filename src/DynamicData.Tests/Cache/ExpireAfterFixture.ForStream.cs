@@ -1,20 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading.Tasks;
-
-using Bogus;
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public static partial class ExpireAfterFixture
 {
@@ -287,7 +271,6 @@ public static partial class ExpireAfterFixture
                 new(reason: ChangeReason.Moved, key: item1.Id, current: item1, previous: default, currentIndex: 4, previousIndex: 1)
             });
 
-
             // Verify initial state, after all emissions
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Count.Should().Be(7, "8 source operations were performed, and 1 should have been ignored");
@@ -453,7 +436,6 @@ public static partial class ExpireAfterFixture
                 new(reason: ChangeReason.Moved, key: item1.Id, current: item1, previous: default, currentIndex: 4, previousIndex: 1)
             });
 
-
             // Verify initial state, after all emissions
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Count.Should().Be(7, "8 source operations were performed, and 1 should have been ignored");
@@ -591,7 +573,6 @@ public static partial class ExpireAfterFixture
             {
                 new(reason: ChangeReason.Add, key: item1.Id, current: item1)
             });
-
 
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
@@ -961,7 +942,7 @@ public static partial class ExpireAfterFixture
             foreach(var changeSet in changeSets)
                 source.OnNext(changeSet);
         }
-    
+
         private static async Task WaitForCompletionAsync(
             CacheItemRecordingObserver<StressItem, int> results,
             TimeSpan timeout)
@@ -976,7 +957,7 @@ public static partial class ExpireAfterFixture
                 await Task.Delay(pollingInterval);
 
                 // Identify "completion" as either an error, a completion signal, or all expiring items being removed.
-                if ((results.Error is not null) 
+                if ((results.Error is not null)
                     || results.HasCompleted
                     || results.RecordedItemsByKey.Values.All(static item => item.Lifetime is null))
                 {

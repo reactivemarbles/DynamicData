@@ -1,12 +1,4 @@
-using System;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-
-using FluentAssertions;
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public static partial class AutoRefreshOnObservableFixture
 {
@@ -20,7 +12,7 @@ public static partial class AutoRefreshOnObservableFixture
                     reevaluator:    (null as Func<Item, IObservable<Unit>>)!))
                 .Should()
                 .Throw<ArgumentNullException>();
-            
+
         protected override IObservable<IChangeSet<Item, int>> BuildUut<TAny>(
                 IObservable<IChangeSet<Item, int>>  source,
                 Func<Item, IObservable<TAny>>       reevaluator,

@@ -1,15 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
-
-using FluentAssertions;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 internal static class ObservableExtensions
 {
@@ -27,7 +16,7 @@ internal static class ObservableExtensions
             : source;
 
     /// <summary>
-    /// Creates an observable that parallelizes some given work by taking the source observable, creates multiple subscriptions, limiting each to a certain number of values, and 
+    /// Creates an observable that parallelizes some given work by taking the source observable, creates multiple subscriptions, limiting each to a certain number of values, and
     /// attaching some work to be done in parallel to each before merging them back together.
     /// </summary>
     /// <typeparam name="T">Input Observable type.</typeparam>
@@ -41,7 +30,7 @@ internal static class ObservableExtensions
         Observable.Merge(Distribute(count, parallel).Select(n => fnAttachParallelWork(source.Take(n))));
 
     /// <summary>
-    /// Creates an observable that parallelizes some given work by taking the source observable, creates multiple subscriptions, limiting each to a certain number of values, and 
+    /// Creates an observable that parallelizes some given work by taking the source observable, creates multiple subscriptions, limiting each to a certain number of values, and
     /// merging them back together.
     /// </summary>
     /// <typeparam name="T">Observable type.</typeparam>
@@ -254,7 +243,7 @@ internal static class ObservableExtensions
             var itemsByKey = new Dictionary<TKey, TObject>();
             var sortedKeys = new List<TKey>();
             var isSorted = null as bool?;
-            
+
             var reasons = Enum.GetValues<ChangeReason>();
 
             return source.SubscribeSafe(RawAnonymousObserver.Create<IChangeSet<TObject, TKey>>(
@@ -310,7 +299,7 @@ internal static class ObservableExtensions
 
                                     change.Previous.HasValue.Should().BeFalse("only Update changes should specify a previous item");
                                     change.PreviousIndex.Should().BeInRange(0, sortedKeys.Count - 1, "the source index should be a valid index of the collection");
-                                    
+
                                     change.Current.Should().Be(itemsByKey[change.Key], "the item to be moved should match the corresponding item in the collection");
                                     change.CurrentIndex.Should().BeInRange(0, sortedKeys.Count - 1, "the target index should be a valid index of the collection");
 
@@ -402,16 +391,16 @@ internal static class ObservableExtensions
         // This allows the operator to be combined with other operators that might be testing for things that the safeguards normally prevent.
         => RawAnonymousObservable.Create<T>(observer =>
         {
-            var inFlightNotification = null as Notification<T>;
+            var inFlightNotification = null as System.Reactive.Notification<T>;
             var synchronizationGate = new object();
 
             // Not using .Do() so we can track the *entire* in-flight period of a notification, including all synchronous downstream processing.
             return source.SubscribeSafe(RawAnonymousObserver.Create<T>(
-                onNext: value => ProcessIncomingNotification(Notification.CreateOnNext(value)),
-                onError: error => ProcessIncomingNotification(Notification.CreateOnError<T>(error)),
-                onCompleted: () => ProcessIncomingNotification(Notification.CreateOnCompleted<T>())));
+                onNext: value => ProcessIncomingNotification(System.Reactive.Notification.CreateOnNext(value)),
+                onError: error => ProcessIncomingNotification(System.Reactive.Notification.CreateOnError<T>(error)),
+                onCompleted: () => ProcessIncomingNotification(System.Reactive.Notification.CreateOnCompleted<T>())));
 
-            void ProcessIncomingNotification(Notification<T> incomingNotification)
+            void ProcessIncomingNotification(System.Reactive.Notification<T> incomingNotification)
             {
                 try
                 {

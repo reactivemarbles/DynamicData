@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Reactive.Subjects;
-using System.Reflection;
-using BenchmarkDotNet.Attributes;
-
-using Bogus;
-
-namespace DynamicData.Benchmarks.List;
+﻿namespace DynamicData.Benchmarks.List;
 
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
@@ -111,7 +101,7 @@ public class Filter_List_Static_RandomizedBoundedEdits
         var changeSets = ImmutableArray.CreateBuilder<IChangeSet<Item>>(initialCapacity: editCount);
 
         var items = new ChangeAwareList<Item>();
-        
+
         items.AddRange(Enumerable.Repeat(0, initialItemCount)
             .Select(_ => new Item()
             {
@@ -120,7 +110,7 @@ public class Filter_List_Static_RandomizedBoundedEdits
             })
             .ToArray());
         changeSets.Add(items.CaptureChanges());
-        
+
         while (changeSets.Count < changeSets.Capacity)
         {
             var changeCount = randomizer.Int(1, maxChangeCount);
@@ -204,7 +194,7 @@ public class Filter_List_Static_RandomizedBoundedEdits
     {
         public static bool FilterByIsIncluded(Item item)
             => item.IsIncluded;
-            
+
         public required int Id { get; init; }
 
         public bool IsIncluded { get; set; }

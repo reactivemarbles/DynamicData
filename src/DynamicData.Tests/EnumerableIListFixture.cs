@@ -1,13 +1,4 @@
-﻿using System;
-using DynamicData.Cache.Internal;
-using System.Collections.Generic;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using DynamicData.Kernel;
-using Xunit;
-
-namespace DynamicData.Tests
+﻿namespace DynamicData.Tests
 {
     public class EnumerableIListFixture
     {
@@ -61,7 +52,7 @@ namespace DynamicData.Tests
 
             exSubject.OnNext(new MissingKeyException());
 
-            Assert.IsType<MissingKeyException>(exceptionRecived);            
+            Assert.IsType<MissingKeyException>(exceptionRecived);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net9.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CS0618;CA1801;CA1812;CA1816;CA1062;CA1063;CS8767;CS8602;CS8618;IDE1006</NoWarn>
@@ -24,4 +24,37 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <Using Include="Argon" />
+    <Using Include="DynamicData.Cache" />
+    <Using Include="DynamicData.Cache.Internal" />
+    <Using Include="DynamicData.Internal" />
+    <Using Include="Bogus" />
+    <Using Include="DynamicData.Tests.Domain" />
+    <Using Include="DynamicData.Tests.Domain.Person" Alias="Person" />
+    <Using Include="DynamicData.Tests.Utilities" />
+    <Using Include="FluentAssertions" />
+    <Using Include="Microsoft.Reactive.Testing" />
+    <Using Include="Mono.Cecil" />
+    <Using Include="PublicApiGenerator" />
+    <Using Include="System.Collections" />
+    <Using Include="System.Collections.Concurrent" />
+    <Using Include="System.Collections.Specialized" />
+    <Using Include="System.Diagnostics" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.Globalization" />
+    <Using Include="System.Linq.Expressions" />
+    <Using Include="System.Management" />
+    <Using Include="System.Reactive" />
+    <Using Include="System.Reactive.Concurrency" />
+    <Using Include="System.Reactive.Threading.Tasks" />
+    <Using Include="System.Runtime.InteropServices" />
+    <Using Include="System.Text" />
+    <Using Include="System.Threading.Channels" />
+    <Using Include="VerifyXunit" />
+    <Using Include="Xunit" />
+    <Using Include="Xunit.Abstractions" />
+    <Using Include="Xunit.Sdk" />
+  </ItemGroup>
+
 </Project>

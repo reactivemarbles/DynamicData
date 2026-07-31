@@ -2,11 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.ComponentModel;
-using System.Linq.Expressions;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class GroupOnPropertyWithImmutableState<TObject, TKey, TGroup>(IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TGroup>> groupSelectorKey, TimeSpan? throttle = null, IScheduler? scheduler = null)

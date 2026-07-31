@@ -1,21 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Management;
-using System.Reflection;
-using System.Threading.Channels;
-
-using Argon;
-
-using Bogus;
-
-using FluentAssertions;
-
-using Xunit;
-using Xunit.Abstractions;
-using Xunit.Sdk;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class ChangeSetFixture
 {
@@ -149,11 +132,11 @@ public class ChangeSetFixture
         public required string Name { get; set; }
 
         public int ChangeCount { get; set; }
-        
+
         public int AddCount { get; set; }
 
         public int AddRangeCount { get; set; }
-        
+
         public int AddRangeSize { get; set; }
 
         public int MoveCount { get; set; }
@@ -161,9 +144,9 @@ public class ChangeSetFixture
         public int RefreshCount { get; set; }
 
         public int RemoveCount { get; set; }
-        
+
         public int RemoveRangeCount { get; set; }
-        
+
         public int RemoveRangeSize { get; set; }
 
         public int ReplaceCount { get; set; }
@@ -238,7 +221,7 @@ public class ChangeSetFixture
             ReplaceCount        = info.GetValue<int>(nameof(ReplaceCount));
             TotalItemCount      = info.GetValue<int>(nameof(TotalItemCount));
         }
-        
+
         void IXunitSerializable.Serialize(IXunitSerializationInfo info)
         {
             info.AddValue(nameof(Name),             Name);
@@ -254,7 +237,7 @@ public class ChangeSetFixture
             info.AddValue(nameof(ReplaceCount),     ReplaceCount);
             info.AddValue(nameof(TotalItemCount),   TotalItemCount);
         }
-        
+
         public override string ToString()
             => Name;
     }

@@ -1,9 +1,4 @@
-using System.Collections.Generic;
-using System.Linq;
-
-using DynamicData.Binding;
-
-namespace DynamicData.Tests.Domain;
+﻿namespace DynamicData.Tests.Domain;
 
 public class PersonWithFriends(string name, int age, IEnumerable<PersonWithFriends> friends) : AbstractNotifyPropertyChanged, IKey<string>
 {

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public static partial class AsyncDisposeManyFixture
 {
@@ -129,7 +126,7 @@ public static partial class AsyncDisposeManyFixture
 
         private readonly TaskCompletionSource _disposeCompletionSource
             = new();
-     
+
         private bool _hasBeenDisposed;
     }
 

@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using BenchmarkDotNet.Attributes;
-
-using Bogus;
-
-namespace DynamicData.Benchmarks.List;
+﻿namespace DynamicData.Benchmarks.List;
 
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
@@ -22,7 +13,7 @@ public class Filter_List_WithPredicateState
             maxChangeCount: 20,
             maxRangeSize:   10,
             randomizer:     randomizer);
-            
+
         _predicateStates = GenerateRandomPredicateStates(
             valueCount: 5_000,
             randomizer: randomizer);
@@ -226,7 +217,7 @@ public class Filter_List_WithPredicateState
                 int     idInclusionMask,
                 Item    item)
             => ((item.Id & idInclusionMask) == 0) && item.IsIncluded;
-            
+
         public required int Id { get; init; }
 
         public bool IsIncluded { get; set; }

@@ -1,16 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class BufferInitialFixture
 {
