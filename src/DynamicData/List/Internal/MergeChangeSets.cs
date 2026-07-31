@@ -3,7 +3,10 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+
+using DynamicData.Internal;
 
 namespace DynamicData.List.Internal;
 
@@ -21,19 +24,24 @@ internal sealed class MergeChangeSets<TObject>(IObservable<IObservable<IChangeSe
     public IObservable<IChangeSet<TObject>> Run() => Observable.Create<IChangeSet<TObject>>(
         observer =>
         {
-            var locker = InternalEx.NewLock();
+            // SharedDeliveryQueue + SynchronizeSafe replaces Synchronize(locker) so the
+            // gate is released before downstream OnNext. Closes the cross-cache deadlock
+            // window.
+            var queue = new SharedDeliveryQueue();
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<TObject>();
 
             // Merge all of the changeset streams together and Process them with the change tracker which will emit the results
-            return CreateClonedListObservable(source, locker)
-                .Synchronize(locker)
+            var publisher = CreateClonedListObservable(source, queue)
+                .SynchronizeSafe(queue)
                 .MergeMany(clonedList => clonedList.Source.RemoveIndex().Do(static _ => { }, observer.OnError))
                 .Subscribe(
                     changes => changeTracker.ProcessChangeSet(changes, observer),
                     observer.OnError,
                     observer.OnCompleted);
+
+            return new CompositeDisposable(publisher, queue);
         });
 
     private static IObservable<IObservable<IChangeSet<TObject>>> CreateObservable(IEnumerable<IObservable<IChangeSet<TObject>>> source, bool completable, IScheduler? scheduler)
@@ -48,21 +56,10 @@ internal sealed class MergeChangeSets<TObject>(IObservable<IObservable<IChangeSe
         return obs;
     }
 
-    // Can optimize for the Add case because that's the only one that applies
-#if NET9_0_OR_GREATER
-    private Change<ClonedListChangeSet<TObject>> CreateChange(IObservable<IChangeSet<TObject>> source, Lock locker) =>
-        new(ListChangeReason.Add, new ClonedListChangeSet<TObject>(source.Synchronize(locker), equalityComparer));
+    private Change<ClonedListChangeSet<TObject>> CreateChange(IObservable<IChangeSet<TObject>> source, SharedDeliveryQueue queue) =>
+        new(ListChangeReason.Add, new ClonedListChangeSet<TObject>(source.SynchronizeSafe(queue), equalityComparer));
 
     // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
-    private IObservable<IChangeSet<ClonedListChangeSet<TObject>>> CreateClonedListObservable(IObservable<IObservable<IChangeSet<TObject>>> source, Lock locker) =>
-        source.Select(src => new ChangeSet<ClonedListChangeSet<TObject>>(new[] { CreateChange(src, locker) }));
-#else
-    private Change<ClonedListChangeSet<TObject>> CreateChange(IObservable<IChangeSet<TObject>> source, object locker) =>
-        new(ListChangeReason.Add, new ClonedListChangeSet<TObject>(source.Synchronize(locker), equalityComparer));
-
-    // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
-    private IObservable<IChangeSet<ClonedListChangeSet<TObject>>> CreateClonedListObservable(IObservable<IObservable<IChangeSet<TObject>>> source, object locker) =>
-        source.Select(src => new ChangeSet<ClonedListChangeSet<TObject>>(new[] { CreateChange(src, locker) }));
-#endif
-
+    private IObservable<IChangeSet<ClonedListChangeSet<TObject>>> CreateClonedListObservable(IObservable<IObservable<IChangeSet<TObject>>> source, SharedDeliveryQueue queue) =>
+        source.Select(src => new ChangeSet<ClonedListChangeSet<TObject>>(new[] { CreateChange(src, queue) }));
 }

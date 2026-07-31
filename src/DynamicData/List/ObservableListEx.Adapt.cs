@@ -12,6 +12,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Binding;
 using DynamicData.Cache.Internal;
+using DynamicData.Internal;
 using DynamicData.List.Internal;
 using DynamicData.List.Linq;
 
@@ -49,7 +50,7 @@ public static partial class ObservableListEx
             observer =>
             {
                 var locker = InternalEx.NewLock();
-                return source.Synchronize(locker).Select(
+                return source.SynchronizeSafe(locker).Select(
                     changes =>
                     {
                         adaptor.Adapt(changes);

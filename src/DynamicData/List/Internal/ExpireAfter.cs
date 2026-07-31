@@ -39,8 +39,15 @@ internal sealed class ExpireAfter<T>
     private abstract class SubscriptionBase
         : IDisposable
     {
-        private readonly List<DateTimeOffset?> _expirationDueTimes;
-        private readonly List<int> _expiringIndexesBuffer;
+        // Shadow of the source maintained from OnSourceNext, carrying both the item and its
+        // expiration time per occurrence. Item identity (by value) is used during expiration
+        // because the shadow may be stale relative to the source: the new SourceList uses
+        // queue-based delivery, so notifications drain after the producing Edit releases its
+        // lock. A concurrent ManageExpirations cannot rely on shadow indices matching source
+        // indices; matching by item value via updater.IndexOf tolerates this divergence and
+        // simply skips items that were already removed externally.
+        private readonly List<ItemEntry> _shadow;
+        private readonly List<int> _expiringShadowIndexesBuffer;
         private readonly IObserver<IEnumerable<T>> _observer;
         private readonly Action<IExtendedList<T>> _onEditingSource;
         private readonly IScheduler _scheduler;
@@ -65,8 +72,8 @@ internal sealed class ExpireAfter<T>
 
             _onEditingSource = OnEditingSource;
 
-            _expirationDueTimes = new();
-            _expiringIndexesBuffer = new();
+            _shadow = new();
+            _expiringShadowIndexesBuffer = new();
 
             _sourceSubscription = source
                 .Connect()
@@ -94,7 +101,7 @@ internal sealed class ExpireAfter<T>
 
         // Instead of using a dedicated _synchronizationGate object, we can save an allocation by using any object that is never exposed to public consumers.
         protected object SynchronizationGate
-            => _expirationDueTimes;
+            => _shadow;
 
         protected abstract DateTimeOffset? GetNextManagementDueTime();
 
@@ -102,9 +109,9 @@ internal sealed class ExpireAfter<T>
         {
             var result = null as DateTimeOffset?;
 
-            foreach (var dueTime in _expirationDueTimes)
+            foreach (var entry in _shadow)
             {
-                if ((dueTime is { } value) && ((result is null) || (value < result)))
+                if ((entry.DueTime is { } value) && ((result is null) || (value < result)))
                     result = value;
             }
 
@@ -141,40 +148,85 @@ internal sealed class ExpireAfter<T>
 
                 var now = Scheduler.Now;
 
-                // One major note here: we are NOT updating our internal state, except to mark items as no longer needing to expire.
-                // Once we're done with the source.Edit() here, it will fire of a changeset for the removals, which will get handled by OnSourceNext(),
-                // thus bringing all of our internal state back into sync.
+                // We are NOT updating our shadow here, except to mark items as no longer needing to expire.
+                // Once source.Edit() returns, the resulting changeset will reach OnSourceNext and bring _shadow
+                // back into sync. The shadow may have been stale on entry (concurrent edits could be queued
+                // behind a pending drain), so we identify removals by item value instead of by shadow index.
 
-                // Buffer removals, so we can eliminate the need for index adjustments as we update the source
-                for (var i = 0; i < _expirationDueTimes.Count; ++i)
+                for (var i = 0; i < _shadow.Count; ++i)
                 {
-                    if ((_expirationDueTimes[i] is { } dueTime) && (dueTime <= now))
+                    if ((_shadow[i].DueTime is { } dueTime) && (dueTime <= now))
                     {
-                        _expiringIndexesBuffer.Add(i);
+                        _expiringShadowIndexesBuffer.Add(i);
 
-                        // This shouldn't be necessary, but it guarantees we don't accidentally expire an item more than once,
-                        // in the event of a race condition or something we haven't predicted.
-                        _expirationDueTimes[i] = null;
+                        // Mark as processed so we don't expire the same shadow slot twice if reentered.
+                        _shadow[i] = new ItemEntry(_shadow[i].Item, null);
                     }
                 }
 
-                // I'm pretty sure it shouldn't be possible to end up with no removals here, but it costs basically nothing to check.
-                if (_expiringIndexesBuffer.Count is not 0)
+                if (_expiringShadowIndexesBuffer.Count is not 0)
                 {
-                    // Processing removals in reverse-index order eliminates the need for us to adjust index of each .RemoveAt() call, as we go.
-                    _expiringIndexesBuffer.Sort(static (x, y) => y.CompareTo(x));
+                    var removedItems = new List<T>(_expiringShadowIndexesBuffer.Count);
 
-                    var removedItems = new T[_expiringIndexesBuffer.Count];
-                    for (var i = 0; i < _expiringIndexesBuffer.Count; ++i)
+                    // Validate the shadow against the live updater all the way up to (and including)
+                    // the LAST expiring index. The previous version of this code only checked the
+                    // prefix up to the FIRST expiring index, which can falsely declare the shadow
+                    // in sync when a concurrent external mutation has moved/replaced an item at a
+                    // position between the first and last expiring index. The subsequent reverse-
+                    // index removal would then remove an unrelated item. If the shadow is stale we
+                    // fall back to value-based IndexOf, which may remove a different equal
+                    // occurrence than originally scheduled but at least keeps the source consistent
+                    // with what subscribers see.
+                    var lastExpiringShadowIdx = _expiringShadowIndexesBuffer[_expiringShadowIndexesBuffer.Count - 1];
+                    var shadowInSync = _shadow.Count == updater.Count;
+                    if (shadowInSync)
                     {
-                        var removedIndex = _expiringIndexesBuffer[i];
-                        removedItems[i] = updater[removedIndex];
-                        updater.RemoveAt(removedIndex);
+                        for (var i = 0; i <= lastExpiringShadowIdx && i < updater.Count; ++i)
+                        {
+                            if (!EqualityComparer<T>.Default.Equals(_shadow[i].Item, updater[i]))
+                            {
+                                shadowInSync = false;
+                                break;
+                            }
+                        }
                     }
 
-                    _observer.OnNext(removedItems);
+                    if (shadowInSync)
+                    {
+                        // Index-based removal in REVERSE shadow order so earlier indices stay
+                        // valid as we remove later items. This matches the legacy behaviour and
+                        // correctly distinguishes between equal duplicate occurrences with
+                        // different expiration times.
+                        for (var i = _expiringShadowIndexesBuffer.Count - 1; i >= 0; --i)
+                        {
+                            var shadowIdx = _expiringShadowIndexesBuffer[i];
+                            removedItems.Add(updater[shadowIdx]);
+                            updater.RemoveAt(shadowIdx);
+                        }
+                    }
+                    else
+                    {
+                        // Shadow is stale (concurrent external mutation has been queued but not
+                        // yet delivered to OnSourceNext). Fall back to value-based search.
+                        // Iterate shadow forward; for each expiring entry remove the first
+                        // matching live occurrence. Silently skip items that have already been
+                        // removed externally; the pending OnSourceNext will reconcile the shadow.
+                        for (var i = 0; i < _expiringShadowIndexesBuffer.Count; ++i)
+                        {
+                            var item = _shadow[_expiringShadowIndexesBuffer[i]].Item;
+                            var idx = updater.IndexOf(item);
+                            if (idx >= 0)
+                            {
+                                updater.RemoveAt(idx);
+                                removedItems.Add(item);
+                            }
+                        }
+                    }
 
-                    _expiringIndexesBuffer.Clear();
+                    if (removedItems.Count > 0)
+                        _observer.OnNext(removedItems);
+
+                    _expiringShadowIndexesBuffer.Clear();
                 }
 
                 OnExpirationsManaged(thisScheduledManagement.DueTime);
@@ -250,9 +302,9 @@ internal sealed class ExpireAfter<T>
                             {
                                 var dueTime = now + _timeSelector.Invoke(change.Item.Current);
 
-                                _expirationDueTimes.Insert(
+                                _shadow.Insert(
                                     index: change.Item.CurrentIndex,
-                                    item: dueTime);
+                                    item: new ItemEntry(change.Item.Current, dueTime));
 
                                 haveExpirationDueTimesChanged |= dueTime is not null;
                             }
@@ -260,16 +312,16 @@ internal sealed class ExpireAfter<T>
 
                         case ListChangeReason.AddRange:
                             {
-                                _expirationDueTimes.EnsureCapacity(_expirationDueTimes.Count + change.Range.Count);
+                                _shadow.EnsureCapacity(_shadow.Count + change.Range.Count);
 
                                 var itemIndex = change.Range.Index;
                                 foreach (var item in change.Range)
                                 {
                                     var dueTime = now + _timeSelector.Invoke(item);
 
-                                    _expirationDueTimes.Insert(
+                                    _shadow.Insert(
                                         index: itemIndex,
-                                        item: dueTime);
+                                        item: new ItemEntry(item, dueTime));
 
                                     haveExpirationDueTimesChanged |= dueTime is not null;
 
@@ -279,37 +331,37 @@ internal sealed class ExpireAfter<T>
                             break;
 
                         case ListChangeReason.Clear:
-                            foreach (var dueTime in _expirationDueTimes)
+                            foreach (var entry in _shadow)
                             {
-                                if (dueTime is not null)
+                                if (entry.DueTime is not null)
                                 {
                                     haveExpirationDueTimesChanged = true;
                                     break;
                                 }
                             }
 
-                            _expirationDueTimes.Clear();
+                            _shadow.Clear();
                             break;
 
                         case ListChangeReason.Moved:
                             {
-                                var expirationDueTime = _expirationDueTimes[change.Item.PreviousIndex];
+                                var entry = _shadow[change.Item.PreviousIndex];
 
-                                _expirationDueTimes.RemoveAt(change.Item.PreviousIndex);
-                                _expirationDueTimes.Insert(
+                                _shadow.RemoveAt(change.Item.PreviousIndex);
+                                _shadow.Insert(
                                     index: change.Item.CurrentIndex,
-                                    item: expirationDueTime);
+                                    item: entry);
                             }
                             break;
 
                         case ListChangeReason.Remove:
                             {
-                                if (_expirationDueTimes[change.Item.CurrentIndex] is not null)
+                                if (_shadow[change.Item.CurrentIndex].DueTime is not null)
                                 {
                                     haveExpirationDueTimesChanged = true;
                                 }
 
-                                _expirationDueTimes.RemoveAt(change.Item.CurrentIndex);
+                                _shadow.RemoveAt(change.Item.CurrentIndex);
                             }
                             break;
 
@@ -318,25 +370,25 @@ internal sealed class ExpireAfter<T>
                                 var rangeEndIndex = change.Range.Index + change.Range.Count - 1;
                                 for (var i = change.Range.Index; i <= rangeEndIndex; ++i)
                                 {
-                                    if (_expirationDueTimes[i] is not null)
+                                    if (_shadow[i].DueTime is not null)
                                     {
                                         haveExpirationDueTimesChanged = true;
                                         break;
                                     }
                                 }
 
-                                _expirationDueTimes.RemoveRange(change.Range.Index, change.Range.Count);
+                                _shadow.RemoveRange(change.Range.Index, change.Range.Count);
                             }
                             break;
 
                         case ListChangeReason.Replace:
                             {
-                                var oldDueTime = _expirationDueTimes[change.Item.CurrentIndex];
+                                var oldDueTime = _shadow[change.Item.CurrentIndex].DueTime;
                                 var newDueTime = now + _timeSelector.Invoke(change.Item.Current);
 
                                 // Ignoring the possibility that the item's index has changed as well, because ISourceList<T> does not allow for this.
 
-                                _expirationDueTimes[change.Item.CurrentIndex] = newDueTime;
+                                _shadow[change.Item.CurrentIndex] = new ItemEntry(change.Item.Current, newDueTime);
 
                                 haveExpirationDueTimesChanged |= newDueTime != oldDueTime;
                             }
@@ -369,6 +421,8 @@ internal sealed class ExpireAfter<T>
 
             public required DateTimeOffset DueTime { get; init; }
         }
+
+        private readonly record struct ItemEntry(T Item, DateTimeOffset? DueTime);
     }
 
     private sealed class OnDemandSubscription
