@@ -190,4 +190,17 @@ public class BatchIfFixture : IDisposable
         actualError.Should().BeSameAs(expectedError, "a failure of the pause selector belongs to the subscriber, not to whichever thread happened to raise it");
         completed.Should().BeFalse("the pause selector failed, it did not complete");
     }
+
+    [Fact]
+    public void PauseSelectorOnlyStartsUnpaused()
+    {
+        // The shortest form has to keep delegating with initialPauseState false, rather than binding
+        // to an overload that starts paused.
+        using var pause = new Subject<bool>();
+        using var results = _source.Connect().BatchIf(pause).AsAggregator();
+
+        _source.AddOrUpdate(new Person("A", 1));
+
+        results.Data.Count.Should().Be(1, "nothing has asked for buffering yet");
+    }
 }
