@@ -139,13 +139,13 @@ public static partial class FilterFixture
             }
 
             [Theory]
-            [InlineData(CompletionStrategy.Asynchronous,    DynamicParameter.Source)]
-            [InlineData(CompletionStrategy.Asynchronous,    DynamicParameter.ReapplyFilter)]
-            [InlineData(CompletionStrategy.Immediate,       DynamicParameter.Source)]
-            [InlineData(CompletionStrategy.Immediate,       DynamicParameter.ReapplyFilter)]
+            [InlineData(StreamCompletionStrategy.Asynchronous,  DynamicParameter.Source)]
+            [InlineData(StreamCompletionStrategy.Asynchronous,  DynamicParameter.ReapplyFilter)]
+            [InlineData(StreamCompletionStrategy.Immediate,     DynamicParameter.Source)]
+            [InlineData(StreamCompletionStrategy.Immediate,     DynamicParameter.ReapplyFilter)]
             public void PredicateChangedCompletesAfterInitialValue_CompletionWaitsForSourceAndReapplyFilterCompletion(
-                CompletionStrategy  completionStrategy,
-                DynamicParameter    lastCompletion)
+                StreamCompletionStrategy    completionStrategy,
+                DynamicParameter            lastCompletion)
             {
                 // Setup
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
@@ -160,7 +160,7 @@ public static partial class FilterFixture
                     new Item() { Id = 6, IsIncluded = false }
                 });
 
-                var predicateChanged = (completionStrategy is CompletionStrategy.Asynchronous)
+                var predicateChanged = (completionStrategy is StreamCompletionStrategy.Asynchronous)
                     ? new Subject<Func<Item, bool>>()
                     : Observable.Return(Item.FilterByIsIncluded);
 
@@ -195,7 +195,7 @@ public static partial class FilterFixture
                     reapplyFilter.OnCompleted();
 
                 results.Error.Should().BeNull();
-                if (completionStrategy is CompletionStrategy.Asynchronous)
+                if (completionStrategy is StreamCompletionStrategy.Asynchronous)
                     results.RecordedChangeSets.Skip(2).Should().BeEmpty("no source operations were performed");
                 else
                     results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations were performed");
@@ -209,7 +209,7 @@ public static partial class FilterFixture
                     source.Complete();
 
                 results.Error.Should().BeNull();
-                if (completionStrategy is CompletionStrategy.Asynchronous)
+                if (completionStrategy is StreamCompletionStrategy.Asynchronous)
                     results.RecordedChangeSets.Skip(2).Should().BeEmpty("no source operations were performed");
                 else
                     results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations were performed");
@@ -221,18 +221,18 @@ public static partial class FilterFixture
             }
 
             [Theory]
-            [InlineData(CompletionStrategy.Immediate,       EmptyChangesetPolicy.IncludeEmptyChangesets)]
-            [InlineData(CompletionStrategy.Immediate,       EmptyChangesetPolicy.SuppressEmptyChangesets)]
-            [InlineData(CompletionStrategy.Asynchronous,    EmptyChangesetPolicy.IncludeEmptyChangesets)]
-            [InlineData(CompletionStrategy.Asynchronous,    EmptyChangesetPolicy.SuppressEmptyChangesets)]
+            [InlineData(StreamCompletionStrategy.Immediate,     EmptyChangesetPolicy.IncludeEmptyChangesets)]
+            [InlineData(StreamCompletionStrategy.Immediate,     EmptyChangesetPolicy.SuppressEmptyChangesets)]
+            [InlineData(StreamCompletionStrategy.Asynchronous,  EmptyChangesetPolicy.IncludeEmptyChangesets)]
+            [InlineData(StreamCompletionStrategy.Asynchronous,  EmptyChangesetPolicy.SuppressEmptyChangesets)]
             public void PredicateChangedCompletesBeforeInitialValue_CompletionPropagatesIfEmptyChangesetsAreSuppressed(
-                CompletionStrategy      completionStrategy,
-                EmptyChangesetPolicy    emptyChangesetPolicy)
+                StreamCompletionStrategy    completionStrategy,
+                EmptyChangesetPolicy        emptyChangesetPolicy)
             {
                 // Setup
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
-                var predicateChanged = (completionStrategy is CompletionStrategy.Asynchronous)
+                var predicateChanged = (completionStrategy is StreamCompletionStrategy.Asynchronous)
                     ? new Subject<Func<Item, bool>>()
                     : Observable.Empty<Func<Item, bool>>();
 
@@ -259,16 +259,16 @@ public static partial class FilterFixture
             }
 
             [Theory]
-            [InlineData(CompletionStrategy.Asynchronous)]
-            [InlineData(CompletionStrategy.Immediate)]
-            public void PredicateChangedFails_ErrorPropagates(CompletionStrategy completionStrategy)
+            [InlineData(StreamCompletionStrategy.Asynchronous)]
+            [InlineData(StreamCompletionStrategy.Immediate)]
+            public void PredicateChangedFails_ErrorPropagates(StreamCompletionStrategy completionStrategy)
             {
                 // Setup
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
                 var error = new Exception("Test");
 
-                var predicateChanged = (completionStrategy is CompletionStrategy.Asynchronous)
+                var predicateChanged = (completionStrategy is StreamCompletionStrategy.Asynchronous)
                     ? new Subject<Func<Item, bool>>()
                     : Observable.Throw<Func<Item, bool>>(error);
 
@@ -299,13 +299,13 @@ public static partial class FilterFixture
                     .Throw<ArgumentNullException>();
 
             [Theory]
-            [InlineData(CompletionStrategy.Immediate,       DynamicParameter.PredicateChanged)]
-            [InlineData(CompletionStrategy.Immediate,       DynamicParameter.Source)]
-            [InlineData(CompletionStrategy.Asynchronous,    DynamicParameter.PredicateChanged)]
-            [InlineData(CompletionStrategy.Asynchronous,    DynamicParameter.Source)]
+            [InlineData(StreamCompletionStrategy.Immediate,     DynamicParameter.PredicateChanged)]
+            [InlineData(StreamCompletionStrategy.Immediate,     DynamicParameter.Source)]
+            [InlineData(StreamCompletionStrategy.Asynchronous,  DynamicParameter.PredicateChanged)]
+            [InlineData(StreamCompletionStrategy.Asynchronous,  DynamicParameter.Source)]
             public void ReapplyFilterCompletes_CompletionWaitsForSourceAndPredicateChangedCompletion(
-                CompletionStrategy  completionStrategy,
-                DynamicParameter    lastCompletion)
+                StreamCompletionStrategy    completionStrategy,
+                DynamicParameter            lastCompletion)
             {
                 // Setup
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
@@ -322,7 +322,7 @@ public static partial class FilterFixture
 
                 var predicateChanged = new BehaviorSubject<Func<Item, bool>>(Item.FilterByIsIncluded);
 
-                var reapplyFilter = (completionStrategy is CompletionStrategy.Asynchronous)
+                var reapplyFilter = (completionStrategy is StreamCompletionStrategy.Asynchronous)
                     ? new Subject<Unit>()
                     : Observable.Empty<Unit>();
 
@@ -372,16 +372,16 @@ public static partial class FilterFixture
             }
 
             [Theory]
-            [InlineData(CompletionStrategy.Asynchronous)]
-            [InlineData(CompletionStrategy.Immediate)]
-            public void ReapplyFilterFails_ErrorPropagates(CompletionStrategy completionStrategy)
+            [InlineData(StreamCompletionStrategy.Asynchronous)]
+            [InlineData(StreamCompletionStrategy.Immediate)]
+            public void ReapplyFilterFails_ErrorPropagates(StreamCompletionStrategy completionStrategy)
             {
                 // Setup
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
                 var error = new Exception("Test");
 
-                var reapplyFilter = (completionStrategy is CompletionStrategy.Asynchronous)
+                var reapplyFilter = (completionStrategy is StreamCompletionStrategy.Asynchronous)
                     ? new Subject<Unit>()
                     : Observable.Throw<Unit>(error);
 
@@ -466,20 +466,20 @@ public static partial class FilterFixture
             }
 
             [Theory]
-            [InlineData(CompletionStrategy.Asynchronous,    EmptyChangesetPolicy.IncludeEmptyChangesets)]
-            [InlineData(CompletionStrategy.Asynchronous,    EmptyChangesetPolicy.SuppressEmptyChangesets)]
-            [InlineData(CompletionStrategy.Immediate,       EmptyChangesetPolicy.IncludeEmptyChangesets)]
-            [InlineData(CompletionStrategy.Immediate,       EmptyChangesetPolicy.SuppressEmptyChangesets)]
+            [InlineData(StreamCompletionStrategy.Asynchronous,  EmptyChangesetPolicy.IncludeEmptyChangesets)]
+            [InlineData(StreamCompletionStrategy.Asynchronous,  EmptyChangesetPolicy.SuppressEmptyChangesets)]
+            [InlineData(StreamCompletionStrategy.Immediate,     EmptyChangesetPolicy.IncludeEmptyChangesets)]
+            [InlineData(StreamCompletionStrategy.Immediate,     EmptyChangesetPolicy.SuppressEmptyChangesets)]
             public void SourceCompletesWhenEmpty_CompletionPropagatesWhenEmptyChangesetsAreSuppressed(
-                CompletionStrategy      completionStrategy,
-                EmptyChangesetPolicy    emptyChangesetPolicy)
+                StreamCompletionStrategy    completionStrategy,
+                EmptyChangesetPolicy        emptyChangesetPolicy)
             {
                 // Setup
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
 
                 // UUT Initialization & Action
-                if (completionStrategy is CompletionStrategy.Immediate)
+                if (completionStrategy is StreamCompletionStrategy.Immediate)
                     source.Complete();
 
                 using var subscription = source.Connect()
@@ -493,7 +493,7 @@ public static partial class FilterFixture
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results);
 
-                if (completionStrategy is CompletionStrategy.Asynchronous)
+                if (completionStrategy is StreamCompletionStrategy.Asynchronous)
                     source.Complete();
 
                 results.Error.Should().BeNull();
@@ -509,13 +509,13 @@ public static partial class FilterFixture
             }
 
             [Theory]
-            [InlineData(CompletionStrategy.Asynchronous,    DynamicParameter.PredicateChanged)]
-            [InlineData(CompletionStrategy.Asynchronous,    DynamicParameter.ReapplyFilter)]
-            [InlineData(CompletionStrategy.Immediate,       DynamicParameter.PredicateChanged)]
-            [InlineData(CompletionStrategy.Immediate,       DynamicParameter.ReapplyFilter)]
+            [InlineData(StreamCompletionStrategy.Asynchronous,  DynamicParameter.PredicateChanged)]
+            [InlineData(StreamCompletionStrategy.Asynchronous,  DynamicParameter.ReapplyFilter)]
+            [InlineData(StreamCompletionStrategy.Immediate,     DynamicParameter.PredicateChanged)]
+            [InlineData(StreamCompletionStrategy.Immediate,     DynamicParameter.ReapplyFilter)]
             public void SourceCompletesWhenNotEmpty_CompletionWaitsForPredicateChangedAndReapplyFilterCompletion(
-                CompletionStrategy  completionStrategy,
-                DynamicParameter    lastCompletion)
+                StreamCompletionStrategy    completionStrategy,
+                DynamicParameter            lastCompletion)
             {
                 // Setup
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
@@ -535,7 +535,7 @@ public static partial class FilterFixture
 
 
                 // UUT Initialization & Action
-                if (completionStrategy is CompletionStrategy.Immediate)
+                if (completionStrategy is StreamCompletionStrategy.Immediate)
                     source.Complete();
 
                 using var subscription = source.Connect()
@@ -546,7 +546,7 @@ public static partial class FilterFixture
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results);
 
-                if (completionStrategy is CompletionStrategy.Asynchronous)
+                if (completionStrategy is StreamCompletionStrategy.Asynchronous)
                     source.Complete();
 
                 results.Error.Should().BeNull();
