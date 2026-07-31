@@ -120,9 +120,14 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                     // Create the Connection Observable
                     ? CreateConnectObservable(predicate, suppressEmptyChangeSets)
 
-                    // Defer until notifications are no longer suspended
-                    : _suspensionTracker.Value.NotificationsSuspendedObservable.Do(static _ => { }, observer.OnCompleted)
-                        .Where(static b => !b).Take(1).Select(_ => CreateConnectObservable(predicate, suppressEmptyChangeSets)).Switch();
+                    // Defer until notifications are no longer suspended. Take(1) means there is only
+                    // ever one inner sequence, so SelectMany carries the terminal event of the gate
+                    // through on its own: the connection ends when the cache does, and fails when it
+                    // fails, rather than reporting a failure as a successful completion.
+                    : _suspensionTracker.Value.NotificationsSuspendedObservable
+                        .Where(static areNotificationsSuspended => !areNotificationsSuspended)
+                        .Take(1)
+                        .SelectMany(_ => CreateConnectObservable(predicate, suppressEmptyChangeSets));
 
                 return observable.SubscribeSafe(observer);
             }
@@ -144,9 +149,12 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                     // Create the Watch Observable
                     ? CreateWatchObservable(key)
 
-                    // Defer until notifications are no longer suspended
-                    : _suspensionTracker.Value.NotificationsSuspendedObservable.Do(static _ => { }, observer.OnCompleted)
-                        .Where(static b => !b).Take(1).Select(_ => CreateWatchObservable(key)).Switch();
+                    // Defer until notifications are no longer suspended. See Connect() for why
+                    // SelectMany is used here.
+                    : _suspensionTracker.Value.NotificationsSuspendedObservable
+                        .Where(static areNotificationsSuspended => !areNotificationsSuspended)
+                        .Take(1)
+                        .SelectMany(_ => CreateWatchObservable(key));
 
                 return observable.SubscribeSafe(observer);
             }
@@ -394,7 +402,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
             if (cache._suspensionTracker.IsValueCreated)
             {
-                cache._suspensionTracker.Value.Dispose();
+                cache._suspensionTracker.Value.Fault(error);
             }
         }
 
@@ -514,6 +522,12 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             {
                 _areNotificationsSuspended.OnNext(false);
             }
+        }
+
+        public void Fault(Exception error)
+        {
+            _areNotificationsSuspended.OnError(error);
+            _areNotificationsSuspended.Dispose();
         }
 
         public void Dispose()
