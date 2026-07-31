@@ -14,15 +14,15 @@ public static partial class FilterFixture
                 .Throw<ArgumentNullException>();
 
         [Theory]
-        [InlineData(CompletionStrategy.Asynchronous)]
-        [InlineData(CompletionStrategy.Immediate)]
-        public void SourceCompletes_CompletionPropagates(CompletionStrategy completionStrategy)
+        [InlineData(StreamCompletionStrategy.Asynchronous)]
+        [InlineData(StreamCompletionStrategy.Immediate)]
+        public void SourceCompletes_CompletionPropagates(StreamCompletionStrategy completionStrategy)
         {
             // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
             // UUT Initialization & Action
-            if (completionStrategy is CompletionStrategy.Immediate)
+            if (completionStrategy is StreamCompletionStrategy.Immediate)
                 source.Complete();
 
             using var subscription = source.Connect(suppressEmptyChangeSets: false)
@@ -31,7 +31,7 @@ public static partial class FilterFixture
                 .ValidateChangeSets(Item.SelectId)
                 .RecordCacheItems(out var results);
 
-            if (completionStrategy is CompletionStrategy.Asynchronous)
+            if (completionStrategy is StreamCompletionStrategy.Asynchronous)
                 source.Complete();
 
             results.Error.Should().BeNull();

@@ -3,5 +3,3 @@
 // See the LICENSE file in the project root for full license information.
 
 [assembly: InternalsVisibleTo("DynamicData.Tests")]
-[assembly: InternalsVisibleTo("DynamicData.ReactiveUI")]
-[assembly: InternalsVisibleTo("DynamicData.Profile")]
