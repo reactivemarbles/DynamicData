@@ -5,9 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-
+using System.Linq;
 using DynamicData.Binding;
-
+using DynamicData.Tests.Utilities;
 using FluentAssertions;
 
 using Xunit;
@@ -154,6 +154,39 @@ public sealed class WhenPropertyChangedBehaviorFixture
         emissions.Should().Equal(new[] { 10, 20, 30 }, "leaf event on detached subtree is ignored");
     }
 
+    // https://github.com/reactivemarbles/DynamicData/issues/1149
+    [Fact]
+    public void ExpressionContainsImplicitInterfaceCast()
+    {
+        var child = new ChildModel()
+        {
+            Age = 10
+        };
+        
+        using var subscription = ObserveAge(child)
+            .RecordValues(out var results);
+
+        results.Error.Should().BeNull("no errors should have occurred");
+        results.RecordedValues.Should().ContainSingle("the initial value of the observed expression should have been published");
+        results.RecordedValues[0].Should().Be(child.Age, "the initial value of the observed expression should have been published");
+
+        ++child.Age;
+
+        results.Error.Should().BeNull("no errors should have occurred");
+        results.RecordedValues.Skip(1).Should().ContainSingle("the value of the observed expression changed once");
+        results.RecordedValues[1].Should().Be(child.Age, "the correct value should have been published");
+
+        static IObservable<int> ObserveAge<T>(T source)
+                where T : IHasAge
+            => source.WhenValueChanged(source => source.Age);
+    }
+    
+    private interface IHasAge
+        : INotifyPropertyChanged
+    {
+        int Age { get; }
+    }
+
     private sealed class TestModel : INotifyPropertyChanged
     {
         private int _value;
@@ -188,7 +221,8 @@ public sealed class WhenPropertyChangedBehaviorFixture
         }
     }
 
-    private sealed class ChildModel : INotifyPropertyChanged
+    private sealed class ChildModel
+        : IHasAge
     {
         private int _age;
 
