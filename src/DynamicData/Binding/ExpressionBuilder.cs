@@ -53,13 +53,11 @@ internal static class ExpressionBuilder
 
                 return property.GetValue;
 
-            case UnaryExpression { NodeType: ExpressionType.Convert } convertExpression:
-                return (convertExpression.Type.IsGenericType
-                        && (convertExpression.Type.GetGenericTypeDefinition() == typeof(Nullable<>)))
-                    ? static target => target
-                    : target => Convert.ChangeType(
-                        value: target,
-                        conversionType: convertExpression.Type);
+            // I.E. cast operations. Since we're just dealing with everything as `object`, there's really nothing for us
+            // to do. If we cast from `object` to the desired type, we'll just immediately cast back to `object` to
+            // return. The runtime has to resolve and do the correct cast anyway, regardless of what we do here.
+            case UnaryExpression { NodeType: ExpressionType.Convert }:
+                return static target => target;
 
             case null:
                 throw new ArgumentNullException(nameof(source));
