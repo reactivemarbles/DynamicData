@@ -120,9 +120,14 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                     // Create the Connection Observable
                     ? CreateConnectObservable(predicate, suppressEmptyChangeSets)
 
-                    // Defer until notifications are no longer suspended
-                    : _suspensionTracker.Value.NotificationsSuspendedObservable.Do(static _ => { }, observer.OnCompleted)
-                        .Where(static b => !b).Take(1).Select(_ => CreateConnectObservable(predicate, suppressEmptyChangeSets)).Switch();
+                    // Defer until notifications are no longer suspended. Take(1) means there is only
+                    // ever one inner sequence, so SelectMany carries the terminal event of the gate
+                    // through on its own: the connection ends when the cache does, and fails when it
+                    // fails, rather than reporting a failure as a successful completion.
+                    : _suspensionTracker.Value.NotificationsSuspendedObservable
+                        .Where(static areNotificationsSuspended => !areNotificationsSuspended)
+                        .Take(1)
+                        .SelectMany(_ => CreateConnectObservable(predicate, suppressEmptyChangeSets));
 
                 return observable.SubscribeSafe(observer);
             }
@@ -144,9 +149,12 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                     // Create the Watch Observable
                     ? CreateWatchObservable(key)
 
-                    // Defer until notifications are no longer suspended
-                    : _suspensionTracker.Value.NotificationsSuspendedObservable.Do(static _ => { }, observer.OnCompleted)
-                        .Where(static b => !b).Take(1).Select(_ => CreateWatchObservable(key)).Switch();
+                    // Defer until notifications are no longer suspended. See Connect() for why
+                    // SelectMany is used here.
+                    : _suspensionTracker.Value.NotificationsSuspendedObservable
+                        .Where(static areNotificationsSuspended => !areNotificationsSuspended)
+                        .Take(1)
+                        .SelectMany(_ => CreateWatchObservable(key));
 
                 return observable.SubscribeSafe(observer);
             }
@@ -338,24 +346,24 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private void ResumeNotifications()
     {
-        bool emitResume;
+        using var notifications = _notifications.AcquireLock();
 
-        using (var notifications = _notifications.AcquireLock())
+        Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Notifications without Suspend Notifications instance");
+
+        var (changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
+        if (changes is not null)
         {
-            Debug.Assert(_suspensionTracker.IsValueCreated, "Should not be Resuming Notifications without Suspend Notifications instance");
-
-            (var changes, emitResume) = _suspensionTracker.Value.ResumeNotifications();
-            if (changes is not null)
-            {
-                notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
-            }
+            notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
         }
 
-        // Emit the resume signal after releasing the delivery scope so that
-        // accumulated changes are delivered first
+        // Emit the resume signal in the same lock acquisition that cleared the suspend count,
+        // so the count and the signal can never disagree: there is no window for a concurrent
+        // SuspendNotifications() to observe one without the other. The accumulated changes are
+        // still delivered off the lock, when this scope exits. A deferred subscriber that
+        // activates on this signal snapshots the current state and skips the still-pending
+        // delivery via the version guard in CreateConnectObservable.
         if (emitResume)
         {
-            using var readLock = _notifications.AcquireReadLock();
             _suspensionTracker.Value.EmitResumeNotification();
         }
     }
@@ -394,7 +402,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
             if (cache._suspensionTracker.IsValueCreated)
             {
-                cache._suspensionTracker.Value.Dispose();
+                cache._suspensionTracker.Value.Fault(error);
             }
         }
 
@@ -476,7 +484,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
         public void SuspendNotifications()
         {
-            if (++_notifySuspendCount == 1)
+            if ((++_notifySuspendCount == 1) && !_areNotificationsSuspended.IsDisposed)
             {
                 Debug.Assert(_pendingChanges.Count == 0, "Shouldn't be any pending values if suspend was just started");
                 Debug.Assert(!_areNotificationsSuspended.Value, "SuspendSubject should be false for the first suspend call");
@@ -507,7 +515,21 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             return (null, false);
         }
 
-        public void EmitResumeNotification() => _areNotificationsSuspended.OnNext(false);
+        public void EmitResumeNotification()
+        {
+            // Disposal runs from the delivery callbacks, which execute off the lock, so the
+            // subject can be torn down concurrently with a resume.
+            if (!_areNotificationsSuspended.IsDisposed)
+            {
+                _areNotificationsSuspended.OnNext(false);
+            }
+        }
+
+        public void Fault(Exception error)
+        {
+            _areNotificationsSuspended.OnError(error);
+            _areNotificationsSuspended.Dispose();
+        }
 
         public void Dispose()
         {
