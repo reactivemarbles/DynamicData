@@ -17,7 +17,7 @@ public static partial class FilterFixture
                     editCount:      5_000,
                     maxChangeCount: 20,
                     randomizer:     randomizer);
-            
+
                 var predicates = GenerateRandomIdInclusionMasks(
                         valueCount: 5_000,
                         randomizer: randomizer)

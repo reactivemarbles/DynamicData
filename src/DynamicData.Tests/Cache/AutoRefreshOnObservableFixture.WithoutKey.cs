@@ -12,7 +12,7 @@ public static partial class AutoRefreshOnObservableFixture
                     reevaluator:    (null as Func<Item, IObservable<Unit>>)!))
                 .Should()
                 .Throw<ArgumentNullException>();
-            
+
         protected override IObservable<IChangeSet<Item, int>> BuildUut<TAny>(
                 IObservable<IChangeSet<Item, int>>  source,
                 Func<Item, IObservable<TAny>>       reevaluator,

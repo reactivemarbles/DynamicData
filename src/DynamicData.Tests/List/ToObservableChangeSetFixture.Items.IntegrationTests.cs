@@ -38,7 +38,7 @@ public static partial class ToObservableChangeSetFixture
                     .ValidateSynchronization()
                     .ValidateChangeSets()
                     .RecordListItems(out var results1);
-        
+
                 using var subscription2 = Observable.Interval(
                         period:     TimeSpan.FromMilliseconds(5),
                         scheduler:  scheduler)

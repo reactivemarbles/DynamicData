@@ -52,7 +52,7 @@
 
             exSubject.OnNext(new MissingKeyException());
 
-            Assert.IsType<MissingKeyException>(exceptionRecived);            
+            Assert.IsType<MissingKeyException>(exceptionRecived);
         }
     }
 }

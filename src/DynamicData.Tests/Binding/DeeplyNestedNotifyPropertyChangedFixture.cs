@@ -250,7 +250,7 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
         var sw = new Stopwatch();
 
-        //  var factory = 
+        //  var factory =
 
         var myObservable = list.Connect().Do(_ => sw.Start()).WhenPropertyChanged(a => a!.Child!.Age, false).Do(_ => sw.Stop()).Subscribe();
 

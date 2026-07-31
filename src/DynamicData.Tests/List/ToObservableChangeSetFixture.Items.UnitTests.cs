@@ -83,7 +83,7 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(5).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2, item3, item4, item5 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2, item3, item4, item5 },
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -94,7 +94,7 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(6).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item2, item3, item4, item5, item6 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item2, item3, item4, item5, item6 },
                     because: "1 item was emitted, and 1 was evicted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -114,7 +114,7 @@ public static partial class ToObservableChangeSetFixture
                     SourceType.Immediate    => Observable.Return(item),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
-            
+
                 var scheduler = new TestScheduler();
 
                 // UUT Initialization & Action
@@ -137,7 +137,7 @@ public static partial class ToObservableChangeSetFixture
                     results.RecordedChangeSets.Count.Should().Be(2, "1 item was emitted, after initialization");
                 else
                     results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item },
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("1 item has yet to expire");
@@ -168,7 +168,7 @@ public static partial class ToObservableChangeSetFixture
                     SourceType.Immediate    => Observable.Return(item),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
-            
+
                 var scheduler = new TestScheduler();
 
                 // UUT Initialization & Action
@@ -191,7 +191,7 @@ public static partial class ToObservableChangeSetFixture
                     results.RecordedChangeSets.Count.Should().Be(2, "1 item was emitted, after initialization");
                 else
                     results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item },
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeTrue("the source has completed, and no items remain to be expired");
@@ -226,7 +226,7 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item1 },
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -238,7 +238,7 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 },
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -250,7 +250,7 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2, item3 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2, item3 },
                     because: "1 item was emitted",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -260,7 +260,7 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(4).Count().Should().Be(1, "1 expiration should have occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 },
                     because: "1 item expired, and 1 had its lifetime extended",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -270,7 +270,7 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(5).Should().BeEmpty("no expirations should have occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 },
                     because: "no changes were made",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -280,7 +280,7 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(5).Count().Should().Be(1, "1 expiration should have occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item2 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item2 },
                     because: "1 item reached its expiration",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -290,7 +290,7 @@ public static partial class ToObservableChangeSetFixture
 
                 results.Error.Should().BeNull();
                 results.RecordedChangeSets.Skip(6).Should().BeEmpty("no expirations should have occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item2 }, 
+                results.RecordedItems.Should().BeEquivalentTo(new[] { item2 },
                     because: "no changes were made",
                     config: options => options.WithStrictOrdering());
                 results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -305,7 +305,7 @@ public static partial class ToObservableChangeSetFixture
                 var error = new Exception("Test Exception");
 
                 var source = sourceType switch
-                { 
+                {
                     SourceType.Asynchronous => new Subject<Item>(),
                     SourceType.Immediate    => Observable.Throw<Item>(error),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))

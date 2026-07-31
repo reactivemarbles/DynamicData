@@ -89,7 +89,7 @@ public class NotifyPropertyChangedExFixture
         anotherPerson.Age = 13;
         lastAgeChange.Should().Be(13);
     }
-    
+
     [Fact]
     public void CastToNullable()
     {
@@ -98,30 +98,30 @@ public class NotifyPropertyChangedExFixture
             Id = 1,
             Age = 10
         };
-        
+
         using var subscription = parent.WhenValueChanged(
                 propertyAccessor:       static entity => (int?)entity.Child.Age,
                 notifyOnInitialValue:   true,
                 fallbackValue:          static () => null)
             .RecordValues(out var results);
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("additional changes could be made");
         results.RecordedValues.Should().ContainSingle("an initial value should have been published");
         results.RecordedValues[0].Should().Be(null, "the target entity has no child");
-        
+
         var child = new TestEntity()
         {
             Id = 2,
             Age = 5
         };
         parent.Child = child;
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.HasCompleted.Should().BeFalse("additional changes could be made");
         results.RecordedValues.Skip(1).Should().ContainSingle("a single change was performed");
         results.RecordedValues.Skip(1).First().Should().Be(child.Age, "a child of age 5 was added");
-        
+
         child.Age = 6;
 
         results.Error.Should().BeNull("no errors should have occurred");
@@ -129,26 +129,26 @@ public class NotifyPropertyChangedExFixture
         results.RecordedValues.Skip(2).Should().ContainSingle("a single change was performed");
         results.RecordedValues.Skip(2).First().Should().Be(child.Age, "the child entity's age was changed");
     }
-    
+
     public class TestEntity
         : INotifyPropertyChanged
     {
         public long Id { get; init; }
-        
+
         public int Age
         {
             get;
             set => SetPropertyField(ref field, value);
         }
-        
+
         public TestEntity? Child
         {
             get;
             set => SetPropertyField(ref field, value);
-        } 
-            
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
-            
+
         protected void SetPropertyField<T>(
             ref                 T       field,
                                 T       value,
@@ -156,7 +156,7 @@ public class NotifyPropertyChangedExFixture
         {
             if (EqualityComparer<T>.Default.Equals(field, value))
                 return;
-            
+
             field = value;
 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

@@ -32,7 +32,7 @@ public class SortChangedFixture
         public int Number { get; } = number;
 
         public int CompareTo(ListItem? other) => DefaultComparer.Compare(this, other);
-            
+
     }
 }
 

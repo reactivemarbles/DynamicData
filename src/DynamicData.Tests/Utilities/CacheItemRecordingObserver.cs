@@ -15,7 +15,7 @@ public sealed class CacheItemRecordingObserver<TObject, TKey>
         _recordedChangeSets = new();
         _recordedItemsByKey = new();
         _recordedItemsSorted = new();
-    }        
+    }
 
     public IReadOnlyList<IChangeSet<TObject, TKey>> RecordedChangeSets
         => _recordedChangeSets;

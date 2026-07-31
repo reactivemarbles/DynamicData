@@ -61,7 +61,7 @@ public static partial class FilterFixture
                 config: options => options.WithoutStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-        
+
         [Fact]
         public void ExcludedItemIsAdded_NoChangesAreMade()
         {
@@ -87,7 +87,7 @@ public static partial class FilterFixture
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("empty changesets should be suppressed");
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-        
+
         [Fact]
         public void ExcludedItemIsRemoved_NoChangesAreMade()
         {
@@ -206,7 +206,7 @@ public static partial class FilterFixture
         {
             // Setup
             using var source = new TestSourceList<Item>();
-            
+
             source.AddRange(new[]
             {
                 new Item() { Id = 1, IsIncluded = true },
@@ -231,7 +231,7 @@ public static partial class FilterFixture
                 config: options => options.WithStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-            // UUT Action: Moves for matching items, 
+            // UUT Action: Moves for matching items,
             source.Edit(items =>
             {
                 items.Move(2, 0);
@@ -403,7 +403,7 @@ public static partial class FilterFixture
             results.RecordedItems.Should().BeEquivalentTo(source.Items, "the matching item should have been added");
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-        
+
         [Fact]
         public void MatchingItemIsRemoved_RemovalPropagates()
         {

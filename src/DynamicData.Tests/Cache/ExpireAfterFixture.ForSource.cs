@@ -660,7 +660,7 @@ public static partial class ExpireAfterFixture
             };
 
             var randomizer = new Randomizer(1234567);
-        
+
             var items = Enumerable.Range(1, editCount * maxChangeCount)
                 .Select(id => new StressItem()
                 {

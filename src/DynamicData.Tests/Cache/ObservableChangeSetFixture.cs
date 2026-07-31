@@ -27,7 +27,7 @@ public class ObservableChangeSetFixture
                          *  but periodically fails when all tests are run. WTAF - I have no idea why but can only speculate
                          *  that without it the context is returning to the context of the test runner and it doesn't get back to it
                          *  until after the test session ends
-                         */  
+                         */
                         await Task.Delay(5, token).ConfigureAwait(false);
                     }
                 },

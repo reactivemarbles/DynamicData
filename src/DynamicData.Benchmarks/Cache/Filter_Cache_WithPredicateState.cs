@@ -140,7 +140,7 @@ public class Filter_Cache_WithPredicateState
                 int     idInclusionMask,
                 Item    item)
             => ((item.Id & idInclusionMask) == 0) && item.IsIncluded;
-            
+
         public required int Id { get; init; }
 
         public bool IsIncluded { get; set; }

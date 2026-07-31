@@ -13,7 +13,7 @@ public static partial class AutoRefreshOnObservableFixture
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
 
             var scheduler = new TestScheduler();
@@ -35,21 +35,21 @@ public static partial class AutoRefreshOnObservableFixture
 
             // UUT Action (publish reevaluator notification)
             ++item2.Value;
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("the reevaluator notification should have been buffered");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             // UUT Action (advance time, within buffer window)
             scheduler.AdvanceTo(TimeSpan.FromSeconds(5).Ticks);
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("the buffer window has not yet ended");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             // UUT Action (advance time, to buffer window)
             scheduler.AdvanceTo(TimeSpan.FromSeconds(10).Ticks);
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "a buffer window expired");
             results.RecordedChangeSets.Skip(1).First().Count.Should().Be(1, "1 item published a reevaluator notification");
@@ -57,31 +57,31 @@ public static partial class AutoRefreshOnObservableFixture
             results.RecordedChangeSets.Skip(1).First().First().Current.Should().Be(item2, "item #2 published a reevaluator notification");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "no items should have changed, within the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             // UUT Action (publish reevaluator notification)
             ++item1.Value;
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Should().BeEmpty("the reevaluator notification should have been buffered");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
             // UUT Action (advance time, within buffer window)
             scheduler.AdvanceTo(TimeSpan.FromSeconds(15).Ticks);
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Should().BeEmpty("the buffer window has not yet ended");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
             // UUT Action (publish additional reevaluator notification)
             ++item3.Value;
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Should().BeEmpty("the reevaluator notification should have been buffered");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
             // UUT Action (advance time, to buffer window)
             scheduler.AdvanceTo(TimeSpan.FromSeconds(20).Ticks);
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "a buffer window expired");
             results.RecordedChangeSets.Skip(2).First().Count.Should().Be(2, "2 items published a reevaluator notification");
@@ -92,7 +92,7 @@ public static partial class AutoRefreshOnObservableFixture
 
             // UUT Action (normal refresh)
             source.Refresh(item2);
-            
+
             // Normal refreshes should not be buffered
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "one source operation was performed");
@@ -102,7 +102,7 @@ public static partial class AutoRefreshOnObservableFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "no items should have changed, within the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-    
+
         [Fact]
         public void ItemIsAdded_SubscribesToReevaluator()
         {
@@ -112,7 +112,7 @@ public static partial class AutoRefreshOnObservableFixture
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             // UUT Initialization
             using var subscription = BuildUut(
                     source:         source.Connect(),
@@ -137,7 +137,7 @@ public static partial class AutoRefreshOnObservableFixture
             item2.HasObservers.Should().BeTrue("the reevaluator should be invoked and subscribed to, for each added item");
             item3.HasObservers.Should().BeTrue("the reevaluator should be invoked and subscribed to, for each added item");
         }
-        
+
         [Fact]
         public void ItemIsMoved_NotificationPropagates()
         {
@@ -147,9 +147,9 @@ public static partial class AutoRefreshOnObservableFixture
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             var items = new[] { item1, item2, item3 };
-            
+
             var initialChangeset = new ChangeSet<Item, int>()
             {
                 new Change<Item, int>(reason: ChangeReason.Add, key: item1.Id, current: item1, index: 0),
@@ -181,7 +181,7 @@ public static partial class AutoRefreshOnObservableFixture
                     key:            item3.Id,
                     current:        item3,
                     currentIndex:   0,
-                    previousIndex:  2) 
+                    previousIndex:  2)
             });
 
             results.Error.Should().BeNull();
@@ -194,7 +194,7 @@ public static partial class AutoRefreshOnObservableFixture
                 "an item was moved within the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-        
+
         [Fact]
         public void ItemIsRefreshed_NotificationPropagates()
         {
@@ -204,11 +204,11 @@ public static partial class AutoRefreshOnObservableFixture
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             var reevaluatorInvocationCount = 0;
-            
+
             // UUT Initialization
             using var subscription = BuildUut(
                     source:         source.Connect(),
@@ -251,9 +251,9 @@ public static partial class AutoRefreshOnObservableFixture
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             // UUT Initialization
             using var subscription = BuildUut(
                     source:         source.Connect(),
@@ -274,7 +274,7 @@ public static partial class AutoRefreshOnObservableFixture
             results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "one source operation was performed");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "1 item was removed from the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             item2.HasObservers.Should().BeFalse("removing an item should trigger unsubscription from its reevaluator");
             item1.HasObservers.Should().BeTrue("the item was not removed from the source");
             item3.HasObservers.Should().BeTrue("the item was not removed from the source");
@@ -289,9 +289,9 @@ public static partial class AutoRefreshOnObservableFixture
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             // UUT Initialization
             using var subscription = BuildUut(
                     source:         source.Connect(),
@@ -313,15 +313,15 @@ public static partial class AutoRefreshOnObservableFixture
             results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "one source operation was performed");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "1 item was replaced within the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             item2.HasObservers.Should().BeFalse("replacing an item should trigger unsubscription from its reevaluator");
             item4.HasObservers.Should().BeTrue("adding an item should invoke its reevaluator and subscribe to it");
             item1.HasObservers.Should().BeTrue("the item was not removed from the source");
             item3.HasObservers.Should().BeTrue("the item was not removed from the source");
-            
+
             // UUT Action (updated item publishes reevaluator notification)
             ++item4.Value;
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "1 item published a reevaluation notification");
             results.RecordedChangeSets.Skip(2).First().Count.Should().Be(1, "1 item published a reevaluation notification");
@@ -330,21 +330,21 @@ public static partial class AutoRefreshOnObservableFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "no source operations were performed");
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-            
+
         [Theory]
         [InlineData(NotificationStrategy.Immediate)]
         [InlineData(NotificationStrategy.Asynchronous)]
         public void ReevaluatorCompletesWhenNotOnlyItemInSource_CompletionWaitsForSourceCompletionAndOtherReevaluatorCompletions(NotificationStrategy notificationStrategy)
         {
-            // Setup 
+            // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             // UUT Initialization & Action (initial completion)
             if (notificationStrategy is NotificationStrategy.Immediate)
                 item2.Complete();
@@ -371,7 +371,7 @@ public static partial class AutoRefreshOnObservableFixture
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations were performed");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             // UUT Action (source completion)
             source.Complete();
 
@@ -379,19 +379,19 @@ public static partial class AutoRefreshOnObservableFixture
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations were performed");
             results.HasCompleted.Should().BeTrue("all notification sources have completed");
         }
-            
+
         [Theory]
         [InlineData(NotificationStrategy.Immediate)]
         [InlineData(NotificationStrategy.Asynchronous)]
         public void ReevaluatorCompletesWhenOnlyItemInSource_CompletionWaitsForSourceCompletion(NotificationStrategy notificationStrategy)
         {
-            // Setup 
+            // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
             using var item = new Item() { Id = 1 };
-            
+
             source.AddOrUpdate(item);
-            
+
             // UUT Initialization & Action (reevaluator completion)
             if (notificationStrategy is NotificationStrategy.Immediate)
                 item.Complete();
@@ -418,7 +418,7 @@ public static partial class AutoRefreshOnObservableFixture
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations were performed");
             results.HasCompleted.Should().BeTrue("all notification sources have completed");
         }
-            
+
         [Fact]
         public void ReevaluatorEmitsAsynchronously_ItemRefreshes()
         {
@@ -428,9 +428,9 @@ public static partial class AutoRefreshOnObservableFixture
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             // UUT Initialization
             using var subscription = BuildUut(
                     source:         source.Connect(),
@@ -455,7 +455,7 @@ public static partial class AutoRefreshOnObservableFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "no source operations were performed");
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-          
+
         [Fact(Skip = "Existing defect, #1099")]
         public void ReevaluatorEmitsImmediately_ItemDoesNotRefresh()
         {
@@ -465,9 +465,9 @@ public static partial class AutoRefreshOnObservableFixture
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             // UUT Initialization & Action
             using var subscription = BuildUut(
                     source:         source.Connect(),
@@ -482,23 +482,23 @@ public static partial class AutoRefreshOnObservableFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "3 items were added to the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-            
+
         [Theory(Skip = "Existing defect. Docs say that ignoring reevaluator exceptions is intentional, but it shouldn't be. Basic RX philosophy is that exceptions should basically always propagate.")]
         [InlineData(NotificationStrategy.Immediate)]
         [InlineData(NotificationStrategy.Asynchronous)]
         public void ReevaluatorFails_ErrorPropagates(NotificationStrategy notificationStrategy)
         {
-            // Setup 
+            // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             var error = new Exception("Test");
-            
+
             // UUT Initialization & Action
             if (notificationStrategy is NotificationStrategy.Immediate)
                 item2.SetError(error);
@@ -522,11 +522,11 @@ public static partial class AutoRefreshOnObservableFixture
                 results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "3 items were added to the source");
             }
         }
-            
+
         [Fact(Skip = "Existing defect. Docs say that ignoring reevaluator exceptions is intentional, but it shouldn't be. Basic RX philosophy is that exceptions should basically always propagate.")]
         public void ReevaluatorThrows_ExceptionPropagates()
         {
-            // Setup 
+            // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
             var error = new Exception("Test");
@@ -550,13 +550,13 @@ public static partial class AutoRefreshOnObservableFixture
             results.Error.Should().Be(error, "upstream errors should propagate downstream");
             results.RecordedChangeSets.Should().BeEmpty("an error occurred during processing of the initial changeset");
         }
-            
+
         [Theory]
         [InlineData(NotificationStrategy.Immediate)]
         [InlineData(NotificationStrategy.Asynchronous)]
         public void SourceCompletesWhenEmpty_CompletionPropagates(NotificationStrategy notificationStrategy)
         {
-            // Setup 
+            // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
             // UUT Initialization & Action
@@ -583,15 +583,15 @@ public static partial class AutoRefreshOnObservableFixture
         [InlineData(NotificationStrategy.Asynchronous)]
         public void SourceCompletesWhenNotEmpty_CompletionWaitsForReevaluatorCompletions(NotificationStrategy notificationStrategy)
         {
-            // Setup 
+            // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             // UUT Initialization & Action (source completion)
             if (notificationStrategy is NotificationStrategy.Immediate)
                 source.Complete();
@@ -632,17 +632,17 @@ public static partial class AutoRefreshOnObservableFixture
         [InlineData(NotificationStrategy.Asynchronous)]
         public void SourceFails_ErrorPropagates(NotificationStrategy notificationStrategy)
         {
-            // Setup 
+            // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             var error = new Exception("Test");
-            
+
             // UUT Initialization & Action
             if (notificationStrategy is NotificationStrategy.Immediate)
                 source.SetError(error);
@@ -684,14 +684,14 @@ public static partial class AutoRefreshOnObservableFixture
             using var item1 = new Item() { Id = 1 };
             using var item2 = new Item() { Id = 2 };
             using var item3 = new Item() { Id = 3 };
-            
+
             var initialChangeset = new ChangeSet<Item, int>()
             {
                 new Change<Item, int>(reason: ChangeReason.Add, key: item1.Id, current: item1),
                 new Change<Item, int>(reason: ChangeReason.Add, key: item2.Id, current: item2),
                 new Change<Item, int>(reason: ChangeReason.Add, key: item3.Id, current: item3)
             };
-            
+
             // UUT Initialization
             using var subscription = BuildUut(
                     source:         source.Prepend(initialChangeset),
@@ -711,7 +711,7 @@ public static partial class AutoRefreshOnObservableFixture
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations were performed");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             source.HasObservers.Should().BeFalse("subscription disposal should propagate");
             item1.HasObservers.Should().BeFalse("subscription disposal should propagate");
             item2.HasObservers.Should().BeFalse("subscription disposal should propagate");

@@ -153,7 +153,7 @@ public class SourceCacheFixture : IDisposable
     public void StaticFilterRemove()
     {
         var cache = new SourceCache<SomeObject, int>(x => x.Id);
-        
+
         var above5 = cache.Connect(x => x.Value > 5).AsObservableCache();
         var below5 = cache.Connect(x => x.Value <= 5).AsObservableCache();
 

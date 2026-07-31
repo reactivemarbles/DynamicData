@@ -26,7 +26,7 @@ public class InnerJoinFixtureRaceCondition
         ids.InnerJoin(itemsCache.Connect(), x => x.Id, (_, thing) => thing).Subscribe((z) => { }, ex => { }, () => { });
     }
 
-    // See https://github.com/reactivemarbles/DynamicData/issues/787 
+    // See https://github.com/reactivemarbles/DynamicData/issues/787
     [Fact]
     public void LetsSeeWhetherWeCanRandomlyHitADifferentRaceCondition()
     {

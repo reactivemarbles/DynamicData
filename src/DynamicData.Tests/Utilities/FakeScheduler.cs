@@ -26,7 +26,7 @@ internal sealed class FakeScheduler
             state: state,
             dueTime: null,
             action: action);
-    
+
     public IDisposable Schedule<TState>(
             TState state,
             TimeSpan dueTime,
@@ -35,7 +35,7 @@ internal sealed class FakeScheduler
             state: state,
             dueTime: _now + dueTime,
             action: action);
-    
+
     public IDisposable Schedule<TState>(
             TState state,
             DateTimeOffset dueTime,

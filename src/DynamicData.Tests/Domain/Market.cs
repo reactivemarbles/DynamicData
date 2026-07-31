@@ -78,7 +78,7 @@ internal sealed class Market : IMarket, IDisposable
         })));
 
     public Market RefreshAllPrices(Func<decimal> getNewPrice) => RefreshAllPrices(_ => getNewPrice());
-    
+
     public Market RefreshAllPrices(decimal newPrice) => RefreshAllPrices(_ => newPrice);
 
     public void RemoveAllPrices() => this.With(_ => _latestPrices.Clear());

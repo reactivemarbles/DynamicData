@@ -74,7 +74,7 @@ public abstract class SortAndBindObservableFixture : IDisposable
 
         // change to oldest first sort
         ComparerObservable.OnNext(_oldestComparer);
-        
+
         var oldestFirst = people.OrderBy(p => p, _oldestComparer).ToList();
         _boundList.SequenceEqual(oldestFirst).Should().BeTrue();
 

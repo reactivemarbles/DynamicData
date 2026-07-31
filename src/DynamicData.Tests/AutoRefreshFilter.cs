@@ -8,9 +8,9 @@ public class AutoRefreshFilter
         var count = 3;
         var list = new SourceList<string>();
         list.AddRange(Enumerable.Range(1, count).Select(c => $"item {c}"));
-        
+
         var bindedList = new ObservableCollectionExtended<string>();
-       
+
         list.Connect()
             .FilterOnObservable(_ => Observable.Return(true))
             .Transform(str => str)

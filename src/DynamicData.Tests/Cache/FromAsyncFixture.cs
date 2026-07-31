@@ -52,7 +52,7 @@ public class FromAsyncFixture
         var data2 = Observable.FromAsync(Loader).ToObservableChangeSet(p => p.Key).AsObservableCache().Connect().Subscribe(changes => { }, ex => error = ex);
 
         //var subscribed = data.Connect()
-        //    
+        //
 
         error.Should().NotBeNull();
     }

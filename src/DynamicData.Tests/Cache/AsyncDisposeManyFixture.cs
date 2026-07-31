@@ -126,7 +126,7 @@ public static partial class AsyncDisposeManyFixture
 
         private readonly TaskCompletionSource _disposeCompletionSource
             = new();
-     
+
         private bool _hasBeenDisposed;
     }
 

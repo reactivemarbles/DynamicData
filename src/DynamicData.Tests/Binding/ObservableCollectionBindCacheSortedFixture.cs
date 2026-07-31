@@ -88,8 +88,8 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
             ReadOnlyObservableCollection<Person> list;
             //var list = new ObservableCollectionExtended<Person>();
 
-            var binder = options == null 
-                ? _source.Connect().Sort(_comparer).Bind(out list).Subscribe() 
+            var binder = options == null
+                ? _source.Connect().Sort(_comparer).Bind(out list).Subscribe()
                 : _source.Connect().Sort(_comparer).Bind(out list, options.Value).Subscribe();
 
             using var listEvents = list.ObserveCollectionChanges().Take(1)

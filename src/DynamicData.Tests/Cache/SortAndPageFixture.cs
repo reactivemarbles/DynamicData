@@ -26,7 +26,7 @@ public sealed class SortAndPageWithComparerChangesFixture : SortAndPageFixtureBa
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.Should().BeEquivalentTo(expectedResult);
 
-        // change the comparer 
+        // change the comparer
         _comparerSubject.OnNext(_descComparer);
 
         Aggregator.Messages.Cast<IChangeSet<Person, string, PageContext<Person>>>().LastOrDefault().Context.Comparer.Should().Be(_descComparer);
@@ -39,7 +39,7 @@ public sealed class SortAndPageWithComparerChangesFixture : SortAndPageFixtureBa
     public void ChangeComparerWithOnlyOnePage()
     {
         PageRequests.OnNext(new PageRequest(page: 1, size: 200));
-        
+
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid());
         Source.AddOrUpdate(people);
 
@@ -49,7 +49,7 @@ public sealed class SortAndPageWithComparerChangesFixture : SortAndPageFixtureBa
         actualResult.Should().BeEquivalentTo(expectedResult);
         var changesetCount = Aggregator.Messages.Count;
 
-        // change the comparer 
+        // change the comparer
         _comparerSubject.OnNext(_descComparer);
 
         Aggregator.Messages.Cast<IChangeSet<Person, string, PageContext<Person>>>().LastOrDefault().Context.Comparer.Should().Be(_descComparer);

@@ -811,7 +811,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         var markets2 = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
         AddUniquePrices(markets2);
         using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.EqualityComparer).AsAggregator();
-        (var firstReason, var nextReason, int expectedChanges) = removeFirst 
+        (var firstReason, var nextReason, int expectedChanges) = removeFirst
             ? (ChangeReason.Remove, ChangeReason.Add, 2 * MarketCount * PricesPerMarket)
             : (ChangeReason.Add, ChangeReason.Remove, 3 * MarketCount * PricesPerMarket);
 

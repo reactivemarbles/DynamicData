@@ -30,7 +30,7 @@ public static partial class FilterFixture
 
         public static int SelectId(Item item)
             => item.Id;
-            
+
         public required int Id { get; init; }
 
         public bool IsIncluded { get; set; }

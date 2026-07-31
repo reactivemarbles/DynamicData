@@ -942,7 +942,7 @@ public static partial class ExpireAfterFixture
             foreach(var changeSet in changeSets)
                 source.OnNext(changeSet);
         }
-    
+
         private static async Task WaitForCompletionAsync(
             CacheItemRecordingObserver<StressItem, int> results,
             TimeSpan timeout)
@@ -957,7 +957,7 @@ public static partial class ExpireAfterFixture
                 await Task.Delay(pollingInterval);
 
                 // Identify "completion" as either an error, a completion signal, or all expiring items being removed.
-                if ((results.Error is not null) 
+                if ((results.Error is not null)
                     || results.HasCompleted
                     || results.RecordedItemsByKey.Values.All(static item => item.Lifetime is null))
                 {

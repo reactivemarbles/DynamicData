@@ -148,7 +148,7 @@ public sealed class SortAndBindWithResetOptions: IDisposable
     public void FiresResetWhenThresholdIsMet()
     {
         var options = new SortAndBindOptions { ResetThreshold = 10 };
-        
+
         using var sorted = _source.Connect().SortAndBind(out var list, _comparer, options).Subscribe();
         using var collectionChangedEvents = list.ObserveCollectionChanges().Select(e => e.EventArgs).Subscribe(_collectionChangedEventArgs.Add);
 
@@ -195,7 +195,7 @@ public sealed class SortAndBindWithResetOptions: IDisposable
         _source.AddOrUpdate(Enumerable.Range(10, 15).Select(i => new Person($"P{i}", i)));
         _collectionChangedEventArgs.Count.Should().Be(15);
         _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
-        
+
         list.Count.Should().Be(20);
 
     }
@@ -298,7 +298,7 @@ public abstract class SortAndBindFixture : IDisposable
         _source.AddOrUpdate(toInsert);
 
         _boundList.Count.Should().Be(101);
-        
+
         var last = _boundList[^1];
         last.Should().Be(toInsert);
 
@@ -534,7 +534,7 @@ public abstract class SortAndBindFixture : IDisposable
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
-      
+
         _boundList.Count.Should().Be(100);
         people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
     }
@@ -552,7 +552,7 @@ public abstract class SortAndBindFixture : IDisposable
         _source.AddOrUpdate(new Person(toUpdate.Name, toUpdate.Age + 5));
 
         people[IndexFromKey(update.Key)] = new Person(toUpdate.Name, toUpdate.Age + 5);
-       
+
         int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
 
         people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();

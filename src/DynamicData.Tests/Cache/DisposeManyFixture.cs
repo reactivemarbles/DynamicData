@@ -132,7 +132,7 @@ public sealed class DisposeManyFixture : IDisposable
     public void RemainingItemsAreDisposedAfterError()
     {
         _itemsSource.AddOrUpdate(new DisposableObject(1));
-        
+
         var error = new Exception("Test Exception");
         _changeSetsSource.OnError(error);
 

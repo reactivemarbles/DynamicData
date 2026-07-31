@@ -204,7 +204,7 @@ public class BatchIfWithTimeOutFixture : IDisposable
     {
         _pausingSubject.OnNext(true);
 
-        //should timeout 
+        //should timeout
         _scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
 
         _source.AddOrUpdate(new Person("A", 1));

@@ -16,7 +16,7 @@ public static partial class AsyncDisposeManyFixture
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
             using var subscription = source
-                .AsyncDisposeMany(disposalsCompleted => 
+                .AsyncDisposeMany(disposalsCompleted =>
                 {
                     disposalsCompletedResults.Should().BeNull("disposalsCompletedAccessor should only be invoked once per subscription");
                     disposalsCompleted.RecordValues(out disposalsCompletedResults);
@@ -115,7 +115,7 @@ public static partial class AsyncDisposeManyFixture
 
             using var subscription = source
                 .Connect()
-                .AsyncDisposeMany(disposalsCompleted => 
+                .AsyncDisposeMany(disposalsCompleted =>
                 {
                     disposalsCompletedResults.Should().BeNull("disposalsCompletedAccessor should only be invoked once per subscription");
                     disposalsCompleted.RecordValues(out disposalsCompletedResults);
@@ -176,7 +176,7 @@ public static partial class AsyncDisposeManyFixture
 
             using var subscription = source
                 .Connect()
-                .AsyncDisposeMany(disposalsCompleted => 
+                .AsyncDisposeMany(disposalsCompleted =>
                 {
                     disposalsCompletedResults.Should().BeNull("disposalsCompletedAccessor should only be invoked once per subscription");
                     disposalsCompleted.RecordValues(out disposalsCompletedResults);
@@ -259,7 +259,7 @@ public static partial class AsyncDisposeManyFixture
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
             using var subscription = source
-                .AsyncDisposeMany(disposalsCompleted => 
+                .AsyncDisposeMany(disposalsCompleted =>
                 {
                     disposalsCompletedResults.Should().BeNull("disposalsCompletedAccessor should only be invoked once per subscription");
                     disposalsCompleted.RecordValues(out disposalsCompletedResults);
@@ -313,7 +313,7 @@ public static partial class AsyncDisposeManyFixture
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
 
             using var subscription = source
-                .AsyncDisposeMany(disposalsCompleted => 
+                .AsyncDisposeMany(disposalsCompleted =>
                 {
                     disposalsCompletedResults.Should().BeNull("disposalsCompletedAccessor should only be invoked once per subscription");
                     disposalsCompleted.RecordValues(out disposalsCompletedResults);

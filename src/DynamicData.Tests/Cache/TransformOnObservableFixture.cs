@@ -163,7 +163,7 @@ public class TransformOnObservableFixture : IDisposable
     {
         // Arrange
         using var results = _animalCache.Connect().TransformOnObservable(Observable.Return).AsAggregator();
-        (var firstReason, var nextReason, var expectedChanges) = removeFirst 
+        (var firstReason, var nextReason, var expectedChanges) = removeFirst
             ? (ChangeReason.Remove, ChangeReason.Add, InitialCount * 2)
             : (ChangeReason.Add, ChangeReason.Remove, InitialCount * 3);
 

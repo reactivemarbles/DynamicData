@@ -1,4 +1,4 @@
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class ToCollectionFixture
 {
@@ -9,9 +9,9 @@ public class ToCollectionFixture
     {
         public static int SelectId(TestItem item)
             => item.Id;
-    
+
         public required int Id { get; init; }
-        
+
         public int Version { get; init; }
     }
 
@@ -27,7 +27,7 @@ public class ToCollectionFixture
         using var subscription = source.Connect()
             .ToCollection()
             .RecordValues(out var results);
-            
+
         results.Error.Should().BeNull("no errors should have occurred");
         // TODO: Disabled due to existing defect. Fix and restore.
         //results.RecordedValues.Should().ContainSingle("an initial snapshot should always be published");
@@ -36,7 +36,7 @@ public class ToCollectionFixture
 
         // TODO: Disabled due to existing defect. Fix and restore.
         //priorResults.Add(results.RecordedValues[^1].ToArray());
-        
+
         // UUT Action (add items)
         source.AddOrUpdate(new[]
         {
@@ -44,7 +44,7 @@ public class ToCollectionFixture
             new TestItem() { Id = 2 },
             new TestItem() { Id = 3 }
         });
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.RecordedValues.Skip(priorResults.Count).Should().ContainSingle("a single source operation was performed");
         results.RecordedValues[^1].Should().BeEquivalentTo(source.Items, "snapshots should always match the source collection");
@@ -54,7 +54,7 @@ public class ToCollectionFixture
             result.Should().BeEquivalentTo(priorResult, "previous snapshots should not be mutated");
 
         priorResults.Add(results.RecordedValues[^1].ToArray());
-        
+
         // UUT Action (replace items)
         source.AddOrUpdate(new[]
         {
@@ -62,7 +62,7 @@ public class ToCollectionFixture
             new TestItem() { Id = 2, Version = 1 },
             new TestItem() { Id = 3, Version = 1 }
         });
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.RecordedValues.Skip(priorResults.Count).Should().ContainSingle("a single source operation was performed");
         results.RecordedValues[^1].Should().BeEquivalentTo(source.Items, "snapshots should always match the source collection");
@@ -75,7 +75,7 @@ public class ToCollectionFixture
 
         // UUT Action (remove items)
         source.RemoveKeys(source.Keys.ToArray());
-        
+
         results.Error.Should().BeNull("no errors should have occurred");
         results.RecordedValues.Skip(priorResults.Count).Should().ContainSingle("a single source operation was performed");
         results.RecordedValues[^1].Should().BeEquivalentTo(source.Items, "snapshots should always match the source collection");
@@ -150,7 +150,7 @@ public class ToCollectionFixture
             .Should().Throw<ArgumentNullException>()
             .WithParameterName("source")
             .Which;
-            
+
         _output.WriteLine(result.ToString());
     }
 

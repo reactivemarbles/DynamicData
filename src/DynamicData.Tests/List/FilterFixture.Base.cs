@@ -104,7 +104,7 @@ public static partial class FilterFixture
         {
             // Setup
             using var source = new TestSourceList<Item>();
-            
+
             source.AddRange(new[]
             {
                 new Item() { Id = 1, IsIncluded = true },
@@ -131,7 +131,7 @@ public static partial class FilterFixture
                 config: options => options.WithStrictOrdering());
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
-            // UUT Action: Moves for matching items, 
+            // UUT Action: Moves for matching items,
             source.Edit(items =>
             {
                 items.Move(2, 0);

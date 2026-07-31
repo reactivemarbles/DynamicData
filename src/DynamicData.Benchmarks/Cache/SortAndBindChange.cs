@@ -34,7 +34,7 @@ public class SortAndBindChange: IDisposable
         _newSubject = new Subject<IChangeSet<Item, int>>();
         _newSubjectOptimised = new Subject<IChangeSet<Item, int>>();
 
-        _cleanUp = new CompositeDisposable  
+        _cleanUp = new CompositeDisposable
         (
             _newSubject.SortAndBind(out var newList, _comparer).Subscribe(),
             _newSubjectOptimised.SortAndBind(out var optimisedList, _comparer, new SortAndBindOptions
@@ -42,7 +42,7 @@ public class SortAndBindChange: IDisposable
                 InitialCapacity = Count,
                 UseBinarySearch = true
             }).Subscribe(),
-           
+
             _oldSubject.Sort(_comparer).Bind(out var oldList).Subscribe(),
             _oldSubjectOptimised.Sort(_comparer, SortOptimisations.ComparesImmutableValuesOnly).Bind(out var oldOptimisedList).Subscribe()
         );

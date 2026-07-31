@@ -27,7 +27,7 @@ public sealed class TestSourceCache<TObject, TKey>
 
     public IReadOnlyList<TObject> Items
         => _source.Items;
-    
+
     public IReadOnlyList<TKey> Keys
         => _source.Keys;
 
@@ -89,7 +89,7 @@ public sealed class TestSourceCache<TObject, TKey>
     }
 
     private IObservable<T> WrapStream<T>(IObservable<T> sourceStream)
-        => Observable.Create<T>(downstreamObserver => 
+        => Observable.Create<T>(downstreamObserver =>
         {
             var whenCompleted = _hasCompleted
                 .Where(static hasCompleted => hasCompleted)

@@ -271,10 +271,10 @@ public partial class FilterFixture
 
             // Test Remove, with an excluded item
             source.RemoveAt(3);
-            
+
             // Test Remove, with both included and excluded items
             source.RemoveRange(index: 2, count: 2);
-            
+
             // Test Replace, not affecting filtering
             var item9 = new Item() { Id = 9, IsIncluded = false };
             var item10 = new Item() { Id = 10, IsIncluded = true };
@@ -520,7 +520,7 @@ public partial class FilterFixture
                 maxChangeCount: 20,
                 maxRangeSize:   10,
                 randomizer:     randomizer);
-            
+
             var predicateStates = GenerateRandomPredicateStates(
                 valueCount: 5_000,
                 randomizer: randomizer);
@@ -972,7 +972,7 @@ public partial class FilterFixture
                     int     idInclusionMask,
                     Item    item)
                 => ((item.Id & idInclusionMask) == 0) && item.IsIncluded;
-            
+
             public required int Id { get; init; }
 
             public bool IsIncluded { get; set; }

@@ -152,7 +152,7 @@ public sealed class WhenPropertyChangedBehaviorFixture
         {
             Age = 10
         };
-        
+
         using var subscription = ObserveAge(child)
             .RecordValues(out var results);
 
@@ -170,7 +170,7 @@ public sealed class WhenPropertyChangedBehaviorFixture
                 where T : IHasAge
             => source.WhenValueChanged(source => source.Age);
     }
-    
+
     private interface IHasAge
         : INotifyPropertyChanged
     {

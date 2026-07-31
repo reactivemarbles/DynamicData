@@ -13,7 +13,7 @@ public static partial class AutoRefreshFixture
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
             var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
 
             var scheduler = new TestScheduler();
@@ -34,21 +34,21 @@ public static partial class AutoRefreshFixture
 
             // UUT Action (publish property change notification)
             ++item2.Value;
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("the property change notification should have been buffered");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             // UUT Action (advance time, within buffer window)
             scheduler.AdvanceTo(TimeSpan.FromSeconds(5).Ticks);
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("the buffer window has not yet ended");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             // UUT Action (advance time, to buffer window)
             scheduler.AdvanceTo(TimeSpan.FromSeconds(10).Ticks);
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "a buffer window expired");
             results.RecordedChangeSets.Skip(1).First().Count.Should().Be(1, "1 item published a property change notification");
@@ -56,31 +56,31 @@ public static partial class AutoRefreshFixture
             results.RecordedChangeSets.Skip(1).First().First().Current.Should().Be(item2, "item #2 published a property change notification");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "no items should have changed, within the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             // UUT Action (publish property change notification)
             ++item1.Value;
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Should().BeEmpty("the property change notification should have been buffered");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
             // UUT Action (advance time, within buffer window)
             scheduler.AdvanceTo(TimeSpan.FromSeconds(15).Ticks);
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Should().BeEmpty("the buffer window has not yet ended");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
             // UUT Action (publish additional property change notification)
             ++item3.Value;
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Should().BeEmpty("the property change notification should have been buffered");
             results.HasCompleted.Should().BeFalse("the source has not completed");
 
             // UUT Action (advance time, to buffer window)
             scheduler.AdvanceTo(TimeSpan.FromSeconds(20).Ticks);
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "a buffer window expired");
             results.RecordedChangeSets.Skip(2).First().Count.Should().Be(2, "2 items published a property change notification");
@@ -91,7 +91,7 @@ public static partial class AutoRefreshFixture
 
             // UUT Action (normal refresh)
             source.Refresh(item2);
-            
+
             // Normal refreshes should not be buffered
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "one source operation was performed");
@@ -101,7 +101,7 @@ public static partial class AutoRefreshFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "no items should have changed, within the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-    
+
         [Fact]
         public void ItemIsAdded_SubscribesToPropertyChanged()
         {
@@ -134,7 +134,7 @@ public static partial class AutoRefreshFixture
             item2.HasSubscriptions.Should().BeTrue("the PropertyChanged event should be subscribed to, for each added item");
             item3.HasSubscriptions.Should().BeTrue("the PropertyChanged event should be subscribed to, for each added item");
         }
-        
+
         [Fact]
         public void ItemIsMoved_NotificationPropagates()
         {
@@ -144,9 +144,9 @@ public static partial class AutoRefreshFixture
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
             var item3 = new Item() { Id = 3 };
-            
+
             var items = new [] { item1, item2, item3 };
-            
+
             var initialChangeset = new ChangeSet<Item, int>()
             {
                 new Change<Item, int>(reason: ChangeReason.Add, key: item1.Id, current: item1, index: 0),
@@ -176,7 +176,7 @@ public static partial class AutoRefreshFixture
                     key:            item3.Id,
                     current:        item3,
                     currentIndex:   0,
-                    previousIndex:  2) 
+                    previousIndex:  2)
             });
 
             results.Error.Should().BeNull();
@@ -189,7 +189,7 @@ public static partial class AutoRefreshFixture
                 "an item was moved within the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-        
+
         [Fact]
         public void ItemIsRefreshed_NotificationPropagates()
         {
@@ -199,9 +199,9 @@ public static partial class AutoRefreshFixture
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
             var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             // UUT Initialization
             using var subscription = BuildUut(source.Connect())
                 .ValidateSynchronization()
@@ -234,9 +234,9 @@ public static partial class AutoRefreshFixture
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
             var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             // UUT Initialization
             using var subscription = BuildUut(source.Connect())
                 .ValidateSynchronization()
@@ -255,7 +255,7 @@ public static partial class AutoRefreshFixture
             results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "one source operation was performed");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "1 item was removed from the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             item2.HasSubscriptions.Should().BeFalse("removing an item should trigger unsubscription from its reevaluator");
             item1.HasSubscriptions.Should().BeTrue("the item was not removed from the source");
             item3.HasSubscriptions.Should().BeTrue("the item was not removed from the source");
@@ -270,9 +270,9 @@ public static partial class AutoRefreshFixture
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
             var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             // UUT Initialization
             using var subscription = BuildUut(source.Connect())
                 .ValidateSynchronization()
@@ -292,13 +292,13 @@ public static partial class AutoRefreshFixture
             results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "one source operation was performed");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "1 item was replaced within the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             item2.HasSubscriptions.Should().BeFalse("replacing an item should trigger unsubscription from its reevaluator");
             item4.HasSubscriptions.Should().BeTrue("adding an item should invoke its reevaluator and subscribe to it");
             item1.HasSubscriptions.Should().BeTrue("the item was not removed from the source");
             item3.HasSubscriptions.Should().BeTrue("the item was not removed from the source");
         }
-            
+
         [Fact]
         public void PropertyChangedOccurs_ItemRefreshes()
         {
@@ -308,9 +308,9 @@ public static partial class AutoRefreshFixture
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
             var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             // UUT Initialization
             using var subscription = BuildUut(source.Connect())
                 .ValidateSynchronization()
@@ -343,7 +343,7 @@ public static partial class AutoRefreshFixture
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
             var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
 
             var scheduler = new TestScheduler();
@@ -364,7 +364,7 @@ public static partial class AutoRefreshFixture
 
             // UUT Action (publish property change notification)
             ++item2.Value;
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("the throttle window has not yet ended");
             results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -378,7 +378,7 @@ public static partial class AutoRefreshFixture
 
             // UUT Action (advance time to end of throttle window)
             scheduler.AdvanceTo(TimeSpan.FromSeconds(10).Ticks);
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "the throttle window ended");
             results.RecordedChangeSets.Skip(1).First().Count.Should().Be(1, "1 item published property change notifications");
@@ -386,10 +386,10 @@ public static partial class AutoRefreshFixture
             results.RecordedChangeSets.Skip(1).First().First().Current.Should().Be(item2, "item #2 published property change notifications");
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "no items should have changed, within the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             // UUT Action (publish property change notification)
             ++item2.Value;
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Should().BeEmpty("the throttle window has not yet ended");
             results.HasCompleted.Should().BeFalse("the source has not completed");
@@ -398,21 +398,21 @@ public static partial class AutoRefreshFixture
             scheduler.AdvanceTo(TimeSpan.FromSeconds(15).Ticks);
             ++item2.Value;
             scheduler.AdvanceBy(1);
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Should().BeEmpty("the throttle window has not yet ended");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             // UUT Action (advance time to end of original throttle window)
             scheduler.AdvanceTo(TimeSpan.FromSeconds(20).Ticks);
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Should().BeEmpty("the throttle window should have been extended");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             // UUT Action (advance time to end of throttle window)
             scheduler.AdvanceTo(TimeSpan.FromSeconds(25).Ticks);
-            
+
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "the throttle window ended");
             results.RecordedChangeSets.Skip(2).First().Count.Should().Be(1, "1 item published property change notifications");
@@ -421,13 +421,13 @@ public static partial class AutoRefreshFixture
             results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "no items should have changed, within the source");
             results.HasCompleted.Should().BeFalse("the source has not completed");
         }
-    
+
         [Theory]
         [InlineData(NotificationStrategy.Immediate)]
         [InlineData(NotificationStrategy.Asynchronous)]
         public void SourceCompletesWhenEmpty_CompletionPropagates(NotificationStrategy notificationStrategy)
         {
-            // Setup 
+            // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
             // UUT Initialization & Action
@@ -452,15 +452,15 @@ public static partial class AutoRefreshFixture
         [InlineData(NotificationStrategy.Asynchronous)]
         public void SourceCompletesWhenNotEmpty_CompletionDoesNotPropagate(NotificationStrategy notificationStrategy)
         {
-            // Setup 
+            // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
             var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             // UUT Initialization & Action (source completion)
             if (notificationStrategy is NotificationStrategy.Immediate)
                 source.Complete();
@@ -484,17 +484,17 @@ public static partial class AutoRefreshFixture
         [InlineData(NotificationStrategy.Asynchronous)]
         public void SourceFails_ErrorPropagates(NotificationStrategy notificationStrategy)
         {
-            // Setup 
+            // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
             var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
+
             var error = new Exception("Test");
-            
+
             // UUT Initialization & Action
             if (notificationStrategy is NotificationStrategy.Immediate)
                 source.SetError(error);
@@ -532,14 +532,14 @@ public static partial class AutoRefreshFixture
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
             var item3 = new Item() { Id = 3 };
-            
+
             var initialChangeset = new ChangeSet<Item, int>()
             {
                 new Change<Item, int>(reason: ChangeReason.Add, key: item1.Id, current: item1),
                 new Change<Item, int>(reason: ChangeReason.Add, key: item2.Id, current: item2),
                 new Change<Item, int>(reason: ChangeReason.Add, key: item3.Id, current: item3)
             };
-            
+
             // UUT Initialization
             using var subscription = BuildUut(source.Prepend(initialChangeset))
                 .ValidateSynchronization()
@@ -557,7 +557,7 @@ public static partial class AutoRefreshFixture
             results.Error.Should().BeNull();
             results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations were performed");
             results.HasCompleted.Should().BeFalse("the source has not completed");
-            
+
             source.HasObservers.Should().BeFalse("subscription disposal should propagate");
             item1.HasSubscriptions.Should().BeFalse("subscription disposal should propagate");
             item2.HasSubscriptions.Should().BeFalse("subscription disposal should propagate");

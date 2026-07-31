@@ -51,14 +51,14 @@ public sealed class TestSourceList<T>
         _refreshRequested.Dispose();
         _refreshRequestedPreview.Dispose();
     }
-    
+
     public void Edit(Action<IExtendedList<T>> updateAction)
     {
         AssertCanMutate();
 
         _source.Edit(updateAction);
     }
-    
+
     public IObservable<IChangeSet<T>> Preview(Func<T, bool>? predicate = null)
         => WrapStream(Observable.Merge(
             _source.Preview(predicate),
@@ -126,7 +126,7 @@ public sealed class TestSourceList<T>
         {
             var hasCompleted = _hasCompleted
                 .Publish();
-            
+
             var subscription = Observable
                 .Merge(
                     _error
@@ -138,10 +138,10 @@ public sealed class TestSourceList<T>
                 .TakeUntil(hasCompleted
                     .Where(static hasCompleted => hasCompleted))
                 .SubscribeSafe(downstreamObserver);
-            
+
             // Make sure that an initial changeset gets published, before immediate completion.
             var connection = hasCompleted.Connect();
-            
+
             return Disposable.Create(() =>
             {
                 connection.Dispose();

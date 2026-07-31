@@ -210,7 +210,7 @@ public sealed class TransformManyAsyncFixture : IDisposable
         sameId.Animals.AddRange(newOwner.Animals.Items);
         return sameId;
     }
- 
+
     private static void CheckResultContents<T>(IEnumerable<AnimalOwner> owners, ChangeSetAggregator<AnimalOwner, Guid> ownerResults, ChangeSetAggregator<Animal, T> animalResults, Func<Animal, T> keySelector, IComparer<Animal> comparer)
         where T : notnull
     {

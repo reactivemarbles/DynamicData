@@ -297,7 +297,7 @@ public class RightJoinFixture : IDisposable
             innerCache =>
             {
                 innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2")); 
+                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
                 innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
                 innerCache.AddOrUpdate(new DeviceMetaData(4,"Device4"));
             });

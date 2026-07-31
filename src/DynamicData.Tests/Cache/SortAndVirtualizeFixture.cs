@@ -26,7 +26,7 @@ public sealed class SortAndVirtualizeWithComparerChangesFixture : SortAndVirtual
         var actualResult = Aggregator.Data.Items.OrderBy(p => p, Comparer);
         actualResult.Should().BeEquivalentTo(expectedResult);
 
-        // change the comparer 
+        // change the comparer
         _comparerSubject.OnNext(_descComparer);
 
         expectedResult = people.OrderBy(p => p, _descComparer).Take(25).ToList();
@@ -47,7 +47,7 @@ public sealed class SortAndVirtualizeWithComparerChangesFixture : SortAndVirtual
 
         Aggregator.Messages[0].All(c => c.Reason == ChangeReason.Add).Should().BeTrue();
 
-        // change the comparer 
+        // change the comparer
         _comparerSubject.OnNext(_descComparer);
 
         expectedResult = people.OrderBy(p => p, _descComparer).Take(10).ToList();

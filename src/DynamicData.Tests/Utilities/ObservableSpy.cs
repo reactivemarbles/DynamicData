@@ -201,9 +201,9 @@ internal static class ObservableSpy
 #endif
 
 #if DEBUG
-    private static void DebugLogger(string str) => System.Diagnostics.Debug.WriteLine(str); 
+    private static void DebugLogger(string str) => System.Diagnostics.Debug.WriteLine(str);
 #elif DEBUG_SPY_ALWAYS
-    private static void DebugLogger(string str) => NativeMethods.OutputDebugString(str); 
+    private static void DebugLogger(string str) => NativeMethods.OutputDebugString(str);
 #endif
 
 }

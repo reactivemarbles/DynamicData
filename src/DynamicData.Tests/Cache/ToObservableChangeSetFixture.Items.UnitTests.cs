@@ -165,7 +165,7 @@ public static partial class ToObservableChangeSetFixture
                     SourceType.Immediate    => Observable.Return(item),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
-            
+
                 var scheduler = new TestScheduler();
 
                 // UUT Initialization & Action
@@ -220,7 +220,7 @@ public static partial class ToObservableChangeSetFixture
                     SourceType.Immediate    => Observable.Return(item),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
-            
+
                 var scheduler = new TestScheduler();
 
                 // UUT Initialization & Action
@@ -465,7 +465,7 @@ public static partial class ToObservableChangeSetFixture
                 var error = new Exception("Test Exception");
 
                 var source = sourceType switch
-                { 
+                {
                     SourceType.Asynchronous => new Subject<Item>(),
                     SourceType.Immediate    => Observable.Throw<Item>(error),
                     _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
