@@ -356,15 +356,15 @@ public static partial class FilterFixture
         }
 
         [Theory]
-        [InlineData(CompletionStrategy.Asynchronous)]
-        [InlineData(CompletionStrategy.Immediate)]
-        public void SourceFails_ErrorPropagates(CompletionStrategy completionStrategy)
+        [InlineData(StreamCompletionStrategy.Asynchronous)]
+        [InlineData(StreamCompletionStrategy.Immediate)]
+        public void SourceFails_ErrorPropagates(StreamCompletionStrategy completionStrategy)
         {
             var error = new Exception("Test");
 
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
-            if (completionStrategy is CompletionStrategy.Immediate)
+            if (completionStrategy is StreamCompletionStrategy.Immediate)
                 source.SetError(error);
 
             using var subscription = BuildUut(
@@ -375,7 +375,7 @@ public static partial class FilterFixture
                 .ValidateChangeSets(Item.SelectId)
                 .RecordCacheItems(out var results);
 
-            if (completionStrategy is CompletionStrategy.Asynchronous)
+            if (completionStrategy is StreamCompletionStrategy.Asynchronous)
                 source.SetError(error);
 
             results.Error.Should().Be(error);
