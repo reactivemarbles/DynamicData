@@ -17,6 +17,9 @@ public class Sum_List
     private IReadOnlyList<IChangeSet<Item>> _removeChangeSets = null!;
     private IReadOnlyList<IChangeSet<Item>> _refreshChangeSets = null!;
 
+    private IChangeSet<Item> _seedAfterAdds = null!;
+    private IChangeSet<Item> _seedAfterReplaces = null!;
+
     [Params(100, 500, 1_000, 10_000)]
     public int Count { get; set; }
 
@@ -24,27 +27,32 @@ public class Sum_List
     public void Setup()
     {
         var source = new ChangeAwareList<Item>(capacity: Count);
+        var items = new Item[Count];
 
         var addChangeSets = new List<IChangeSet<Item>>(capacity: Count);
-        for (var id = 1; id <= Count; ++id)
+        for (var index = 0; index < Count; ++index)
         {
-            source.Add(new Item()
+            items[index] = new Item()
             {
-                Id = id,
-                Value = id
-            });
+                Id = index + 1,
+                Value = index + 1
+            };
+            source.Add(items[index]);
             addChangeSets.Add(source.CaptureChanges());
         }
         _addChangeSets = addChangeSets;
 
+        var addedItems = (Item[])items.Clone();
+
         var replaceChangeSets = new List<IChangeSet<Item>>(capacity: Count);
         for (var index = 0; index < Count; ++index)
         {
-            source[index] = new Item()
+            items[index] = new Item()
             {
                 Id = index + 1,
                 Value = (index + 1) * 2
             };
+            source[index] = items[index];
             replaceChangeSets.Add(source.CaptureChanges());
         }
         _replaceChangeSets = replaceChangeSets;
@@ -53,7 +61,7 @@ public class Sum_List
         for (var index = 0; index < Count; ++index)
         {
             // Mutate in place, then refresh - the scenario stateless aggregation cannot currently observe.
-            source[index].Value += 1;
+            items[index].Value += 1;
             source.RefreshAt(index);
             refreshChangeSets.Add(source.CaptureChanges());
         }
@@ -66,27 +74,47 @@ public class Sum_List
             removeChangeSets.Add(source.CaptureChanges());
         }
         _removeChangeSets = removeChangeSets;
+
+        // Replaces, refreshes, and removes only form a valid sequence for an operator that has already
+        // seen the items they refer to, so each of those runs gets seeded with the population as it stood
+        // beforehand. Collapsing the seed into a single change set keeps its cost off the measurement as
+        // far as possible: replaces follow on from the items that were added, while refreshes and removes
+        // follow on from the items that replaced them.
+        _seedAfterAdds = BuildSeed(addedItems);
+        _seedAfterReplaces = BuildSeed(items);
     }
 
     [Benchmark]
-    public void Adds() => Run(_addChangeSets);
+    public void Adds() => Run(seed: null, _addChangeSets);
 
     [Benchmark]
-    public void Replaces() => Run(_replaceChangeSets);
+    public void Replaces() => Run(_seedAfterAdds, _replaceChangeSets);
 
     [Benchmark]
-    public void Refreshes() => Run(_refreshChangeSets);
+    public void Refreshes() => Run(_seedAfterReplaces, _refreshChangeSets);
 
     [Benchmark]
-    public void Removes() => Run(_removeChangeSets);
+    public void Removes() => Run(_seedAfterReplaces, _removeChangeSets);
 
-    private static void Run(IReadOnlyList<IChangeSet<Item>> changeSets)
+    private static IChangeSet<Item> BuildSeed(Item[] items)
+    {
+        var seed = new ChangeAwareList<Item>(capacity: items.Length);
+
+        seed.AddRange(items);
+
+        return seed.CaptureChanges();
+    }
+
+    private static void Run(IChangeSet<Item>? seed, IReadOnlyList<IChangeSet<Item>> changeSets)
     {
         using var source = new Subject<IChangeSet<Item>>();
 
         using var subscription = source
             .Sum(static item => item.Value)
             .Subscribe();
+
+        if (seed is not null)
+            source.OnNext(seed);
 
         foreach (var changeSet in changeSets)
             source.OnNext(changeSet);
