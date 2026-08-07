@@ -111,27 +111,25 @@ public class MergeManyFixture : IDisposable
     }
 
     /// <summary>
-    /// Stream completes even if one of the children fails.
+    /// A faulted inner observable terminates the merged stream with that error.
     /// </summary>
     [Fact]
-    public void MergedStreamCompletesIfLastItemFails()
+    public void MergedStreamFailsIfChildFails()
     {
         var receivedError = default(Exception);
         var streamCompleted = false;
-        var sourceCompleted = false;
+        var expectedError = new Exception("Test exception");
 
         var item = new ObjectWithObservable(1);
         _source.Add(item);
 
-        using var stream = _source.Connect().Do(_ => { }, () => sourceCompleted = true)
+        using var stream = _source.Connect()
                 .MergeMany(o => o.Observable).Subscribe(_ => { }, err => receivedError = err, () => streamCompleted = true);
 
-        _source.Dispose();
-        item.FailObservable(new Exception("Test exception"));
+        item.FailObservable(expectedError);
 
-        receivedError.Should().Be(default);
-        sourceCompleted.Should().BeTrue();
-        streamCompleted.Should().BeTrue();
+        receivedError.Should().Be(expectedError, "a faulted inner observable terminates the merged stream with the same error");
+        streamCompleted.Should().BeFalse("an errored stream does not also complete");
     }
 
     /// <summary>

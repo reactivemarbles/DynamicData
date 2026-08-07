@@ -96,10 +96,12 @@ public class TransformAsyncFixture
         var cache = new SourceCache<Person, string>(p => p.Name);
         var people = Enumerable.Range(1, count).Select(l => new Person("Name" + l, l)).ToArray();
 
+        var randomizer = new Bogus.Randomizer(42);
+
         cache.Connect()
             .TransformAsync(async person =>
             {
-                await Task.Delay(Random.Shared.Next(1, 12));
+                await Task.Delay(randomizer.Number(1, 12));
                 return person;
             })
             .Bind(out collection)
@@ -112,10 +114,9 @@ public class TransformAsyncFixture
         }
 
         // Add one event as an initial empty change set is sent
-        // NOTE TO SELF: How did this test previously work !
-       var changes = await collection.ToObservableChangeSet().Take(count * 2 + 1).ToList();
+        var changes = await collection.ToObservableChangeSet().Take(count * 2 + 1).ToList();
 
-       changes.Count.Should().Be(201);
+        changes.Count.Should().Be(201);
         collection.Count.Should().Be(0);
     }
 

@@ -33,7 +33,7 @@ internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable
 
             // Merge the child changeset changes together and apply to the tracker
             var subMergeMany = shared
-                .MergeMany(clonedList => clonedList.Source.RemoveIndex())
+                .MergeMany(clonedList => clonedList.Source.Do(clonedList.Process).RemoveIndex())
                 .SubscribeSafe(
                     changes => changeTracker.ProcessChangeSet(changes, !parentUpdate ? observer : null),
                     observer.OnError,

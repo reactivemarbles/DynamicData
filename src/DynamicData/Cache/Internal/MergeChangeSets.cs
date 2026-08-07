@@ -24,7 +24,7 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
         observer =>
         {
             var queue = new SharedDeliveryQueue();
-            var cache = new Cache<ChangeSetCache<TObject, TKey>, int>();
+            var cache = new Cache<ChangeSetMirror<TObject, TKey>, int>();
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<TObject, TKey>(() => cache.Items, comparer, equalityComparer);
@@ -33,7 +33,7 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
             return new CompositeDisposable(CreateContainerObservable(source, queue)
                 .SynchronizeSafe(queue)
                 .Do(cache.Clone)
-                .MergeMany(mc => mc.Source.Do(static _ => { }, observer.OnError))
+                .MergeMany(mc => mc.Source.Do(mc.Process))
                 .SubscribeSafe(
                     changes => changeTracker.ProcessChangeSet(changes, observer),
                     observer.OnError,
@@ -41,12 +41,12 @@ internal sealed class MergeChangeSets<TObject, TKey>(IObservable<IObservable<ICh
         });
 
     // Can optimize for the Add case because that's the only one that applies
-    private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, SharedDeliveryQueue queue) =>
-        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source.IgnoreSameReferenceUpdate().SynchronizeSafe(queue)));
+    private static Change<ChangeSetMirror<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index, SharedDeliveryQueue queue) =>
+        new(ChangeReason.Add, index, new ChangeSetMirror<TObject, TKey>(source.IgnoreSameReferenceUpdate().SynchronizeSafe(queue)));
 
     // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
-    private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, SharedDeliveryQueue queue) =>
-        source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index, queue) }));
+    private static IObservable<IChangeSet<ChangeSetMirror<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source, SharedDeliveryQueue queue) =>
+        source.Select((src, index) => new ChangeSet<ChangeSetMirror<TObject, TKey>, int>(new[] { CreateChange(src, index, queue) }));
 
     // Create a ChangeSet Observable with a single event that adds all the values in the enum (and then completes, maybe)
     private static IObservable<IObservable<IChangeSet<TObject, TKey>>> CreateObservable(IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, bool completable, IScheduler? scheduler = null)

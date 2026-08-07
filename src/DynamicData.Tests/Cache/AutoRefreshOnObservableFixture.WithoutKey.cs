@@ -13,7 +13,7 @@ public static partial class AutoRefreshOnObservableFixture
     public class WithoutKey
         : Base
     {
-        [Fact(Skip = "Existing defect: reevaluator is not null checked, throws NRW on first notification, instead")]
+        [Fact]
         public void ReevaluatorIsNull_ThrowsException()
             => FluentActions.Invoking(() => ObservableCacheEx.AutoRefreshOnObservable(
                     source:         Observable.Never<IChangeSet<Item, int>>(),

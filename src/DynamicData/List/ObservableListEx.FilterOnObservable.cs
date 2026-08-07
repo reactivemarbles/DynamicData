@@ -50,6 +50,7 @@ public static partial class ObservableListEx
     /// <listheader><term>Event (per-item observable)</term><description>Behavior</description></listheader>
     /// <item><term>Emits <see langword="true"/></term><description>If not already included, an <b>Add</b> is emitted downstream.</description></item>
     /// <item><term>Emits <see langword="false"/></term><description>If currently included, a <b>Remove</b> is emitted downstream.</description></item>
+    /// <item><term>OnError</term><description>Errors from any per-item filter observable terminate the output. Source errors also terminate the output.</description></item>
     /// </list>
     /// </remarks>
     /// <seealso cref="Filter{T}(IObservable{IChangeSet{T}}, Func{T, bool})"/>

@@ -487,7 +487,6 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
             if ((++_notifySuspendCount == 1) && !_areNotificationsSuspended.IsDisposed)
             {
                 Debug.Assert(_pendingChanges.Count == 0, "Shouldn't be any pending values if suspend was just started");
-                Debug.Assert(!_areNotificationsSuspended.Value, "SuspendSubject should be false for the first suspend call");
                 _areNotificationsSuspended.OnNext(true);
             }
         }

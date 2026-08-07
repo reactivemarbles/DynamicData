@@ -16,7 +16,7 @@ namespace DynamicData.Internal;
 internal sealed class SharedDeliveryQueue : IDisposable
 {
     private readonly List<DrainableBase> _sources = [];
-    private readonly Action? _onDrainComplete;
+    private readonly Action<bool>? _onDrainComplete;
 
 #if NET9_0_OR_GREATER
     private readonly Lock _gate;
@@ -27,6 +27,7 @@ internal sealed class SharedDeliveryQueue : IDisposable
     private Bitset _activeBits = new();
     private int _deadCount;
     private int _drainThreadId = -1;
+    private bool _drainReentered;
     private volatile bool _isTerminated;
 
     /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with its own internal lock.</summary>
@@ -37,9 +38,11 @@ internal sealed class SharedDeliveryQueue : IDisposable
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with its own internal lock
-    /// and a callback that fires outside the lock after each drain cycle completes.
+    /// and a callback that fires outside the lock after each drain cycle completes. The callback receives
+    /// a <see langword="bool"/> indicating whether a reentrant drain (same-thread re-entry via
+    /// <see cref="ExitLockAndDrain"/>) occurred during the prior delivery cycle.
     /// </summary>
-    public SharedDeliveryQueue(Action? onDrainComplete)
+    public SharedDeliveryQueue(Action<bool>? onDrainComplete)
     {
 #if NET9_0_OR_GREATER
         _gate = new Lock();
@@ -157,6 +160,8 @@ internal sealed class SharedDeliveryQueue : IDisposable
         if (_drainThreadId == currentThreadId)
         {
             ExitLock();
+            // Flag so the outer DrainAll re-fires _onDrainComplete after this reentrant drain.
+            _drainReentered = true;
             DrainPending();
             return;
         }
@@ -180,6 +185,9 @@ internal sealed class SharedDeliveryQueue : IDisposable
     {
         try
         {
+            // Reentrancy flag for the prior delivery cycle, reset and re-captured each iteration.
+            var wasReentrant = false;
+
             while (true)
             {
                 if (!DrainPending())
@@ -198,21 +206,21 @@ internal sealed class SharedDeliveryQueue : IDisposable
                     return;
                 }
 
+                // Snapshot before the callback so the next iteration's flag reflects only what
+                // happened during _onDrainComplete itself.
+                wasReentrant = _drainReentered;
+                _drainReentered = false;
+
                 if (_onDrainComplete is not null)
                 {
-                    _onDrainComplete();
+                    _onDrainComplete(wasReentrant);
                 }
 
-                // Atomically check for pending items and release drain ownership
-                // if empty. This closes the TOCTOU window: if we checked and released
-                // in separate lock scopes, Thread B could enqueue between them,
-                // see _drainThreadId != -1, and rely on us to drain, but we'd exit
-                // without draining Thread B's item.
+                // Loop back if items are pending OR a reentrant drain ran during _onDrainComplete.
                 EnterLock();
 
-                if (_activeBits.HasAny() && !_isTerminated)
+                if ((_activeBits.HasAny() || _drainReentered) && !_isTerminated)
                 {
-                    // Items arrived during _onDrainComplete. Loop back to drain them.
                     ExitLock();
                     continue;
                 }
