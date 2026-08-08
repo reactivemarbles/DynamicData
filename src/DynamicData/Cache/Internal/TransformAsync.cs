@@ -9,7 +9,7 @@ namespace DynamicData.Cache.Internal;
 
 internal class TransformAsync<TDestination, TSource, TKey>(
     IObservable<IChangeSet<TSource, TKey>> source,
-    Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory,
+    Func<TSource, Optional<TSource>, TKey, CancellationToken, Task<TDestination>> transformFactory,
     Action<Error<TSource, TKey>>? exceptionCallback,
     IObservable<Func<TSource, TKey, bool>>? forceTransform = null,
     int? maximumConcurrency = null,
@@ -42,7 +42,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         var toTransform = cache.KeyValues.Where(kvp => shouldTransform(kvp.Value.Source, kvp.Key)).Select(kvp =>
             new Change<TSource, TKey>(ChangeReason.Update, kvp.Key, kvp.Value.Source, kvp.Value.Source)).ToArray();
 
-        return toTransform.Select(change => Observable.Defer(() => Transform(change).ToObservable()))
+        return toTransform.Select(change => Observable.FromAsync(t => Transform(change, t)))
             .Merge(maximumConcurrency ?? int.MaxValue)
             .ToArray()
             .Select(transformed => ProcessUpdates(cache, transformed));
@@ -51,7 +51,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(
     private IObservable<IChangeSet<TDestination, TKey>> DoTransform(
         ChangeAwareCache<TransformedItemContainer, TKey> cache, IChangeSet<TSource, TKey> changes)
     {
-        return changes.Select(change => Observable.FromAsync(() => Transform(change)))
+        return changes.Select(change => Observable.FromAsync(t => Transform(change, t)))
             .Merge(maximumConcurrency ?? int.MaxValue)
             .ToArray()
             .Select(transformed => ProcessUpdates(cache, transformed));
@@ -102,13 +102,13 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         return new ChangeSet<TDestination, TKey>(transformed);
     }
 
-    private async Task<TransformResult> Transform(Change<TSource, TKey> change)
+    private async Task<TransformResult> Transform(Change<TSource, TKey> change, CancellationToken cancellationToken)
     {
         try
         {
             if (change.Reason is ChangeReason.Add or ChangeReason.Update || (change.Reason is ChangeReason.Refresh && transformOnRefresh))
             {
-                var destination = await transformFactory(change.Current, change.Previous, change.Key)
+                var destination = await transformFactory(change.Current, change.Previous, change.Key, cancellationToken)
                     .ConfigureAwait(false);
                 return new TransformResult(change, new TransformedItemContainer(change.Current, destination));
             }
