@@ -37,6 +37,17 @@ public static partial class ObservableCacheEx
         return sources.Select(cache => cache.Connect()).Switch();
     }
 
+    /// <inheritdoc cref="Switch{TObject, TKey}(IObservable{IObservable{IChangeSet{TObject, TKey}}})"/>
+    /// <param name="sources">An observable that emits virtualized changeset streams.</param>
+    public static IObservable<IChangeSet<TObject, TKey>> Switch<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey, VirtualContext<TObject>>>> sources)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+
+        return ObservableCacheEx.Switch((IObservable<IObservable<IChangeSet<TObject, TKey>>>)sources);
+    }
+
     /// <summary>
     /// Subscribes to the latest inner changeset stream, unsubscribing from the previous one on each switch.
     /// When switching, the old source's items are removed and the new source's items are added.
