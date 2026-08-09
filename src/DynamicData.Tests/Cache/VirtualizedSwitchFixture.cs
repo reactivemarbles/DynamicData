@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData;
-using DynamicData.Tests;
+using DynamicData.Tests.Utilities;
 using FluentAssertions;
 using Xunit;
 
@@ -23,16 +23,19 @@ public class VirtualizedSwitchFixture
         IObservable<IObservable<IChangeSet<int, int, VirtualContext<int>>>> sources = enabled.Select(
             isEnabled => isEnabled ? virtualized : Observable.Empty<IChangeSet<int, int, VirtualContext<int>>>());
         IObservable<IChangeSet<int, int>> switched = sources.Switch();
-        using ChangeSetAggregator<int, int> results = switched.AsAggregator();
+        using var subscription = switched
+            .ValidateChangeSets(static value => value)
+            .RecordCacheItems(out var results);
 
-        results.Messages.Should().ContainSingle();
-        results.Messages[0].Adds.Should().Be(10);
+        results.RecordedChangeSets.Should().ContainSingle();
+        results.RecordedChangeSets[0].Adds.Should().Be(10);
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(Enumerable.Range(0, 10));
 
         enabled.OnNext(false);
 
-        results.Messages.Should().HaveCount(2);
-        results.Messages[1].Removes.Should().Be(10);
-        results.Data.Items.Should().BeEmpty();
+        results.RecordedChangeSets.Should().HaveCount(2);
+        results.RecordedChangeSets[1].Removes.Should().Be(10);
+        results.RecordedItemsByKey.Should().BeEmpty();
     }
 
     [Fact]
@@ -47,16 +50,18 @@ public class VirtualizedSwitchFixture
         IObservable<IChangeSet<int, int, VirtualContext<int>>> secondVirtualized = CreateVirtualized(second, 3);
         using var sources = new BehaviorSubject<IObservable<IChangeSet<int, int, VirtualContext<int>>>>(firstVirtualized);
         IObservable<IChangeSet<int, int>> switched = sources.Switch();
-        using ChangeSetAggregator<int, int> results = switched.AsAggregator();
+        using var subscription = switched
+            .ValidateChangeSets(static value => value)
+            .RecordCacheItems(out var results);
 
-        results.Data.Items.Should().BeEquivalentTo([0, 1, 2]);
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo([0, 1, 2]);
 
         sources.OnNext(secondVirtualized);
 
-        results.Messages.Should().HaveCount(3);
-        results.Messages[1].Removes.Should().Be(3);
-        results.Messages[2].Adds.Should().Be(3);
-        results.Data.Items.Should().BeEquivalentTo([100, 101, 102]);
+        results.RecordedChangeSets.Should().HaveCount(3);
+        results.RecordedChangeSets[1].Removes.Should().Be(3);
+        results.RecordedChangeSets[2].Adds.Should().Be(3);
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo([100, 101, 102]);
     }
 
     private static IObservable<IChangeSet<int, int, VirtualContext<int>>> CreateVirtualized(SourceCache<int, int> source, int size) =>
