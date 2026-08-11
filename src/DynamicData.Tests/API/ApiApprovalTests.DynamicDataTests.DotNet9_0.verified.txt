@@ -225,6 +225,56 @@ namespace DynamicData.Aggregation
         public static System.IObservable<long> Sum<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, long?> valueSelector)
             where TObject :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<decimal> SumImmutable<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, decimal> valueSelector)
+            where T :  notnull { }
+        public static System.IObservable<decimal> SumImmutable<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, decimal?> valueSelector)
+            where T :  notnull { }
+        public static System.IObservable<double> SumImmutable<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, double> valueSelector)
+            where T :  notnull { }
+        public static System.IObservable<double> SumImmutable<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, double?> valueSelector)
+            where T :  notnull { }
+        public static System.IObservable<float> SumImmutable<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, float> valueSelector)
+            where T :  notnull { }
+        public static System.IObservable<float> SumImmutable<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, float?> valueSelector)
+            where T :  notnull { }
+        public static System.IObservable<int> SumImmutable<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, int> valueSelector)
+            where T :  notnull { }
+        public static System.IObservable<int> SumImmutable<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, int?> valueSelector)
+            where T :  notnull { }
+        public static System.IObservable<long> SumImmutable<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, long> valueSelector)
+            where T :  notnull { }
+        public static System.IObservable<long> SumImmutable<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, long?> valueSelector)
+            where T :  notnull { }
+        public static System.IObservable<decimal> SumImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, decimal> valueSelector)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<decimal> SumImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, decimal?> valueSelector)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<double> SumImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, double> valueSelector)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<double> SumImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, double?> valueSelector)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<float> SumImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, float> valueSelector)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<float> SumImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, float?> valueSelector)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<int> SumImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, int> valueSelector)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<int> SumImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, int?> valueSelector)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<long> SumImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, long> valueSelector)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<long> SumImmutable<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.Func<TObject, long?> valueSelector)
+            where TObject :  notnull
+            where TKey :  notnull { }
     }
 }
 namespace DynamicData.Alias
