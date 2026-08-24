@@ -120,62 +120,45 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
 
     private void DeliverParent(IChangeSet<TParent, TKey> changes)
     {
-        ++_frameDepth;
-        try
-        {
-            ParentOnNext(changes);
-        }
-        finally
-        {
-            EndFrame();
-        }
+        using var frame = BeginFrame();
+        ParentOnNext(changes);
     }
 
     private void DeliverChild(TChild child, TKey parentKey)
     {
-        ++_frameDepth;
-        try
-        {
-            ChildOnNext(child, parentKey);
-        }
-        finally
-        {
-            EndFrame();
-        }
+        using var frame = BeginFrame();
+        ChildOnNext(child, parentKey);
     }
 
     private void CompleteParent()
     {
-        ++_frameDepth;
-        try
-        {
-            CheckCompleted();
-        }
-        finally
-        {
-            EndFrame();
-        }
+        using var frame = BeginFrame();
+        CheckCompleted();
     }
 
     private void CompleteChild(TKey parentKey)
     {
-        ++_frameDepth;
-        try
-        {
-            RemoveChildSubscription(parentKey);
-        }
-        finally
-        {
-            EndFrame();
-        }
+        using var frame = BeginFrame();
+        RemoveChildSubscription(parentKey);
     }
 
     /// <summary>
-    /// Closes the current delivery frame. Deliveries nested beneath this one, which the queue
-    /// runs inline on the same thread, close their own frame first and leave the emit to the
-    /// outermost, so one upstream notification and everything it triggers synchronously produce
-    /// a single downstream changeset. No lock is needed around the depth because the queue has
-    /// already serialized delivery.
+    /// Opens a delivery frame that stays open until the returned <see cref="FrameTracker"/> is disposed.
+    /// Deliveries nested beneath this one, which the queue runs inline on the same thread, open and close
+    /// their own frame and leave the emit to the outermost, so one upstream notification and everything it
+    /// triggers synchronously produce a single downstream changeset. No lock is needed around the depth
+    /// because the queue has already serialized delivery.
+    /// </summary>
+    /// <returns>A tracker that closes the frame when disposed.</returns>
+    private FrameTracker BeginFrame()
+    {
+        ++_frameDepth;
+        return new FrameTracker(this);
+    }
+
+    /// <summary>
+    /// Closes the current delivery frame, emitting the accumulated changes only when the outermost
+    /// frame closes.
     /// </summary>
     private void EndFrame()
     {
@@ -207,5 +190,16 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         }
 
         Debug.Assert(_subscriptionCounter >= 0, "Should never be negative");
+    }
+
+    /// <summary>
+    /// Closes the delivery frame opened by <see cref="BeginFrame"/> when disposed, so a frame can be
+    /// scoped with <see langword="using"/> instead of pairing the calls by hand.
+    /// </summary>
+    /// <param name="owner">The subscription whose frame is being tracked.</param>
+    private readonly struct FrameTracker(CacheParentSubscription<TParent, TKey, TChild, TObserver> owner) : IDisposable
+    {
+        /// <inheritdoc/>
+        public void Dispose() => owner.EndFrame();
     }
 }
