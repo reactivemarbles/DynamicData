@@ -175,6 +175,159 @@ public class SharedDeliveryQueueFixture
         }
     }
 
+    [Fact]
+    public void ReceiptOrderIsPreservedAcrossSubQueues()
+    {
+        var queue = new SharedDeliveryQueue(_gate);
+        var delivered = new List<string>();
+        var blockFirst = new ManualResetEventSlim(false);
+        var firstIsDelivering = new ManualResetEventSlim(false);
+
+        var sub1 = queue.CreateQueue(new TestObserver<int>(i =>
+        {
+            lock (delivered) { delivered.Add($"int:{i}"); }
+
+            if (i == 1)
+            {
+                firstIsDelivering.Set();
+                blockFirst.Wait();
+            }
+        }));
+
+        var sub2 = queue.CreateQueue(new TestObserver<string>(s =>
+        {
+            lock (delivered) { delivered.Add($"str:{s}"); }
+        }));
+
+        // Park a drain part-way through, so the notifications below get queued rather than
+        // delivered inline.
+        var drainer = Task.Run(() =>
+        {
+            using var scope = sub1.AcquireLock();
+            scope.EnqueueNext(1);
+        });
+
+        firstIsDelivering.Wait(TimeSpan.FromSeconds(5));
+
+        using (var scope = sub1.AcquireLock())
+        {
+            scope.EnqueueNext(2);
+        }
+
+        using (var scope = sub2.AcquireLock())
+        {
+            scope.EnqueueNext("hello");
+        }
+
+        blockFirst.Set();
+        drainer.Wait(TimeSpan.FromSeconds(5));
+
+        delivered.Should().Equal(new[] { "int:1", "int:2", "str:hello" }, "delivery should follow the order the notifications were received, not the order the sub-queues were created");
+    }
+
+    [Fact]
+    public void InterleavedSubQueuesDeliverInReceiptOrder()
+    {
+        var queue = new SharedDeliveryQueue(_gate);
+        var delivered = new List<string>();
+        var block = new ManualResetEventSlim(false);
+        var parked = new ManualResetEventSlim(false);
+
+        var sub1 = queue.CreateQueue(new TestObserver<int>(i =>
+        {
+            lock (delivered) { delivered.Add($"int:{i}"); }
+
+            if (i == 0)
+            {
+                parked.Set();
+                block.Wait();
+            }
+        }));
+
+        var sub2 = queue.CreateQueue(new TestObserver<string>(s =>
+        {
+            lock (delivered) { delivered.Add($"str:{s}"); }
+        }));
+
+        var drainer = Task.Run(() =>
+        {
+            using var scope = sub1.AcquireLock();
+            scope.EnqueueNext(0);
+        });
+
+        parked.Wait(TimeSpan.FromSeconds(5));
+
+        using (var scope = sub2.AcquireLock())
+        {
+            scope.EnqueueNext("a");
+        }
+
+        using (var scope = sub1.AcquireLock())
+        {
+            scope.EnqueueNext(2);
+        }
+
+        using (var scope = sub2.AcquireLock())
+        {
+            scope.EnqueueNext("b");
+        }
+
+        using (var scope = sub1.AcquireLock())
+        {
+            scope.EnqueueNext(4);
+        }
+
+        block.Set();
+        drainer.Wait(TimeSpan.FromSeconds(5));
+
+        delivered.Should().Equal("int:0", "str:a", "int:2", "str:b", "int:4");
+    }
+
+    [Fact]
+    public void DisposedSubQueueDoesNotDeliverQueuedItems()
+    {
+        var queue = new SharedDeliveryQueue(_gate);
+        var delivered = new List<string>();
+        var block = new ManualResetEventSlim(false);
+        var parked = new ManualResetEventSlim(false);
+
+        var sub1 = queue.CreateQueue(new TestObserver<int>(i =>
+        {
+            lock (delivered) { delivered.Add($"int:{i}"); }
+
+            if (i == 0)
+            {
+                parked.Set();
+                block.Wait();
+            }
+        }));
+
+        var sub2 = queue.CreateQueue(new TestObserver<string>(s =>
+        {
+            lock (delivered) { delivered.Add($"str:{s}"); }
+        }));
+
+        var drainer = Task.Run(() =>
+        {
+            using var scope = sub1.AcquireLock();
+            scope.EnqueueNext(0);
+        });
+
+        parked.Wait(TimeSpan.FromSeconds(5));
+
+        using (var scope = sub2.AcquireLock())
+        {
+            scope.EnqueueNext("dropped");
+        }
+
+        sub2.Dispose();
+
+        block.Set();
+        drainer.Wait(TimeSpan.FromSeconds(5));
+
+        delivered.Should().Equal(new[] { "int:0" }, "a disposed sub-queue should not deliver what it had queued");
+    }
+
     private sealed class TestObserver<T>(Action<T> onNext) : IObserver<T>
     {
         public Exception? Error { get; private set; }
