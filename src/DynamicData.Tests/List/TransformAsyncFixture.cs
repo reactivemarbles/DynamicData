@@ -1,11 +1,13 @@
 using System;
 using System.Linq;
-using System.Threading;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
-using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
+
 using FluentAssertions;
 using Xunit;
+
+using DynamicData.Tests.Domain;
+using DynamicData.Tests.Utilities;
 
 namespace DynamicData.Tests.List;
 
@@ -186,5 +188,65 @@ public class TransformAsyncFixture : IDisposable
 
         sub.Dispose();
         Assert.True(tcs.Task.IsCanceled);
+    }
+    
+    // Covers https://github.com/reactivemarbles/DynamicData/issues/1169
+    [Fact]
+    public void RemoveWithoutIndex()
+    {
+        var source = Enumerable.Empty<IChangeSet<int>>()
+            .Append(new ChangeSet<int>()
+            {
+                new Change<int>(
+                    reason: ListChangeReason.AddRange,
+                    items:  Enumerable.Range(1, 3))
+            })
+            .Append(new ChangeSet<int>()
+            {
+                new Change<int>(
+                    reason:     ListChangeReason.Remove,
+                    current:    2)
+            })
+            .ToObservable();
+        
+        using var subscription = source
+            .TransformAsync(static item => Task.FromResult(item.ToString()))
+            .ValidateChangeSets()
+            .RecordListItems(out var results);
+
+        results.Error.Should().BeNull("no errors should have occurred");
+        results.RecordedChangeSets.Count.Should().Be(2, "2 source operations were performed");
+        results.RecordedItems.Should().BeEquivalentTo(new[] { "1", "3" }, static options => options.WithStrictOrdering(), "The middle item in the list should have been removed");
+        results.HasCompleted.Should().BeTrue("the source, and all asynchronous operations, have completed");
+    }
+    
+    // Covers https://github.com/reactivemarbles/DynamicData/issues/1169
+    [Fact]
+    public void RemoveRangeWithoutIndex()
+    {
+        var source = Enumerable.Empty<IChangeSet<int>>()
+            .Append(new ChangeSet<int>()
+            {
+                new Change<int>(
+                    reason: ListChangeReason.AddRange,
+                    items:  Enumerable.Range(1, 5))
+            })
+            .Append(new ChangeSet<int>()
+            {
+                new Change<int>(
+                    reason: ListChangeReason.RemoveRange,
+                    items:  new[] { 1, 3, 5 })
+            })
+            .ToObservable();
+        
+        using var subscription = source
+            .TransformAsync(static item => Task.FromResult(item.ToString()))
+            .ValidateChangeSets()
+            .RecordListItems(out var results);
+
+        results.Error.Should().BeNull("no errors should have occurred");
+        results.RecordedChangeSets.Count.Should().Be(2, "2 source operations were performed");
+        results.RecordedItems.Should().BeEquivalentTo(new[] { "2", "4" }, static options => options.WithStrictOrdering(), "The odd-numbered items in the list should have been removed");
+        results.HasCompleted.Should().BeTrue("the source, and all asynchronous operations, have completed");
     }
 }
