@@ -29,8 +29,6 @@ internal sealed class SharedDeliveryQueue : IDisposable
     /// </summary>
     private readonly Queue<DrainableBase> _order = new();
 
-    private readonly Action? _onDrainComplete;
-
 #if NET9_0_OR_GREATER
     private readonly Lock _gate;
 #else
@@ -42,22 +40,12 @@ internal sealed class SharedDeliveryQueue : IDisposable
 
     /// <summary>Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with its own internal lock.</summary>
     public SharedDeliveryQueue()
-        : this(onDrainComplete: null)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SharedDeliveryQueue"/> class with its own internal lock
-    /// and a callback that fires outside the lock after each drain cycle completes.
-    /// </summary>
-    public SharedDeliveryQueue(Action? onDrainComplete)
     {
 #if NET9_0_OR_GREATER
         _gate = new Lock();
 #else
         _gate = new object();
 #endif
-        _onDrainComplete = onDrainComplete;
     }
 
 #if NET9_0_OR_GREATER
@@ -166,8 +154,6 @@ internal sealed class SharedDeliveryQueue : IDisposable
                     ReleaseDrainOwnership();
                     return;
                 }
-
-                _onDrainComplete?.Invoke();
 
                 // Atomically re-check for work and release ownership if there is none. Checking
                 // and releasing in separate lock scopes would let a producer enqueue in between,
