@@ -19,7 +19,7 @@
     <PackageReference Include="AwesomeAssertions" Version="8.*" />
     <PackageReference Include="Microsoft.Reactive.Testing" Version="6.*" />
     <PackageReference Include="PublicApiGenerator" Version="11.*" />
-    <PackageReference Include="coverlet.collector" Version="6.*">
+    <PackageReference Include="coverlet.collector" Version="10.*">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
