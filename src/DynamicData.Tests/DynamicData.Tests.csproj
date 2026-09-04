@@ -16,7 +16,7 @@
     <PackageReference Include="xunit.runner.console" Version="$(XunitVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.*" />
     <PackageReference Include="Verify.Xunit" Version="30.*" />
-    <PackageReference Include="AwesomeAssertions" Version="8.*" />
+    <PackageReference Include="AwesomeAssertions" Version="9.*" />
     <PackageReference Include="Microsoft.Reactive.Testing" Version="6.*" />
     <PackageReference Include="PublicApiGenerator" Version="11.*" />
     <PackageReference Include="coverlet.collector" Version="6.*">
