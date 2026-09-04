@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 
 using DynamicData.Aggregation;
+using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
 
 using FluentAssertions;
@@ -263,6 +264,66 @@ public partial class SumFixture
 
             results.Error.Should().BeSameAs(error, "the error from the source should propagate to the subscriber immediately upon subscription");
             results.HasCompleted.Should().BeFalse("an error is not a completion");
+        }
+
+        [Fact]
+        public void ItemIsRefreshed_SumReflectsMutatedValue()
+        {
+            using var source = new TestSourceList<Person>();
+            var person = new Person("A", 10);
+
+            source.Add(person);
+
+            using var subscription = source.Connect()
+                .Sum(p => p.Age)
+                .RecordValues(out var results);
+
+            person.Age = 40;
+            source.Refresh(0);
+
+            results.RecordedValues.Should().Equal(10, 40);
+
+            source.RemoveAt(0);
+
+            results.RecordedValues[^1].Should().Be(0, "removal should subtract the value captured by the refresh");
+        }
+
+        [Fact]
+        public void ItemIsMoved_RefreshUsesItsNewIndex()
+        {
+            using var source = new TestSourceList<Person>();
+            var first = new Person("A", 10);
+            var second = new Person("B", 20);
+
+            source.AddRange(new[] { first, second });
+
+            using var subscription = source.Connect()
+                .Sum(p => p.Age)
+                .RecordValues(out var results);
+
+            source.Move(1, 0);
+            second.Age = 50;
+            source.Refresh(0);
+
+            results.RecordedValues.Should().Equal(30, 30, 60);
+        }
+
+        [Fact]
+        public void ItemIsRefreshed_SumImmutableDoesNotReevaluateMutatedValue()
+        {
+            using var source = new TestSourceList<Person>();
+            var person = new Person("A", 10);
+
+            source.Add(person);
+
+            using var subscription = source.Connect()
+                .SumImmutable(p => p.Age)
+                .RecordValues(out var results);
+
+            person.Age = 40;
+            source.Refresh(0);
+
+            results.RecordedValues.Should().Equal(10, 10);
         }
 
         [Theory]
