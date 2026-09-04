@@ -284,7 +284,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                     ? _changes.SkipWhile(_ => Volatile.Read(ref _currentDeliveryVersion) <= snapshotVersion)
                     : _changes;
 
-                return changes.Finally(observer.OnCompleted).Subscribe(
+                return changes.Subscribe(
                     changes =>
                     {
                         foreach (var change in changes)
@@ -295,7 +295,9 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                                 observer.OnNext(change);
                             }
                         }
-                    });
+                    },
+                    observer.OnError,
+                    observer.OnCompleted);
             });
 
     /// <summary>

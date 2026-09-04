@@ -70,11 +70,13 @@ internal sealed class SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccesse
 
             // Create a new sort applicator each time.
             var latestComparer = comparerChanged.SynchronizeSafe(queue)
-                .Subscribe(comparer =>
-                {
-                    sortApplicator = new SortApplicator(_cache, target, comparer, options);
-                    sortApplicator.ApplySort();
-                });
+                .Subscribe(
+                    comparer =>
+                    {
+                        sortApplicator = new SortApplicator(_cache, target, comparer, options);
+                        sortApplicator.ApplySort();
+                    },
+                    observer.OnError);
 
             // Listen to changes and apply the sorting
             var subscriber = source.SynchronizeSafe(queue)

@@ -1,10 +1,14 @@
-using System;
+﻿using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 using FluentAssertions;
 
 using Xunit;
+using System.Collections.Generic;
+using System.Reactive;
+using System.Reactive.Concurrency;
+using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
 
@@ -82,5 +86,20 @@ public class MergeManyFixture : IDisposable
             _value = value;
             _changed.OnNext(value);
         }
+    }
+
+    [Fact]
+    public void DeliversAnErrorRaisedByAChild()
+    {
+        Exception? error = null;
+
+        using var source = new SourceCache<Person, string>(p => p.Name);
+        using var child = new Subject<int>();
+        using var subscription = source.Connect().MergeMany(_ => child).Subscribe(_ => { }, ex => error = ex, () => { });
+
+        source.AddOrUpdate(new Person("a", 1));
+        child.OnError(new InvalidOperationException("boom"));
+
+        error.Should().BeOfType<InvalidOperationException>("Merge propagates a failure from any inner stream");
     }
 }

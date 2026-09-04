@@ -31,5 +31,10 @@ internal sealed class MergeManyItems<TObject, TKey, TDestination>
         _observableSelector = (t, _) => observableSelector(t);
     }
 
-    public IObservable<ItemWithValue<TObject, TDestination>> Run() => Observable.Create<ItemWithValue<TObject, TDestination>>(observer => _source.SubscribeMany((t, v) => _observableSelector(t, v).Select(z => new ItemWithValue<TObject, TDestination>(t, z)).SubscribeSafe(observer)).Subscribe());
+    // MergeMany already tracks the parent and every child subscription so that the result finishes only once
+    // all of them have. Reusing it keeps a child completing from terminating the whole stream.
+    public IObservable<ItemWithValue<TObject, TDestination>> Run() =>
+        new MergeMany<TObject, TKey, ItemWithValue<TObject, TDestination>>(
+            _source,
+            (t, v) => _observableSelector(t, v).Select(z => new ItemWithValue<TObject, TDestination>(t, z))).Run();
 }

@@ -43,7 +43,7 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>The item is updated in the destination cache via AddOrUpdate.</description></item>
     /// <item><term>Remove</term><description>The item is removed from the destination cache.</description></item>
     /// <item><term>Refresh</term><description>A Refresh is issued on the destination cache for the item.</description></item>
-    /// <item><term>OnError</term><description>The subscription is terminated. The destination cache is not rolled back.</description></item>
+    /// <item><term>OnError</term><description>The subscription ends and the destination cache is not rolled back. Since this method is a sink with no downstream observer, the exception is rethrown by Rx on whichever thread delivered it. Subscribe to <paramref name="source"/> directly if you need to handle the failure.</description></item>
     /// <item><term>OnCompleted</term><description>The subscription ends. The destination cache retains all items.</description></item>
     /// </list>
     /// </remarks>
