@@ -1,28 +1,32 @@
 ---
 applyTo: "**/*.cs"
 ---
-# Reactive Extensions (Rx) — Comprehensive Guide
+# Reactive Extensions (Rx) — DynamicData Practical Guide
 
 Reference: [ReactiveX Observable Contract](http://reactivex.io/documentation/contract.html) | [Rx.NET GitHub](https://github.com/dotnet/reactive) | [IntroToRx.com](http://introtorx.com/)
 
+**Authoritative reference: [`rx-design-guide.instructions.md`](./rx-design-guide.instructions.md)** is the complete distillation of the Microsoft Rx Design Guidelines (October 2010), with stable `§X.Y` rule IDs. Cite those IDs in PR descriptions, code reviews, and commit messages. This file covers practical, DynamicData-flavored material that complements the design guide: hot vs cold semantics, the modern Rx.NET scheduler/disposable APIs, an operator quick-reference, custom-operator patterns specific to this codebase, and common pitfalls.
+
 ## Core Concepts
 
-### Observables are Composable
+### Composition
 
-Rx's power comes from composition. Every operator returns a new `IObservable<T>`, enabling fluent chaining:
+Rx's power comes from composition (per [§6.1](./rx-design-guide.instructions.md#61-implement-new-operators-by-composing-existing-operators)). Every operator returns a new `IObservable<T>`, enabling fluent chaining:
 
 ```csharp
 source
-    .Where(x => x.IsValid)           // filter
-    .Select(x => x.Transform())      // project
-    .DistinctUntilChanged()           // deduplicate
+    .Where(x => x.IsValid)                // filter
+    .Select(x => x.Transform())           // project
+    .DistinctUntilChanged()                // deduplicate
     .ObserveOn(RxApp.MainThreadScheduler) // marshal to UI thread
-    .Subscribe(x => UpdateUI(x));     // consume
+    .Subscribe(x => UpdateUI(x));         // consume
 ```
 
-Each operator in the chain is a separate subscription. Disposing the final subscription cascades disposal upstream through the entire chain. This composability is what makes Rx powerful — and what makes contract violations devastating, since a bug in any operator corrupts the entire downstream chain.
+Each operator is a separate subscription. Disposing the final subscription cascades disposal upstream through the entire chain. This composability is what makes Rx powerful, and what makes contract violations devastating: a bug in any operator corrupts the entire downstream chain.
 
 ### Hot vs Cold Observables
+
+Not covered by the PDF. Critical to understand for DynamicData consumers because most cache pipelines are cold and incorrectly assuming hot semantics is a common source of duplicated work.
 
 **Cold**: starts producing items when subscribed to. Each subscriber gets its own sequence. Created with `Observable.Create`, `Observable.Defer`, `Observable.Return`, etc.
 
@@ -38,7 +42,7 @@ var cold = Observable.FromAsync(() => httpClient.GetAsync(url));
 var hot = Observable.FromEventPattern<EventArgs>(button, nameof(button.Click));
 ```
 
-**Converting**: `Publish()` + `Connect()` or `Publish().RefCount()` converts cold to hot (shared).
+**Converting**: `Publish()` + `Connect()` or `Publish().RefCount()` converts cold to hot (shared, see [§5.10](./rx-design-guide.instructions.md#510-use-the-publish-operator-to-share-side-effects)).
 
 ```csharp
 var shared = coldSource.Publish().RefCount(); // auto-connect on first sub, auto-disconnect on last unsub
@@ -46,52 +50,14 @@ var shared = coldSource.Publish().RefCount(); // auto-connect on first sub, auto
 
 ## The Observable Contract
 
-### 1. Serialized Notifications (THE critical rule)
+The full contract lives in [§4](./rx-design-guide.instructions.md#4-the-rx-contract) of the design guide. Highlights:
 
-`OnNext`, `OnError`, and `OnCompleted` calls MUST be serialized — they must never execute concurrently. This is the most commonly violated rule and causes the most insidious bugs.
+- **[§4.1](./rx-design-guide.instructions.md#41-assume-the-rx-grammar)** Grammar: `OnNext* (OnCompleted | OnError)?`. Mutually-exclusive terminals. No notifications after a terminal.
+- **[§4.2](./rx-design-guide.instructions.md#42-assume-observer-instances-are-called-in-a-serialized-fashion)** Serialized notifications. The single most-violated rule in practice. Violation produces silent state corruption.
+- **[§4.3](./rx-design-guide.instructions.md#43-assume-resources-are-cleaned-up-after-an-onerror-or-oncompleted-message)** Resource cleanup on terminal.
+- **[§4.4](./rx-design-guide.instructions.md#44-assume-a-best-effort-to-stop-all-outstanding-work-on-unsubscribe)** Unsubscribe semantics: best-effort stop, in-flight results suppressed.
 
-```csharp
-// WRONG: two sources can call OnNext concurrently
-source1.Subscribe(x => observer.OnNext(Process(x)));  // thread A
-source2.Subscribe(x => observer.OnNext(Process(x)));  // thread B — RACE!
-
-// RIGHT: use Synchronize to serialize
-source1.Synchronize(gate).Subscribe(observer);
-source2.Synchronize(gate).Subscribe(observer);
-
-// RIGHT: use Merge (serializes internally)
-source1.Merge(source2).Subscribe(observer);
-
-// RIGHT: use Subject (serializes OnNext calls via Synchronize)
-var subject = new Subject<T>();
-source1.Subscribe(subject);  // Subject.OnNext is NOT thread-safe by default!
-// Use Subject with Synchronize if multiple threads call OnNext
-```
-
-**Why it matters**: operators maintain mutable internal state (caches, dictionaries, counters). Concurrent `OnNext` calls corrupt this state silently — no exception, just wrong data.
-
-### 2. Terminal Notifications
-
-```
-Grammar: OnNext* (OnError | OnCompleted)?
-```
-
-- Zero or more `OnNext`, followed by at most one terminal notification
-- `OnError` and `OnCompleted` are **mutually exclusive** — emit one or neither, never both
-- After a terminal notification, **no further notifications** of any kind
-- Operators receiving a terminal notification should release resources
-
-### 3. Subscription Lifecycle
-
-- `Subscribe` returns `IDisposable` — disposing it **unsubscribes**
-- After disposal, no further notifications should be delivered
-- Disposal must be **idempotent** (safe to call multiple times) and **thread-safe**
-- Operators should stop producing when their subscription is disposed
-
-### 4. Error Handling
-
-- Exceptions thrown inside `OnNext` handlers propagate synchronously to the producing operator
-- Use `SubscribeSafe` instead of `Subscribe` to route subscriber exceptions to `OnError`:
+DynamicData-specific: subscribers that throw inside `OnNext` propagate exceptions to the producing operator. Use `SubscribeSafe` to route subscriber exceptions to `OnError`:
 
 ```csharp
 // Subscribe: exception in handler crashes the source
@@ -105,7 +71,7 @@ source.SubscribeSafe(Observer.Create<T>(
 
 ## Schedulers
 
-Schedulers control **when** and **where** work executes. They are Rx's abstraction over threading.
+Schedulers control **when** and **where** work executes; they are Rx's abstraction over threading. The design guide's [§5.4](./rx-design-guide.instructions.md#54-consider-passing-a-specific-scheduler-to-concurrency-introducing-operators), [§5.5](./rx-design-guide.instructions.md#55-call-the-observeon-operator-as-late-and-in-as-few-places-as-possible), [§6.9–6.12](./rx-design-guide.instructions.md#69-parameterize-concurrency-by-providing-a-scheduler-argument) cover the rules. This section is the modern Rx.NET reference for which scheduler to actually use.
 
 ### Common Schedulers
 
@@ -140,7 +106,7 @@ source.SubscribeOn(TaskPoolScheduler.Default)  // subscribe on background thread
 
 ### Scheduler Injection for Testability
 
-**Always inject schedulers** instead of using defaults. This enables deterministic testing:
+DynamicData convention (not in the PDF): **always inject schedulers** instead of using defaults. This enables deterministic testing via `TestScheduler`:
 
 ```csharp
 // WRONG: hardcoded scheduler — untestable time-dependent behavior
@@ -161,7 +127,7 @@ results.Should().HaveCount(1);
 
 ## Disposable Helpers
 
-Rx provides several `IDisposable` implementations for managing subscription lifecycles:
+The design guide's [§6.13](./rx-design-guide.instructions.md#613-hand-out-all-disposable-instances-created-inside-the-operator-to-consumers) lists the disposable family and the requirement to hand all internal disposables back to consumers. This section is the practical reference with code samples for each.
 
 ### Disposable.Create
 
@@ -178,7 +144,7 @@ var cleanup = Disposable.Create(() =>
 
 ### Disposable.Empty
 
-A no-op disposable. Useful as a default or placeholder.
+A no-op disposable. Useful as a default or placeholder (required by [§6.5](./rx-design-guide.instructions.md#65-subscribe-implementations-should-not-throw) when routing an error from `Subscribe`).
 
 ```csharp
 public IDisposable Subscribe(IObservable<T> source) =>
@@ -215,7 +181,7 @@ Observable.Create<T>(observer =>
 
 ### SerialDisposable
 
-Holds a single disposable that can be **replaced**. Disposing the previous value when a new one is set. Useful for "switch" patterns.
+Holds a single disposable that can be **replaced**. Disposing the previous value when a new one is set. Useful for "switch" patterns. (PDF calls this `MutableDisposable`.)
 
 ```csharp
 var serial = new SerialDisposable();
@@ -231,7 +197,7 @@ serial.Dispose();
 
 ### SingleAssignmentDisposable
 
-Like SerialDisposable but can only be assigned **once**. Throws on second assignment. Useful when a subscription is created asynchronously but disposal might happen before it's ready.
+Like SerialDisposable but can only be assigned **once**. Throws on second assignment. Useful when a subscription is created asynchronously but disposal might happen before it's ready. (Modern addition, not in the PDF.)
 
 ```csharp
 var holder = new SingleAssignmentDisposable();
@@ -249,7 +215,7 @@ holder.Dispose();
 
 ### RefCountDisposable
 
-Tracks multiple "dependent" disposables. The underlying resource is only disposed when **all** dependents (plus the primary) are disposed.
+Tracks multiple "dependent" disposables. The underlying resource is only disposed when **all** dependents (plus the primary) are disposed. (Modern addition, not in the PDF.)
 
 ```csharp
 var primary = new RefCountDisposable(expensiveResource);
@@ -278,6 +244,8 @@ cd.Dispose(); // triggers cancellation
 ```
 
 ## Standard Rx Operators Reference
+
+Not in the PDF. A quick catalog of modern Rx.NET operators by category. For each operator, the design guide rules in [§5](./rx-design-guide.instructions.md#5-using-rx) and [§6](./rx-design-guide.instructions.md#6-operator-implementations) tell you how to use it correctly.
 
 ### Creation
 
@@ -387,38 +355,40 @@ cd.Dispose(); // triggers cancellation
 | `SubscribeOn(scheduler)` | Subscribe (and produce) on specified scheduler |
 | `Delay(timeSpan)` | Delay each notification by a time span |
 | `Timeout(timeSpan)` | Error if no notification within timeout |
-| `Synchronize()` | Serialize notifications with internal gate |
-| `Synchronize(gate)` | Serialize notifications with external gate object |
+| `Synchronize()` | Serialize notifications with internal gate (per [§5.8](./rx-design-guide.instructions.md#58-use-the-synchronize-operator-only-to-fix-custom-iobservable-implementations) — only for non-conforming sources) |
+| `Synchronize(gate)` | Serialize notifications with external gate object (the multi-source pattern from [§6.7](./rx-design-guide.instructions.md#67-serialize-calls-to-iobserver-methods-within-observable-sequence-implementations)) |
 
 ### Utility
 
 | Operator | Description |
 |----------|-------------|
-| `Do(action)` | Perform side effect for each notification |
+| `Do(action)` | Perform side effect for each notification (see [§5.7](./rx-design-guide.instructions.md#57-make-side-effects-explicit-using-the-do-operator)) |
 | `Publish().RefCount()` | Share a subscription among multiple subscribers |
 | `Replay(bufferSize).RefCount()` | Share with replay |
 | `AsObservable()` | Hide the implementation type (e.g., Subject → IObservable) |
 | `Subscribe(observer)` | Subscribe with an IObserver |
-| `Subscribe(onNext, onError, onCompleted)` | Subscribe with callbacks |
+| `Subscribe(onNext, onError, onCompleted)` | Subscribe with callbacks (see [§5.2](./rx-design-guide.instructions.md#52-consider-passing-multiple-arguments-to-subscribe)) |
 | `SubscribeSafe(observer)` | Subscribe with exception routing to OnError |
 | `ForEachAsync(action)` | Async iteration (returns Task) |
-| `Wait()` | Block until complete (avoid on UI thread) |
+| `Wait()` | Block until complete (avoid on UI thread; see [§6.14](./rx-design-guide.instructions.md#614-operators-should-not-block)) |
 | `ToTask()` | Convert to Task (last value) |
 
 ## Writing Custom Operators
 
+[§6.1](./rx-design-guide.instructions.md#61-implement-new-operators-by-composing-existing-operators) requires composition over `Observable.Create`. [§6.2](./rx-design-guide.instructions.md#62-implement-custom-operators-using-observablecreate) governs how to use `Observable.Create` when composition isn't enough. This section is the DynamicData-specific elaboration of those rules: the Defer pattern for per-subscription state without `Observable.Create`, the canonical `Observable.Create` skeleton, and a multi-source pattern.
+
 ### Composition First — Observable.Create is a Last Resort
 
-**The Rx contracts are axioms, not guidelines.** `Merge` subscribes sequentially. `Defer` evaluates at subscription time. `Do` fires synchronously during delivery. `Concat` subscribes to the second source only after the first completes. These guarantees are unconditional — they hold in every case, on every scheduler, under every threading model. If they didn't, nothing in Rx would work.
+**The Rx contracts are axioms, not guidelines.** `Merge` subscribes sequentially. `Defer` evaluates at subscription time. `Do` fires synchronously during delivery. `Concat` subscribes to the second source only after the first completes. These guarantees are unconditional: they hold in every case, on every scheduler, under every threading model. If they didn't, nothing in Rx would work.
 
 **Trust the contracts completely.** When you compose operators, you can reason about ordering, state, and lifecycle *because* the contracts are absolute. The moment you doubt them and add "safety" wrappers, you've abandoned the very thing that makes Rx code correct by construction.
 
-**Before reaching for `Observable.Create`, ask: can this be expressed as a composition of existing operators?** Rx operators already handle subscription lifecycle, error propagation, disposal, and serialization. Manual observer forwarding inside `Observable.Create` reimplements all of that — and introduces bugs that the operators would have prevented.
+**Before reaching for `Observable.Create`, ask: can this be expressed as a composition of existing operators?** Rx operators already handle subscription lifecycle, error propagation, disposal, and serialization. Manual observer forwarding inside `Observable.Create` reimplements all of that, and introduces bugs that the operators would have prevented.
 
-**The smell:** If you're writing `observer.OnNext(x)` / `observer.OnError(ex)` / `observer.OnCompleted()` inside `Observable.Create`, you're manually reimplementing what `Subscribe` already does. Stop and look for the composition.
+**The smell:** if you're writing `observer.OnNext(x)` / `observer.OnError(ex)` / `observer.OnCompleted()` inside `Observable.Create`, you're manually reimplementing what `Subscribe` already does. Stop and look for the composition.
 
 ```csharp
-// ❌ WRONG: imperative Observable.Create with manual forwarding
+// WRONG: imperative Observable.Create with manual forwarding
 // This reimplements Subscribe, adds boilerplate, and is harder to reason about.
 return Observable.Create<Optional<TObject>>(observer =>
 {
@@ -439,7 +409,7 @@ return Observable.Create<Optional<TObject>>(observer =>
     return sub;
 });
 
-// ✅ RIGHT: declarative composition using existing operators
+// RIGHT: declarative composition using existing operators
 // Each operator does one thing. The intent is immediately clear.
 return Observable.Defer(() =>
 {
@@ -496,7 +466,7 @@ Each subscription gets its own `index` / `hasEmitted` — cold observable semant
 
 ### The Observable.Create Pattern
 
-When you genuinely need `Observable.Create`, follow this structure:
+When you genuinely need `Observable.Create`, follow this structure. Notice the [§6.4](./rx-design-guide.instructions.md#64-protect-calls-to-user-code-from-within-an-operator) try/catch around the user selector and the [§6.16](./rx-design-guide.instructions.md#616-argument-validation-should-occur-outside-observablecreate) argument validation that would be required at the public extension method boundary.
 
 ```csharp
 public static IObservable<TResult> MyOperator<TSource, TResult>(
@@ -526,7 +496,7 @@ public static IObservable<TResult> MyOperator<TSource, TResult>(
 
 ### Multi-Source Operator Pattern
 
-When combining multiple sources, serialize their notifications:
+When combining multiple sources, serialize their notifications through a shared gate (per [§6.7](./rx-design-guide.instructions.md#67-serialize-calls-to-iobserver-methods-within-observable-sequence-implementations)):
 
 ```csharp
 public static IObservable<T> MyMerge<T>(
@@ -545,22 +515,26 @@ public static IObservable<T> MyMerge<T>(
 }
 ```
 
-**Note**: `Synchronize(gate)` holds the lock during downstream `OnNext` delivery. This ensures serialization but means the lock is held for the duration of all downstream processing. Keep downstream chains lightweight when using shared gates.
+**Note**: `Synchronize(gate)` holds the lock during downstream `OnNext` delivery. This ensures serialization but means the lock is held for the duration of all downstream processing. Keep downstream chains lightweight when using shared gates. DynamicData's `SynchronizeSafe` + `SharedDeliveryQueue` is the in-library alternative that releases the lock before downstream delivery (used to prevent cross-cache deadlocks).
 
 ### Operator Checklist
 
-When writing or reviewing an Rx operator:
+When writing or reviewing an Rx operator, walk this checklist alongside the rule audits in the design guide:
 
-- [ ] **Serialized delivery**: can `OnNext` be called concurrently? If multiple sources, are they serialized?
-- [ ] **Terminal semantics**: does `OnError`/`OnCompleted` propagate correctly? No notifications after terminal?
-- [ ] **Disposal**: does disposing the subscription clean up all resources? Is it idempotent?
-- [ ] **Error handling**: does `SubscribeSafe` catch subscriber exceptions? Are errors propagated, not swallowed?
-- [ ] **Back-pressure**: does the operator buffer unboundedly? Could it cause memory issues?
-- [ ] **Scheduler**: are time-dependent operations using an injectable scheduler?
-- [ ] **Cold/Hot**: is the observable cold (deferred via `Observable.Create`)? If hot, is sharing handled correctly?
+- [ ] **Serialized delivery** ([§4.2](./rx-design-guide.instructions.md#42-assume-observer-instances-are-called-in-a-serialized-fashion) / [§6.7](./rx-design-guide.instructions.md#67-serialize-calls-to-iobserver-methods-within-observable-sequence-implementations)): can `OnNext` be called concurrently? If multiple sources, are they serialized through the same gate?
+- [ ] **Terminal semantics** ([§4.1](./rx-design-guide.instructions.md#41-assume-the-rx-grammar) / [§6.6](./rx-design-guide.instructions.md#66-onerror-messages-should-have-abort-semantics)): does `OnError`/`OnCompleted` propagate correctly? No notifications after terminal? No buffer flush on error?
+- [ ] **Disposal** ([§4.4](./rx-design-guide.instructions.md#44-assume-a-best-effort-to-stop-all-outstanding-work-on-unsubscribe) / [§6.13](./rx-design-guide.instructions.md#613-hand-out-all-disposable-instances-created-inside-the-operator-to-consumers) / [§6.17](./rx-design-guide.instructions.md#617-unsubscription-should-be-idempotent) / [§6.18](./rx-design-guide.instructions.md#618-unsubscription-should-not-throw)): does disposing the subscription clean up all resources? Are all internal disposables exposed to the subscriber? Idempotent and non-throwing?
+- [ ] **User code protection** ([§6.4](./rx-design-guide.instructions.md#64-protect-calls-to-user-code-from-within-an-operator)): are user-provided selectors / predicates / comparers wrapped in try/catch with errors routed to `OnError`?
+- [ ] **Subscribe doesn't throw** ([§6.5](./rx-design-guide.instructions.md#65-subscribe-implementations-should-not-throw)): error conditions detected in subscribe go through `observer.OnError(...)` + `return Disposable.Empty;`?
+- [ ] **Argument validation** ([§6.16](./rx-design-guide.instructions.md#616-argument-validation-should-occur-outside-observablecreate)): null checks happen before `Observable.Create`, not inside the subscribe lambda?
+- [ ] **Back-pressure / buffers** ([§5.6](./rx-design-guide.instructions.md#56-consider-limiting-buffers)): does the operator buffer unboundedly? Could it cause memory issues?
+- [ ] **Scheduler** ([§5.4](./rx-design-guide.instructions.md#54-consider-passing-a-specific-scheduler-to-concurrency-introducing-operators) / [§6.9–6.12](./rx-design-guide.instructions.md#69-parameterize-concurrency-by-providing-a-scheduler-argument)): time-dependent operations take a scheduler argument? Default uses `Scheduler.Immediate` where possible?
+- [ ] **Cold/Hot**: is the observable cold (deferred via `Observable.Create` / `Observable.Defer`)? If hot, is sharing handled correctly via `Publish().RefCount()` (per [§5.10](./rx-design-guide.instructions.md#510-use-the-publish-operator-to-share-side-effects))?
 - [ ] **Thread safety**: is mutable state protected? Are there race conditions between subscribe/dispose/OnNext?
 
 ## Common Pitfalls
+
+Practical pitfalls that don't have direct PDF analogues but appear repeatedly in DynamicData code review.
 
 ### 1. Subscribing Multiple Times to a Cold Observable
 
@@ -570,7 +544,7 @@ var data = Observable.FromAsync(() => httpClient.GetAsync(url));
 data.Subscribe(handler1);  // call 1
 data.Subscribe(handler2);  // call 2 — probably not intended
 
-// RIGHT: share the result
+// RIGHT: share the result (per §5.10)
 var shared = data.Publish().RefCount();
 shared.Subscribe(handler1);  // shares
 shared.Subscribe(handler2);  // same result
@@ -590,7 +564,7 @@ _cleanup.Add(source.Subscribe(x => UpdateUI(x)));
 ### 3. Blocking on Rx (sync-over-async)
 
 ```csharp
-// WRONG: blocks the thread, can hang on UI thread
+// WRONG: blocks the thread, can hang on UI thread (see §6.14)
 var result = source.FirstAsync().Wait();
 
 // RIGHT: use async/await
@@ -611,7 +585,7 @@ public IObservable<int> Values => _values.AsObservable();
 ### 5. Not Handling OnError
 
 ```csharp
-// WRONG: unhandled OnError crashes the app (routes to DefaultExceptionHandler)
+// WRONG: unhandled OnError crashes the app (routes to DefaultExceptionHandler — see §5.2)
 source.Subscribe(x => Process(x));
 
 // RIGHT: always handle errors

@@ -7,6 +7,8 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
+using DynamicData.Internal;
+
 namespace DynamicData.Cache.Internal;
 
 internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey> pivotOn, IObservable<Func<Node<TObject, TKey>, bool>>? predicateChanged)
@@ -197,7 +199,10 @@ internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject,
                         reFilterObservable.OnNext(Unit.Default);
                     }).DisposeMany().Subscribe();
 
-                var filter = _predicateChanged.SynchronizeSafe(queue).CombineLatest(reFilterObservable, (predicate, _) => predicate);
+                // Both inputs are routed through the same SharedDeliveryQueue so their delivery is
+                // serialized; UnsynchronizedCombineLatest avoids the ABBA-prone gate that
+                // Observable.CombineLatest would hold across downstream delivery.
+                var filter = _predicateChanged.SynchronizeSafe(queue).UnsynchronizedCombineLatest(reFilterObservable.SynchronizeSafe(queue), (predicate, _) => predicate);
                 var result = allNodes.Connect().Filter(filter).SubscribeSafe(observer);
 
                 return new CompositeDisposable(result, parentSetter, allData, allNodes, groupedByPivot, Disposable.Create(() => reFilterObservable.OnCompleted()), queue);
