@@ -1,4 +1,6 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Reactive.Subjects;
 
 using DynamicData.Tests.Domain;
 
@@ -88,5 +90,31 @@ public class QueryWhenChangedFixture : IDisposable
     {
         _source.Dispose();
         _results.Dispose();
+    }
+
+    [Fact]
+    public void CompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var subscription = source.QueryWhenChanged().Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void DeliversTheError()
+    {
+        Exception? error = null;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var subscription = source.QueryWhenChanged().Subscribe(_ => { }, ex => error = ex, () => { });
+
+        source.OnError(new InvalidOperationException("boom"));
+
+        error.Should().BeOfType<InvalidOperationException>();
     }
 }

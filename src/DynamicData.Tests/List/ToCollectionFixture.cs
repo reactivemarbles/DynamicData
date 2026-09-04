@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using DynamicData.Binding;
+using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
 
@@ -22,5 +25,33 @@ public class ToCollectionFixture
         list.Add("2");
         res1?.Count.Should().Be(2);
         res2?.Count.Should().Be(2);
+    }
+
+    [Fact]
+    public void CompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var subscription = source.ToCollection().Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue("ToCollection is built on QueryWhenChanged");
+    }
+
+    [Fact]
+    public void ToSortedCollectionCompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var subscription = source
+            .ToSortedCollection(SortExpressionComparer<Person>.Ascending(p => p.Name))
+            .Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue();
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -40,7 +40,9 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
                         {
                             observer.OnNext(notifications);
                         }
-                    });
+                    },
+                    observer.OnError,
+                    observer.OnCompleted);
 
                 // When a list is removed, update all items that were in that list
                 var removedItem = sourceLists.Connect().OnItemRemoved(
@@ -63,7 +65,8 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
                                 observer.OnNext(notification2);
                             }
                         }
-                    }).Subscribe();
+                    })
+                    .Subscribe(static _ => { }, static _ => { });
 
                 // When a list is added, update all items that are in that list
                 var sourceChanged = sourceLists.Connect().WhereReasonsAre(ListChangeReason.Add, ListChangeReason.AddRange).ForEachItemChange(
@@ -84,7 +87,8 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
                                 observer.OnNext(notification2);
                             }
                         }
-                    }).Subscribe();
+                    })
+                    .Subscribe(static _ => { }, static _ => { });
 
                 return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged);
             });

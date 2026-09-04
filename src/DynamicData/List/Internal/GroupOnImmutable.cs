@@ -35,8 +35,9 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
 
                 var grouper = shared.Select(changes => Process(groupings, groupCache, changes));
 
+                // An absent regrouper never fires, so Empty rather than Never keeps the merge able to complete.
                 var reGroupFunc = _reGrouper is null ?
-                    Observable.Never<IChangeSet<IGrouping<TObject, TGroupKey>>>() :
+                    Observable.Empty<IChangeSet<IGrouping<TObject, TGroupKey>>>() :
                     _reGrouper.Synchronize(locker).CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
 
                 var publisher = grouper.Merge(reGroupFunc).NotEmpty().SubscribeSafe(observer);

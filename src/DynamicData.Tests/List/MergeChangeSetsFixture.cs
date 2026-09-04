@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -12,7 +13,6 @@ using DynamicData.Tests.Utilities;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
 using Xunit;
-using System.Collections.Concurrent;
 
 namespace DynamicData.Tests.List;
 
@@ -439,4 +439,21 @@ public sealed class MergeChangeSetsFixture : IDisposable
 
     private IEnumerable<IObservable<IChangeSet<Animal>>> GetEnumerableObservable() => _animalOwners.Select(owner => owner.Animals.Connect());
     private IObservable<IObservable<IChangeSet<Animal>>> GetObservableObservable() => GetEnumerableObservable().ToObservable();
+
+    [Fact]
+    public void WithAComparerDoesNotRecurse()
+    {
+        var completed = false;
+
+        using var sources = new SourceList<IObservable<IChangeSet<int, int>>>();
+
+        // This overload used to bind to itself and exhaust the stack before returning.
+        using var subscription = sources.Connect()
+            .MergeChangeSets(Comparer<int>.Default)
+            .Subscribe(_ => { }, () => completed = true);
+
+        sources.Dispose();
+
+        completed.Should().BeTrue();
+    }
 }
