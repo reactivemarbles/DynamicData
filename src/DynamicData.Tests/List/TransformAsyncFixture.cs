@@ -1,7 +1,8 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-
+using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
@@ -164,5 +165,26 @@ public class TransformAsyncFixture : IDisposable
         results.Messages.Count.Should().Be(5);
 
         results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Replace);
+    }
+
+    [Fact]
+    public void TransformAsyncCancelsTokenOnUnSubscribe()
+    {
+        using var source = new SourceList<Person>();
+        var tcs = new TaskCompletionSource<Person>();
+        using var sub = source.Connect()
+            .TransformAsync<Person, Person>(async (c, p, count, cancel) =>
+            {
+                using (cancel.Register(() => tcs.SetCanceled(), useSynchronizationContext: false))
+                {
+                    return await tcs.Task.ConfigureAwait(false);
+                }
+            })
+            .Subscribe();
+
+        source.Add(new Person());
+
+        sub.Dispose();
+        Assert.True(tcs.Task.IsCanceled);
     }
 }

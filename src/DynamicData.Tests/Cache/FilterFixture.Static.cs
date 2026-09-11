@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 using FluentAssertions;
 using Xunit;
 
+using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
 
 namespace DynamicData.Tests.Cache;
@@ -23,16 +26,16 @@ public static partial class FilterFixture
                 .Throw<ArgumentNullException>();
 
         [Theory]
-        [InlineData(CompletionStrategy.Asynchronous)]
-        [InlineData(CompletionStrategy.Immediate)]
-        public void SourceCompletes_CompletionPropagates(CompletionStrategy completionStrategy)
+        [InlineData(StreamCompletionStrategy.Asynchronous)]
+        [InlineData(StreamCompletionStrategy.Immediate)]
+        public void SourceCompletes_CompletionPropagates(StreamCompletionStrategy completionStrategy)
         {
             // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
 
             // UUT Initialization & Action
-            if (completionStrategy is CompletionStrategy.Immediate)
+            if (completionStrategy is StreamCompletionStrategy.Immediate)
                 source.Complete();
 
             using var subscription = source.Connect(suppressEmptyChangeSets: false)
@@ -41,7 +44,7 @@ public static partial class FilterFixture
                 .ValidateChangeSets(Item.SelectId)
                 .RecordCacheItems(out var results);
 
-            if (completionStrategy is CompletionStrategy.Asynchronous)
+            if (completionStrategy is StreamCompletionStrategy.Asynchronous)
                 source.Complete();
 
             results.Error.Should().BeNull();
@@ -86,5 +89,55 @@ public static partial class FilterFixture
             => source.Filter(
                 filter:                     predicate,
                 suppressEmptyChangeSets:    suppressEmptyChangeSets);
+        [Fact]
+        public void AutoRefreshRemoveKeyFilterUpdate_CollectionUpdated()
+        {
+            RandomPersonGenerator generator = new();
+            using var source = new SourceCache<Person, string>(p => p.Key);
+            var people = generator.Take(100).ToArray();
+            var average = people.Average(x => x.Age);
+            ReadOnlyObservableCollection<Person> collection;
+            using var subscription = source.Connect()
+                .AutoRefresh(x => x.Age)
+                .RemoveKey()
+                .Filter(x => x.Age < average)
+                .Bind(out collection)
+                .Subscribe();
+            source.AddOrUpdate(people);
+
+            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+
+            foreach (var person in people)
+            {
+                person.Age = person.Age + 1;
+            }
+            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+        }
+
+        [Fact]
+        public void AutoRefreshFilterRemoveKeyUpdate_CollectionUpdated()
+        {
+            RandomPersonGenerator generator = new();
+            using var source = new SourceCache<Person, string>(p => p.Key);
+            var people = generator.Take(100).ToArray();
+            var average = people.Average(x => x.Age);
+            ReadOnlyObservableCollection<Person> collection;
+            using var subscription = source.Connect()
+                .AutoRefresh(x => x.Age)
+                .Filter(x => x.Age < average)
+                .RemoveKey()
+                .Bind(out collection)
+                .Subscribe();
+            source.AddOrUpdate(people);
+
+            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+
+            foreach (var person in people)
+            {
+                person.Age = person.Age + 1;
+            }
+            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+        }
     }
+
 }

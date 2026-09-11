@@ -1,0 +1,92 @@
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
+using DynamicData.Binding;
+using DynamicData.Cache;
+using DynamicData.Cache.Internal;
+
+// ReSharper disable once CheckNamespace
+
+namespace DynamicData;
+
+/// <summary>
+/// Extensions for dynamic data.
+/// </summary>
+public static partial class ObservableCacheEx
+{
+    /// <summary>
+    /// Invokes <paramref name="removeAction"/> for each item with <see cref="ChangeReason.Remove"/> in the changeset stream.
+    /// The changeset is forwarded downstream unchanged.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to observe item removals in.</param>
+    /// <param name="removeAction">The <see cref="Action{TObject, TKey}"/> callback invoked for each removed item. Receives the removed item and its key.</param>
+    /// <param name="invokeOnUnsubscribe">
+    /// When <see langword="true"/> (the default), the callback is also invoked for <b>every item still in the cache</b>
+    /// when the subscription is disposed. When <see langword="false"/>, only inline Remove changes trigger the callback.
+    /// </param>
+    /// <returns>A stream that forwards all changesets from <paramref name="source"/> unchanged.</returns>
+    /// <remarks>
+    /// <para>
+    /// <b>Change reason handling:</b>
+    /// <list type="table">
+    ///   <listheader><term>Event</term><description>Behavior</description></listheader>
+    ///   <item><term>Add</term><description>Ignored (but tracked internally when <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>).</description></item>
+    ///   <item><term>Update</term><description>Ignored (cache updated internally when <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>).</description></item>
+    ///   <item><term>Remove</term><description>Invokes <paramref name="removeAction"/> with the item and key.</description></item>
+    ///   <item><term>Refresh</term><description>Ignored.</description></item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <b>Unsubscribe behavior:</b> when <paramref name="invokeOnUnsubscribe"/> is <see langword="true"/>, the operator
+    /// maintains an internal cache mirroring the stream. On disposal, it iterates all remaining items and
+    /// invokes <paramref name="removeAction"/> for each. This is useful for cleanup logic (e.g. event unsubscription)
+    /// that must run for items that were never explicitly removed.
+    /// </para>
+    /// <para>
+    /// Exceptions thrown in <paramref name="removeAction"/> propagate as <c>OnError</c> during inline removes.
+    /// During unsubscribe disposal, exceptions are not caught.
+    /// </para>
+    /// <para><b>Worth noting:</b> The action also fires for ALL remaining items when the subscription is disposed (unless <c>invokeOnUnsubscribe</c> is <see langword="false"/>). The action runs under a lock; avoid calling into other caches from within it.</para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="removeAction"/> is <see langword="null"/>.</exception>
+    /// <seealso cref="DisposeMany{TObject,TKey}"/>
+    /// <seealso cref="SubscribeMany{TObject,TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IDisposable})"/>
+    /// <seealso cref="ObservableListEx.OnItemRemoved"/>
+    public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TKey> removeAction, bool invokeOnUnsubscribe = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
+
+        if (invokeOnUnsubscribe)
+        {
+            return new OnBeingRemoved<TObject, TKey>(source, removeAction).Run();
+        }
+
+        return source.OnChangeAction(ChangeReason.Remove, removeAction);
+    }
+
+    /// <inheritdoc cref="OnItemRemoved{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject, TKey}, bool)"/>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to observe item removals in.</param>
+    /// <param name="removeAction">The <see cref="Action{TObject}"/> callback invoked for each removed item. Receives only the item (no key).</param>
+    /// <param name="invokeOnUnsubscribe">When <see langword="true"/> (the default), also invoked for all remaining items on disposal.</param>
+    /// <remarks>Overload that omits the key from the callback. Delegates to <see cref="OnItemRemoved{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject, TKey}, bool)"/>.</remarks>
+    public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction, bool invokeOnUnsubscribe = true)
+        where TObject : notnull
+        where TKey : notnull
+        => source.OnItemRemoved((obj, _) => removeAction(obj), invokeOnUnsubscribe);
+}
