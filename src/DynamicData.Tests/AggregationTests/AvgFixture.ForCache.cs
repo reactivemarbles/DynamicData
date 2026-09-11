@@ -110,7 +110,7 @@ public partial class AvgFixture
                 results.RecordedValues[^1].Should().Be(20.0);
             }
 
-            [Fact(Skip = "Existing defect: Avg does not emit emptyValue when the source is initially empty.")]
+            [Fact(Skip = "Existing defect: Avg does not emit emptyValue when the source is initially empty. Re-enable once the operator has been rewritten and fixed.")]
             public void SourceIsEmpty_ConfiguredEmptyValueIsEmitted()
             {
                 using var source = new TestSourceCache<Person, string>(person => person.Name);
@@ -232,7 +232,7 @@ public partial class AvgFixture
                 results.RecordedValues.Should().ContainSingle().Which.Should().Be(10.5);
             }
 
-            [Fact(Skip = "Existing defect: the legacy aggregate adapter discards Refresh details.")]
+            [Fact(Skip = "Existing defect: the legacy aggregate adapter discards Refresh details. Re-enable once the operator has been rewritten and fixed.")]
             public void ItemIsRefreshed_AverageReevaluatesMutatedValue()
             {
                 using var source = new TestSourceCache<Person, string>(person => person.Name);
@@ -272,7 +272,7 @@ public partial class AvgFixture
                 results.RecordedValues.Should().ContainSingle().Which.Should().Be(20.0);
             }
 
-            [Theory(Skip = "Existing defect: Avg does not emit emptyValue when the source is initially empty.")]
+            [Theory(Skip = "Existing defect: Avg does not emit emptyValue when the source is initially empty. Re-enable once the operator has been rewritten and fixed.")]
             [InlineData(StreamCompletionStrategy.Asynchronous)]
             [InlineData(StreamCompletionStrategy.Immediate)]
             public void EmptySourceCompletes_ConfiguredEmptyValueAndCompletionPropagate(StreamCompletionStrategy completionStrategy)
