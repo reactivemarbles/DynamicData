@@ -13,7 +13,8 @@ namespace DynamicData.Internal;
 /// when either the parent or child gets a new value.
 /// Uses a <see cref="SharedDeliveryQueue"/> for serialization and lock-free delivery.
 /// Same-thread reentrant delivery preserves child-during-parent ordering.
-/// OnDrainComplete calls EmitChanges after the outermost delivery, outside the lock.
+/// Accumulated changes are emitted once per delivery frame, where a frame is one
+/// notification plus anything delivered synchronously beneath it on the same thread.
 /// </summary>
 /// <typeparam name="TParent">Type of the Parent ChangeSet.</typeparam>
 /// <typeparam name="TKey">Type for the Parent ChangeSet Key.</typeparam>
@@ -29,6 +30,7 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     private readonly SharedDeliveryQueue _queue;
     private readonly IObserver<TObserver> _observer;
     private int _subscriptionCounter = 1; // Starts at 1 for the parent subscription
+    private int _frameDepth;
     private bool _isCompleted;
     private bool _hasTerminated;
     private bool _disposedValue;
@@ -40,7 +42,7 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     protected CacheParentSubscription(IObserver<TObserver> observer)
     {
         _observer = observer;
-        _queue = new SharedDeliveryQueue(onDrainComplete: OnDrainComplete);
+        _queue = new SharedDeliveryQueue();
     }
 
     /// <inheritdoc/>
@@ -76,9 +78,9 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         disposableContainer.Disposable = observable
             .Finally(CheckCompleted)
             .SubscribeSafe(
-                onNext: val => ChildOnNext(val, parentKey),
+                onNext: val => DeliverChild(val, parentKey),
                 onError: TerminalError,
-                onCompleted: () => RemoveChildSubscription(parentKey));
+                onCompleted: () => CompleteChild(parentKey));
     }
 
     protected void RemoveChildSubscription(TKey parentKey) => _childSubscriptions.Remove(parentKey);
@@ -88,9 +90,9 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
             source
                 .SynchronizeSafe(_queue)
                 .SubscribeSafe(
-                    onNext: ParentOnNext,
+                    onNext: DeliverParent,
                     onError: TerminalError,
-                    onCompleted: CheckCompleted);
+                    onCompleted: CompleteParent);
 
     protected virtual void Dispose(bool disposing)
     {
@@ -116,8 +118,55 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     protected IObservable<T> MakeChildObservable<T>(IObservable<T> observable) =>
         observable.SynchronizeSafe(_queue);
 
-    private void OnDrainComplete()
+    private void DeliverParent(IChangeSet<TParent, TKey> changes)
     {
+        using var frame = BeginFrame();
+        ParentOnNext(changes);
+    }
+
+    private void DeliverChild(TChild child, TKey parentKey)
+    {
+        using var frame = BeginFrame();
+        ChildOnNext(child, parentKey);
+    }
+
+    private void CompleteParent()
+    {
+        using var frame = BeginFrame();
+        CheckCompleted();
+    }
+
+    private void CompleteChild(TKey parentKey)
+    {
+        using var frame = BeginFrame();
+        RemoveChildSubscription(parentKey);
+    }
+
+    /// <summary>
+    /// Opens a delivery frame that stays open until the returned <see cref="FrameTracker"/> is disposed.
+    /// Deliveries nested beneath this one, which the queue runs inline on the same thread, open and close
+    /// their own frame and leave the emit to the outermost, so one upstream notification and everything it
+    /// triggers synchronously produce a single downstream changeset. No lock is needed around the depth
+    /// because the queue has already serialized delivery.
+    /// </summary>
+    /// <returns>A tracker that closes the frame when disposed.</returns>
+    private FrameTracker BeginFrame()
+    {
+        ++_frameDepth;
+        return new FrameTracker(this);
+    }
+
+    /// <summary>
+    /// Closes the current delivery frame, emitting the accumulated changes only when the outermost
+    /// frame closes.
+    /// </summary>
+    private void EndFrame()
+    {
+        if (--_frameDepth != 0)
+        {
+            return;
+        }
+
         EmitChanges(_observer);
 
         if (Volatile.Read(ref _isCompleted) && !_hasTerminated)
@@ -141,5 +190,16 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         }
 
         Debug.Assert(_subscriptionCounter >= 0, "Should never be negative");
+    }
+
+    /// <summary>
+    /// Closes the delivery frame opened by <see cref="BeginFrame"/> when disposed, so a frame can be
+    /// scoped with <see langword="using"/> instead of pairing the calls by hand.
+    /// </summary>
+    /// <param name="owner">The subscription whose frame is being tracked.</param>
+    private readonly struct FrameTracker(CacheParentSubscription<TParent, TKey, TChild, TObserver> owner) : IDisposable
+    {
+        /// <inheritdoc/>
+        public void Dispose() => owner.EndFrame();
     }
 }
