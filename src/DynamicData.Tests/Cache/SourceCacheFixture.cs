@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 using DynamicData.Tests.Domain;
-
+using DynamicData.Tests.Utilities;
 using FluentAssertions;
 
 using Xunit;
@@ -162,8 +163,6 @@ public class SourceCacheFixture : IDisposable
         change!.Count.Should().Be(0);
     }
 
-
-
     [Fact]
     public void StaticFilterRemove()
     {
@@ -190,7 +189,6 @@ public class SourceCacheFixture : IDisposable
     }
 
     public record class SomeObject(int Id, int Value);
-
 
     [Fact]
     public async Task MultiCacheFanInDoesNotDeadlock()
@@ -352,6 +350,76 @@ public class SourceCacheFixture : IDisposable
         // Each key should appear exactly once in the new subscriber's view
         addCounts.GetValueOrDefault("k1").Should().Be(1, "k1 should appear once (snapshot only)");
         addCounts.GetValueOrDefault("k2").Should().Be(1, "k2 should appear once, not duplicated from snapshot + queued delivery");
+    }
+
+    // Covers https://github.com/reactivemarbles/DynamicData/issues/1129
+    [Fact]
+    public void ConnectDuringEditsDoesNotDuplicate()
+    {
+        using var items = new SourceCache<int, int>(static item => item);
+        
+        using var subscriptions = new CompositeDisposable();
+        
+        // An initial subscription is required to initiate internal buffering of changes, during the upcoming .Edit().
+        // That is, we want there to be changes buffered, internally, when the mid-edit subscription comes in, to
+        // ensure that they don't get duplicated. This is the scenario that came in up #1129. 
+        subscriptions.Add(items
+            .Connect()
+            .Subscribe());
+            
+        CacheItemRecordingObserver<int, int>? results = null;
+            
+        items.Edit(inner =>
+        {
+            inner.AddOrUpdate(1);
+
+            subscriptions.Add(items
+                .Connect()
+                .ValidateChangeSets(static item => item)
+                .RecordCacheItems(out results));
+        
+            results.Error.Should().BeNull("no errors should have occurred");
+            results.RecordedChangeSets.Should().BeEmpty("no changes should be published in the middle of an edit");
+        
+            inner.AddOrUpdate(2);
+
+            results.Error.Should().BeNull("no errors should have occurred");
+            results.RecordedChangeSets.Should().BeEmpty("no changes should be published in the middle of an edit");
+
+            // Explicitly doing a nested edit, as that system is closely intertwined with the edit-tracking system that
+            // .Connect() uses.
+            items.Remove(item: 1);
+
+            results.Error.Should().BeNull("no errors should have occurred");
+            results.RecordedChangeSets.Should().BeEmpty("no changes should be published in the middle of an edit");
+        });
+        
+        results.Should().NotBeNull("the edit delegate should have been invoked");
+        results.Error.Should().BeNull("no errors should have occurred");
+        results.RecordedChangeSets.Should().ContainSingle("subscribers should only receive a single initial changeset");
+        results.RecordedItemsByKey.Should().BeEquivalentTo(
+            new Dictionary<int, int>() { [2] = 2 },
+            options => options.WithoutStrictOrdering(),
+            "all items in the source should have propagated downstream");
+
+        results.HasCompleted.Should().BeFalse("the source has not yet completed");
+    }
+
+    [Fact]
+    public void ConnectContinuesToWorkNormallyAfterAFailedEdit()
+    {
+        using var source = new SourceCache<int, int>(static item => item);
+    
+        source.AddOrUpdate(1);
+
+        source.Invoking(source => source.Edit(_ => throw new Exception("Test")))
+            .Should().Throw<Exception>()
+            .WithMessage("Test");
+
+        using var subscription = source.Connect().RecordCacheItems(out var results);
+
+        results.Error.Should().BeNull("new subscribers should not receive previous errors");
+        results.RecordedChangeSets.Should().ContainSingle("an initial changeset should have been published.");
     }
 
     private sealed record TestItem(string Key, string Value);
