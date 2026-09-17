@@ -28,7 +28,7 @@ jobs:
       STABLE_VERSION_INPUT: ${{ inputs.stable_version }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0
 
