@@ -16,7 +16,6 @@ namespace DynamicData.Internal;
 /// </summary>
 /// <typeparam name="T">The value type delivered via OnNext.</typeparam>
 internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
-    where T : notnull
 {
     /// <summary>
     /// The _queue field.

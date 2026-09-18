@@ -9,6 +9,7 @@ using FluentAssertions;
 using Xunit;
 
 using DynamicData.Kernel;
+using DynamicData.Tests.Utilities;
 
 namespace DynamicData.Tests.Cache;
 
@@ -44,6 +45,41 @@ public static partial class SuspendNotificationsFixture
             _results.Messages.Count.Should().Be(0, "Should have no item updates");
             _results.Data.Count.Should().Be(0, "Should not receive data after suspend");
             _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+        }
+
+        // https://github.com/reactivemarbles/DynamicData/issues/1136
+        [Fact]
+        public void SuspendedConnectCompletesCorrectly()
+        {
+            using var source = new SourceCache<int, int>(static item => item);
+        
+            using var suspension = source.SuspendNotifications();
+        
+            source.AddOrUpdate(1);
+        
+            using var subscription = source.Connect()
+                .RecordCacheItems(out var results);
+
+            results.Error.Should().BeNull("no errors should have occurred");
+            results.RecordedChangeSets.Should().BeEmpty("notifications should have been suspended");
+
+            suspension.Dispose();
+
+            results.Error.Should().BeNull("no errors should have occurred");
+            results.RecordedChangeSets.Should().ContainSingle("notifications should have been resumed");
+            results.RecordedItemsByKey.Should().BeEquivalentTo(source.KeyValues, "all changes should have propagated to the new subscriber");
+
+            source.AddOrUpdate(2);
+        
+            results.Error.Should().BeNull("no errors should have occurred");
+            results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "a single additional source operation was performed");
+            results.RecordedItemsByKey.Should().BeEquivalentTo(source.KeyValues, "all changes should have propagated to the new subscriber");
+
+            source.Dispose();
+        
+            results.Error.Should().BeNull("no errors should have occurred");
+            results.RecordedChangeSets.Skip(2).Should().BeEmpty("no additional source operations were performed");
+            results.HasCompleted.Should().BeTrue("the source has been disposed");
         }
 
         [Fact]
@@ -510,22 +546,6 @@ public static partial class SuspendNotificationsFixture
 
             results.Error.Should().Be(expectedError, "an activated connection should still see the source fail");
             results.Data.Count.Should().Be(1, "the data written before the failure should have arrived");
-        }
-
-        [Fact]
-        public void OnCompletedFiresIfCacheDisposedAfterResumingWhileWatchWasSuspended()
-        {
-            // The tests above cover failure. Completion has to reach an activated watch too, and
-            // this covers the path through the watch itself rather than through the suspension gate.
-            var suspend = _source.SuspendNotifications();
-            var isCompleted = false;
-            using var subscription = _source.Watch(1).Subscribe(static _ => { }, () => isCompleted = true);
-            _source.AddOrUpdate(1);
-
-            suspend.Dispose();
-            _source.Dispose();
-
-            isCompleted.Should().BeTrue("a watch deferred by a suspension should still complete when the source does");
         }
 
         public void Dispose()

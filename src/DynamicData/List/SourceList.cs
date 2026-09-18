@@ -62,6 +62,12 @@ public sealed class SourceList<T> : ISourceList<T>
     private readonly DeliveryQueue<ListUpdate> _notifications;
 
     /// <summary>
+    /// The _isEditInProgress field.
+    /// </summary>
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Completed with _cleanUp and explicit disposal is redundant.")]
+    private readonly Lazy<BehaviorSignal<bool>> _isEditInProgress;
+
+    /// <summary>
     /// The _editLevel field.
     /// </summary>
     private int _editLevel;
@@ -88,6 +94,7 @@ public sealed class SourceList<T> : ISourceList<T>
     public SourceList(IObservable<IChangeSet<T>>? source = null)
     {
         _notifications = new DeliveryQueue<ListUpdate>(_locker, new ListUpdateObserver(this));
+        _isEditInProgress = new(() => new(_editLevel is not 0));
 
         var loader = source is null ? Disposable.Empty : LoadFromSource(source);
 
@@ -132,6 +139,22 @@ public sealed class SourceList<T> : ISourceList<T>
     /// <param name="predicate">The predicate value.</param>
     /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<T>> Connect(Func<T, bool>? predicate = null)
+        => Observable.Create<IChangeSet<T>>(observer =>
+        {
+            lock (_locker)
+            {
+                var observable = _isEditInProgress.IsValueCreated || (_editLevel is not 0)
+                    ? _isEditInProgress.Value
+                        .Where(static isEditInProgress => !isEditInProgress)
+                        .Take(1)
+                        .SelectMany(_ => CreateConnectObservable(predicate))
+                    : CreateConnectObservable(predicate);
+
+                return observable.SubscribeSafe(observer);
+            }
+        });
+
+    private IObservable<IChangeSet<T>> CreateConnectObservable(Func<T, bool>? predicate)
     {
         var observable = Observable.Create<IChangeSet<T>>(
             observer =>
@@ -222,21 +245,35 @@ public sealed class SourceList<T> : ISourceList<T>
         IChangeSet<T>? changes = null;
 
         _editLevel++;
-
-        if (_editLevel == 1)
+        if (_isEditInProgress.IsValueCreated && (_editLevel is 1))
         {
-            changes = _changesPreview.HasObservers ? _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview) : _readerWriter.Write(updateAction);
-        }
-        else
-        {
-            _readerWriter.WriteNested(updateAction);
+            _isEditInProgress.Value.OnNext(true);
         }
 
-        _editLevel--;
-
-        if (changes is not null && changes.Count != 0 && _editLevel == 0)
+        try
         {
-            notifications.EnqueueNext(new ListUpdate(changes, _readerWriter.Count, ++_currentVersion));
+            if (_editLevel == 1)
+            {
+                changes = _changesPreview.HasObservers ? _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview) : _readerWriter.Write(updateAction);
+            }
+            else
+            {
+                _readerWriter.WriteNested(updateAction);
+            }
+        }
+        finally
+        {
+            _editLevel--;
+
+            if (changes is not null && changes.Count != 0 && _editLevel == 0)
+            {
+                notifications.EnqueueNext(new ListUpdate(changes, _readerWriter.Count, ++_currentVersion));
+            }
+
+            if (_isEditInProgress.IsValueCreated && (_editLevel is 0))
+            {
+                _isEditInProgress.Value.OnNext(false);
+            }
         }
     }
 
@@ -369,6 +406,11 @@ public sealed class SourceList<T> : ISourceList<T>
             sourceList._changesPreview.OnError(error);
             sourceList._changes.OnError(error);
 
+            if (sourceList._isEditInProgress.IsValueCreated)
+            {
+                sourceList._isEditInProgress.Value.OnError(error);
+            }
+
             if (sourceList._countChanged.IsValueCreated)
             {
                 sourceList._countChanged.Value.OnError(error);
@@ -382,6 +424,11 @@ public sealed class SourceList<T> : ISourceList<T>
         {
             sourceList._changesPreview.OnCompleted();
             sourceList._changes.OnCompleted();
+
+            if (sourceList._isEditInProgress.IsValueCreated)
+            {
+                sourceList._isEditInProgress.Value.OnCompleted();
+            }
 
             if (sourceList._countChanged.IsValueCreated)
             {

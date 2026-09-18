@@ -3,11 +3,10 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-#if REACTIVE_SHIM
 
+#if REACTIVE_SHIM
 namespace DynamicData.Reactive.Internal;
 #else
-
 namespace DynamicData.Internal;
 #endif
 
@@ -16,7 +15,8 @@ namespace DynamicData.Internal;
 /// when either the parent or child gets a new value.
 /// Uses a <see cref="SharedDeliveryQueue"/> for serialization and lock-free delivery.
 /// Same-thread reentrant delivery preserves child-during-parent ordering.
-/// OnDrainComplete calls EmitChanges after the outermost delivery, outside the lock.
+/// Accumulated changes are emitted once per delivery frame, where a frame is one
+/// notification plus anything delivered synchronously beneath it on the same thread.
 /// </summary>
 /// <typeparam name="TParent">Type of the Parent ChangeSet.</typeparam>
 /// <typeparam name="TKey">Type for the Parent ChangeSet Key.</typeparam>
@@ -27,44 +27,14 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     where TKey : notnull
     where TChild : notnull
 {
-    /// <summary>
-    /// The _childSubscriptions field.
-    /// </summary>
     private readonly KeyedDisposable<TKey> _childSubscriptions = new();
-
-    /// <summary>
-    /// The _parentSubscription field.
-    /// </summary>
     private readonly SingleAssignmentDisposable _parentSubscription = new();
-
-    /// <summary>
-    /// The _queue field.
-    /// </summary>
     private readonly SharedDeliveryQueue _queue;
-
-    /// <summary>
-    /// The _observer field.
-    /// </summary>
     private readonly IObserver<TObserver> _observer;
-
-    /// <summary>
-    /// The _subscriptionCounter field.
-    /// </summary>
     private int _subscriptionCounter = 1; // Starts at 1 for the parent subscription
-
-    /// <summary>
-    /// The _isCompleted field.
-    /// </summary>
+    private int _frameDepth;
     private bool _isCompleted;
-
-    /// <summary>
-    /// The _hasTerminated field.
-    /// </summary>
     private bool _hasTerminated;
-
-    /// <summary>
-    /// The _disposedValue field.
-    /// </summary>
     private bool _disposedValue;
 
     /// <summary>
@@ -74,7 +44,7 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     protected CacheParentSubscription(IObserver<TObserver> observer)
     {
         _observer = observer;
-        _queue = new SharedDeliveryQueue(onDrainComplete: OnDrainComplete);
+        _queue = new SharedDeliveryQueue();
     }
 
     /// <inheritdoc/>
@@ -84,30 +54,12 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         GC.SuppressFinalize(this);
     }
 
-    /// <summary>
-    /// Executes the ParentOnNext operation.
-    /// </summary>
-    /// <param name="changes">The changes value.</param>
     protected abstract void ParentOnNext(IChangeSet<TParent, TKey> changes);
 
-    /// <summary>
-    /// Executes the ChildOnNext operation.
-    /// </summary>
-    /// <param name="child">The child value.</param>
-    /// <param name="parentKey">The parentKey value.</param>
     protected abstract void ChildOnNext(TChild child, TKey parentKey);
 
-    /// <summary>
-    /// Executes the EmitChanges operation.
-    /// </summary>
-    /// <param name="observer">The observer value.</param>
     protected abstract void EmitChanges(IObserver<TObserver> observer);
 
-    /// <summary>
-    /// Executes the AddChildSubscription operation.
-    /// </summary>
-    /// <param name="observable">The observable value.</param>
-    /// <param name="parentKey">The parentKey value.</param>
     protected void AddChildSubscription(IObservable<TChild> observable, TKey parentKey)
     {
         // Add a new subscription. Do first so cleanup of existing subs doesn't trigger OnCompleted.
@@ -127,33 +79,21 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         // disposal cleanup is handled by KeyedDisposable, not by individual completion callbacks.
         disposableContainer.Disposable = PrimitivesLinqExtensions.SubscribeSafe(
             observable.Finally(CheckCompleted),
-            onNext: val => ChildOnNext(val, parentKey),
+            onNext: val => DeliverChild(val, parentKey),
             onError: TerminalError,
-            onCompleted: () => RemoveChildSubscription(parentKey));
+            onCompleted: () => CompleteChild(parentKey));
     }
 
-    /// <summary>
-    /// Executes the RemoveChildSubscription operation.
-    /// </summary>
-    /// <param name="parentKey">The parentKey value.</param>
     protected void RemoveChildSubscription(TKey parentKey) => _childSubscriptions.Remove(parentKey);
 
-    /// <summary>
-    /// Executes the CreateParentSubscription operation.
-    /// </summary>
-    /// <param name="source">The source value.</param>
     protected void CreateParentSubscription(IObservable<IChangeSet<TParent, TKey>> source) =>
         _parentSubscription.Disposable =
             PrimitivesLinqExtensions.SubscribeSafe(
                 source.SynchronizeSafe(_queue),
-                onNext: ParentOnNext,
+                onNext: DeliverParent,
                 onError: TerminalError,
-                onCompleted: CheckCompleted);
+                onCompleted: CompleteParent);
 
-    /// <summary>
-    /// Executes the Dispose operation.
-    /// </summary>
-    /// <param name="disposing">The disposing value.</param>
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)
@@ -175,17 +115,58 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     /// Same-thread reentrant delivery ensures child items are delivered inline during
     /// parent processing, preserving the original Synchronize(lock) ordering semantics.
     /// </summary>
-    /// <typeparam name="T">The type of the T value.</typeparam>
-    /// <param name="observable">The observable value.</param>
-    /// <returns>The result of the operation.</returns>
     protected IObservable<T> MakeChildObservable<T>(IObservable<T> observable) =>
         observable.SynchronizeSafe(_queue);
 
-    /// <summary>
-    /// Executes the OnDrainComplete operation.
-    /// </summary>
-    private void OnDrainComplete()
+    private void DeliverParent(IChangeSet<TParent, TKey> changes)
     {
+        using var frame = BeginFrame();
+        ParentOnNext(changes);
+    }
+
+    private void DeliverChild(TChild child, TKey parentKey)
+    {
+        using var frame = BeginFrame();
+        ChildOnNext(child, parentKey);
+    }
+
+    private void CompleteParent()
+    {
+        using var frame = BeginFrame();
+        CheckCompleted();
+    }
+
+    private void CompleteChild(TKey parentKey)
+    {
+        using var frame = BeginFrame();
+        RemoveChildSubscription(parentKey);
+    }
+
+    /// <summary>
+    /// Opens a delivery frame that stays open until the returned <see cref="FrameTracker"/> is disposed.
+    /// Deliveries nested beneath this one, which the queue runs inline on the same thread, open and close
+    /// their own frame and leave the emit to the outermost, so one upstream notification and everything it
+    /// triggers synchronously produce a single downstream changeset. No lock is needed around the depth
+    /// because the queue has already serialized delivery.
+    /// </summary>
+    /// <returns>A tracker that closes the frame when disposed.</returns>
+    private FrameTracker BeginFrame()
+    {
+        ++_frameDepth;
+        return new FrameTracker(this);
+    }
+
+    /// <summary>
+    /// Closes the current delivery frame, emitting the accumulated changes only when the outermost
+    /// frame closes.
+    /// </summary>
+    private void EndFrame()
+    {
+        if (--_frameDepth != 0)
+        {
+            return;
+        }
+
         EmitChanges(_observer);
 
         if (Volatile.Read(ref _isCompleted) && !_hasTerminated)
@@ -195,19 +176,12 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         }
     }
 
-    /// <summary>
-    /// Executes the TerminalError operation.
-    /// </summary>
-    /// <param name="error">The error value.</param>
     private void TerminalError(Exception error)
     {
         _hasTerminated = true;
         _observer.OnError(error);
     }
 
-    /// <summary>
-    /// Executes the CheckCompleted operation.
-    /// </summary>
     private void CheckCompleted()
     {
         if (Interlocked.Decrement(ref _subscriptionCounter) == 0)
@@ -216,5 +190,16 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         }
 
         Debug.Assert(_subscriptionCounter >= 0, "Should never be negative");
+    }
+
+    /// <summary>
+    /// Closes the delivery frame opened by <see cref="BeginFrame"/> when disposed, so a frame can be
+    /// scoped with <see langword="using"/> instead of pairing the calls by hand.
+    /// </summary>
+    /// <param name="owner">The subscription whose frame is being tracked.</param>
+    private readonly struct FrameTracker(CacheParentSubscription<TParent, TKey, TChild, TObserver> owner) : IDisposable
+    {
+        /// <inheritdoc/>
+        public void Dispose() => owner.EndFrame();
     }
 }

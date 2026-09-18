@@ -17,7 +17,6 @@ namespace DynamicData.Internal;
 /// </summary>
 /// <typeparam name="T">The type of the T value.</typeparam>
 internal readonly struct Notification<T>
-    where T : notnull
 {
     /// <summary>
     /// The _value field.

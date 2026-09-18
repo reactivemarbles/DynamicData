@@ -75,6 +75,12 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     private readonly DeliveryQueue<CacheUpdate> _notifications;
 
     /// <summary>
+    /// The _isEditInProgress field.
+    /// </summary>
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Completed with _cleanUp and explicit disposal is redundant.")]
+    private readonly Lazy<BehaviorSignal<bool>> _isEditInProgress;
+
+    /// <summary>
     /// The _editLevel field.
     /// </summary>
     private int _editLevel; // The level of recursion in editing.
@@ -98,6 +104,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         _readerWriter = new ReaderWriter<TObject, TKey>();
         _notifications = new DeliveryQueue<CacheUpdate>(_locker, new CacheUpdateObserver(this));
         _suspensionTracker = new(() => new SuspensionTracker());
+        _isEditInProgress = new(() => new(_editLevel is not 0));
 
         var loader = source.Subscribe(
             changeSet =>
@@ -132,6 +139,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         _readerWriter = new ReaderWriter<TObject, TKey>(keySelector);
         _notifications = new DeliveryQueue<CacheUpdate>(_locker, new CacheUpdateObserver(this));
         _suspensionTracker = new(() => new SuspensionTracker());
+        _isEditInProgress = new(() => new(_editLevel is not 0));
 
         _cleanUp = Disposable.Create(NotifyCompleted);
     }
@@ -181,27 +189,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
     /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) =>
-        Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-        {
-            lock (_locker)
-            {
-                var observable = (!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.AreNotificationsSuspended)
-
-                    // Create the Connection Observable
-                    ? CreateConnectObservable(predicate, suppressEmptyChangeSets)
-
-                    // Defer until notifications are no longer suspended. Take(1) means there is only
-                    // ever one inner sequence, so SelectMany carries the terminal event of the gate
-                    // through on its own: the connection ends when the cache does, and fails when it
-                    // fails, rather than reporting a failure as a successful completion.
-                    : _suspensionTracker.Value.NotificationsSuspendedObservable
-                        .Where(static areNotificationsSuspended => !areNotificationsSuspended)
-                        .Take(1)
-                        .SelectMany(_ => CreateConnectObservable(predicate, suppressEmptyChangeSets));
-
-                return observable.SubscribeSafe(observer);
-            }
-        });
+        CreateDeferredNotificationObservable(() => CreateConnectObservable(predicate, suppressEmptyChangeSets));
 
     /// <summary>
     /// Executes the Dispose operation.
@@ -228,25 +216,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     /// <param name="key">The key value.</param>
     /// <returns>The result of the operation.</returns>
     public IObservable<Change<TObject, TKey>> Watch(TKey key) =>
-        Observable.Create<Change<TObject, TKey>>(observer =>
-        {
-            lock (_locker)
-            {
-                var observable = (!_suspensionTracker.IsValueCreated || !_suspensionTracker.Value.AreNotificationsSuspended)
-
-                    // Create the Watch Observable
-                    ? CreateWatchObservable(key)
-
-                    // Defer until notifications are no longer suspended. See Connect() for why
-                    // SelectMany is used here.
-                    : _suspensionTracker.Value.NotificationsSuspendedObservable
-                        .Where(static areNotificationsSuspended => !areNotificationsSuspended)
-                        .Take(1)
-                        .SelectMany(_ => CreateWatchObservable(key));
-
-                return observable.SubscribeSafe(observer);
-            }
-        });
+        CreateDeferredNotificationObservable(() => CreateWatchObservable(key));
 
     /// <summary>
     /// Executes the SuspendCount operation.
@@ -294,21 +264,36 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         ChangeSet<TObject, TKey>? changes = null;
 
         _editLevel++;
-        if (_editLevel == 1)
+        if (_isEditInProgress.IsValueCreated && (_editLevel is 1))
         {
-            var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
-            changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
-        }
-        else
-        {
-            _readerWriter.WriteNested(updateAction);
+            _isEditInProgress.Value.OnNext(true);
         }
 
-        _editLevel--;
-
-        if (changes is not null && _editLevel == 0)
+        try
         {
-            notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+            if (_editLevel == 1)
+            {
+                var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
+                changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
+            }
+            else
+            {
+                _readerWriter.WriteNested(updateAction);
+            }
+        }
+        finally
+        {
+            _editLevel--;
+
+            if (changes is not null && _editLevel == 0)
+            {
+                notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+            }
+
+            if (_isEditInProgress.IsValueCreated && (_editLevel is 0))
+            {
+                _isEditInProgress.Value.OnNext(false);
+            }
         }
     }
 
@@ -325,21 +310,36 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
         ChangeSet<TObject, TKey>? changes = null;
 
         _editLevel++;
-        if (_editLevel == 1)
+        if (_isEditInProgress.IsValueCreated && (_editLevel is 1))
         {
-            var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
-            changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
-        }
-        else
-        {
-            _readerWriter.WriteNested(updateAction);
+            _isEditInProgress.Value.OnNext(true);
         }
 
-        _editLevel--;
-
-        if (changes is not null && _editLevel == 0)
+        try
         {
-            notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+            if (_editLevel == 1)
+            {
+                var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
+                changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
+            }
+            else
+            {
+                _readerWriter.WriteNested(updateAction);
+            }
+        }
+        finally
+        {
+            _editLevel--;
+
+            if (changes is not null && _editLevel == 0)
+            {
+                notifications.EnqueueNext(new CacheUpdate(changes, _readerWriter.Count, ++_currentVersion));
+            }
+
+            if (_isEditInProgress.IsValueCreated && (_editLevel is 0))
+            {
+                _isEditInProgress.Value.OnNext(false);
+            }
         }
     }
 
@@ -378,6 +378,44 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
                 return changes.SubscribeSafe(observer);
             });
+
+    private IObservable<T> CreateDeferredNotificationObservable<T>(Func<IObservable<T>> factory)
+        => Observable.Create<T>(observer =>
+        {
+            lock (_locker)
+            {
+                var observable = (_suspensionTracker.IsValueCreated, _isEditInProgress.IsValueCreated || (_editLevel is not 0)) switch
+                {
+                    (false, false) => factory.Invoke(),
+                    (false, true) => _isEditInProgress.Value
+                        .Where(static isEditInProgress => !isEditInProgress)
+                        .Take(1)
+                        .SelectMany(_ => (_suspensionTracker.IsValueCreated && _suspensionTracker.Value.AreNotificationsSuspended)
+                            ? CreateFullyDeferredConnection()
+                            : factory.Invoke()),
+                    (true, false) => _suspensionTracker.Value.NotificationsSuspendedObservable
+                        .Where(static areNotificationsSuspended => !areNotificationsSuspended)
+                        .Take(1)
+                        .SelectMany(_ => (_isEditInProgress.IsValueCreated && _isEditInProgress.Value.Value)
+                            ? CreateFullyDeferredConnection()
+                            : factory.Invoke()),
+                    _ => CreateFullyDeferredConnection()
+                };
+
+                return observable.SubscribeSafe(observer);
+
+                IObservable<T> CreateFullyDeferredConnection()
+                    => Observable.CombineLatest(
+                            _suspensionTracker.Value.NotificationsSuspendedObservable,
+                            _isEditInProgress.Value,
+                            static (areNotificationsSuspended, isEditInProgress) => areNotificationsSuspended || isEditInProgress)
+                        .Do(static _ => { }, observer.OnCompleted)
+                        .Where(static shouldConnectionBeDeferred => !shouldConnectionBeDeferred)
+                        .Take(1)
+                        .Select(_ => factory.Invoke())
+                        .Switch();
+            }
+        });
 
     /// <summary>
     /// Executes the CreateWatchObservable operation.
@@ -537,6 +575,11 @@ private sealed class CacheUpdateObserver(ObservableCache<TObject, TKey> cache) :
             cache._changesPreview.OnError(error);
             cache._changes.OnError(error);
 
+            if (cache._isEditInProgress.IsValueCreated)
+            {
+                cache._isEditInProgress.Value.OnError(error);
+            }
+
             if (cache._countChanged.IsValueCreated)
             {
                 cache._countChanged.Value.OnError(error);
@@ -555,6 +598,11 @@ private sealed class CacheUpdateObserver(ObservableCache<TObject, TKey> cache) :
         {
             cache._changes.OnCompleted();
             cache._changesPreview.OnCompleted();
+
+            if (cache._isEditInProgress.IsValueCreated)
+            {
+                cache._isEditInProgress.Value.OnCompleted();
+            }
 
             if (cache._countChanged.IsValueCreated)
             {
