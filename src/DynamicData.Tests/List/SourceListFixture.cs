@@ -2,8 +2,8 @@ namespace DynamicData.Tests.List;
 
 public class SourceListFixture
 {
-    [Fact]
-    public void InitialChangeIsRange()
+    [Test]
+    public async Task InitialChangeIsRange()
     {
         var source = new SourceList<string>();
         source.Add("A");
@@ -11,7 +11,7 @@ public class SourceListFixture
 
         source.Connect().Subscribe(changeSets.Add).Dispose();
 
-        changeSets[0].First().Type.Should().Be(ChangeType.Range);
-        changeSets[0].First().Range.Index.Should().Be(0);
+        await Assert.That(changeSets[0].First().Type).IsEqualTo(ChangeType.Range);
+        await Assert.That(changeSets[0].First().Range.Index).IsEqualTo(0);
     }
 }

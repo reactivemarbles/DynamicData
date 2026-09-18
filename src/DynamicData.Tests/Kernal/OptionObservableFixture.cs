@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 
 namespace DynamicData.Tests.Kernal;
 
@@ -7,29 +11,29 @@ public class OptionObservableFixture
     private const int NoneCount = 5;
     private const int SomeCount = 10;
 
-    private static Optional<string> NotConvertableToInt { get; } = Optional<string>.Some("NOT AN INT");
+    private static ReactiveUI.Primitives.Optional<string> NotConvertableToInt { get; } = ReactiveUI.Primitives.Optional<string>.Some("NOT AN INT");
     private static IEnumerable<int> IntEnum { get; } = Enumerable.Range(0, SomeCount);
     private static IEnumerable<string> StringEnum { get; } = IntEnum.Select(n => n.ToString());
-    private static IEnumerable<Optional<int>> OptIntEnum { get; } = IntEnum.Select(i => Optional<int>.Some(i));
-    private static IEnumerable<Optional<int>> OptNoneIntEnum { get; } = Enumerable.Repeat(Optional<int>.None, NoneCount);
-    private static IEnumerable<Optional<string>> OptNoneStringEnum { get; } = Enumerable.Repeat(Optional<string>.None, NoneCount);
-    private static IEnumerable<Optional<string>> OptStringEnum { get; } = StringEnum.Select(str => Optional<string>.Some(str));
-    private static IEnumerable<Optional<string>> OptStringWithNoneEnum { get; } = OptNoneStringEnum.Concat(OptStringEnum);
-    private static IEnumerable<Optional<string>> OptStringWithBadEnum { get; } = OptStringEnum.Prepend(NotConvertableToInt);
-    private static IEnumerable<Optional<string>> OptStringWithBadAndNoneEnum { get; } = OptStringWithNoneEnum.Prepend(NotConvertableToInt);
+    private static IEnumerable<ReactiveUI.Primitives.Optional<int>> OptIntEnum { get; } = IntEnum.Select(i => ReactiveUI.Primitives.Optional<int>.Some(i));
+    private static IEnumerable<ReactiveUI.Primitives.Optional<int>> OptNoneIntEnum { get; } = Enumerable.Repeat(ReactiveUI.Primitives.Optional<int>.None, NoneCount);
+    private static IEnumerable<ReactiveUI.Primitives.Optional<string>> OptNoneStringEnum { get; } = Enumerable.Repeat(ReactiveUI.Primitives.Optional<string>.None, NoneCount);
+    private static IEnumerable<ReactiveUI.Primitives.Optional<string>> OptStringEnum { get; } = StringEnum.Select(str => ReactiveUI.Primitives.Optional<string>.Some(str));
+    private static IEnumerable<ReactiveUI.Primitives.Optional<string>> OptStringWithNoneEnum { get; } = OptNoneStringEnum.Concat(OptStringEnum);
+    private static IEnumerable<ReactiveUI.Primitives.Optional<string>> OptStringWithBadEnum { get; } = OptStringEnum.Prepend(NotConvertableToInt);
+    private static IEnumerable<ReactiveUI.Primitives.Optional<string>> OptStringWithBadAndNoneEnum { get; } = OptStringWithNoneEnum.Prepend(NotConvertableToInt);
 
-    [Fact]
-    public void NullChecks()
+    [Test]
+    public async Task NullChecks()
     {
         // having
-        var neverObservable = Observable.Never<Optional<int>>();
-        var nullObservable = (IObservable<Optional<int>>)null!;
+        var neverObservable = Observable.Never<ReactiveUI.Primitives.Optional<int>>();
+        var nullObservable = (IObservable<ReactiveUI.Primitives.Optional<int>>)null!;
         var nullConverter = (Func<int, double>)null!;
-        var nullOptionalConverter = (Func<int, Optional<double>>)null!;
+        var nullOptionalConverter = (Func<int, ReactiveUI.Primitives.Optional<double>>)null!;
         var converter = (Func<int, double>)(i => i);
         var nullFallback = (Func<int>)null!;
         var nullConvertFallback = (Func<double>)null!;
-        var nullOptionalFallback = (Func<Optional<int>>)null!;
+        var nullOptionalFallback = (Func<ReactiveUI.Primitives.Optional<int>>)null!;
         var action = (Action)null!;
         var actionVal = (Action<int>)null!;
         var nullExceptionGenerator = (Func<Exception>)null!;
@@ -55,28 +59,28 @@ public class OptionObservableFixture
         var valueOrThrow2 = () => neverObservable.ValueOrThrow(nullExceptionGenerator);
 
         // then
-        convert1.Should().Throw<ArgumentNullException>();
-        convert2.Should().Throw<ArgumentNullException>();
-        convertOpt1.Should().Throw<ArgumentNullException>();
-        convertOpt2.Should().Throw<ArgumentNullException>();
-        convertOr1.Should().Throw<ArgumentNullException>();
-        convertOr2.Should().Throw<ArgumentNullException>();
-        convertOr3.Should().Throw<ArgumentNullException>();
-        orElse1.Should().Throw<ArgumentNullException>();
-        orElse2.Should().Throw<ArgumentNullException>();
-        onHasValue.Should().Throw<ArgumentNullException>();
-        onHasValue2.Should().Throw<ArgumentNullException>();
-        onHasNoValue.Should().Throw<ArgumentNullException>();
-        onHasNoValue2.Should().Throw<ArgumentNullException>();
-        selectValues.Should().Throw<ArgumentNullException>();
-        valueOr.Should().Throw<ArgumentNullException>();
-        valueOrDefault.Should().Throw<ArgumentNullException>();
-        valueOrThrow1.Should().Throw<ArgumentNullException>();
-        valueOrThrow2.Should().Throw<ArgumentNullException>();
+        await Assert.That(convert1).Throws<ArgumentNullException>();
+        await Assert.That(convert2).Throws<ArgumentNullException>();
+        await Assert.That(convertOpt1).Throws<ArgumentNullException>();
+        await Assert.That(convertOpt2).Throws<ArgumentNullException>();
+        await Assert.That(convertOr1).Throws<ArgumentNullException>();
+        await Assert.That(convertOr2).Throws<ArgumentNullException>();
+        await Assert.That(convertOr3).Throws<ArgumentNullException>();
+        await Assert.That(orElse1).Throws<ArgumentNullException>();
+        await Assert.That(orElse2).Throws<ArgumentNullException>();
+        await Assert.That(onHasValue).Throws<ArgumentNullException>();
+        await Assert.That(onHasValue2).Throws<ArgumentNullException>();
+        await Assert.That(onHasNoValue).Throws<ArgumentNullException>();
+        await Assert.That(onHasNoValue2).Throws<ArgumentNullException>();
+        await Assert.That(selectValues).Throws<ArgumentNullException>();
+        await Assert.That(valueOr).Throws<ArgumentNullException>();
+        await Assert.That(valueOrDefault).Throws<ArgumentNullException>();
+        await Assert.That(valueOrThrow1).Throws<ArgumentNullException>();
+        await Assert.That(valueOrThrow2).Throws<ArgumentNullException>();
     }
 
-    [Fact]
-    public void ConvertWillConvertValues()
+    [Test]
+    public async Task ConvertWillConvertValues()
     {
         // having
         var observable = OptStringEnum.ToObservable();
@@ -86,12 +90,12 @@ public class OptionObservableFixture
         var intList = OptIntEnum.ToList();
 
         // then
-        results.Should().BeSubsetOf(intList);
-        intList.Should().BeSubsetOf(results);
+        await Assert.That(new HashSet<ReactiveUI.Primitives.Optional<int>>(results).IsSubsetOf(intList)).IsTrue();
+        await Assert.That(new HashSet<ReactiveUI.Primitives.Optional<int>>(intList).IsSubsetOf(results)).IsTrue();
     }
 
-    [Fact]
-    public void ConvertPreservesNone()
+    [Test]
+    public async Task ConvertPreservesNone()
     {
         // having
         var enumerable = OptStringWithNoneEnum;
@@ -102,12 +106,12 @@ public class OptionObservableFixture
         var expected = enumerable.Where(opt => !opt.HasValue).Count();
 
         // then
-        results.Should().Be(expected);
-        results.Should().Be(NoneCount);
+        await Assert.That(results).IsEqualTo(expected);
+        await Assert.That(results).IsEqualTo(NoneCount);
     }
 
-    [Fact]
-    public void ConvertOptionalWillConvertValues()
+    [Test]
+    public async Task ConvertOptionalWillConvertValues()
     {
         // having
         var observable = OptStringWithBadEnum.ToObservable();
@@ -117,12 +121,12 @@ public class OptionObservableFixture
         var intList = OptIntEnum.ToList();
 
         // then
-        intList.Should().BeSubsetOf(results);
-        results.Should().Contain(Optional<int>.None);
+        await Assert.That(new HashSet<ReactiveUI.Primitives.Optional<int>>(intList).IsSubsetOf(results)).IsTrue();
+        await Assert.That(results).Contains(ReactiveUI.Primitives.Optional<int>.None);
     }
 
-    [Fact]
-    public void ConvertOptionalPreservesNone()
+    [Test]
+    public async Task ConvertOptionalPreservesNone()
     {
         // having
         var enumerable = OptStringWithBadAndNoneEnum;
@@ -133,12 +137,12 @@ public class OptionObservableFixture
         var expected = OptStringWithNoneEnum.Where(opt => !opt.HasValue).Count() + 1;
 
         // then
-        results.Should().Be(expected);
-        results.Should().BeGreaterThan(1);
+        await Assert.That(results).IsEqualTo(expected);
+        await Assert.That(results).IsGreaterThan(1);
     }
 
-    [Fact]
-    public void ConvertOrConvertsOrFallsback()
+    [Test]
+    public async Task ConvertOrConvertsOrFallsback()
     {
         // having
         var observable = OptStringWithNoneEnum.ToObservable();
@@ -148,27 +152,27 @@ public class OptionObservableFixture
         var intList = IntEnum.Prepend(-1);
 
         // then
-        results.Should().BeSubsetOf(intList);
-        intList.Should().BeSubsetOf(results);
+        await Assert.That(new HashSet<int>(results).IsSubsetOf(intList)).IsTrue();
+        await Assert.That(new HashSet<int>(intList).IsSubsetOf(results)).IsTrue();
     }
 
-    [Fact]
-    public void OrElseFallsback()
+    [Test]
+    public async Task OrElseFallsback()
     {
         // having
-        var observable = OptIntEnum.ToObservable().StartWith(Optional<int>.None);
+        var observable = OptIntEnum.ToObservable().StartWith(ReactiveUI.Primitives.Optional<int>.None);
 
         // when
         var results = observable.OrElse(() => -1).ToEnumerable();
         var intList = OptIntEnum.Prepend(-1);
 
         // then
-        results.Should().BeSubsetOf(intList);
-        intList.Should().BeSubsetOf(results);
+        await Assert.That(new HashSet<ReactiveUI.Primitives.Optional<int>>(results).IsSubsetOf(intList)).IsTrue();
+        await Assert.That(new HashSet<ReactiveUI.Primitives.Optional<int>>(intList).IsSubsetOf(results)).IsTrue();
     }
 
-    [Fact]
-    public void OnHasValueInvokesCorrectAction()
+    [Test]
+    public async Task OnHasValueInvokesCorrectAction()
     {
         // having
         int value = 0;
@@ -181,12 +185,12 @@ public class OptionObservableFixture
         var results = observable.ToEnumerable().ToList();
 
         // then
-        value.Should().Be(SomeCount);
-        noValue.Should().Be(NoneCount);
+        await Assert.That(value).IsEqualTo(SomeCount);
+        await Assert.That(noValue).IsEqualTo(NoneCount);
     }
 
-    [Fact]
-    public void OnHasNoValueInvokesCorrectAction()
+    [Test]
+    public async Task OnHasNoValueInvokesCorrectAction()
     {
         // having
         int value = 0;
@@ -199,12 +203,12 @@ public class OptionObservableFixture
         var results = observable.ToEnumerable().ToList();
 
         // then
-        value.Should().Be(SomeCount);
-        noValue.Should().Be(NoneCount);
+        await Assert.That(value).IsEqualTo(SomeCount);
+        await Assert.That(noValue).IsEqualTo(NoneCount);
     }
 
-    [Fact]
-    public void SelectValuesReturnsTheValues()
+    [Test]
+    public async Task SelectValuesReturnsTheValues()
     {
         // having
         var enumerable = OptIntEnum.Concat(OptNoneIntEnum);
@@ -215,12 +219,12 @@ public class OptionObservableFixture
         var results = observable.ToEnumerable().Count();
 
         // then
-        expected.Should().Be(results);
-        results.Should().Be(SomeCount);
+        await Assert.That(expected).IsEqualTo(results);
+        await Assert.That(results).IsEqualTo(SomeCount);
     }
 
-    [Fact]
-    public void ValueOrInvokesSelector()
+    [Test]
+    public async Task ValueOrInvokesSelector()
     {
         // having
         int invokeCount = 0;
@@ -233,13 +237,13 @@ public class OptionObservableFixture
         var results = observable.ToEnumerable().Where(i => i.Equals(-1)).Count();
 
         // then
-        expected.Should().Be(results);
-        results.Should().Be(NoneCount);
-        invokeCount.Should().Be(NoneCount);
+        await Assert.That(expected).IsEqualTo(results);
+        await Assert.That(results).IsEqualTo(NoneCount);
+        await Assert.That(invokeCount).IsEqualTo(NoneCount);
     }
 
-    [Fact]
-    public void ValueOrDefaultReturnsDefaultValues()
+    [Test]
+    public async Task ValueOrDefaultReturnsDefaultValues()
     {
         // having
         var enumerable = OptStringWithNoneEnum;
@@ -250,12 +254,12 @@ public class OptionObservableFixture
         var results = observable.ToEnumerable().Where(str => str == default).Count();
 
         // then
-        expected.Should().Be(results);
-        results.Should().Be(NoneCount);
+        await Assert.That(expected).IsEqualTo(results);
+        await Assert.That(results).IsEqualTo(NoneCount);
     }
 
-    [Fact]
-    public void ValueOrThrowFailsWithGeneratedError()
+    [Test]
+    public async Task ValueOrThrowFailsWithGeneratedError()
     {
         // having
         var expectedError = new Exception("Nope");
@@ -268,11 +272,11 @@ public class OptionObservableFixture
         using var cleanup = observable.Subscribe(_ => { }, err => receivedError = err);
 
         // then
-        receivedError.Should().Be(expectedError);
+        await Assert.That(receivedError).IsEqualTo(expectedError);
     }
 
-    private static Optional<int> ParseIntOpt(string input) =>
-        int.TryParse(input, out var result) ? Optional<int>.Some(result) : Optional<int>.None;
+    private static ReactiveUI.Primitives.Optional<int> ParseIntOpt(string input) =>
+        int.TryParse(input, out var result) ? ReactiveUI.Primitives.Optional<int>.Some(result) : ReactiveUI.Primitives.Optional<int>.None;
 
     private static int ParseInt(string input) => int.Parse(input);
 }

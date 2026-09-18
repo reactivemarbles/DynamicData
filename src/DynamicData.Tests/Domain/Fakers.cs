@@ -1,4 +1,4 @@
-﻿using Bogus;
+using Bogus;
 
 namespace DynamicData.Tests.Domain;
 

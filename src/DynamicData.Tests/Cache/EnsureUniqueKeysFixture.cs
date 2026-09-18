@@ -2,7 +2,7 @@ using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
 
-public class EnsureUniqueKeysFixture: IDisposable
+public class EnsureUniqueKeysFixture : IDisposable
 {
     private readonly ISourceCache<Person, string> _source;
     private readonly ChangeSetAggregator<Person, string> _results;
@@ -13,8 +13,8 @@ public class EnsureUniqueKeysFixture: IDisposable
         _results = _source.Connect(suppressEmptyChangeSets: false).EnsureUniqueKeys().AsAggregator();
     }
 
-    [Fact]
-    public void UniqueForAdds()
+    [Test]
+    public async Task UniqueForAdds()
     {
         _source.Edit(innerCache =>
         {
@@ -24,13 +24,13 @@ public class EnsureUniqueKeysFixture: IDisposable
         });
 
         var message1 = _results.Messages[0];
-        message1.Count.Should().Be(1);
-        message1.First().Current.Age.Should().Be(22);
-        message1.First().Reason.Should().Be(ChangeReason.Add);
+        await Assert.That(message1.Count).IsEqualTo(1);
+        await Assert.That(message1.First().Current.Age).IsEqualTo(22);
+        await Assert.That(message1.First().Reason).IsEqualTo(ChangeReason.Add);
     }
 
-    [Fact]
-    public void AddAndRemove()
+    [Test]
+    public async Task AddAndRemove()
     {
         _source.Edit(innerCache =>
         {
@@ -40,12 +40,12 @@ public class EnsureUniqueKeysFixture: IDisposable
         });
 
         var message1 = _results.Messages[0];
-        message1.Count.Should().Be(0);
+        await Assert.That(message1.Count).IsEqualTo(0);
 
     }
 
-    [Fact]
-    public void Refresh()
+    [Test]
+    public async Task Refresh()
     {
         _source.AddOrUpdate(new Person("Me", 20));
 
@@ -55,14 +55,14 @@ public class EnsureUniqueKeysFixture: IDisposable
         });
 
         var message1 = _results.Messages[1];
-        message1.Count.Should().Be(1);
-        message1.First().Current.Age.Should().Be(20);
-        message1.First().Reason.Should().Be(ChangeReason.Refresh);
+        await Assert.That(message1.Count).IsEqualTo(1);
+        await Assert.That(message1.First().Current.Age).IsEqualTo(20);
+        await Assert.That(message1.First().Reason).IsEqualTo(ChangeReason.Refresh);
 
     }
 
-    [Fact]
-    public void CompoundRefresh1()
+    [Test]
+    public async Task CompoundRefresh1()
     {
         _source.Edit(innerCache =>
         {
@@ -71,14 +71,14 @@ public class EnsureUniqueKeysFixture: IDisposable
         });
 
         var message1 = _results.Messages[0];
-        message1.Count.Should().Be(1);
-        message1.First().Current.Age.Should().Be(20);
-        message1.First().Reason.Should().Be(ChangeReason.Add);
+        await Assert.That(message1.Count).IsEqualTo(1);
+        await Assert.That(message1.First().Current.Age).IsEqualTo(20);
+        await Assert.That(message1.First().Reason).IsEqualTo(ChangeReason.Add);
 
     }
 
-    [Fact]
-    public void CompoundRefresh2()
+    [Test]
+    public async Task CompoundRefresh2()
     {
         _source.Edit(innerCache =>
         {
@@ -89,14 +89,14 @@ public class EnsureUniqueKeysFixture: IDisposable
         });
 
         var message1 = _results.Messages[0];
-        message1.Count.Should().Be(1);
-        message1.First().Current.Age.Should().Be(21);
-        message1.First().Reason.Should().Be(ChangeReason.Add);
+        await Assert.That(message1.Count).IsEqualTo(1);
+        await Assert.That(message1.First().Current.Age).IsEqualTo(21);
+        await Assert.That(message1.First().Reason).IsEqualTo(ChangeReason.Add);
 
     }
 
-    [Fact]
-    public void CompoundRefresh3()
+    [Test]
+    public async Task CompoundRefresh3()
     {
         _source.AddOrUpdate(new Person("Me", 20));
 
@@ -109,9 +109,9 @@ public class EnsureUniqueKeysFixture: IDisposable
         });
 
         var message1 = _results.Messages[1];
-        message1.Count.Should().Be(1);
-        message1.First().Current.Age.Should().Be(20);
-        message1.First().Reason.Should().Be(ChangeReason.Refresh);
+        await Assert.That(message1.Count).IsEqualTo(1);
+        await Assert.That(message1.First().Current.Age).IsEqualTo(20);
+        await Assert.That(message1.First().Reason).IsEqualTo(ChangeReason.Refresh);
 
     }
 

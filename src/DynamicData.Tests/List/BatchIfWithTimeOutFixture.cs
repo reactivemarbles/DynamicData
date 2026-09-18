@@ -4,7 +4,7 @@ namespace DynamicData.Tests.List;
 
 public class BatchIfWithTimeOutFixture : IDisposable
 {
-    private readonly ISignal<bool> _pausingSubject = new Signal<bool>();
+    private readonly ReactiveUI.Primitives.Signals.ISignal<bool> _pausingSubject = new ReactiveUI.Primitives.Signals.Signal<bool>();
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -14,14 +14,14 @@ public class BatchIfWithTimeOutFixture : IDisposable
 
     public BatchIfWithTimeOutFixture()
     {
-        _pausingSubject = new Signal<bool>();
+        _pausingSubject = new ReactiveUI.Primitives.Signals.Signal<bool>();
         _scheduler = new TestScheduler();
         _source = new SourceList<Person>();
         _results = _source.Connect().BufferIf(_pausingSubject, TimeSpan.FromMinutes(1), _scheduler).AsAggregator();
     }
 
-    [Fact]
-    public void CanToggleSuspendResume()
+    [Test]
+    public async Task CanToggleSuspendResume()
     {
         _pausingSubject.OnNext(true);
         ////advance otherwise nothing happens
@@ -30,14 +30,14 @@ public class BatchIfWithTimeOutFixture : IDisposable
         _source.Add(new Person("A", 1));
 
         //go forward an arbitary amount of time
-        _results.Messages.Count.Should().Be(0, "There should be no messages");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("There should be no messages");
 
         _pausingSubject.OnNext(false);
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
         _source.Add(new Person("B", 1));
 
-        _results.Messages.Count.Should().Be(2, "There should be no messages");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("There should be no messages");
     }
 
     public void Dispose()
@@ -48,8 +48,8 @@ public class BatchIfWithTimeOutFixture : IDisposable
         _pausingSubject?.Dispose();
     }
 
-    [Fact]
-    public void NoResultsWillBeReceivedIfPaused()
+    [Test]
+    public async Task NoResultsWillBeReceivedIfPaused()
     {
         _pausingSubject.OnNext(true);
         //advance otherwise nothing happens
@@ -57,31 +57,31 @@ public class BatchIfWithTimeOutFixture : IDisposable
 
         _source.Add(new Person("A", 1));
 
-        _results.Messages.Count.Should().Be(0, "There should be no messages");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("There should be no messages");
     }
 
-    [Fact]
-    public void ResultsWillBeReceivedIfNotPaused()
+    [Test]
+    public async Task ResultsWillBeReceivedIfNotPaused()
     {
         _source.Add(new Person("A", 1));
 
         //go forward an arbitary amount of time
         _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-        _results.Messages.Count.Should().Be(1, "Should be 1 update");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 update");
     }
 
-    [Fact]
-    public void WillApplyTimeout()
+    [Test]
+    public async Task WillApplyTimeout()
     {
         _pausingSubject.OnNext(true);
 
-        //should timeout 
+        //should timeout
         _scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
 
         _source.Add(new Person("A", 1));
 
         //go forward an arbitary amount of time
         // _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-        _results.Messages.Count.Should().Be(1, "There should be no messages");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("There should be no messages");
     }
 }

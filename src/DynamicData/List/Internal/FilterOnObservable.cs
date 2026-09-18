@@ -37,7 +37,7 @@ internal sealed class FilterOnObservable<TObject>(IObservable<IChangeSet<TObject
     public IObservable<IChangeSet<TObject>> Run() => Observable.Create<IChangeSet<TObject>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var locker = InternalEx.NewMonitorGate();
 
                 var allItems = new List<ObjWithFilterValue>();
 
@@ -88,12 +88,12 @@ internal sealed class FilterOnObservable<TObject>(IObservable<IChangeSet<TObject
         return itemsToFind.Join(indexed, objectPropertyFunc, right => objectPropertyFunc(right.Element), (left, right) => resultSelector(left, right.Index));
     }
 
-/// <summary>
-/// Represents the ObjWithFilterValue value.
-/// </summary>
-/// <param name="obj">The obj value.</param>
-/// <param name="filter">The filter value.</param>
-private readonly struct ObjWithFilterValue(TObject obj, bool filter) : IEquatable<ObjWithFilterValue>
+    /// <summary>
+    /// Represents the ObjWithFilterValue value.
+    /// </summary>
+    /// <param name="obj">The obj value.</param>
+    /// <param name="filter">The filter value.</param>
+    private readonly struct ObjWithFilterValue(TObject obj, bool filter) : IEquatable<ObjWithFilterValue>
     {
         /// <summary>
         /// The Obj field.
@@ -131,10 +131,10 @@ private readonly struct ObjWithFilterValue(TObject obj, bool filter) : IEquatabl
         /// <returns>The result of the operation.</returns>
         public override int GetHashCode() => ObjComparer.GetHashCode(this);
 
-/// <summary>
-/// Provides members for the ObjEqualityComparer class.
-/// </summary>
-private sealed class ObjEqualityComparer : IEqualityComparer<ObjWithFilterValue>
+        /// <summary>
+        /// Provides members for the ObjEqualityComparer class.
+        /// </summary>
+        private sealed class ObjEqualityComparer : IEqualityComparer<ObjWithFilterValue>
         {
             /// <summary>
             /// Executes the Equals operation.

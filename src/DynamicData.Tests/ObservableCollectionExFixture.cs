@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests;
@@ -11,32 +15,32 @@ public class ObservableCollectionExFixture
 
     private readonly Person _person3 = new("Three", 3);
 
-    [Fact]
-    public void CanConvertToObservableChangeSetList()
+    [Test]
+    public async Task CanConvertToObservableChangeSetList()
     {
         var source = new ObservableCollection<Person> { _person1, _person2, _person3 };
         var changeSet = source.ToObservableChangeSet().AsObservableList();
-        changeSet.Items.Should().BeEquivalentTo(source);
+        await Assert.That(changeSet.Items).IsEquivalentTo(source);
     }
 
-    [Fact]
-    public void CanConvertToObservableChangeSetCache()
+    [Test]
+    public async Task CanConvertToObservableChangeSetCache()
     {
         var source = new ObservableCollection<Person> { _person1, _person2, _person3 };
         var changeSet = source.ToObservableChangeSet(x => x.Name).AsObservableCache();
-        changeSet.Items.Should().BeEquivalentTo(source);
+        await Assert.That(changeSet.Items).IsEquivalentTo(source);
         var one = changeSet.Lookup("One").Value;
-        one.Should().BeEquivalentTo(_person1);
+        await Assert.That(one).IsEquivalentTo(_person1);
     }
 
-    [Fact]
-    public void ReplacingAnItemWithSameProducesUpdate()
+    [Test]
+    public async Task ReplacingAnItemWithSameProducesUpdate()
     {
         var source = new ObservableCollection<Person> { _person1, _person2, _person3 };
         var aggregator = source.ToObservableChangeSet(x => x.Name).AsAggregator();
         source[0] = new Person("One", 100);
-        aggregator.Summary.Latest.Updates.Should().Be(1);
-        aggregator.Summary.Latest.Adds.Should().Be(0);
-        aggregator.Summary.Latest.Removes.Should().Be(0);
+        await Assert.That(aggregator.Summary.Latest.Updates).IsEqualTo(1);
+        await Assert.That(aggregator.Summary.Latest.Adds).IsEqualTo(0);
+        await Assert.That(aggregator.Summary.Latest.Removes).IsEqualTo(0);
     }
 }

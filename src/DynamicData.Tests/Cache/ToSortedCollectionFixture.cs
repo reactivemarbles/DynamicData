@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
@@ -25,8 +29,8 @@ public class ToSortedCollectionFixture : IDisposable
         _cleanup.Dispose();
     }
 
-    [Fact]
-    public void SortAscending()
+    [Test]
+    public async Task SortAscending()
     {
         TestScheduler testScheduler = new();
 
@@ -51,13 +55,13 @@ public class ToSortedCollectionFixture : IDisposable
 
         testScheduler.AdvanceBy(TimeSpan.FromSeconds(2).Ticks);
 
-        _cache.Items.Should().Equal(_unsortedCollection);
-        _cache.Items.Should().NotEqual(_sortedCollection);
-        _cache.Items.OrderBy(p => p.Age).Should().Equal(_sortedCollection);
+        await Assert.That(_cache.Items).IsEquivalentTo(_unsortedCollection);
+        await Assert.That(_cache.Items).IsNotEqualTo(_sortedCollection);
+        await Assert.That(_cache.Items.OrderBy(p => p.Age)).IsEquivalentTo(_sortedCollection);
     }
 
-    [Fact]
-    public void SortDescending()
+    [Test]
+    public async Task SortDescending()
     {
         TestScheduler testScheduler = new();
 
@@ -82,8 +86,8 @@ public class ToSortedCollectionFixture : IDisposable
 
         testScheduler.AdvanceBy(TimeSpan.FromSeconds(2).Ticks);
 
-        _cache.Items.Should().Equal(_unsortedCollection);
-        _cache.Items.Should().NotEqual(_sortedCollection);
-        _cache.Items.OrderByDescending(p => p.Age).Should().Equal(_sortedCollection);
+        await Assert.That(_cache.Items).IsEquivalentTo(_unsortedCollection);
+        await Assert.That(_cache.Items).IsNotEqualTo(_sortedCollection);
+        await Assert.That(_cache.Items.OrderByDescending(p => p.Age)).IsEquivalentTo(_sortedCollection);
     }
 }

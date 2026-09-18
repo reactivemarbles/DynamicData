@@ -141,13 +141,13 @@ public static partial class ObservableListEx
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source,
-        Func<TSource, Optional<TDestination>, int, CancellationToken, Task<TDestination>> transformFactory,
+        Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, int, CancellationToken, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
 
         return new TransformAsync<TSource, TDestination>(source, transformFactory, transformOnRefresh).Run();
     }

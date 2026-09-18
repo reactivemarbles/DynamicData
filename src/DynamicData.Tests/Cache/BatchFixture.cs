@@ -23,20 +23,20 @@ public class BatchFixture : IDisposable
         _source.Dispose();
     }
 
-    [Fact]
-    public void NoResultsWillBeReceivedBeforeClosingBuffer()
+    [Test]
+    public async Task NoResultsWillBeReceivedBeforeClosingBuffer()
     {
         _source.AddOrUpdate(new Person("A", 1));
-        _results.Messages.Count.Should().Be(0, "There should be no messages");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("There should be no messages");
     }
 
-    [Fact]
-    public void ResultsWillBeReceivedAfterClosingBuffer()
+    [Test]
+    public async Task ResultsWillBeReceivedAfterClosingBuffer()
     {
         _source.AddOrUpdate(new Person("A", 1));
 
         //go forward an arbitary amount of time
         _scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
-        _results.Messages.Count.Should().Be(1, "Should be 1 update");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 update");
     }
 }

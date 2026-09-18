@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Aggregation;
+#else
 using DynamicData.Aggregation;
+#endif
 
 namespace DynamicData.Tests.AggregationTests;
 
@@ -6,10 +10,10 @@ public partial class SumFixture
 {
     public class ForList
     {
-        [Theory]
-        [InlineData(1, 10)]
-        [InlineData(3, 60)]
-        public void ItemsAreAdded_SumReflectsAllItems(int itemCount, int expectedSum)
+        [Test]
+        [Arguments(1, 10)]
+        [Arguments(3, 60)]
+        public async Task ItemsAreAdded_SumReflectsAllItems(int itemCount, int expectedSum)
         {
             var items = new[] { 10, 20, 30 };
             using var source = new TestSourceList<int>();
@@ -20,24 +24,23 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().BeEmpty("no items have been added to the source");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).IsEmpty();
 
             // UUT Action
             source.AddRange(items.Take(itemCount));
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().ContainSingle("an AddRange produces a single changeset")
-                .Which.Should().Be(expectedSum, $"the sum of the first {itemCount} items should be {expectedSum}");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(await Assert.That(results.RecordedValues).HasSingleItem()).IsEqualTo(expectedSum).Because($"the sum of the first {itemCount} items should be {expectedSum}");
         }
 
-        [Theory]
-        [InlineData(0, 50)]
-        [InlineData(1, 40)]
-        [InlineData(2, 30)]
-        public void ItemIsRemoved_SumReflectsRemoval(int removalIndex, int expectedSum)
+        [Test]
+        [Arguments(0, 50)]
+        [Arguments(1, 40)]
+        [Arguments(2, 30)]
+        public async Task ItemIsRemoved_SumReflectsRemoval(int removalIndex, int expectedSum)
         {
             using var source = new TestSourceList<int>();
 
@@ -49,22 +52,21 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().ContainSingle("one changeset was published containing all pre-existing items")
-                .Which.Should().Be(60, "the sum of items 10 + 20 + 30 is 60");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(await Assert.That(results.RecordedValues).HasSingleItem()).IsEqualTo(60).Because("the sum of items 10 + 20 + 30 is 60");
 
             // UUT Action
             source.RemoveAt(removalIndex);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().HaveCount(2, "one additional sum value should have been emitted after the removal");
-            results.RecordedValues[^1].Should().Be(expectedSum, $"removing item at index {removalIndex} should leave a sum of {expectedSum}");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).HasCount(2).Because("one additional sum value should have been emitted after the removal");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(expectedSum).Because($"removing item at index {removalIndex} should leave a sum of {expectedSum}");
         }
 
-        [Fact]
-        public void ItemIsReplaced_SumReflectsReplacement()
+        [Test]
+        public async Task ItemIsReplaced_SumReflectsReplacement()
         {
             using var source = new TestSourceList<int>();
 
@@ -76,20 +78,19 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.RecordedValues.Should().ContainSingle("one changeset was published containing all pre-existing items")
-                .Which.Should().Be(60, "the sum of items 10 + 20 + 30 is 60");
+            await Assert.That(await Assert.That(results.RecordedValues).HasSingleItem()).IsEqualTo(60).Because("the sum of items 10 + 20 + 30 is 60");
 
             // UUT Action: replace item at index 1 (value 20) with 50
             source.ReplaceAt(1, 50);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().HaveCount(2, "one additional sum value should have been emitted after the replacement");
-            results.RecordedValues[^1].Should().Be(90, "replacing 20 with 50 should change the sum from 60 to 90");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).HasCount(2).Because("one additional sum value should have been emitted after the replacement");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(90).Because("replacing 20 with 50 should change the sum from 60 to 90");
         }
 
-        [Fact]
-        public void ItemsAreCleared_SumReturnsToZero()
+        [Test]
+        public async Task ItemsAreCleared_SumReturnsToZero()
         {
             using var source = new TestSourceList<int>();
 
@@ -101,20 +102,19 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.RecordedValues.Should().ContainSingle("one changeset was published containing all pre-existing items")
-                .Which.Should().Be(60, "the sum of items 10 + 20 + 30 is 60");
+            await Assert.That(await Assert.That(results.RecordedValues).HasSingleItem()).IsEqualTo(60).Because("the sum of items 10 + 20 + 30 is 60");
 
             // UUT Action
             source.Clear();
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().HaveCount(2, "one additional sum value should have been emitted after clearing");
-            results.RecordedValues[^1].Should().Be(0, "all items were removed so the sum should return to zero");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).HasCount(2).Because("one additional sum value should have been emitted after clearing");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(0).Because("all items were removed so the sum should return to zero");
         }
 
-        [Fact]
-        public void SourceIsEmpty_NoSumEmitted()
+        [Test]
+        public async Task SourceIsEmpty_NoSumEmitted()
         {
             using var source = new TestSourceList<int>();
 
@@ -124,13 +124,13 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().BeEmpty("no items were added so no sum values should have been emitted");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).IsEmpty();
         }
 
-        [Fact]
-        public void SourceCompletesAfterEmitting_CompletionPropagates()
+        [Test]
+        public async Task SourceCompletesAfterEmitting_CompletionPropagates()
         {
             using var source = new TestSourceList<int>();
 
@@ -142,19 +142,19 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().ContainSingle("one changeset was published containing all pre-existing items");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).HasSingleItem();
 
             // UUT Action
             source.Complete();
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeTrue("the source has completed");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsTrue();
         }
 
-        [Fact]
-        public void SourceCompletesWithoutEmitting_CompletionPropagates()
+        [Test]
+        public async Task SourceCompletesWithoutEmitting_CompletionPropagates()
         {
             using var source = new TestSourceList<int>();
 
@@ -164,18 +164,18 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.RecordedValues.Should().BeEmpty("no items were added to the source");
+            await Assert.That(results.RecordedValues).IsEmpty();
 
             // UUT Action
             source.Complete();
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeTrue("the source has completed");
-            results.RecordedValues.Should().BeEmpty("no items were added so no sum values should have been emitted");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsTrue();
+            await Assert.That(results.RecordedValues).IsEmpty();
         }
 
-        [Fact]
-        public void SourceCompletesImmediately_InitialSumAndCompletionPropagate()
+        [Test]
+        public async Task SourceCompletesImmediately_InitialSumAndCompletionPropagate()
         {
             using var source = new TestSourceList<int>();
 
@@ -189,14 +189,13 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeTrue("the source was already completed at the time of subscription");
-            results.RecordedValues.Should().ContainSingle("an initial sum value should still be emitted, even when the source completes immediately upon subscription")
-                .Which.Should().Be(60, "the sum of items 10 + 20 + 30 is 60");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsTrue();
+            await Assert.That(await Assert.That(results.RecordedValues).HasSingleItem()).IsEqualTo(60).Because("the sum of items 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void SourceCompletesImmediatelyWithoutEmitting_CompletionPropagates()
+        [Test]
+        public async Task SourceCompletesImmediatelyWithoutEmitting_CompletionPropagates()
         {
             using var source = new TestSourceList<int>();
 
@@ -208,13 +207,13 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeTrue("the source was already completed at the time of subscription");
-            results.RecordedValues.Should().BeEmpty("no items were added so no sum values should have been emitted");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsTrue();
+            await Assert.That(results.RecordedValues).IsEmpty();
         }
 
-        [Fact]
-        public void SourceErrorsAfterEmitting_ErrorPropagates()
+        [Test]
+        public async Task SourceErrorsAfterEmitting_ErrorPropagates()
         {
             using var source = new TestSourceList<int>();
 
@@ -226,19 +225,19 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.RecordedValues.Should().ContainSingle("one changeset was published containing all pre-existing items");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedValues).HasSingleItem();
 
             // UUT Action
             var error = new Exception("Test error");
             source.SetError(error);
 
-            results.Error.Should().BeSameAs(error, "the error from the source should propagate to the subscriber");
-            results.HasCompleted.Should().BeFalse("an error is not a completion");
+            await Assert.That(results.Error).IsSameReferenceAs(error).Because("the error from the source should propagate to the subscriber");
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
-        [Fact]
-        public void SourceFailsImmediately_ErrorPropagates()
+        [Test]
+        public async Task SourceFailsImmediately_ErrorPropagates()
         {
             using var source = new TestSourceList<int>();
 
@@ -253,17 +252,17 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeSameAs(error, "the error from the source should propagate to the subscriber immediately upon subscription");
-            results.HasCompleted.Should().BeFalse("an error is not a completion");
+            await Assert.That(results.Error).IsSameReferenceAs(error).Because("the error from the source should propagate to the subscriber immediately upon subscription");
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
-        [Theory]
-        [InlineData(new[] { 10, 20, 30 }, 60)]
-        [InlineData(new[] { int.MaxValue }, int.MaxValue)]
-        [InlineData(new[] { int.MinValue }, int.MinValue)]
-        [InlineData(new[] { int.MaxValue, -1 }, int.MaxValue - 1)]
-        [InlineData(new[] { int.MinValue, 1 }, int.MinValue + 1)]
-        public void ItemsAreAdded_SumIsCorrect_ForInt(int[] values, int expectedSum)
+        [Test]
+        [Arguments(new[] { 10, 20, 30 }, 60)]
+        [Arguments(new[] { int.MaxValue }, int.MaxValue)]
+        [Arguments(new[] { int.MinValue }, int.MinValue)]
+        [Arguments(new[] { int.MaxValue, -1 }, int.MaxValue - 1)]
+        [Arguments(new[] { int.MinValue, 1 }, int.MinValue + 1)]
+        public async Task ItemsAreAdded_SumIsCorrect_ForInt(int[] values, int expectedSum)
         {
             using var source = new TestSourceList<int>();
 
@@ -273,11 +272,11 @@ public partial class SumFixture
                 .Sum(x => x)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(expectedSum, $"the int sum of [{string.Join(", ", values)}] is {expectedSum}");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(expectedSum).Because($"the int sum of [{string.Join(", ", values)}] is {expectedSum}");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForNullableInt()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForNullableInt()
         {
             using var source = new TestSourceList<int>();
 
@@ -287,11 +286,11 @@ public partial class SumFixture
                 .Sum(x => (int?)x)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60, "the nullable int sum of items 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60).Because("the nullable int sum of items 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForLong()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForLong()
         {
             using var source = new TestSourceList<int>();
 
@@ -301,11 +300,11 @@ public partial class SumFixture
                 .Sum(x => (long)x)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60L, "the long sum of items 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60L).Because("the long sum of items 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForNullableLong()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForNullableLong()
         {
             using var source = new TestSourceList<int>();
 
@@ -315,11 +314,11 @@ public partial class SumFixture
                 .Sum(x => (long?)x)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60L, "the nullable long sum of items 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60L).Because("the nullable long sum of items 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForDouble()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForDouble()
         {
             using var source = new TestSourceList<int>();
 
@@ -329,11 +328,11 @@ public partial class SumFixture
                 .Sum(x => (double)x)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60.0, "the double sum of items 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60.0).Because("the double sum of items 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForNullableDouble()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForNullableDouble()
         {
             using var source = new TestSourceList<int>();
 
@@ -343,11 +342,11 @@ public partial class SumFixture
                 .Sum(x => (double?)x)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60.0, "the nullable double sum of items 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60.0).Because("the nullable double sum of items 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForDecimal()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForDecimal()
         {
             using var source = new TestSourceList<int>();
 
@@ -357,11 +356,11 @@ public partial class SumFixture
                 .Sum(x => (decimal)x)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60M, "the decimal sum of items 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60M).Because("the decimal sum of items 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForNullableDecimal()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForNullableDecimal()
         {
             using var source = new TestSourceList<int>();
 
@@ -371,11 +370,11 @@ public partial class SumFixture
                 .Sum(x => (decimal?)x)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60M, "the nullable decimal sum of items 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60M).Because("the nullable decimal sum of items 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForFloat()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForFloat()
         {
             using var source = new TestSourceList<int>();
 
@@ -385,11 +384,11 @@ public partial class SumFixture
                 .Sum(x => (float)x)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60F, "the float sum of items 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60F).Because("the float sum of items 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForNullableFloat()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForNullableFloat()
         {
             using var source = new TestSourceList<int>();
 
@@ -399,7 +398,7 @@ public partial class SumFixture
                 .Sum(x => (float?)x)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60F, "the nullable float sum of items 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60F).Because("the nullable float sum of items 10 + 20 + 30 is 60");
         }
     }
 }

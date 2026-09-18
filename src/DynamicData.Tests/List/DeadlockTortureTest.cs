@@ -1,4 +1,8 @@
-﻿using DynamicData.Binding;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
+using DynamicData.Binding;
+#endif
 using DynamicData.Tests;
 using DynamicData.Tests.Domain;
 
@@ -15,7 +19,7 @@ namespace DynamicData.Tests.List;
 /// On origin/main (Synchronize(lock)): deadlocks reliably within seconds.
 /// On the PR branch (SynchronizeSafe queue-drain): no deadlock possible.
 /// </summary>
-[Collection(IntegrationTestFixtureBase.CollectionName)]
+[NotInParallel]
 public sealed class DeadlockTortureTest
 {
     private const int ItemCount = 200;
@@ -47,66 +51,66 @@ public sealed class DeadlockTortureTest
         return true;
     }
 
-    [Fact]
+    [Test]
     public async Task Sort_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)))).Should().BeTrue();
+        await Assert.That((await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age))))).IsTrue();
 
-    [Fact]
+    [Test]
     public async Task AutoRefresh_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.AutoRefresh(p => p.Age))).Should().BeTrue();
+        await Assert.That((await RunBidirectionalDeadlockTest(s => s.AutoRefresh(p => p.Age)))).IsTrue();
 
-    [Fact]
+    [Test]
     public async Task Page_DoesNotDeadlock()
     {
-        using var req = new StateSignal<IPageRequest>(new PageRequest(1, 50));
-        (await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Page(req))).Should().BeTrue();
+        using var req = new ReactiveUI.Primitives.Signals.StateSignal<IPageRequest>(new PageRequest(1, 50));
+        await Assert.That((await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Page(req)))).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task Virtualise_DoesNotDeadlock()
     {
-        using var req = new StateSignal<IVirtualRequest>(new VirtualRequest(0, 50));
-        (await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Virtualise(req))).Should().BeTrue();
+        using var req = new ReactiveUI.Primitives.Signals.StateSignal<IVirtualRequest>(new VirtualRequest(0, 50));
+        await Assert.That((await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Virtualise(req)))).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task FilterDynamic_DoesNotDeadlock()
     {
-        using var pred = new StateSignal<Func<Person, bool>>(_ => true);
-        (await RunBidirectionalDeadlockTest(s => s.Filter(pred))).Should().BeTrue();
+        using var pred = new ReactiveUI.Primitives.Signals.StateSignal<Func<Person, bool>>(_ => true);
+        await Assert.That((await RunBidirectionalDeadlockTest(s => s.Filter(pred)))).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task BufferIf_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.BufferIf(new StateSignal<bool>(false), false, (TimeSpan?)null))).Should().BeTrue();
+        await Assert.That((await RunBidirectionalDeadlockTest(s => s.BufferIf(new ReactiveUI.Primitives.Signals.StateSignal<bool>(false), false, (TimeSpan?)null)))).IsTrue();
 
-    [Fact]
+    [Test]
     public async Task DisposeMany_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.DisposeMany())).Should().BeTrue();
+        await Assert.That((await RunBidirectionalDeadlockTest(s => s.DisposeMany()))).IsTrue();
 
-    [Fact]
+    [Test]
     public async Task GroupOn_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.GroupOn(p => p.Age % 3).MergeMany(g => g.List.Connect()))).Should().BeTrue();
+        await Assert.That((await RunBidirectionalDeadlockTest(s => s.GroupOn(p => p.Age % 3).MergeMany(g => g.List.Connect())))).IsTrue();
 
-    [Fact]
+    [Test]
     public async Task TransformMany_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.TransformMany(p => new[] { p }))).Should().BeTrue();
+        await Assert.That((await RunBidirectionalDeadlockTest(s => s.TransformMany(p => new[] { p })))).IsTrue();
 
-    [Fact]
+    [Test]
     public async Task AllDangerous_Stacked_DoNotDeadlock()
     {
-        using var pageReq = new StateSignal<IPageRequest>(new PageRequest(1, 100));
-        using var pred = new StateSignal<Func<Person, bool>>(_ => true);
-        (await RunBidirectionalDeadlockTest(
+        using var pageReq = new ReactiveUI.Primitives.Signals.StateSignal<IPageRequest>(new PageRequest(1, 100));
+        using var pred = new ReactiveUI.Primitives.Signals.StateSignal<Func<Person, bool>>(_ => true);
+        await Assert.That(await RunBidirectionalDeadlockTest(
             s => s.AutoRefresh(p => p.Age)
                   .Filter(pred)
                   .DisposeMany()
                   .Sort(SortExpressionComparer<Person>.Ascending(p => p.Age))
                   .Page(pageReq),
-            iterations: Iterations * 2)).Should().BeTrue();
+            iterations: Iterations * 2)).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task ThreeWayCircular_DoesNotDeadlock()
     {
         for (var iter = 0; iter < Iterations; iter++)
@@ -127,7 +131,7 @@ public sealed class DeadlockTortureTest
                 Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) c.Add(new Person("CC-" + iter + "-" + i, i)); }),
             };
             var completed = Task.WhenAll(tasks);
-            (await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds)))).Should().BeSameAs(completed, "iteration " + iter);
+            await Assert.That((await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds))))).IsSameReferenceAs(completed).Because("iteration " + iter);
         }
     }
 }

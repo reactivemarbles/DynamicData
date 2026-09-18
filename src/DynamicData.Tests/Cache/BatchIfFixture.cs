@@ -4,7 +4,7 @@ namespace DynamicData.Tests.Cache;
 
 public class BatchIfFixture : IDisposable
 {
-    private readonly ISignal<bool> _pausingSubject = new Signal<bool>();
+    private readonly ReactiveUI.Primitives.Signals.ISignal<bool> _pausingSubject = new ReactiveUI.Primitives.Signals.Signal<bool>();
 
     private readonly ChangeSetAggregator<Person, string> _results;
 
@@ -18,11 +18,11 @@ public class BatchIfFixture : IDisposable
         _source = new SourceCache<Person, string>(p => p.Key);
         _results = _source.Connect().BatchIf(_pausingSubject, _scheduler).AsAggregator();
 
-        // _results = _source.Connect().BatchIf(new StateSignal<bool>(true), scheduler: _scheduler).AsAggregator();
+        // _results = _source.Connect().BatchIf(new ReactiveUI.Primitives.Signals.StateSignal<bool>(true), scheduler: _scheduler).AsAggregator();
     }
 
-    [Fact]
-    public void CanToggleSuspendResume()
+    [Test]
+    public async Task CanToggleSuspendResume()
     {
         _pausingSubject.OnNext(true);
         ////advance otherwise nothing happens
@@ -32,14 +32,14 @@ public class BatchIfFixture : IDisposable
 
         //go forward an arbitary amount of time
         _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-        _results.Messages.Count.Should().Be(0, "There should be no messages");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("There should be no messages");
 
         _pausingSubject.OnNext(false);
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
         _source.AddOrUpdate(new Person("B", 1));
 
-        _results.Messages.Count.Should().Be(2, "There should be 2 messages");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("There should be 2 messages");
 
         _pausingSubject.OnNext(true);
         ////advance otherwise nothing happens
@@ -49,19 +49,19 @@ public class BatchIfFixture : IDisposable
 
         //go forward an arbitary amount of time
         _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-        _results.Messages.Count.Should().Be(2, "There should be 2 messages");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("There should be 2 messages");
 
         _pausingSubject.OnNext(false);
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
-        _results.Messages.Count.Should().Be(3, "There should be 3 messages");
+        await Assert.That(_results.Messages.Count).IsEqualTo(3).Because("There should be 3 messages");
     }
 
     /// <summary>
     /// Test case to prove the issue and fix to DynamicData GitHub issue #98 - BatchIf race condition
     /// </summary>
-    [Fact]
-    public void ChangesNotLostIfConsumerIsRunningOnDifferentThread()
+    [Test]
+    public async Task ChangesNotLostIfConsumerIsRunningOnDifferentThread()
     {
         var producerScheduler = new TestScheduler();
         var consumerScheduler = new TestScheduler();
@@ -74,7 +74,7 @@ public class BatchIfFixture : IDisposable
         producerScheduler.AdvanceBy(1);
         consumerScheduler.AdvanceBy(1);
 
-        target.Count.Should().Be(1, "There should be 1 message");
+        await Assert.That(target.Count).IsEqualTo(1).Because("There should be 1 message");
 
         _pausingSubject.OnNext(true);
 
@@ -86,7 +86,7 @@ public class BatchIfFixture : IDisposable
         producerScheduler.AdvanceBy(1);
         consumerScheduler.AdvanceBy(1);
 
-        target.Count.Should().Be(1, "There should be 1 message");
+        await Assert.That(target.Count).IsEqualTo(1).Because("There should be 1 message");
 
         _pausingSubject.OnNext(false);
 
@@ -94,11 +94,11 @@ public class BatchIfFixture : IDisposable
 
         //Target doesnt get the messages until its scheduler runs, but the
         //messages shouldnt be lost
-        target.Count.Should().Be(1, "There should be 1 message");
+        await Assert.That(target.Count).IsEqualTo(1).Because("There should be 1 message");
 
         consumerScheduler.AdvanceBy(1);
 
-        target.Count.Should().Be(2, "There should be 2 message");
+        await Assert.That(target.Count).IsEqualTo(2).Because("There should be 2 message");
     }
 
     public void Dispose()
@@ -108,8 +108,8 @@ public class BatchIfFixture : IDisposable
         _pausingSubject.Dispose();
     }
 
-    [Fact]
-    public void NoResultsWillBeReceivedIfPaused()
+    [Test]
+    public async Task NoResultsWillBeReceivedIfPaused()
     {
         _pausingSubject.OnNext(true);
         //advance otherwise nothing happens
@@ -119,29 +119,29 @@ public class BatchIfFixture : IDisposable
 
         //go forward an arbitary amount of time
         _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-        _results.Messages.Count.Should().Be(0, "There should be no messages");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("There should be no messages");
     }
 
-    [Fact]
-    public void ResultsWillBeReceivedIfNotPaused()
+    [Test]
+    public async Task ResultsWillBeReceivedIfNotPaused()
     {
         _source.AddOrUpdate(new Person("A", 1));
 
         //go forward an arbitary amount of time
         _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-        _results.Messages.Count.Should().Be(1, "Should be 1 update");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 update");
     }
 
-    [Fact]
-    public void PauseSelectorOnlyStartsUnpaused()
+    [Test]
+    public async Task PauseSelectorOnlyStartsUnpaused()
     {
         // The shortest form has to keep delegating with initialPauseState false, rather than binding
         // to an overload that starts paused.
-        using var pause = new Subject<bool>();
-        using var results = _source.Connect().BatchIf(pause).AsAggregator();
+        using var pause = new ReactiveUI.Primitives.Signals.Signal<bool>();
+        using var results = _source.Connect().BatchIf(pause, false, (TimeSpan?)null, scheduler: null).AsAggregator();
 
         _source.AddOrUpdate(new Person("A", 1));
 
-        results.Data.Count.Should().Be(1, "nothing has asked for buffering yet");
+        await Assert.That(results.Data.Count).IsEqualTo(1).Because("nothing has asked for buffering yet");
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace DynamicData.Tests.List;
+namespace DynamicData.Tests.List;
 
 public static partial class FilterFixture
 {
@@ -23,8 +23,8 @@ public static partial class FilterFixture
             => item.IsIncluded;
 
         public static bool FilterByIdInclusionMask(
-                int     idInclusionMask,
-                Item    item)
+                int idInclusionMask,
+                Item item)
             => ((item.Id & idInclusionMask) == 0) && item.IsIncluded;
 
         public required int Id { get; init; }

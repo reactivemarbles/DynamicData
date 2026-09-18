@@ -1,11 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Subjects;
 
-using FluentAssertions;
-using Xunit;
-using Xunit.Abstractions;
 
 using DynamicData.Tests.Utilities;
 
@@ -13,21 +9,19 @@ namespace DynamicData.Tests.Cache;
 
 public class ToCollectionFixture
 {
-    public ToCollectionFixture(ITestOutputHelper output)
-        => _output = output;
 
     public record TestItem
     {
         public static int SelectId(TestItem item)
             => item.Id;
-    
+
         public required int Id { get; init; }
-        
+
         public int Version { get; init; }
     }
 
-    [Fact]
-    public void WhenChangesAreMade_ResultMatchesSourceAndPriorResultsAreNotMutated()
+    [Test]
+    public async Task WhenChangesAreMade_ResultMatchesSourceAndPriorResultsAreNotMutated()
     {
         // Setup
         using var source = new SourceCache<TestItem, int>(TestItem.SelectId);
@@ -39,16 +33,10 @@ public class ToCollectionFixture
         using var subscription = source.Connect()
             .ToCollection()
             .RecordValues(out var results);
-            
-        results.Error.Should().BeNull("no errors should have occurred");
-        // TODO: Disabled due to existing defect. Fix and restore.
-        //results.RecordedValues.Should().ContainSingle("an initial snapshot should always be published");
-        //results.RecordedValues[^1].Should().BeEmpty("no items have been added to the source");
-        results.HasCompleted.Should().BeFalse("the source has not completed");
 
-        // TODO: Disabled due to existing defect. Fix and restore.
-        //priorResults.Add(results.RecordedValues[^1].ToArray());
-        
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.HasCompleted).IsFalse();
+
 
         // UUT Action (add items)
         source.AddOrUpdate(new[]
@@ -57,18 +45,18 @@ public class ToCollectionFixture
             new TestItem() { Id = 2 },
             new TestItem() { Id = 3 }
         });
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.RecordedValues.Skip(priorResults.Count).Should().ContainSingle("a single source operation was performed");
-        results.RecordedValues[^1].Should().BeEquivalentTo(source.Items, "snapshots should always match the source collection");
-        results.HasCompleted.Should().BeFalse("the source has not completed");
+
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.RecordedValues.Count - priorResults.Count).IsEqualTo(1);
+        await Assert.That(results.RecordedValues[^1]).IsEquivalentTo(source.Items);
+        await Assert.That(results.HasCompleted).IsFalse();
 
         foreach (var (result, priorResult) in results.RecordedValues.Zip(priorResults))
-            result.Should().BeEquivalentTo(priorResult, "previous snapshots should not be mutated");
+            await Assert.That(result).IsEquivalentTo(priorResult);
 
         priorResults.Add(results.RecordedValues[^1].ToArray());
-        
-        
+
+
         // UUT Action (replace items)
         source.AddOrUpdate(new[]
         {
@@ -76,36 +64,36 @@ public class ToCollectionFixture
             new TestItem() { Id = 2, Version = 1 },
             new TestItem() { Id = 3, Version = 1 }
         });
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.RecordedValues.Skip(priorResults.Count).Should().ContainSingle("a single source operation was performed");
-        results.RecordedValues[^1].Should().BeEquivalentTo(source.Items, "snapshots should always match the source collection");
-        results.HasCompleted.Should().BeFalse("the source has not completed");
+
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.RecordedValues.Count - priorResults.Count).IsEqualTo(1);
+        await Assert.That(results.RecordedValues[^1]).IsEquivalentTo(source.Items);
+        await Assert.That(results.HasCompleted).IsFalse();
 
         foreach (var (result, priorResult) in results.RecordedValues.Zip(priorResults))
-            result.Should().BeEquivalentTo(priorResult, "previous snapshots should not be mutated");
+            await Assert.That(result).IsEquivalentTo(priorResult);
 
         priorResults.Add(results.RecordedValues[^1].ToArray());
 
 
         // UUT Action (remove items)
         source.RemoveKeys(source.Keys.ToArray());
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.RecordedValues.Skip(priorResults.Count).Should().ContainSingle("a single source operation was performed");
-        results.RecordedValues[^1].Should().BeEquivalentTo(source.Items, "snapshots should always match the source collection");
-        results.HasCompleted.Should().BeFalse("the source has not completed");
+
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.RecordedValues.Count - priorResults.Count).IsEqualTo(1);
+        await Assert.That(results.RecordedValues[^1]).IsEquivalentTo(source.Items);
+        await Assert.That(results.HasCompleted).IsFalse();
 
         foreach (var (result, priorResult) in results.RecordedValues.Zip(priorResults))
-            result.Should().BeEquivalentTo(priorResult, "previous snapshots should not be mutated");
+            await Assert.That(result).IsEquivalentTo(priorResult);
 
         priorResults.Add(results.RecordedValues[^1].ToArray());
     }
 
-    [Theory]
-    [InlineData(StreamCompletionStrategy.Asynchronous)]
-    [InlineData(StreamCompletionStrategy.Immediate)]
-    public void WhenSourceCompletes_CompletionPropagates(StreamCompletionStrategy completionStrategy)
+    [Test]
+    [Arguments(StreamCompletionStrategy.Asynchronous)]
+    [Arguments(StreamCompletionStrategy.Immediate)]
+    public async Task WhenSourceCompletes_CompletionPropagates(StreamCompletionStrategy completionStrategy)
     {
         // Setup
         using var source = new TestSourceCache<TestItem, int>(TestItem.SelectId);
@@ -122,16 +110,16 @@ public class ToCollectionFixture
         if (completionStrategy is StreamCompletionStrategy.Asynchronous)
             source.Complete();
 
-        results.Error.Should().BeNull();
-        results.RecordedValues.Should().ContainSingle("an initial snapshot should always be published");
-        results.RecordedValues[^1].Should().BeEmpty("no items were added to the source");
-        results.HasCompleted.Should().BeTrue("the source has completed");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.RecordedValues.Count).IsEqualTo(1);
+        await Assert.That(results.RecordedValues[^1]).IsEmpty();
+        await Assert.That(results.HasCompleted).IsTrue();
     }
 
-    [Theory]
-    [InlineData(StreamCompletionStrategy.Asynchronous)]
-    [InlineData(StreamCompletionStrategy.Immediate)]
-    public void WhenSourceFails_ErrorPropagates(StreamCompletionStrategy completionStrategy)
+    [Test]
+    [Arguments(StreamCompletionStrategy.Asynchronous)]
+    [Arguments(StreamCompletionStrategy.Immediate)]
+    public async Task WhenSourceFails_ErrorPropagates(StreamCompletionStrategy completionStrategy)
     {
         // Setup
         using var source = new TestSourceCache<TestItem, int>(TestItem.SelectId);
@@ -150,32 +138,22 @@ public class ToCollectionFixture
         if (completionStrategy is StreamCompletionStrategy.Asynchronous)
             source.SetError(error);
 
-        results.Error.Should().Be(error, "errors should propagate");
-        // TODO: Disabled due to existing defect. Fix and restore.
-        //results.RecordedValues.Should().ContainSingle("an initial snapshot should always be published");
-        //results.RecordedValues[^1].Should().BeEmpty("no items were added to the source");
+        await Assert.That(results.Error).IsSameReferenceAs(error);
     }
 
-    [Fact]
-    public void WhenSourceIsNull_ThrowsException()
+    [Test]
+    public async Task WhenSourceIsNull_ThrowsException()
     {
         // UUT Action
-        var result = FluentActions.Invoking(() =>
-            {
-                _ = ObservableCacheEx.ToCollection<int, int>(null!);
-            })
-            .Should().Throw<ArgumentNullException>()
-            .WithParameterName("source")
-            .Which;
-            
-        _output.WriteLine(result.ToString());
+        var exception = await Assert.That(() => ObservableCacheEx.ToCollection<int, int>(null!)).Throws<ArgumentNullException>();
+        await Assert.That(exception.ParamName).IsEqualTo("source");
     }
 
-    [Fact]
-    public void WhenSubscriptionIsDisposed_SubscriptionDisposalPropagates()
+    [Test]
+    public async Task WhenSubscriptionIsDisposed_SubscriptionDisposalPropagates()
     {
         // Setup
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
 
         // UUT Initialization
@@ -183,18 +161,14 @@ public class ToCollectionFixture
             .ToCollection()
             .RecordValues(out var results);
 
-        results.Error.Should().BeNull();
-        // TODO: Disabled due to existing defect. Fix and restore.
-        //results.RecordedValues.Should().ContainSingle("an initial snapshot should always be published");
-        //results.RecordedValues[^1].Should().BeEmpty("no items were added to the source");
-        results.HasCompleted.Should().BeFalse("the source has not completed");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.HasCompleted).IsFalse();
 
 
         // UUT Action
         subscription.Dispose();
 
-        source.HasObservers.Should().BeFalse("subscription disposal should propagate to the source");
+        await Assert.That(source.HasObservers).IsFalse();
     }
 
-    private readonly ITestOutputHelper _output;
 }

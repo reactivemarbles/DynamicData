@@ -10,7 +10,6 @@ namespace DynamicData.Tests.Internal;
 /// Tests for <see cref="CacheParentSubscription{TParent, TKey, TChild, TObserver}"/>
 /// behavioral contracts using a minimal concrete subclass.
 /// </summary>
-[Collection(IntegrationTestFixtureBase.CollectionName)]
 public sealed class CacheParentSubscriptionFixture
 {
     private const int SeedMin = 1;
@@ -23,8 +22,8 @@ public sealed class CacheParentSubscriptionFixture
     /// <summary>Test item with a typed key — no string parsing.</summary>
     private sealed record TestItem(int Key, string Value);
 
-    [Fact]
-    public void ParentOnNext_CalledForEachChangeSet()
+    [Test]
+    public async Task ParentOnNext_CalledForEachChangeSet()
     {
         var itemCount = _rand.Number(BatchSizeMin, BatchSizeMax);
         using var source = new SourceCache<TestItem, int>(x => x.Key);
@@ -39,19 +38,19 @@ public sealed class CacheParentSubscriptionFixture
         foreach (var item in items)
             source.AddOrUpdate(item);
 
-        sub.ParentCallCount.Should().Be(items.Count, "ParentOnNext should fire once per changeset");
-        observer.EmitCount.Should().Be(items.Count, "EmitChanges should fire after each parent update");
+        await Assert.That(sub.ParentCallCount).IsEqualTo(items.Count);
+        await Assert.That(observer.EmitCount).IsEqualTo(items.Count);
     }
 
-    [Fact]
-    public void ChildOnNext_CalledForEachEmission()
+    [Test]
+    public async Task ChildOnNext_CalledForEachEmission()
     {
         using var source = new SourceCache<TestItem, int>(x => x.Key);
-        var childSubjects = new List<Signal<string>>();
+        var childSubjects = new List<ReactiveUI.Primitives.Signals.Signal<string>>();
         var observer = new TestObserver();
         using var sub = new TestSubscription(observer, key =>
         {
-            var subj = new Signal<string>();
+            var subj = new ReactiveUI.Primitives.Signals.Signal<string>();
             childSubjects.Add(subj);
             return subj;
         });
@@ -60,16 +59,16 @@ public sealed class CacheParentSubscriptionFixture
         var key = _rand.Number(SeedMin, SeedMax);
         source.AddOrUpdate(new TestItem(key, "parent"));
 
-        childSubjects.Should().HaveCount(1);
+        await Assert.That(childSubjects).HasCount(1);
         var childValue = _rand.String2(_rand.Number(5, 15));
         childSubjects[0].OnNext(childValue);
 
-        sub.ChildCalls.Should().ContainSingle()
-            .Which.Should().Be((childValue, key));
+        await Assert.That(sub.ChildCalls).HasCount(1);
+        await Assert.That(sub.ChildCalls[0]).IsEqualTo((childValue, key));
     }
 
-    [Fact]
-    public void EmitChanges_FiresOnceForBatch()
+    [Test]
+    public async Task EmitChanges_FiresOnceForBatch()
     {
         var batchSize = _rand.Number(BatchSizeMin, BatchSizeMax);
         using var source = new SourceCache<TestItem, int>(x => x.Key);
@@ -83,12 +82,12 @@ public sealed class CacheParentSubscriptionFixture
                 updater.AddOrUpdate(new TestItem(i + 1, _rand.String2(_rand.Number(3, 8))));
         });
 
-        sub.ParentCallCount.Should().Be(1, "single batch = single ParentOnNext");
-        sub.EmitCallCount.Should().Be(1, "single batch = single EmitChanges");
+        await Assert.That(sub.ParentCallCount).IsEqualTo(1);
+        await Assert.That(sub.EmitCallCount).IsEqualTo(1);
     }
 
-    [Fact]
-    public void Batching_ChildUpdatesSettleBeforeEmit()
+    [Test]
+    public async Task Batching_ChildUpdatesSettleBeforeEmit()
     {
         var batchSize = _rand.Number(BatchSizeMin, BatchSizeMax);
         using var source = new SourceCache<TestItem, int>(x => x.Key);
@@ -97,7 +96,7 @@ public sealed class CacheParentSubscriptionFixture
         using var sub = new TestSubscription(observer, key =>
         {
             Interlocked.Increment(ref childCount);
-            return new StateSignal<string>($"sync-{key}");
+            return new ReactiveUI.Primitives.Signals.StateSignal<string>($"sync-{key}");
         });
         sub.ExposeCreateParent(source.Connect());
 
@@ -107,37 +106,36 @@ public sealed class CacheParentSubscriptionFixture
                 updater.AddOrUpdate(new TestItem(i + 1, _rand.String2(_rand.Number(3, 8))));
         });
 
-        childCount.Should().Be(batchSize, "each item should create a child");
-        sub.EmitCallCount.Should().BeGreaterThanOrEqualTo(1,
-            "EmitChanges fires after parent + children settle");
+        await Assert.That(childCount).IsEqualTo(batchSize);
+        await Assert.That(sub.EmitCallCount).IsGreaterThanOrEqualTo(1);
     }
 
-    [Fact]
-    public void Completion_RequiresParentAndAllChildren()
+    [Test]
+    public async Task Completion_RequiresParentAndAllChildren()
     {
         using var source = new TestSourceCache<TestItem, int>(x => x.Key);
-        var childSubjects = new List<Signal<string>>();
+        var childSubjects = new List<ReactiveUI.Primitives.Signals.Signal<string>>();
         var observer = new TestObserver();
         using var sub = new TestSubscription(observer, key =>
         {
-            var subj = new Signal<string>();
+            var subj = new ReactiveUI.Primitives.Signals.Signal<string>();
             childSubjects.Add(subj);
             return subj;
         });
         sub.ExposeCreateParent(source.Connect());
 
         source.AddOrUpdate(new TestItem(_rand.Number(SeedMin, SeedMax), "item"));
-        childSubjects.Should().HaveCount(1);
+        await Assert.That(childSubjects).HasCount(1);
 
         source.Complete();
-        observer.IsCompleted.Should().BeFalse("parent complete but child still active");
+        await Assert.That(observer.IsCompleted).IsFalse();
 
         childSubjects[0].OnCompleted();
-        observer.IsCompleted.Should().BeTrue("OnCompleted fires when parent + all children complete");
+        await Assert.That(observer.IsCompleted).IsTrue();
     }
 
-    [Fact]
-    public void Completion_ParentOnly_NoChildren()
+    [Test]
+    public async Task Completion_ParentOnly_NoChildren()
     {
         using var source = new TestSourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
@@ -145,18 +143,18 @@ public sealed class CacheParentSubscriptionFixture
         sub.ExposeCreateParent(source.Connect());
 
         source.Complete();
-        observer.IsCompleted.Should().BeTrue("immediate OnCompleted when no children");
+        await Assert.That(observer.IsCompleted).IsTrue();
     }
 
-    [Fact]
-    public void Disposal_StopsAllEmissions()
+    [Test]
+    public async Task Disposal_StopsAllEmissions()
     {
         using var source = new SourceCache<TestItem, int>(x => x.Key);
-        var childSubjects = new List<Signal<string>>();
+        var childSubjects = new List<ReactiveUI.Primitives.Signals.Signal<string>>();
         var observer = new TestObserver();
         var sub = new TestSubscription(observer, key =>
         {
-            var subj = new Signal<string>();
+            var subj = new ReactiveUI.Primitives.Signals.Signal<string>();
             childSubjects.Add(subj);
             return subj;
         });
@@ -171,11 +169,11 @@ public sealed class CacheParentSubscriptionFixture
         if (childSubjects.Count > 0)
             childSubjects[0].OnNext("after-dispose");
 
-        observer.EmitCount.Should().Be(emitsBefore, "no emissions after disposal");
+        await Assert.That(observer.EmitCount).IsEqualTo(emitsBefore);
     }
 
-    [Fact]
-    public void Error_Propagates()
+    [Test]
+    public async Task Error_Propagates()
     {
         using var source = new TestSourceCache<TestItem, int>(x => x.Key);
         var observer = new TestObserver();
@@ -185,11 +183,11 @@ public sealed class CacheParentSubscriptionFixture
         var error = new InvalidOperationException("test error");
         source.SetError(error);
 
-        observer.Error.Should().BeSameAs(error);
+        await Assert.That(observer.Error).IsSameReferenceAs(error);
     }
 
-    [Fact]
-    public void Serialization_ParentAndChildDoNotInterleave()
+    [Test]
+    public async Task Serialization_ParentAndChildDoNotInterleave()
     {
         using var source = new SourceCache<TestItem, int>(x => x.Key);
         var callLog = new List<string>();
@@ -198,7 +196,7 @@ public sealed class CacheParentSubscriptionFixture
             observer,
             key =>
             {
-                var subj = new Signal<string>();
+                var subj = new ReactiveUI.Primitives.Signals.Signal<string>();
                 return subj;
             },
             onParent: () => { lock (callLog) callLog.Add("P-start"); Thread.Sleep(1); lock (callLog) callLog.Add("P-end"); },
@@ -211,7 +209,7 @@ public sealed class CacheParentSubscriptionFixture
         for (var i = 0; i + 1 < callLog.Count; i += 2)
         {
             var prefix = callLog[i].Split('-')[0];
-            callLog[i + 1].Should().StartWith(prefix, "operations should not interleave");
+            await Assert.That(callLog[i + 1]).StartsWith(prefix);
         }
     }
 
@@ -220,8 +218,7 @@ public sealed class CacheParentSubscriptionFixture
     /// whose EmitChanges callbacks write into each other's source cache — creating a
     /// cross-cache cycle. Deadlocks on unfixed code, passes after the fix.
     /// </summary>
-    [Trait("Category", "ExplicitDeadlock")]
-    [Fact]
+    [Test]
     public async Task DeadlockProof_CrossFeedingSubscriptions()
     {
         var iterations = _rand.Number(50, 150);
@@ -258,8 +255,7 @@ public sealed class CacheParentSubscriptionFixture
 
         var completed = Task.WhenAll(taskA, taskB);
         var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(30)));
-        finished.Should().BeSameAs(completed,
-            "cross-feeding CacheParentSubscriptions should not deadlock");
+        await Assert.That(finished).IsSameReferenceAs(completed);
     }
 
     // ═══════════════════════════════════════════════════════════════

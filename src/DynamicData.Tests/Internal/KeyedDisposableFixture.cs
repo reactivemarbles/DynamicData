@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,8 +6,8 @@ namespace DynamicData.Tests.Internal;
 
 public class KeyedDisposableFixture
 {
-    [Fact]
-    public void AddTracksDisposable()
+    [Test]
+    public async Task AddTracksDisposable()
     {
         var tracker = new KeyedDisposable<string>();
         var disposed = false;
@@ -15,12 +15,12 @@ public class KeyedDisposableFixture
 
         tracker.Add("key", item);
 
-        tracker.ContainsKey("key").Should().BeTrue();
-        disposed.Should().BeFalse();
+        await Assert.That(tracker.ContainsKey("key")).IsTrue();
+        await Assert.That(disposed).IsFalse();
     }
 
-    [Fact]
-    public void RemoveDisposesItem()
+    [Test]
+    public async Task RemoveDisposesItem()
     {
         var tracker = new KeyedDisposable<string>();
         var disposed = false;
@@ -28,12 +28,12 @@ public class KeyedDisposableFixture
 
         tracker.Remove("key");
 
-        disposed.Should().BeTrue();
-        tracker.ContainsKey("key").Should().BeFalse();
+        await Assert.That(disposed).IsTrue();
+        await Assert.That(tracker.ContainsKey("key")).IsFalse();
     }
 
-    [Fact]
-    public void AddWithSameKeyDisposePrevious()
+    [Test]
+    public async Task AddWithSameKeyDisposePrevious()
     {
         var tracker = new KeyedDisposable<string>();
         var disposed1 = false;
@@ -42,12 +42,12 @@ public class KeyedDisposableFixture
 
         tracker.Add("key", new TestDisposable(() => disposed2 = true));
 
-        disposed1.Should().BeTrue("previous item should be disposed");
-        disposed2.Should().BeFalse("new item should not be disposed");
+        await Assert.That(disposed1).IsTrue();
+        await Assert.That(disposed2).IsFalse();
     }
 
-    [Fact]
-    public void AddWithSameReferenceDoesNotDispose()
+    [Test]
+    public async Task AddWithSameReferenceDoesNotDispose()
     {
         var tracker = new KeyedDisposable<string>();
         var disposeCount = 0;
@@ -56,12 +56,12 @@ public class KeyedDisposableFixture
         tracker.Add("key", item);
         tracker.Add("key", item); // same reference
 
-        disposeCount.Should().Be(0, "same reference should not be disposed");
-        tracker.ContainsKey("key").Should().BeTrue();
+        await Assert.That(disposeCount).IsEqualTo(0);
+        await Assert.That(tracker.ContainsKey("key")).IsTrue();
     }
 
-    [Fact]
-    public void DisposeDisposesAllItems()
+    [Test]
+    public async Task DisposeDisposesAllItems()
     {
         var tracker = new KeyedDisposable<int>();
         var disposedCount = 0;
@@ -70,12 +70,12 @@ public class KeyedDisposableFixture
 
         tracker.Dispose();
 
-        disposedCount.Should().Be(5);
-        tracker.IsDisposed.Should().BeTrue();
+        await Assert.That(disposedCount).IsEqualTo(5);
+        await Assert.That(tracker.IsDisposed).IsTrue();
     }
 
-    [Fact]
-    public void DisposeIsIdempotent()
+    [Test]
+    public async Task DisposeIsIdempotent()
     {
         var tracker = new KeyedDisposable<string>();
         var disposeCount = 0;
@@ -84,11 +84,11 @@ public class KeyedDisposableFixture
         tracker.Dispose();
         tracker.Dispose();
 
-        disposeCount.Should().Be(1);
+        await Assert.That(disposeCount).IsEqualTo(1);
     }
 
-    [Fact]
-    public void AddAfterDisposeDisposesImmediately()
+    [Test]
+    public async Task AddAfterDisposeDisposesImmediately()
     {
         var tracker = new KeyedDisposable<string>();
         tracker.Dispose();
@@ -96,36 +96,34 @@ public class KeyedDisposableFixture
         var disposed = false;
         tracker.Add("key", new TestDisposable(() => disposed = true));
 
-        disposed.Should().BeTrue("item added after Dispose should be disposed immediately");
+        await Assert.That(disposed).IsTrue();
     }
 
-    [Fact]
-    public void DisposeAggregatesExceptions()
+    [Test]
+    public async Task DisposeAggregatesExceptions()
     {
         var tracker = new KeyedDisposable<int>();
         tracker.Add(1, new TestDisposable(() => throw new InvalidOperationException("boom1")));
         tracker.Add(2, new TestDisposable(() => { }));
         tracker.Add(3, new TestDisposable(() => throw new InvalidOperationException("boom3")));
 
-        var act = () => tracker.Dispose();
-
-        act.Should().Throw<AggregateException>()
-            .Which.InnerExceptions.Should().HaveCount(2);
-        tracker.Count.Should().Be(0, "all items should be cleared even after exceptions");
+        var exception = await Assert.That(() => tracker.Dispose()).Throws<AggregateException>();
+        await Assert.That(exception.InnerExceptions).HasCount(2);
+        await Assert.That(tracker.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void AddNonDisposableTracksNothing()
+    [Test]
+    public async Task AddNonDisposableTracksNothing()
     {
         var tracker = new KeyedDisposable<string>();
 
         tracker.Add("key", "not disposable");
 
-        tracker.ContainsKey("key").Should().BeFalse();
+        await Assert.That(tracker.ContainsKey("key")).IsFalse();
     }
 
-    [Fact]
-    public void AddNonDisposableRemovesPrevious()
+    [Test]
+    public async Task AddNonDisposableRemovesPrevious()
     {
         var tracker = new KeyedDisposable<string>();
         var disposed = false;
@@ -133,12 +131,12 @@ public class KeyedDisposableFixture
 
         tracker.Add("key", "not disposable");
 
-        disposed.Should().BeTrue("previous disposable should be disposed");
-        tracker.ContainsKey("key").Should().BeFalse();
+        await Assert.That(disposed).IsTrue();
+        await Assert.That(tracker.ContainsKey("key")).IsFalse();
     }
 
-    [Fact]
-    public void RemoveNonExistentKeyIsNoOp()
+    [Test]
+    public async Task RemoveNonExistentKeyIsNoOp()
     {
         var tracker = new KeyedDisposable<string>();
         tracker.Remove("nonexistent"); // should not throw

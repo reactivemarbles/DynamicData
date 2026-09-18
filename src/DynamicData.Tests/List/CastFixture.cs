@@ -1,4 +1,4 @@
-﻿namespace DynamicData.Tests.List;
+namespace DynamicData.Tests.List;
 
 public class CastFixture : IDisposable
 {
@@ -12,14 +12,14 @@ public class CastFixture : IDisposable
         _results = _source.Cast(i => (decimal)i).AsAggregator();
     }
 
-    [Fact]
-    public void CanCast()
+    [Test]
+    public async Task CanCast()
     {
         _source.AddRange(Enumerable.Range(1, 10));
-        _results.Data.Count.Should().Be(10);
+        await Assert.That(_results.Data.Count).IsEqualTo(10);
 
         _source.Clear();
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
     public void Dispose()

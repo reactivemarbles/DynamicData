@@ -468,7 +468,7 @@ internal sealed class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey
     {
         ArgumentExceptionHelper.ThrowIfNull(items);
 
-        if (items is IList<TObject> list)
+        if (items is IList<KeyValuePair<TKey, TObject>> list)
         {
             // zero allocation enumerator
             foreach (var key in EnumerableIList.Create(list))

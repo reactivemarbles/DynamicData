@@ -6,8 +6,8 @@ public sealed class TestSourceCache<TObject, TKey>
     where TKey : notnull
 {
     private readonly IObservable<int> _countChanged;
-    private readonly StateSignal<Exception?> _error;
-    private readonly StateSignal<bool> _hasCompleted;
+    private readonly ReactiveUI.Primitives.Signals.StateSignal<Exception?> _error;
+    private readonly ReactiveUI.Primitives.Signals.StateSignal<bool> _hasCompleted;
     private readonly SourceCache<TObject, TKey> _source;
 
     public TestSourceCache(Func<TObject, TKey> keySelector)
@@ -27,7 +27,7 @@ public sealed class TestSourceCache<TObject, TKey>
 
     public IReadOnlyList<TObject> Items
         => _source.Items;
-    
+
     public IReadOnlyList<TKey> Keys
         => _source.Keys;
 
@@ -63,7 +63,7 @@ public sealed class TestSourceCache<TObject, TKey>
         _source.Edit(updateAction);
     }
 
-    public Optional<TObject> Lookup(TKey key)
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key)
         => _source.Lookup(key);
 
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null)
@@ -89,7 +89,7 @@ public sealed class TestSourceCache<TObject, TKey>
     }
 
     private IObservable<T> WrapStream<T>(IObservable<T> sourceStream)
-        => Observable.Create<T>(downstreamObserver => 
+        => Observable.Create<T>(downstreamObserver =>
         {
             var whenCompleted = _hasCompleted
                 .Where(static hasCompleted => hasCompleted)

@@ -4,23 +4,23 @@ namespace DynamicData.Tests.Cache;
 
 public class EditDiffChangeSetOptionalFixture
 {
-    private static readonly Optional<Person> s_noPerson = Optional<Person>.None;
+    private static readonly ReactiveUI.Primitives.Optional<Person> s_noPerson = ReactiveUI.Primitives.Optional<Person>.None;
 
     private const int MaxItems = 1097;
 
-    [Fact]
+    [Test]
     [Description("Required to maintain test coverage percentage")]
-    public void NullChecksArePerformed()
+    public async Task NullChecksArePerformed()
     {
-        Action actionNullKeySelector = () => Observable.Empty<Optional<Person>>().EditDiff<Person, int>(null!);
-        Action actionNullObservable = () => default(IObservable<Optional<Person>>)!.EditDiff<Person, int>(null!);
+        Action actionNullKeySelector = () => Observable.Empty<ReactiveUI.Primitives.Optional<Person>>().EditDiff<Person, int>(null!);
+        Action actionNullObservable = () => default(IObservable<ReactiveUI.Primitives.Optional<Person>>)!.EditDiff<Person, int>(null!);
 
-        actionNullKeySelector.Should().Throw<ArgumentNullException>().WithParameterName("keySelector");
-        actionNullObservable.Should().Throw<ArgumentNullException>().WithParameterName("source");
+        await Assert.That(actionNullKeySelector).Throws<ArgumentNullException>().WithParameterName("keySelector");
+        await Assert.That(actionNullObservable).Throws<ArgumentNullException>().WithParameterName("source");
     }
 
-    [Fact]
-    public void OptionalSomeCreatesAddChange()
+    [Test]
+    public async Task OptionalSomeCreatesAddChange()
     {
         // having
         var optional = CreatePerson(0, "Name");
@@ -31,31 +31,31 @@ public class EditDiffChangeSetOptionalFixture
         using var results = observableChangeSet.AsAggregator();
 
         // then
-        results.Data.Count.Should().Be(1);
-        results.Messages.Count.Should().Be(1);
+        await Assert.That(results.Data.Count).IsEqualTo(1);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
     }
 
-    [Fact]
-    public void OptionalNoneCreatesRemoveChange()
+    [Test]
+    public async Task OptionalNoneCreatesRemoveChange()
     {
         // having
         var optional = CreatePerson(0, "Name");
-        var optObservable = new[] {optional, s_noPerson}.ToObservable();
+        var optObservable = new[] { optional, s_noPerson }.ToObservable();
 
         // when
         var observableChangeSet = optObservable.EditDiff(p => p.Id);
         using var results = observableChangeSet.AsAggregator();
 
         // then
-        results.Data.Count.Should().Be(0);
-        results.Messages.Count.Should().Be(2);
-        results.Messages[0].Adds.Should().Be(1);
-        results.Messages[1].Removes.Should().Be(1);
-        results.Messages[1].Updates.Should().Be(0);
+        await Assert.That(results.Data.Count).IsEqualTo(0);
+        await Assert.That(results.Messages.Count).IsEqualTo(2);
+        await Assert.That(results.Messages[0].Adds).IsEqualTo(1);
+        await Assert.That(results.Messages[1].Removes).IsEqualTo(1);
+        await Assert.That(results.Messages[1].Updates).IsEqualTo(0);
     }
 
-    [Fact]
-    public void OptionalSomeWithSameKeyCreatesUpdateChange()
+    [Test]
+    public async Task OptionalSomeWithSameKeyCreatesUpdateChange()
     {
         // having
         var optional1 = CreatePerson(0, "Name");
@@ -67,15 +67,15 @@ public class EditDiffChangeSetOptionalFixture
         using var results = observableChangeSet.AsAggregator();
 
         // then
-        results.Data.Count.Should().Be(1);
-        results.Messages.Count.Should().Be(2);
-        results.Messages[0].Adds.Should().Be(1);
-        results.Messages[1].Removes.Should().Be(0);
-        results.Messages[1].Updates.Should().Be(1);
+        await Assert.That(results.Data.Count).IsEqualTo(1);
+        await Assert.That(results.Messages.Count).IsEqualTo(2);
+        await Assert.That(results.Messages[0].Adds).IsEqualTo(1);
+        await Assert.That(results.Messages[1].Removes).IsEqualTo(0);
+        await Assert.That(results.Messages[1].Updates).IsEqualTo(1);
     }
 
-    [Fact]
-    public void OptionalSomeWithSameReferenceCreatesNoChanges()
+    [Test]
+    public async Task OptionalSomeWithSameReferenceCreatesNoChanges()
     {
         // having
         var optional = CreatePerson(0, "Name");
@@ -86,15 +86,15 @@ public class EditDiffChangeSetOptionalFixture
         using var results = observableChangeSet.AsAggregator();
 
         // then
-        results.Data.Count.Should().Be(1);
-        results.Messages.Count.Should().Be(1);
-        results.Summary.Overall.Adds.Should().Be(1);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
+        await Assert.That(results.Data.Count).IsEqualTo(1);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(1);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
     }
 
-    [Fact]
-    public void OptionalSomeWithSameCreatesNoChanges()
+    [Test]
+    public async Task OptionalSomeWithSameCreatesNoChanges()
     {
         // having
         var optional1 = CreatePerson(0, "Name");
@@ -106,15 +106,15 @@ public class EditDiffChangeSetOptionalFixture
         using var results = observableChangeSet.AsAggregator();
 
         // then
-        results.Data.Count.Should().Be(1);
-        results.Messages.Count.Should().Be(1);
-        results.Summary.Overall.Adds.Should().Be(1);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
+        await Assert.That(results.Data.Count).IsEqualTo(1);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(1);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
     }
 
-    [Fact]
-    public void OptionalSomeWithDifferentKeyCreatesAddRemoveChanges()
+    [Test]
+    public async Task OptionalSomeWithDifferentKeyCreatesAddRemoveChanges()
     {
         // having
         var optional1 = CreatePerson(0, "Name");
@@ -126,23 +126,23 @@ public class EditDiffChangeSetOptionalFixture
         using var results = observableChangeSet.AsAggregator();
 
         // then
-        results.Data.Count.Should().Be(1);
-        results.Messages.Count.Should().Be(2);
-        results.Messages[0].Adds.Should().Be(1);
-        results.Messages[1].Removes.Should().Be(1);
-        results.Messages[1].Updates.Should().Be(0);
+        await Assert.That(results.Data.Count).IsEqualTo(1);
+        await Assert.That(results.Messages.Count).IsEqualTo(2);
+        await Assert.That(results.Messages[0].Adds).IsEqualTo(1);
+        await Assert.That(results.Messages[1].Removes).IsEqualTo(1);
+        await Assert.That(results.Messages[1].Updates).IsEqualTo(0);
     }
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void ResultCompletesIfAndOnlyIfSourceCompletes(bool completeSource)
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task ResultCompletesIfAndOnlyIfSourceCompletes(bool completeSource)
     {
         // having
         var optional = CreatePerson(0, "Name");
         var optObservable = Observable.Return(optional);
         if (!completeSource)
         {
-            optObservable = optObservable.Concat(Observable.Never<Optional<Person>>());
+            optObservable = optObservable.Concat(Observable.Never<ReactiveUI.Primitives.Optional<Person>>());
         }
         bool completed = false;
 
@@ -150,13 +150,13 @@ public class EditDiffChangeSetOptionalFixture
         using var results = optObservable.Subscribe(_ => { }, () => completed = true);
 
         // then
-        completed.Should().Be(completeSource);
+        await Assert.That(completed).IsEqualTo(completeSource);
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void ResultFailsIfAndOnlyIfSourceFails (bool failSource)
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task ResultFailsIfAndOnlyIfSourceFails(bool failSource)
     {
         // having
         var optional = CreatePerson(0, "Name");
@@ -164,7 +164,7 @@ public class EditDiffChangeSetOptionalFixture
         var testException = new Exception("Test");
         if (failSource)
         {
-            optObservable = optObservable.Concat(Observable.Throw<Optional<Person>>(testException));
+            optObservable = optObservable.Concat(Observable.Throw<ReactiveUI.Primitives.Optional<Person>>(testException));
         }
         var receivedError = default(Exception);
 
@@ -172,10 +172,10 @@ public class EditDiffChangeSetOptionalFixture
         using var results = optObservable.Subscribe(_ => { }, err => receivedError = err);
 
         // then
-        receivedError.Should().Be(failSource ? testException : default);
+        await Assert.That(receivedError).IsEqualTo(failSource ? testException : default);
     }
 
-    private static Optional<Person> CreatePerson(int id, string name) => Optional<Person>.Some(new Person(id, name));
+    private static ReactiveUI.Primitives.Optional<Person> CreatePerson(int id, string name) => ReactiveUI.Primitives.Optional<Person>.Some(new Person(id, name));
 
     private class PersonComparer : IEqualityComparer<Person>
     {

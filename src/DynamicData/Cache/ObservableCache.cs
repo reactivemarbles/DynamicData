@@ -405,8 +405,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
                 return observable.SubscribeSafe(observer);
 
                 IObservable<T> CreateFullyDeferredConnection()
-                    => Observable.CombineLatest(
-                            _suspensionTracker.Value.NotificationsSuspendedObservable,
+                    => _suspensionTracker.Value.NotificationsSuspendedObservable.CombineLatest(
                             _isEditInProgress.Value,
                             static (areNotificationsSuspended, isEditInProgress) => areNotificationsSuspended || isEditInProgress)
                         .Do(static _ => { }, observer.OnCompleted)
@@ -544,12 +543,12 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
     /// <param name="Version">The Version value.</param>
     private readonly record struct CacheUpdate(ChangeSet<TObject, TKey>? Changes, int Count, long Version = 0);
 
-/// <summary>
-/// Observer that dispatches <see cref="CacheUpdate"/> items to the cache's
-/// downstream subjects. Used as the delivery target for <see cref="_notifications"/>.
-/// </summary>
-/// <param name="cache">The cache value.</param>
-private sealed class CacheUpdateObserver(ObservableCache<TObject, TKey> cache) : IObserver<CacheUpdate>
+    /// <summary>
+    /// Observer that dispatches <see cref="CacheUpdate"/> items to the cache's
+    /// downstream subjects. Used as the delivery target for <see cref="_notifications"/>.
+    /// </summary>
+    /// <param name="cache">The cache value.</param>
+    private sealed class CacheUpdateObserver(ObservableCache<TObject, TKey> cache) : IObserver<CacheUpdate>
     {
         /// <summary>
         /// Executes the OnNext operation.
@@ -660,10 +659,10 @@ private sealed class CacheUpdateObserver(ObservableCache<TObject, TKey> cache) :
         }
     }
 
-/// <summary>
-/// Provides members for the SuspensionTracker class.
-/// </summary>
-private sealed class SuspensionTracker : IDisposable
+    /// <summary>
+    /// Provides members for the SuspensionTracker class.
+    /// </summary>
+    private sealed class SuspensionTracker : IDisposable
     {
         /// <summary>
         /// The _areNotificationsSuspended field.

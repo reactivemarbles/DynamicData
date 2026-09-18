@@ -38,10 +38,10 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
         observer => new Subscription(source, selector, observer, equalityComparer));
     // Maintains state for a single subscription
 
-/// <summary>
-/// Provides members for the Subscription class.
-/// </summary>
-private sealed class Subscription : CacheParentSubscription<ClonedListChangeSet<TDestination>, TKey, IChangeSet<TDestination>, IChangeSet<TDestination>>
+    /// <summary>
+    /// Provides members for the Subscription class.
+    /// </summary>
+    private sealed class Subscription : CacheParentSubscription<ClonedListChangeSet<TDestination>, TKey, IChangeSet<TDestination>, IChangeSet<TDestination>>
     {
         /// <summary>
         /// The _changeSetMergeTracker field.
@@ -90,8 +90,8 @@ private sealed class Subscription : CacheParentSubscription<ClonedListChangeSet<
 
                     // Shutdown the existing subscription and remove from the cache
                     case ChangeReason.Remove:
-                        _changeSetMergeTracker.RemoveItems(change.Current.List);
                         RemoveChildSubscription(change.Key);
+                        _changeSetMergeTracker.RemoveItems(change.Current.List);
                         break;
                 }
             }

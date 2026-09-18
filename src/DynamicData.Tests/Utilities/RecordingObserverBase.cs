@@ -44,7 +44,7 @@ public abstract class RecordingObserverBase<T>
         _hasCompleted = true;
         _whenFinalizedSource.SetResult();
     }
-    
+
     void IObserver<T>.OnError(Exception error)
     {
         _notifications.Add(new(

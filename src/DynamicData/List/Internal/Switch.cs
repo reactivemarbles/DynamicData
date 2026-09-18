@@ -45,7 +45,7 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
                 var isSourceRunning = false;
                 var areSourcesComplete = false;
 
-                var outer = _sources.SubscribeSafe(
+                var outer = _sources.SubscribeSafe(Observer.Create<IObservable<IChangeSet<T>>>(
                     source =>
                     {
                         int id;
@@ -64,7 +64,14 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
 
                         // Subscribed outside the lock. The source may deliver synchronously, and that
                         // delivery takes the lock for itself.
-                        subscription.Disposable = source.SubscribeSafe(
+                        if (id != Volatile.Read(ref active))
+                        {
+                            return;
+                        }
+
+                        var innerSubscription = new SingleAssignmentDisposable();
+                        subscription.Disposable = innerSubscription;
+                        innerSubscription.Disposable = source.SubscribeSafe(Observer.Create<IChangeSet<T>>(
                             changes =>
                             {
                                 using var scope = queue.AcquireLock();
@@ -107,7 +114,7 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
                                 {
                                     scope.EnqueueCompleted();
                                 }
-                            });
+                            }));
                     },
                     queue.OnError,
                     () =>
@@ -121,7 +128,7 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
                         {
                             scope.EnqueueCompleted();
                         }
-                    });
+                    }));
 
                 // Disposal order matters and CompositeDisposable does not specify one. The queue goes first
                 // so that any delivery in flight is finished before the subscriptions feeding it are torn down.

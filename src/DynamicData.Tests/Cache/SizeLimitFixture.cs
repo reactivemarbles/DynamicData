@@ -22,45 +22,45 @@ public class SizeLimitFixture : IDisposable
         _results = _source.Connect().AsAggregator();
     }
 
-    [Fact]
-    public void Add()
+    [Test]
+    public async Task Add()
     {
         var person = _generator.Take(1).First();
         _source.AddOrUpdate(person);
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].Should().Be(person, "Should be same person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(person).Because("Should be same person");
     }
 
-    [Fact]
-    public void AddLessThanLimit()
+    [Test]
+    public async Task AddLessThanLimit()
     {
         var person = _generator.Take(1).First();
         _source.AddOrUpdate(person);
 
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].Should().Be(person, "Should be same person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(person).Because("Should be same person");
     }
 
-    [Fact]
-    public void AddMoreThanLimit()
+    [Test]
+    public async Task AddMoreThanLimit()
     {
         var people = _generator.Take(100).OrderBy(p => p.Name).ToArray();
         _source.AddOrUpdate(people);
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
 
         _source.Dispose();
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(100, "Should be 100 adds in the first update");
-        _results.Messages[1].Removes.Should().Be(90, "Should be 90 removes in the second update");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(100).Because("Should be 100 adds in the first update");
+        await Assert.That(_results.Messages[1].Removes).IsEqualTo(90).Because("Should be 90 removes in the second update");
     }
 
-    [Fact]
-    public void AddMoreThanLimitInBatched()
+    [Test]
+    public async Task AddMoreThanLimitInBatched()
     {
         // _generator.Take(N) draws random Person rows from a finite name pool; a second
         // Take(10) call can produce keys that collide with the first batch, turning an
@@ -72,10 +72,10 @@ public class SizeLimitFixture : IDisposable
 
         _scheduler.Start();
 
-        _results.Messages.Count.Should().Be(3, "Should be 3 updates");
-        _results.Messages[0].Adds.Should().Be(10, "Should be 10 adds in the first update");
-        _results.Messages[1].Adds.Should().Be(10, "Should be 10 adds in the second update");
-        _results.Messages[2].Removes.Should().Be(10, "Should be 10 removes in the third update");
+        await Assert.That(_results.Messages.Count).IsEqualTo(3).Because("Should be 3 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(10).Because("Should be 10 adds in the first update");
+        await Assert.That(_results.Messages[1].Adds).IsEqualTo(10).Because("Should be 10 adds in the second update");
+        await Assert.That(_results.Messages[2].Removes).IsEqualTo(10).Because("Should be 10 removes in the third update");
     }
 
     public void Dispose()
@@ -85,8 +85,8 @@ public class SizeLimitFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void InvokeLimitSizeToWhenOverLimit()
+    [Test]
+    public async Task InvokeLimitSizeToWhenOverLimit()
     {
         var removesTriggered = false;
         var subscriber = _source.LimitSizeTo(10, _scheduler).Subscribe(removes => { removesTriggered = true; });
@@ -99,36 +99,70 @@ public class SizeLimitFixture : IDisposable
         _source.AddOrUpdate(people.Take(10).ToArray());
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
 
-        removesTriggered.Should().BeFalse();
+        await Assert.That(removesTriggered).IsFalse();
 
         _source.AddOrUpdate(people.Skip(10).Take(10).ToArray());
 
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
 
-        removesTriggered.Should().BeTrue();
+        await Assert.That(removesTriggered).IsTrue();
 
-        _results.Messages.Count.Should().Be(3, "Should be 3 updates");
-        _results.Messages[0].Adds.Should().Be(10, "Should be 10 adds in the first update");
-        _results.Messages[1].Adds.Should().Be(10, "Should be 10 adds in the second update");
-        _results.Messages[2].Removes.Should().Be(10, "Should be 10 removes in the third update");
+        await Assert.That(_results.Messages.Count).IsEqualTo(3).Because("Should be 3 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(10).Because("Should be 10 adds in the first update");
+        await Assert.That(_results.Messages[1].Adds).IsEqualTo(10).Because("Should be 10 adds in the second update");
+        await Assert.That(_results.Messages[2].Removes).IsEqualTo(10).Because("Should be 10 removes in the third update");
 
         subscriber.Dispose();
     }
 
-    [Fact(Skip = "Need to re-examine and fix failure")]
-    public void OnCompleteIsInvokedWhenSourceIsDisposed()
+    [Test]
+    public async Task OnCompleteIsInvokedWhenSourceIsDisposed()
     {
-        var completed = false;
-
-        var subscriber = _source.LimitSizeTo(10).Finally(() => completed = true).Subscribe(updates => { Console.WriteLine(); });
+        var completions = 0;
+        using var subscriber = _source.LimitSizeTo(10, _scheduler)
+            .Subscribe(_ => { }, () => completions++);
 
         _source.Dispose();
+        await Assert.That(completions).IsEqualTo(0);
 
-        completed.Should().BeTrue();
+        _scheduler.Start();
+        await Assert.That(completions).IsEqualTo(1);
     }
 
-    [Fact]
-    public void ThrowsIfSizeLimitIsZero() =>
+    [Test]
+    public async Task DisposingSubscriptionDoesNotCompleteObserver()
+    {
+        var completions = 0;
+        var subscriber = _source.LimitSizeTo(10, _scheduler)
+            .Subscribe(_ => { }, () => completions++);
+
+        subscriber.Dispose();
+        _source.Dispose();
+        _scheduler.Start();
+
+        await Assert.That(completions).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task SourceErrorIsForwardedOnTheSchedulerWithoutCompletion()
+    {
+        using var source = new TestSourceCache<int, int>(value => value);
+        var scheduler = new TestScheduler();
+        var expected = new InvalidOperationException("Source failed");
+        Exception? observed = null;
+        var completions = 0;
+        using var subscription = source.LimitSizeTo(1, scheduler)
+            .Subscribe(_ => { }, error => observed = error, () => completions++);
+
+        source.SetError(expected);
+        await Assert.That(observed).IsNull();
+        scheduler.Start();
+
+        await Assert.That(observed).IsSameReferenceAs(expected);
+        await Assert.That(completions).IsEqualTo(0);
+    }
+    [Test]
+    public async Task ThrowsIfSizeLimitIsZero() =>
         // Initialise();
-        Assert.Throws<ArgumentException>(() => new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0));
+        await Assert.That(() => new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0)).Throws<ArgumentException>();
 }

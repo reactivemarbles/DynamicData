@@ -4,13 +4,14 @@ public static partial class FilterFixture
 {
     public static partial class DynamicPredicate
     {
+        [InheritsTests]
         public sealed class UnitTests
             : Base
         {
-            [Theory]
-            [InlineData(EmptyChangesetPolicy.IncludeEmptyChangesets)]
-            [InlineData(EmptyChangesetPolicy.SuppressEmptyChangesets)]
-            public void ChangesAreMadeBeforeInitialPredicateChangedValue_ItemsAreExcluded(EmptyChangesetPolicy emptyChangesetPolicy)
+            [Test]
+            [Arguments(EmptyChangesetPolicy.IncludeEmptyChangesets)]
+            [Arguments(EmptyChangesetPolicy.SuppressEmptyChangesets)]
+            public async Task ChangesAreMadeBeforeInitialPredicateChangedValue_ItemsAreExcluded(EmptyChangesetPolicy emptyChangesetPolicy)
             {
                 // Setup
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
@@ -18,15 +19,15 @@ public static partial class FilterFixture
                 // UUT Initialization
                 using var subscription = source.Connect()
                     .Filter(
-                        predicateChanged:           Observable.Never<Func<Item, bool>>(),
-                        suppressEmptyChangeSets:    emptyChangesetPolicy is EmptyChangesetPolicy.SuppressEmptyChangesets)
+                        predicateChanged: Observable.Never<Func<Item, bool>>(),
+                        suppressEmptyChangeSets: emptyChangesetPolicy is EmptyChangesetPolicy.SuppressEmptyChangesets)
                     .ValidateSynchronization()
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Should().BeEmpty("no source operations were performed");
-                results.HasCompleted.Should().BeFalse("the source has not completed");
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no source operations were performed");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action
                 // Add changes
@@ -65,27 +66,27 @@ public static partial class FilterFixture
 
                 if (emptyChangesetPolicy is EmptyChangesetPolicy.IncludeEmptyChangesets)
                 {
-                    results.RecordedChangeSets.Count.Should().Be(6, "6 source operations were performed");
-                    results.RecordedItemsByKey.Should().BeEmpty("the predicate has not initialized");
+                    await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(6).Because("6 source operations were performed");
+                    await Assert.That(results.RecordedItemsByKey).IsEmpty().Because("the predicate has not initialized");
                 }
                 else
                 {
-                    results.RecordedChangeSets.Should().BeEmpty("empty changesets should be suppressed");
+                    await Assert.That(results.RecordedChangeSets).IsEmpty().Because("empty changesets should be suppressed");
                 }
-                results.HasCompleted.Should().BeFalse("the source has not completed");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // Final verification
-                results.ShouldNotSupportSorting("sorting is not supported by filter operators");
+                await results.ShouldNotSupportSorting("sorting is not supported by filter operators");
             }
 
-            [Theory]
-            [InlineData(EmptyChangesetPolicy.IncludeEmptyChangesets)]
-            [InlineData(EmptyChangesetPolicy.SuppressEmptyChangesets)]
-            public void PredicateChangedChanges_ItemsAreReFiltered(EmptyChangesetPolicy emptyChangesetPolicy)
+            [Test]
+            [Arguments(EmptyChangesetPolicy.IncludeEmptyChangesets)]
+            [Arguments(EmptyChangesetPolicy.SuppressEmptyChangesets)]
+            public async Task PredicateChangedChanges_ItemsAreReFiltered(EmptyChangesetPolicy emptyChangesetPolicy)
             {
                 // Setup
-                using var source            = new TestSourceCache<Item, int>(Item.SelectId);
-                using var predicateChanged  = new StateSignal<Func<Item, bool>>(Item.FilterByIsIncluded);
+                using var source = new TestSourceCache<Item, int>(Item.SelectId);
+                using var predicateChanged = new ReactiveUI.Primitives.Signals.StateSignal<Func<Item, bool>>(Item.FilterByIsIncluded);
 
                 source.AddOrUpdate(new[]
                 {
@@ -100,33 +101,33 @@ public static partial class FilterFixture
                 // UUT Initialization
                 using var subscription = source.Connect()
                     .Filter(
-                        predicateChanged:           predicateChanged,
-                        suppressEmptyChangeSets:    emptyChangesetPolicy is EmptyChangesetPolicy.SuppressEmptyChangesets)
+                        predicateChanged: predicateChanged,
+                        suppressEmptyChangeSets: emptyChangesetPolicy is EmptyChangesetPolicy.SuppressEmptyChangesets)
                     .ValidateSynchronization()
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset was published");
-                results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all matching items should have propagated");
-                results.HasCompleted.Should().BeFalse("the source has not completed");
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("an initial changeset was published");
+                await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(source.Items.Where(Item.FilterByIsIncluded)).Because("all matching items should have propagated");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action
                 predicateChanged.OnNext(Item.FilterByEvenId);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 predicate change occurred");
-                results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByEvenId), "newly-matching items should have been added, and newly-excluded items should have been removed");
-                results.HasCompleted.Should().BeFalse("the source has not completed");
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Skip(1).Count()).IsEqualTo(1).Because("1 predicate change occurred");
+                await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(source.Items.Where(Item.FilterByEvenId)).Because("newly-matching items should have been added, and newly-excluded items should have been removed");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // Final verification
-                results.ShouldNotSupportSorting("sorting is not supported by filter operators");
+                await results.ShouldNotSupportSorting("sorting is not supported by filter operators");
             }
 
-            [Theory]
-            [InlineData(StreamCompletionStrategy.Asynchronous)]
-            [InlineData(StreamCompletionStrategy.Immediate)]
-            public void PredicateChangedCompletesAfterInitialValue_CompletionWaitsForSourceCompletion(StreamCompletionStrategy completionStrategy)
+            [Test]
+            [Arguments(StreamCompletionStrategy.Asynchronous)]
+            [Arguments(StreamCompletionStrategy.Immediate)]
+            public async Task PredicateChangedCompletesAfterInitialValue_CompletionWaitsForSourceCompletion(StreamCompletionStrategy completionStrategy)
             {
                 // Setup
                 var source = new TestSourceCache<Item, int>(Item.SelectId);
@@ -142,10 +143,10 @@ public static partial class FilterFixture
                 });
 
                 var predicateChanged = (completionStrategy is StreamCompletionStrategy.Asynchronous)
-                    ? new Signal<Func<Item, bool>>()
+                    ? new ReactiveUI.Primitives.Signals.Signal<Func<Item, bool>>()
                     : Observable.Return(Item.FilterByIsIncluded);
 
-                var reapplyFilter = new Signal<Unit>();
+                var reapplyFilter = new ReactiveUI.Primitives.Signals.Signal<Unit>();
 
                 // UUT Initialization & Action
                 using var subscription = source.Connect()
@@ -154,71 +155,71 @@ public static partial class FilterFixture
                     .ValidateChangeSets(static item => item.Id)
                     .RecordCacheItems(out var results);
 
-                if (predicateChanged is Signal<Func<Item, bool>> subject)
+                if (predicateChanged is ReactiveUI.Primitives.Signals.Signal<Func<Item, bool>> subject)
                 {
                     subject.OnNext(Item.FilterByIsIncluded);
                     subject.OnCompleted();
                 }
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Count.Should().Be(1, "an initial predicate, was published");
-                results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all matching items should have propagated");
-                results.HasCompleted.Should().BeFalse("changes could still be generated by the source");
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("an initial predicate, was published");
+                await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(source.Items.Where(Item.FilterByIsIncluded)).Because("all matching items should have propagated");
+                await Assert.That(results.HasCompleted).IsFalse().Because("changes could still be generated by the source");
 
                 // UUT Action
                 source.Complete();
 
-                results.Error.Should().BeNull();
+                await Assert.That(results.Error).IsNull();
                 if (completionStrategy is StreamCompletionStrategy.Asynchronous)
-                    results.RecordedChangeSets.Skip(2).Should().BeEmpty("no source operations were performed");
+                    await Assert.That(results.RecordedChangeSets.Skip(2)).IsEmpty().Because("no source operations were performed");
                 else
-                    results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations were performed");
-                results.HasCompleted.Should().BeTrue("all source streams have completed");
+                    await Assert.That(results.RecordedChangeSets.Skip(1)).IsEmpty().Because("no source operations were performed");
+                await Assert.That(results.HasCompleted).IsTrue().Because("all source streams have completed");
 
                 // Final verification
-                results.ShouldNotSupportSorting("sorting is not supported by filter operators");
+                await results.ShouldNotSupportSorting("sorting is not supported by filter operators");
             }
 
-            [Theory]
-            [InlineData(StreamCompletionStrategy.Immediate,       EmptyChangesetPolicy.IncludeEmptyChangesets)]
-            [InlineData(StreamCompletionStrategy.Immediate,       EmptyChangesetPolicy.SuppressEmptyChangesets)]
-            [InlineData(StreamCompletionStrategy.Asynchronous,    EmptyChangesetPolicy.IncludeEmptyChangesets)]
-            [InlineData(StreamCompletionStrategy.Asynchronous,    EmptyChangesetPolicy.SuppressEmptyChangesets)]
-            public void PredicateChangedCompletesBeforeInitialValue_CompletionPropagatesIfEmptyChangesetsAreSuppressed(
-                StreamCompletionStrategy      StreamCompletionStrategy,
-                EmptyChangesetPolicy    emptyChangesetPolicy)
+            [Test]
+            [Arguments(StreamCompletionStrategy.Immediate, EmptyChangesetPolicy.IncludeEmptyChangesets)]
+            [Arguments(StreamCompletionStrategy.Immediate, EmptyChangesetPolicy.SuppressEmptyChangesets)]
+            [Arguments(StreamCompletionStrategy.Asynchronous, EmptyChangesetPolicy.IncludeEmptyChangesets)]
+            [Arguments(StreamCompletionStrategy.Asynchronous, EmptyChangesetPolicy.SuppressEmptyChangesets)]
+            public async Task PredicateChangedCompletesBeforeInitialValue_CompletionPropagatesIfEmptyChangesetsAreSuppressed(
+                StreamCompletionStrategy completionStrategy,
+                EmptyChangesetPolicy emptyChangesetPolicy)
             {
                 // Setup
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
 
                 var predicateChanged = (completionStrategy is StreamCompletionStrategy.Asynchronous)
-                    ? new Signal<Func<Item, bool>>()
+                    ? new ReactiveUI.Primitives.Signals.Signal<Func<Item, bool>>()
                     : Observable.Empty<Func<Item, bool>>();
 
                 // UUT Initialization & Action
                 using var subscription = source.Connect()
                     .Filter(
-                        predicateChanged:           predicateChanged,
-                        suppressEmptyChangeSets:    emptyChangesetPolicy is EmptyChangesetPolicy.SuppressEmptyChangesets)
+                        predicateChanged: predicateChanged,
+                        suppressEmptyChangeSets: emptyChangesetPolicy is EmptyChangesetPolicy.SuppressEmptyChangesets)
                     .ValidateSynchronization()
                     .ValidateChangeSets(static item => item.Id)
                     .RecordCacheItems(out var results);
 
-                if (predicateChanged is Signal<Func<Item, bool>> subject)
+                if (predicateChanged is ReactiveUI.Primitives.Signals.Signal<Func<Item, bool>> subject)
                     subject.OnCompleted();
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Should().BeEmpty("no source operations were performed");
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no source operations were performed");
                 if (emptyChangesetPolicy is EmptyChangesetPolicy.IncludeEmptyChangesets)
-                    results.HasCompleted.Should().BeFalse("additional empty changesets can occur");
+                    await Assert.That(results.HasCompleted).IsFalse().Because("additional empty changesets can occur");
                 else
-                    results.HasCompleted.Should().BeTrue("only empty changesets can occur");
+                    await Assert.That(results.HasCompleted).IsTrue().Because("only empty changesets can occur");
             }
 
-            [Theory]
-            [InlineData(StreamCompletionStrategy.Asynchronous)]
-            [InlineData(StreamCompletionStrategy.Immediate)]
-            public void PredicateChangedFails_ErrorPropagates(StreamCompletionStrategy completionStrategy)
+            [Test]
+            [Arguments(StreamCompletionStrategy.Asynchronous)]
+            [Arguments(StreamCompletionStrategy.Immediate)]
+            public async Task PredicateChangedFails_ErrorPropagates(StreamCompletionStrategy completionStrategy)
             {
                 // Setup
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
@@ -226,41 +227,39 @@ public static partial class FilterFixture
                 var error = new Exception("Test");
 
                 var predicateChanged = (completionStrategy is StreamCompletionStrategy.Asynchronous)
-                    ? new Signal<Func<Item, bool>>()
+                    ? new ReactiveUI.Primitives.Signals.Signal<Func<Item, bool>>()
                     : Observable.Throw<Func<Item, bool>>(error);
 
                 // UUT Initialization & Action
                 using var subscription = source.Connect()
                     .Filter(
-                        predicateChanged:   predicateChanged)
+                        predicateChanged: predicateChanged)
                     .ValidateSynchronization()
                     .ValidateChangeSets(static item => item.Id)
                     .RecordCacheItems(out var results);
 
-                if (predicateChanged is Signal<Func<Item, bool>> subject)
+                if (predicateChanged is ReactiveUI.Primitives.Signals.Signal<Func<Item, bool>> subject)
                     subject.OnError(error);
 
-                results.Error.Should().Be(error, "errors should propagate downstream");
-                results.RecordedChangeSets.Should().BeEmpty("no source operations were performed");
+                await Assert.That(results.Error).IsEqualTo(error).Because("errors should propagate downstream");
+                await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no source operations were performed");
             }
 
-            [Fact]
-            public void PredicateChangedIsNull_ThrowsException()
-                => FluentActions.Invoking(() => ObservableCacheEx.Filter(
-                        source:             Observable.Return(ChangeSet<Item, int>.Empty),
-                        reapplyFilter:      Observable.Never<Unit>(),
-                        predicateChanged:   null!))
-                    .Should()
-                    .Throw<ArgumentNullException>();
+            [Test]
+            public async Task PredicateChangedIsNull_ThrowsException()
+                => await Assert.That(() => ObservableCacheEx.Filter(
+                        source: Observable.Return(ChangeSet<Item, int>.Empty),
+                        reapplyFilter: Observable.Never<Unit>(),
+                        predicateChanged: null!)).Throws<ArgumentNullException>();
 
-            [Theory]
-            [InlineData(StreamCompletionStrategy.Asynchronous,    EmptyChangesetPolicy.IncludeEmptyChangesets)]
-            [InlineData(StreamCompletionStrategy.Asynchronous,    EmptyChangesetPolicy.SuppressEmptyChangesets)]
-            [InlineData(StreamCompletionStrategy.Immediate,       EmptyChangesetPolicy.IncludeEmptyChangesets)]
-            [InlineData(StreamCompletionStrategy.Immediate,       EmptyChangesetPolicy.SuppressEmptyChangesets)]
-            public void SourceCompletesWhenEmpty_CompletionPropagatesWhenEmptyChangesetsAreSuppressed(
-                StreamCompletionStrategy      StreamCompletionStrategy,
-                EmptyChangesetPolicy    emptyChangesetPolicy)
+            [Test]
+            [Arguments(StreamCompletionStrategy.Asynchronous, EmptyChangesetPolicy.IncludeEmptyChangesets)]
+            [Arguments(StreamCompletionStrategy.Asynchronous, EmptyChangesetPolicy.SuppressEmptyChangesets)]
+            [Arguments(StreamCompletionStrategy.Immediate, EmptyChangesetPolicy.IncludeEmptyChangesets)]
+            [Arguments(StreamCompletionStrategy.Immediate, EmptyChangesetPolicy.SuppressEmptyChangesets)]
+            public async Task SourceCompletesWhenEmpty_CompletionPropagatesWhenEmptyChangesetsAreSuppressed(
+                StreamCompletionStrategy completionStrategy,
+                EmptyChangesetPolicy emptyChangesetPolicy)
             {
                 // Setup
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
@@ -271,10 +270,10 @@ public static partial class FilterFixture
 
                 using var subscription = source.Connect()
                     .Filter(
-                        predicateChanged:           Observable.Concat(
+                        predicateChanged: Observable.Concat(
                             Observable.Return(Item.FilterByIsIncluded),
                             Observable.Never<Func<Item, bool>>()),
-                        suppressEmptyChangeSets:    emptyChangesetPolicy is EmptyChangesetPolicy.SuppressEmptyChangesets)
+                        suppressEmptyChangeSets: emptyChangesetPolicy is EmptyChangesetPolicy.SuppressEmptyChangesets)
                     .ValidateSynchronization()
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results);
@@ -282,21 +281,21 @@ public static partial class FilterFixture
                 if (completionStrategy is StreamCompletionStrategy.Asynchronous)
                     source.Complete();
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Should().BeEmpty("no source operations were performed");
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no source operations were performed");
                 if (emptyChangesetPolicy is EmptyChangesetPolicy.IncludeEmptyChangesets)
-                    results.HasCompleted.Should().BeFalse("the source has completed, but further empty changesets can occur");
+                    await Assert.That(results.HasCompleted).IsFalse().Because("the source has completed, but further empty changesets can occur");
                 else
-                    results.HasCompleted.Should().BeTrue("the source has completed, and no further changesets can occur");
+                    await Assert.That(results.HasCompleted).IsTrue().Because("the source has completed, and no further changesets can occur");
 
                 // Final verification
-                results.ShouldNotSupportSorting("sorting is not supported by filter operators");
+                await results.ShouldNotSupportSorting("sorting is not supported by filter operators");
             }
 
-            [Theory]
-            [InlineData(StreamCompletionStrategy.Asynchronous)]
-            [InlineData(StreamCompletionStrategy.Immediate)]
-            public void SourceCompletesWhenNotEmpty_CompletionWaitsForPredicateChangedCompletion(StreamCompletionStrategy completionStrategy)
+            [Test]
+            [Arguments(StreamCompletionStrategy.Asynchronous)]
+            [Arguments(StreamCompletionStrategy.Immediate)]
+            public async Task SourceCompletesWhenNotEmpty_CompletionWaitsForPredicateChangedCompletion(StreamCompletionStrategy completionStrategy)
             {
                 // Setup
                 using var source = new TestSourceCache<Item, int>(Item.SelectId);
@@ -311,7 +310,7 @@ public static partial class FilterFixture
                     new Item() { Id = 6, IsIncluded = false }
                 });
 
-                using var predicateChanged = new StateSignal<Func<Item, bool>>(Item.FilterByIsIncluded);
+                using var predicateChanged = new ReactiveUI.Primitives.Signals.StateSignal<Func<Item, bool>>(Item.FilterByIsIncluded);
 
                 // UUT Initialization & Action
                 if (completionStrategy is StreamCompletionStrategy.Immediate)
@@ -326,29 +325,29 @@ public static partial class FilterFixture
                 if (completionStrategy is StreamCompletionStrategy.Asynchronous)
                     source.Complete();
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset was published");
-                results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "all matching items should have propagated");
-                results.HasCompleted.Should().BeFalse("the collection could still change due to new predicates");
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("an initial changeset was published");
+                await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(source.Items.Where(Item.FilterByIsIncluded)).Because("all matching items should have propagated");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the collection could still change due to new predicates");
 
                 // UUT Action
                 predicateChanged.OnCompleted();
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations were performed");
-                results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items.Where(Item.FilterByIsIncluded), "no changes should have been made");
-                results.HasCompleted.Should().BeTrue("all source streams have completed");
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Skip(1)).IsEmpty().Because("no source operations were performed");
+                await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(source.Items.Where(Item.FilterByIsIncluded)).Because("no changes should have been made");
+                await Assert.That(results.HasCompleted).IsTrue().Because("all source streams have completed");
 
                 // Final Verification
-                results.ShouldNotSupportSorting("sorting is not supported by filter operators");
+                await results.ShouldNotSupportSorting("sorting is not supported by filter operators");
             }
 
-            [Fact]
-            public void SubscriptionIsDisposed_SubscriptionDisposalPropagates()
+            [Test]
+            public async Task SubscriptionIsDisposed_SubscriptionDisposalPropagates()
             {
                 // Setup
-                using var source            = new Signal<IChangeSet<Item, int>>();
-                using var predicateChanged  = new StateSignal<Func<Item, bool>>(Item.FilterByIsIncluded);
+                using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
+                using var predicateChanged = new ReactiveUI.Primitives.Signals.StateSignal<Func<Item, bool>>(Item.FilterByIsIncluded);
 
                 // UUT Initialization
                 using var subscription = source
@@ -357,26 +356,24 @@ public static partial class FilterFixture
                     .ValidateChangeSets(Item.SelectId)
                     .RecordCacheItems(out var results);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Should().BeEmpty("no source operations were performed");
-                results.HasCompleted.Should().BeFalse("the source has not completed");
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no source operations were performed");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action
                 subscription.Dispose();
 
-                source          .HasObservers.Should().BeFalse("subscription disposal should propagate to all sources");
-                predicateChanged.HasObservers.Should().BeFalse("subscription disposal should propagate to all sources");
+                await Assert.That(source.HasObservers).IsFalse().Because("subscription disposal should propagate to all sources");
+                await Assert.That(predicateChanged.HasObservers).IsFalse().Because("subscription disposal should propagate to all sources");
             }
 
             protected override IObservable<IChangeSet<Item, int>> BuildUut(
-                    IObservable<IChangeSet<Item, int>>  source,
-                    Func<Item, bool>                    predicate,
-                    bool                                suppressEmptyChangeSets)
+                    IObservable<IChangeSet<Item, int>> source,
+                    Func<Item, bool> predicate,
+                    bool suppressEmptyChangeSets)
                 => source.Filter(
-                    predicateChanged:           Observable.Return(predicate),
-                    suppressEmptyChangeSets:    suppressEmptyChangeSets);
+                    predicateChanged: Observable.Return(predicate),
+                    suppressEmptyChangeSets: suppressEmptyChangeSets);
         }
     }
 }
-
-

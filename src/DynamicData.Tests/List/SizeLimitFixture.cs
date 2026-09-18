@@ -22,56 +22,56 @@ public class SizeLimitFixture : IDisposable
         _results = _source.Connect().AsAggregator();
     }
 
-    [Fact]
-    public void Add()
+    [Test]
+    public async Task Add()
     {
         var person = _generator.Take(1).First();
         _source.Add(person);
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].Should().Be(person, "Should be same person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(person).Because("Should be same person");
     }
 
-    [Fact]
-    public void AddLessThanLimit()
+    [Test]
+    public async Task AddLessThanLimit()
     {
         var person = _generator.Take(1).First();
         _source.Add(person);
 
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].Should().Be(person, "Should be same person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(person).Because("Should be same person");
     }
 
-    [Fact]
-    public void AddMoreThanLimit()
+    [Test]
+    public async Task AddMoreThanLimit()
     {
         var people = _generator.Take(100).OrderBy(p => p.Name).ToArray();
         _source.AddRange(people);
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
 
         _source.Dispose();
-        _results.Data.Count.Should().Be(10, "Should be 10 items in the cache");
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(100, "Should be 100 adds in the first update");
-        _results.Messages[1].Removes.Should().Be(90, "Should be 90 removes in the second update");
+        await Assert.That(_results.Data.Count).IsEqualTo(10).Because("Should be 10 items in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(100).Because("Should be 100 adds in the first update");
+        await Assert.That(_results.Messages[1].Removes).IsEqualTo(90).Because("Should be 90 removes in the second update");
     }
 
-    [Fact]
-    public void AddMoreThanLimitInBatched()
+    [Test]
+    public async Task AddMoreThanLimitInBatched()
     {
         _source.AddRange(_generator.Take(10).ToArray());
         _source.AddRange(_generator.Take(10).ToArray());
 
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
-        _results.Data.Count.Should().Be(10, "Should be 10 items in the cache");
-        _results.Messages.Count.Should().Be(3, "Should be 3 updates");
-        _results.Messages[0].Adds.Should().Be(10, "Should be 10 adds in the first update");
-        _results.Messages[1].Adds.Should().Be(10, "Should be 10 adds in the second update");
-        _results.Messages[2].Removes.Should().Be(10, "Should be 10 removes in the third update");
+        await Assert.That(_results.Data.Count).IsEqualTo(10).Because("Should be 10 items in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(3).Because("Should be 3 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(10).Because("Should be 10 adds in the first update");
+        await Assert.That(_results.Messages[1].Adds).IsEqualTo(10).Because("Should be 10 adds in the second update");
+        await Assert.That(_results.Messages[2].Removes).IsEqualTo(10).Because("Should be 10 removes in the third update");
     }
 
     public void Dispose()
@@ -81,15 +81,15 @@ public class SizeLimitFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void ForceError()
+    [Test]
+    public async Task ForceError()
     {
         var person = _generator.Take(1).First();
-        Assert.Throws<ArgumentOutOfRangeException>(() => _source.RemoveAt(1));
+        await Assert.That(() => _source.RemoveAt(1)).ThrowsExactly<ArgumentOutOfRangeException>();
     }
 
-    [Fact]
-    public void ThrowsIfSizeLimitIsZero() =>
+    [Test]
+    public async Task ThrowsIfSizeLimitIsZero() =>
         // Initialise();
-        Assert.Throws<ArgumentException>(() => new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0));
+        await Assert.That(() => new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0)).ThrowsExactly<ArgumentException>();
 }

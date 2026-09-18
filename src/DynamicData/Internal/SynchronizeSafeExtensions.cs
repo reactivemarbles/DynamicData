@@ -45,7 +45,6 @@ internal static class SynchronizeSafeExtensions
     /// <param name="queue">The queue value.</param>
     /// <returns>The result of the operation.</returns>
     public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, SharedDeliveryQueue queue)
-        where T : notnull
         =>
         Observable.Create<T>(observer =>
         {
@@ -64,7 +63,7 @@ internal static class SynchronizeSafeExtensions
     /// <param name="gate">The gate value.</param>
     /// <returns>The result of the operation.</returns>
     public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, Lock gate)
-        where T : notnull =>
+        =>
         Observable.Create<T>(observer =>
         {
             var queue = new DeliveryQueue<T>(gate, observer);
@@ -83,7 +82,7 @@ internal static class SynchronizeSafeExtensions
     /// <param name="source">The source value.</param>
     /// <returns>The result of the operation.</returns>
     public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source)
-        where T : notnull =>
+        =>
         Observable.Create<T>(observer =>
         {
             var queue = new DeliveryQueue<T>(observer);

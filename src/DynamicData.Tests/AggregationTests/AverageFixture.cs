@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Aggregation;
+#else
 using DynamicData.Aggregation;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.AggregationTests;
@@ -9,8 +13,8 @@ public class AverageFixture : IDisposable
 
     public AverageFixture() => _source = new SourceCache<Person, string>(p => p.Name);
 
-    [Fact]
-    public void AddedItemsContributeToSum()
+    [Test]
+    public async Task AddedItemsContributeToSum()
     {
         double avg = 0;
 
@@ -20,13 +24,13 @@ public class AverageFixture : IDisposable
         _source.AddOrUpdate(new Person("B", 20));
         _source.AddOrUpdate(new Person("C", 30));
 
-        avg.Should().Be(20, "Average value should be 20");
+        await Assert.That(avg).IsEqualTo(20).Because("Average value should be 20");
 
         accumulator.Dispose();
     }
 
-    [Fact]
-    public void AddedItemsContributeToSumLong()
+    [Test]
+    public async Task AddedItemsContributeToSumLong()
     {
         double avg = 0;
 
@@ -36,13 +40,13 @@ public class AverageFixture : IDisposable
         _source.AddOrUpdate(new Person("B", 20));
         _source.AddOrUpdate(new Person("C", 30));
 
-        avg.Should().Be(20, "Average value should be 20");
+        await Assert.That(avg).IsEqualTo(20).Because("Average value should be 20");
 
         accumulator.Dispose();
     }
 
-    [Fact]
-    public void AddedItemsContributeToSumFloat()
+    [Test]
+    public async Task AddedItemsContributeToSumFloat()
     {
         double avg = 0;
 
@@ -52,13 +56,13 @@ public class AverageFixture : IDisposable
         _source.AddOrUpdate(new Person("B", 20));
         _source.AddOrUpdate(new Person("C", 30));
 
-        avg.Should().Be(20, "Average value should be 20");
+        await Assert.That(avg).IsEqualTo(20).Because("Average value should be 20");
 
         accumulator.Dispose();
     }
 
-    [Fact]
-    public void AddedItemsContributeToSumDouble()
+    [Test]
+    public async Task AddedItemsContributeToSumDouble()
     {
         double avg = 0;
 
@@ -68,13 +72,13 @@ public class AverageFixture : IDisposable
         _source.AddOrUpdate(new Person("B", 20));
         _source.AddOrUpdate(new Person("C", 30));
 
-        avg.Should().Be(20, "Average value should be 20");
+        await Assert.That(avg).IsEqualTo(20).Because("Average value should be 20");
 
         accumulator.Dispose();
     }
 
-    [Fact]
-    public void AddedItemsContributeToSumDecimal()
+    [Test]
+    public async Task AddedItemsContributeToSumDecimal()
     {
         decimal avg = 0;
 
@@ -84,13 +88,13 @@ public class AverageFixture : IDisposable
         _source.AddOrUpdate(new Person("B", 20));
         _source.AddOrUpdate(new Person("C", 30));
 
-        avg.Should().Be(20, "Average value should be 20");
+        await Assert.That(avg).IsEqualTo(20).Because("Average value should be 20");
 
         accumulator.Dispose();
     }
 
-    [Fact]
-    public void AddedItemsContributeToSumNullable()
+    [Test]
+    public async Task AddedItemsContributeToSumNullable()
     {
         double avg = 0;
 
@@ -100,13 +104,13 @@ public class AverageFixture : IDisposable
         _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
         _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
 
-        avg.Should().Be(20, "Average value should be 20");
+        await Assert.That(avg).IsEqualTo(20).Because("Average value should be 20");
 
         accumulator.Dispose();
     }
 
-    [Fact]
-    public void AddedItemsContributeToSumNullableLong()
+    [Test]
+    public async Task AddedItemsContributeToSumNullableLong()
     {
         double avg = 0;
 
@@ -116,13 +120,13 @@ public class AverageFixture : IDisposable
         _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
         _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
 
-        avg.Should().Be(20, "Average value should be 20");
+        await Assert.That(avg).IsEqualTo(20).Because("Average value should be 20");
 
         accumulator.Dispose();
     }
 
-    [Fact]
-    public void AddedItemsContributeToSumNullableFloat()
+    [Test]
+    public async Task AddedItemsContributeToSumNullableFloat()
     {
         double avg = 0;
 
@@ -132,13 +136,13 @@ public class AverageFixture : IDisposable
         _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
         _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
 
-        avg.Should().Be(20, "Average value should be 20");
+        await Assert.That(avg).IsEqualTo(20).Because("Average value should be 20");
 
         accumulator.Dispose();
     }
 
-    [Fact]
-    public void AddedItemsContributeToSumNullableDouble()
+    [Test]
+    public async Task AddedItemsContributeToSumNullableDouble()
     {
         double avg = 0;
 
@@ -148,13 +152,13 @@ public class AverageFixture : IDisposable
         _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
         _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
 
-        avg.Should().Be(20, "Average value should be 20");
+        await Assert.That(avg).IsEqualTo(20).Because("Average value should be 20");
 
         accumulator.Dispose();
     }
 
-    [Fact]
-    public void AddedItemsContributeToSumNullableDecimal()
+    [Test]
+    public async Task AddedItemsContributeToSumNullableDecimal()
     {
         decimal avg = 0;
 
@@ -164,15 +168,15 @@ public class AverageFixture : IDisposable
         _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
         _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
 
-        avg.Should().Be(20, "Average value should be 20");
+        await Assert.That(avg).IsEqualTo(20).Because("Average value should be 20");
 
         accumulator.Dispose();
     }
 
     public void Dispose() => _source.Dispose();
 
-    [Fact]
-    public void InlineChangeReEvaluatesTotals()
+    [Test]
+    public async Task InlineChangeReEvaluatesTotals()
     {
         double avg = 0;
 
@@ -185,16 +189,16 @@ public class AverageFixture : IDisposable
         _source.AddOrUpdate(personb);
         _source.AddOrUpdate(new Person("C", 30));
 
-        avg.Should().Be(15, "Sum should be 15 after inline change");
+        await Assert.That(avg).IsEqualTo(15).Because("Sum should be 15 after inline change");
 
         personb.Age = 20;
 
-        avg.Should().Be(20, "Sum should be 20 after inline change");
+        await Assert.That(avg).IsEqualTo(20).Because("Sum should be 20 after inline change");
         accumulator.Dispose();
     }
 
-    [Fact]
-    public void RemoveProduceCorrectResult()
+    [Test]
+    public async Task RemoveProduceCorrectResult()
     {
         double avg = 0;
 
@@ -205,7 +209,7 @@ public class AverageFixture : IDisposable
         _source.AddOrUpdate(new Person("C", 30));
 
         _source.Remove("A");
-        avg.Should().Be(25, "Average value should be 25 after remove");
+        await Assert.That(avg).IsEqualTo(25).Because("Average value should be 25 after remove");
         accumulator.Dispose();
     }
 }

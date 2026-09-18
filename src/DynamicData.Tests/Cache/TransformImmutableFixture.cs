@@ -2,10 +2,10 @@ namespace DynamicData.Tests.Cache;
 
 public sealed class TransformImmutableFixture
 {
-    [Fact]
-    public void ItemsAreManipulated_ItemsAreTransformed()
+    [Test]
+    public async Task ItemsAreManipulated_ItemsAreTransformed()
     {
-        using var source = new Signal<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
         using var results = source
             .TransformImmutable(transformFactory: Item.NameSelector)
@@ -21,11 +21,11 @@ public sealed class TransformImmutableFixture
         };
         source.OnNext(operation1);
 
-        results.Error.Should().BeNull();
-        results.Messages.Count.Should().Be(1, "1 source operation was performed");
-        results.Messages.ElementAt(0).Select(change => change.CurrentIndex).Should().BeEquivalentTo(operation1.Select(change => change.CurrentIndex), "indexes should be preserved");
-        results.Messages.ElementAt(0).Select(change => change.PreviousIndex).Should().BeEquivalentTo(operation1.Select(change => change.PreviousIndex), "indexes should be preserved");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item1.Name, item2.Name }, "2 items were added");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.Messages.Count).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.Messages.ElementAt(0).Select(change => change.CurrentIndex)).IsEquivalentTo(operation1.Select(change => change.CurrentIndex)).Because("indexes should be preserved");
+        await Assert.That(results.Messages.ElementAt(0).Select(change => change.PreviousIndex)).IsEquivalentTo(operation1.Select(change => change.PreviousIndex)).Because("indexes should be preserved");
+        await Assert.That(results.Data.Items).IsEquivalentTo(new[] { item1.Name, item2.Name }).Because("2 items were added");
 
         // Replace items, changing inclusion
         var item3 = new Item() { Id = item1.Id, Name = "Item #3" };
@@ -37,11 +37,11 @@ public sealed class TransformImmutableFixture
         };
         source.OnNext(operation2);
 
-        results.Error.Should().BeNull();
-        results.Messages.Skip(1).Count().Should().Be(1, "1 source operation was performed");
-        results.Messages.ElementAt(1).Select(change => change.CurrentIndex).Should().BeEquivalentTo(operation2.Select(change => change.CurrentIndex), "indexes should be preserved");
-        results.Messages.ElementAt(1).Select(change => change.PreviousIndex).Should().BeEquivalentTo(operation2.Select(change => change.PreviousIndex), "indexes should be preserved");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item3.Name, item4.Name }, "2 items were replaced");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.Messages.Skip(1).Count()).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.Messages.ElementAt(1).Select(change => change.CurrentIndex)).IsEquivalentTo(operation2.Select(change => change.CurrentIndex)).Because("indexes should be preserved");
+        await Assert.That(results.Messages.ElementAt(1).Select(change => change.PreviousIndex)).IsEquivalentTo(operation2.Select(change => change.PreviousIndex)).Because("indexes should be preserved");
+        await Assert.That(results.Data.Items).IsEquivalentTo(new[] { item3.Name, item4.Name }).Because("2 items were replaced");
 
         // Refresh items
         var operation3 = new ChangeSet<Item, int>()
@@ -51,11 +51,11 @@ public sealed class TransformImmutableFixture
         };
         source.OnNext(operation3);
 
-        results.Error.Should().BeNull();
-        results.Messages.Skip(2).Count().Should().Be(1, "1 source operation was performed");
-        results.Messages.ElementAt(2).Select(change => change.CurrentIndex).Should().BeEquivalentTo(operation3.Select(change => change.CurrentIndex), "indexes should be preserved");
-        results.Messages.ElementAt(2).Select(change => change.PreviousIndex).Should().BeEquivalentTo(operation3.Select(change => change.PreviousIndex), "indexes should be preserved");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item3.Name, item4.Name }, "2 items were refreshed");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.Messages.Skip(2).Count()).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.Messages.ElementAt(2).Select(change => change.CurrentIndex)).IsEquivalentTo(operation3.Select(change => change.CurrentIndex)).Because("indexes should be preserved");
+        await Assert.That(results.Messages.ElementAt(2).Select(change => change.PreviousIndex)).IsEquivalentTo(operation3.Select(change => change.PreviousIndex)).Because("indexes should be preserved");
+        await Assert.That(results.Data.Items).IsEquivalentTo(new[] { item3.Name, item4.Name }).Because("2 items were refreshed");
 
         // Move items
         var operation4 = new ChangeSet<Item, int>()
@@ -65,11 +65,11 @@ public sealed class TransformImmutableFixture
         };
         source.OnNext(operation4);
 
-        results.Error.Should().BeNull();
-        results.Messages.Skip(3).Count().Should().Be(1, "1 source operation was performed");
-        results.Messages.ElementAt(3).Select(change => change.CurrentIndex).Should().BeEquivalentTo(operation4.Select(change => change.CurrentIndex), "indexes should be preserved");
-        results.Messages.ElementAt(3).Select(change => change.PreviousIndex).Should().BeEquivalentTo(operation4.Select(change => change.PreviousIndex), "indexes should be preserved");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item4.Name, item3.Name }, "2 items were moved");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.Messages.Skip(3).Count()).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.Messages.ElementAt(3).Select(change => change.CurrentIndex)).IsEquivalentTo(operation4.Select(change => change.CurrentIndex)).Because("indexes should be preserved");
+        await Assert.That(results.Messages.ElementAt(3).Select(change => change.PreviousIndex)).IsEquivalentTo(operation4.Select(change => change.PreviousIndex)).Because("indexes should be preserved");
+        await Assert.That(results.Data.Items).IsEquivalentTo(new[] { item4.Name, item3.Name }).Because("2 items were moved");
 
         // Remove items
         var operation5 = new ChangeSet<Item, int>()
@@ -79,19 +79,19 @@ public sealed class TransformImmutableFixture
         };
         source.OnNext(operation5);
 
-        results.Error.Should().BeNull();
-        results.Messages.Skip(4).Count().Should().Be(1, "1 source operation was performed");
-        results.Messages.ElementAt(4).Select(change => change.CurrentIndex).Should().BeEquivalentTo(operation5.Select(change => change.CurrentIndex), "indexes should be preserved");
-        results.Messages.ElementAt(4).Select(change => change.PreviousIndex).Should().BeEquivalentTo(operation5.Select(change => change.PreviousIndex), "indexes should be preserved");
-        results.Data.Items.Should().BeEmpty("2 items were removed");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.Messages.Skip(4).Count()).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.Messages.ElementAt(4).Select(change => change.CurrentIndex)).IsEquivalentTo(operation5.Select(change => change.CurrentIndex)).Because("indexes should be preserved");
+        await Assert.That(results.Messages.ElementAt(4).Select(change => change.PreviousIndex)).IsEquivalentTo(operation5.Select(change => change.PreviousIndex)).Because("indexes should be preserved");
+        await Assert.That(results.Data.Items).IsEmpty().Because("2 items were removed");
 
-        results.IsCompleted.Should().BeFalse();
+        await Assert.That(results.IsCompleted).IsFalse();
     }
 
-    [Fact]
-    public void SourceCompletes_CompletionIsPropagated()
+    [Test]
+    public async Task SourceCompletes_CompletionIsPropagated()
     {
-        using var source = new Signal<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
         using var results = source
             .TransformImmutable(transformFactory: Item.NameSelector)
@@ -104,10 +104,10 @@ public sealed class TransformImmutableFixture
         });
         source.OnCompleted();
 
-        results.Error.Should().BeNull();
-        results.IsCompleted.Should().BeTrue();
-        results.Messages.Count.Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item1.Name }, "1 item was added");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.IsCompleted).IsTrue();
+        await Assert.That(results.Messages.Count).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.Data.Items).IsEquivalentTo(new[] { item1.Name }).Because("1 item was added");
 
         // Make sure no extraneous notifications are published.
         var item2 = new Item() { Id = 2, Name = "Item #2" };
@@ -116,11 +116,11 @@ public sealed class TransformImmutableFixture
             new(reason: ChangeReason.Add, key: item2.Id, current: item2)
         });
 
-        results.Messages.Skip(1).Should().BeEmpty("no source operations should have been processed");
+        await Assert.That(results.Messages.Skip(1)).IsEmpty().Because("no source operations should have been processed");
     }
 
-    [Fact]
-    public void SourceCompletesImmediately_CompletionIsPropagated()
+    [Test]
+    public async Task SourceCompletesImmediately_CompletionIsPropagated()
     {
         var item1 = new Item() { Id = 1, Name = "Item #1" };
 
@@ -142,16 +142,16 @@ public sealed class TransformImmutableFixture
             .TransformImmutable(transformFactory: Item.NameSelector)
             .AsAggregator();
 
-        results.Error.Should().BeNull();
-        results.IsCompleted.Should().BeTrue();
-        results.Messages.Count.Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item1.Name }, "1 item was added");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.IsCompleted).IsTrue();
+        await Assert.That(results.Messages.Count).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.Data.Items).IsEquivalentTo(new[] { item1.Name }).Because("1 item was added");
     }
 
-    [Fact]
-    public void SourceErrors_ErrorIsPropagated()
+    [Test]
+    public async Task SourceErrors_ErrorIsPropagated()
     {
-        using var source = new Signal<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
         var error = new Exception();
 
@@ -166,10 +166,10 @@ public sealed class TransformImmutableFixture
         });
         source.OnError(error);
 
-        results.Error.Should().Be(error);
-        results.IsCompleted.Should().BeFalse();
-        results.Messages.Count.Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item1.Name }, "1 item was added");
+        await Assert.That(results.Error).IsEqualTo(error);
+        await Assert.That(results.IsCompleted).IsFalse();
+        await Assert.That(results.Messages.Count).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.Data.Items).IsEquivalentTo(new[] { item1.Name }).Because("1 item was added");
 
         // Make sure no extraneous notifications are published.
         var item2 = new Item() { Id = 2, Name = "Item #2" };
@@ -178,11 +178,11 @@ public sealed class TransformImmutableFixture
             new(reason: ChangeReason.Add, key: item2.Id, current: item2)
         });
 
-        results.Messages.Skip(1).Should().BeEmpty("no source operations should have been processed");
+        await Assert.That(results.Messages.Skip(1)).IsEmpty().Because("no source operations should have been processed");
     }
 
-    [Fact]
-    public void SourceErrorsImmediately_ErrorIsPropagated()
+    [Test]
+    public async Task SourceErrorsImmediately_ErrorIsPropagated()
     {
         var item1 = new Item() { Id = 1, Name = "Item #1" };
         var error = new Exception();
@@ -203,30 +203,28 @@ public sealed class TransformImmutableFixture
             .TransformImmutable(transformFactory: Item.NameSelector)
             .AsAggregator();
 
-        results.Error.Should().Be(error);
-        results.IsCompleted.Should().BeFalse();
-        results.Messages.Count.Should().Be(1, "1 source operation was performed");
-        results.Data.Items.Should().BeEquivalentTo(new[] { item1.Name }, "1 item was added");
+        await Assert.That(results.Error).IsEqualTo(error);
+        await Assert.That(results.IsCompleted).IsFalse();
+        await Assert.That(results.Messages.Count).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.Data.Items).IsEquivalentTo(new[] { item1.Name }).Because("1 item was added");
     }
 
-    [Fact]
-    public void SourceIsNull_ThrowsException()
-        => FluentActions.Invoking(() => ObservableCacheEx.TransformImmutable(
+    [Test]
+    public async Task SourceIsNull_ThrowsException()
+        => await Assert.That(() => ObservableCacheEx.TransformImmutable(
             source: (null as IObservable<IChangeSet<Item, int>>)!,
-            transformFactory: Item.NameSelector))
-        .Should().Throw<ArgumentNullException>();
+            transformFactory: Item.NameSelector)).Throws<ArgumentNullException>();
 
-    [Fact]
-    public void TransformFactoryIsNull_ThrowsException()
-        => FluentActions.Invoking(() => Observable
+    [Test]
+    public async Task TransformFactoryIsNull_ThrowsException()
+        => await Assert.That(() => Observable
                 .Never<IChangeSet<Item, int>>()
-                .TransformImmutable<string, Item, int>(transformFactory: null!))
-            .Should().Throw<ArgumentNullException>();
+                .TransformImmutable<string, Item, int>(transformFactory: null!)).Throws<ArgumentNullException>();
 
-    [Fact]
-    public void TransformFactoryThrows_ExceptionIsCaptured()
+    [Test]
+    public async Task TransformFactoryThrows_ExceptionIsCaptured()
     {
-        using var source = new Signal<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
         var error = new Exception();
 
@@ -240,16 +238,16 @@ public sealed class TransformImmutableFixture
             new(reason: ChangeReason.Add, key: item1.Id, current: item1)
         });
 
-        results.Error.Should().Be(error);
-        results.Messages.Should().BeEmpty("no source operations should have been processed");
-        results.IsCompleted.Should().BeFalse();
+        await Assert.That(results.Error).IsEqualTo(error);
+        await Assert.That(results.Messages).IsEmpty().Because("no source operations should have been processed");
+        await Assert.That(results.IsCompleted).IsFalse();
     }
 
     // https://github.com/reactivemarbles/DynamicData/issues/925
-    [Fact]
-    public void TDestinationIsValueType_DoesNotThrowException()
+    [Test]
+    public async Task TDestinationIsValueType_DoesNotThrowException()
     {
-        using var source = new Signal<IChangeSet<string, string>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<string, string>>();
 
         using var results = source
             .TransformImmutable(transformFactory: static value => value.Length)
@@ -260,8 +258,8 @@ public sealed class TransformImmutableFixture
             new(reason: ChangeReason.Add, key: "Item #1", current: "Item #1", index: 0)
         });
 
-        results.Error.Should().BeNull();
-        results.Messages.Count.Should().Be(1, "1 source operation was performed");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.Messages.Count).IsEqualTo(1).Because("1 source operation was performed");
     }
 
     private class Item

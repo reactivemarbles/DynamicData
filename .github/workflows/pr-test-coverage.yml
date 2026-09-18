@@ -13,7 +13,7 @@ jobs:
       matrix:
         configuration: [Release] # future support for more coverage
 
-    runs-on: windows-latest  
+    runs-on: windows-latest
     if: github.event.workflow_run.conclusion == 'success'
     steps:
     - name: Checkout
@@ -32,10 +32,13 @@ jobs:
     - name: Install .NET
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: | 
+        dotnet-version: |
           6.0.x
           7.0.x
           8.0.x
+          9.0.x
+          10.0.x
+        global-json-file: global.json
 
     - name: Cache SonarCloud packages
       uses: actions/cache@v5
@@ -54,11 +57,21 @@ jobs:
 
     - name: Run coverage tests
       run: |
-        dotnet sonarscanner begin /k:"reactivemarbles_DynamicData" /o:"reactivemarbles" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.opencover.reportsPaths=./**/coverage.opencover.xml /d:sonar.host.url="https://sonarcloud.io"
+        dotnet sonarscanner begin /k:"reactivemarbles_DynamicData" /o:"reactivemarbles" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.vscoveragexml.reportsPaths=./TestResults/coverage/*.xml /d:sonar.host.url="https://sonarcloud.io"
+        if ($LASTEXITCODE -ne 0) { throw "Sonar scanner initialization failed." }
         dotnet build --no-restore --no-incremental --configuration ${{ matrix.configuration }} -p:ContinuousIntegrationBuild=false DynamicData.sln
-        dotnet test --no-build --configuration ${{ matrix.configuration }} --collect:"XPlat Code Coverage" --settings coverlet.xml
+        if ($LASTEXITCODE -ne 0) { throw "Coverage build failed." }
+        dotnet test --solution DynamicData.sln --no-build --configuration ${{ matrix.configuration }} --coverage --coverage-settings coverage.config --coverage-output-format xml --results-directory TestResults/coverage
+        if ($LASTEXITCODE -ne 0) { throw "Coverage tests failed." }
         dotnet sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       working-directory: src
+
+    - name: Upload coverage reports
+      if: always()
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: coverage
+        path: src/TestResults/coverage/

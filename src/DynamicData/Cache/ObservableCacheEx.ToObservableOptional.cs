@@ -71,22 +71,58 @@ public static partial class ObservableCacheEx
     /// <returns>An observable optional.</returns>
     /// <exception cref="ArgumentNullException">source is null.</exception>
     /// <remarks>
-    /// <para><b>Worth noting:</b> Uses lock-based coordination. If the key exists synchronously on <c>Connect()</c>, the initial <c>None</c> may or may not be emitted depending on timing.</para>
+    /// <para><b>Worth noting:</b> The initial <c>None</c> is emitted only if the source subscription has not already synchronously produced a value for the key.</para>
     /// </remarks>
     public static IObservable<ReactiveUI.Primitives.Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, bool initialOptionalWhenMissing, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
     {
+        ArgumentExceptionHelper.ThrowIfNull(source);
+
         if (initialOptionalWhenMissing)
         {
-            return Observable.Defer(() =>
+            return Observable.Create<ReactiveUI.Primitives.Optional<TObject>>(observer =>
             {
-                var seenValue = false;
-                return source.ToObservableOptional(key, equalityComparer)
-                    .Do(_ => seenValue = true)
-                    .Merge(Observable.Defer(() => seenValue
-                        ? Observable.Empty<ReactiveUI.Primitives.Optional<TObject>>()
-                        : Observable.Return(ReactiveUI.Primitives.Optional<TObject>.None)));
+                var queue = new DeliveryQueue<ReactiveUI.Primitives.Optional<TObject>>(observer);
+                var hasEmitted = false;
+                var subscription = source.ToObservableOptional(key, equalityComparer).Subscribe(
+                    value =>
+                    {
+                        using var scope = queue.AcquireLock();
+                        hasEmitted = true;
+                        scope.EnqueueNext(value);
+                    },
+                    error =>
+                    {
+                        using var scope = queue.AcquireLock();
+                        scope.EnqueueError(error);
+                    },
+                    () =>
+                    {
+                        using var scope = queue.AcquireLock();
+                        if (!hasEmitted)
+                        {
+                            hasEmitted = true;
+                            scope.EnqueueNext(ReactiveUI.Primitives.Optional<TObject>.None);
+                        }
+
+                        scope.EnqueueCompleted();
+                    });
+
+                using (var scope = queue.AcquireLock())
+                {
+                    if (!hasEmitted)
+                    {
+                        hasEmitted = true;
+                        scope.EnqueueNext(ReactiveUI.Primitives.Optional<TObject>.None);
+                    }
+                }
+
+                return Disposable.Create(() =>
+                {
+                    queue.Dispose();
+                    subscription.Dispose();
+                });
             });
         }
 

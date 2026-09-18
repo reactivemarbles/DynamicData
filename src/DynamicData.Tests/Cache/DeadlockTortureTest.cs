@@ -2,7 +2,11 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
@@ -17,7 +21,7 @@ namespace DynamicData.Tests.Cache;
 /// On main (Synchronize(lock)): deadlocks reliably within seconds.
 /// On the PR branch (SynchronizeSafe queue-drain): no deadlock possible.
 /// </summary>
-[Collection(IntegrationTestFixtureBase.CollectionName)]
+[NotInParallel]
 public sealed class DeadlockTortureTest
 {
     private const int ItemCount = 200;
@@ -47,47 +51,57 @@ public sealed class DeadlockTortureTest
         return true;
     }
 
-    [Fact] public async Task Sort_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)))).Should().BeTrue();
+    [Test]
+    public async Task Sort_DoesNotDeadlock() =>
+await Assert.That((await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age))))).IsTrue();
 
-    [Fact] public async Task AutoRefresh_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.AutoRefresh(p => p.Age))).Should().BeTrue();
+    [Test]
+    public async Task AutoRefresh_DoesNotDeadlock() =>
+await Assert.That((await RunBidirectionalDeadlockTest(s => s.AutoRefresh(p => p.Age)))).IsTrue();
 
-    [Fact] public async Task GroupOn_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.Group(p => p.Age % 3).MergeMany(g => g.Cache.Connect()))).Should().BeTrue();
+    [Test]
+    public async Task GroupOn_DoesNotDeadlock() =>
+await Assert.That((await RunBidirectionalDeadlockTest(s => s.Group(p => p.Age % 3).MergeMany(g => g.Cache.Connect())))).IsTrue();
 
-    [Fact] public async Task Page_DoesNotDeadlock()
+    [Test]
+    public async Task Page_DoesNotDeadlock()
     {
-        using var req = new StateSignal<IPageRequest>(new PageRequest(1, 50));
-        (await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Page(req))).Should().BeTrue();
+        using var req = new ReactiveUI.Primitives.Signals.StateSignal<IPageRequest>(new PageRequest(1, 50));
+        await Assert.That((await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Page(req)))).IsTrue();
     }
 
-    [Fact] public async Task Virtualise_DoesNotDeadlock()
+    [Test]
+    public async Task Virtualise_DoesNotDeadlock()
     {
-        using var req = new StateSignal<IVirtualRequest>(new VirtualRequest(0, 50));
-        (await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Virtualise(req))).Should().BeTrue();
+        using var req = new ReactiveUI.Primitives.Signals.StateSignal<IVirtualRequest>(new VirtualRequest(0, 50));
+        await Assert.That((await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Virtualise(req)))).IsTrue();
     }
 
-    [Fact] public async Task TransformWithForce_DoesNotDeadlock()
+    [Test]
+    public async Task TransformWithForce_DoesNotDeadlock()
     {
-        using var force = new Signal<Func<Person, string, bool>>();
-        (await RunBidirectionalDeadlockTest(s => s.Transform((p, k) => new Person("T-" + p.Name, p.Age), force))).Should().BeTrue();
+        using var force = new ReactiveUI.Primitives.Signals.Signal<Func<Person, string, bool>>();
+        await Assert.That((await RunBidirectionalDeadlockTest(s => s.Transform((p, k) => new Person("T-" + p.Name, p.Age), force)))).IsTrue();
     }
 
-    [Fact] public async Task BatchIf_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.BatchIf(new StateSignal<bool>(false), false, (TimeSpan?)null))).Should().BeTrue();
+    [Test]
+    public async Task BatchIf_DoesNotDeadlock() =>
+await Assert.That((await RunBidirectionalDeadlockTest(s => s.BatchIf(new ReactiveUI.Primitives.Signals.StateSignal<bool>(false), false, (TimeSpan?)null)))).IsTrue();
 
-    [Fact] public async Task DisposeMany_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.DisposeMany())).Should().BeTrue();
+    [Test]
+    public async Task DisposeMany_DoesNotDeadlock() =>
+await Assert.That((await RunBidirectionalDeadlockTest(s => s.DisposeMany()))).IsTrue();
 
-    [Fact] public async Task OnItemRemoved_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.OnItemRemoved(_ => { }))).Should().BeTrue();
+    [Test]
+    public async Task OnItemRemoved_DoesNotDeadlock() =>
+await Assert.That((await RunBidirectionalDeadlockTest(s => s.OnItemRemoved(_ => { })))).IsTrue();
 
-    [Fact] public async Task AllDangerous_Stacked_DoNotDeadlock()
+    [Test]
+    public async Task AllDangerous_Stacked_DoNotDeadlock()
     {
-        using var pageReq = new StateSignal<IPageRequest>(new PageRequest(1, 100));
-        using var force = new Signal<Func<Person, string, bool>>();
-        (await RunBidirectionalDeadlockTest(
+        using var pageReq = new ReactiveUI.Primitives.Signals.StateSignal<IPageRequest>(new PageRequest(1, 100));
+        using var force = new ReactiveUI.Primitives.Signals.Signal<Func<Person, string, bool>>();
+        await Assert.That(await RunBidirectionalDeadlockTest(
             s => s.AutoRefresh(p => p.Age)
                   .Filter(p => p.Age >= 0)
                   .Transform((p, k) => new Person("X-" + p.Name, p.Age), force)
@@ -95,13 +109,14 @@ public sealed class DeadlockTortureTest
                   .DisposeMany()
                   .Sort(SortExpressionComparer<Person>.Ascending(p => p.Age))
                   .Page(pageReq),
-            iterations: Iterations * 2)).Should().BeTrue();
+            iterations: Iterations * 2)).IsTrue();
     }
 
-    [Fact] public async Task MultiplePairs_Simultaneous_NoDeadlock()
+    [Test]
+    public async Task MultiplePairs_Simultaneous_NoDeadlock()
     {
-        using var pageReq = new StateSignal<IPageRequest>(new PageRequest(1, 50));
-        using var virtReq = new StateSignal<IVirtualRequest>(new VirtualRequest(0, 50));
+        using var pageReq = new ReactiveUI.Primitives.Signals.StateSignal<IPageRequest>(new PageRequest(1, 50));
+        using var virtReq = new ReactiveUI.Primitives.Signals.StateSignal<IVirtualRequest>(new VirtualRequest(0, 50));
         var results = await Task.WhenAll(
             RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)), 30),
             RunBidirectionalDeadlockTest(s => s.AutoRefresh(p => p.Age), 30),
@@ -110,11 +125,15 @@ public sealed class DeadlockTortureTest
             RunBidirectionalDeadlockTest(s => s.DisposeMany(), 30),
             RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Page(pageReq), 30),
             RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Virtualise(virtReq), 30),
-            RunBidirectionalDeadlockTest(s => s.BatchIf(new StateSignal<bool>(false), false, (TimeSpan?)null), 30));
-        results.Should().AllSatisfy(r => r.Should().BeTrue());
+            RunBidirectionalDeadlockTest(s => s.BatchIf(new ReactiveUI.Primitives.Signals.StateSignal<bool>(false), false, (TimeSpan?)null), 30));
+        foreach (var result in results)
+        {
+            await Assert.That(result).IsTrue();
+        }
     }
 
-    [Fact] public async Task ThreeWayCircular_DoesNotDeadlock()
+    [Test]
+    public async Task ThreeWayCircular_DoesNotDeadlock()
     {
         for (var iter = 0; iter < Iterations; iter++)
         {
@@ -134,7 +153,7 @@ public sealed class DeadlockTortureTest
                 Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) c.AddOrUpdate(new Person("CC-" + iter + "-" + i, i)); }),
             };
             var completed = Task.WhenAll(tasks);
-            (await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds)))).Should().BeSameAs(completed, "iteration " + iter);
+            await Assert.That((await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds))))).IsSameReferenceAs(completed).Because("iteration " + iter);
         }
     }
 }

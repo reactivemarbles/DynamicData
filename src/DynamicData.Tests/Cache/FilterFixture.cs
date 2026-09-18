@@ -26,22 +26,22 @@ public static partial class FilterFixture
             => item.IsIncluded;
 
         public static bool FilterByIdInclusionMask(
-                int     idInclusionMask,
-                Item    item)
+                int idInclusionMask,
+                Item item)
             => ((item.Id & idInclusionMask) == 0) && item.IsIncluded;
 
         public static int SelectId(Item item)
             => item.Id;
-            
+
         public required int Id { get; init; }
 
         public bool IsIncluded { get; set; }
     }
 
     private static (ICache<Item, int> items, IReadOnlyList<IChangeSet<Item, int>> changeSets) GenerateStressItemsAndChangeSets(
-        int         editCount,
-        int         maxChangeCount,
-        Randomizer  randomizer)
+        int editCount,
+        int maxChangeCount,
+        Randomizer randomizer)
     {
         // Not exercising Moved, since ChangeAwareCache<> doesn't support it, and I'm too lazy to implement it by hand.
         var changeReasons = new[]
@@ -84,20 +84,20 @@ public static partial class FilterFixture
             {
                 var changeReason = randomizer.WeightedRandom(changeReasons, items.Count switch
                 {
-                    0   => changeReasonWeightsWhenCountIs0,
-                    _   => changeReasonWeightsOtherwise
+                    0 => changeReasonWeightsWhenCountIs0,
+                    _ => changeReasonWeightsOtherwise
                 });
 
                 switch (changeReason)
                 {
                     case ChangeReason.Add:
                         items.AddOrUpdate(
-                            item:   new Item()
+                            item: new Item()
                             {
-                                Id          = nextItemId,
-                                IsIncluded  = randomizer.Bool()
+                                Id = nextItemId,
+                                IsIncluded = randomizer.Bool()
                             },
-                            key:    nextItemId);
+                            key: nextItemId);
                         ++nextItemId;
                         break;
 
@@ -112,12 +112,12 @@ public static partial class FilterFixture
                     case ChangeReason.Update:
                         var id = items.Keys.ElementAt(randomizer.Int(0, items.Count - 1));
                         items.AddOrUpdate(
-                            item:   new Item()
+                            item: new Item()
                             {
-                                Id          = id,
-                                IsIncluded  = randomizer.Bool()
+                                Id = id,
+                                IsIncluded = randomizer.Bool()
                             },
-                            key:    id);
+                            key: id);
                         break;
                 }
             }
@@ -129,8 +129,8 @@ public static partial class FilterFixture
     }
 
     private static IReadOnlyList<int> GenerateRandomIdInclusionMasks(
-        int         valueCount,
-        Randomizer  randomizer)
+        int valueCount,
+        Randomizer randomizer)
     {
         var values = new List<int>(capacity: valueCount);
 

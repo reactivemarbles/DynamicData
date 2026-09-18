@@ -15,8 +15,8 @@ public class TransformManyFixture : IDisposable
         _results = _source.Connect().TransformMany(p => p.Relations.RecursiveSelect(r => r.Relations)).AsAggregator();
     }
 
-    [Fact]
-    public void Add()
+    [Test]
+    public async Task Add()
     {
         var frientofchild1 = new PersonWithRelations("Friend1", 10);
         var child1 = new PersonWithRelations("Child1", 10, new[] { frientofchild1 });
@@ -27,12 +27,12 @@ public class TransformManyFixture : IDisposable
 
         _source.Add(mother);
 
-        _results.Data.Count.Should().Be(4);
-        _results.Data.Items.Should().BeEquivalentTo(new[] { child1, child2, child3, frientofchild1});
+        await Assert.That(_results.Data.Count).IsEqualTo(4);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(new[] { child1, child2, child3, frientofchild1 });
     }
 
-    [Fact]
-    public void AddRange()
+    [Test]
+    public async Task AddRange()
     {
         var frientofchild1 = new PersonWithRelations("Friend1", 10);
         var child1 = new PersonWithRelations("Child1", 10, new[] { frientofchild1 });
@@ -51,12 +51,12 @@ public class TransformManyFixture : IDisposable
         var anotherRelative2 = new PersonWithRelations("Another2", 2, new[] { child6, child7 });
 
         _source.AddRange(new[] { anotherRelative1, anotherRelative2 });
-        _results.Data.Count.Should().Be(8);
-        _results.Data.Items.Should().BeEquivalentTo(new[] { child1, child2, child3, frientofchild1, child4, child5, child6, child7});
+        await Assert.That(_results.Data.Count).IsEqualTo(8);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(new[] { child1, child2, child3, frientofchild1, child4, child5, child6, child7 });
     }
 
-    [Fact]
-    public void Clear()
+    [Test]
+    public async Task Clear()
     {
         var frientofchild1 = new PersonWithRelations("Friend1", 10);
         var child1 = new PersonWithRelations("Child1", 10, new[] { frientofchild1 });
@@ -73,7 +73,7 @@ public class TransformManyFixture : IDisposable
         _source.AddRange(new[] { mother, anotherRelative1, anotherRelative2 });
 
         _source.Clear();
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
     public void Dispose()
@@ -82,10 +82,10 @@ public class TransformManyFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void Move()
+    [Test]
+    public async Task Move()
     {
-        //Move should have no effect 
+        //Move should have no effect
 
         var child4 = new PersonWithRelations("Child4", 1);
         var child5 = new PersonWithRelations("Child5", 2);
@@ -96,13 +96,13 @@ public class TransformManyFixture : IDisposable
 
         _source.AddRange(new[] { anotherRelative1, anotherRelative2 });
 
-        _results.Messages.Count.Should().Be(1);
+        await Assert.That(_results.Messages.Count).IsEqualTo(1);
         _source.Move(1, 0);
-        _results.Messages.Count.Should().Be(1);
+        await Assert.That(_results.Messages.Count).IsEqualTo(1);
     }
 
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         var tourProviders = new SourceList<TourProvider>();
 
@@ -119,20 +119,20 @@ public class TransformManyFixture : IDisposable
 
         tourProviders.AddRange(new[] { tp1, tp2, tp3 });
 
-        allTours.Items.Should().BeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2});
+        await Assert.That(allTours.Items).IsEquivalentTo(new[] { tour1_1, tour2_1, tour2_2 });
 
         tp3.Tours.Add(tour3_1);
-        allTours.Items.Should().BeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2, tour3_1});
+        await Assert.That(allTours.Items).IsEquivalentTo(new[] { tour1_1, tour2_1, tour2_2, tour3_1 });
 
         tp2.Tours.Remove(tour2_1);
-        allTours.Items.Should().BeEquivalentTo(new[] { tour1_1, tour2_2, tour3_1});
+        await Assert.That(allTours.Items).IsEquivalentTo(new[] { tour1_1, tour2_2, tour3_1 });
 
         tp2.Tours.Add(tour2_1);
-        allTours.Items.Should().BeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2, tour3_1});
+        await Assert.That(allTours.Items).IsEquivalentTo(new[] { tour1_1, tour2_1, tour2_2, tour3_1 });
     }
 
-    [Fact]
-    public void RemoveParent()
+    [Test]
+    public async Task RemoveParent()
     {
         var frientofchild1 = new PersonWithRelations("Friend1", 10);
         var child1 = new PersonWithRelations("Child1", 10, new[] { frientofchild1 });
@@ -142,11 +142,11 @@ public class TransformManyFixture : IDisposable
 
         _source.Add(mother);
         _source.Remove(mother);
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void RemoveRange()
+    [Test]
+    public async Task RemoveRange()
     {
         var frientofchild1 = new PersonWithRelations("Friend1", 10);
         var child1 = new PersonWithRelations("Child1", 10, new[] { frientofchild1 });
@@ -163,12 +163,12 @@ public class TransformManyFixture : IDisposable
         _source.AddRange(new[] { mother, anotherRelative1, anotherRelative2 });
 
         _source.RemoveRange(0, 2);
-        _results.Data.Count.Should().Be(2);
-        _results.Data.Items.Should().BeEquivalentTo(new[] { child6, child7});
+        await Assert.That(_results.Data.Count).IsEqualTo(2);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(new[] { child6, child7 });
     }
 
-    [Fact]
-    public void Replace()
+    [Test]
+    public async Task Replace()
     {
         var frientofchild1 = new PersonWithRelations("Friend1", 10);
         var child1 = new PersonWithRelations("Child1", 10, new[] { frientofchild1 });
@@ -183,8 +183,8 @@ public class TransformManyFixture : IDisposable
 
         _source.Replace(mother, updatedMother);
 
-        _results.Data.Count.Should().Be(4);
-        _results.Data.Items.Should().BeEquivalentTo(new[] { child1, child2, frientofchild1, child4});
+        await Assert.That(_results.Data.Count).IsEqualTo(4);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(new[] { child1, child2, frientofchild1, child4 });
     }
 
     public class Tour(string name)

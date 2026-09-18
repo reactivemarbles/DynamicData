@@ -8,8 +8,8 @@ public class MergeManyFixture : IDisposable
 
     public void Dispose() => _source.Dispose();
 
-    [Fact]
-    public void EverythingIsUnsubscribedWhenStreamIsDisposed()
+    [Test]
+    public async Task EverythingIsUnsubscribedWhenStreamIsDisposed()
     {
         var invoked = false;
         var stream = _source.Connect().MergeMany(o => o.Observable).Subscribe(o => { invoked = true; });
@@ -20,14 +20,14 @@ public class MergeManyFixture : IDisposable
         stream.Dispose();
 
         item.InvokeObservable(true);
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
     }
 
     /// <summary>
     /// Invocations the only when child is invoked.
     /// </summary>
-    [Fact]
-    public void InvocationOnlyWhenChildIsInvoked()
+    [Test]
+    public async Task InvocationOnlyWhenChildIsInvoked()
     {
         var invoked = false;
 
@@ -36,15 +36,15 @@ public class MergeManyFixture : IDisposable
         var item = new ObjectWithObservable(1);
         _source.AddOrUpdate(item);
 
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
 
         item.InvokeObservable(true);
-        invoked.Should().BeTrue();
+        await Assert.That(invoked).IsTrue();
         stream.Dispose();
     }
 
-    [Fact]
-    public void RemovedItemWillNotCauseInvocation()
+    [Test]
+    public async Task RemovedItemWillNotCauseInvocation()
     {
         var invoked = false;
         var stream = _source.Connect().MergeMany(o => o.Observable).Subscribe(o => { invoked = true; });
@@ -52,16 +52,16 @@ public class MergeManyFixture : IDisposable
         var item = new ObjectWithObservable(1);
         _source.AddOrUpdate(item);
         _source.Remove(item);
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
 
         item.InvokeObservable(true);
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
         stream.Dispose();
     }
 
     private class ObjectWithObservable(int id) : IDisposable
     {
-        private readonly Signal<bool> _changed = new Signal<bool>();
+        private readonly ReactiveUI.Primitives.Signals.Signal<bool> _changed = new ReactiveUI.Primitives.Signals.Signal<bool>();
 
         private bool _value;
 
@@ -79,5 +79,5 @@ public class MergeManyFixture : IDisposable
         {
             _changed.Dispose();
         }
-}
+    }
 }

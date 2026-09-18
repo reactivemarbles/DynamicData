@@ -1,4 +1,4 @@
-﻿using DynamicData.Tests.Domain;
+using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
 
@@ -15,8 +15,8 @@ public class TransformManyFixture : IDisposable
         _results = _source.Connect().TransformMany(p => p.Relations.RecursiveSelect(r => r.Relations), p => p.Name).IgnoreUpdateWhen((current, previous) => current.Name == previous.Name).AsAggregator();
     }
 
-    [Fact]
-    public void ChildrenAreRemovedWhenParentIsRemoved()
+    [Test]
+    public async Task ChildrenAreRemovedWhenParentIsRemoved()
     {
         var frientofchild1 = new PersonWithRelations("Friend1", 10);
         var child1 = new PersonWithRelations("Child1", 10, new[] { frientofchild1 });
@@ -27,7 +27,7 @@ public class TransformManyFixture : IDisposable
 
         _source.AddOrUpdate(mother);
         _source.Remove(mother);
-        _results.Data.Count.Should().Be(0, "Should be 4 in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be 4 in the cache");
     }
 
     public void Dispose()
@@ -36,8 +36,8 @@ public class TransformManyFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void RecursiveChildrenCanBeAdded()
+    [Test]
+    public async Task RecursiveChildrenCanBeAdded()
     {
         var frientofchild1 = new PersonWithRelations("Friend1", 10);
         var child1 = new PersonWithRelations("Child1", 10, new[] { frientofchild1 });
@@ -48,10 +48,10 @@ public class TransformManyFixture : IDisposable
 
         _source.AddOrUpdate(mother);
 
-        _results.Data.Count.Should().Be(4, "Should be 4 in the cache");
-        _results.Data.Lookup("Child1").HasValue.Should().BeTrue();
-        _results.Data.Lookup("Child2").HasValue.Should().BeTrue();
-        _results.Data.Lookup("Child3").HasValue.Should().BeTrue();
-        _results.Data.Lookup("Friend1").HasValue.Should().BeTrue();
+        await Assert.That(_results.Data.Count).IsEqualTo(4).Because("Should be 4 in the cache");
+        await Assert.That(_results.Data.Lookup("Child1").HasValue).IsTrue();
+        await Assert.That(_results.Data.Lookup("Child2").HasValue).IsTrue();
+        await Assert.That(_results.Data.Lookup("Child3").HasValue).IsTrue();
+        await Assert.That(_results.Data.Lookup("Friend1").HasValue).IsTrue();
     }
 }

@@ -1,6 +1,5 @@
 ﻿[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Benchmarks")]
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Profile")]
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.ReactiveUI")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Reactive.Tests")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Tests")]
 [assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v10.0", FrameworkDisplayName=".NET 10.0")]
 namespace DynamicData.Aggregation
@@ -1148,13 +1147,13 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, System.TimeSpan? timeOut = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, System.TimeSpan? timeOut, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
-        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, System.IObservable<ReactiveUI.Primitives.RxVoid>? timer = null, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState, System.IObservable<ReactiveUI.Primitives.RxVoid>? timer, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source, System.IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, System.TimeSpan? timeOut = default, ReactiveUI.Primitives.Concurrency.ISequencer? scheduler = null)
@@ -1959,6 +1958,14 @@ namespace DynamicData
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, System.Threading.CancellationToken, System.Threading.Tasks.Task<TDestination>> transformFactory, DynamicData.TransformAsyncOptions options)
+            where TDestination :  notnull
+            where TSource :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, System.Threading.CancellationToken, System.Threading.Tasks.Task<TDestination>> transformFactory, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
+            where TDestination :  notnull
+            where TSource :  notnull
+            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformImmutable<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, TDestination> transformFactory)
             where TDestination :  notnull
             where TSource :  notnull
@@ -2100,6 +2107,14 @@ namespace DynamicData
             where TSource :  notnull
             where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, System.Threading.Tasks.Task<TDestination>> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
+            where TDestination :  notnull
+            where TSource :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, System.Threading.CancellationToken, System.Threading.Tasks.Task<TDestination>> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, DynamicData.TransformAsyncOptions options)
+            where TDestination :  notnull
+            where TSource :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this System.IObservable<DynamicData.IChangeSet<TSource, TKey>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, System.Threading.CancellationToken, System.Threading.Tasks.Task<TDestination>> transformFactory, System.Action<DynamicData.Kernel.Error<TSource, TKey>> errorHandler, System.IObservable<System.Func<TSource, TKey, bool>>? forceTransform = null)
             where TDestination :  notnull
             where TSource :  notnull
             where TKey :  notnull { }
@@ -2474,6 +2489,9 @@ namespace DynamicData
             where TSource :  notnull
             where TDestination :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, int, System.Threading.Tasks.Task<TDestination>> transformFactory, bool transformOnRefresh = false)
+            where TSource :  notnull
+            where TDestination :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, int, System.Threading.CancellationToken, System.Threading.Tasks.Task<TDestination>> transformFactory, bool transformOnRefresh = false)
             where TSource :  notnull
             where TDestination :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this System.IObservable<DynamicData.IChangeSet<TSource>> source, System.Func<TSource, DynamicData.IObservableList<TDestination>> manySelector, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null)

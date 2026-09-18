@@ -2,8 +2,8 @@ namespace DynamicData.Tests.List;
 
 public class MergeManyChangeSetsFixture
 {
-    [Fact]
-    public void MergeManyShouldWork()
+    [Test]
+    public async Task MergeManyShouldWork()
     {
         var a = new SourceList<int>();
         var b = new SourceList<int>();
@@ -16,33 +16,33 @@ public class MergeManyChangeSetsFixture
 
         var d = parent.Connect().MergeMany(e => e.Connect().RemoveIndex()).AsObservableList();
 
-        d.Count.Should().Be(0);
+        await Assert.That(d.Count).IsEqualTo(0);
 
         a.Add(1);
 
-        d.Count.Should().Be(1);
+        await Assert.That(d.Count).IsEqualTo(1);
         a.Add(2);
-        d.Count.Should().Be(2);
+        await Assert.That(d.Count).IsEqualTo(2);
 
         b.Add(3);
-        d.Count.Should().Be(3);
+        await Assert.That(d.Count).IsEqualTo(3);
         b.Add(5);
-        d.Count.Should().Be(4);
-        new[] { 1, 2, 3, 5 }.Should().BeEquivalentTo(d.Items);
+        await Assert.That(d.Count).IsEqualTo(4);
+        await Assert.That(new[] { 1, 2, 3, 5 }).IsEquivalentTo(d.Items);
 
         b.Clear();
 
         // Fails below
-        d.Count.Should().Be(2);
-        new[] { 1, 2 }.Should().BeEquivalentTo(d.Items);
+        await Assert.That(d.Count).IsEqualTo(2);
+        await Assert.That(new[] { 1, 2 }).IsEquivalentTo(d.Items);
 
-        a.ReplaceAt(0,100);
-        new[] { 2, 100 }.Should().BeEquivalentTo(d.Items);
+        a.ReplaceAt(0, 100);
+        await Assert.That(new[] { 2, 100 }).IsEquivalentTo(d.Items);
 
         var f = new SourceList<int>();
-        f.AddRange(Enumerable.Range(10,5));
-        parent.ReplaceAt(2,f);
+        f.AddRange(Enumerable.Range(10, 5));
+        parent.ReplaceAt(2, f);
 
-        new[] { 2, 100, 10,11,12,13,14 }.Should().BeEquivalentTo(d.Items);
+        await Assert.That(new[] { 2, 100, 10, 11, 12, 13, 14 }).IsEquivalentTo(d.Items);
     }
 }

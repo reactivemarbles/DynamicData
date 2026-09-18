@@ -28,7 +28,7 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
     /// <summary>
     /// The _locker field.
     /// </summary>
-    private readonly Lock _locker = new();
+    private readonly object _locker = new();
 
     /// <summary>
     /// The _source field.
@@ -230,10 +230,10 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
         return resultList.CaptureChanges();
     }
 
-/// <summary>
-/// Provides members for the MergeContainer class.
-/// </summary>
-private sealed class MergeContainer
+    /// <summary>
+    /// Provides members for the MergeContainer class.
+    /// </summary>
+    private sealed class MergeContainer
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MergeContainer"/> class.

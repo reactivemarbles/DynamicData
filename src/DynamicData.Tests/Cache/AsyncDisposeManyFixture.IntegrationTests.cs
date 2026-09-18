@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 
 namespace DynamicData.Tests.Cache;
 
@@ -7,30 +11,35 @@ public static partial class AsyncDisposeManyFixture
     public class IntegrationTests
         : IntegrationTestFixtureBase
     {
-        [Theory(Timeout = 5_000)]
-        [InlineData(ItemType.Disposable)]
-        [InlineData(ItemType.AsyncDisposable)]
-        [InlineData(ItemType.ImmediateAsyncDisposable)]
-        public async Task ItemDisposalErrors_ErrorPropagatesToDisposalsCompleted(ItemType itemType)
+        [Test, Timeout(5_000)]
+        [Arguments(ItemType.Disposable)]
+        [Arguments(ItemType.AsyncDisposable)]
+        [Arguments(ItemType.ImmediateAsyncDisposable)]
+        public async Task ItemDisposalErrors_ErrorPropagatesToDisposalsCompleted(ItemType itemType, CancellationToken cancellationToken)
         {
             using var source = new SourceCache<ItemBase, int>(static item => item.Id);
-            using var sourceCompletionSource = new Signal<Unit>();
+            using var sourceCompletionSource = new ReactiveUI.Primitives.Signals.Signal<Unit>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
+            var disposalsCompletedAccessorInvokedMoreThanOnce = false;
 
             using var subscription = source
                 .Connect()
                 .TakeUntil(sourceCompletionSource)
-                .AsyncDisposeMany(disposalsCompleted => 
+                .AsyncDisposeMany(disposalsCompleted =>
                 {
-                    disposalsCompletedResults.Should().BeNull("disposalsCompletedAccessor should only be invoked once per subscription");
+                    if (disposalsCompletedResults is not null)
+                    {
+                        disposalsCompletedAccessorInvokedMoreThanOnce = true;
+                    }
                     disposalsCompleted.RecordValues(out disposalsCompletedResults);
                 })
                 .ValidateSynchronization()
                 .ValidateChangeSets(static item => item.Id)
                 .RecordCacheItems(out var results);
 
-            disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
+            await Assert.That(disposalsCompletedResults).IsNotNull().Because("disposalsCompletedAccessor should have been invoked");
+            await Assert.That(disposalsCompletedAccessorInvokedMoreThanOnce).IsFalse().Because("disposalsCompletedAccessor should only be invoked once per subscription");
 
             source.AddOrUpdate(new[]
             {
@@ -39,14 +48,14 @@ public static partial class AsyncDisposeManyFixture
                 ItemBase.Create(type: itemType, id: 3, version: 1)
             });
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "3 items were added");
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(source.Items).Because("3 items were added");
+            await Assert.That(results.HasCompleted).IsFalse();
 
-            disposalsCompletedResults.Error.Should().BeNull();
-            disposalsCompletedResults.RecordedValues.Should().BeEmpty("no disposals should have occurred");
-            disposalsCompletedResults.HasCompleted.Should().BeFalse("no disposals should have occurred");
+            await Assert.That(disposalsCompletedResults.Error).IsNull();
+            await Assert.That(disposalsCompletedResults.RecordedValues).IsEmpty().Because("no disposals should have occurred");
+            await Assert.That(disposalsCompletedResults.HasCompleted).IsFalse().Because("no disposals should have occurred");
 
             var error = new Exception("Test");
             source.Items.ElementAt(1).FailDisposal(error);
@@ -54,41 +63,46 @@ public static partial class AsyncDisposeManyFixture
             sourceCompletionSource.OnNext(Unit.Default);
 
             // RX and TPL don't guarantee Task continuations run synchronously with antecedent completion
-            await disposalsCompletedResults.WhenFinalized;
+            await disposalsCompletedResults.WhenFinalized.WaitAsync(cancellationToken);
 
-            results.Error.Should().BeNull("disposal errors should be propagated on disposalsCompleted");
-            results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations were performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "no items were changed");
-            results.HasCompleted.Should().BeTrue();
+            await Assert.That(results.Error).IsNull().Because("disposal errors should be propagated on disposalsCompleted");
+            await Assert.That(results.RecordedChangeSets.Skip(1)).IsEmpty().Because("no source operations were performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(source.Items).Because("no items were changed");
+            await Assert.That(results.HasCompleted).IsTrue();
 
-            disposalsCompletedResults.Error.Should().Be(error, "disposal errors should be caught and propagated on disposalsCompleted");
+            await Assert.That(disposalsCompletedResults.Error).IsEqualTo(error).Because("disposal errors should be caught and propagated on disposalsCompleted");
         }
 
-        [Theory(Timeout = 5_000)]
-        [InlineData(ItemType.Plain)]
-        [InlineData(ItemType.Disposable)]
-        [InlineData(ItemType.AsyncDisposable)]
-        [InlineData(ItemType.ImmediateAsyncDisposable)]
-        public async Task ItemDisposalsComplete_DisposalsCompletedOccursAndCompletes(ItemType itemType)
+        [Test, Timeout(5_000)]
+        [Arguments(ItemType.Plain)]
+        [Arguments(ItemType.Disposable)]
+        [Arguments(ItemType.AsyncDisposable)]
+        [Arguments(ItemType.ImmediateAsyncDisposable)]
+        public async Task ItemDisposalsComplete_DisposalsCompletedOccursAndCompletes(ItemType itemType, CancellationToken cancellationToken)
         {
             using var source = new SourceCache<ItemBase, int>(static item => item.Id);
-            using var sourceCompletionSource = new Signal<Unit>();
+            using var sourceCompletionSource = new ReactiveUI.Primitives.Signals.Signal<Unit>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
+            var disposalsCompletedAccessorInvokedMoreThanOnce = false;
 
             using var subscription = source
                 .Connect()
                 .TakeUntil(sourceCompletionSource)
-                .AsyncDisposeMany(disposalsCompleted => 
+                .AsyncDisposeMany(disposalsCompleted =>
                 {
-                    disposalsCompletedResults.Should().BeNull("disposalsCompletedAccessor should only be invoked once per subscription");
+                    if (disposalsCompletedResults is not null)
+                    {
+                        disposalsCompletedAccessorInvokedMoreThanOnce = true;
+                    }
                     disposalsCompleted.RecordValues(out disposalsCompletedResults);
                 })
                 .ValidateSynchronization()
                 .ValidateChangeSets(static item => item.Id)
                 .RecordCacheItems(out var results);
 
-            disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
+            await Assert.That(disposalsCompletedResults).IsNotNull().Because("disposalsCompletedAccessor should have been invoked");
+            await Assert.That(disposalsCompletedAccessorInvokedMoreThanOnce).IsFalse().Because("disposalsCompletedAccessor should only be invoked once per subscription");
 
             source.AddOrUpdate(new[]
             {
@@ -97,72 +111,78 @@ public static partial class AsyncDisposeManyFixture
                 ItemBase.Create(type: itemType, id: 3, version: 1)
             });
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "3 items were added");
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(source.Items).Because("3 items were added");
+            await Assert.That(results.HasCompleted).IsFalse();
 
-            disposalsCompletedResults.Error.Should().BeNull();
-            disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
-            disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
+            await Assert.That(disposalsCompletedResults.Error).IsNull();
+            await Assert.That(disposalsCompletedResults.RecordedValues).IsEmpty().Because("the source has not completed");
+            await Assert.That(disposalsCompletedResults.HasCompleted).IsFalse().Because("the source has not completed");
 
             sourceCompletionSource.OnNext(Unit.Default);
             foreach (var item in source.Items)
                 item.CompleteDisposal();
 
             // RX and TPL don't guarantee Task continuations run synchronously with antecedent completion
-            await disposalsCompletedResults.WhenFinalized;
+            await disposalsCompletedResults.WhenFinalized.WaitAsync(cancellationToken);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations were performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "no items were changed");
-            results.HasCompleted.Should().BeTrue();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(1)).IsEmpty().Because("no source operations were performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(source.Items).Because("no items were changed");
+            await Assert.That(results.HasCompleted).IsTrue();
 
-            disposalsCompletedResults.Error.Should().BeNull();
-            disposalsCompletedResults.RecordedValues.Count.Should().Be(1, "the source and all disposals have completed");
-            disposalsCompletedResults.HasCompleted.Should().BeTrue("the source and all disposals have completed");
+            await Assert.That(disposalsCompletedResults.Error).IsNull();
+            await Assert.That(disposalsCompletedResults.RecordedValues.Count).IsEqualTo(1).Because("the source and all disposals have completed");
+            await Assert.That(disposalsCompletedResults.HasCompleted).IsTrue().Because("the source and all disposals have completed");
         }
 
-        [Fact(Timeout = 30_000)]
-        public async Task ItemDisposalsOccurOnMultipleThreads_DisposalIsThreadSafe()
+        [Test, Timeout(30_000)]
+        public async Task ItemDisposalsOccurOnMultipleThreads_DisposalIsThreadSafe(CancellationToken cancellationToken)
         {
             using var source = new SourceCache<AsyncDisposableItem, int>(static item => item.Id);
-            using var sourceCompletionSource = new Signal<Unit>();
+            using var sourceCompletionSource = new ReactiveUI.Primitives.Signals.Signal<Unit>();
 
             ValueRecordingObserver<Unit>? disposalsCompletedResults = null;
+            var disposalsCompletedAccessorInvokedMoreThanOnce = false;
 
             using var subscription = source
                 .Connect()
                 .TakeUntil(sourceCompletionSource)
-                .AsyncDisposeMany(disposalsCompleted => 
+                .AsyncDisposeMany(disposalsCompleted =>
                 {
-                    disposalsCompletedResults.Should().BeNull("disposalsCompletedAccessor should only be invoked once per subscription");
+                    if (disposalsCompletedResults is not null)
+                    {
+                        disposalsCompletedAccessorInvokedMoreThanOnce = true;
+                    }
                     disposalsCompleted.RecordValues(out disposalsCompletedResults);
                 })
                 .ValidateSynchronization()
                 .ValidateChangeSets(static item => item.Id)
                 .RecordCacheItems(out var results);
 
-            disposalsCompletedResults.Should().NotBeNull("disposalsCompletedAccessor should have been invoked");
+            await Assert.That(disposalsCompletedResults).IsNotNull().Because("disposalsCompletedAccessor should have been invoked");
+            await Assert.That(disposalsCompletedAccessorInvokedMoreThanOnce).IsFalse().Because("disposalsCompletedAccessor should only be invoked once per subscription");
 
             var items = Enumerable.Range(1, 100_000)
                 .Select(id => new AsyncDisposableItem()
                 {
-                    Id      = id,
+                    Id = id,
                     Version = 1
                 })
                 .ToArray();
 
             source.AddOrUpdate(items);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "items were added");
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+            await Assert.That(results.RecordedItemsByKey.Count).IsEqualTo(source.Count);
+            await Assert.That(source.Items.All(item => results.RecordedItemsByKey.TryGetValue(item.Id, out var actual) && ReferenceEquals(actual, item))).IsTrue().Because("each added item should retain its identity");
+            await Assert.That(results.HasCompleted).IsFalse();
 
-            disposalsCompletedResults.Error.Should().BeNull();
-            disposalsCompletedResults.RecordedValues.Should().BeEmpty("the source has not completed");
-            disposalsCompletedResults.HasCompleted.Should().BeFalse("the source has not completed");
+            await Assert.That(disposalsCompletedResults.Error).IsNull();
+            await Assert.That(disposalsCompletedResults.RecordedValues).IsEmpty().Because("the source has not completed");
+            await Assert.That(disposalsCompletedResults.HasCompleted).IsFalse().Because("the source has not completed");
 
             sourceCompletionSource.OnNext();
             await Task.WhenAll(items
@@ -170,22 +190,26 @@ public static partial class AsyncDisposeManyFixture
                 .Select(group => Task.Run(() =>
                 {
                     foreach (var item in group)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
                         item.CompleteDisposal();
-                })));
+                    }
+                }, cancellationToken)));
 
             // RX and TPL don't guarantee Task continuations run synchronously with antecedent completion
-            await disposalsCompletedResults.WhenFinalized;
+            await disposalsCompletedResults.WhenFinalized.WaitAsync(cancellationToken);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(items, "no items were removed");
-            results.HasCompleted.Should().BeTrue();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+            await Assert.That(results.RecordedItemsByKey.Count).IsEqualTo(items.Length);
+            await Assert.That(items.All(item => results.RecordedItemsByKey.TryGetValue(item.Id, out var actual) && ReferenceEquals(actual, item))).IsTrue().Because("no items were removed or replaced");
+            await Assert.That(results.HasCompleted).IsTrue();
 
-            items.Should().AllSatisfy(item => item.HasBeenDisposed.Should().BeTrue(), "disposable items should be disposed upon source completion");
+            foreach (var item in items) { await Assert.That(item.HasBeenDisposed).IsTrue().Because("disposable items should be disposed upon source completion"); }
 
-            disposalsCompletedResults.Error.Should().BeNull();
-            disposalsCompletedResults.RecordedValues.Count.Should().Be(1, "the source and all disposals have completed");
-            disposalsCompletedResults.HasCompleted.Should().BeTrue("the source and all disposals have completed");
+            await Assert.That(disposalsCompletedResults.Error).IsNull();
+            await Assert.That(disposalsCompletedResults.RecordedValues.Count).IsEqualTo(1).Because("the source and all disposals have completed");
+            await Assert.That(disposalsCompletedResults.HasCompleted).IsTrue().Because("the source and all disposals have completed");
         }
     }
 }

@@ -8,8 +8,8 @@ public class InnerJoinFixtureRaceCondition
     /// RP: 04-June-2020 Before the fix, this code occasionally caused a threading issue and the fix seems to have worked.
     /// I am leaving it here for a short period of time to see whether it produces traffic light test results.
     /// </summary>
-    [Fact]
-    public void LetsSeeWhetherWeCanRandomlyHitARaceCondition()
+    [Test]
+    public async Task LetsSeeWhetherWeCanRandomlyHitARaceCondition()
     {
         var ids = ObservableChangeSet.Create<long, long>(sourceCache => { return Observable.Range(1, 1000000, Scheduler.Default).Subscribe(x => sourceCache.AddOrUpdate(x)); }, x => x);
 
@@ -26,9 +26,9 @@ public class InnerJoinFixtureRaceCondition
         ids.InnerJoin(itemsCache.Connect(), x => x.Id, (_, thing) => thing).Subscribe((z) => { }, ex => { }, () => { });
     }
 
-    // See https://github.com/reactivemarbles/DynamicData/issues/787 
-    [Fact]
-    public void LetsSeeWhetherWeCanRandomlyHitADifferentRaceCondition()
+    // See https://github.com/reactivemarbles/DynamicData/issues/787
+    [Test]
+    public async Task LetsSeeWhetherWeCanRandomlyHitADifferentRaceCondition()
     {
         using var leftSource = new SourceCache<Thing, long>(thing => thing.Id);
         using var rightSource = new SourceCache<Thing, long>(thing => thing.Id);

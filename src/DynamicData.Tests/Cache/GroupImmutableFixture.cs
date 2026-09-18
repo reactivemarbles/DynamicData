@@ -1,4 +1,8 @@
-﻿using DynamicData.Kernel;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
+using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
@@ -15,43 +19,41 @@ public class GroupImmutableFixture : IDisposable
         _results = _source.Connect().GroupWithImmutableState(p => p.Age).AsAggregator();
     }
 
-    [Fact]
-    public void Add()
+    [Test]
+    public async Task Add()
     {
         _source.AddOrUpdate(new Person("Person1", 20));
-        _results.Data.Count.Should().Be(1, "Should be 1 add");
-        _results.Messages.First().Adds.Should().Be(1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 add");
+        await Assert.That(_results.Messages.First().Adds).IsEqualTo(1);
     }
 
-    [Fact]
-    public void ChanegMultipleGroups()
+    [Test]
+    public async Task ChanegMultipleGroups()
     {
         var initialPeople = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i % 10)).ToArray();
 
         _source.AddOrUpdate(initialPeople);
 
-        initialPeople.GroupBy(p => p.Age).ForEach(
-            group =>
-            {
-                var cache = _results.Data.Lookup(group.Key).Value;
-                cache.Items.Should().BeEquivalentTo(group);
-            });
+        foreach (var group in initialPeople.GroupBy(p => p.Age))
+        {
+            var cache = _results.Data.Lookup(group.Key).Value;
+            await Assert.That(cache.Items).IsEquivalentTo(group);
+        }
 
         var changedPeople = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i % 5)).ToArray();
 
         _source.AddOrUpdate(changedPeople);
 
-        changedPeople.GroupBy(p => p.Age).ForEach(
-            group =>
-            {
-                var cache = _results.Data.Lookup(group.Key).Value;
-                cache.Items.Should().BeEquivalentTo(group);
-            });
+        foreach (var group in changedPeople.GroupBy(p => p.Age))
+        {
+            var cache = _results.Data.Lookup(group.Key).Value;
+            await Assert.That(cache.Items).IsEquivalentTo(group);
+        }
 
-        _results.Messages.Count.Should().Be(2);
-        _results.Messages.First().Adds.Should().Be(10);
-        _results.Messages.Skip(1).First().Removes.Should().Be(5);
-        _results.Messages.Skip(1).First().Updates.Should().Be(5);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2);
+        await Assert.That(_results.Messages.First().Adds).IsEqualTo(10);
+        await Assert.That(_results.Messages.Skip(1).First().Removes).IsEqualTo(5);
+        await Assert.That(_results.Messages.Skip(1).First().Updates).IsEqualTo(5);
     }
 
     public void Dispose()
@@ -60,8 +62,8 @@ public class GroupImmutableFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void FiresManyValueForBatchOfDifferentAdds()
+    [Test]
+    public async Task FiresManyValueForBatchOfDifferentAdds()
     {
         _source.Edit(
             updater =>
@@ -72,17 +74,17 @@ public class GroupImmutableFixture : IDisposable
                 updater.AddOrUpdate(new Person("Person4", 23));
             });
 
-        _results.Data.Count.Should().Be(4);
-        _results.Messages.Count.Should().Be(1);
-        _results.Messages.First().Count.Should().Be(4);
+        await Assert.That(_results.Data.Count).IsEqualTo(4);
+        await Assert.That(_results.Messages.Count).IsEqualTo(1);
+        await Assert.That(_results.Messages.First().Count).IsEqualTo(4);
         foreach (var update in _results.Messages.First())
         {
-            update.Reason.Should().Be(ChangeReason.Add);
+            await Assert.That(update.Reason).IsEqualTo(ChangeReason.Add);
         }
     }
 
-    [Fact]
-    public void FiresOnlyOnceForABatchOfUniqueValues()
+    [Test]
+    public async Task FiresOnlyOnceForABatchOfUniqueValues()
     {
         _source.Edit(
             updater =>
@@ -93,18 +95,18 @@ public class GroupImmutableFixture : IDisposable
                 updater.AddOrUpdate(new Person("Person4", 20));
             });
 
-        _results.Messages.Count.Should().Be(1);
-        _results.Messages.First().Adds.Should().Be(1);
-        _results.Data.Items[0].Count.Should().Be(4);
+        await Assert.That(_results.Messages.Count).IsEqualTo(1);
+        await Assert.That(_results.Messages.First().Adds).IsEqualTo(1);
+        await Assert.That(_results.Data.Items[0].Count).IsEqualTo(4);
     }
 
-    [Fact]
-    public void Reevaluate()
+    [Test]
+    public async Task Reevaluate()
     {
         var initialPeople = Enumerable.Range(1, 10).Select(i => new Person("Person" + i, i % 2)).ToArray();
 
         _source.AddOrUpdate(initialPeople);
-        _results.Messages.Count.Should().Be(1);
+        await Assert.That(_results.Messages.Count).IsEqualTo(1);
 
         //do an inline update
         foreach (var person in initialPeople)
@@ -115,59 +117,58 @@ public class GroupImmutableFixture : IDisposable
         //signal operators to evaluate again
         _source.Refresh();
 
-        initialPeople.GroupBy(p => p.Age).ForEach(
-            group =>
-            {
-                var cache = _results.Data.Lookup(group.Key).Value;
-                cache.Items.Should().BeEquivalentTo(group);
-            });
+        foreach (var group in initialPeople.GroupBy(p => p.Age))
+        {
+            var cache = _results.Data.Lookup(group.Key).Value;
+            await Assert.That(cache.Items).IsEquivalentTo(group);
+        }
 
-        _results.Data.Count.Should().Be(2);
-        _results.Messages.Count.Should().Be(2);
+        await Assert.That(_results.Data.Count).IsEqualTo(2);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2);
 
         var secondMessage = _results.Messages.Skip(1).First();
-        secondMessage.Removes.Should().Be(1);
-        secondMessage.Updates.Should().Be(1);
-        secondMessage.Adds.Should().Be(1);
+        await Assert.That(secondMessage.Removes).IsEqualTo(1);
+        await Assert.That(secondMessage.Updates).IsEqualTo(1);
+        await Assert.That(secondMessage.Adds).IsEqualTo(1);
     }
 
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         _source.AddOrUpdate(new Person("Person1", 20));
         _source.Remove(new Person("Person1", 20));
 
-        _results.Messages.Count.Should().Be(2);
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void UpdateAnItemWillChangedThegroup()
+    [Test]
+    public async Task UpdateAnItemWillChangedThegroup()
     {
         _source.AddOrUpdate(new Person("Person1", 20));
         _source.AddOrUpdate(new Person("Person1", 21));
 
-        _results.Data.Count.Should().Be(1);
-        _results.Messages.First().Adds.Should().Be(1);
-        _results.Messages.Skip(1).First().Adds.Should().Be(1);
-        _results.Messages.Skip(1).First().Removes.Should().Be(1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(_results.Messages.First().Adds).IsEqualTo(1);
+        await Assert.That(_results.Messages.Skip(1).First().Adds).IsEqualTo(1);
+        await Assert.That(_results.Messages.Skip(1).First().Removes).IsEqualTo(1);
         var group = _results.Data.Items[0];
-        group.Count.Should().Be(1);
+        await Assert.That(group.Count).IsEqualTo(1);
 
-        group.Key.Should().Be(21);
+        await Assert.That(group.Key).IsEqualTo(21);
     }
 
-    [Fact]
-    public void UpdatesArePermissible()
+    [Test]
+    public async Task UpdatesArePermissible()
     {
         _source.AddOrUpdate(new Person("Person1", 20));
         _source.AddOrUpdate(new Person("Person2", 20));
 
-        _results.Data.Count.Should().Be(1); //1 group
-        _results.Messages.First().Adds.Should().Be(1);
-        _results.Messages.Skip(1).First().Updates.Should().Be(1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1); //1 group
+        await Assert.That(_results.Messages.First().Adds).IsEqualTo(1);
+        await Assert.That(_results.Messages.Skip(1).First().Updates).IsEqualTo(1);
 
         var group = _results.Data.Items[0];
-        group.Count.Should().Be(2);
+        await Assert.That(group.Count).IsEqualTo(2);
     }
 }

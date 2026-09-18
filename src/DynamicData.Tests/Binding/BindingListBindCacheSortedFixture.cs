@@ -1,6 +1,10 @@
 #if SUPPORTS_BINDINGLIST
 
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Binding
@@ -24,62 +28,64 @@ namespace DynamicData.Tests.Binding
             _binder = _source.Connect().Sort(_comparer, resetThreshold: 25).Bind(_collection).Subscribe();
         }
 
-        [Fact]
-        public void AddToSourceAddsToDestination()
+        [Test]
+        public async Task AddToSourceAddsToDestination()
         {
             var person = new Person("Adult1", 50);
             _source.AddOrUpdate(person);
 
-            _collection.Count.Should().Be(1, "Should be 1 item in the collection");
-            _collection.First().Should().Be(person, "Should be same person");
+            await Assert.That(_collection.Count).IsEqualTo(1).Because("Should be 1 item in the collection");
+            await Assert.That(_collection.First()).IsEqualTo(person).Because("Should be same person");
         }
 
-        [Fact]
-        public void BatchAdd()
+        [Test]
+        public async Task BatchAdd()
         {
             var people = _generator.Take(100).ToList();
             _source.AddOrUpdate(people);
 
-            _collection.Count.Should().Be(100, "Should be 100 items in the collection");
-            _collection.Should().BeEquivalentTo(_collection, "Collections should be equivalent");
+            await Assert.That(_collection.Count).IsEqualTo(100).Because("Should be 100 items in the collection");
+            await Assert.That(_collection).IsEquivalentTo(_collection).Because("Collections should be equivalent");
         }
 
-        [Fact]
-        public void BatchRemove()
+        [Test]
+        public async Task BatchRemove()
         {
             var people = _generator.Take(100).ToList();
             _source.AddOrUpdate(people);
             _source.Clear();
-            _collection.Count.Should().Be(0, "Should be 100 items in the collection");
+            await Assert.That(_collection.Count).IsEqualTo(0).Because("Should be 100 items in the collection");
         }
 
-        [Fact]
-        public void CollectionIsInSortOrder()
+        [Test]
+        public async Task CollectionIsInSortOrder()
         {
             _source.AddOrUpdate(_generator.Take(100));
             var sorted = _source.Items.OrderBy(p => p, _comparer).ToList();
-            sorted.Should().BeEquivalentTo(_collection.ToList());
+            await Assert.That(sorted).IsEquivalentTo(_collection.ToList());
         }
 
-        [Fact]
-        public void LargeUpdateInvokesAReset()
+        [Test]
+        public async Task LargeUpdateInvokesAReset()
         {
             //update once as initial load is always a reset
             _source.AddOrUpdate(new Person("Me", 21));
 
             var invoked = false;
+            ListChangedType? listChangedType = null;
             _collection.ListChanged += (sender, e) =>
                 {
                     invoked = true;
-                    e.ListChangedType.Should().Be(ListChangedType.Reset);
+                    listChangedType = e.ListChangedType;
                 };
             _source.AddOrUpdate(_generator.Take(100));
 
-            invoked.Should().BeTrue();
+            await Assert.That(invoked).IsTrue();
+            await Assert.That(listChangedType).IsEqualTo(ListChangedType.Reset);
         }
 
-        [Fact]
-        public void Refresh()
+        [Test]
+        public async Task Refresh()
         {
             var people = _generator.Take(100).ToList();
             _source.AddOrUpdate(people);
@@ -93,24 +99,24 @@ namespace DynamicData.Tests.Binding
 
             _source.Refresh(people[10]);
 
-            args.Should().NotBeNull();
-            args.ListChangedType.Should().Be(ListChangedType.ItemChanged);
+            await Assert.That(args).IsNotNull();
+            await Assert.That(args.ListChangedType).IsEqualTo(ListChangedType.ItemChanged);
 
-            _collection[args.NewIndex].Should().Be(people[10]);
+            await Assert.That(_collection[args.NewIndex]).IsEqualTo(people[10]);
         }
 
-        [Fact]
-        public void RemoveSourceRemovesFromTheDestination()
+        [Test]
+        public async Task RemoveSourceRemovesFromTheDestination()
         {
             var person = new Person("Adult1", 50);
             _source.AddOrUpdate(person);
             _source.Remove(person);
 
-            _collection.Count.Should().Be(0, "Should be 1 item in the collection");
+            await Assert.That(_collection.Count).IsEqualTo(0).Because("Should be 1 item in the collection");
         }
 
-        [Fact]
-        public void SmallChangeDoesNotInvokeReset()
+        [Test]
+        public async Task SmallChangeDoesNotInvokeReset()
         {
             //update once as initial load is always a reset
             _source.AddOrUpdate(new Person("Me", 21));
@@ -127,12 +133,12 @@ namespace DynamicData.Tests.Binding
                 };
             _source.AddOrUpdate(_generator.Take(24));
 
-            invoked.Should().BeTrue();
-            resetInvoked.Should().BeFalse();
+            await Assert.That(invoked).IsTrue();
+            await Assert.That(resetInvoked).IsFalse();
         }
 
-        [Fact]
-        public void TreatMovesAsRemoveAdd()
+        [Test]
+        public async Task TreatMovesAsRemoveAdd()
         {
             var cache = new SourceCache<Person, string>(p => p.Name);
 
@@ -161,29 +167,29 @@ namespace DynamicData.Tests.Binding
                 }
 
                 importantGuy.Age += 200;
-                latestSetWithoutMoves.Should().NotBeNull();
-                latestSetWithoutMoves.Removes.Should().Be(1);
-                latestSetWithoutMoves.Adds.Should().Be(1);
-                latestSetWithoutMoves.Moves.Should().Be(0);
-                latestSetWithoutMoves.Updates.Should().Be(0);
+                await Assert.That(latestSetWithoutMoves).IsNotNull();
+                await Assert.That(latestSetWithoutMoves.Removes).IsEqualTo(1);
+                await Assert.That(latestSetWithoutMoves.Adds).IsEqualTo(1);
+                await Assert.That(latestSetWithoutMoves.Moves).IsEqualTo(0);
+                await Assert.That(latestSetWithoutMoves.Updates).IsEqualTo(0);
 
-                latestSetWithMoves.Moves.Should().Be(1);
-                latestSetWithMoves.Updates.Should().Be(0);
-                latestSetWithMoves.Removes.Should().Be(0);
-                latestSetWithMoves.Adds.Should().Be(0);
+                await Assert.That(latestSetWithMoves.Moves).IsEqualTo(1);
+                await Assert.That(latestSetWithMoves.Updates).IsEqualTo(0);
+                await Assert.That(latestSetWithMoves.Removes).IsEqualTo(0);
+                await Assert.That(latestSetWithMoves.Adds).IsEqualTo(0);
             }
         }
 
-        [Fact]
-        public void UpdateToSourceUpdatesTheDestination()
+        [Test]
+        public async Task UpdateToSourceUpdatesTheDestination()
         {
             var person = new Person("Adult1", 50);
             var personUpdated = new Person("Adult1", 51);
             _source.AddOrUpdate(person);
             _source.AddOrUpdate(personUpdated);
 
-            _collection.Count.Should().Be(1, "Should be 1 item in the collection");
-            _collection.First().Should().Be(personUpdated, "Should be updated person");
+            await Assert.That(_collection.Count).IsEqualTo(1).Because("Should be 1 item in the collection");
+            await Assert.That(_collection.First()).IsEqualTo(personUpdated).Because("Should be updated person");
         }
 
         public void Dispose()

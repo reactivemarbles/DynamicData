@@ -12,14 +12,14 @@ public class WatchFixture : IDisposable
         _results = new ChangeSetAggregator<DisposableObject, int>(_source.Connect().DisposeMany());
     }
 
-    [Fact]
-    public void AddWillNotCallDispose()
+    [Test]
+    public async Task AddWillNotCallDispose()
     {
         _source.AddOrUpdate(new DisposableObject(1));
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].IsDisposed.Should().Be(false, "Should not be disposed");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(_results.Data.Items[0].IsDisposed).IsFalse().Because("Should not be disposed");
     }
 
     public void Dispose()
@@ -28,37 +28,37 @@ public class WatchFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void EverythingIsDisposedWhenStreamIsDisposed()
+    [Test]
+    public async Task EverythingIsDisposedWhenStreamIsDisposed()
     {
         _source.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new DisposableObject(i)));
         _source.Clear();
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[1].All(d => d.Current.IsDisposed).Should().BeTrue();
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Messages[1].All(d => d.Current.IsDisposed)).IsTrue();
     }
 
-    [Fact]
-    public void RemoveWillCallDispose()
+    [Test]
+    public async Task RemoveWillCallDispose()
     {
         _source.AddOrUpdate(new DisposableObject(1));
         _source.Edit(updater => updater.Remove(1));
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Data.Count.Should().Be(0, "Should be 0 items in the cache");
-        _results.Messages[1].First().Current.IsDisposed.Should().Be(true, "Should be disposed");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be 0 items in the cache");
+        await Assert.That(_results.Messages[1].First().Current.IsDisposed).IsTrue().Because("Should be disposed");
     }
 
-    [Fact]
-    public void UpdateWillCallDispose()
+    [Test]
+    public async Task UpdateWillCallDispose()
     {
         _source.AddOrUpdate(new DisposableObject(1));
         _source.AddOrUpdate(new DisposableObject(1));
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 items in the cache");
-        _results.Messages[1].First().Current.IsDisposed.Should().Be(false, "Current should not be disposed");
-        _results.Messages[1].First().Previous.Value.IsDisposed.Should().Be(true, "Previous should be disposed");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 items in the cache");
+        await Assert.That(_results.Messages[1].First().Current.IsDisposed).IsFalse().Because("Current should not be disposed");
+        await Assert.That(_results.Messages[1].First().Previous.Value.IsDisposed).IsTrue().Because("Previous should be disposed");
     }
 
     private class DisposableObject(int id) : IDisposable

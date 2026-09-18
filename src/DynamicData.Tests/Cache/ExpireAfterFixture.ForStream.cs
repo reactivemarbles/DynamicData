@@ -8,10 +8,10 @@ public static partial class ExpireAfterFixture
 {
     public sealed class ForStream
     {
-        [Fact]
-        public void ExpiredItemIsRemoved_RemovalIsSkipped()
+        [Test]
+        public async Task ExpiredItemIsRemoved_RemovalIsSkipped()
         {
-            using var source = new Signal<IChangeSet<TestItem, int>>();
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -34,15 +34,15 @@ public static partial class ExpireAfterFixture
             });
             scheduler.AdvanceBy(1);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item2, item3 }, "3 items were added");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1, item2, item3 }).Because("3 items were added");
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item2, item3 }, "item #1 should have been removed");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(1).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item2, item3 }).Because("item #1 should have been removed");
 
             // Send a notification to remove an item that's already been removed
             source.OnNext(new ChangeSet<TestItem, int>()
@@ -51,16 +51,16 @@ public static partial class ExpireAfterFixture
             });
             scheduler.AdvanceBy(1);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(2).Should().BeEmpty("no changes should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(2)).IsEmpty().Because("no changes should have occurred");
 
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
-        [Fact]
-        public void ItemIsRemovedBeforeExpiration_ExpirationIsCancelled()
+        [Test]
+        public async Task ItemIsRemovedBeforeExpiration_ExpirationIsCancelled()
         {
-            using var source = new Signal<IChangeSet<TestItem, int>>();
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -96,23 +96,23 @@ public static partial class ExpireAfterFixture
             });
             scheduler.AdvanceBy(1);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(3, "3 source operations were performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item3, item4 }, "3 items were added, and one was removed");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(3).Because("3 source operations were performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1, item3, item4 }).Because("3 items were added, and one was removed");
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item4 }, "items #1 and #3 should have been removed");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(3).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item4 }).Because("items #1 and #3 should have been removed");
 
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
-        [Fact]
-        public void NextItemToExpireIsReplaced_ExpirationIsRescheduledIfNeeded()
+        [Test]
+        public async Task NextItemToExpireIsReplaced_ExpirationIsRescheduledIfNeeded()
         {
-            using var source = new Signal<IChangeSet<TestItem, int>>();
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -139,14 +139,14 @@ public static partial class ExpireAfterFixture
             });
             scheduler.AdvanceBy(1);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(2, "2 source operations were performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item2 }, "item #1 was added, and then replaced");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(2).Because("2 source operations were performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item2 }).Because("item #1 was added, and then replaced");
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(2).Should().BeEmpty("no expirations should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(2)).IsEmpty().Because("no expirations should have occurred");
 
             // Shorten the expiration to an earlier time
             var item3 = new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(15) };
@@ -156,9 +156,9 @@ public static partial class ExpireAfterFixture
             });
             scheduler.AdvanceBy(1);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "1 source operation was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item3 }, "item #1 was replaced");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(2).Count()).IsEqualTo(1).Because("1 source operation was performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item3 }).Because("item #1 was replaced");
 
             // One more update with no changes to the expiration
             var item4 = new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(15) };
@@ -168,28 +168,28 @@ public static partial class ExpireAfterFixture
             });
             scheduler.AdvanceBy(1);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "1 source operation was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item4 }, "item #1 was replaced");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(3).Count()).IsEqualTo(1).Because("1 source operation was performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item4 }).Because("item #1 was replaced");
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(15).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(4).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEmpty("item #1 should have expired");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(4).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEmpty().Because("item #1 should have expired");
 
             scheduler.AdvanceTo(DateTimeOffset.MaxValue.Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(5).Should().BeEmpty("no expirations should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(5)).IsEmpty().Because("no expirations should have occurred");
 
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
-        [Fact]
-        public void PollingIntervalIsGiven_RemovalsAreScheduledAtInterval()
+        [Test]
+        public async Task PollingIntervalIsGiven_RemovalsAreScheduledAtInterval()
         {
-            using var source = new Signal<IChangeSet<TestItem, int>>();
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -218,8 +218,8 @@ public static partial class ExpireAfterFixture
             scheduler.AdvanceBy(1);
 
             // Additional expirations at 20ms.
-            var item6 = new TestItem() { Id = 6, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(20)};
-            var item7 = new TestItem() { Id = 7, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(20)};
+            var item6 = new TestItem() { Id = 6, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(20) };
+            var item7 = new TestItem() { Id = 7, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(20) };
             source.OnNext(new ChangeSet<TestItem, int>()
             {
                 new(reason: ChangeReason.Add, key: item6.Id, current: item6, index: 5),
@@ -228,7 +228,7 @@ public static partial class ExpireAfterFixture
             scheduler.AdvanceBy(1);
 
             // Out-of-order expiration
-            var item8 = new TestItem() { Id = 8, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(15)};
+            var item8 = new TestItem() { Id = 8, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(15) };
             source.OnNext(new ChangeSet<TestItem, int>()
             {
                 new(reason: ChangeReason.Add, key: item8.Id, current: item8, index: 7)
@@ -276,86 +276,86 @@ public static partial class ExpireAfterFixture
             });
 
             // Verify initial state, after all emissions
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(7, "8 source operations were performed, and 1 should have been ignored");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item2, item3, item6, item7, item8, item9, item10, item11 }, "9 items were added, 2 were replaced, and 1 was refreshed");
-            results.RecordedItemsSorted.Should().BeEmpty();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(7).Because("8 source operations were performed, and 1 should have been ignored");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1, item2, item3, item6, item7, item8, item9, item10, item11 }).Because("9 items were added, 2 were replaced, and 1 was refreshed");
+            await Assert.That(results.RecordedItemsSorted).IsEmpty();
 
             // Item scheduled to expire at 10ms, but won't be picked up yet
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(7).Should().BeEmpty("no changes should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(7)).IsEmpty().Because("no changes should have occurred");
 
             // Item scheduled to expire at 15ms, but won't be picked up yet
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(15).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(7).Should().BeEmpty("no changes should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(7)).IsEmpty().Because("no changes should have occurred");
 
             // Expired items should be polled
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(20).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(7).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item3, item9, item10, item11 }, "items #1, #2, #6, #7, and #8 should have been removed");
-            results.RecordedItemsSorted.Should().BeEmpty();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(7).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item3, item9, item10, item11 }).Because("items #1, #2, #6, #7, and #8 should have been removed");
+            await Assert.That(results.RecordedItemsSorted).IsEmpty();
 
             // Item scheduled to expire at 30ms, but won't be picked up yet
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(30).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(8).Should().BeEmpty("no changes should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(8)).IsEmpty().Because("no changes should have occurred");
 
             // Expired items should be polled, but should exclude the one that was changed from 40ms to 45ms.
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(40).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(8).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item9, item10, item11 }, "item #3 should have been removed");
-            results.RecordedItemsSorted.Should().BeEmpty();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(8).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item9, item10, item11 }).Because("item #3 should have been removed");
+            await Assert.That(results.RecordedItemsSorted).IsEmpty();
 
             // Item scheduled to expire at 45ms, but won't be picked up yet
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(45).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(9).Should().BeEmpty("no changes should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(9)).IsEmpty().Because("no changes should have occurred");
 
             // Expired items should be polled
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(60).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(9).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item9, item11 }, "item #10 should have been removed");
-            results.RecordedItemsSorted.Should().BeEmpty();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(9).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item9, item11 }).Because("item #10 should have been removed");
+            await Assert.That(results.RecordedItemsSorted).IsEmpty();
 
             // Expired items should be polled, but none should be found
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(80).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(10).Should().BeEmpty("no changes should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(10)).IsEmpty().Because("no changes should have occurred");
 
             // Expired items should be polled
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(100).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(10).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item9 }, "item #11 should have been removed");
-            results.RecordedItemsSorted.Should().BeEmpty();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(10).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item9 }).Because("item #11 should have been removed");
+            await Assert.That(results.RecordedItemsSorted).IsEmpty();
 
             // Next poll should not find anything to expire.
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(120).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(11).Should().BeEmpty("no changes should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(11)).IsEmpty().Because("no changes should have occurred");
 
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
-        [Fact]
-        public void PollingIntervalIsNotGiven_RemovalsAreScheduledImmediately()
+        [Test]
+        public async Task PollingIntervalIsNotGiven_RemovalsAreScheduledImmediately()
         {
-            using var source = new Signal<IChangeSet<TestItem, int>>();
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -383,8 +383,8 @@ public static partial class ExpireAfterFixture
             scheduler.AdvanceBy(1);
 
             // Additional expirations at 20ms.
-            var item6 = new TestItem() { Id = 6, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(20)};
-            var item7 = new TestItem() { Id = 7, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(20)};
+            var item6 = new TestItem() { Id = 6, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(20) };
+            var item7 = new TestItem() { Id = 7, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(20) };
             source.OnNext(new ChangeSet<TestItem, int>()
             {
                 new(reason: ChangeReason.Add, key: item6.Id, current: item6, index: 5),
@@ -393,7 +393,7 @@ public static partial class ExpireAfterFixture
             scheduler.AdvanceBy(1);
 
             // Out-of-order expiration
-            var item8 = new TestItem() { Id = 8, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(15)};
+            var item8 = new TestItem() { Id = 8, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(15) };
             source.OnNext(new ChangeSet<TestItem, int>()
             {
                 new(reason: ChangeReason.Add, key: item8.Id, current: item8, index: 7)
@@ -441,71 +441,71 @@ public static partial class ExpireAfterFixture
             });
 
             // Verify initial state, after all emissions
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(7, "8 source operations were performed, and 1 should have been ignored");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item2, item3, item6, item7, item8, item9, item10, item11 }, "11 items were added, 2 were replaced, and 1 was refreshed");
-            results.RecordedItemsSorted.Should().BeEmpty();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(7).Because("8 source operations were performed, and 1 should have been ignored");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1, item2, item3, item6, item7, item8, item9, item10, item11 }).Because("11 items were added, 2 were replaced, and 1 was refreshed");
+            await Assert.That(results.RecordedItemsSorted).IsEmpty();
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(7).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item2, item3, item6, item7, item8, item9, item10, item11 }, "item #1 should have been removed");
-            results.RecordedItemsSorted.Should().BeEmpty();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(7).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item2, item3, item6, item7, item8, item9, item10, item11 }).Because("item #1 should have been removed");
+            await Assert.That(results.RecordedItemsSorted).IsEmpty();
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(15).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(8).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item2, item3, item6, item7, item9, item10, item11 }, "item #8 should have expired");
-            results.RecordedItemsSorted.Should().BeEmpty();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(8).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item2, item3, item6, item7, item9, item10, item11 }).Because("item #8 should have expired");
+            await Assert.That(results.RecordedItemsSorted).IsEmpty();
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(20).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(9).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item3, item9, item10, item11 }, "items #2, #6, and #7 should have been removed");
-            results.RecordedItemsSorted.Should().BeEmpty();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(9).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item3, item9, item10, item11 }).Because("items #2, #6, and #7 should have been removed");
+            await Assert.That(results.RecordedItemsSorted).IsEmpty();
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(30).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(10).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item9, item10, item11 }, "item #3 should have been removed");
-            results.RecordedItemsSorted.Should().BeEmpty();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(10).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item9, item10, item11 }).Because("item #3 should have been removed");
+            await Assert.That(results.RecordedItemsSorted).IsEmpty();
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(40).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(11).Should().BeEmpty("no changes should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(11)).IsEmpty().Because("no changes should have occurred");
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(45).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(11).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item9, item11 }, "item #10 should have expired");
-            results.RecordedItemsSorted.Should().BeEmpty();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(11).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item9, item11 }).Because("item #10 should have expired");
+            await Assert.That(results.RecordedItemsSorted).IsEmpty();
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(50).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(12).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item9 }, "item #11 should have expired");
-            results.RecordedItemsSorted.Should().BeEmpty();
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(12).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item9 }).Because("item #11 should have expired");
+            await Assert.That(results.RecordedItemsSorted).IsEmpty();
 
             // Remaining item should never expire
             scheduler.AdvanceTo(DateTimeOffset.MaxValue.Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(13).Should().BeEmpty("no changes should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(13)).IsEmpty().Because("no changes should have occurred");
 
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
-        [Fact]
-        public void RemovalsArePending_CompletionWaitsForRemovals()
+        [Test]
+        public async Task RemovalsArePending_CompletionWaitsForRemovals()
         {
-            using var source = new Signal<IChangeSet<TestItem, int>>();
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -529,35 +529,35 @@ public static partial class ExpireAfterFixture
             scheduler.AdvanceBy(1);
 
             // Verify initial state, after all emissions
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item2, item3 }, "3 items were added");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1, item2, item3 }).Because("3 items were added");
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item2, item3 }, "item #1 should have been removed");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(1).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item2, item3 }).Because("item #1 should have been removed");
 
             source.OnCompleted();
 
-            results.Error.Should().BeNull();
-            results.HasCompleted.Should().BeFalse("removals are pending");
-            results.RecordedChangeSets.Skip(2).Should().BeEmpty("no changes should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse().Because("removals are pending");
+            await Assert.That(results.RecordedChangeSets.Skip(2)).IsEmpty().Because("no changes should have occurred");
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(20).Ticks);
 
-            results.Error.Should().BeNull();
-            results.HasCompleted.Should().BeTrue();
-            results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item2 }, "item #3 should have expired");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsTrue();
+            await Assert.That(results.RecordedChangeSets.Skip(2).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item2 }).Because("item #3 should have expired");
         }
 
         // Covers https://github.com/reactivemarbles/DynamicData/issues/716
-        [Fact]
-        public void SchedulerIsInaccurate_RemovalsAreNotSkipped()
+        [Test]
+        public async Task SchedulerIsInaccurate_RemovalsAreNotSkipped()
         {
-            using var source = new Signal<IChangeSet<TestItem, int>>();
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = new FakeScheduler()
             {
@@ -578,23 +578,23 @@ public static partial class ExpireAfterFixture
                 new(reason: ChangeReason.Add, key: item1.Id, current: item1)
             });
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1 }).Because("1 item was added");
 
             scheduler.SimulateUntilIdle(inaccuracyOffset: TimeSpan.FromMilliseconds(-1));
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 expiration should have occurred");
-            results.RecordedItemsByKey.Values.Should().BeEmpty("item #1 should have been removed");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(1).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEmpty().Because("item #1 should have been removed");
 
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
-        [Fact]
-        public void SourceCompletes_CompletionIsPropagated()
+        [Test]
+        public async Task SourceCompletes_CompletionIsPropagated()
         {
-            using var source = new Signal<IChangeSet<TestItem, int>>();
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -616,20 +616,20 @@ public static partial class ExpireAfterFixture
                 new(reason: ChangeReason.Add, key: item3.Id, current: item3)
             });
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item2, item3 }, "3 items were added");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1, item2, item3 }).Because("3 items were added");
 
             source.OnCompleted();
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(1).Should().BeEmpty("no changes should have occurred");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(1)).IsEmpty().Because("no changes should have occurred");
 
-            results.HasCompleted.Should().BeTrue();
+            await Assert.That(results.HasCompleted).IsTrue();
         }
 
-        [Fact]
-        public void SourceCompletesImmediately_CompletionIsPropagated()
+        [Test]
+        public async Task SourceCompletesImmediately_CompletionIsPropagated()
         {
             var item1 = new TestItem() { Id = 1 };
             var item2 = new TestItem() { Id = 2 };
@@ -659,17 +659,17 @@ public static partial class ExpireAfterFixture
                 .ValidateChangeSets(static item => item.Id)
                 .RecordCacheItems(out var results, scheduler);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1, item2, item3 }, "3 items were added");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1, item2, item3 }).Because("3 items were added");
 
-            results.HasCompleted.Should().BeTrue();
+            await Assert.That(results.HasCompleted).IsTrue();
         }
 
-        [Fact]
-        public void SourceErrors_ErrorIsPropagated()
+        [Test]
+        public async Task SourceErrors_ErrorIsPropagated()
         {
-            using var source = new Signal<IChangeSet<TestItem, int>>();
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -688,24 +688,24 @@ public static partial class ExpireAfterFixture
             });
             scheduler.AdvanceBy(1);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(1, "1 source operations was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operations was performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1 }).Because("1 item was added");
 
             var error = new Exception("This is a test");
             source.OnError(error);
 
-            results.Error.Should().Be(error);
-            results.RecordedChangeSets.Skip(1).Should().BeEmpty("no changes should have occurred");
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.Error).IsEqualTo(error);
+            await Assert.That(results.RecordedChangeSets.Skip(1)).IsEmpty().Because("no changes should have occurred");
+            await Assert.That(results.HasCompleted).IsFalse();
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
 
-            results.RecordedChangeSets.Skip(1).Should().BeEmpty("notifications should not get published after an error");
+            await Assert.That(results.RecordedChangeSets.Skip(1)).IsEmpty().Because("notifications should not get published after an error");
         }
 
-        [Fact]
-        public void SourceErrorsImmediately_ErrorIsPropagated()
+        [Test]
+        public async Task SourceErrorsImmediately_ErrorIsPropagated()
         {
             var item1 = new TestItem() { Id = 1, Expiration = DateTimeOffset.FromUnixTimeMilliseconds(10) };
 
@@ -733,27 +733,26 @@ public static partial class ExpireAfterFixture
                 .ValidateChangeSets(static item => item.Id)
                 .RecordCacheItems(out var results, scheduler);
 
-            results.Error.Should().Be(error);
-            results.RecordedChangeSets.Count.Should().Be(1, "1 source operations was performed");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.Error).IsEqualTo(error);
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operations was performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1 }).Because("1 item was added");
+            await Assert.That(results.HasCompleted).IsFalse();
 
             scheduler.AdvanceTo(DateTimeOffset.FromUnixTimeMilliseconds(10).Ticks);
 
-            results.RecordedChangeSets.Skip(1).Should().BeEmpty("notifications should not get published after an error");
+            await Assert.That(results.RecordedChangeSets.Skip(1)).IsEmpty().Because("notifications should not get published after an error");
         }
 
-        [Fact]
-        public void SourceIsNull_ThrowsException()
-            => FluentActions.Invoking(() => ObservableCacheEx.ExpireAfter(
+        [Test]
+        public async Task SourceIsNull_ThrowsException()
+            => await Assert.That(() => ObservableCacheEx.ExpireAfter(
                 source: (null as IObservable<IChangeSet<TestItem, int>>)!,
-                timeSelector: static _ => default))
-            .Should().Throw<ArgumentNullException>();
+                timeSelector: static _ => default)).Throws<ArgumentNullException>();
 
-        [Fact]
+        [Test]
         public async Task ThreadPoolSchedulerIsUsedWithoutPolling_ExpirationIsThreadSafe()
         {
-            using var source = new Signal<IChangeSet<StressItem, int>>();
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<StressItem, int>>();
 
             var scheduler = ThreadPoolScheduler.Instance;
 
@@ -774,16 +773,16 @@ public static partial class ExpireAfterFixture
 
             await WaitForCompletionAsync(results, timeout: TimeSpan.FromMinutes(1));
 
-            results.Error.Should().BeNull();
-            results.RecordedItemsByKey.Values.Should().AllSatisfy(item => item.Lifetime.Should().BeNull("all items with an expiration should have expired"));
+            await Assert.That(results.Error).IsNull();
+            foreach (var item in results.RecordedItemsByKey.Values) { await Assert.That(item.Lifetime).IsNull().Because("all items with an expiration should have expired"); }
 
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
-        [Fact]
+        [Test]
         public async Task ThreadPoolSchedulerIsUsedWithPolling_ExpirationIsThreadSafe()
         {
-            using var source = new Signal<IChangeSet<StressItem, int>>();
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<StressItem, int>>();
 
             var scheduler = ThreadPoolScheduler.Instance;
 
@@ -807,22 +806,21 @@ public static partial class ExpireAfterFixture
 
             var now = scheduler.Now;
 
-            results.Error.Should().BeNull();
-            results.RecordedItemsByKey.Values.Should().AllSatisfy(item => item.Lifetime.Should().BeNull("all items with an expiration should have expired"));
+            await Assert.That(results.Error).IsNull();
+            foreach (var item in results.RecordedItemsByKey.Values) { await Assert.That(item.Lifetime).IsNull().Because("all items with an expiration should have expired"); }
 
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
-        [Fact]
-        public void TimeSelectorIsNull_ThrowsException()
-            => FluentActions.Invoking(() => new Signal<IChangeSet<TestItem, int>>().ExpireAfter(
-                timeSelector: null!))
-            .Should().Throw<ArgumentNullException>();
+        [Test]
+        public async Task TimeSelectorIsNull_ThrowsException()
+            => await Assert.That(() => new ReactiveUI.Primitives.Signals.Signal<IChangeSet<TestItem, int>>().ExpireAfter(
+                timeSelector: null!)).Throws<ArgumentNullException>();
 
-        [Fact]
-        public void TimeSelectorThrows_ErrorIsPropagated()
+        [Test]
+        public async Task TimeSelectorThrows_ErrorIsPropagated()
         {
-            using var source = new Signal<IChangeSet<TestItem, int>>();
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<TestItem, int>>();
 
             var scheduler = CreateTestScheduler();
 
@@ -843,9 +841,9 @@ public static partial class ExpireAfterFixture
             });
             scheduler.AdvanceBy(1);
 
-            results.Error.Should().Be(error);
-            results.RecordedChangeSets.Should().BeEmpty("no source operations should have been processed");
-            results.HasCompleted.Should().BeFalse();
+            await Assert.That(results.Error).IsEqualTo(error);
+            await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no source operations should have been processed");
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
         private static void PublishStressChangeSets(
@@ -898,22 +896,22 @@ public static partial class ExpireAfterFixture
                 {
                     var changeReason = randomizer.WeightedRandom(changeReasons, cache.Count switch
                     {
-                        0   => changeReasonWeightsWhenCountIs0,
-                        _   => changeReasonWeightsOtherwise
+                        0 => changeReasonWeightsWhenCountIs0,
+                        _ => changeReasonWeightsOtherwise
                     });
 
                     switch (changeReason)
                     {
                         case ChangeReason.Add:
                             cache.AddOrUpdate(
-                                item:   new StressItem()
+                                item: new StressItem()
                                 {
-                                    Id          = nextItemId,
-                                    Lifetime    = randomizer.Bool()
+                                    Id = nextItemId,
+                                    Lifetime = randomizer.Bool()
                                         ? TimeSpan.FromTicks(randomizer.Long(minItemLifetime.Ticks, maxItemLifetime.Ticks))
                                         : null
                                 },
-                                key:    nextItemId);
+                                key: nextItemId);
                             ++nextItemId;
                             break;
 
@@ -928,14 +926,14 @@ public static partial class ExpireAfterFixture
                         case ChangeReason.Update:
                             var id = cache.Keys.ElementAt(randomizer.Int(0, cache.Count - 1));
                             cache.AddOrUpdate(
-                                item:   new StressItem()
+                                item: new StressItem()
                                 {
-                                    Id          = id,
-                                    Lifetime    = randomizer.Bool()
+                                    Id = id,
+                                    Lifetime = randomizer.Bool()
                                         ? TimeSpan.FromTicks(randomizer.Long(minItemLifetime.Ticks, maxItemLifetime.Ticks))
                                         : null
                                 },
-                                key:    id);
+                                key: id);
                             break;
                     }
                 }
@@ -943,10 +941,10 @@ public static partial class ExpireAfterFixture
                 changeSets.Add(cache.CaptureChanges());
             }
 
-            foreach(var changeSet in changeSets)
+            foreach (var changeSet in changeSets)
                 source.OnNext(changeSet);
         }
-    
+
         private static async Task WaitForCompletionAsync(
             CacheItemRecordingObserver<StressItem, int> results,
             TimeSpan timeout)
@@ -961,7 +959,7 @@ public static partial class ExpireAfterFixture
                 await Task.Delay(pollingInterval);
 
                 // Identify "completion" as either an error, a completion signal, or all expiring items being removed.
-                if ((results.Error is not null) 
+                if ((results.Error is not null)
                     || results.HasCompleted
                     || results.RecordedItemsByKey.Values.All(static item => item.Lifetime is null))
                 {

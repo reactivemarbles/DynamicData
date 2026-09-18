@@ -5,7 +5,7 @@ namespace DynamicData.Tests.Cache;
 public class ObservableChangeSetFixture
 {
 
-   // [Fact] //Disabled due to test failing when run with a test runner. Run locally in isolation and it works
+    // [Test] //Disabled due to test failing when run with a test runner. Run locally in isolation and it works
     [Description("See https://github.com/reactivemarbles/DynamicData/issues/383")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Acceptable for test.")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Disabled due to test failing when run with a test runner")]
@@ -29,7 +29,7 @@ public class ObservableChangeSetFixture
                          *  but periodically fails when all tests are run. WTAF - I have no idea why but can only speculate
                          *  that without it the context is returning to the context of the test runner and it doesn't get back to it
                          *  until after the test session ends
-                         */  
+                         */
                         await Task.Delay(5, token).ConfigureAwait(false);
                     }
                 },
@@ -46,11 +46,11 @@ public class ObservableChangeSetFixture
         //allow some results through
         await Task.Delay(100);
 
-        isComplete.Should().Be(false);
-        error.Should().BeNull();
+        await Assert.That(isComplete).IsFalse();
+        await Assert.That(error).IsNull();
 
         //do not try to be clever with timings because wierd stuff happens in time
-        result.Take(5).Should().BeEquivalentTo(new List<int>
+        await Assert.That(result.Take(5)).IsEquivalentTo(new List<int>
         {
             0,
             1,
@@ -62,8 +62,8 @@ public class ObservableChangeSetFixture
         subscriber.Dispose();
     }
 
-    [Fact]
-    public void HandlesAsyncError()
+    [Test]
+    public async Task HandlesAsyncError()
     {
         Exception? error = null;
 
@@ -81,12 +81,12 @@ public class ObservableChangeSetFixture
         using var dervived = observable.AsObservableCache();
         using (dervived.Connect().Subscribe(_ => { }, ex => error = ex))
         {
-            error.Should().NotBeNull();
+            await Assert.That(error).IsNotNull();
         }
     }
 
-    [Fact]
-    public void HandlesError()
+    [Test]
+    public async Task HandlesError()
     {
         Exception? error = null;
 
@@ -104,26 +104,26 @@ public class ObservableChangeSetFixture
         using var derived = observable.AsObservableCache();
         using (derived.Connect().Subscribe(_ => { }, ex => error = ex))
         {
-            error.Should().NotBeNull();
+            await Assert.That(error).IsNotNull();
         }
     }
 
-    [Fact]
-    public void LoadsAndDisposeFromObservableCache()
+    [Test]
+    public async Task LoadsAndDisposeFromObservableCache()
     {
         var isDisposed = false;
 
         var observable = ObservableChangeSet.Create<Person, string>(cache => () => isDisposed = true, p => p.Name);
 
         observable.AsObservableCache().Dispose();
-        isDisposed.Should().BeTrue();
+        await Assert.That(isDisposed).IsTrue();
     }
 
-    [Fact]
-    public void LoadsAndDisposeUsingAction()
+    [Test]
+    public async Task LoadsAndDisposeUsingAction()
     {
         var isDisposed = false;
-        SubscribeAndAssert(
+        await SubscribeAndAssert(
             ObservableChangeSet.Create<Person, string>(
                 cache =>
                 {
@@ -132,18 +132,18 @@ public class ObservableChangeSetFixture
                     return () => isDisposed = true;
                 },
                 p => p.Name),
-            checkContentAction: result => result.Count.Should().Be(100));
+checkContentAction: async result => { await Assert.That(result.Count).IsEqualTo(100); });
 
-        isDisposed.Should().BeTrue();
+        await Assert.That(isDisposed).IsTrue();
     }
 
-    [Fact]
-    public void LoadsAndDisposeUsingActionAsync()
+    [Test]
+    public async Task LoadsAndDisposeUsingActionAsync()
     {
         static Task<Person[]> CreateTask() => Task.FromResult(Enumerable.Range(1, 100).Select(i => new Person($"Name.{i}", i)).ToArray());
 
         var isDisposed = false;
-        SubscribeAndAssert(
+        await SubscribeAndAssert(
             ObservableChangeSet.Create<Person, string>(
                 async cache =>
                 {
@@ -152,16 +152,16 @@ public class ObservableChangeSetFixture
                     return () => isDisposed = true;
                 },
                 p => p.Name),
-            checkContentAction: result => result.Count.Should().Be(100));
+checkContentAction: async result => { await Assert.That(result.Count).IsEqualTo(100); });
 
-        isDisposed.Should().BeTrue();
+        await Assert.That(isDisposed).IsTrue();
     }
 
-    [Fact]
-    public void LoadsAndDisposeUsingDisposable()
+    [Test]
+    public async Task LoadsAndDisposeUsingDisposable()
     {
         var isDisposed = false;
-        SubscribeAndAssert(
+        await SubscribeAndAssert(
             ObservableChangeSet.Create<Person, string>(
                 cache =>
                 {
@@ -170,18 +170,18 @@ public class ObservableChangeSetFixture
                     return Disposable.Create(() => isDisposed = true);
                 },
                 p => p.Name),
-            checkContentAction: result => result.Count.Should().Be(100));
+checkContentAction: async result => { await Assert.That(result.Count).IsEqualTo(100); });
 
-        isDisposed.Should().BeTrue();
+        await Assert.That(isDisposed).IsTrue();
     }
 
-    [Fact]
-    public void LoadsAndDisposeUsingDisposableAsync()
+    [Test]
+    public async Task LoadsAndDisposeUsingDisposableAsync()
     {
         static Task<Person[]> CreateTask() => Task.FromResult(Enumerable.Range(1, 100).Select(i => new Person($"Name.{i}", i)).ToArray());
 
         var isDisposed = false;
-        SubscribeAndAssert(
+        await SubscribeAndAssert(
             ObservableChangeSet.Create<Person, string>(
                 async cache =>
                 {
@@ -190,13 +190,13 @@ public class ObservableChangeSetFixture
                     return Disposable.Create(() => isDisposed = true);
                 },
                 p => p.Name),
-            checkContentAction: result => result.Count.Should().Be(100));
+checkContentAction: async result => { await Assert.That(result.Count).IsEqualTo(100); });
 
-        isDisposed.Should().BeTrue();
+        await Assert.That(isDisposed).IsTrue();
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
-    private void SubscribeAndAssert<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> observableChangeset, bool expectsError = false, Action<IObservableCache<TObject, TKey>>? checkContentAction = null)
+    private async Task SubscribeAndAssert<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> observableChangeset, bool expectsError = false, Func<IObservableCache<TObject, TKey>, Task>? checkContentAction = null)
         where TKey : notnull
         where TObject : notnull
     {
@@ -209,16 +209,16 @@ public class ObservableChangeSetFixture
         {
             if (!expectsError)
             {
-                error.Should().BeNull();
+                await Assert.That(error).IsNull();
             }
             else
             {
-                error.Should().NotBeNull();
+                await Assert.That(error).IsNotNull();
             }
 
-            checkContentAction?.Invoke(cache);
+            if (checkContentAction is not null) { await checkContentAction(cache); }
         }
 
-        complete.Should().BeTrue();
+        await Assert.That(complete).IsTrue();
     }
 }

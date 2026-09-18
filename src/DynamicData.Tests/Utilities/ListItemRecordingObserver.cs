@@ -12,7 +12,7 @@ public sealed class ListItemRecordingObserver<T>
     {
         _recordedChangeSets = new();
         _recordedItems = new();
-    }        
+    }
 
     public IReadOnlyList<IChangeSet<T>> RecordedChangeSets
         => _recordedChangeSets;
@@ -22,7 +22,7 @@ public sealed class ListItemRecordingObserver<T>
 
     public void ClearChangeSets()
         => _recordedChangeSets.Clear();
-    
+
     protected override void OnNext(IChangeSet<T> value)
     {
         if (!HasFinalized)

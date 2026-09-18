@@ -14,8 +14,8 @@ public class TrueForAllFixture : IDisposable
 
     public void Dispose() => _source.Dispose();
 
-    [Fact]
-    public void InitialItemReturnsFalseWhenObservableHasNoValue()
+    [Test]
+    public async Task InitialItemReturnsFalseWhenObservableHasNoValue()
     {
         bool? valueReturned = null;
         var subscribed = _observable.Subscribe(result => { valueReturned = result; });
@@ -23,20 +23,20 @@ public class TrueForAllFixture : IDisposable
         var item = new ObjectWithObservable(1);
         _source.AddOrUpdate(item);
 
-        valueReturned.HasValue.Should().BeTrue();
+        await Assert.That(valueReturned.HasValue).IsTrue();
 
         if (valueReturned is null)
         {
             throw new InvalidOperationException(nameof(valueReturned));
         }
 
-        valueReturned.Value.Should().Be(false, "The initial value should be false");
+        await Assert.That(valueReturned.Value).IsFalse().Because("The initial value should be false");
 
         subscribed.Dispose();
     }
 
-    [Fact]
-    public void InlineObservableChangeProducesResult()
+    [Test]
+    public async Task InlineObservableChangeProducesResult()
     {
         bool? valueReturned = null;
         var subscribed = _observable.Subscribe(result => { valueReturned = result; });
@@ -50,12 +50,12 @@ public class TrueForAllFixture : IDisposable
             throw new InvalidOperationException(nameof(valueReturned));
         }
 
-        valueReturned.Value.Should().Be(true, "Value should be true");
+        await Assert.That(valueReturned.Value).IsTrue().Because("Value should be true");
         subscribed.Dispose();
     }
 
-    [Fact]
-    public void MultipleValuesReturnTrue()
+    [Test]
+    public async Task MultipleValuesReturnTrue()
     {
         bool? valueReturned = null;
         var subscribed = _observable.Subscribe(result => { valueReturned = result; });
@@ -72,19 +72,19 @@ public class TrueForAllFixture : IDisposable
             throw new InvalidOperationException(nameof(valueReturned));
         }
 
-        valueReturned.Value.Should().Be(false, "Value should be false");
+        await Assert.That(valueReturned.Value).IsFalse().Because("Value should be false");
 
         item1.InvokeObservable(true);
         item2.InvokeObservable(true);
         item3.InvokeObservable(true);
-        valueReturned.Value.Should().Be(true, "Value should be true");
+        await Assert.That(valueReturned.Value).IsTrue().Because("Value should be true");
 
         subscribed.Dispose();
     }
 
     private class ObjectWithObservable(int id) : IDisposable
     {
-        private readonly ISignal<bool> _changed = new Signal<bool>();
+        private readonly ReactiveUI.Primitives.Signals.ISignal<bool> _changed = new ReactiveUI.Primitives.Signals.Signal<bool>();
 
         public int Id { get; } = id;
 
@@ -102,5 +102,5 @@ public class TrueForAllFixture : IDisposable
         {
             _changed.Dispose();
         }
-}
+    }
 }

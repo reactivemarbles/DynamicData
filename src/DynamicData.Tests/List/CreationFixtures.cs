@@ -2,12 +2,12 @@ namespace DynamicData.Tests.List;
 
 public class ListCreationFixtures
 {
-    [Fact]
-    public void Create()
+    [Test]
+    public async Task Create()
     {
         static Task<T> CreateTask<T>(T value) => Task.FromResult(value);
 
-        SubscribeAndAssert(
+        await SubscribeAndAssert(
             ObservableChangeSet.Create<int>(
                 async list =>
                 {
@@ -18,7 +18,7 @@ public class ListCreationFixtures
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
-    private void SubscribeAndAssert<T>(IObservable<IChangeSet<T>> observableChangeset, bool expectsError = false)
+    private async Task SubscribeAndAssert<T>(IObservable<IChangeSet<T>> observableChangeset, bool expectsError = false)
         where T : notnull
     {
         Exception? error = null;
@@ -30,14 +30,14 @@ public class ListCreationFixtures
         {
             if (!expectsError)
             {
-                error.Should().BeNull();
+                await Assert.That(error).IsNull();
             }
             else
             {
-                error.Should().NotBeNull();
+                await Assert.That(error).IsNotNull();
             }
         }
 
-        complete.Should().BeTrue();
+        await Assert.That(complete).IsTrue();
     }
 }

@@ -15,8 +15,8 @@ public class RecursiveTransformManyFixture : IDisposable
         _results = _source.Connect().TransformMany(p => p.Relations.RecursiveSelect(r => r.Relations)).AsAggregator();
     }
 
-    [Fact]
-    public void ChildrenAreRemovedWhenParentIsRemoved()
+    [Test]
+    public async Task ChildrenAreRemovedWhenParentIsRemoved()
     {
         var frientofchild1 = new PersonWithRelations("Friend1", 10);
         var child1 = new PersonWithRelations("Child1", 10, new[] { frientofchild1 });
@@ -27,7 +27,7 @@ public class RecursiveTransformManyFixture : IDisposable
 
         _source.Add(mother);
         _source.Remove(mother);
-        _results.Data.Count.Should().Be(0, "Should be 4 in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be 4 in the cache");
     }
 
     public void Dispose()
@@ -36,8 +36,8 @@ public class RecursiveTransformManyFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void RecursiveChildrenCanBeAdded()
+    [Test]
+    public async Task RecursiveChildrenCanBeAdded()
     {
         var frientofchild1 = new PersonWithRelations("Friend1", 10);
         var child1 = new PersonWithRelations("Child1", 10, new[] { frientofchild1 });
@@ -48,10 +48,10 @@ public class RecursiveTransformManyFixture : IDisposable
 
         _source.Add(mother);
 
-        _results.Data.Count.Should().Be(4, "Should be 4 in the cache");
-        _results.Data.Items.IndexOfOptional(child1).HasValue.Should().BeTrue();
-        _results.Data.Items.IndexOfOptional(child2).HasValue.Should().BeTrue();
-        _results.Data.Items.IndexOfOptional(child3).HasValue.Should().BeTrue();
-        _results.Data.Items.IndexOfOptional(frientofchild1).HasValue.Should().BeTrue();
+        await Assert.That(_results.Data.Count).IsEqualTo(4).Because("Should be 4 in the cache");
+        await Assert.That(_results.Data.Items.IndexOfOptional(child1).HasValue).IsTrue();
+        await Assert.That(_results.Data.Items.IndexOfOptional(child2).HasValue).IsTrue();
+        await Assert.That(_results.Data.Items.IndexOfOptional(child3).HasValue).IsTrue();
+        await Assert.That(_results.Data.Items.IndexOfOptional(frientofchild1).HasValue).IsTrue();
     }
 }

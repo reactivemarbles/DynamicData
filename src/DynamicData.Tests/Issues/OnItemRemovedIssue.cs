@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 
 namespace DynamicData.Tests.Issues
 {
@@ -7,8 +11,8 @@ namespace DynamicData.Tests.Issues
 
         //Fix for https://github.com/reactivemarbles/DynamicData/issues/268
 
-        [Fact]
-        public void ListAndCacheShouldHaveEquivalentBehaviour()
+        [Test]
+        public async Task ListAndCacheShouldHaveEquivalentBehaviour()
         {
             var source = new ObservableCollection<Item>
             {
@@ -30,12 +34,12 @@ namespace DynamicData.Tests.Issues
                 .Bind(out var cacheOutput)
                 .Subscribe();
 
-            Assert.Equal(listOutput, cacheOutput, new ProxyEqualityComparer());
+            await Assert.That(cacheOutput).IsEquivalentTo(listOutput, new ProxyEqualityComparer(), TUnit.Assertions.Enums.CollectionOrdering.Matching);
 
             list.Dispose();
             cache.Dispose();
 
-            Assert.Equal(listOutput, cacheOutput, new ProxyEqualityComparer());
+            await Assert.That(cacheOutput).IsEquivalentTo(listOutput, new ProxyEqualityComparer(), TUnit.Assertions.Enums.CollectionOrdering.Matching);
         }
 
         public class Item

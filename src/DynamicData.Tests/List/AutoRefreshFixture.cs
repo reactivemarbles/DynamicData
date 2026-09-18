@@ -1,13 +1,21 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.List;
 
 public class AutoRefreshFixture
 {
-    [Fact]
-    public void AutoRefresh()
+    [Test]
+    public async Task AutoRefresh()
     {
         var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, 1)).ToArray();
 
@@ -16,34 +24,34 @@ public class AutoRefreshFixture
         using var results = list.Connect().AutoRefresh(p => p.Age).AsAggregator();
         list.AddRange(items);
 
-        results.Data.Count.Should().Be(100);
-        results.Messages.Count.Should().Be(1);
+        await Assert.That(results.Data.Count).IsEqualTo(100);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
 
         items[0].Age = 10;
-        results.Data.Count.Should().Be(100);
-        results.Messages.Count.Should().Be(2);
+        await Assert.That(results.Data.Count).IsEqualTo(100);
+        await Assert.That(results.Messages.Count).IsEqualTo(2);
 
-        results.Messages[1].First().Reason.Should().Be(ListChangeReason.Refresh);
+        await Assert.That(results.Messages[1].First().Reason).IsEqualTo(ListChangeReason.Refresh);
 
         //remove an item and check no change is fired
         var toRemove = items[1];
         list.Remove(toRemove);
-        results.Data.Count.Should().Be(99);
-        results.Messages.Count.Should().Be(3);
+        await Assert.That(results.Data.Count).IsEqualTo(99);
+        await Assert.That(results.Messages.Count).IsEqualTo(3);
         toRemove.Age = 100;
-        results.Messages.Count.Should().Be(3);
+        await Assert.That(results.Messages.Count).IsEqualTo(3);
 
         //add it back in and check it updates
         list.Add(toRemove);
-        results.Messages.Count.Should().Be(4);
+        await Assert.That(results.Messages.Count).IsEqualTo(4);
         toRemove.Age = 101;
-        results.Messages.Count.Should().Be(5);
+        await Assert.That(results.Messages.Count).IsEqualTo(5);
 
-        results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
+        await Assert.That(results.Messages.Last().First().Reason).IsEqualTo(ListChangeReason.Refresh);
     }
 
-    [Fact]
-    public void AutoRefreshBatched()
+    [Test]
+    public async Task AutoRefreshBatched()
     {
         var scheduler = new TestScheduler();
 
@@ -54,8 +62,8 @@ public class AutoRefreshFixture
         using var results = list.Connect().AutoRefresh(p => p.Age, TimeSpan.FromSeconds(1), scheduler: scheduler).AsAggregator();
         list.AddRange(items);
 
-        results.Data.Count.Should().Be(100);
-        results.Messages.Count.Should().Be(1);
+        await Assert.That(results.Data.Count).IsEqualTo(100);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
 
         //update 50 records
         items.Skip(50).ForEach(p => p.Age += 1);
@@ -63,12 +71,12 @@ public class AutoRefreshFixture
         scheduler.AdvanceBy(TimeSpan.FromSeconds(1).Ticks);
 
         //should be another message with 50 refreshes
-        results.Messages.Count.Should().Be(2);
-        results.Messages[1].Refreshes.Should().Be(50);
+        await Assert.That(results.Messages.Count).IsEqualTo(2);
+        await Assert.That(results.Messages[1].Refreshes).IsEqualTo(50);
     }
 
-    [Fact]
-    public void AutoRefreshDistinct()
+    [Test]
+    public async Task AutoRefreshDistinct()
     {
         var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
 
@@ -77,19 +85,19 @@ public class AutoRefreshFixture
         using var results = list.Connect().AutoRefresh(p => p.Age).DistinctValues(p => p.Age / 10).AsAggregator();
         list.AddRange(items);
 
-        results.Data.Count.Should().Be(11);
-        results.Messages.Count.Should().Be(1);
+        await Assert.That(results.Data.Count).IsEqualTo(11);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
 
         //update an item which did not match the filter and does so after change
         items[50].Age = 500;
-        results.Data.Count.Should().Be(12);
+        await Assert.That(results.Data.Count).IsEqualTo(12);
 
-        results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Add);
-        results.Messages.Last().First().Item.Current.Should().Be(50);
+        await Assert.That(results.Messages.Last().First().Reason).IsEqualTo(ListChangeReason.Add);
+        await Assert.That(results.Messages.Last().First().Item.Current).IsEqualTo(50);
     }
 
-    [Fact]
-    public void AutoRefreshFilter()
+    [Test]
+    public async Task AutoRefreshFilter()
     {
         var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
 
@@ -98,84 +106,84 @@ public class AutoRefreshFixture
         using var results = list.Connect().AutoRefresh(p => p.Age).Filter(p => p.Age > 50).AsAggregator();
         list.AddRange(items);
 
-        results.Data.Count.Should().Be(50);
-        results.Messages.Count.Should().Be(1);
+        await Assert.That(results.Data.Count).IsEqualTo(50);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
 
         //update an item which did not match the filter and does so after change
         items[0].Age = 60;
-        results.Data.Count.Should().Be(51);
-        results.Messages.Count.Should().Be(2);
-        results.Messages[1].First().Reason.Should().Be(ListChangeReason.Add);
+        await Assert.That(results.Data.Count).IsEqualTo(51);
+        await Assert.That(results.Messages.Count).IsEqualTo(2);
+        await Assert.That(results.Messages[1].First().Reason).IsEqualTo(ListChangeReason.Add);
 
         //check for removes
         items[0].Age = 21;
-        results.Data.Count.Should().Be(50);
-        results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Remove);
+        await Assert.That(results.Data.Count).IsEqualTo(50);
+        await Assert.That(results.Messages.Last().First().Reason).IsEqualTo(ListChangeReason.Remove);
         items[0].Age = 60;
 
         //update an item which matched the filter and still does [refresh should have propagated]
         items[60].Age = 160;
-        results.Data.Count.Should().Be(51);
-        results.Messages.Count.Should().Be(5);
-        results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
+        await Assert.That(results.Data.Count).IsEqualTo(51);
+        await Assert.That(results.Messages.Count).IsEqualTo(5);
+        await Assert.That(results.Messages.Last().First().Reason).IsEqualTo(ListChangeReason.Refresh);
 
         //remove an item and check no change is fired
         var toRemove = items[65];
         list.Remove(toRemove);
-        results.Data.Count.Should().Be(50);
-        results.Messages.Count.Should().Be(6);
+        await Assert.That(results.Data.Count).IsEqualTo(50);
+        await Assert.That(results.Messages.Count).IsEqualTo(6);
         toRemove.Age = 100;
-        results.Messages.Count.Should().Be(6);
+        await Assert.That(results.Messages.Count).IsEqualTo(6);
 
         //add it back in and check it updates
         list.Add(toRemove);
-        results.Messages.Count.Should().Be(7);
+        await Assert.That(results.Messages.Count).IsEqualTo(7);
         toRemove.Age = 101;
-        results.Messages.Count.Should().Be(8);
+        await Assert.That(results.Messages.Count).IsEqualTo(8);
 
-        results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
+        await Assert.That(results.Messages.Last().First().Reason).IsEqualTo(ListChangeReason.Refresh);
     }
 
-    [Fact]
-    public void AutoRefreshGroup()
+    [Test]
+    public async Task AutoRefreshGroup()
     {
         var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
 
         //result should only be true when all items are set to true
         using var list = new SourceList<Person>();
         using var results = list.Connect().AutoRefresh(p => p.Age).GroupOn(p => p.Age % 10).AsAggregator();
-        void CheckContent()
+        async Task CheckContent()
         {
             foreach (var grouping in items.GroupBy(p => p.Age % 10))
             {
                 var childGroup = results.Data.Items.Single(g => g.GroupKey == grouping.Key);
                 var expected = grouping.OrderBy(p => p.Name);
                 var actual = childGroup.List.Items.OrderBy(p => p.Name);
-                actual.Should().BeEquivalentTo(expected);
+                await Assert.That(actual).IsEquivalentTo(expected);
             }
         }
 
         list.AddRange(items);
-        results.Data.Count.Should().Be(10);
-        results.Messages.Count.Should().Be(1);
-        CheckContent();
+        await Assert.That(results.Data.Count).IsEqualTo(10);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
+        await CheckContent();
 
         //move person from group 1 to 2
         items[0].Age = items[0].Age + 1;
-        CheckContent();
+        await CheckContent();
 
         //change the value and move to a grouping which does not yet exist
         items[1].Age = -1;
-        results.Data.Count.Should().Be(11);
-        results.Data.Items[^1].GroupKey.Should().Be(-1);
-        results.Data.Items[^1].List.Count.Should().Be(1);
-        results.Data.Items[0].List.Count.Should().Be(9);
-        CheckContent();
+        await Assert.That(results.Data.Count).IsEqualTo(11);
+        await Assert.That(results.Data.Items[^1].GroupKey).IsEqualTo(-1);
+        await Assert.That(results.Data.Items[^1].List.Count).IsEqualTo(1);
+        await Assert.That(results.Data.Items[0].List.Count).IsEqualTo(9);
+        await CheckContent();
 
         //put the value back where it was and check the group was removed
         items[1].Age = 1;
-        results.Data.Count.Should().Be(10);
-        CheckContent();
+        await Assert.That(results.Data.Count).IsEqualTo(10);
+        await CheckContent();
 
         var groupOf3 = results.Data.Items.ElementAt(2);
 
@@ -184,63 +192,63 @@ public class AutoRefreshFixture
 
         //refresh an item which makes it belong to the same group - should then propagate a refresh
         items[2].Age = 13;
-        changes.Should().NotBeNull();
-        changes!.Count.Should().Be(1);
-        changes!.First().Reason.Should().Be(ListChangeReason.Replace);
-        changes!.First().Item.Current.Should().BeSameAs(items[2]);
+        await Assert.That(changes).IsNotNull();
+        await Assert.That(changes!.Count).IsEqualTo(1);
+        await Assert.That(changes!.First().Reason).IsEqualTo(ListChangeReason.Replace);
+        await Assert.That(changes!.First().Item.Current).IsSameReferenceAs(items[2]);
     }
 
-    [Fact]
-    public void AutoRefreshGroupImmutable()
+    [Test]
+    public async Task AutoRefreshGroupImmutable()
     {
         var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
 
         //result should only be true when all items are set to true
         using var list = new SourceList<Person>();
         using var results = list.Connect().AutoRefresh(p => p.Age).GroupWithImmutableState(p => p.Age % 10).AsAggregator();
-        void CheckContent()
+        async Task CheckContent()
         {
             foreach (var grouping in items.GroupBy(p => p.Age % 10))
             {
                 var childGroup = results.Data.Items.Single(g => g.Key == grouping.Key);
                 var expected = grouping.OrderBy(p => p.Name);
                 var actual = childGroup.Items.OrderBy(p => p.Name);
-                actual.Should().BeEquivalentTo(expected);
+                await Assert.That(actual).IsEquivalentTo(expected);
             }
         }
 
         list.AddRange(items);
-        results.Data.Count.Should().Be(10);
-        results.Messages.Count.Should().Be(1);
-        CheckContent();
+        await Assert.That(results.Data.Count).IsEqualTo(10);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
+        await CheckContent();
 
         //move person from group 1 to 2
         items[0].Age = items[0].Age + 1;
-        CheckContent();
+        await CheckContent();
 
         //change the value and move to a grouping which does not yet exist
         items[1].Age = -1;
-        results.Data.Count.Should().Be(11);
-        results.Data.Items[^1].Key.Should().Be(-1);
-        results.Data.Items[^1].Count.Should().Be(1);
-        results.Data.Items[0].Count.Should().Be(9);
-        CheckContent();
+        await Assert.That(results.Data.Count).IsEqualTo(11);
+        await Assert.That(results.Data.Items[^1].Key).IsEqualTo(-1);
+        await Assert.That(results.Data.Items[^1].Count).IsEqualTo(1);
+        await Assert.That(results.Data.Items[0].Count).IsEqualTo(9);
+        await CheckContent();
 
         //put the value back where it was and check the group was removed
         items[1].Age = 1;
-        results.Data.Count.Should().Be(10);
-        results.Messages.Count.Should().Be(4);
-        CheckContent();
+        await Assert.That(results.Data.Count).IsEqualTo(10);
+        await Assert.That(results.Messages.Count).IsEqualTo(4);
+        await CheckContent();
 
         //refresh an item which makes it belong to the same group - should then propagate a refresh
         items[2].Age = 13;
-        CheckContent();
+        await CheckContent();
 
-        results.Messages.Count.Should().Be(5);
+        await Assert.That(results.Messages.Count).IsEqualTo(5);
     }
 
-    [Fact]
-    public void AutoRefreshSelected()
+    [Test]
+    public async Task AutoRefreshSelected()
     {
         //test added as v6 broke unit test in DynamicData.Snippets
         var initialItems = Enumerable.Range(1, 10).Select(i => new SelectableItem(i)).ToArray();
@@ -249,21 +257,21 @@ public class AutoRefreshFixture
         using var sourceList = new SourceList<SelectableItem>();
         using var sut = sourceList.Connect().AutoRefresh().Filter(si => si.IsSelected).AsObservableList();
         sourceList.AddRange(initialItems);
-        sut.Count.Should().Be(0);
+        await Assert.That(sut.Count).IsEqualTo(0);
 
         initialItems[0].IsSelected = true;
-        sut.Count.Should().Be(1);
+        await Assert.That(sut.Count).IsEqualTo(1);
 
         initialItems[1].IsSelected = true;
-        sut.Count.Should().Be(2);
+        await Assert.That(sut.Count).IsEqualTo(2);
 
         //remove the selected items
         sourceList.RemoveRange(0, 2);
-        sut.Count.Should().Be(0);
+        await Assert.That(sut.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void AutoRefreshSort()
+    [Test]
+    public async Task AutoRefreshSort()
     {
         var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).OrderByDescending(p => p.Age).ToArray();
 
@@ -272,45 +280,45 @@ public class AutoRefreshFixture
         //result should only be true when all items are set to true
         using var list = new SourceList<Person>();
         using var results = list.Connect().AutoRefresh(p => p.Age).Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).AsAggregator();
-        void CheckOrder()
+        async Task CheckOrder()
         {
             var sorted = items.OrderBy(p => p, comparer).ToArray();
-            results.Data.Items.Should().BeEquivalentTo(sorted);
+            await Assert.That(results.Data.Items).IsEquivalentTo(sorted);
         }
 
         list.AddRange(items);
 
-        results.Data.Count.Should().Be(100);
-        results.Messages.Count.Should().Be(1);
-        CheckOrder();
+        await Assert.That(results.Data.Count).IsEqualTo(100);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
+        await CheckOrder();
 
         items[0].Age = 60;
-        CheckOrder();
-        results.Messages.Count.Should().Be(2);
-        results.Messages.Last().Refreshes.Should().Be(1);
-        results.Messages.Last().Moves.Should().Be(1);
+        await CheckOrder();
+        await Assert.That(results.Messages.Count).IsEqualTo(2);
+        await Assert.That(results.Messages.Last().Refreshes).IsEqualTo(1);
+        await Assert.That(results.Messages.Last().Moves).IsEqualTo(1);
 
         items[90].Age = -1; //move to beginning
-        CheckOrder();
-        results.Messages.Count.Should().Be(3);
-        results.Messages.Last().Refreshes.Should().Be(1);
-        results.Messages.Last().Moves.Should().Be(1);
+        await CheckOrder();
+        await Assert.That(results.Messages.Count).IsEqualTo(3);
+        await Assert.That(results.Messages.Last().Refreshes).IsEqualTo(1);
+        await Assert.That(results.Messages.Last().Moves).IsEqualTo(1);
 
         items[50].Age = 49; //same position so no move
-        CheckOrder();
-        results.Messages.Count.Should().Be(4);
-        results.Messages.Last().Refreshes.Should().Be(1);
-        results.Messages.Last().Moves.Should().Be(0);
+        await CheckOrder();
+        await Assert.That(results.Messages.Count).IsEqualTo(4);
+        await Assert.That(results.Messages.Last().Refreshes).IsEqualTo(1);
+        await Assert.That(results.Messages.Last().Moves).IsEqualTo(0);
 
         items[50].Age = 51; //same position so no move
-        CheckOrder();
-        results.Messages.Count.Should().Be(5);
-        results.Messages.Last().Refreshes.Should().Be(1);
-        results.Messages.Last().Moves.Should().Be(1);
+        await CheckOrder();
+        await Assert.That(results.Messages.Count).IsEqualTo(5);
+        await Assert.That(results.Messages.Last().Refreshes).IsEqualTo(1);
+        await Assert.That(results.Messages.Last().Moves).IsEqualTo(1);
     }
 
-    [Fact]
-    public void AutoRefreshTransform()
+    [Test]
+    public async Task AutoRefreshTransform()
     {
         var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
 
@@ -319,25 +327,25 @@ public class AutoRefreshFixture
         using var results = list.Connect().AutoRefresh(p => p.Age).Transform((p, idx) => new TransformedPerson(p, idx)).AsAggregator();
         list.AddRange(items);
 
-        results.Data.Count.Should().Be(100);
-        results.Messages.Count.Should().Be(1);
+        await Assert.That(results.Data.Count).IsEqualTo(100);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
 
         //update an item which did not match the filter and does so after change
         items[0].Age = 60;
-        results.Messages.Count.Should().Be(2);
-        results.Messages.Last().Refreshes.Should().Be(1);
-        results.Messages.Last().First().Item.Reason.Should().Be(ListChangeReason.Refresh);
-        results.Messages.Last().First().Item.Current.Index.Should().Be(0);
+        await Assert.That(results.Messages.Count).IsEqualTo(2);
+        await Assert.That(results.Messages.Last().Refreshes).IsEqualTo(1);
+        await Assert.That(results.Messages.Last().First().Item.Reason).IsEqualTo(ListChangeReason.Refresh);
+        await Assert.That(results.Messages.Last().First().Item.Current.Index).IsEqualTo(0);
 
         items[60].Age = 160;
-        results.Messages.Count.Should().Be(3);
-        results.Messages.Last().Refreshes.Should().Be(1);
-        results.Messages.Last().First().Item.Reason.Should().Be(ListChangeReason.Refresh);
-        results.Messages.Last().First().Item.Current.Index.Should().Be(60);
+        await Assert.That(results.Messages.Count).IsEqualTo(3);
+        await Assert.That(results.Messages.Last().Refreshes).IsEqualTo(1);
+        await Assert.That(results.Messages.Last().First().Item.Reason).IsEqualTo(ListChangeReason.Refresh);
+        await Assert.That(results.Messages.Last().First().Item.Current.Index).IsEqualTo(60);
     }
 
-    [Fact]
-    public void RefreshTransformAsList()
+    [Test]
+    public async Task RefreshTransformAsList()
     {
         var list = new SourceList<Example>();
         var valueList = list.Connect().AutoRefresh(e => e.Value).Transform(e => e.Value, true).AsObservableList();
@@ -345,7 +353,7 @@ public class AutoRefreshFixture
         var obj = new Example { Value = 0 };
         list.Add(obj);
         obj.Value = 1;
-        valueList.Items[0].Should().Be(1);
+        await Assert.That(valueList.Items[0]).IsEqualTo(1);
     }
 
     private class Example : AbstractNotifyPropertyChanged

@@ -23,7 +23,7 @@ namespace DynamicData.Cache.Internal;
 /// <param name="transformOnRefresh">The transformOnRefresh value.</param>
 internal class TransformAsync<TDestination, TSource, TKey>(
     IObservable<IChangeSet<TSource, TKey>> source,
-    Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, Task<TDestination>> transformFactory,
+    Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, CancellationToken, Task<TDestination>> transformFactory,
     Action<Error<TSource, TKey>>? exceptionCallback,
     IObservable<Func<TSource, TKey, bool>>? forceTransform = null,
     int? maximumConcurrency = null,
@@ -144,8 +144,9 @@ internal class TransformAsync<TDestination, TSource, TKey>(
     /// Executes the Transform operation.
     /// </summary>
     /// <param name="change">The change value.</param>
+    /// <param name="cancellationToken">Cancels the asynchronous item transformation.</param>
     /// <returns>The result of the operation.</returns>
-    private async Task<TransformResult> Transform(Change<TSource, TKey> change)
+    private async Task<TransformResult> Transform(Change<TSource, TKey> change, CancellationToken cancellationToken)
     {
         try
         {
@@ -170,12 +171,12 @@ internal class TransformAsync<TDestination, TSource, TKey>(
         }
     }
 
-/// <summary>
-/// Represents the TransformedItemContainer value.
-/// </summary>
-/// <param name="source">The source value.</param>
-/// <param name="destination">The destination value.</param>
-private readonly struct TransformedItemContainer(TSource source, TDestination destination)
+    /// <summary>
+    /// Represents the TransformedItemContainer value.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="destination">The destination value.</param>
+    private readonly struct TransformedItemContainer(TSource source, TDestination destination)
     {
         /// <summary>
         /// Gets the Destination value.
@@ -188,10 +189,10 @@ private readonly struct TransformedItemContainer(TSource source, TDestination de
         public TSource Source { get; } = source;
     }
 
-/// <summary>
-/// Provides members for the TransformResult class.
-/// </summary>
-private sealed class TransformResult
+    /// <summary>
+    /// Provides members for the TransformResult class.
+    /// </summary>
+    private sealed class TransformResult
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="TransformResult"/> class.

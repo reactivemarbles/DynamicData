@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Binding;
@@ -23,8 +27,8 @@ public class IObservableListBindListFixture : IDisposable
         _observableListNotifications = _list.Connect().AsAggregator();
     }
 
-    [Fact]
-    public void ResetThresholdsForBinding_ObservableCollection()
+    [Test]
+    public async Task ResetThresholdsForBinding_ObservableCollection()
     {
         var people = _generator.Take(100).ToArray();
 
@@ -34,10 +38,10 @@ public class IObservableListBindListFixture : IDisposable
         var test3 = Test(new BindingOptions(105, ResetOnFirstTimeLoad: false));
         var test4 = Test(BindingOptions.NeverFireReset());
 
-        test1.action.Should().Be(NotifyCollectionChangedAction.Reset);
-        test2.action.Should().Be(NotifyCollectionChangedAction.Reset);
-        test3.action.Should().Be(NotifyCollectionChangedAction.Add);
-        test4.action.Should().Be(NotifyCollectionChangedAction.Add);
+        await Assert.That(test1.action).IsEqualTo(NotifyCollectionChangedAction.Reset);
+        await Assert.That(test2.action).IsEqualTo(NotifyCollectionChangedAction.Reset);
+        await Assert.That(test3.action).IsEqualTo(NotifyCollectionChangedAction.Add);
+        await Assert.That(test4.action).IsEqualTo(NotifyCollectionChangedAction.Add);
 
         return;
 
@@ -66,8 +70,8 @@ public class IObservableListBindListFixture : IDisposable
         }
     }
 
-    [Fact]
-    public void ResetThresholdsForBinding_ReadonlyObservableCollection()
+    [Test]
+    public async Task ResetThresholdsForBinding_ReadonlyObservableCollection()
     {
         var people = _generator.Take(100).ToArray();
 
@@ -77,10 +81,10 @@ public class IObservableListBindListFixture : IDisposable
         var test3 = Test(new BindingOptions(105, ResetOnFirstTimeLoad: false));
         var test4 = Test(BindingOptions.NeverFireReset());
 
-        test1.action.Should().Be(NotifyCollectionChangedAction.Reset);
-        test2.action.Should().Be(NotifyCollectionChangedAction.Reset);
-        test3.action.Should().Be(NotifyCollectionChangedAction.Add);
-        test4.action.Should().Be(NotifyCollectionChangedAction.Add);
+        await Assert.That(test1.action).IsEqualTo(NotifyCollectionChangedAction.Reset);
+        await Assert.That(test2.action).IsEqualTo(NotifyCollectionChangedAction.Reset);
+        await Assert.That(test3.action).IsEqualTo(NotifyCollectionChangedAction.Add);
+        await Assert.That(test4.action).IsEqualTo(NotifyCollectionChangedAction.Add);
 
         return;
 
@@ -109,33 +113,33 @@ public class IObservableListBindListFixture : IDisposable
         }
     }
 
-    [Fact]
-    public void AddRange()
+    [Test]
+    public async Task AddRange()
     {
         var people = _generator.Take(100).ToList();
         _source.AddRange(people);
 
-        _list.Count.Should().Be(100, "Should be 100 items in the collection");
-        _list.Should().BeEquivalentTo(_list, "Collections should be equivalent");
+        await Assert.That(_list.Count).IsEqualTo(100).Because("Should be 100 items in the collection");
+        await Assert.That(_list.Items).IsEquivalentTo(people).Because("Collections should be equivalent");
     }
 
-    [Fact]
-    public void AddToSourceAddsToDestination()
+    [Test]
+    public async Task AddToSourceAddsToDestination()
     {
         var person = new Person("Adult1", 50);
         _source.Add(person);
 
-        _list.Count.Should().Be(1, "Should be 1 item in the collection");
-        _list.Items[0].Should().Be(person, "Should be same person");
+        await Assert.That(_list.Count).IsEqualTo(1).Because("Should be 1 item in the collection");
+        await Assert.That(_list.Items[0]).IsEqualTo(person).Because("Should be same person");
     }
 
-    [Fact]
-    public void Clear()
+    [Test]
+    public async Task Clear()
     {
         var people = _generator.Take(100).ToList();
         _source.AddRange(people);
         _source.Clear();
-        _list.Count.Should().Be(0, "Should be 100 items in the collection");
+        await Assert.That(_list.Count).IsEqualTo(0).Because("Should be 100 items in the collection");
     }
 
     public void Dispose()
@@ -145,37 +149,37 @@ public class IObservableListBindListFixture : IDisposable
         _source.Dispose();
     }
 
-    [Fact]
-    public void ListRecievesRefresh()
+    [Test]
+    public async Task ListRecievesRefresh()
     {
         var person = new Person("Adult1", 50);
         _source.Add(person);
 
         person.Age = 60;
 
-        _observableListNotifications.Messages.Count.Should().Be(2);
-        _observableListNotifications.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
+        await Assert.That(_observableListNotifications.Messages.Count).IsEqualTo(2);
+        await Assert.That(_observableListNotifications.Messages.Last().First().Reason).IsEqualTo(ListChangeReason.Refresh);
     }
 
-    [Fact]
-    public void RemoveSourceRemovesFromTheDestination()
+    [Test]
+    public async Task RemoveSourceRemovesFromTheDestination()
     {
         var person = new Person("Adult1", 50);
         _source.Add(person);
         _source.Remove(person);
 
-        _list.Count.Should().Be(0, "Should be 1 item in the collection");
+        await Assert.That(_list.Count).IsEqualTo(0).Because("Should be 1 item in the collection");
     }
 
-    [Fact]
-    public void UpdateToSourceUpdatesTheDestination()
+    [Test]
+    public async Task UpdateToSourceUpdatesTheDestination()
     {
         var person = new Person("Adult1", 50);
         var personUpdated = new Person("Adult1", 51);
         _source.Add(person);
         _source.Replace(person, personUpdated);
 
-        _list.Count.Should().Be(1, "Should be 1 item in the collection");
-        _list.Items[0].Should().Be(personUpdated, "Should be updated person");
+        await Assert.That(_list.Count).IsEqualTo(1).Because("Should be 1 item in the collection");
+        await Assert.That(_list.Items[0]).IsEqualTo(personUpdated).Because("Should be updated person");
     }
 }

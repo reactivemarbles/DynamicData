@@ -38,7 +38,7 @@ internal sealed class AutoRefresh<TObject, TAny>(IObservable<IChangeSet<TObject>
     public IObservable<IChangeSet<TObject>> Run() => Observable.Create<IChangeSet<TObject>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var locker = InternalEx.NewMonitorGate();
 
                 var allItems = new List<TObject>();
 

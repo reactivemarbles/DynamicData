@@ -1,5 +1,9 @@
 using Bogus;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
@@ -37,13 +41,13 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         _marketCacheResults = _marketCache.Connect().AsAggregator();
     }
 
-    [Theory]
-    [InlineData(5, 7)]
-    [InlineData(10, 50)]
+    [Test]
+    [Arguments(5, 7)]
+    [Arguments(10, 50)]
 #if false && !DEBUG
-    [InlineData(100, 100)]
-    [InlineData(10, 1_000)]
-    [InlineData(1_000, 10)]
+    [Arguments(100, 100)]
+    [Arguments(10, 1_000)]
+    [Arguments(1_000, 10)]
 #endif
     public async Task MultiThreadedStressTest(int marketCount, int priceCount)
     {
@@ -112,11 +116,11 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         await cacheCompleted;
 
         // Verify the results
-        CheckResultContents(_marketCacheResults, priceResults, Market.RatingCompare);
+        await CheckResultContents(_marketCacheResults, priceResults, Market.RatingCompare);
     }
 
-    [Fact]
-    public void NullChecks()
+    [Test]
+    public async Task NullChecks()
     {
         // having
         var emptyChangeSetObs = Observable.Empty<IChangeSet<int, int>>();
@@ -143,31 +147,31 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         var actionParentCompareKey2b = () => emptyChangeSetObs.MergeManyChangeSets(nullKeySelector, sourceComparer: emptyParentComparer, equalityComparer: emptyEqualityComparer);
 
         // then
-        emptyChangeSetObs.Should().NotBeNull();
-        emptyChildChangeSetObs.Should().NotBeNull();
-        emptyChildComparer.Should().NotBeNull();
-        emptyEqualityComparer.Should().NotBeNull();
-        emptyKeySelector.Should().NotBeNull();
-        emptyParentComparer.Should().NotBeNull();
-        emptySelector.Should().NotBeNull();
-        nullChangeSetObs.Should().BeNull();
-        nullChildComparer.Should().BeNull();
-        nullEqualityComparer.Should().BeNull();
-        nullKeySelector.Should().BeNull();
-        nullParentComparer.Should().BeNull();
-        nullSelector.Should().BeNull();
+        await Assert.That(emptyChangeSetObs).IsNotNull();
+        await Assert.That(emptyChildChangeSetObs).IsNotNull();
+        await Assert.That(emptyChildComparer).IsNotNull();
+        await Assert.That(emptyEqualityComparer).IsNotNull();
+        await Assert.That(emptyKeySelector).IsNotNull();
+        await Assert.That(emptyParentComparer).IsNotNull();
+        await Assert.That(emptySelector).IsNotNull();
+        await Assert.That(nullChangeSetObs).IsNull();
+        await Assert.That(nullChildComparer).IsNull();
+        await Assert.That(nullEqualityComparer).IsNull();
+        await Assert.That(nullKeySelector).IsNull();
+        await Assert.That(nullParentComparer).IsNull();
+        await Assert.That(nullSelector).IsNull();
 
-        actionParentCompare1.Should().Throw<ArgumentNullException>();
-        actionParentCompareKey1a.Should().Throw<ArgumentNullException>();
-        actionParentCompareKey1b.Should().Throw<ArgumentNullException>();
-        actionParentCompareKey1c.Should().Throw<ArgumentNullException>();
-        actionParentCompare2.Should().Throw<ArgumentNullException>();
-        actionParentCompareKey2a.Should().Throw<ArgumentNullException>();
-        actionParentCompareKey2b.Should().Throw<ArgumentNullException>();
+        await Assert.That(actionParentCompare1).Throws<ArgumentNullException>();
+        await Assert.That(actionParentCompareKey1a).Throws<ArgumentNullException>();
+        await Assert.That(actionParentCompareKey1b).Throws<ArgumentNullException>();
+        await Assert.That(actionParentCompareKey1c).Throws<ArgumentNullException>();
+        await Assert.That(actionParentCompare2).Throws<ArgumentNullException>();
+        await Assert.That(actionParentCompareKey2a).Throws<ArgumentNullException>();
+        await Assert.That(actionParentCompareKey2b).Throws<ArgumentNullException>();
     }
 
-    [Fact]
-    public void AbleToInvokeFactory()
+    [Test]
+    public async Task AbleToInvokeFactory()
     {
         // having
         var invoked = false;
@@ -182,12 +186,12 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         _marketCache.AddOrUpdate(new Market(0));
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(1);
-        invoked.Should().BeTrue();
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(1);
+        await Assert.That(invoked).IsTrue();
     }
 
-    [Fact]
-    public void AbleToInvokeFactoryWithKey()
+    [Test]
+    public async Task AbleToInvokeFactoryWithKey()
     {
         // having
         var invoked = false;
@@ -202,12 +206,12 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         _marketCache.AddOrUpdate(new Market(0));
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(1);
-        invoked.Should().BeTrue();
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(1);
+        await Assert.That(invoked).IsTrue();
     }
 
-    [Fact]
-    public void AllExistingSubItemsPresentInResult()
+    [Test]
+    public async Task AllExistingSubItemsPresentInResult()
     {
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
@@ -218,18 +222,18 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         _marketCache.AddOrUpdate(markets);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(MarketCount);
-        markets.Sum(m => m.PricesCache.Count).Should().Be(MarketCount * PricesPerMarket);
-        results.Data.Count.Should().Be(MarketCount * PricesPerMarket);
-        results.Messages.Count.Should().Be(1);
-        results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(MarketCount);
+        await Assert.That(markets.Sum(m => m.PricesCache.Count)).IsEqualTo(MarketCount * PricesPerMarket);
+        await Assert.That(results.Data.Count).IsEqualTo(MarketCount * PricesPerMarket);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(MarketCount * PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Fact]
-    public void AllNewSubItemsPresentInResult()
+    [Test]
+    public async Task AllNewSubItemsPresentInResult()
     {
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
@@ -240,18 +244,18 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.SetPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(MarketCount);
-        markets.Sum(m => m.PricesCache.Count).Should().Be(MarketCount * PricesPerMarket);
-        results.Data.Count.Should().Be(MarketCount * PricesPerMarket);
-        results.Messages.Count.Should().Be(MarketCount);
-        results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(MarketCount);
+        await Assert.That(markets.Sum(m => m.PricesCache.Count)).IsEqualTo(MarketCount * PricesPerMarket);
+        await Assert.That(results.Data.Count).IsEqualTo(MarketCount * PricesPerMarket);
+        await Assert.That(results.Messages.Count).IsEqualTo(MarketCount);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(MarketCount * PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Fact]
-    public void AllRefreshedSubItemsAreRefreshed()
+    [Test]
+    public async Task AllRefreshedSubItemsAreRefreshed()
     {
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
@@ -263,17 +267,17 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         markets.ForEach(m => m.RefreshAllPrices(GetRandomPrice));
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(MarketCount);
-        results.Data.Count.Should().Be(MarketCount * PricesPerMarket);
-        results.Messages.Count.Should().Be(MarketCount + 1);
-        results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(MarketCount * PricesPerMarket);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(MarketCount);
+        await Assert.That(results.Data.Count).IsEqualTo(MarketCount * PricesPerMarket);
+        await Assert.That(results.Messages.Count).IsEqualTo(MarketCount + 1);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(MarketCount * PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(MarketCount * PricesPerMarket);
     }
 
-    [Fact]
-    public void AnyDuplicateKeyValuesShouldBeHidden()
+    [Test]
+    public async Task AnyDuplicateKeyValuesShouldBeHidden()
     {
         // having
         var markets = Enumerable.Range(0, 2).Select(n => new Market(n)).ToArray();
@@ -286,17 +290,17 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         markets[1].SetPrices(0, PricesPerMarket, GetRandomPrice);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Data.Items.Zip(markets[0].PricesCache.Items).ForEach(pair => pair.First.Should().Be(pair.Second));
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        foreach (var pair in results.Data.Items.Zip(markets[0].PricesCache.Items)) { await Assert.That(pair.First).IsEqualTo(pair.Second); }
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Fact]
-    public void AnyDuplicateValuesShouldBeNoOpWhenRemoved()
+    [Test]
+    public async Task AnyDuplicateValuesShouldBeNoOpWhenRemoved()
     {
         // having
         var markets = Enumerable.Range(0, 2).Select(n => new Market(n)).ToArray();
@@ -310,17 +314,17 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         markets[1].RemoveAllPrices();
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Data.Items.Zip(markets[0].PricesCache.Items).ForEach(pair => pair.First.Should().Be(pair.Second));
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        foreach (var pair in results.Data.Items.Zip(markets[0].PricesCache.Items)) { await Assert.That(pair.First).IsEqualTo(pair.Second); }
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Fact]
-    public void AnyDuplicateValuesShouldBeUnhiddenWhenOtherIsRemoved()
+    [Test]
+    public async Task AnyDuplicateValuesShouldBeUnhiddenWhenOtherIsRemoved()
     {
         // having
         var markets = Enumerable.Range(0, 2).Select(n => new Market(n)).ToArray();
@@ -334,19 +338,19 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         _marketCache.Remove(markets[0]);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(1);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Data.Items.Zip(markets[1].PricesCache.Items).ForEach(pair => pair.First.Should().Be(pair.Second));
-        results.Messages.Count.Should().Be(2);
-        results.Messages[1].Updates.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(1);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        foreach (var pair in results.Data.Items.Zip(markets[1].PricesCache.Items)) { await Assert.That(pair.First).IsEqualTo(pair.Second); }
+        await Assert.That(results.Messages.Count).IsEqualTo(2);
+        await Assert.That(results.Messages[1].Updates).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Fact]
-    public void AnyDuplicateValuesShouldNotRefreshWhenHidden()
+    [Test]
+    public async Task AnyDuplicateValuesShouldNotRefreshWhenHidden()
     {
         // having
         var markets = Enumerable.Range(0, 2).Select(n => new Market(n)).ToArray();
@@ -360,18 +364,18 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         markets[1].RefreshAllPrices(GetRandomPrice);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Refreshes.Should().Be(0);
-        results.Data.Items.Zip(markets[0].PricesCache.Items).ForEach(pair => pair.First.Should().Be(pair.Second));
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var pair in results.Data.Items.Zip(markets[0].PricesCache.Items)) { await Assert.That(pair.First).IsEqualTo(pair.Second); }
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Fact]
-    public void SourceRefreshGeneratesUpdatesAsNeeded()
+    [Test]
+    public async Task SourceRefreshGeneratesUpdatesAsNeeded()
     {
         // having
         var markets = Enumerable.Range(0, 2).Select(n => new Market(n)).ToArray();
@@ -385,17 +389,17 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         SetRating(markets[1], 2.0);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Data.Items.Zip(markets[1].PricesCache.Items).ForEach(pair => pair.First.Should().Be(pair.Second));
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        foreach (var pair in results.Data.Items.Zip(markets[1].PricesCache.Items)) { await Assert.That(pair.First).IsEqualTo(pair.Second); }
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Fact]
-    public void SourceRefreshDoesNothingIfDisabled()
+    [Test]
+    public async Task SourceRefreshDoesNothingIfDisabled()
     {
         // having
         var markets = Enumerable.Range(0, 2).Select(n => new Market(n)).ToArray();
@@ -409,17 +413,17 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         SetRating(markets[1], 2.0);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Data.Items.Zip(markets[0].PricesCache.Items).ForEach(pair => pair.First.Should().Be(pair.Second));
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        foreach (var pair in results.Data.Items.Zip(markets[0].PricesCache.Items)) { await Assert.That(pair.First).IsEqualTo(pair.Second); }
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Fact]
-    public void AnyRemovedSubItemIsRemoved()
+    [Test]
+    public async Task AnyRemovedSubItemIsRemoved()
     {
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
@@ -431,18 +435,18 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         markets.ForEach(m => m.PricesCache.Edit(updater => updater.RemoveKeys(updater.Keys.Take(RemoveCount))));
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(MarketCount);
-        results.Data.Count.Should().Be(MarketCount * (PricesPerMarket - RemoveCount));
-        results.Messages.Count.Should().Be(MarketCount * 2);
-        results.Messages[0].Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(MarketCount * RemoveCount);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(MarketCount);
+        await Assert.That(results.Data.Count).IsEqualTo(MarketCount * (PricesPerMarket - RemoveCount));
+        await Assert.That(results.Messages.Count).IsEqualTo(MarketCount * 2);
+        await Assert.That(results.Messages[0].Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(MarketCount * PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(MarketCount * RemoveCount);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Fact]
-    public void AnySourceItemRemovedRemovesAllSourceValues()
+    [Test]
+    public async Task AnySourceItemRemovedRemovesAllSourceValues()
     {
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
@@ -454,16 +458,16 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         _marketCache.Edit(updater => updater.RemoveKeys(updater.Keys.Take(RemoveCount)));
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(MarketCount - RemoveCount);
-        results.Data.Count.Should().Be((MarketCount - RemoveCount) * PricesPerMarket);
-        results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(PricesPerMarket * RemoveCount);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(MarketCount - RemoveCount);
+        await Assert.That(results.Data.Count).IsEqualTo((MarketCount - RemoveCount) * PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(MarketCount * PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(PricesPerMarket * RemoveCount);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Fact]
-    public void ChangingSourceByUpdateRemovesPreviousAndAddsNewValues()
+    [Test]
+    public async Task ChangingSourceByUpdateRemovesPreviousAndAddsNewValues()
     {
         // having
         using var results = ChangeSetByRating(false).AsAggregator();
@@ -477,17 +481,17 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         _marketCache.AddOrUpdate(updatedMarket);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(1);
-        results.Data.Count.Should().Be(PricesPerMarket * 2);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket * 3);
-        results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Refreshes.Should().Be(0);
-        results.Data.Items.Zip(updatedMarket.PricesCache.Items).ForEach(pair => pair.First.Should().Be(pair.Second));
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(1);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket * 2);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket * 3);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var pair in results.Data.Items.Zip(updatedMarket.PricesCache.Items)) { await Assert.That(pair.First).IsEqualTo(pair.Second); }
     }
 
-    [Fact]
-    public void ChangingSourceByUpdateRemovesPreviousAndEmitsBetterValues()
+    [Test]
+    public async Task ChangingSourceByUpdateRemovesPreviousAndEmitsBetterValues()
     {
         // having
         using var results = ChangeSetByRating(false).AsAggregator();
@@ -506,18 +510,18 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         _marketCache.AddOrUpdate(updatedMarket);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        results.Data.Count.Should().Be(PricesPerMarket * 3);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket * 3);
-        results.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
-        results.Data.Items.Take(PricesPerMarket).Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketWorse.Id));
-        results.Data.Items.Skip(PricesPerMarket).Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(updatedMarket.Id));
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket * 3);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket * 3);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 2);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in results.Data.Items.Take(PricesPerMarket).Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketWorse.Id); }
+        foreach (var guid in results.Data.Items.Skip(PricesPerMarket).Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(updatedMarket.Id); }
     }
 
-    [Fact]
-    public void UpdatesToCorrectValueOnRemove()
+    [Test]
+    public async Task UpdatesToCorrectValueOnRemove()
     {
         // having
         var marketOriginal = new Market(0);
@@ -537,17 +541,17 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         _marketCache.Remove(marketBest);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
-        results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 2);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in results.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketBetter.Id); }
     }
 
-    [Fact]
-    public void OnlyUpdatesOnDuplicateIfNewItemIsFromBetterParent()
+    [Test]
+    public async Task OnlyUpdatesOnDuplicateIfNewItemIsFromBetterParent()
     {
         // having
         using var results = ChangeSetByRating(false).AsAggregator();
@@ -563,23 +567,23 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         _marketCache.AddOrUpdate(marketBetter);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
-        results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
-        resultsLow.Data.Count.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Updates.Should().Be(0);
-        resultsLow.Summary.Overall.Removes.Should().Be(0);
-        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
-        resultsLow.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in results.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketBetter.Id); }
+        await Assert.That(resultsLow.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in resultsLow.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketOriginal.Id); }
     }
 
-    [Fact]
-    public void BestChoiceFromDuplicatesSelectedWhenChangeSetCreated()
+    [Test]
+    public async Task BestChoiceFromDuplicatesSelectedWhenChangeSetCreated()
     {
         // having
         var marketOriginal = new Market(0);
@@ -595,23 +599,23 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         using var resultsLow = ChangeSetByLowRating(false).AsAggregator();
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
-        results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
-        resultsLow.Data.Count.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Updates.Should().Be(0);
-        resultsLow.Summary.Overall.Removes.Should().Be(0);
-        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
-        resultsLow.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in results.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketBetter.Id); }
+        await Assert.That(resultsLow.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in resultsLow.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketOriginal.Id); }
     }
 
-    [Fact]
-    public void OnlyAddsBetterValuesOnSourceUpdate()
+    [Test]
+    public async Task OnlyAddsBetterValuesOnSourceUpdate()
     {
         // having
         using var results = ChangeSetByRating(false).AsAggregator();
@@ -627,23 +631,23 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         marketBetter.SetPrices(0, PricesPerMarket, GetRandomPrice);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
-        results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
-        resultsLow.Data.Count.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Updates.Should().Be(0);
-        resultsLow.Summary.Overall.Removes.Should().Be(0);
-        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
-        resultsLow.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in results.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketBetter.Id); }
+        await Assert.That(resultsLow.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in resultsLow.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketOriginal.Id); }
     }
 
-    [Fact]
-    public void UpdatesToCorrectValueOnRefresh()
+    [Test]
+    public async Task UpdatesToCorrectValueOnRefresh()
     {
         // having
         using var results = ChangeSetByRating(false).AsAggregator();
@@ -662,35 +666,35 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         SetRating(marketBetter, 2.0);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        _marketCacheResults.Summary.Overall.Refreshes.Should().Be(1);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
-        results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
-        resultsLow.Data.Count.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Removes.Should().Be(0);
-        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
-        resultsLow.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
-        resultsRefresh.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsRefresh.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        resultsRefresh.Summary.Overall.Removes.Should().Be(0);
-        resultsRefresh.Summary.Overall.Refreshes.Should().Be(0);
-        resultsRefresh.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
-        resultsLowRefresh.Data.Count.Should().Be(PricesPerMarket);
-        resultsLowRefresh.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsLowRefresh.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
-        resultsLowRefresh.Summary.Overall.Removes.Should().Be(0);
-        resultsLowRefresh.Summary.Overall.Refreshes.Should().Be(0);
-        resultsLowRefresh.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(_marketCacheResults.Summary.Overall.Refreshes).IsEqualTo(1);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in results.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketOriginal.Id); }
+        await Assert.That(resultsLow.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Updates).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in resultsLow.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketBetter.Id); }
+        await Assert.That(resultsRefresh.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsRefresh.Summary.Overall.Updates).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsRefresh.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsRefresh.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in resultsRefresh.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketBetter.Id); }
+        await Assert.That(resultsLowRefresh.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLowRefresh.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLowRefresh.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 2);
+        await Assert.That(resultsLowRefresh.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsLowRefresh.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in resultsLowRefresh.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketOriginal.Id); }
     }
 
-    [Fact]
-    public void ChildComparerUpdatesToCorrectValueOnUpdate()
+    [Test]
+    public async Task ChildComparerUpdatesToCorrectValueOnUpdate()
     {
         // having
         using var resultsLow = ChangeSetByLowRating(false).AsAggregator();
@@ -711,31 +715,31 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         marketLowest.UpdateAllPrices(LowestPrice);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(3);
-        resultsLow.Data.Count.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Updates.Should().Be(0);
-        resultsLow.Summary.Overall.Removes.Should().Be(0);
-        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
-        resultsLow.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(3);
+        await Assert.That(resultsLow.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in resultsLow.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketOriginal.Id); }
 
-        resultsLowPrice.Data.Count.Should().Be(PricesPerMarket);
-        resultsLowPrice.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsLowPrice.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
-        resultsLowPrice.Summary.Overall.Removes.Should().Be(0);
-        resultsLowPrice.Summary.Overall.Refreshes.Should().Be(0);
-        resultsLowPrice.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLowest.Id));
+        await Assert.That(resultsLowPrice.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLowPrice.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLowPrice.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 3);
+        await Assert.That(resultsLowPrice.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsLowPrice.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in resultsLowPrice.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketLowest.Id); }
 
-        resultsHighPrice.Data.Count.Should().Be(PricesPerMarket);
-        resultsHighPrice.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsHighPrice.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        resultsHighPrice.Summary.Overall.Removes.Should().Be(0);
-        resultsHighPrice.Summary.Overall.Refreshes.Should().Be(0);
-        resultsHighPrice.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketHighest.Id));
+        await Assert.That(resultsHighPrice.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsHighPrice.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsHighPrice.Summary.Overall.Updates).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsHighPrice.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsHighPrice.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in resultsHighPrice.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketHighest.Id); }
     }
 
-    [Fact]
-    public void ChildComparerOnlyUpdatesVisibleValuesOnUpdate()
+    [Test]
+    public async Task ChildComparerOnlyUpdatesVisibleValuesOnUpdate()
     {
         // having
         using var results = ChangeSetByRating(false).AsAggregator();
@@ -757,29 +761,29 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         marketLowest.UpdateAllPrices(LowestPrice - 1);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(3);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
-        results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
-        lowRatingLowPriceResults.Data.Count.Should().Be(PricesPerMarket);
-        lowRatingLowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        lowRatingLowPriceResults.Summary.Overall.Removes.Should().Be(0);
-        lowRatingLowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
-        lowRatingLowPriceResults.Summary.Overall.Refreshes.Should().Be(0);
-        lowRatingLowPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLowest.Id));
-        lowRatingHighPriceResults.Data.Count.Should().Be(PricesPerMarket);
-        lowRatingHighPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        lowRatingHighPriceResults.Summary.Overall.Removes.Should().Be(0);
-        lowRatingHighPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
-        lowRatingHighPriceResults.Summary.Overall.Refreshes.Should().Be(0);
-        lowRatingHighPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLow.Id));
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(3);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in results.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketOriginal.Id); }
+        await Assert.That(lowRatingLowPriceResults.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(lowRatingLowPriceResults.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(lowRatingLowPriceResults.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(lowRatingLowPriceResults.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 2);
+        await Assert.That(lowRatingLowPriceResults.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in lowRatingLowPriceResults.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketLowest.Id); }
+        await Assert.That(lowRatingHighPriceResults.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(lowRatingHighPriceResults.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(lowRatingHighPriceResults.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(lowRatingHighPriceResults.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 3);
+        await Assert.That(lowRatingHighPriceResults.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in lowRatingHighPriceResults.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketLow.Id); }
     }
 
-    [Fact]
-    public void ChildComparerOnlyRefreshesVisibleValues()
+    [Test]
+    public async Task ChildComparerOnlyRefreshesVisibleValues()
     {
         // having
         using var results = ChangeSetByRating(false).AsAggregator();
@@ -801,29 +805,29 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         marketLowest.RefreshAllPrices(LowestPrice - 1);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(3);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
-        results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
-        lowRatingLowPriceResults.Data.Count.Should().Be(PricesPerMarket);
-        lowRatingLowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        lowRatingLowPriceResults.Summary.Overall.Removes.Should().Be(0);
-        lowRatingLowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
-        lowRatingLowPriceResults.Summary.Overall.Refreshes.Should().Be(PricesPerMarket);
-        lowRatingLowPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLowest.Id));
-        lowRatingHighPriceResults.Data.Count.Should().Be(PricesPerMarket);
-        lowRatingHighPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        lowRatingHighPriceResults.Summary.Overall.Removes.Should().Be(0);
-        lowRatingHighPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        lowRatingHighPriceResults.Summary.Overall.Refreshes.Should().Be(0);
-        lowRatingHighPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLow.Id));
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(3);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in results.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketOriginal.Id); }
+        await Assert.That(lowRatingLowPriceResults.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(lowRatingLowPriceResults.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(lowRatingLowPriceResults.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(lowRatingLowPriceResults.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 2);
+        await Assert.That(lowRatingLowPriceResults.Summary.Overall.Refreshes).IsEqualTo(PricesPerMarket);
+        foreach (var guid in lowRatingLowPriceResults.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketLowest.Id); }
+        await Assert.That(lowRatingHighPriceResults.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(lowRatingHighPriceResults.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(lowRatingHighPriceResults.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(lowRatingHighPriceResults.Summary.Overall.Updates).IsEqualTo(PricesPerMarket);
+        await Assert.That(lowRatingHighPriceResults.Summary.Overall.Refreshes).IsEqualTo(0);
+        foreach (var guid in lowRatingHighPriceResults.Data.Items.Select(cp => cp.MarketId)) { await Assert.That(guid).IsEqualTo(marketLow.Id); }
     }
 
-    [Fact]
-    public void EqualityComparerHidesUpdatesWithoutChanges()
+    [Test]
+    public async Task EqualityComparerHidesUpdatesWithoutChanges()
     {
         // having
         var market = new Market(0);
@@ -835,17 +839,17 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         market.SetPrices(0, PricesPerMarket, LowestPrice);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(1);
-        results.Data.Count.Should().Be(PricesPerMarket);
-        results.Messages.Count.Should().Be(1);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(1);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Fact]
-    public void EqualityComparerAndChildComparerWorkTogetherForUpdates()
+    [Test]
+    public async Task EqualityComparerAndChildComparerWorkTogetherForUpdates()
     {
         // having
         using var resultsLow = ChangeSetByLowRating().AsAggregator();
@@ -864,27 +868,27 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         market.UpdateAllPrices(LowestPrice);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        resultsLow.Data.Count.Should().Be(PricesPerMarket);
-        resultsLow.Messages.Count.Should().Be(1);
-        resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Removes.Should().Be(0);
-        resultsLow.Summary.Overall.Updates.Should().Be(0);
-        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
-        resultsRecent.Messages.Count.Should().Be(3);
-        resultsRecent.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsRecent.Summary.Overall.Removes.Should().Be(0);
-        resultsRecent.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
-        resultsRecent.Summary.Overall.Refreshes.Should().Be(0);
-        resultsTimeStamp.Messages.Count.Should().Be(4);
-        resultsTimeStamp.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsTimeStamp.Summary.Overall.Removes.Should().Be(0);
-        resultsTimeStamp.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
-        resultsTimeStamp.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(resultsLow.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Messages.Count).IsEqualTo(1);
+        await Assert.That(resultsLow.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Refreshes).IsEqualTo(0);
+        await Assert.That(resultsRecent.Messages.Count).IsEqualTo(3);
+        await Assert.That(resultsRecent.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsRecent.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsRecent.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 2);
+        await Assert.That(resultsRecent.Summary.Overall.Refreshes).IsEqualTo(0);
+        await Assert.That(resultsTimeStamp.Messages.Count).IsEqualTo(4);
+        await Assert.That(resultsTimeStamp.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsTimeStamp.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsTimeStamp.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 3);
+        await Assert.That(resultsTimeStamp.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Fact]
-    public void EqualityComparerAndChildComparerWorkTogetherForRefreshes()
+    [Test]
+    public async Task EqualityComparerAndChildComparerWorkTogetherForRefreshes()
     {
         // having
         using var resultsLow = ChangeSetByLowRating().AsAggregator();
@@ -907,27 +911,27 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         market.RefreshAllPrices(LowestPrice);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        resultsLow.Data.Count.Should().Be(PricesPerMarket);
-        resultsLow.Messages.Count.Should().Be(1);
-        resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Removes.Should().Be(0);
-        resultsLow.Summary.Overall.Updates.Should().Be(0);
-        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
-        resultsRecent.Messages.Count.Should().Be(4);
-        resultsRecent.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsRecent.Summary.Overall.Removes.Should().Be(0);
-        resultsRecent.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
-        resultsRecent.Summary.Overall.Refreshes.Should().Be(PricesPerMarket);
-        resultsTimeStamp.Messages.Count.Should().Be(5);
-        resultsTimeStamp.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsTimeStamp.Summary.Overall.Removes.Should().Be(0);
-        resultsTimeStamp.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
-        resultsTimeStamp.Summary.Overall.Refreshes.Should().Be(PricesPerMarket);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(resultsLow.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Messages.Count).IsEqualTo(1);
+        await Assert.That(resultsLow.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Refreshes).IsEqualTo(0);
+        await Assert.That(resultsRecent.Messages.Count).IsEqualTo(4);
+        await Assert.That(resultsRecent.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsRecent.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsRecent.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 2);
+        await Assert.That(resultsRecent.Summary.Overall.Refreshes).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsTimeStamp.Messages.Count).IsEqualTo(5);
+        await Assert.That(resultsTimeStamp.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsTimeStamp.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsTimeStamp.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 3);
+        await Assert.That(resultsTimeStamp.Summary.Overall.Refreshes).IsEqualTo(PricesPerMarket);
     }
 
-    [Fact]
-    public void EqualityComparerAndChildComparerRefreshesBecomeUpdates()
+    [Test]
+    public async Task EqualityComparerAndChildComparerRefreshesBecomeUpdates()
     {
         // having
         using var resultsLow = ChangeSetByLowRating().AsAggregator();
@@ -950,27 +954,27 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         market.RefreshAllPrices(GetRandomPrice);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        resultsLow.Data.Count.Should().Be(PricesPerMarket);
-        resultsLow.Messages.Count.Should().Be(1);
-        resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Removes.Should().Be(0);
-        resultsLow.Summary.Overall.Updates.Should().Be(0);
-        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
-        resultsRecent.Messages.Count.Should().Be(4);
-        resultsRecent.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsRecent.Summary.Overall.Removes.Should().Be(0);
-        resultsRecent.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
-        resultsRecent.Summary.Overall.Refreshes.Should().Be(0);
-        resultsTimeStamp.Messages.Count.Should().Be(5);
-        resultsTimeStamp.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsTimeStamp.Summary.Overall.Removes.Should().Be(0);
-        resultsTimeStamp.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
-        resultsTimeStamp.Summary.Overall.Refreshes.Should().Be(PricesPerMarket);
+        await Assert.That(_marketCacheResults.Data.Count).IsEqualTo(2);
+        await Assert.That(resultsLow.Data.Count).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Messages.Count).IsEqualTo(1);
+        await Assert.That(resultsLow.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsLow.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(resultsLow.Summary.Overall.Refreshes).IsEqualTo(0);
+        await Assert.That(resultsRecent.Messages.Count).IsEqualTo(4);
+        await Assert.That(resultsRecent.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsRecent.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsRecent.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 3);
+        await Assert.That(resultsRecent.Summary.Overall.Refreshes).IsEqualTo(0);
+        await Assert.That(resultsTimeStamp.Messages.Count).IsEqualTo(5);
+        await Assert.That(resultsTimeStamp.Summary.Overall.Adds).IsEqualTo(PricesPerMarket);
+        await Assert.That(resultsTimeStamp.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(resultsTimeStamp.Summary.Overall.Updates).IsEqualTo(PricesPerMarket * 3);
+        await Assert.That(resultsTimeStamp.Summary.Overall.Refreshes).IsEqualTo(PricesPerMarket);
     }
 
-    [Fact]
-    public void EveryItemVisibleWhenSequenceCompletes()
+    [Test]
+    public async Task EveryItemVisibleWhenSequenceCompletes()
     {
         // having
         _marketCache.AddOrUpdate(Enumerable.Range(0, MarketCount).Select(n => new FixedMarket(GetRandomPrice, n * ItemIdStride, (n * ItemIdStride) + PricesPerMarket)));
@@ -980,19 +984,19 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         DisposeMarkets();
 
         // then
-        results.Data.Count.Should().Be(PricesPerMarket * MarketCount);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket * MarketCount);
-        results.Summary.Overall.Removes.Should().Be(0);
-        results.Summary.Overall.Updates.Should().Be(0);
-        results.Summary.Overall.Refreshes.Should().Be(0);
+        await Assert.That(results.Data.Count).IsEqualTo(PricesPerMarket * MarketCount);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(PricesPerMarket * MarketCount);
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0);
+        await Assert.That(results.Summary.Overall.Refreshes).IsEqualTo(0);
     }
 
-    [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public void MergedObservableCompletesOnlyWhenSourceAndAllChildrenComplete(bool completeSource, bool completeChildren)
+    [Test]
+    [Arguments(false, false)]
+    [Arguments(false, true)]
+    [Arguments(true, false)]
+    [Arguments(true, true)]
+    public async Task MergedObservableCompletesOnlyWhenSourceAndAllChildrenComplete(bool completeSource, bool completeChildren)
     {
         // having
         _marketCache.AddOrUpdate(Enumerable.Range(0, MarketCount).Select(n => new FixedMarket(GetRandomPrice, n * ItemIdStride, (n * ItemIdStride) + PricesPerMarket, completable: completeChildren)));
@@ -1009,12 +1013,12 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         }
 
         // then
-        hasSourceSequenceCompleted.Should().Be(completeSource);
-        hasMergedSequenceCompleted.Should().Be(completeSource && completeChildren);
+        await Assert.That(hasSourceSequenceCompleted).IsEqualTo(completeSource);
+        await Assert.That(hasMergedSequenceCompleted).IsEqualTo(completeSource && completeChildren);
     }
 
-    [Fact]
-    public void MergedObservableWillFailIfSourceFails()
+    [Test]
+    public async Task MergedObservableWillFailIfSourceFails()
     {
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
@@ -1030,7 +1034,7 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
         DisposeMarkets();
 
         // then
-        receivedError.Should().Be(expectedError);
+        await Assert.That(receivedError).IsEqualTo(expectedError);
     }
 
     private IObservable<IChangeSet<MarketPrice, int>> CreateChangeSet(string name, IComparer<IMarket>? sourceComp = null, IComparer<MarketPrice>? childCompare = null, IEqualityComparer<MarketPrice>? equalityComparer = null, bool resortOnRefresh = true) =>
@@ -1058,16 +1062,17 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
     public void Dispose()
     {
         _marketCacheResults.Dispose();
-        DisposeMarkets();
+        _marketCache.Items.ForEach(m => (m as IDisposable)?.Dispose());
+        _marketCache.Dispose();
     }
 
-    private void CheckResultContents(ChangeSetAggregator<IMarket, Guid> marketResults, ChangeSetAggregator<MarketPrice, int> priceResults, IComparer<IMarket> comparer)
+    private async Task CheckResultContents(ChangeSetAggregator<IMarket, Guid> marketResults, ChangeSetAggregator<MarketPrice, int> priceResults, IComparer<IMarket> comparer)
     {
         var expectedMarkets = _marketCache.Items.ToList();
 
         // These should be subsets of each other
-        expectedMarkets.Should().BeSubsetOf(marketResults.Data.Items);
-        marketResults.Data.Items.Count.Should().Be(expectedMarkets.Count);
+        await Assert.That(expectedMarkets.Except(marketResults.Data.Items).Any()).IsFalse();
+        await Assert.That(marketResults.Data.Items.Count).IsEqualTo(expectedMarkets.Count);
 
         // Pair up all the Markets/Prices, Group them by ItemId, and sort each Group by the Market comparer
         // Then pull out the first value from each group, which should be the price from the best market for each ItemId
@@ -1077,8 +1082,8 @@ public sealed class MergeManyChangeSetsCacheSourceCompareFixture : IDisposable
             .ToList();
 
         // These should be subsets of each other
-        expectedPrices.Should().BeSubsetOf(priceResults.Data.Items);
-        priceResults.Data.Items.Count.Should().Be(expectedPrices.Count);
+        await Assert.That(expectedPrices.Except(priceResults.Data.Items).Any()).IsFalse();
+        await Assert.That(priceResults.Data.Items.Count).IsEqualTo(expectedPrices.Count);
     }
 
     private void DisposeMarkets()

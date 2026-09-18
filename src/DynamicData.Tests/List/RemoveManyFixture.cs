@@ -6,30 +6,30 @@ public class RemoveManyFixture
 
     public RemoveManyFixture() => _list = new List<int>();
 
-    [Fact]
-    public void DoesNotRemoveDuplicates()
+    [Test]
+    public async Task DoesNotRemoveDuplicates()
     {
         _list.AddRange(new[] { 1, 1, 1, 5, 6, 7 });
         _list.RemoveMany(new[] { 1, 1, 7 });
-        _list.Should().BeEquivalentTo(new[] { 1, 5, 6 });
+        await Assert.That(_list).IsEquivalentTo(new[] { 1, 5, 6 });
     }
 
-    [Fact]
-    public void RemoveLargeBatch()
+    [Test]
+    public async Task RemoveLargeBatch()
     {
         var toAdd = Enumerable.Range(1, 10000).ToArray();
         _list.AddRange(toAdd);
 
         var toRemove = _list.Take(_list.Count / 2).OrderBy(x => Guid.NewGuid()).ToArray();
         _list.RemoveMany(toRemove);
-        _list.Should().BeEquivalentTo(toAdd.Except(toRemove));
+        await Assert.That(_list).IsEquivalentTo(toAdd.Except(toRemove));
     }
 
-    [Fact]
-    public void RemoveManyWillRemoveARange()
+    [Test]
+    public async Task RemoveManyWillRemoveARange()
     {
         _list.AddRange(Enumerable.Range(1, 10));
         _list.RemoveMany(Enumerable.Range(2, 8));
-        _list.Should().BeEquivalentTo(new[] { 1, 10 });
+        await Assert.That(_list).IsEquivalentTo(new[] { 1, 10 });
     }
 }

@@ -163,13 +163,13 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
                 var transformed = _source.Transform(
                     t =>
                     {
-                        var locker = InternalEx.NewLock();
+                        var locker = InternalEx.NewMonitorGate();
                         var collection = manySelector(t);
                         var changes = childChanges(t).Synchronize(locker).Skip(1);
                         return new ManyContainer(collection, changes);
                     }).Publish();
 
-                var outerLock = new Lock();
+                var outerLock = InternalEx.NewMonitorGate();
                 var initial = transformed.Synchronize(outerLock).Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer)));
 
                 var subsequent = transformed.MergeMany(x => x.Changes).Synchronize(outerLock);
@@ -195,12 +195,12 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
     }
     // make this an instance
 
-/// <summary>
-/// Provides members for the DestinationEnumerator class.
-/// </summary>
-/// <param name="changes">The changes value.</param>
-/// <param name="equalityComparer">The equalityComparer value.</param>
-private sealed class DestinationEnumerator(IChangeSet<ManyContainer> changes, IEqualityComparer<TDestination> equalityComparer) : IEnumerable<Change<TDestination>>
+    /// <summary>
+    /// Provides members for the DestinationEnumerator class.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    /// <param name="equalityComparer">The equalityComparer value.</param>
+    private sealed class DestinationEnumerator(IChangeSet<ManyContainer> changes, IEqualityComparer<TDestination> equalityComparer) : IEnumerable<Change<TDestination>>
     {
         /// <summary>
         /// Executes the GetEnumerator operation.
@@ -280,12 +280,12 @@ private sealed class DestinationEnumerator(IChangeSet<ManyContainer> changes, IE
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-/// <summary>
-/// Provides members for the ManyContainer class.
-/// </summary>
-/// <param name="destination">The destination value.</param>
-/// <param name="changes">The changes value.</param>
-private sealed class ManyContainer(IEnumerable<TDestination> destination, IObservable<IChangeSet<TDestination>>? changes = null)
+    /// <summary>
+    /// Provides members for the ManyContainer class.
+    /// </summary>
+    /// <param name="destination">The destination value.</param>
+    /// <param name="changes">The changes value.</param>
+    private sealed class ManyContainer(IEnumerable<TDestination> destination, IObservable<IChangeSet<TDestination>>? changes = null)
     {
         /// <summary>
         /// Gets the Changes value.
@@ -298,12 +298,12 @@ private sealed class ManyContainer(IEnumerable<TDestination> destination, IObser
         public IEnumerable<TDestination> Destination { get; } = destination;
     }
 
-/// <summary>
-/// Provides members for the ManySelectorFunc class.
-/// </summary>
-/// <param name="source">The source value.</param>
-/// <param name="selector">The selector value.</param>
-private sealed class ManySelectorFunc(TSource source, Func<TSource, IEnumerable<TDestination>> selector) : IEnumerable<TDestination>
+    /// <summary>
+    /// Provides members for the ManySelectorFunc class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="selector">The selector value.</param>
+    private sealed class ManySelectorFunc(TSource source, Func<TSource, IEnumerable<TDestination>> selector) : IEnumerable<TDestination>
     {
         /// <summary>
         /// The _selector field.

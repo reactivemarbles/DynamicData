@@ -2,7 +2,11 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 
 namespace DynamicData.Tests.Binding;
 
@@ -11,12 +15,12 @@ namespace DynamicData.Tests.Binding;
 /// Each test forces concurrency between the operator's subscribe call (or chain re-walk) and one or more
 /// <see cref="INotifyPropertyChanged.PropertyChanged"/> notifiers firing on other threads.
 /// </summary>
-[Collection(IntegrationTestFixtureBase.CollectionName)]
+[NotInParallel]
 public sealed class WhenPropertyChangedRaceFixture
 {
     private static readonly TimeSpan ConditionTimeout = TimeSpan.FromSeconds(30);
 
-    [Fact]
+    [Test]
     public async Task Shallow_ConcurrentMutationDuringInitialEmit_NotDropped()
     {
         var item = new Item()
@@ -29,8 +33,8 @@ public sealed class WhenPropertyChangedRaceFixture
         var whenValueChanged = new ManualResetEventSlim();
 
         var source = item.WhenPropertyChanged(
-            propertyAccessor:       static item => item.Value,
-            notifyOnInitialValue:   true);
+            propertyAccessor: static item => item.Value,
+            notifyOnInitialValue: true);
 
         var observedValues = new List<int>();
         var observer = Observer.Create<PropertyValue<Item, int>>(propertyValue =>
@@ -55,13 +59,12 @@ public sealed class WhenPropertyChangedRaceFixture
                 whenValueChanged.Set();
             }));
 
-        observedValues.Should().BeEquivalentTo(
-            expectation:    new [] { 10, 20 },
-            config:         options => options.WithStrictOrdering(),
-            because:        "All change events occurring after publication of the initial value should be captured and forwarded.");
+        await Assert.That(observedValues).IsEquivalentTo(
+            new[] { 10, 20 },
+            TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("All change events occurring after publication of the initial value should be captured and forwarded.");
     }
 
-    [Fact]
+    [Test]
     public async Task DeepChain_ConcurrentLeafMutationDuringInitialEmit_NotDropped()
     {
         // Deep-chain version of the above. The observer blocks inside its OnNext for the initial
@@ -93,10 +96,10 @@ public sealed class WhenPropertyChangedRaceFixture
                 whenValueChanged.Set();
             })).WaitAsync(ConditionTimeout);
 
-        emissions.Should().Equal(new[] { 10, 20 });
+        await Assert.That(emissions).IsEquivalentTo(new[] { 10, 20 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
+    [Test]
     public async Task DeepChain_ConcurrentParentSwap_LeafEventOnWinnerNotDropped()
     {
         // Two threads concurrently swap parent.Child. After both swaps complete, a leaf mutation
@@ -141,10 +144,10 @@ public sealed class WhenPropertyChangedRaceFixture
             }
         }
 
-        losses.Should().Be(0, $"out of {iterations} iterations, {losses} dropped the leaf event on the post-swap winner");
+        await Assert.That(losses).IsEqualTo(0).Because($"out of {iterations} iterations, {losses} dropped the leaf event on the post-swap winner");
     }
 
-    [Fact]
+    [Test]
     public async Task DeepChain_FiveLevels_AllLevelsMutatedConcurrently_FinalEmissionMatchesActual()
     {
         // Torture: five worker threads each mutating at a different level of a 5-level chain.
@@ -238,25 +241,29 @@ public sealed class WhenPropertyChangedRaceFixture
                 legal.Add(iterSeed + 40_000 + i);
             }
 
+            List<int> emissionsSnapshot;
+
             lock (emissions)
             {
-                emissions.Should().NotBeEmpty($"iter {iter}: notifyOnInitialValue=true requires at least the initial emission");
-                emissions[0].Should().Be(0, $"iter {iter}: first emission must be the initial value");
+                emissionsSnapshot = emissions.ToList();
 
-                var illegal = emissions.Where(v => !legal.Contains(v)).ToList();
-                illegal.Should().BeEmpty($"iter {iter}: every emission must be a value some thread wrote; saw {string.Join(",", illegal.Take(5))}");
-
-                if (emissions.Count == 0 || emissions[^1] != actualFinal)
+                if (emissionsSnapshot.Count == 0 || emissionsSnapshot[^1] != actualFinal)
                 {
                     mismatches++;
                 }
             }
+
+            await Assert.That(emissionsSnapshot).IsNotEmpty();
+            await Assert.That(emissionsSnapshot[0]).IsEqualTo(0).Because($"iter {iter}: first emission must be the initial value");
+
+            var illegal = emissionsSnapshot.Where(v => !legal.Contains(v)).ToList();
+            await Assert.That(illegal).IsEmpty();
         }
 
-        mismatches.Should().Be(0, $"out of {iterations} iterations, {mismatches} ended with the last emission not matching the actual final chain leaf");
+        await Assert.That(mismatches).IsEqualTo(0).Because($"out of {iterations} iterations, {mismatches} ended with the last emission not matching the actual final chain leaf");
     }
 
-    [Fact(Skip = "AutoRefresh has a separate concurrency bug; tracked separately")]
+    [Test]
     public async Task AutoRefreshThenFilter_ConcurrentAddsAndPropertyActivation_AllItemsObserved()
     {
         // One adder thread sequentially adds items to the cache while a single flipper thread
@@ -305,12 +312,12 @@ public sealed class WhenPropertyChangedRaceFixture
             WaitForCondition(() => results.Data.Keys.ToHashSet().SetEquals(expected));
 
             var actual = results.Data.Keys.ToHashSet();
-            actual.Should().BeEquivalentTo(expected, $"iter {iter}: every item ends Activated=true and must appear in the filter (missing: {string.Join(",", expected.Except(actual))})");
-            results.Error.Should().BeNull($"iter {iter}: pipeline must not error");
+            await Assert.That(actual).IsEquivalentTo(expected).Because($"iter {iter}: every item ends Activated=true and must appear in the filter (missing: {string.Join(",", expected.Except(actual))})");
+            await Assert.That(results.Error).IsNull();
         }
     }
 
-    [Fact(Skip = "AutoRefresh has a separate concurrency bug; tracked separately")]
+    [Test]
     public async Task AutoRefreshThenFilter_DualSubscribers_AllItemsObserved()
     {
         // Two independent cache subscribers running on the ThreadPool:
@@ -355,8 +362,8 @@ public sealed class WhenPropertyChangedRaceFixture
             WaitForCondition(() => results.Data.Keys.ToHashSet().SetEquals(expected));
 
             var actual = results.Data.Keys.ToHashSet();
-            actual.Should().BeEquivalentTo(expected, $"iter {iter}: every item was flipped to Activated=true by the mutator and must appear in the filter (missing: {string.Join(",", expected.Except(actual))})");
-            results.Error.Should().BeNull($"iter {iter}: pipeline must not error");
+            await Assert.That(actual).IsEquivalentTo(expected).Because($"iter {iter}: every item was flipped to Activated=true by the mutator and must appear in the filter (missing: {string.Join(",", expected.Except(actual))})");
+            await Assert.That(results.Error).IsNull();
         }
     }
 

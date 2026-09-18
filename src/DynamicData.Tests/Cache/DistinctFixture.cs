@@ -14,8 +14,8 @@ public class DistinctFixture : IDisposable
         _results = _source.Connect().DistinctValues(p => p.Age).AsAggregator();
     }
 
-    [Fact]
-    public void BreakWithLoadsOfUpdates()
+    [Test]
+    public async Task BreakWithLoadsOfUpdates()
     {
         _source.Edit(
             updater =>
@@ -29,12 +29,12 @@ public class DistinctFixture : IDisposable
                 updater.AddOrUpdate(new Person("Person4", 14));
             });
 
-        _results.Data.Items.Should().BeEquivalentTo(new[] { 1, 12, 13, 14 });
+        await Assert.That(_results.Data.Items).IsEquivalentTo(new[] { 1, 12, 13, 14 });
 
         //This previously threw
         _source.Remove(new Person("Person3", 13));
 
-        _results.Data.Items.Should().BeEquivalentTo(new[] { 1, 12, 14 });
+        await Assert.That(_results.Data.Items).IsEquivalentTo(new[] { 1, 12, 14 });
     }
 
     public void Dispose()
@@ -43,8 +43,8 @@ public class DistinctFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void DuplicatedResultsResultInNoAdditionalMessage()
+    [Test]
+    public async Task DuplicatedResultsResultInNoAdditionalMessage()
     {
         _source.Edit(
             updater =>
@@ -54,13 +54,13 @@ public class DistinctFixture : IDisposable
                 updater.AddOrUpdate(new Person("Person1", 20));
             });
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 update message");
-        _results.Data.Count.Should().Be(1, "Should be 1 items in the cache");
-        _results.Data.Items[0].Should().Be(20, "Should 20");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 update message");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 items in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(20).Because("Should 20");
     }
 
-    [Fact]
-    public void DuplicateKeysRefreshAfterRemove()
+    [Test]
+    public async Task DuplicateKeysRefreshAfterRemove()
     {
         var source1 = new SourceCache<Person, string>(p => p.Name);
         var source2 = new SourceCache<Person, string>(p => p.Name);
@@ -74,27 +74,27 @@ public class DistinctFixture : IDisposable
         source2.Remove(person);
         source1.Refresh(person); // would previously throw KeyNotFoundException here
 
-        results.Messages.Should().HaveCount(1);
-        results.Data.Items.Should().BeEquivalentTo(new[] { 12 });
+        await Assert.That(results.Messages).HasCount(1);
+        await Assert.That(results.Data.Items).IsEquivalentTo(new[] { 12 });
 
         source1.Remove(person);
 
-        results.Messages.Should().HaveCount(2);
-        results.Data.Items.Should().BeEmpty();
+        await Assert.That(results.Messages).HasCount(2);
+        await Assert.That(results.Data.Items).IsEmpty();
     }
 
-    [Fact]
-    public void FiresAddWhenaNewItemIsAdded()
+    [Test]
+    public async Task FiresAddWhenaNewItemIsAdded()
     {
         _source.AddOrUpdate(new Person("Person1", 20));
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].Should().Be(20, "Should 20");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(20).Because("Should 20");
     }
 
-    [Fact]
-    public void FiresBatchResultOnce()
+    [Test]
+    public async Task FiresBatchResultOnce()
     {
         _source.Edit(
             updater =>
@@ -104,22 +104,22 @@ public class DistinctFixture : IDisposable
                 updater.AddOrUpdate(new Person("Person3", 22));
             });
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(3, "Should be 3 items in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(3).Because("Should be 3 items in the cache");
 
-        _results.Data.Items.Should().BeEquivalentTo(new[] { 20, 21, 22 });
-        _results.Data.Items[0].Should().Be(20, "Should 20");
+        await Assert.That(_results.Data.Items).IsEquivalentTo(new[] { 20, 21, 22 });
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(20).Because("Should 20");
     }
 
-    [Fact]
-    public void RemovingAnItemRemovesTheDistinct()
+    [Test]
+    public async Task RemovingAnItemRemovesTheDistinct()
     {
         _source.AddOrUpdate(new Person("Person1", 20));
         _source.Remove(new Person("Person1", 20));
-        _results.Messages.Count.Should().Be(2, "Should be 1 update message");
-        _results.Data.Count.Should().Be(0, "Should be 1 items in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 1 update message");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be 1 items in the cache");
 
-        _results.Messages.First().Adds.Should().Be(1, "First message should be an add");
-        _results.Messages.Skip(1).First().Removes.Should().Be(1, "Second messsage should be a remove");
+        await Assert.That(_results.Messages.First().Adds).IsEqualTo(1).Because("First message should be an add");
+        await Assert.That(_results.Messages.Skip(1).First().Removes).IsEqualTo(1).Because("Second messsage should be a remove");
     }
 }

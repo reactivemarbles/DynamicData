@@ -10,8 +10,8 @@ public class SharedDeliveryQueueFixture
 {
     private readonly Lock _gate = new();
 
-    [Fact]
-    public void SingleSourceDeliversItems()
+    [Test]
+    public async Task SingleSourceDeliversItems()
     {
         var queue = new SharedDeliveryQueue(_gate);
         var delivered = new List<int>();
@@ -25,11 +25,11 @@ public class SharedDeliveryQueueFixture
             scope.EnqueueNext(3);
         }
 
-        delivered.Should().Equal(1, 2, 3);
+        await Assert.That(delivered).IsEquivalentTo(new[] { 1, 2, 3 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void MultipleSourcesSerializeDelivery()
+    [Test]
+    public async Task MultipleSourcesSerializeDelivery()
     {
         var queue = new SharedDeliveryQueue(_gate);
         var delivered = new List<string>();
@@ -48,11 +48,11 @@ public class SharedDeliveryQueueFixture
             scope2.EnqueueNext("hello");
         }
 
-        delivered.Should().Equal("int:1", "str:hello");
+        await Assert.That(delivered).IsEquivalentTo(new[] { "int:1", "str:hello" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void ErrorTerminatesAllSubQueues()
+    [Test]
+    public async Task ErrorTerminatesAllSubQueues()
     {
         var queue = new SharedDeliveryQueue(_gate);
         var delivered1 = new List<int>();
@@ -68,7 +68,7 @@ public class SharedDeliveryQueueFixture
             scope1.EnqueueError(new InvalidOperationException("boom"));
         }
 
-        queue.IsTerminated.Should().BeTrue();
+        await Assert.That(queue.IsTerminated).IsTrue();
 
         // Further enqueues should be ignored
         using (var scope2 = sub2.AcquireLock())
@@ -76,13 +76,13 @@ public class SharedDeliveryQueueFixture
             scope2.EnqueueNext("ignored");
         }
 
-        delivered1.Should().Equal(1);
-        obs1.Error.Should().NotBeNull();
-        delivered2.Should().BeEmpty();
+        await Assert.That(delivered1).IsEquivalentTo(new[] { 1 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(obs1.Error).IsNotNull();
+        await Assert.That(delivered2).IsEmpty();
     }
 
-    [Fact]
-    public void CompletionDoesNotTerminateParent()
+    [Test]
+    public async Task CompletionDoesNotTerminateParent()
     {
         var queue = new SharedDeliveryQueue(_gate);
         var delivered1 = new List<int>();
@@ -98,8 +98,8 @@ public class SharedDeliveryQueueFixture
             scope1.EnqueueCompleted();
         }
 
-        queue.IsTerminated.Should().BeFalse("completion of one sub-queue should not terminate parent");
-        obs1.IsCompleted.Should().BeTrue();
+        await Assert.That(queue.IsTerminated).IsFalse();
+        await Assert.That(obs1.IsCompleted).IsTrue();
 
         // Other sub-queue should still work
         using (var scope2 = sub2.AcquireLock())
@@ -107,11 +107,11 @@ public class SharedDeliveryQueueFixture
             scope2.EnqueueNext("still alive");
         }
 
-        delivered2.Should().Equal("still alive");
+        await Assert.That(delivered2).IsEquivalentTo(new[] { "still alive" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void DisposeTerminatesAndWaits()
+    [Test]
+    public async Task DisposeTerminatesAndWaits()
     {
         var queue = new SharedDeliveryQueue(_gate);
         var observer = new TestObserver<int>(_ => { });
@@ -124,10 +124,10 @@ public class SharedDeliveryQueueFixture
 
         queue.Dispose();
 
-        queue.IsTerminated.Should().BeTrue();
+        await Assert.That(queue.IsTerminated).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task ConcurrentMultiSourceDelivery()
     {
         const int threadCount = 4;
@@ -152,18 +152,18 @@ public class SharedDeliveryQueueFixture
 
         await Task.WhenAll(tasks);
 
-        delivered.Count.Should().Be(threadCount * itemsPerThread);
+        await Assert.That(delivered.Count).IsEqualTo(threadCount * itemsPerThread);
 
         // Each thread's items should all be present
         for (var t = 0; t < threadCount; t++)
         {
             var threadItems = delivered.Where(s => s.StartsWith($"{t}:")).Count();
-            threadItems.Should().Be(itemsPerThread);
+            await Assert.That(threadItems).IsEqualTo(itemsPerThread);
         }
     }
 
-    [Fact]
-    public void ReceiptOrderIsPreservedAcrossSubQueues()
+    [Test]
+    public async Task ReceiptOrderIsPreservedAcrossSubQueues()
     {
         var queue = new SharedDeliveryQueue(_gate);
         var delivered = new List<string>();
@@ -209,11 +209,11 @@ public class SharedDeliveryQueueFixture
         blockFirst.Set();
         drainer.Wait(TimeSpan.FromSeconds(5));
 
-        delivered.Should().Equal(new[] { "int:1", "int:2", "str:hello" }, "delivery should follow the order the notifications were received, not the order the sub-queues were created");
+        await Assert.That(delivered).IsEquivalentTo(new[] { "int:1", "int:2", "str:hello" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void InterleavedSubQueuesDeliverInReceiptOrder()
+    [Test]
+    public async Task InterleavedSubQueuesDeliverInReceiptOrder()
     {
         var queue = new SharedDeliveryQueue(_gate);
         var delivered = new List<string>();
@@ -267,11 +267,11 @@ public class SharedDeliveryQueueFixture
         block.Set();
         drainer.Wait(TimeSpan.FromSeconds(5));
 
-        delivered.Should().Equal("int:0", "str:a", "int:2", "str:b", "int:4");
+        await Assert.That(delivered).IsEquivalentTo(new[] { "int:0", "str:a", "int:2", "str:b", "int:4" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void DisposedSubQueueDoesNotDeliverQueuedItems()
+    [Test]
+    public async Task DisposedSubQueueDoesNotDeliverQueuedItems()
     {
         var queue = new SharedDeliveryQueue(_gate);
         var delivered = new List<string>();
@@ -312,7 +312,7 @@ public class SharedDeliveryQueueFixture
         block.Set();
         drainer.Wait(TimeSpan.FromSeconds(5));
 
-        delivered.Should().Equal(new[] { "int:0" }, "a disposed sub-queue should not deliver what it had queued");
+        await Assert.That(delivered).IsEquivalentTo(new[] { "int:0" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
     private sealed class TestObserver<T>(Action<T> onNext) : IObserver<T>

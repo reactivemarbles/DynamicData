@@ -14,8 +14,8 @@ public class SourceCacheFixture : IDisposable
         _results = _source.Connect().AsAggregator();
     }
 
-    [Fact]
-    public void CanHandleABatchOfUpdates()
+    [Test]
+    public async Task CanHandleABatchOfUpdates()
     {
         _source.Edit(
             updater =>
@@ -31,18 +31,18 @@ public class SourceCacheFixture : IDisposable
                 updater.Refresh(torequery);
             });
 
-        _results.Summary.Overall.Count.Should().Be(6, "Should be  6 up`dates");
-        _results.Messages.Count.Should().Be(1, "Should be 1 message");
-        _results.Messages[0].Adds.Should().Be(1, "Should be 1 update");
-        _results.Messages[0].Updates.Should().Be(3, "Should be 3 updates");
-        _results.Messages[0].Removes.Should().Be(1, "Should be  1 remove");
-        _results.Messages[0].Refreshes.Should().Be(1, "Should be 1 evaluate");
+        await Assert.That(_results.Summary.Overall.Count).IsEqualTo(6).Because("Should be  6 up`dates");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 message");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(1).Because("Should be 1 update");
+        await Assert.That(_results.Messages[0].Updates).IsEqualTo(3).Because("Should be 3 updates");
+        await Assert.That(_results.Messages[0].Removes).IsEqualTo(1).Because("Should be  1 remove");
+        await Assert.That(_results.Messages[0].Refreshes).IsEqualTo(1).Because("Should be 1 evaluate");
 
-        _results.Data.Count.Should().Be(0, "Should be 1 item in` the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be 1 item in` the cache");
     }
 
-    [Fact]
-    public void CountChanged()
+    [Test]
+    public async Task CountChanged()
     {
         var count = 0;
         var invoked = 0;
@@ -53,39 +53,39 @@ public class SourceCacheFixture : IDisposable
                        invoked++;
                    }))
         {
-            invoked.Should().Be(1);
-            count.Should().Be(0);
+            await Assert.That(invoked).IsEqualTo(1);
+            await Assert.That(count).IsEqualTo(0);
 
             _source.AddOrUpdate(new RandomPersonGenerator().Take(100));
-            invoked.Should().Be(2);
-            count.Should().Be(100);
+            await Assert.That(invoked).IsEqualTo(2);
+            await Assert.That(count).IsEqualTo(100);
 
             _source.Clear();
-            invoked.Should().Be(3);
-            count.Should().Be(0);
+            await Assert.That(invoked).IsEqualTo(3);
+            await Assert.That(count).IsEqualTo(0);
         }
     }
 
-    [Fact]
-    public void CountChangedShouldAlwaysInvokeUponeSubscription()
+    [Test]
+    public async Task CountChangedShouldAlwaysInvokeUponeSubscription()
     {
         int? result = null;
         var subscription = _source.CountChanged.Subscribe(count => result = count);
 
-        result.HasValue.Should().BeTrue();
+        await Assert.That(result.HasValue).IsTrue();
 
         if (result is null)
         {
             throw new InvalidOperationException(nameof(result));
         }
 
-        result.Value.Should().Be(0, "Count should be zero");
+        await Assert.That(result.Value).IsEqualTo(0).Because("Count should be zero");
 
         subscription.Dispose();
     }
 
-    [Fact]
-    public void CountChangedShouldReflectContentsOfCacheInvokeUponSubscription()
+    [Test]
+    public async Task CountChangedShouldReflectContentsOfCacheInvokeUponSubscription()
     {
         var generator = new RandomPersonGenerator();
         int? result = null;
@@ -98,8 +98,8 @@ public class SourceCacheFixture : IDisposable
             throw new InvalidOperationException(nameof(result));
         }
 
-        result.HasValue.Should().BeTrue();
-        result.Value.Should().Be(100, "Count should be 100");
+        await Assert.That(result.HasValue).IsTrue();
+        await Assert.That(result.Value).IsEqualTo(100).Because("Count should be 100");
         subscription.Dispose();
     }
 
@@ -109,8 +109,8 @@ public class SourceCacheFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void SubscribesDisposesCorrectly()
+    [Test]
+    public async Task SubscribesDisposesCorrectly()
     {
         var called = false;
         var errored = false;
@@ -121,62 +121,62 @@ public class SourceCacheFixture : IDisposable
         subscription.Dispose();
         _source.Dispose();
 
-        errored.Should().BeFalse();
-        called.Should().BeTrue();
-        completed.Should().BeTrue();
+        await Assert.That(errored).IsFalse();
+        await Assert.That(called).IsTrue();
+        await Assert.That(completed).IsTrue();
     }
 
-    [Fact]
-    public void EmptyChanges()
+    [Test]
+    public async Task EmptyChanges()
     {
         IChangeSet<Person, string>? change = null;
 
         using var subscription = _source.Connect(suppressEmptyChangeSets: false)
-            .Subscribe(c=> change = c);
+            .Subscribe(c => change = c);
 
-        change.Should().NotBeNull();
-        change!.Count.Should().Be(0);
+        await Assert.That(change).IsNotNull();
+        await Assert.That(change!.Count).IsEqualTo(0);
 
     }
 
-    [Fact]
-    public void EmptyChangesWithFilter()
+    [Test]
+    public async Task EmptyChangesWithFilter()
     {
         IChangeSet<Person, string>? change = null;
 
-        using var subscription = _source.Connect(p=>p.Age == 20, suppressEmptyChangeSets: false)
+        using var subscription = _source.Connect(p => p.Age == 20, suppressEmptyChangeSets: false)
             .Subscribe(c => change = c);
 
-        change.Should().NotBeNull();
-        change!.Count.Should().Be(0);
+        await Assert.That(change).IsNotNull();
+        await Assert.That(change!.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void StaticFilterRemove()
+    [Test]
+    public async Task StaticFilterRemove()
     {
         var cache = new SourceCache<SomeObject, int>(x => x.Id);
-        
+
         var above5 = cache.Connect(x => x.Value > 5).AsObservableCache();
         var below5 = cache.Connect(x => x.Value <= 5).AsObservableCache();
 
-        cache.AddOrUpdate(Enumerable.Range(1,10).Select(i=> new SomeObject(i,i)));
+        cache.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new SomeObject(i, i)));
 
-        above5.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5).Select(i => new SomeObject(i, i)));
-        below5.Items.Should().BeEquivalentTo(Enumerable.Range(1, 5).Select(i => new SomeObject(i, i)));
+        await Assert.That(above5.Items).IsEquivalentTo(Enumerable.Range(6, 5).Select(i => new SomeObject(i, i)));
+        await Assert.That(below5.Items).IsEquivalentTo(Enumerable.Range(1, 5).Select(i => new SomeObject(i, i)));
 
         //should move from above 5 to below 5
-        cache.AddOrUpdate(new SomeObject(6,-1));
+        cache.AddOrUpdate(new SomeObject(6, -1));
 
-        above5.Count.Should().Be(4);
-        below5.Count.Should().Be(6);
+        await Assert.That(above5.Count).IsEqualTo(4);
+        await Assert.That(below5.Count).IsEqualTo(6);
 
-        above5.Items.Should().BeEquivalentTo(Enumerable.Range(7, 4).Select(i => new SomeObject(i, i)));
-        below5.Items.Should().BeEquivalentTo(Enumerable.Range(1, 6).Select(i => new SomeObject(i, i == 6 ? -1 : i)));
+        await Assert.That(above5.Items).IsEquivalentTo(Enumerable.Range(7, 4).Select(i => new SomeObject(i, i)));
+        await Assert.That(below5.Items).IsEquivalentTo(Enumerable.Range(1, 6).Select(i => new SomeObject(i, i == 6 ? -1 : i)));
     }
 
     public record class SomeObject(int Id, int Value);
 
-    [Fact]
+    [Test]
     public async Task MultiCacheFanInDoesNotDeadlock()
     {
         const int itemCount = 100;
@@ -207,13 +207,13 @@ public class SourceCacheFixture : IDisposable
         var completed = Task.WhenAll(taskA, taskB);
         var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(10)));
 
-        finished.Should().BeSameAs(completed, "concurrent edits with cross-cache subscribers should not deadlock");
-        results.Error.Should().BeNull();
-        results.Data.Count.Should().Be(itemCount * 2, "all items from both caches should arrive in the destination");
-        results.Data.Items.Should().BeEquivalentTo([.. cacheA.Items, .. cacheB.Items], "all items should be in the destination");
+        await Assert.That(finished).IsSameReferenceAs(completed).Because("concurrent edits with cross-cache subscribers should not deadlock");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.Data.Count).IsEqualTo(itemCount * 2).Because("all items from both caches should arrive in the destination");
+        await Assert.That(results.Data.Items).IsEquivalentTo([.. cacheA.Items, .. cacheB.Items]).Because("all items should be in the destination");
     }
 
-    [Fact]
+    [Test]
     public async Task DirectCrossWriteDoesNotDeadlock()
     {
         const int iterations = 50;
@@ -258,84 +258,63 @@ public class SourceCacheFixture : IDisposable
             var completed = Task.WhenAll(taskA, taskB);
             var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(60)));
 
-            finished.Should().BeSameAs(completed, $"iteration {iter}: bidirectional cross-cache writes should not deadlock");
+            await Assert.That(finished).IsSameReferenceAs(completed).Because($"iteration {iter}: bidirectional cross-cache writes should not deadlock");
         }
     }
 
-    [Fact]
-    public void ConnectDuringDeliveryDoesNotDuplicate()
+    [Test]
+    public async Task ConnectDuringDeliveryDoesNotDuplicate()
     {
-        // Exploits the dequeue-to-OnNext window. Thread A writes two items in
-        // separate batches. The first delivery is held by a slow subscriber.
-        // While item1 delivery is blocked, item2 is committed to ReaderWriter
-        // and sitting in the queue. Thread B calls Connect(), takes a snapshot
-        // (sees both items), subscribes to _changes, then item2 is delivered
-        // via OnNext — producing a duplicate if not guarded by a generation counter.
-        using var cache = new SourceCache<TestItem, string>(static x => x.Key);
-
-        using var delivering = new ManualResetEventSlim(false);
-        using var item2Written = new ManualResetEventSlim(false);
+        using var cache = new SourceCache<TestItem, string>(static item => item.Key);
+        var delivering = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         using var connectDone = new ManualResetEventSlim(false);
-
         var firstDelivery = true;
-
-        // First subscriber: blocks on the first delivery to create the window
-        using var slowSub = cache.Connect().Subscribe(_ =>
+        using var slowSubscription = cache.Connect().Subscribe(_ =>
         {
-            if (firstDelivery)
+            if (!firstDelivery)
+                return;
+
+            firstDelivery = false;
+            delivering.TrySetResult();
+            if (!connectDone.Wait(TimeSpan.FromSeconds(30)))
+                throw new TimeoutException("The second subscriber did not connect during delivery.");
+        });
+
+        // This writer intentionally blocks inside OnNext. Give it its own thread
+        // so it cannot starve the pool that runs the test's async continuations.
+        var firstWrite = Task.Factory.StartNew(
+            () => cache.AddOrUpdate(new TestItem("k1", "v1")),
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
+        try
+        {
+            await delivering.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            await Task.Run(() => cache.AddOrUpdate(new TestItem("k2", "v2")))
+                .WaitAsync(TimeSpan.FromSeconds(15));
+
+            // Both writes are committed, but the second delivery is still queued.
+            var addCounts = new Dictionary<string, int>();
+            using var newSubscription = cache.Connect().Subscribe(changes =>
             {
-                firstDelivery = false;
-                delivering.Set();
-
-                // Wait until item2 has been written and the Connect has subscribed
-                connectDone.Wait(TimeSpan.FromSeconds(5));
-            }
-        });
-
-        // Write item1 on a background thread — delivery starts, slow subscriber blocks
-        var writeTask = Task.Run(() =>
-        {
-            cache.AddOrUpdate(new TestItem("k1", "v1"));
-        });
-
-        // Wait for delivery of item1 to be in progress (slow sub is blocking)
-        delivering.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("delivery should have started");
-
-        // Now write item2 on another thread. It will acquire the lock, commit to
-        // ReaderWriter, enqueue a notification, and return. The notification sits
-        // in the queue because the deliverer (Thread A) is blocked by the slow sub.
-        var writeTask2 = Task.Run(() =>
-        {
-            cache.AddOrUpdate(new TestItem("k2", "v2"));
-            item2Written.Set();
-        });
-        item2Written.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("item2 should have been written");
-
-        // Now Connect on the main thread. The snapshot from ReaderWriter includes
-        // BOTH k1 and k2. The subscription to _changes is added. When the slow
-        // subscriber unblocks, item2's notification will be delivered via OnNext
-        // and the new subscriber will see k2 again — a duplicate Add.
-        var addCounts = new Dictionary<string, int>();
-        using var newSub = cache.Connect().Subscribe(changes =>
-        {
-            foreach (var c in changes)
-            {
-                if (c.Reason == ChangeReason.Add)
+                foreach (var change in changes)
                 {
-                    var key = c.Current.Key;
-                    addCounts[key] = addCounts.GetValueOrDefault(key) + 1;
+                    if (change.Reason == ChangeReason.Add)
+                        addCounts[change.Key] = addCounts.GetValueOrDefault(change.Key) + 1;
                 }
-            }
-        });
+            });
 
-        // Unblock the slow subscriber — delivery resumes, item2 delivered
-        connectDone.Set();
-        writeTask.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("writeTask should complete");
-        writeTask2.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("writeTask2 should complete");
-
-        // Each key should appear exactly once in the new subscriber's view
-        addCounts.GetValueOrDefault("k1").Should().Be(1, "k1 should appear once (snapshot only)");
-        addCounts.GetValueOrDefault("k2").Should().Be(1, "k2 should appear once, not duplicated from snapshot + queued delivery");
+            connectDone.Set();
+            await firstWrite.WaitAsync(TimeSpan.FromSeconds(15));
+            await Assert.That(addCounts.GetValueOrDefault("k1")).IsEqualTo(1);
+            await Assert.That(addCounts.GetValueOrDefault("k2")).IsEqualTo(1)
+                .Because("the queued update must not duplicate the subscription snapshot");
+        }
+        finally
+        {
+            connectDone.Set();
+            await firstWrite.WaitAsync(TimeSpan.FromSeconds(15));
+        }
     }
 
     private sealed record TestItem(string Key, string Value);

@@ -65,7 +65,7 @@ public static partial class AutoRefreshOnObservableFixture
             => _valueChanged.OnError(error);
 
         private readonly int _id;
-        private readonly Signal<int> _valueChanged;
+        private readonly ReactiveUI.Primitives.Signals.Signal<int> _valueChanged;
 
         private bool _hasDisposed;
         private int _value;

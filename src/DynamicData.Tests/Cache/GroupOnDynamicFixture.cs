@@ -1,5 +1,9 @@
 using Bogus;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
 using Person = DynamicData.Tests.Domain.Person;
 
@@ -23,8 +27,8 @@ public class GroupOnDynamicFixture : IDisposable
     private readonly GroupChangeSetAggregator<Person, string, string> _groupResults;
     private readonly Faker<Person> _faker;
     private readonly Randomizer _randomizer;
-    private readonly StateSignal<Func<Person, string, string>?> _keySelectionSubject = new (null);
-    private readonly Signal<Unit> _regroupSubject = new ();
+    private readonly ReactiveUI.Primitives.Signals.StateSignal<Func<Person, string, string>?> _keySelectionSubject = new(null);
+    private readonly ReactiveUI.Primitives.Signals.Signal<Unit> _regroupSubject = new();
 
     public GroupOnDynamicFixture()
     {
@@ -34,12 +38,12 @@ public class GroupOnDynamicFixture : IDisposable
         _groupResults = _cache.Connect().Group(KeySelectionObservable, _regroupSubject).AsAggregator();
     }
 
-    [Theory]
-    [InlineData(5)]
-    [InlineData(10)]
+    [Test]
+    [Arguments(5)]
+    [Arguments(10)]
 #if !DEBUG
-    [InlineData(200)]
-    [InlineData(500)]
+    [Arguments(200)]
+    [Arguments(500)]
 #endif
     public async Task MultiThreadedStressTest(int changeCount)
     {
@@ -93,11 +97,11 @@ public class GroupOnDynamicFixture : IDisposable
         await Task.WhenAll(taskCacheChanges, taskGrouperChanges, taskRegrouperChanges);
 
         // Verify the results
-        VerifyGroupingResults();
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultEmptyIfSelectionKeyDoesNotFire()
+    [Test]
+    public async Task ResultEmptyIfSelectionKeyDoesNotFire()
     {
         // Arrange
 
@@ -105,14 +109,14 @@ public class GroupOnDynamicFixture : IDisposable
         InitialPopulate();
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount);
-        _results.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
-        _groupResults.Messages.Count.Should().Be(0);
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount);
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("The child observables fire on subscription so everything should appear as a single changeset");
+        await Assert.That(_groupResults.Messages.Count).IsEqualTo(0);
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultContainsAllInitialChildren()
+    [Test]
+    public async Task ResultContainsAllInitialChildren()
     {
         // Arrange
         InitialPopulate();
@@ -121,14 +125,14 @@ public class GroupOnDynamicFixture : IDisposable
         GroupByFavColor();
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount);
-        _results.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
-        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().Be(1));
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount);
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("The child observables fire on subscription so everything should appear as a single changeset");
+        foreach (var group in _groupResults.Groups.Items) { await Assert.That(group.Messages.Count).IsEqualTo(1); }
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultContainsAllAddedChildren()
+    [Test]
+    public async Task ResultContainsAllAddedChildren()
     {
         // Arrange
         GroupByFavColor();
@@ -137,14 +141,14 @@ public class GroupOnDynamicFixture : IDisposable
         InitialPopulate();
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount);
-        _results.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
-        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().Be(1));
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount);
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("The child observables fire on subscription so everything should appear as a single changeset");
+        foreach (var group in _groupResults.Groups.Items) { await Assert.That(group.Messages.Count).IsEqualTo(1); }
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultContainsAddedValues()
+    [Test]
+    public async Task ResultContainsAddedValues()
     {
         // Arrange
         InitialPopulate();
@@ -154,14 +158,14 @@ public class GroupOnDynamicFixture : IDisposable
         _cache.AddOrUpdate(_faker.Generate(AddCount));
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount + AddCount);
-        _results.Messages.Count.Should().Be(2, "Initial Adds and then the subsequent Additions should each be a single message");
-        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount + AddCount);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Initial Adds and then the subsequent Additions should each be a single message");
+        foreach (var group in _groupResults.Groups.Items) { await Assert.That(group.Messages.Count).IsLessThanOrEqualTo(2); }
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultDoesNotContainRemovedValues()
+    [Test]
+    public async Task ResultDoesNotContainRemovedValues()
     {
         // Arrange
         InitialPopulate();
@@ -171,14 +175,14 @@ public class GroupOnDynamicFixture : IDisposable
         _cache.RemoveKeys(_randomizer.ListItems(_cache.Items.ToList(), RemoveCount).Select(p => p.UniqueKey));
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount - RemoveCount);
-        _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
-        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount - RemoveCount);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("1 for Adds and 1 for Removes");
+        foreach (var group in _groupResults.Groups.Items) { await Assert.That(group.Messages.Count).IsLessThanOrEqualTo(2); }
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultContainsUpdatedValues()
+    [Test]
+    public async Task ResultContainsUpdatedValues()
     {
         // Arrange
         GroupByPetType();
@@ -190,14 +194,14 @@ public class GroupOnDynamicFixture : IDisposable
         _cache.AddOrUpdate(replacements);
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount, "Only replacements were made");
-        _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Updates");
-        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount).Because("Only replacements were made");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("1 for Adds and 1 for Updates");
+        foreach (var group in _groupResults.Groups.Items) { await Assert.That(group.Messages.Count).IsLessThanOrEqualTo(2); }
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultContainsRefreshedValues()
+    [Test]
+    public async Task ResultContainsRefreshedValues()
     {
         // Arrange
         GroupByPetType();
@@ -209,13 +213,13 @@ public class GroupOnDynamicFixture : IDisposable
         _cache.Refresh(refreshList);
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount, "Only replacements were made");
-        _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Updates");
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount).Because("Only replacements were made");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("1 for Adds and 1 for Updates");
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultIsCorrectWhenGroupSelectorChanges()
+    [Test]
+    public async Task ResultIsCorrectWhenGroupSelectorChanges()
     {
         // Arrange
         InitialPopulate();
@@ -227,16 +231,16 @@ public class GroupOnDynamicFixture : IDisposable
         GroupByPetType();
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount);
-        _results.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
-        _groupResults.Summary.Overall.Adds.Should().Be(usedColorList.Count + usedPetTypeList.Count);
-        _groupResults.Summary.Overall.Removes.Should().Be(usedColorList.Count);
-        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount);
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("The child observables fire on subscription so everything should appear as a single changeset");
+        await Assert.That(_groupResults.Summary.Overall.Adds).IsEqualTo(usedColorList.Count + usedPetTypeList.Count);
+        await Assert.That(_groupResults.Summary.Overall.Removes).IsEqualTo(usedColorList.Count);
+        foreach (var group in _groupResults.Groups.Items) { await Assert.That(group.Messages.Count).IsLessThanOrEqualTo(2); }
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultIsCorrectAfterForcedRegroup()
+    [Test]
+    public async Task ResultIsCorrectAfterForcedRegroup()
     {
         // Arrange
         InitialPopulate();
@@ -247,22 +251,22 @@ public class GroupOnDynamicFixture : IDisposable
         ForceRegroup();
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount);
-        _results.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
-        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2, "1 for adds and 1 for regrouping"));
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount);
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("The child observables fire on subscription so everything should appear as a single changeset");
+        foreach (var group in _groupResults.Groups.Items) { await Assert.That(group.Messages.Count).IsLessThanOrEqualTo(2).Because("1 for adds and 1 for regrouping"); }
+        await VerifyGroupingResults();
     }
 
-    [Theory]
-    [InlineData(false, false, false)]
-    [InlineData(false, false, true)]
-    [InlineData(false, true, false)]
-    [InlineData(false, true, true)]
-    [InlineData(true, false, false)]
-    [InlineData(true, false, true)]
-    [InlineData(true, true, false)]
-    [InlineData(true, true, true)]
-    public void ResultCompletesOnlyWhenAllInputsComplete(bool completeSource, bool completeKeySelector, bool completeRegrouper)
+    [Test]
+    [Arguments(false, false, false)]
+    [Arguments(false, false, true)]
+    [Arguments(false, true, false)]
+    [Arguments(false, true, true)]
+    [Arguments(true, false, false)]
+    [Arguments(true, false, true)]
+    [Arguments(true, true, false)]
+    [Arguments(true, true, true)]
+    public async Task ResultCompletesOnlyWhenAllInputsComplete(bool completeSource, bool completeKeySelector, bool completeRegrouper)
     {
         // Arrange
         InitialPopulate();
@@ -283,12 +287,12 @@ public class GroupOnDynamicFixture : IDisposable
         }
 
         // Assert
-        _results.IsCompleted.Should().Be(completeSource);
-        _groupResults.IsCompleted.Should().Be(completeSource && completeKeySelector && completeRegrouper);
+        await Assert.That(_results.IsCompleted).IsEqualTo(completeSource);
+        await Assert.That(_groupResults.IsCompleted).IsEqualTo(completeSource && completeKeySelector && completeRegrouper);
     }
 
-    [Fact]
-    public void ResultFailsIfSourceFails()
+    [Test]
+    public async Task ResultFailsIfSourceFails()
     {
         // Arrange
         InitialPopulate();
@@ -300,11 +304,11 @@ public class GroupOnDynamicFixture : IDisposable
         _cache.Dispose();
 
         // Assert
-        results.Error.Should().Be(expectedError);
+        await Assert.That(results.Error).IsEqualTo(expectedError);
     }
 
-    [Fact]
-    public void ResultFailsIfGroupObservableFails()
+    [Test]
+    public async Task ResultFailsIfGroupObservableFails()
     {
         // Arrange
         InitialPopulate();
@@ -314,11 +318,11 @@ public class GroupOnDynamicFixture : IDisposable
         _keySelectionSubject.OnError(expectedError);
 
         // Assert
-        _groupResults.Error.Should().Be(expectedError);
+        await Assert.That(_groupResults.Error).IsEqualTo(expectedError);
     }
 
-    [Fact]
-    public void ResultFailsIfRegrouperFails()
+    [Test]
+    public async Task ResultFailsIfRegrouperFails()
     {
         // Arrange
         InitialPopulate();
@@ -328,7 +332,7 @@ public class GroupOnDynamicFixture : IDisposable
         _regroupSubject.OnError(expectedError);
 
         // Assert
-        _groupResults.Error.Should().Be(expectedError);
+        await Assert.That(_groupResults.Error).IsEqualTo(expectedError);
     }
 
     public void Dispose()
@@ -344,15 +348,15 @@ public class GroupOnDynamicFixture : IDisposable
 
     private void InitialPopulate() => _cache.AddOrUpdate(_faker.Generate(InitialCount));
 
-    private void VerifyGroupingResults() =>
+    private Task VerifyGroupingResults() =>
         VerifyGroupingResults(_cache, _results, _groupResults, _keySelectionSubject.Value);
 
-    private static void VerifyGroupingResults(ISourceCache<Person, string> cache, ChangeSetAggregator<Person, string> cacheResults, GroupChangeSetAggregator<Person, string, string> groupResults, Func<Person, string, string>? groupKeySelector)
+    private static async Task VerifyGroupingResults(ISourceCache<Person, string> cache, ChangeSetAggregator<Person, string> cacheResults, GroupChangeSetAggregator<Person, string, string> groupResults, Func<Person, string, string>? groupKeySelector)
     {
         if (groupKeySelector is null)
         {
-            groupResults.Data.Count.Should().Be(0);
-            groupResults.Groups.Count.Should().Be(0);
+            await Assert.That(groupResults.Data.Count).IsEqualTo(0);
+            await Assert.That(groupResults.Groups.Count).IsEqualTo(0);
             return;
         }
 
@@ -360,14 +364,14 @@ public class GroupOnDynamicFixture : IDisposable
         var expectedGroupings = expectedItems.GroupBy(p => groupKeySelector(p, string.Empty)).ToList();
 
         // These datasets should be equivalent
-        expectedItems.Should().BeEquivalentTo(cacheResults.Data.Items);
-        expectedGroupings.Select(g => g.Key).Should().BeEquivalentTo(groupResults.Groups.Keys);
+        await Assert.That(expectedItems).IsEquivalentTo(cacheResults.Data.Items);
+        await Assert.That(expectedGroupings.Select(g => g.Key)).IsEquivalentTo(groupResults.Groups.Keys);
 
         // Check each group
-        expectedGroupings.ForEach(grouping => grouping.Should().BeEquivalentTo(groupResults.Groups.Lookup(grouping.Key).Value.Data.Items));
+        foreach (var grouping in expectedGroupings) { await Assert.That(grouping).IsEquivalentTo(groupResults.Groups.Lookup(grouping.Key).Value.Data.Items); }
 
         // No groups should be empty
-        groupResults.Groups.Items.ForEach(group => group.Data.Count.Should().BeGreaterThan(0, "Empty groups should be removed"));
+        foreach (var group in groupResults.Groups.Items) { await Assert.That(group.Data.Count).IsGreaterThan(0).Because("Empty groups should be removed"); }
     }
 
     private void ForceRegroup() => _regroupSubject.OnNext(Unit.Default);

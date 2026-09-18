@@ -8,8 +8,8 @@ public class FromAsyncFixture
 
     public TestScheduler Scheduler { get; }
 
-    [Fact]
-    public void CanLoadFromTask()
+    [Test]
+    public async Task CanLoadFromTask()
     {
         Task<IEnumerable<Person>> Loader()
         {
@@ -20,11 +20,11 @@ public class FromAsyncFixture
 
         var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet(p => p.Key).AsObservableCache();
 
-        data.Count.Should().Be(100);
+        await Assert.That(data.Count).IsEqualTo(100);
     }
 
-    [Fact]
-    public void HandlesErrorsInObservable()
+    [Test]
+    public async Task HandlesErrorsInObservable()
     {
         Task<IEnumerable<Person>> Loader()
         {
@@ -36,11 +36,11 @@ public class FromAsyncFixture
 
         var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet(p => p.Key).Subscribe((changes) => { }, ex => error = ex);
 
-        error.Should().NotBeNull();
+        await Assert.That(error).IsNotNull();
     }
 
-    [Fact]
-    public void HandlesErrorsObservableList()
+    [Test]
+    public async Task HandlesErrorsObservableList()
     {
         Task<IEnumerable<Person>> Loader()
         {
@@ -54,8 +54,8 @@ public class FromAsyncFixture
         var data2 = Observable.FromAsync(Loader).ToObservableChangeSet(p => p.Key).AsObservableCache().Connect().Subscribe(changes => { }, ex => error = ex);
 
         //var subscribed = data.Connect()
-        //    
+        //
 
-        error.Should().NotBeNull();
+        await Assert.That(error).IsNotNull();
     }
 }

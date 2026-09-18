@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Aggregation;
+#else
 using DynamicData.Aggregation;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.AggregationTests;
@@ -7,10 +11,10 @@ public partial class SumFixture
 {
     public class ForCache
     {
-        [Theory]
-        [InlineData(1, 10)]
-        [InlineData(3, 60)]
-        public void ItemsAreAdded_SumReflectsAllItems(int itemCount, int expectedSum)
+        [Test]
+        [Arguments(1, 10)]
+        [Arguments(3, 60)]
+        public async Task ItemsAreAdded_SumReflectsAllItems(int itemCount, int expectedSum)
         {
             var ages = new[] { 10, 20, 30 };
             using var source = new TestSourceCache<Person, string>(p => p.Name);
@@ -21,9 +25,9 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().BeEmpty("no items have been added to the source");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).IsEmpty();
 
             // UUT Action
             for (var i = 0; i < itemCount; i++)
@@ -31,17 +35,17 @@ public partial class SumFixture
                 source.AddOrUpdate(new Person(((char)('A' + i)).ToString(), ages[i]));
             }
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().HaveCount(itemCount, "each AddOrUpdate should produce a new sum emission");
-            results.RecordedValues[^1].Should().Be(expectedSum, $"the sum of the first {itemCount} ages should be {expectedSum}");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).HasCount(itemCount).Because("each AddOrUpdate should produce a new sum emission");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(expectedSum).Because($"the sum of the first {itemCount} ages should be {expectedSum}");
         }
 
-        [Theory]
-        [InlineData("A", 50)]
-        [InlineData("B", 40)]
-        [InlineData("C", 30)]
-        public void ItemIsRemoved_SumReflectsRemoval(string keyToRemove, int expectedSum)
+        [Test]
+        [Arguments("A", 50)]
+        [Arguments("B", 40)]
+        [Arguments("C", 30)]
+        public async Task ItemIsRemoved_SumReflectsRemoval(string keyToRemove, int expectedSum)
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -55,22 +59,21 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().ContainSingle("one changeset was published containing all pre-existing items")
-                .Which.Should().Be(60, "the sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(await Assert.That(results.RecordedValues).HasSingleItem()).IsEqualTo(60).Because("the sum of ages 10 + 20 + 30 is 60");
 
             // UUT Action
             source.Remove(keyToRemove);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().HaveCount(2, "one additional sum value should have been emitted after the removal");
-            results.RecordedValues[^1].Should().Be(expectedSum, $"removing '{keyToRemove}' should leave a sum of {expectedSum}");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).HasCount(2).Because("one additional sum value should have been emitted after the removal");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(expectedSum).Because($"removing '{keyToRemove}' should leave a sum of {expectedSum}");
         }
 
-        [Fact]
-        public void ItemIsUpdated_SumReflectsNewValue()
+        [Test]
+        public async Task ItemIsUpdated_SumReflectsNewValue()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -83,22 +86,21 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().ContainSingle("one changeset was published containing all pre-existing items")
-                .Which.Should().Be(30, "the sum of ages 10 + 20 is 30");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(await Assert.That(results.RecordedValues).HasSingleItem()).IsEqualTo(30).Because("the sum of ages 10 + 20 is 30");
 
             // UUT Action: update "B" from age 20 to age 50 (same key, new value)
             source.AddOrUpdate(new Person("B", 50));
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().HaveCount(2, "one additional sum value should have been emitted after the update");
-            results.RecordedValues[^1].Should().Be(60, "updating 'B' from 20 to 50 should change the sum from 30 to 60");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).HasCount(2).Because("one additional sum value should have been emitted after the update");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60).Because("updating 'B' from 20 to 50 should change the sum from 30 to 60");
         }
 
-        [Fact]
-        public void MultipleChangesInBatch_SingleSumEmitted()
+        [Test]
+        public async Task MultipleChangesInBatch_SingleSumEmitted()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -108,7 +110,7 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.RecordedValues.Should().BeEmpty("no items have been added to the source");
+            await Assert.That(results.RecordedValues).IsEmpty();
 
             // UUT Action: add 3 items in a single batch
             source.Edit(updater =>
@@ -118,14 +120,13 @@ public partial class SumFixture
                 updater.AddOrUpdate(new Person("C", 30));
             });
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().ContainSingle("a batched edit should produce exactly one sum emission")
-                .Which.Should().Be(60, "the sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(await Assert.That(results.RecordedValues).HasSingleItem()).IsEqualTo(60).Because("the sum of ages 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void SourceIsEmpty_NoSumEmitted()
+        [Test]
+        public async Task SourceIsEmpty_NoSumEmitted()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -135,13 +136,13 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().BeEmpty("no items were added so no sum values should have been emitted");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).IsEmpty();
         }
 
-        [Fact]
-        public void AllItemsRemoved_SumReturnsToZero()
+        [Test]
+        public async Task AllItemsRemoved_SumReturnsToZero()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -155,20 +156,19 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.RecordedValues.Should().ContainSingle("one changeset was published containing all pre-existing items")
-                .Which.Should().Be(60, "the sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(await Assert.That(results.RecordedValues).HasSingleItem()).IsEqualTo(60).Because("the sum of ages 10 + 20 + 30 is 60");
 
             // UUT Action: remove all items in a single batch
             source.Edit(updater => updater.Clear());
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().HaveCount(2, "one additional sum value should have been emitted after clearing");
-            results.RecordedValues[^1].Should().Be(0, "all items were removed so the sum should return to zero");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).HasCount(2).Because("one additional sum value should have been emitted after clearing");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(0).Because("all items were removed so the sum should return to zero");
         }
 
-        [Fact]
-        public void SourceCompletesAfterEmitting_CompletionPropagates()
+        [Test]
+        public async Task SourceCompletesAfterEmitting_CompletionPropagates()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -180,20 +180,19 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().ContainSingle("one changeset was published containing the pre-existing item")
-                .Which.Should().Be(10, "the sum of a single age of 10 is 10");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(await Assert.That(results.RecordedValues).HasSingleItem()).IsEqualTo(10).Because("the sum of a single age of 10 is 10");
 
             // UUT Action
             source.Complete();
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeTrue("the source has completed");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsTrue();
         }
 
-        [Fact]
-        public void SourceCompletesWithoutEmitting_CompletionPropagates()
+        [Test]
+        public async Task SourceCompletesWithoutEmitting_CompletionPropagates()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -203,18 +202,18 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.RecordedValues.Should().BeEmpty("no items were added to the source");
+            await Assert.That(results.RecordedValues).IsEmpty();
 
             // UUT Action
             source.Complete();
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeTrue("the source has completed");
-            results.RecordedValues.Should().BeEmpty("no items were added so no sum values should have been emitted");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsTrue();
+            await Assert.That(results.RecordedValues).IsEmpty();
         }
 
-        [Fact]
-        public void SourceCompletesImmediately_InitialSumAndCompletionPropagate()
+        [Test]
+        public async Task SourceCompletesImmediately_InitialSumAndCompletionPropagate()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -230,14 +229,13 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeTrue("the source was already completed at the time of subscription");
-            results.RecordedValues.Should().ContainSingle("an initial sum value should still be emitted, even when the source completes immediately upon subscription")
-                .Which.Should().Be(60, "the sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsTrue();
+            await Assert.That(await Assert.That(results.RecordedValues).HasSingleItem()).IsEqualTo(60).Because("the sum of ages 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void SourceCompletesImmediatelyWithoutEmitting_CompletionPropagates()
+        [Test]
+        public async Task SourceCompletesImmediatelyWithoutEmitting_CompletionPropagates()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -249,13 +247,13 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeTrue("the source was already completed at the time of subscription");
-            results.RecordedValues.Should().BeEmpty("no items were added so no sum values should have been emitted");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsTrue();
+            await Assert.That(results.RecordedValues).IsEmpty();
         }
 
-        [Fact]
-        public void SourceErrorsAfterEmitting_ErrorPropagates()
+        [Test]
+        public async Task SourceErrorsAfterEmitting_ErrorPropagates()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -267,19 +265,19 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.RecordedValues.Should().ContainSingle("one changeset was published containing the pre-existing item");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedValues).HasSingleItem();
 
             // UUT Action
             var error = new Exception("Test error");
             source.SetError(error);
 
-            results.Error.Should().BeSameAs(error, "the error from the source should propagate to the subscriber");
-            results.HasCompleted.Should().BeFalse("an error is not a completion");
+            await Assert.That(results.Error).IsSameReferenceAs(error).Because("the error from the source should propagate to the subscriber");
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
-        [Fact]
-        public void SourceErrorsWithoutEmitting_ErrorPropagates()
+        [Test]
+        public async Task SourceErrorsWithoutEmitting_ErrorPropagates()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -289,19 +287,19 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.RecordedValues.Should().BeEmpty("no items were added to the source");
+            await Assert.That(results.RecordedValues).IsEmpty();
 
             // UUT Action
             var error = new Exception("Test error");
             source.SetError(error);
 
-            results.Error.Should().BeSameAs(error, "the error from the source should propagate to the subscriber");
-            results.HasCompleted.Should().BeFalse("an error is not a completion");
-            results.RecordedValues.Should().BeEmpty("no items were added so no sum values should have been emitted");
+            await Assert.That(results.Error).IsSameReferenceAs(error).Because("the error from the source should propagate to the subscriber");
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(results.RecordedValues).IsEmpty();
         }
 
-        [Fact]
-        public void SourceFailsImmediately_ErrorPropagates()
+        [Test]
+        public async Task SourceFailsImmediately_ErrorPropagates()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -316,12 +314,12 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeSameAs(error, "the error from the source should propagate to the subscriber immediately upon subscription");
-            results.HasCompleted.Should().BeFalse("an error is not a completion");
+            await Assert.That(results.Error).IsSameReferenceAs(error).Because("the error from the source should propagate to the subscriber immediately upon subscription");
+            await Assert.That(results.HasCompleted).IsFalse();
         }
 
-        [Fact]
-        public void NullableValuesAreTreatedAsZero()
+        [Test]
+        public async Task NullableValuesAreTreatedAsZero()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -335,19 +333,18 @@ public partial class SumFixture
                 .ValidateSynchronization()
                 .RecordValues(out var results);
 
-            results.Error.Should().BeNull("no errors should have occurred");
-            results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-            results.RecordedValues.Should().ContainSingle("one changeset was published containing all pre-existing items")
-                .Which.Should().Be(40, "null values should be treated as zero, so the sum should be 10 + 0 + 30 = 40");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.HasCompleted).IsFalse();
+            await Assert.That(await Assert.That(results.RecordedValues).HasSingleItem()).IsEqualTo(40).Because("null values should be treated as zero, so the sum should be 10 + 0 + 30 = 40");
         }
 
-        [Theory]
-        [InlineData(new[] { 10, 20, 30 }, 60)]
-        [InlineData(new[] { int.MaxValue }, int.MaxValue)]
-        [InlineData(new[] { int.MinValue }, int.MinValue)]
-        [InlineData(new[] { int.MaxValue, -1 }, int.MaxValue - 1)]
-        [InlineData(new[] { int.MinValue, 1 }, int.MinValue + 1)]
-        public void ItemsAreAdded_SumIsCorrect_ForInt(int[] ages, int expectedSum)
+        [Test]
+        [Arguments(new[] { 10, 20, 30 }, 60)]
+        [Arguments(new[] { int.MaxValue }, int.MaxValue)]
+        [Arguments(new[] { int.MinValue }, int.MinValue)]
+        [Arguments(new[] { int.MaxValue, -1 }, int.MaxValue - 1)]
+        [Arguments(new[] { int.MinValue, 1 }, int.MinValue + 1)]
+        public async Task ItemsAreAdded_SumIsCorrect_ForInt(int[] ages, int expectedSum)
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -360,11 +357,11 @@ public partial class SumFixture
                 .Sum(p => p.Age)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(expectedSum, $"the int sum of [{string.Join(", ", ages)}] is {expectedSum}");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(expectedSum).Because($"the int sum of [{string.Join(", ", ages)}] is {expectedSum}");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForNullableInt()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForNullableInt()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -376,11 +373,11 @@ public partial class SumFixture
                 .Sum(p => p.AgeNullable)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60, "the nullable int sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60).Because("the nullable int sum of ages 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForLong()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForLong()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -392,11 +389,11 @@ public partial class SumFixture
                 .Sum(p => (long)p.Age)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60L, "the long sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60L).Because("the long sum of ages 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForNullableLong()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForNullableLong()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -408,11 +405,11 @@ public partial class SumFixture
                 .Sum(p => (long?)p.Age)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60L, "the nullable long sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60L).Because("the nullable long sum of ages 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForDouble()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForDouble()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -424,11 +421,11 @@ public partial class SumFixture
                 .Sum(p => (double)p.Age)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60.0, "the double sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60.0).Because("the double sum of ages 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForNullableDouble()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForNullableDouble()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -440,11 +437,11 @@ public partial class SumFixture
                 .Sum(p => (double?)p.Age)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60.0, "the nullable double sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60.0).Because("the nullable double sum of ages 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForDecimal()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForDecimal()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -456,11 +453,11 @@ public partial class SumFixture
                 .Sum(p => (decimal)p.Age)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60M, "the decimal sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60M).Because("the decimal sum of ages 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForNullableDecimal()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForNullableDecimal()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -472,11 +469,11 @@ public partial class SumFixture
                 .Sum(p => (decimal?)p.Age)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60M, "the nullable decimal sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60M).Because("the nullable decimal sum of ages 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForFloat()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForFloat()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -488,11 +485,11 @@ public partial class SumFixture
                 .Sum(p => (float)p.Age)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60F, "the float sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60F).Because("the float sum of ages 10 + 20 + 30 is 60");
         }
 
-        [Fact]
-        public void ItemsAreAdded_SumIsCorrect_ForNullableFloat()
+        [Test]
+        public async Task ItemsAreAdded_SumIsCorrect_ForNullableFloat()
         {
             using var source = new TestSourceCache<Person, string>(p => p.Name);
 
@@ -504,7 +501,7 @@ public partial class SumFixture
                 .Sum(p => (float?)p.Age)
                 .RecordValues(out var results);
 
-            results.RecordedValues[^1].Should().Be(60F, "the nullable float sum of ages 10 + 20 + 30 is 60");
+            await Assert.That(results.RecordedValues[^1]).IsEqualTo(60F).Because("the nullable float sum of ages 10 + 20 + 30 is 60");
         }
     }
 }

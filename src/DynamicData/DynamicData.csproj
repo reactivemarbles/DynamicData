@@ -11,7 +11,7 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ReactiveUI.Primitives" Version="7.1.0" ExcludeAssets="analyzers" />
+    <PackageReference Include="ReactiveUI.Primitives" Version="8.0.0" ExcludeAssets="analyzers" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,7 +52,7 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
     <Compile Remove="**\ObservableCacheEx.*.cs" />
     <Compile Remove="Internal\ObservableEx.cs" />
     <Compile Remove="Internal\ReactiveCompatibility.cs" />
-  
+
     <Compile Include="**\ObservableCacheEx.*.cs">
       <DependentUpon>ObservableCacheEx.cs</DependentUpon>
     </Compile>

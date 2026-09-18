@@ -4,49 +4,49 @@ namespace DynamicData.Tests.Kernal;
 
 public class DistinctUpdateFixture
 {
-    [Fact]
-    public void Add()
+    [Test]
+    public async Task Add()
     {
         var person = new Person("Person", 10);
         var update = new Change<Person, Person>(ChangeReason.Add, person, person);
 
-        update.Key.Should().Be(person);
-        update.Reason.Should().Be(ChangeReason.Add);
-        update.Current.Should().Be(person);
-        update.Previous.Should().Be(Optional<Person>.None);
+        await Assert.That(update.Key).IsEqualTo(person);
+        await Assert.That(update.Reason).IsEqualTo(ChangeReason.Add);
+        await Assert.That(update.Current).IsEqualTo(person);
+        await Assert.That(update.Previous).IsEqualTo(ReactiveUI.Primitives.Optional<Person>.None);
     }
 
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         var person = new Person("Person", 10);
         var update = new Change<Person, Person>(ChangeReason.Remove, person, person);
 
-        update.Key.Should().Be(person);
-        update.Reason.Should().Be(ChangeReason.Remove);
-        update.Current.Should().Be(person);
-        update.Previous.Should().Be(Optional<Person>.None);
+        await Assert.That(update.Key).IsEqualTo(person);
+        await Assert.That(update.Reason).IsEqualTo(ChangeReason.Remove);
+        await Assert.That(update.Current).IsEqualTo(person);
+        await Assert.That(update.Previous).IsEqualTo(ReactiveUI.Primitives.Optional<Person>.None);
     }
 
-    [Fact]
-    public void Update()
+    [Test]
+    public async Task Update()
     {
         var current = new Person("Person", 10);
         var previous = new Person("Person", 9);
         var update = new Change<Person, Person>(ChangeReason.Update, current, current, previous);
 
-        update.Key.Should().Be(current);
-        update.Reason.Should().Be(ChangeReason.Update);
-        update.Current.Should().Be(current);
-        update.Previous.HasValue.Should().BeTrue();
-        update.Previous.Value.Should().Be(previous);
+        await Assert.That(update.Key).IsEqualTo(current);
+        await Assert.That(update.Reason).IsEqualTo(ChangeReason.Update);
+        await Assert.That(update.Current).IsEqualTo(current);
+        await Assert.That(update.Previous.HasValue).IsTrue();
+        await Assert.That(update.Previous.Value).IsEqualTo(previous);
     }
 
-    [Fact]
-    public void UpdateWillThrowIfNoPreviousValueIsSupplied()
+    [Test]
+    public async Task UpdateWillThrowIfNoPreviousValueIsSupplied()
     {
         var current = new Person("Person", 10);
 
-        Assert.Throws<ArgumentException>(() => new Change<Person, Person>(ChangeReason.Update, current, current));
+        await Assert.That(() => new Change<Person, Person>(ChangeReason.Update, current, current)).Throws<ArgumentException>();
     }
 }

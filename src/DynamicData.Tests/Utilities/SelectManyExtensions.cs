@@ -1,4 +1,4 @@
-﻿namespace DynamicData.Tests.Utilities;
+namespace DynamicData.Tests.Utilities;
 
 /// <summary>
 /// see http://www.superstarcoders.com/blogs/posts/recursive-select-in-c-sharp-and-linq.aspx

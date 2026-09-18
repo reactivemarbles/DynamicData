@@ -52,7 +52,7 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
                 // capture the grouping up front which has the benefit that the group key is only selected once
                 var itemsWithGroup = _source.Transform<TObject, ItemWithGroupKey>((t, previous) => new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p => p.Group)), true);
 
-                var locker = InternalEx.NewLock();
+                var locker = InternalEx.NewMonitorGate();
                 var shared = itemsWithGroup.Synchronize(locker).Publish();
 
                 var grouper = shared.Select(changes => Process(groupings, groupCache, changes));
@@ -310,11 +310,11 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
         return CreateChangeSet(result, allGroupings, initialStateOfGroups);
     }
 
-/// <summary>
-/// Provides members for the GroupContainer class.
-/// </summary>
-/// <param name="key">The key value.</param>
-private sealed class GroupContainer(TGroupKey key)
+    /// <summary>
+    /// Provides members for the GroupContainer class.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    private sealed class GroupContainer(TGroupKey key)
     {
         /// <summary>
         /// Gets the Key value.
@@ -327,13 +327,13 @@ private sealed class GroupContainer(TGroupKey key)
         public IList<TObject> List { get; } = new List<TObject>();
     }
 
-/// <summary>
-/// Provides members for the ItemWithGroupKey class.
-/// </summary>
-/// <param name="item">The item value.</param>
-/// <param name="group">The group value.</param>
-/// <param name="previousGroup">The previousGroup value.</param>
-private sealed class ItemWithGroupKey(TObject item, TGroupKey group, ReactiveUI.Primitives.Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
+    /// <summary>
+    /// Provides members for the ItemWithGroupKey class.
+    /// </summary>
+    /// <param name="item">The item value.</param>
+    /// <param name="group">The group value.</param>
+    /// <param name="previousGroup">The previousGroup value.</param>
+    private sealed class ItemWithGroupKey(TObject item, TGroupKey group, ReactiveUI.Primitives.Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
     {
         /// <summary>
         /// Gets or sets the Group value.

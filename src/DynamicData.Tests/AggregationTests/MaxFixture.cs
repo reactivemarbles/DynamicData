@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Aggregation;
+#else
 using DynamicData.Aggregation;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.AggregationTests;
@@ -9,8 +13,8 @@ public class MaxFixture : IDisposable
 
     public MaxFixture() => _source = new SourceCache<Person, string>(p => p.Name);
 
-    [Fact]
-    public void AddItems()
+    [Test]
+    public async Task AddItems()
     {
         var result = 0;
 
@@ -20,15 +24,15 @@ public class MaxFixture : IDisposable
         _source.AddOrUpdate(new Person("B", 20));
         _source.AddOrUpdate(new Person("C", 30));
 
-        result.Should().Be(30, "Max value should be 30");
+        await Assert.That(result).IsEqualTo(30).Because("Max value should be 30");
 
         accumulator.Dispose();
     }
 
     public void Dispose() => _source.Dispose();
 
-    [Fact]
-    public void InlineChangeReEvaluatesTotals()
+    [Test]
+    public async Task InlineChangeReEvaluatesTotals()
     {
         double max = 0;
 
@@ -41,16 +45,16 @@ public class MaxFixture : IDisposable
         _source.AddOrUpdate(new Person("B", 11));
         _source.AddOrUpdate(personc);
 
-        max.Should().Be(11, "Max should be 11");
+        await Assert.That(max).IsEqualTo(11).Because("Max should be 11");
 
         personc.Age = 100;
 
-        max.Should().Be(100, "Max should be 100 after inline change");
+        await Assert.That(max).IsEqualTo(100).Because("Max should be 100 after inline change");
         accumulator.Dispose();
     }
 
-    [Fact]
-    public void RemoveItems()
+    [Test]
+    public async Task RemoveItems()
     {
         var result = 0;
 
@@ -61,7 +65,7 @@ public class MaxFixture : IDisposable
         _source.AddOrUpdate(new Person("C", 30));
 
         _source.Remove("C");
-        result.Should().Be(20, "Max value should be 20 after remove");
+        await Assert.That(result).IsEqualTo(20).Because("Max value should be 20 after remove");
         accumulator.Dispose();
     }
 }

@@ -1,5 +1,9 @@
 using Bogus;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
@@ -22,7 +26,7 @@ public class TransformOnObservableFixture : IDisposable
     private readonly ISourceCache<Animal, int> _animalCache = new SourceCache<Animal, int>(a => a.Id);
     private readonly ChangeSetAggregator<Animal, int> _animalResults;
     private readonly Faker<Animal> _animalFaker;
-    private readonly Randomizer _randomizer = new (0x2112_2112);
+    private readonly Randomizer _randomizer = new(0x2112_2112);
 
     public TransformOnObservableFixture()
     {
@@ -31,8 +35,8 @@ public class TransformOnObservableFixture : IDisposable
         _animalResults = _animalCache.Connect().AsAggregator();
     }
 
-    [Fact]
-    public void ResultContainsAllInitialChildren()
+    [Test]
+    public async Task ResultContainsAllInitialChildren()
     {
         // Arrange
 
@@ -40,13 +44,13 @@ public class TransformOnObservableFixture : IDisposable
         using var results = _animalCache.Connect().TransformOnObservable((ani, id) => Observable.Return(ani.Name)).AsAggregator();
 
         // Assert
-        _animalResults.Data.Count.Should().Be(InitialCount);
-        results.Data.Count.Should().Be(InitialCount);
-        results.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
+        await Assert.That(_animalResults.Data.Count).IsEqualTo(InitialCount);
+        await Assert.That(results.Data.Count).IsEqualTo(InitialCount);
+        await Assert.That(results.Messages.Count).IsEqualTo(1).Because("The child observables fire on subscription so everything should appear as a single changeset");
     }
 
-    [Fact]
-    public void ResultContainsAddedValues()
+    [Test]
+    public async Task ResultContainsAddedValues()
     {
         // Arrange
         using var results = _animalCache.Connect().TransformOnObservable((ani, id) => Observable.Return(ani.Name)).AsAggregator();
@@ -55,13 +59,13 @@ public class TransformOnObservableFixture : IDisposable
         _animalCache.AddOrUpdate(_animalFaker.Generate(AddCount));
 
         // Assert
-        _animalResults.Data.Count.Should().Be(InitialCount + AddCount);
-        results.Data.Count.Should().Be(_animalResults.Data.Count);
-        results.Messages.Count.Should().Be(2, "Initial Adds and then the subsequent Additions should each be a single message");
+        await Assert.That(_animalResults.Data.Count).IsEqualTo(InitialCount + AddCount);
+        await Assert.That(results.Data.Count).IsEqualTo(_animalResults.Data.Count);
+        await Assert.That(results.Messages.Count).IsEqualTo(2).Because("Initial Adds and then the subsequent Additions should each be a single message");
     }
 
-    [Fact]
-    public void ResultDoesNotContainRemovedValues()
+    [Test]
+    public async Task ResultDoesNotContainRemovedValues()
     {
         // Arrange
         using var results = _animalCache.Connect().TransformOnObservable((ani, id) => Observable.Return(ani.Name)).AsAggregator();
@@ -70,12 +74,12 @@ public class TransformOnObservableFixture : IDisposable
         _animalCache.RemoveKeys(_randomizer.ListItems(_animalCache.Items.ToList(), RemoveCount).Select(a => a.Id));
 
         // Assert
-        _animalResults.Data.Count.Should().Be(InitialCount - RemoveCount);
-        results.Data.Count.Should().Be(_animalResults.Data.Count);
-        results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
+        await Assert.That(_animalResults.Data.Count).IsEqualTo(InitialCount - RemoveCount);
+        await Assert.That(results.Data.Count).IsEqualTo(_animalResults.Data.Count);
+        await Assert.That(results.Messages.Count).IsEqualTo(2).Because("1 for Adds and 1 for Removes");
     }
 
-    [Fact]
+    [Test]
     public async Task ResultUpdatesOnFutureValues()
     {
         // Create an observable that fires a wrong value on an interval a fixed number of times
@@ -97,20 +101,20 @@ public class TransformOnObservableFixture : IDisposable
         await task;
 
         // Assert
-        _animalResults.Data.Count.Should().Be(InitialCount);
-        results.Data.Count.Should().Be(_animalResults.Data.Count);
-        results.Summary.Overall.Adds.Should().Be(InitialCount);
-        results.Summary.Overall.Updates.Should().Be(InitialCount * UpdateCount, $"Each item should update {UpdateCount} times");
-        results.Messages.Count.Should().BeGreaterThanOrEqualTo(1, "The delay may cause the messages to appear as multiple changesets");
-        _animalCache.Items.ForEach(animal => results.Data.Lookup(animal.Id).Should().Be(Optional.Some(animal.Name)));
+        await Assert.That(_animalResults.Data.Count).IsEqualTo(InitialCount);
+        await Assert.That(results.Data.Count).IsEqualTo(_animalResults.Data.Count);
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(InitialCount);
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(InitialCount * UpdateCount).Because($"Each item should update {UpdateCount} times");
+        await Assert.That(results.Messages.Count).IsGreaterThanOrEqualTo(1).Because("The delay may cause the messages to appear as multiple changesets");
+        foreach (var animal in _animalCache.Items) { await Assert.That(results.Data.Lookup(animal.Id)).IsEqualTo(ReactiveUI.Primitives.Optional.Some(animal.Name)); }
     }
 
-    [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public void ResultCompletesOnlyWhenSourceAndAllChildrenComplete(bool completeSource, bool completeChildren)
+    [Test]
+    [Arguments(false, false)]
+    [Arguments(false, true)]
+    [Arguments(true, false)]
+    [Arguments(true, true)]
+    public async Task ResultCompletesOnlyWhenSourceAndAllChildrenComplete(bool completeSource, bool completeChildren)
     {
         IObservable<string> CreateChildObs(Animal a, int id) =>
             completeChildren
@@ -127,12 +131,12 @@ public class TransformOnObservableFixture : IDisposable
         }
 
         // Assert
-        _animalResults.IsCompleted.Should().Be(completeSource);
-        results.IsCompleted.Should().Be(completeSource && completeChildren);
+        await Assert.That(_animalResults.IsCompleted).IsEqualTo(completeSource);
+        await Assert.That(results.IsCompleted).IsEqualTo(completeSource && completeChildren);
     }
 
-    [Fact]
-    public void ResultFailsIfChildFails()
+    [Test]
+    public async Task ResultFailsIfChildFails()
     {
         // Arrange
         var expectedError = new Exception("Expected");
@@ -142,11 +146,11 @@ public class TransformOnObservableFixture : IDisposable
         using var results = _animalCache.Connect().TransformOnObservable(_ => throwObservable).AsAggregator();
 
         // Assert
-        results.Error.Should().Be(expectedError);
+        await Assert.That(results.Error).IsEqualTo(expectedError);
     }
 
-    [Fact]
-    public void ResultFailsIfSourceFails()
+    [Test]
+    public async Task ResultFailsIfSourceFails()
     {
         // Arrange
         var expectedError = new Exception("Expected");
@@ -157,17 +161,17 @@ public class TransformOnObservableFixture : IDisposable
         _animalCache.Dispose();
 
         // Assert
-        results.Error.Should().Be(expectedError);
+        await Assert.That(results.Error).IsEqualTo(expectedError);
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void OrderOfChangesIsPreserved(bool removeFirst)
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task OrderOfChangesIsPreserved(bool removeFirst)
     {
         // Arrange
         using var results = _animalCache.Connect().TransformOnObservable(Observable.Return).AsAggregator();
-        (var firstReason, var nextReason, var expectedChanges) = removeFirst 
+        (var firstReason, var nextReason, var expectedChanges) = removeFirst
             ? (ChangeReason.Remove, ChangeReason.Add, InitialCount * 2)
             : (ChangeReason.Add, ChangeReason.Remove, InitialCount * 3);
 
@@ -187,10 +191,10 @@ public class TransformOnObservableFixture : IDisposable
         });
 
         // Assert
-        results.Messages.Count.Should().Be(2);
-        results.Messages[1].Count.Should().Be(expectedChanges);
-        results.Messages[1].Take(InitialCount).All(change => change.Reason == firstReason).Should().BeTrue();
-        results.Messages[1].Skip(InitialCount).All(change => change.Reason == nextReason).Should().BeTrue();
+        await Assert.That(results.Messages.Count).IsEqualTo(2);
+        await Assert.That(results.Messages[1].Count).IsEqualTo(expectedChanges);
+        await Assert.That(results.Messages[1].Take(InitialCount).All(change => change.Reason == firstReason)).IsTrue();
+        await Assert.That(results.Messages[1].Skip(InitialCount).All(change => change.Reason == nextReason)).IsTrue();
     }
 
     public void Dispose()

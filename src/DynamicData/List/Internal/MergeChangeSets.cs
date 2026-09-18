@@ -37,7 +37,7 @@ internal sealed class MergeChangeSets<TObject>(IObservable<IObservable<IChangeSe
     public IObservable<IChangeSet<TObject>> Run() => Observable.Create<IChangeSet<TObject>>(
         observer =>
         {
-            var locker = InternalEx.NewLock();
+            var locker = InternalEx.NewMonitorGate();
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<TObject>();
@@ -70,28 +70,6 @@ internal sealed class MergeChangeSets<TObject>(IObservable<IObservable<IChangeSe
 
         return obs;
     }
-    // Can optimize for the Add case because that's the only one that applies
-#if NET9_0_OR_GREATER
-
-    /// <summary>
-    /// Executes the CreateChange operation.
-    /// </summary>
-    /// <param name="source">The source value.</param>
-    /// <param name="locker">The locker value.</param>
-    /// <returns>The result of the operation.</returns>
-    private Change<ClonedListChangeSet<TObject>> CreateChange(IObservable<IChangeSet<TObject>> source, Lock locker) =>
-        new(ListChangeReason.Add, new ClonedListChangeSet<TObject>(source.Synchronize(locker), equalityComparer));
-    // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
-
-    /// <summary>
-    /// Executes the CreateClonedListObservable operation.
-    /// </summary>
-    /// <param name="source">The source value.</param>
-    /// <param name="locker">The locker value.</param>
-    /// <returns>The result of the operation.</returns>
-    private IObservable<IChangeSet<ClonedListChangeSet<TObject>>> CreateClonedListObservable(IObservable<IObservable<IChangeSet<TObject>>> source, Lock locker) =>
-        source.Select(src => new ChangeSet<ClonedListChangeSet<TObject>>(new[] { CreateChange(src, locker) }));
-#else
 
     /// <summary>
     /// Executes the CreateChange operation.
@@ -111,6 +89,4 @@ internal sealed class MergeChangeSets<TObject>(IObservable<IObservable<IChangeSe
     /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<ClonedListChangeSet<TObject>>> CreateClonedListObservable(IObservable<IObservable<IChangeSet<TObject>>> source, object locker) =>
         source.Select(src => new ChangeSet<ClonedListChangeSet<TObject>>(new[] { CreateChange(src, locker) }));
-#endif
-
 }

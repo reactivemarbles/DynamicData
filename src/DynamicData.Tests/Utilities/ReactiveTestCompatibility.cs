@@ -54,17 +54,50 @@ public readonly record struct Recorded<T>
 }
 
 public sealed class NewThreadScheduler : ISequencer
+#if REACTIVE_TESTS
+    , System.Reactive.Concurrency.IScheduler
+#endif
 {
-    public DateTimeOffset Now => ThreadPoolScheduler.Instance.Now;
+    public DateTimeOffset Now => ReactiveUI.Primitives.Concurrency.ThreadPoolSequencer.Instance.Now;
 
-    public long Timestamp => ThreadPoolScheduler.Instance.Timestamp;
+    public long Timestamp => ReactiveUI.Primitives.Concurrency.ThreadPoolSequencer.Instance.Timestamp;
 
-    public void Schedule(IWorkItem item) => ThreadPoolScheduler.Instance.Schedule(item);
+    public void Schedule(IWorkItem item) => ReactiveUI.Primitives.Concurrency.ThreadPoolSequencer.Instance.Schedule(item);
 
-    public void Schedule(IWorkItem item, long dueTimestamp) => ThreadPoolScheduler.Instance.Schedule(item, dueTimestamp);
+    public void Schedule(IWorkItem item, long dueTimestamp) => ReactiveUI.Primitives.Concurrency.ThreadPoolSequencer.Instance.Schedule(item, dueTimestamp);
+
+#if REACTIVE_TESTS
+    public IDisposable Schedule<TState>(
+        TState state,
+        Func<System.Reactive.Concurrency.IScheduler, TState, IDisposable> action)
+    {
+        var item = new RxScheduledWorkItem<TState>(this, state, action);
+        Schedule(item);
+        return item;
+    }
+
+    public IDisposable Schedule<TState>(
+        TState state,
+        TimeSpan dueTime,
+        Func<System.Reactive.Concurrency.IScheduler, TState, IDisposable> action)
+    {
+        var item = new RxScheduledWorkItem<TState>(this, state, action);
+        Schedule(item, ReactiveTestSchedulerBridge.AddTimestamp(Timestamp, dueTime));
+        return item;
+    }
+
+    public IDisposable Schedule<TState>(
+        TState state,
+        DateTimeOffset dueTime,
+        Func<System.Reactive.Concurrency.IScheduler, TState, IDisposable> action) =>
+        Schedule(state, dueTime - Now, action);
+#endif
 }
 
 public sealed class TestScheduler : ISequencer
+#if REACTIVE_TESTS
+    , System.Reactive.Concurrency.IScheduler
+#endif
 {
     private readonly List<ScheduledItem> _queue = [];
     private long _clockTicks;
@@ -94,6 +127,33 @@ public sealed class TestScheduler : ISequencer
             return due != 0 ? due : left.Id.CompareTo(right.Id);
         });
     }
+
+#if REACTIVE_TESTS
+    public IDisposable Schedule<TState>(
+        TState state,
+        Func<System.Reactive.Concurrency.IScheduler, TState, IDisposable> action)
+    {
+        var item = new RxScheduledWorkItem<TState>(this, state, action);
+        Schedule(item);
+        return item;
+    }
+
+    public IDisposable Schedule<TState>(
+        TState state,
+        TimeSpan dueTime,
+        Func<System.Reactive.Concurrency.IScheduler, TState, IDisposable> action)
+    {
+        var item = new RxScheduledWorkItem<TState>(this, state, action);
+        Schedule(item, ReactiveTestSchedulerBridge.AddTimestamp(Timestamp, dueTime));
+        return item;
+    }
+
+    public IDisposable Schedule<TState>(
+        TState state,
+        DateTimeOffset dueTime,
+        Func<System.Reactive.Concurrency.IScheduler, TState, IDisposable> action) =>
+        Schedule(state, dueTime - Now, action);
+#endif
 
     public void AdvanceBy(long ticks)
     {
@@ -163,3 +223,78 @@ public sealed class TestScheduler : ISequencer
 
     private sealed record ScheduledItem(long DueTimestamp, long Id, IWorkItem Item);
 }
+
+#if REACTIVE_TESTS
+file sealed class RxScheduledWorkItem<TState>(
+    System.Reactive.Concurrency.IScheduler scheduler,
+    TState state,
+    Func<System.Reactive.Concurrency.IScheduler, TState, IDisposable> action)
+    : IWorkItem, IDisposable
+{
+    private readonly object _gate = new();
+    private IDisposable? _inner;
+    private bool _isDisposed;
+
+    public void Execute()
+    {
+        lock (_gate)
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+        }
+
+        var inner = action(scheduler, state);
+        lock (_gate)
+        {
+            if (_isDisposed)
+            {
+                inner.Dispose();
+            }
+            else
+            {
+                _inner = inner;
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        IDisposable? inner;
+        lock (_gate)
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+            inner = _inner;
+            _inner = null;
+        }
+
+        inner?.Dispose();
+    }
+}
+
+file static class ReactiveTestSchedulerBridge
+{
+    public static long AddTimestamp(long timestamp, TimeSpan dueTime)
+    {
+        var delta = ToTimestampDelta(dueTime);
+        return timestamp >= long.MaxValue - delta ? long.MaxValue : timestamp + delta;
+    }
+
+    public static long ToTimestampDelta(TimeSpan dueTime)
+    {
+        if (dueTime <= TimeSpan.Zero)
+        {
+            return 0;
+        }
+
+        var value = dueTime.Ticks / (double)TimeSpan.TicksPerSecond * Stopwatch.Frequency;
+        return value >= long.MaxValue ? long.MaxValue : (long)value;
+    }
+}
+#endif

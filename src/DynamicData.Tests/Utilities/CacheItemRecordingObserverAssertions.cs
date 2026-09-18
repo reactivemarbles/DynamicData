@@ -1,22 +1,25 @@
-﻿namespace DynamicData.Tests.Utilities;
+namespace DynamicData.Tests.Utilities;
 
 public static class CacheItemRecordingObserverAssertions
 {
-    public static void ShouldNotSupportSorting<TObject, TKey>(
-            this    CacheItemRecordingObserver<TObject, TKey>   results,
-                    string                                      because = "")
-        where TObject   : notnull
-        where TKey      : notnull
+    public static async Task ShouldNotSupportSorting<TObject, TKey>(
+            this CacheItemRecordingObserver<TObject, TKey> results,
+                    string because = "")
+        where TObject : notnull
+        where TKey : notnull
     {
-        results.RecordedChangeSets.Should().AllSatisfy(changeSet =>
+        foreach (var changeSet in results.RecordedChangeSets)
         {
             if (changeSet.Count is not 0)
-                changeSet.Should().AllSatisfy(change =>
+            {
+                foreach (var change in changeSet)
                 {
-                    change.CurrentIndex.Should().Be(-1, because);
-                    change.PreviousIndex.Should().Be(-1, because);
-                });
-        });
-        results.RecordedItemsSorted.Should().BeEmpty(because);
+                    await Assert.That(change.CurrentIndex).IsEqualTo(-1);
+                    await Assert.That(change.PreviousIndex).IsEqualTo(-1);
+                }
+            }
+        }
+
+        await Assert.That(results.RecordedItemsSorted).IsEmpty();
     }
 }

@@ -149,7 +149,7 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
                     (t, _) =>
                     {
                         // Only skip initial for first time Adds where there is initial data records
-                        var locker = InternalEx.NewLock();
+                        var locker = InternalEx.NewMonitorGate();
                         var changes = childChanges(t).Synchronize(locker).Skip(1);
                         return new ManyContainer(
                             () =>
@@ -179,12 +179,12 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
             });
     }
 
-/// <summary>
-/// Provides members for the DestinationContainer class.
-/// </summary>
-/// <param name="item">The item value.</param>
-/// <param name="key">The key value.</param>
-private sealed class DestinationContainer(TDestination item, TDestinationKey key)
+    /// <summary>
+    /// Provides members for the DestinationContainer class.
+    /// </summary>
+    /// <param name="item">The item value.</param>
+    /// <param name="key">The key value.</param>
+    private sealed class DestinationContainer(TDestination item, TDestinationKey key)
     {
         /// <summary>
         /// Gets the KeyComparer value.
@@ -201,10 +201,10 @@ private sealed class DestinationContainer(TDestination item, TDestinationKey key
         /// </summary>
         public TDestinationKey Key { get; } = key;
 
-/// <summary>
-/// Provides members for the KeyEqualityComparer class.
-/// </summary>
-private sealed class KeyEqualityComparer : IEqualityComparer<DestinationContainer>
+        /// <summary>
+        /// Provides members for the KeyEqualityComparer class.
+        /// </summary>
+        private sealed class KeyEqualityComparer : IEqualityComparer<DestinationContainer>
         {
             /// <summary>
             /// Executes the Equals operation.
@@ -236,11 +236,11 @@ private sealed class KeyEqualityComparer : IEqualityComparer<DestinationContaine
         }
     }
 
-/// <summary>
-/// Provides members for the DestinationEnumerator class.
-/// </summary>
-/// <param name="changes">The changes value.</param>
-private sealed class DestinationEnumerator(IChangeSet<ManyContainer, TSourceKey> changes) : IEnumerable<Change<TDestination, TDestinationKey>>
+    /// <summary>
+    /// Provides members for the DestinationEnumerator class.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    private sealed class DestinationEnumerator(IChangeSet<ManyContainer, TSourceKey> changes) : IEnumerable<Change<TDestination, TDestinationKey>>
     {
         /// <summary>
         /// Executes the GetEnumerator operation.
@@ -307,12 +307,12 @@ private sealed class DestinationEnumerator(IChangeSet<ManyContainer, TSourceKey>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-/// <summary>
-/// Provides members for the ManyContainer class.
-/// </summary>
-/// <param name="initial">The initial value.</param>
-/// <param name="changes">The changes value.</param>
-private sealed class ManyContainer(Func<IEnumerable<DestinationContainer>> initial, IObservable<IChangeSet<TDestination, TDestinationKey>>? changes = null)
+    /// <summary>
+    /// Provides members for the ManyContainer class.
+    /// </summary>
+    /// <param name="initial">The initial value.</param>
+    /// <param name="changes">The changes value.</param>
+    private sealed class ManyContainer(Func<IEnumerable<DestinationContainer>> initial, IObservable<IChangeSet<TDestination, TDestinationKey>>? changes = null)
     {
         /// <summary>
         /// Gets the Changes value.

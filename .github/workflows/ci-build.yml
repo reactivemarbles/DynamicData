@@ -12,8 +12,8 @@ jobs:
     runs-on: windows-latest
     outputs:
       nbgv: ${{ steps.nbgv.outputs.SemVer2 }}
-    steps:        
-       
+    steps:
+
     - name: Checkout
       uses: actions/checkout@v6
       with:
@@ -29,7 +29,7 @@ jobs:
             8.0.x
             9.0.x
             10.0.x
-            11.0.x
+        global-json-file: global.json
         cache: true
         cache-dependency-path: |
             **/Directory.Packages.props
@@ -55,13 +55,13 @@ jobs:
     - name: NuGet Restore
       run: dotnet restore DynamicData.sln
       working-directory: src
-      
+
     - name: Build
       run: dotnet build --no-restore --configuration Release DynamicData.sln
       working-directory: src
 
     - name: Run Tests
-      run: dotnet test --no-restore --configuration Release DynamicData.sln
+      run: dotnet test --solution DynamicData.sln --no-build --configuration Release
       working-directory: src
 
     - name: Pack

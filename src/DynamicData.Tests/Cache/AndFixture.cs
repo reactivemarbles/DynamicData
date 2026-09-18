@@ -2,11 +2,20 @@ using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
 
+[InheritsTests]
 public class AndFixture : AndFixtureBase
 {
-    protected override IObservable<IChangeSet<Person, string>> CreateObservable() => _source1.Connect().And(_source2.Connect());
+    protected override IObservable<IChangeSet<Person, string>> CreateObservable()
+    {
+#if REACTIVE_TESTS
+        return DynamicData.Reactive.ObservableCacheEx.And(_source1.Connect(), _source2.Connect());
+#else
+        return DynamicData.ObservableCacheEx.And(_source1.Connect(), _source2.Connect());
+#endif
+    }
 }
 
+[InheritsTests]
 public class AndCollectionFixture : AndFixtureBase
 {
     protected override IObservable<IChangeSet<Person, string>> CreateObservable()
@@ -39,42 +48,42 @@ public abstract class AndFixtureBase : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void RemovingFromOneRemovesFromResult()
+    [Test]
+    public async Task RemovingFromOneRemovesFromResult()
     {
         var person = new Person("Adult1", 50);
         _source1.AddOrUpdate(person);
         _source2.AddOrUpdate(person);
 
         _source2.Remove(person);
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Data.Count.Should().Be(0, "Cache should have no items");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Cache should have no items");
     }
 
-    [Fact]
-    public void StartingWithNonEmptySourceProducesNoResult()
+    [Test]
+    public async Task StartingWithNonEmptySourceProducesNoResult()
     {
         var person = new Person("Adult", 50);
         _source1.AddOrUpdate(person);
 
         using var result = CreateObservable().AsAggregator();
-        _results.Messages.Count.Should().Be(0, "Should have no updates");
-        result.Data.Count.Should().Be(0, "Cache should have no items");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("Should have no updates");
+        await Assert.That(result.Data.Count).IsEqualTo(0).Because("Cache should have no items");
     }
 
-    [Fact]
-    public void UpdatingBothProducesResults()
+    [Test]
+    public async Task UpdatingBothProducesResults()
     {
         var person = new Person("Adult1", 50);
         _source1.AddOrUpdate(person);
         _source2.AddOrUpdate(person);
-        _results.Messages.Count.Should().Be(1, "Should have no updates");
-        _results.Data.Count.Should().Be(1, "Cache should have no items");
-        _results.Data.Items[0].Should().Be(person, "Should be same person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should have no updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Cache should have no items");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(person).Because("Should be same person");
     }
 
-    [Fact]
-    public void UpdatingOneProducesOnlyOneUpdate()
+    [Test]
+    public async Task UpdatingOneProducesOnlyOneUpdate()
     {
         var person = new Person("Adult1", 50);
         _source1.AddOrUpdate(person);
@@ -82,19 +91,19 @@ public abstract class AndFixtureBase : IDisposable
 
         var personUpdated = new Person("Adult1", 51);
         _source2.AddOrUpdate(personUpdated);
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Data.Count.Should().Be(1, "Cache should have no items");
-        _results.Data.Items[0].Should().Be(personUpdated, "Should be updated person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Cache should have no items");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(personUpdated).Because("Should be updated person");
     }
 
-    [Fact]
-    public void UpdatingOneSourceOnlyProducesNoResults()
+    [Test]
+    public async Task UpdatingOneSourceOnlyProducesNoResults()
     {
         var person = new Person("Adult1", 50);
         _source1.AddOrUpdate(person);
 
-        _results.Messages.Count.Should().Be(0, "Should have no updates");
-        _results.Data.Count.Should().Be(0, "Cache should have no items");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("Should have no updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Cache should have no items");
     }
 
     protected abstract IObservable<IChangeSet<Person, string>> CreateObservable();

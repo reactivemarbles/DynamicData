@@ -49,7 +49,7 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var locker = InternalEx.NewMonitorGate();
                 var original = new List<T>();
                 var target = new ChangeAwareList<T>();
 

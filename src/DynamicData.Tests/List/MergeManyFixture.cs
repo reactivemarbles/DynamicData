@@ -8,8 +8,8 @@ public class MergeManyFixture : IDisposable
 
     public void Dispose() => _source.Dispose();
 
-    [Fact]
-    public void EverythingIsUnsubscribedWhenStreamIsDisposed()
+    [Test]
+    public async Task EverythingIsUnsubscribedWhenStreamIsDisposed()
     {
         var invoked = false;
         var stream = _source.Connect().MergeMany(o => o.Observable).Subscribe(o => { invoked = true; });
@@ -20,14 +20,14 @@ public class MergeManyFixture : IDisposable
         stream.Dispose();
 
         item.InvokeObservable(true);
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
     }
 
     /// <summary>
     /// Invocations the only when child is invoked.
     /// </summary>
-    [Fact]
-    public void InvocationOnlyWhenChildIsInvoked()
+    [Test]
+    public async Task InvocationOnlyWhenChildIsInvoked()
     {
         var invoked = false;
 
@@ -36,15 +36,15 @@ public class MergeManyFixture : IDisposable
         var item = new ObjectWithObservable(1);
         _source.Add(item);
 
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
 
         item.InvokeObservable(true);
-        invoked.Should().BeTrue();
+        await Assert.That(invoked).IsTrue();
         stream.Dispose();
     }
 
-    [Fact]
-    public void RemovedItemWillNotCauseInvocation()
+    [Test]
+    public async Task RemovedItemWillNotCauseInvocation()
     {
         var invoked = false;
         var stream = _source.Connect().MergeMany(o => o.Observable).Subscribe(o => { invoked = true; });
@@ -52,18 +52,18 @@ public class MergeManyFixture : IDisposable
         var item = new ObjectWithObservable(1);
         _source.Add(item);
         _source.Remove(item);
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
 
         item.InvokeObservable(true);
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
         stream.Dispose();
     }
 
     /// <summary>
     /// Merged stream does not complete if a child stream is still active.
     /// </summary>
-    [Fact]
-    public void MergedStreamDoesNotCompleteWhileItemStreamActive()
+    [Test]
+    public async Task MergedStreamDoesNotCompleteWhileItemStreamActive()
     {
         var streamCompleted = false;
         var sourceCompleted = false;
@@ -76,15 +76,15 @@ public class MergeManyFixture : IDisposable
 
         _source.Dispose();
 
-        sourceCompleted.Should().BeTrue();
-        streamCompleted.Should().BeFalse();
+        await Assert.That(sourceCompleted).IsTrue();
+        await Assert.That(streamCompleted).IsFalse();
     }
 
     /// <summary>
     /// Stream completes only when source and all child are complete.
     /// </summary>
-    [Fact]
-    public void MergedStreamCompletesWhenSourceAndItemsComplete()
+    [Test]
+    public async Task MergedStreamCompletesWhenSourceAndItemsComplete()
     {
         var streamCompleted = false;
         var sourceCompleted = false;
@@ -98,15 +98,15 @@ public class MergeManyFixture : IDisposable
         _source.Dispose();
         item.CompleteObservable();
 
-        sourceCompleted.Should().BeTrue();
-        streamCompleted.Should().BeTrue();
+        await Assert.That(sourceCompleted).IsTrue();
+        await Assert.That(streamCompleted).IsTrue();
     }
 
     /// <summary>
     /// Stream completes even if one of the children fails.
     /// </summary>
-    [Fact]
-    public void MergedStreamCompletesIfLastItemFails()
+    [Test]
+    public async Task MergedStreamCompletesIfLastItemFails()
     {
         var receivedError = default(Exception);
         var streamCompleted = false;
@@ -121,16 +121,16 @@ public class MergeManyFixture : IDisposable
         _source.Dispose();
         item.FailObservable(new Exception("Test exception"));
 
-        receivedError.Should().Be(default);
-        sourceCompleted.Should().BeTrue();
-        streamCompleted.Should().BeTrue();
+        await Assert.That(receivedError).IsNull();
+        await Assert.That(sourceCompleted).IsTrue();
+        await Assert.That(streamCompleted).IsTrue();
     }
 
     /// <summary>
     /// If the source stream has an error, the merged steam should also.
     /// </summary>
-    [Fact]
-    public void MergedStreamFailsWhenSourceFails()
+    [Test]
+    public async Task MergedStreamFailsWhenSourceFails()
     {
         var receivedError = default(Exception);
         var expectedError = new Exception("Test exception");
@@ -143,12 +143,12 @@ public class MergeManyFixture : IDisposable
 
         _source.Dispose();
 
-        receivedError.Should().Be(expectedError);
+        await Assert.That(receivedError).IsEqualTo(expectedError);
     }
 
     private class ObjectWithObservable(int id) : IDisposable
     {
-        private readonly ISignal<bool> _changed = new Signal<bool>();
+        private readonly ReactiveUI.Primitives.Signals.ISignal<bool> _changed = new ReactiveUI.Primitives.Signals.Signal<bool>();
 
         private bool _value;
 

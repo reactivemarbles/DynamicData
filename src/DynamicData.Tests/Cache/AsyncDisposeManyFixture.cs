@@ -1,4 +1,4 @@
-﻿namespace DynamicData.Tests.Cache;
+namespace DynamicData.Tests.Cache;
 
 public static partial class AsyncDisposeManyFixture
 {
@@ -19,32 +19,32 @@ public static partial class AsyncDisposeManyFixture
     public abstract record ItemBase
     {
         public static ItemBase Create(
-                ItemType    type,
-                int         id,
-                int         version)
+                ItemType type,
+                int id,
+                int version)
             => type switch
             {
-                ItemType.Plain                      => new PlainItem()
+                ItemType.Plain => new PlainItem()
                 {
-                    Id      = id,
+                    Id = id,
                     Version = version
                 },
-                ItemType.Disposable                 => new DisposableItem()
+                ItemType.Disposable => new DisposableItem()
                 {
-                    Id      = id,
+                    Id = id,
                     Version = version
                 },
-                ItemType.AsyncDisposable            => new AsyncDisposableItem()
+                ItemType.AsyncDisposable => new AsyncDisposableItem()
                 {
-                    Id      = id,
+                    Id = id,
                     Version = version
                 },
-                ItemType.ImmediateAsyncDisposable   => new ImmediateAsyncDisposableItem()
+                ItemType.ImmediateAsyncDisposable => new ImmediateAsyncDisposableItem()
                 {
-                    Id      = id,
+                    Id = id,
                     Version = version
                 },
-                _                                   => throw new ArgumentException($"{type} is not a valid {nameof(ItemType)} value", nameof(type))
+                _ => throw new ArgumentException($"{type} is not a valid {nameof(ItemType)} value", nameof(type))
             };
 
         public required int Id { get; init; }
@@ -91,15 +91,15 @@ public static partial class AsyncDisposeManyFixture
         public void Dispose()
         {
             if (_disposeError is not null)
-                #pragma warning disable CA1065 // Do not raise exceptions in unexpected locations
+#pragma warning disable CA1065 // Do not raise exceptions in unexpected locations
                 throw _disposeError;
-                #pragma warning restore CA1065 // Do not raise exceptions in unexpected locations
+#pragma warning restore CA1065 // Do not raise exceptions in unexpected locations
 
             _hasBeenDisposed = true;
         }
 
-        private Exception?  _disposeError;
-        private bool        _hasBeenDisposed;
+        private Exception? _disposeError;
+        private bool _hasBeenDisposed;
     }
 
     public sealed record AsyncDisposableItem
@@ -126,7 +126,7 @@ public static partial class AsyncDisposeManyFixture
 
         private readonly TaskCompletionSource _disposeCompletionSource
             = new();
-     
+
         private bool _hasBeenDisposed;
     }
 
@@ -153,7 +153,7 @@ public static partial class AsyncDisposeManyFixture
                 : ValueTask.CompletedTask;
         }
 
-        private Exception?  _disposeError;
-        private bool        _hasBeenDisposed;
+        private Exception? _disposeError;
+        private bool _hasBeenDisposed;
     }
 }

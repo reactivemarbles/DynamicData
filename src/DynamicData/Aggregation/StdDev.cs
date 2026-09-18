@@ -12,8 +12,8 @@ namespace DynamicData.Aggregation;
 /// <summary>
 /// Represents the StdDev record.
 /// </summary>
-/// <typeparam name="TValue">The type of the TValue value.</typeparam>
+/// <typeparam name="T">The numeric accumulator type.</typeparam>
 /// <param name="Count">The Count value.</param>
-/// <param name="SumOfItems">The SumOfItems value.</param>
-/// <param name="SumOfSquares">The SumOfSquares value.</param>
-internal readonly record struct StdDev<TValue>(int Count, TValue SumOfItems, TValue SumOfSquares);
+/// <param name="Mean">The Mean value.</param>
+/// <param name="SumOfSquaredDifferences">The SumOfSquaredDifferences value.</param>
+internal readonly record struct StdDev<T>(int Count, T Mean, T SumOfSquaredDifferences);

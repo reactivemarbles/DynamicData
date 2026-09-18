@@ -1,9 +1,13 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 
 namespace DynamicData.Tests.Cache;
 
-[Collection(IntegrationTestFixtureBase.CollectionName)]
-public sealed class SuspendNotificationsFixture : IDisposable
+[NotInParallel]
+public sealed class SuspendNotificationsRegressionFixture : IDisposable
 {
     private readonly SourceCache<int, int> _source = new(static x => x);
 
@@ -13,14 +17,14 @@ public sealed class SuspendNotificationsFixture : IDisposable
 
     private readonly IDisposable _countChangeSubscription;
 
-    public SuspendNotificationsFixture()
+    public SuspendNotificationsRegressionFixture()
     {
         _results = _source.Connect().AsAggregator();
         _countChangeSubscription = _source.CountChanged.Do(_countChangeHistory.Add).Subscribe();
     }
 
-    [Fact]
-    public void NotificationsCanBeSuspended()
+    [Test]
+    public async Task NotificationsCanBeSuspended()
     {
         // Arrange
         using var suspend = _source.SuspendNotifications();
@@ -29,13 +33,13 @@ public sealed class SuspendNotificationsFixture : IDisposable
         _source.AddOrUpdate(1);
 
         // Assert
-        _results.Messages.Count.Should().Be(0, "Should have no item updates");
-        _results.Data.Count.Should().Be(0, "Should not receive data after suspend");
-        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("Should have no item updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should not receive data after suspend");
+        await Assert.That(_results.IsCompleted).IsFalse().Because("IsCompleted should not have fired");
     }
 
-    [Fact]
-    public void SuspendingNotificationsDoesNotImpactPreview()
+    [Test]
+    public async Task SuspendingNotificationsDoesNotImpactPreview()
     {
         // Arrange
         using var previewResults = _source.Preview().AsAggregator();
@@ -45,14 +49,14 @@ public sealed class SuspendNotificationsFixture : IDisposable
         _source.AddOrUpdate(1);
 
         // Assert
-        previewResults.Messages.Count.Should().Be(1, "should have received a message in Preview");
-        _results.Messages.Count.Should().Be(0, "should not have gotten any updates");
-        _results.Data.Count.Should().Be(0, "should not receive data after suspend");
-        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+        await Assert.That(previewResults.Messages.Count).IsEqualTo(1).Because("should have received a message in Preview");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("should not have gotten any updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("should not receive data after suspend");
+        await Assert.That(_results.IsCompleted).IsFalse().Because("IsCompleted should not have fired");
     }
 
-    [Fact]
-    public void SuspendingNotificationsPreventsWatch()
+    [Test]
+    public async Task SuspendingNotificationsPreventsWatch()
     {
         // Arrange
         var gotData = false;
@@ -63,14 +67,14 @@ public sealed class SuspendNotificationsFixture : IDisposable
         _source.AddOrUpdate(1);
 
         // Assert
-        gotData.Should().BeFalse("Should not have received data after suspend");
-        _results.Messages.Count.Should().Be(0, "Should have no item updates");
-        _results.Data.Count.Should().Be(0, "Should not receive data after suspend");
-        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+        await Assert.That(gotData).IsFalse().Because("Should not have received data after suspend");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("Should have no item updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should not receive data after suspend");
+        await Assert.That(_results.IsCompleted).IsFalse().Because("IsCompleted should not have fired");
     }
 
-    [Fact]
-    public void NotificationsCanBeResumed()
+    [Test]
+    public async Task NotificationsCanBeResumed()
     {
         // Arrange
         {
@@ -81,13 +85,13 @@ public sealed class SuspendNotificationsFixture : IDisposable
         Enumerable.Range(1, 37).ForEach(_source.AddOrUpdate);
 
         // Assert
-        _results.Messages.Count.Should().Be(37, "Should receive updates after resume");
-        _results.Data.Count.Should().Be(37, "Should receive data after resume");
-        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+        await Assert.That(_results.Messages.Count).IsEqualTo(37).Because("Should receive updates after resume");
+        await Assert.That(_results.Data.Count).IsEqualTo(37).Because("Should receive data after resume");
+        await Assert.That(_results.IsCompleted).IsFalse().Because("IsCompleted should not have fired");
     }
 
-    [Fact]
-    public void ExistingDataNotEmittedWhileSuspended()
+    [Test]
+    public async Task ExistingDataNotEmittedWhileSuspended()
     {
         // Arrange
         var suspend = _source.SuspendNotifications();
@@ -97,13 +101,13 @@ public sealed class SuspendNotificationsFixture : IDisposable
         using var results = _source.Connect().AsAggregator();
 
         // Assert
-        results.Messages.Count.Should().Be(0, "Should have no item updates");
-        results.Data.Count.Should().Be(0, "Should not receive data after suspend");
-        results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+        await Assert.That(results.Messages.Count).IsEqualTo(0).Because("Should have no item updates");
+        await Assert.That(results.Data.Count).IsEqualTo(0).Because("Should not receive data after suspend");
+        await Assert.That(results.IsCompleted).IsFalse().Because("IsCompleted should not have fired");
     }
 
-    [Fact]
-    public void ExistingDataNotEmittedViaWatchUntilResumed()
+    [Test]
+    public async Task ExistingDataNotEmittedViaWatchUntilResumed()
     {
         // Arrange
         var gotData = false;
@@ -115,11 +119,11 @@ public sealed class SuspendNotificationsFixture : IDisposable
         suspend.Dispose();
 
         // Assert
-        gotData.Should().BeTrue("should have received a notice after the suspend was released");
+        await Assert.That(gotData).IsTrue().Because("should have received a notice after the suspend was released");
     }
 
-    [Fact]
-    public void ExistingDataNotEmittedUntilResumed()
+    [Test]
+    public async Task ExistingDataNotEmittedUntilResumed()
     {
         // Arrange
         var suspend = _source.SuspendNotifications();
@@ -130,13 +134,13 @@ public sealed class SuspendNotificationsFixture : IDisposable
         suspend.Dispose();
 
         // Assert
-        results.Messages.Count.Should().Be(1, "Should receive updates after resume");
-        results.Data.Count.Should().Be(37, "Should receive data after resume");
-        results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+        await Assert.That(results.Messages.Count).IsEqualTo(1).Because("Should receive updates after resume");
+        await Assert.That(results.Data.Count).IsEqualTo(37).Because("Should receive data after resume");
+        await Assert.That(results.IsCompleted).IsFalse().Because("IsCompleted should not have fired");
     }
 
-    [Fact]
-    public void ExistingAndNewDataEmittedAsASingleChangesetOnResume()
+    [Test]
+    public async Task ExistingAndNewDataEmittedAsASingleChangesetOnResume()
     {
         // Arrange
         var suspend = _source.SuspendNotifications();
@@ -148,13 +152,13 @@ public sealed class SuspendNotificationsFixture : IDisposable
         suspend.Dispose();
 
         // Assert
-        results.Messages.Count.Should().Be(1, "Should receive single changeset on resume");
-        results.Data.Count.Should().Be(37 * 2, "Should receive data after resume");
-        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+        await Assert.That(results.Messages.Count).IsEqualTo(1).Because("Should receive single changeset on resume");
+        await Assert.That(results.Data.Count).IsEqualTo(37 * 2).Because("Should receive data after resume");
+        await Assert.That(_results.IsCompleted).IsFalse().Because("IsCompleted should not have fired");
     }
 
-    [Fact]
-    public void PendingNotificationsEmittedAsSingleChangeSetOnResume()
+    [Test]
+    public async Task PendingNotificationsEmittedAsSingleChangeSetOnResume()
     {
         // Arrange
         var suspend = _source.SuspendNotifications();
@@ -165,15 +169,15 @@ public sealed class SuspendNotificationsFixture : IDisposable
         suspend.Dispose();
 
         // Assert
-        _results.Data.Count.Should().Be(36, "Should receive data after resume");
-        _results.Messages.Count.Should().Be(1, "Should receive single changeset on resume");
-        _results.Messages[0].Adds.Should().Be(37, "Should have 37 adds");
-        _results.Messages[0].Removes.Should().Be(1, "Should show the remove");
-        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+        await Assert.That(_results.Data.Count).IsEqualTo(36).Because("Should receive data after resume");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should receive single changeset on resume");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(37).Because("Should have 37 adds");
+        await Assert.That(_results.Messages[0].Removes).IsEqualTo(1).Because("Should show the remove");
+        await Assert.That(_results.IsCompleted).IsFalse().Because("IsCompleted should not have fired");
     }
 
-    [Fact]
-    public void MultipleSuspendsAreCumulative()
+    [Test]
+    public async Task MultipleSuspendsAreCumulative()
     {
         // Arrange
         var suspend = _source.SuspendNotifications();
@@ -184,13 +188,13 @@ public sealed class SuspendNotificationsFixture : IDisposable
         suspend.Dispose();
 
         // Assert
-        _results.Messages.Count.Should().Be(0, "Should have no item updates");
-        _results.Data.Count.Should().Be(0, "Should not receive data after suspend");
-        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("Should have no item updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should not receive data after suspend");
+        await Assert.That(_results.IsCompleted).IsFalse().Because("IsCompleted should not have fired");
     }
 
-    [Fact]
-    public void MultipleSuspendsCanBeResumed()
+    [Test]
+    public async Task MultipleSuspendsCanBeResumed()
     {
         // Arrange
         var suspend = _source.SuspendNotifications();
@@ -202,13 +206,13 @@ public sealed class SuspendNotificationsFixture : IDisposable
         suspend2.Dispose();
 
         // Assert
-        _results.Messages.Count.Should().Be(1, "Should receive updates after resume");
-        _results.Data.Count.Should().Be(1, "Should receive data after resume");
-        _results.IsCompleted.Should().BeFalse("IsCompleted should not have fired");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should receive updates after resume");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should receive data after resume");
+        await Assert.That(_results.IsCompleted).IsFalse().Because("IsCompleted should not have fired");
     }
 
-    [Fact]
-    public void OnCompletedFiresIfCacheDisposedWhileSuspended()
+    [Test]
+    public async Task OnCompletedFiresIfCacheDisposedWhileSuspended()
     {
         // Arrange
         using var suspend = _source.SuspendNotifications();
@@ -219,13 +223,13 @@ public sealed class SuspendNotificationsFixture : IDisposable
         _source.Dispose();
 
         // Assert
-        results.IsCompleted.Should().BeTrue("IsCompleted should fire even if Notifications are suspended");
-        results.Messages.Count.Should().Be(0, "Shouldn't receive any Changesets");
-        results.Data.Count.Should().Be(0, "Shouldn't receive any Data");
+        await Assert.That(results.IsCompleted).IsTrue().Because("IsCompleted should fire even if Notifications are suspended");
+        await Assert.That(results.Messages.Count).IsEqualTo(0).Because("Shouldn't receive any Changesets");
+        await Assert.That(results.Data.Count).IsEqualTo(0).Because("Shouldn't receive any Data");
     }
 
-    [Fact]
-    public void CountNotificationsCanBeSuspended()
+    [Test]
+    public async Task CountNotificationsCanBeSuspended()
     {
         // Arrange
         using var suspend = _source.SuspendCount();
@@ -234,12 +238,12 @@ public sealed class SuspendNotificationsFixture : IDisposable
         _source.AddOrUpdate(1);
 
         // Assert
-        _countChangeHistory.Count.Should().Be(1, "Should Not receive count updates");
-        _countChangeHistory[0].Should().Be(0, "Should have only received the empty list");
+        await Assert.That(_countChangeHistory.Count).IsEqualTo(1).Because("Should Not receive count updates");
+        await Assert.That(_countChangeHistory[0]).IsEqualTo(0).Because("Should have only received the empty list");
     }
 
-    [Fact]
-    public void CountNotificationsCanBeResumed()
+    [Test]
+    public async Task CountNotificationsCanBeResumed()
     {
         // Arrange
         {
@@ -250,13 +254,13 @@ public sealed class SuspendNotificationsFixture : IDisposable
         _source.AddOrUpdate(1);
 
         // Assert
-        _countChangeHistory.Count.Should().Be(2, "Should receive count updates");
-        _countChangeHistory[0].Should().Be(0, "Should have received the empty list");
-        _countChangeHistory[1].Should().Be(1, "Should have received the updated count");
+        await Assert.That(_countChangeHistory.Count).IsEqualTo(2).Because("Should receive count updates");
+        await Assert.That(_countChangeHistory[0]).IsEqualTo(0).Because("Should have received the empty list");
+        await Assert.That(_countChangeHistory[1]).IsEqualTo(1).Because("Should have received the updated count");
     }
 
-    [Fact]
-    public void CountChangedAlwaysStartsWithInitialEvenWhenSuspended()
+    [Test]
+    public async Task CountChangedAlwaysStartsWithInitialEvenWhenSuspended()
     {
         // Arrange
         _source.AddOrUpdate(Enumerable.Range(1, 50));
@@ -268,12 +272,12 @@ public sealed class SuspendNotificationsFixture : IDisposable
         Enumerable.Range(100, 50).ForEach(_source.AddOrUpdate);
 
         // Assert
-        countChangeHistory.Count.Should().Be(1, "Should receive initial value");
-        countChangeHistory[0].Should().Be(50, "Should have received the correct initial value");
+        await Assert.That(countChangeHistory.Count).IsEqualTo(1).Because("Should receive initial value");
+        await Assert.That(countChangeHistory[0]).IsEqualTo(50).Because("Should have received the correct initial value");
     }
 
-    [Fact]
-    public void PendingCountNotificationsEmittedOnResume()
+    [Test]
+    public async Task PendingCountNotificationsEmittedOnResume()
     {
         // Arrange
         var suspend = _source.SuspendCount();
@@ -285,13 +289,13 @@ public sealed class SuspendNotificationsFixture : IDisposable
         suspend.Dispose();
 
         // Assert
-        _countChangeHistory.Count.Should().Be(2, "Should receive count updates");
-        _countChangeHistory[0].Should().Be(0, "Should have received the initial 0 count");
-        _countChangeHistory[1].Should().Be(3, "Should have received the updated count");
+        await Assert.That(_countChangeHistory.Count).IsEqualTo(2).Because("Should receive count updates");
+        await Assert.That(_countChangeHistory[0]).IsEqualTo(0).Because("Should have received the initial 0 count");
+        await Assert.That(_countChangeHistory[1]).IsEqualTo(3).Because("Should have received the updated count");
     }
 
-    [Fact]
-    public void MultipleCountSuspendsAreCumulative()
+    [Test]
+    public async Task MultipleCountSuspendsAreCumulative()
     {
         // Arrange
         var suspend = _source.SuspendCount();
@@ -304,12 +308,12 @@ public sealed class SuspendNotificationsFixture : IDisposable
         suspend.Dispose();
 
         // Assert
-        _countChangeHistory.Count.Should().Be(1, "Should Not receive count updates");
-        _countChangeHistory[0].Should().Be(0, "Should have only received the empty list");
+        await Assert.That(_countChangeHistory.Count).IsEqualTo(1).Because("Should Not receive count updates");
+        await Assert.That(_countChangeHistory[0]).IsEqualTo(0).Because("Should have only received the empty list");
     }
 
-    [Fact]
-    public void MultipleCountSuspendsCanBeResumed()
+    [Test]
+    public async Task MultipleCountSuspendsCanBeResumed()
     {
         // Arrange
         var suspend = _source.SuspendCount();
@@ -323,12 +327,12 @@ public sealed class SuspendNotificationsFixture : IDisposable
         suspend2.Dispose();
 
         // Assert
-        _countChangeHistory.Count.Should().Be(2, "Should receive count updates");
-        _countChangeHistory[0].Should().Be(0, "Should have received the initial 0 count");
-        _countChangeHistory[1].Should().Be(3, "Should have received the updated count");
+        await Assert.That(_countChangeHistory.Count).IsEqualTo(2).Because("Should receive count updates");
+        await Assert.That(_countChangeHistory[0]).IsEqualTo(0).Because("Should have received the initial 0 count");
+        await Assert.That(_countChangeHistory[1]).IsEqualTo(3).Because("Should have received the updated count");
     }
 
-    [Fact]
+    [Test]
     public async Task SuspensionsAreThreadSafe()
     {
         // Arrange
@@ -340,13 +344,13 @@ public sealed class SuspendNotificationsFixture : IDisposable
         await Task.Run(suspend.Dispose);
 
         // Assert
-        _results.Data.Count.Should().Be(100, "Should receive data after resume");
-        _results.Messages.Count.Should().Be(1, "Should receive single changeset on resume");
-        _results.Messages[0].Adds.Should().Be(100, "Should have 100 adds");
+        await Assert.That(_results.Data.Count).IsEqualTo(100).Because("Should receive data after resume");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should receive single changeset on resume");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(100).Because("Should have 100 adds");
     }
 
-    [Fact]
-    public void ResumeThenReSuspendDeliversFirstBatchOnly()
+    [Test]
+    public async Task ResumeThenReSuspendDeliversFirstBatchOnly()
     {
         // Forces the ordering: resume completes before re-suspend.
         // The deferred subscriber activates with the first batch snapshot,
@@ -360,42 +364,42 @@ public sealed class SuspendNotificationsFixture : IDisposable
         cache.AddOrUpdate(dataSet1);
 
         using var results = cache.Connect().AsAggregator();
-        results.Messages.Count.Should().Be(0, "no messages during suspension");
+        await Assert.That(results.Messages.Count).IsEqualTo(0).Because("no messages during suspension");
 
         // Resume first — subscriber activates
         suspend1.Dispose();
 
-        results.Messages.Count.Should().Be(1, "exactly one message after resume");
-        results.Messages[0].Adds.Should().Be(dataSet1.Count, $"snapshot should have {dataSet1.Count} adds");
-        results.Messages[0].Removes.Should().Be(0, "no removes");
-        results.Messages[0].Updates.Should().Be(0, "no updates");
-        results.Messages[0].Select(x => x.Key).Should().Equal(dataSet1, "snapshot should contain first batch keys");
+        await Assert.That(results.Messages.Count).IsEqualTo(1).Because("exactly one message after resume");
+        await Assert.That(results.Messages[0].Adds).IsEqualTo(dataSet1.Count).Because($"snapshot should have {dataSet1.Count} adds");
+        await Assert.That(results.Messages[0].Removes).IsEqualTo(0).Because("no removes");
+        await Assert.That(results.Messages[0].Updates).IsEqualTo(0).Because("no updates");
+        await Assert.That(results.Messages[0].Select(x => x.Key)).IsEquivalentTo(dataSet1).Because("snapshot should contain first batch keys");
 
         // Re-suspend, write second batch
         var suspend2 = cache.SuspendNotifications();
         cache.AddOrUpdate(dataSet2);
 
-        results.Messages.Count.Should().Be(1, "still one message — second batch held by suspension");
-        results.Summary.Overall.Adds.Should().Be(dataSet1.Count, $"still {dataSet1.Count} adds total");
+        await Assert.That(results.Messages.Count).IsEqualTo(1).Because("still one message — second batch held by suspension");
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(dataSet1.Count).Because($"still {dataSet1.Count} adds total");
 
         // Final resume
         suspend2.Dispose();
 
-        results.Messages.Count.Should().Be(2, "two messages total");
-        results.Messages[1].Adds.Should().Be(dataSet2.Count, $"second message has {dataSet2.Count} adds");
-        results.Messages[1].Removes.Should().Be(0, "no removes in second message");
-        results.Messages[1].Updates.Should().Be(0, "no updates in second message");
-        results.Messages[1].Select(x => x.Key).Should().Equal(dataSet2, "second message should contain second batch keys");
+        await Assert.That(results.Messages.Count).IsEqualTo(2).Because("two messages total");
+        await Assert.That(results.Messages[1].Adds).IsEqualTo(dataSet2.Count).Because($"second message has {dataSet2.Count} adds");
+        await Assert.That(results.Messages[1].Removes).IsEqualTo(0).Because("no removes in second message");
+        await Assert.That(results.Messages[1].Updates).IsEqualTo(0).Because("no updates in second message");
+        await Assert.That(results.Messages[1].Select(x => x.Key)).IsEquivalentTo(dataSet2).Because("second message should contain second batch keys");
 
-        results.Summary.Overall.Adds.Should().Be(allData.Count, $"exactly {allData.Count} adds total");
-        results.Summary.Overall.Removes.Should().Be(0, "no removes");
-        results.Data.Count.Should().Be(allData.Count, $"{allData.Count} items in final state");
-        results.Error.Should().BeNull();
-        results.IsCompleted.Should().BeFalse();
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(allData.Count).Because($"exactly {allData.Count} adds total");
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0).Because("no removes");
+        await Assert.That(results.Data.Count).IsEqualTo(allData.Count).Because($"{allData.Count} items in final state");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.IsCompleted).IsFalse();
     }
 
-    [Fact]
-    public void ReSuspendThenResumeDeliversAllInSingleBatch()
+    [Test]
+    public async Task ReSuspendThenResumeDeliversAllInSingleBatch()
     {
         // Forces the ordering: re-suspend before resume.
         // Suspend count goes 1→2→1, no resume signal fires.
@@ -409,7 +413,7 @@ public sealed class SuspendNotificationsFixture : IDisposable
         cache.AddOrUpdate(dataSet1);
 
         using var results = cache.Connect().AsAggregator();
-        results.Messages.Count.Should().Be(0, "no messages during suspension");
+        await Assert.That(results.Messages.Count).IsEqualTo(0).Because("no messages during suspension");
 
         // Re-suspend first — count goes 1→2
         var suspend2 = cache.SuspendNotifications();
@@ -417,32 +421,32 @@ public sealed class SuspendNotificationsFixture : IDisposable
         // Resume first suspend — count goes 2→1, still suspended
         suspend1.Dispose();
 
-        results.Messages.Count.Should().Be(0, "no messages — still suspended (count=1)");
-        results.Summary.Overall.Adds.Should().Be(0, "no adds — still suspended");
+        await Assert.That(results.Messages.Count).IsEqualTo(0).Because("no messages — still suspended (count=1)");
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(0).Because("no adds — still suspended");
 
         // Write second batch while still suspended
         cache.AddOrUpdate(dataSet2);
 
-        results.Messages.Count.Should().Be(0, "still no messages");
+        await Assert.That(results.Messages.Count).IsEqualTo(0).Because("still no messages");
 
         // Final resume — count goes 1→0
         suspend2.Dispose();
 
-        results.Messages.Count.Should().Be(1, "single message with all data");
-        results.Messages[0].Adds.Should().Be(allData.Count, $"all {allData.Count} items in one changeset");
-        results.Messages[0].Removes.Should().Be(0, "no removes");
-        results.Messages[0].Updates.Should().Be(0, "no updates");
-        results.Messages[0].Select(c => c.Key).OrderBy(k => k).Should().Equal(allData, "should contain both batches in order");
+        await Assert.That(results.Messages.Count).IsEqualTo(1).Because("single message with all data");
+        await Assert.That(results.Messages[0].Adds).IsEqualTo(allData.Count).Because($"all {allData.Count} items in one changeset");
+        await Assert.That(results.Messages[0].Removes).IsEqualTo(0).Because("no removes");
+        await Assert.That(results.Messages[0].Updates).IsEqualTo(0).Because("no updates");
+        await Assert.That(results.Messages[0].Select(c => c.Key).OrderBy(k => k)).IsEquivalentTo(allData).Because("should contain both batches in order");
 
-        results.Summary.Overall.Adds.Should().Be(allData.Count, $"exactly {allData.Count} adds total");
-        results.Summary.Overall.Removes.Should().Be(0, "no removes");
-        results.Summary.Overall.Updates.Should().Be(0, "no updates");
-        results.Data.Count.Should().Be(allData.Count, $"{allData.Count} items in final state");
-        results.Error.Should().BeNull();
-        results.IsCompleted.Should().BeFalse();
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(allData.Count).Because($"exactly {allData.Count} adds total");
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0).Because("no removes");
+        await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0).Because("no updates");
+        await Assert.That(results.Data.Count).IsEqualTo(allData.Count).Because($"{allData.Count} items in final state");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.IsCompleted).IsFalse();
     }
 
-    [Fact]
+    [Test]
     public async Task ConcurrentSuspendDuringResumeDoesNotCorrupt()
     {
         // Stress test: races resume against re-suspend on two threads.
@@ -480,17 +484,17 @@ public sealed class SuspendNotificationsFixture : IDisposable
             cache.AddOrUpdate(dataSet2);
             suspend2.Dispose();
 
-            results.Summary.Overall.Adds.Should().Be(allData.Count, $"iteration {iter}: exactly {allData.Count} adds");
-            results.Summary.Overall.Removes.Should().Be(0, $"iteration {iter}: no removes");
-            results.Summary.Overall.Updates.Should().Be(0, $"iteration {iter}: no updates because keys don't overlap");
-            results.Data.Count.Should().Be(allData.Count, $"iteration {iter}: {allData.Count} items in final state");
-            results.Data.Keys.OrderBy(k => k).Should().Equal(allData, $"iteration {iter}: all keys present in order");
-            results.Error.Should().BeNull($"iteration {iter}: no errors");
-            results.IsCompleted.Should().BeFalse($"iteration {iter}: not completed");
+            await Assert.That(results.Summary.Overall.Adds).IsEqualTo(allData.Count).Because($"iteration {iter}: exactly {allData.Count} adds");
+            await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0).Because($"iteration {iter}: no removes");
+            await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0).Because($"iteration {iter}: no updates because keys don't overlap");
+            await Assert.That(results.Data.Count).IsEqualTo(allData.Count).Because($"iteration {iter}: {allData.Count} items in final state");
+            await Assert.That(results.Data.Keys.OrderBy(k => k)).IsEquivalentTo(allData).Because($"iteration {iter}: all keys present in order");
+            await Assert.That(results.Error).IsNull().Because($"iteration {iter}: no errors");
+            await Assert.That(results.IsCompleted).IsFalse().Because($"iteration {iter}: not completed");
         }
     }
 
-    [Fact]
+    [Test]
     public async Task ResumeSignalUnderLockPreventsStaleSnapshotFromReSuspend()
     {
         // Verifies that a deferred Connect subscriber never sees data written during
@@ -526,11 +530,11 @@ public sealed class SuspendNotificationsFixture : IDisposable
 
         // Deferred subscriber — will activate when resume signal fires
         using var results = cache.Connect().AsAggregator();
-        results.Messages.Count.Should().Be(0, "no messages during suspension");
+        await Assert.That(results.Messages.Count).IsEqualTo(0).Because("no messages during suspension");
 
         // Resume on background thread — delivery blocks on slow subscriber
         var resumeTask = Task.Run(() => suspend1.Dispose());
-        (await delivering.WaitAsync(TimeSpan.FromSeconds(5))).Should().BeTrue("delivery should have started");
+        await Assert.That((await delivering.WaitAsync(TimeSpan.FromSeconds(5)))).IsTrue().Because("delivery should have started");
 
         // Re-suspend and write second batch while delivery is blocked
         var suspend2 = cache.SuspendNotifications();
@@ -541,8 +545,8 @@ public sealed class SuspendNotificationsFixture : IDisposable
         {
             foreach (var change in msg)
             {
-                change.Key.Should().BeInRange(0, 99,
-                    "deferred subscriber should only have first-batch keys before second resume");
+                await Assert.That(change.Key is >= 0 and <= 99)
+                    .IsTrue().Because("deferred subscriber should only have first-batch keys before second resume");
             }
         }
 
@@ -551,26 +555,23 @@ public sealed class SuspendNotificationsFixture : IDisposable
         await resumeTask;
 
         // Only dataSet1 should have been delivered — dataSet2 is held by second suspension
-        results.Summary.Overall.Adds.Should().Be(dataSet1.Count,
-            $"exactly {dataSet1.Count} adds before second resume — dataSet2 must be held by suspension");
-        results.Messages.Should().HaveCount(1, "exactly one message (snapshot of dataSet1)");
-        results.Messages[0].Adds.Should().Be(dataSet1.Count);
-        results.Messages[0].Select(c => c.Key).Should().Equal(dataSet1,
-            "snapshot should contain exactly first-batch keys in order");
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(dataSet1.Count).Because($"exactly {dataSet1.Count} adds before second resume — dataSet2 must be held by suspension");
+        await Assert.That(results.Messages).HasCount(1).Because("exactly one message (snapshot of dataSet1)");
+        await Assert.That(results.Messages[0].Adds).IsEqualTo(dataSet1.Count);
+        await Assert.That(results.Messages[0].Select(c => c.Key)).IsEquivalentTo(dataSet1).Because("snapshot should contain exactly first-batch keys in order");
 
         // Resume second suspension — dataSet2 arrives now
         suspend2.Dispose();
 
-        results.Summary.Overall.Adds.Should().Be(allData.Count, $"exactly {allData.Count} adds total");
-        results.Summary.Overall.Removes.Should().Be(0, "no removes");
-        results.Messages.Should().HaveCount(2, "two messages: snapshot + second batch");
-        results.Messages[1].Adds.Should().Be(dataSet2.Count);
-        results.Messages[1].Select(c => c.Key).Should().Equal(dataSet2,
-            "second message should contain exactly second-batch keys in order");
-        results.Data.Count.Should().Be(allData.Count);
-        results.Data.Keys.OrderBy(k => k).Should().Equal(allData);
-        results.Error.Should().BeNull();
-        results.IsCompleted.Should().BeFalse();
+        await Assert.That(results.Summary.Overall.Adds).IsEqualTo(allData.Count).Because($"exactly {allData.Count} adds total");
+        await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0).Because("no removes");
+        await Assert.That(results.Messages).HasCount(2).Because("two messages: snapshot + second batch");
+        await Assert.That(results.Messages[1].Adds).IsEqualTo(dataSet2.Count);
+        await Assert.That(results.Messages[1].Select(c => c.Key)).IsEquivalentTo(dataSet2).Because("second message should contain exactly second-batch keys in order");
+        await Assert.That(results.Data.Count).IsEqualTo(allData.Count);
+        await Assert.That(results.Data.Keys.OrderBy(k => k)).IsEquivalentTo(allData);
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.IsCompleted).IsFalse();
     }
 
     public void Dispose()

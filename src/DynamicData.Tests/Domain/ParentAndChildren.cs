@@ -1,4 +1,8 @@
-﻿using DynamicData.Kernel;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
+using DynamicData.Kernel;
+#endif
 
 namespace DynamicData.Tests.Domain;
 
@@ -10,7 +14,7 @@ public class ParentAndChildren : IEquatable<ParentAndChildren>
         Children = children;
     }
 
-    public ParentAndChildren(string parentId, Optional<Person> parent, Person[] children)
+    public ParentAndChildren(string parentId, ReactiveUI.Primitives.Optional<Person> parent, Person[] children)
     {
         Parent = parent.ValueOrDefault();
         ParentId = parentId;

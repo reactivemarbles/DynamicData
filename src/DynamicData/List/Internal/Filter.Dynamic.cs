@@ -14,12 +14,12 @@ namespace DynamicData.List.Internal;
 /// </summary>
 internal static partial class Filter
 {
-/// <summary>
-/// Provides members for the Dynamic class.
-/// </summary>
-/// <typeparam name="T">The type of the T value.</typeparam>
-internal sealed class Dynamic<T>
-        where T : notnull
+    /// <summary>
+    /// Provides members for the Dynamic class.
+    /// </summary>
+    /// <typeparam name="T">The type of the T value.</typeparam>
+    internal sealed class Dynamic<T>
+            where T : notnull
     {
         /// <summary>
         /// The _policy field.
@@ -74,7 +74,7 @@ internal sealed class Dynamic<T>
         public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
                 observer =>
                 {
-                    var locker = InternalEx.NewLock();
+                    var locker = InternalEx.NewMonitorGate();
 
                     Func<T, bool> predicate = _ => false;
                     var all = new List<ItemWithMatch>();
@@ -116,16 +116,18 @@ internal sealed class Dynamic<T>
                                 var wasMatch = previous.ConvertOr(p => p!.IsMatch, () => false);
                                 return new ItemWithMatch(t, predicate(t), wasMatch);
                             },
-                        true)
+                        false)
                         .Select(changes =>
                         {
+                            var result = Process(predicate, filtered, changes);
+
                             // keep track of all changes if filtering on an observable
                             if (!immutableFilter)
                             {
                                 all.Clone(changes);
                             }
 
-                            return Process(filtered, changes);
+                            return result;
                         });
 
                     return predicateChanged.Merge(filteredResult).NotEmpty()
@@ -136,10 +138,11 @@ internal sealed class Dynamic<T>
         /// <summary>
         /// Executes the Process operation.
         /// </summary>
+        /// <param name="predicate">The active predicate.</param>
         /// <param name="filtered">The filtered value.</param>
         /// <param name="changes">The changes value.</param>
         /// <returns>The result of the operation.</returns>
-        private static IChangeSet<ItemWithMatch> Process(ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
+        private static IChangeSet<ItemWithMatch> Process(Func<T, bool> predicate, ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
         {
             // Maintain all items as well as filtered list. This enables us to a) re-query when the predicate changes b) check the previous state when Refresh is called
             foreach (var item in changes)
@@ -168,7 +171,7 @@ internal sealed class Dynamic<T>
                         {
                             var change = item.Item;
                             var match = change.Current.IsMatch;
-                            var wasMatch = item.Item.Current.WasMatch;
+                            var wasMatch = change.Previous.Value.IsMatch;
                             if (match)
                             {
                                 if (wasMatch)
@@ -195,8 +198,10 @@ internal sealed class Dynamic<T>
                     case ListChangeReason.Refresh:
                         {
                             var change = item.Item;
-                            var match = change.Current.IsMatch;
-                            var wasMatch = item.Item.Current.WasMatch;
+                            var wasMatch = change.Current.IsMatch;
+                            var match = predicate(change.Current.Item);
+                            change.Current.WasMatch = wasMatch;
+                            change.Current.IsMatch = match;
                             if (match)
                             {
                                 if (wasMatch)
@@ -299,13 +304,13 @@ internal sealed class Dynamic<T>
             return filtered.CaptureChanges();
         }
 
-/// <summary>
-/// Provides members for the ItemWithMatch class.
-/// </summary>
-/// <param name="item">The item value.</param>
-/// <param name="isMatch">The isMatch value.</param>
-/// <param name="wasMatch">The wasMatch value.</param>
-private sealed class ItemWithMatch(T item, bool isMatch, bool wasMatch = false) : IEquatable<ItemWithMatch>
+        /// <summary>
+        /// Provides members for the ItemWithMatch class.
+        /// </summary>
+        /// <param name="item">The item value.</param>
+        /// <param name="isMatch">The isMatch value.</param>
+        /// <param name="wasMatch">The wasMatch value.</param>
+        private sealed class ItemWithMatch(T item, bool isMatch, bool wasMatch = false) : IEquatable<ItemWithMatch>
         {
             /// <summary>
             /// Gets the Item value.

@@ -58,7 +58,7 @@ internal sealed class FakeScheduler
             state: state,
             dueTime: null,
             action: action);
-    
+
     public IDisposable Schedule<TState>(
             TState state,
             TimeSpan dueTime,
@@ -67,7 +67,7 @@ internal sealed class FakeScheduler
             state: state,
             dueTime: _now + dueTime,
             action: action);
-    
+
     public IDisposable Schedule<TState>(
             TState state,
             DateTimeOffset dueTime,
@@ -80,7 +80,7 @@ internal sealed class FakeScheduler
     // Simulate the scheduler invoking actions, allowing for each action to schedule followup actions, until none remain.
     public void SimulateUntilIdle(TimeSpan inaccuracyOffset = default)
     {
-        while(ScheduledActions.Count is not 0)
+        while (ScheduledActions.Count is not 0)
         {
             // If the action doesn't have a DueTime, invoke it immediately
             if (ScheduledActions[0].DueTime is not DateTimeOffset dueTime)

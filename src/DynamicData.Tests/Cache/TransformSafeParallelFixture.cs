@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
@@ -31,25 +35,25 @@ public class TransformSafeParallelFixture : IDisposable
         _results = new ChangeSetAggregator<PersonWithGender, string>(safeTransform);
     }
 
-    [Fact]
-    public void AddWithError()
+    [Test]
+    public async Task AddWithError()
     {
         var person = new Person("Person", 3);
         _source.AddOrUpdate(person);
 
-        _errors.Count.Should().Be(1, "Should be 1 error reported");
-        _results.Messages.Count.Should().Be(1, "Should be 1 messages");
+        await Assert.That(_errors.Count).IsEqualTo(1).Because("Should be 1 error reported");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 messages");
     }
 
-    [Fact]
-    public void AddWithNoError()
+    [Test]
+    public async Task AddWithNoError()
     {
         var person = new Person("Adult1", 50);
         _source.AddOrUpdate(person);
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].Should().Be(_transformFactory(person), "Should be same person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(_transformFactory(person)).Because("Should be same person");
     }
 
     public void Dispose()
@@ -58,8 +62,8 @@ public class TransformSafeParallelFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void UpdateBatch()
+    [Test]
+    public async Task UpdateBatch()
     {
         const string key = "Adult1";
         var update1 = new Person(key, 1);
@@ -74,31 +78,31 @@ public class TransformSafeParallelFixture : IDisposable
                 updater.AddOrUpdate(update3);
             });
 
-        _errors.Count.Should().Be(1, "Should be 1 error reported");
-        _results.Messages.Count.Should().Be(1, "Should be 1 messages");
+        await Assert.That(_errors.Count).IsEqualTo(1).Because("Should be 1 error reported");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 messages");
 
-        _results.Data.Count.Should().Be(1, "Should 1 item in the cache");
-        _results.Data.Items[0].Should().Be(_transformFactory(update2), "Change 2 shoud be the only item cached");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should 1 item in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(_transformFactory(update2)).Because("Change 2 shoud be the only item cached");
     }
 
-    [Fact]
-    public void UpdateBatchAndClear()
+    [Test]
+    public async Task UpdateBatchAndClear()
     {
         var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
 
         _source.AddOrUpdate(people);
         _source.Clear();
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
 
-        _errors.Count.Should().Be(33, "Should be 33 errors");
-        _results.Messages[0].Adds.Should().Be(67, "Should be 67 add");
-        _results.Messages[1].Removes.Should().Be(67, "Should be 67 removes");
-        _results.Data.Count.Should().Be(0, "Should be nothing cached");
+        await Assert.That(_errors.Count).IsEqualTo(33).Because("Should be 33 errors");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(67).Because("Should be 67 add");
+        await Assert.That(_results.Messages[1].Removes).IsEqualTo(67).Because("Should be 67 removes");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be nothing cached");
     }
 
-    [Fact]
-    public void UpdateSucessively()
+    [Test]
+    public async Task UpdateSucessively()
     {
         const string key = "Adult1";
         var update1 = new Person(key, 1);
@@ -109,10 +113,10 @@ public class TransformSafeParallelFixture : IDisposable
         _source.AddOrUpdate(update2);
         _source.AddOrUpdate(update3);
 
-        _errors.Count.Should().Be(1, "Should be 1 error reported");
-        _results.Messages.Count.Should().Be(3, "Should be 3 messages");
+        await Assert.That(_errors.Count).IsEqualTo(1).Because("Should be 1 error reported");
+        await Assert.That(_results.Messages.Count).IsEqualTo(3).Because("Should be 3 messages");
 
-        _results.Data.Count.Should().Be(1, "Should 1 item in the cache");
-        _results.Data.Items[0].Should().Be(_transformFactory(update2), "Change 2 shoud be the only item cached");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should 1 item in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(_transformFactory(update2)).Because("Change 2 shoud be the only item cached");
     }
 }

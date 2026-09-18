@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.List;
@@ -7,7 +11,7 @@ public class PageFixture : IDisposable
 {
     private readonly RandomPersonGenerator _generator = new();
 
-    private readonly ISignal<PageRequest> _requestSubject = new StateSignal<PageRequest>(new PageRequest(1, 25));
+    private readonly ReactiveUI.Primitives.Signals.ISignal<PageRequest> _requestSubject = new ReactiveUI.Primitives.Signals.StateSignal<PageRequest>(new PageRequest(1, 25));
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -27,19 +31,19 @@ public class PageFixture : IDisposable
         _requestSubject.Dispose();
     }
 
-    [Fact]
-    public void InsertAfterPageProducesNothing()
+    [Test]
+    public async Task InsertAfterPageProducesNothing()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
         var expected = people.Take(25).ToArray();
 
         _source.InsertRange(_generator.Take(100), 50);
-        _results.Data.Items.Should().BeEquivalentTo(expected);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(expected);
     }
 
-    [Fact]
-    public void InsertInPageReflectsChange()
+    [Test]
+    public async Task InsertInPageReflectsChange()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
@@ -50,24 +54,24 @@ public class PageFixture : IDisposable
         var message = _results.Messages[1].ElementAt(0);
         var removedPerson = people.ElementAt(24);
 
-        _results.Data.Items.ElementAt(10).Should().Be(newPerson);
-        message.Item.Current.Should().Be(removedPerson);
-        message.Reason.Should().Be(ListChangeReason.Remove);
+        await Assert.That(_results.Data.Items.ElementAt(10)).IsEqualTo(newPerson);
+        await Assert.That(message.Item.Current).IsEqualTo(removedPerson);
+        await Assert.That(message.Reason).IsEqualTo(ListChangeReason.Remove);
     }
 
-    [Fact]
-    public void MoveToNextPage()
+    [Test]
+    public async Task MoveToNextPage()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
         _requestSubject.OnNext(new PageRequest(2, 25));
 
         var expected = people.Skip(25).Take(25).ToArray();
-        _results.Data.Items.Should().BeEquivalentTo(expected);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(expected);
     }
 
-    [Fact]
-    public void MoveWithinSamePage()
+    [Test]
+    public async Task MoveWithinSamePage()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
@@ -75,11 +79,11 @@ public class PageFixture : IDisposable
         _source.Move(0, 10);
 
         var actualPersonAtIndex10 = _results.Data.Items.ElementAt(10);
-        actualPersonAtIndex10.Should().Be(personToMove);
+        await Assert.That(actualPersonAtIndex10).IsEqualTo(personToMove);
     }
 
-    [Fact]
-    public void MoveWithinSamePage2()
+    [Test]
+    public async Task MoveWithinSamePage2()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
@@ -87,11 +91,11 @@ public class PageFixture : IDisposable
         _source.Move(10, 0);
 
         var actualPersonAtIndex0 = _results.Data.Items.ElementAt(0);
-        actualPersonAtIndex0.Should().Be(personToMove);
+        await Assert.That(actualPersonAtIndex0).IsEqualTo(personToMove);
     }
 
-    [Fact]
-    public void RemoveBeforeShiftsPage()
+    [Test]
+    public async Task RemoveBeforeShiftsPage()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
@@ -99,26 +103,26 @@ public class PageFixture : IDisposable
         _source.RemoveAt(0);
         var expected = people.Skip(26).Take(25).ToArray();
 
-        _results.Data.Items.Should().BeEquivalentTo(expected);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(expected);
 
         var removedMessage = _results.Messages[2].ElementAt(0);
         var removedPerson = people.ElementAt(25);
-        removedMessage.Item.Current.Should().Be(removedPerson);
-        removedMessage.Reason.Should().Be(ListChangeReason.Remove);
+        await Assert.That(removedMessage.Item.Current).IsEqualTo(removedPerson);
+        await Assert.That(removedMessage.Reason).IsEqualTo(ListChangeReason.Remove);
 
         var addedMessage = _results.Messages[2].ElementAt(1);
         var addedPerson = people.ElementAt(50);
-        addedMessage.Item.Current.Should().Be(addedPerson);
-        addedMessage.Reason.Should().Be(ListChangeReason.Add);
+        await Assert.That(addedMessage.Item.Current).IsEqualTo(addedPerson);
+        await Assert.That(addedMessage.Reason).IsEqualTo(ListChangeReason.Add);
     }
 
-    [Fact]
-    public void VirtualiseInitial()
+    [Test]
+    public async Task VirtualiseInitial()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
         var expected = people.Take(25).ToArray();
-        _results.Data.Items.Should().BeEquivalentTo(expected);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(expected);
     }
 }
 
@@ -138,29 +142,29 @@ public class PageFixtureWithNoInitialData
         new("Sharon", "Red Backed Shrike", AnimalFamily.Bird),
     ];
 
-    [Fact]
-    public void SimplePaging()
+    [Test]
+    public async Task SimplePaging()
     {
-        using var pager = new StateSignal<IPageRequest>(new PageRequest(0, 0));
+        using var pager = new ReactiveUI.Primitives.Signals.StateSignal<IPageRequest>(new PageRequest(0, 0));
         using var sourceList = new SourceList<Animal>();
         using var sut = new SimplePaging(sourceList, pager);
         // Add items to source
         sourceList.AddRange(_items);
 
-        sut.Paged.Count.Should().Be(0);
+        await Assert.That(sut.Paged.Count).IsEqualTo(0);
 
         pager.OnNext(new PageRequest(1, 2));
-        sut.Paged.Count.Should().Be(2);
+        await Assert.That(sut.Paged.Count).IsEqualTo(2);
 
         pager.OnNext(new PageRequest(1, 4));
-        sut.Paged.Count.Should().Be(4);
+        await Assert.That(sut.Paged.Count).IsEqualTo(4);
 
         pager.OnNext(new PageRequest(2, 3));
-        sut.Paged.Count.Should().Be(3);
+        await Assert.That(sut.Paged.Count).IsEqualTo(3);
     }
 
-    [Fact]
-    public void DoesNotThrowWithDuplicates()
+    [Test]
+    public async Task DoesNotThrowWithDuplicates()
     {
         // see https://github.com/reactivemarbles/DynamicData/issues/540
 
@@ -169,11 +173,11 @@ public class PageFixtureWithNoInitialData
         var source = new SourceList<string>();
         source.AddRange(Enumerable.Repeat("item", 10));
         source.Connect()
-            .Page(new StateSignal<IPageRequest>(new PageRequest(0, 3)))
+            .Page(new ReactiveUI.Primitives.Signals.StateSignal<IPageRequest>(new PageRequest(0, 3)))
             .Clone(result)
             .Subscribe();
 
-        result.Count.Should().Be(1);
+        await Assert.That(result.Count).IsEqualTo(1);
     }
 }
 

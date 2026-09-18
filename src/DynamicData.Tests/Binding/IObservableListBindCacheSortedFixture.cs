@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Binding;
@@ -9,7 +13,7 @@ public class IObservableListBindCacheSortedFixture : IDisposable
 
     private static readonly IComparer<Person> _comparerNameDesc = SortExpressionComparer<Person>.Descending(p => p.Name);
 
-    private readonly StateSignal<IComparer<Person>> _comparer = new(_comparerAgeAscThanNameAsc);
+    private readonly ReactiveUI.Primitives.Signals.StateSignal<IComparer<Person>> _comparer = new(_comparerAgeAscThanNameAsc);
 
     private readonly RandomPersonGenerator _generator = new();
 
@@ -29,43 +33,43 @@ public class IObservableListBindCacheSortedFixture : IDisposable
         _listNotifications = _list.Connect().AsAggregator();
     }
 
-    [Fact]
-    public void AddToSourceAddsToDestination()
+    [Test]
+    public async Task AddToSourceAddsToDestination()
     {
         var person = new Person("Adult1", 50);
         _source.AddOrUpdate(person);
 
-        _list.Count.Should().Be(1, "Should be 1 item in the collection");
-        _list.Items[0].Should().Be(person, "Should be same person");
+        await Assert.That(_list.Count).IsEqualTo(1).Because("Should be 1 item in the collection");
+        await Assert.That(_list.Items[0]).IsEqualTo(person).Because("Should be same person");
     }
 
-    [Fact]
-    public void BatchAdd()
+    [Test]
+    public async Task BatchAdd()
     {
         var people = _generator.Take(15).ToList();
         _source.AddOrUpdate(people);
 
         var sorted = people.OrderBy(p => p, _comparerAgeAscThanNameAsc).ToList();
 
-        _list.Count.Should().Be(15, "Should be 15 items in the collection");
-        _list.Items.Should().Equal(sorted, "Collections should be equivalent");
+        await Assert.That(_list.Count).IsEqualTo(15).Because("Should be 15 items in the collection");
+        await Assert.That(_list.Items).IsEquivalentTo(sorted, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("Collections should be equivalent");
     }
 
-    [Fact]
-    public void BatchRemove()
+    [Test]
+    public async Task BatchRemove()
     {
         var people = _generator.Take(100).ToList();
         _source.AddOrUpdate(people);
         _source.Clear();
-        _list.Count.Should().Be(0, "Should be 0 items in the collection");
+        await Assert.That(_list.Count).IsEqualTo(0).Because("Should be 0 items in the collection");
     }
 
-    [Fact]
-    public void CollectionIsInSortOrder()
+    [Test]
+    public async Task CollectionIsInSortOrder()
     {
         _source.AddOrUpdate(_generator.Take(100));
         var sorted = _source.Items.OrderBy(p => p, _comparerAgeAscThanNameAsc).ToList();
-        sorted.Should().Equal(_list.Items);
+        await Assert.That(sorted).IsEquivalentTo(_list.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
     public void Dispose()
@@ -76,8 +80,8 @@ public class IObservableListBindCacheSortedFixture : IDisposable
         _comparer.Dispose();
     }
 
-    [Fact]
-    public void InitialBindWithExistingData()
+    [Test]
+    public async Task InitialBindWithExistingData()
     {
         var source = new SourceCache<Person, string>(p => p.Name);
 
@@ -92,9 +96,9 @@ public class IObservableListBindCacheSortedFixture : IDisposable
         var listNotifications = list.Connect().AsAggregator();
 
         // Assert
-        listNotifications.Messages.Count.Should().Be(1);
-        listNotifications.Messages.First().First().Reason.Should().Be(ListChangeReason.AddRange);
-        list.Items.Should().Equal(person1, person2);
+        await Assert.That(listNotifications.Messages.Count).IsEqualTo(1);
+        await Assert.That(listNotifications.Messages.First().First().Reason).IsEqualTo(ListChangeReason.AddRange);
+        await Assert.That(list.Items).IsEquivalentTo(new[] { person1, person2 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
 
         // Clean up
         source.Dispose();
@@ -103,8 +107,8 @@ public class IObservableListBindCacheSortedFixture : IDisposable
         list.Dispose();
     }
 
-    [Fact]
-    public void ListRecievesMoves()
+    [Test]
+    public async Task ListRecievesMoves()
     {
         var person1 = new Person("Person1", 10);
         var person2 = new Person("Person2", 20);
@@ -116,52 +120,52 @@ public class IObservableListBindCacheSortedFixture : IDisposable
         person3.Age = 1;
 
         // 1 ChangeSet with AddRange & 1 ChangeSet with Refresh & Move
-        _listNotifications.Messages.Count.Should().Be(2);
+        await Assert.That(_listNotifications.Messages.Count).IsEqualTo(2);
 
         // Assert AddRange
         var addChangeSet = _listNotifications.Messages.First();
-        addChangeSet.First().Reason.Should().Be(ListChangeReason.AddRange);
+        await Assert.That(addChangeSet.First().Reason).IsEqualTo(ListChangeReason.AddRange);
 
         // Assert Refresh & Move
         var refreshAndMoveChangeSet = _listNotifications.Messages.Last();
 
-        refreshAndMoveChangeSet.Count.Should().Be(2);
+        await Assert.That(refreshAndMoveChangeSet.Count).IsEqualTo(2);
 
         var refreshChange = refreshAndMoveChangeSet.First();
-        refreshChange.Reason.Should().Be(ListChangeReason.Refresh);
-        refreshChange.Item.Current.Should().Be(person3);
+        await Assert.That(refreshChange.Reason).IsEqualTo(ListChangeReason.Refresh);
+        await Assert.That(refreshChange.Item.Current).IsEqualTo(person3);
 
         var moveChange = refreshAndMoveChangeSet.Last();
-        moveChange.Reason.Should().Be(ListChangeReason.Moved);
-        moveChange.Item.Current.Should().Be(person3);
-        moveChange.Item.PreviousIndex.Should().Be(2);
-        moveChange.Item.CurrentIndex.Should().Be(0);
+        await Assert.That(moveChange.Reason).IsEqualTo(ListChangeReason.Moved);
+        await Assert.That(moveChange.Item.Current).IsEqualTo(person3);
+        await Assert.That(moveChange.Item.PreviousIndex).IsEqualTo(2);
+        await Assert.That(moveChange.Item.CurrentIndex).IsEqualTo(0);
     }
 
-    [Fact]
-    public void ListRecievesRefresh()
+    [Test]
+    public async Task ListRecievesRefresh()
     {
         var person = new Person("Adult1", 50);
         _source.AddOrUpdate(person);
 
         person.Age = 60;
 
-        _listNotifications.Messages.Count.Should().Be(2);
-        _listNotifications.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
+        await Assert.That(_listNotifications.Messages.Count).IsEqualTo(2);
+        await Assert.That(_listNotifications.Messages.Last().First().Reason).IsEqualTo(ListChangeReason.Refresh);
     }
 
-    [Fact]
-    public void RemoveSourceRemovesFromTheDestination()
+    [Test]
+    public async Task RemoveSourceRemovesFromTheDestination()
     {
         var person = new Person("Adult1", 50);
         _source.AddOrUpdate(person);
         _source.Remove(person);
 
-        _list.Count.Should().Be(0, "Should be 1 item in the collection");
+        await Assert.That(_list.Count).IsEqualTo(0).Because("Should be 1 item in the collection");
     }
 
-    [Fact]
-    public void Reset()
+    [Test]
+    public async Task Reset()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToArray();
 
@@ -171,17 +175,17 @@ public class IObservableListBindCacheSortedFixture : IDisposable
 
         var sorted = people.OrderBy(p => p, _comparerNameDesc).ToList();
 
-        _list.Items.Should().Equal(sorted);
+        await Assert.That(_list.Items).IsEquivalentTo(sorted, TUnit.Assertions.Enums.CollectionOrdering.Matching);
 
-        _listNotifications.Messages.Count.Should().Be(2); // Initial loading change set and a reset change due to a change over the reset threshold.
-        _listNotifications.Messages[0].First().Reason.Should().Be(ListChangeReason.AddRange); // initial loading
-        _listNotifications.Messages[1].Count.Should().Be(2); // Reset
-        _listNotifications.Messages[1].First().Reason.Should().Be(ListChangeReason.Clear); // reset
-        _listNotifications.Messages[1].Last().Reason.Should().Be(ListChangeReason.AddRange); // reset
+        await Assert.That(_listNotifications.Messages.Count).IsEqualTo(2); // Initial loading change set and a reset change due to a change over the reset threshold.
+        await Assert.That(_listNotifications.Messages[0].First().Reason).IsEqualTo(ListChangeReason.AddRange); // initial loading
+        await Assert.That(_listNotifications.Messages[1].Count).IsEqualTo(2); // Reset
+        await Assert.That(_listNotifications.Messages[1].First().Reason).IsEqualTo(ListChangeReason.Clear); // reset
+        await Assert.That(_listNotifications.Messages[1].Last().Reason).IsEqualTo(ListChangeReason.AddRange); // reset
     }
 
-    [Fact]
-    public void TreatMovesAsRemoveAdd()
+    [Test]
+    public async Task TreatMovesAsRemoveAdd()
     {
         var cache = new SourceCache<Person, string>(p => p.Name);
 
@@ -208,20 +212,20 @@ public class IObservableListBindCacheSortedFixture : IDisposable
                 throw new InvalidOperationException(nameof(latestSetWithMoves));
             }
 
-            latestSetWithoutMoves.Removes.Should().Be(1);
-            latestSetWithoutMoves.Adds.Should().Be(1);
-            latestSetWithoutMoves.Moves.Should().Be(0);
-            latestSetWithoutMoves.Updates.Should().Be(0);
+            await Assert.That(latestSetWithoutMoves.Removes).IsEqualTo(1);
+            await Assert.That(latestSetWithoutMoves.Adds).IsEqualTo(1);
+            await Assert.That(latestSetWithoutMoves.Moves).IsEqualTo(0);
+            await Assert.That(latestSetWithoutMoves.Updates).IsEqualTo(0);
 
-            latestSetWithMoves.Moves.Should().Be(1);
-            latestSetWithMoves.Updates.Should().Be(0);
-            latestSetWithMoves.Removes.Should().Be(0);
-            latestSetWithMoves.Adds.Should().Be(0);
+            await Assert.That(latestSetWithMoves.Moves).IsEqualTo(1);
+            await Assert.That(latestSetWithMoves.Updates).IsEqualTo(0);
+            await Assert.That(latestSetWithMoves.Removes).IsEqualTo(0);
+            await Assert.That(latestSetWithMoves.Adds).IsEqualTo(0);
         }
     }
 
-    [Fact]
-    public void UpdateToSourceUpdatesTheDestination()
+    [Test]
+    public async Task UpdateToSourceUpdatesTheDestination()
     {
         var person1 = new Person("Adult1", 20);
         var person2 = new Person("Adult2", 30);
@@ -230,10 +234,10 @@ public class IObservableListBindCacheSortedFixture : IDisposable
         _source.AddOrUpdate(person1);
         _source.AddOrUpdate(person2);
 
-        _list.Items.Should().Equal(person1, person2);
+        await Assert.That(_list.Items).IsEquivalentTo(new[] { person1, person2 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
 
         _source.AddOrUpdate(personUpdated1);
 
-        _list.Items.Should().Equal(person2, personUpdated1);
+        await Assert.That(_list.Items).IsEquivalentTo(new[] { person2, personUpdated1 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 }

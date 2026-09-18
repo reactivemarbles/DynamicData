@@ -1,30 +1,37 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 
 namespace DynamicData.Tests;
 
 public class AutoRefreshFilter
 {
-    [Fact]
-    public void Bind_Transform_and_FilterOnObservable()
+    [Test]
+    public async Task Bind_Transform_and_FilterOnObservable()
     {
         var count = 3;
-        var list = new SourceList<string>();
+        using var list = new SourceList<string>();
         list.AddRange(Enumerable.Range(1, count).Select(c => $"item {c}"));
-        
+
         var bindedList = new ObservableCollectionExtended<string>();
-       
-        list.Connect()
+
+        Exception? error = null;
+        using var subscription = list.Connect()
             .FilterOnObservable(_ => Observable.Return(true))
             .Transform(str => str)
             .Bind(bindedList)
             .Subscribe(
                 _ => { },
-                ex => {Assert.Fail("There should be no error");}
+                ex => error = ex
             );
+        await Assert.That(error).IsNull();
+        await Assert.That(bindedList).IsEquivalentTo(list.Items);
     }
 
-    [Fact]
-    public void Test()
+    [Test]
+    public async Task Test()
     {
         var a0 = new Item("A0");
         var i1 = new Item("I1");
@@ -36,20 +43,20 @@ public class AutoRefreshFilter
 
         var obsListDerived = obsList.Connect().AutoRefresh(x => x.Name).Filter(x => x.Name.Contains("I")).AsObservableList();
 
-        obsListDerived.Count.Should().Be(3);
-        obsListDerived.Items.Should().BeEquivalentTo(new []{ i1, i2, i3});
+        await Assert.That(obsListDerived.Count).IsEqualTo(3);
+        await Assert.That(obsListDerived.Items).IsEquivalentTo(new[] { i1, i2, i3 });
 
         i1.Name = "X2";
-        obsListDerived.Count.Should().Be(2);
-        obsListDerived.Items.Should().BeEquivalentTo(new[] { i2, i3});
+        await Assert.That(obsListDerived.Count).IsEqualTo(2);
+        await Assert.That(obsListDerived.Items).IsEquivalentTo(new[] { i2, i3 });
 
         a0.Name = "I0";
-        obsListDerived.Count.Should().Be(3);
-        obsListDerived.Items.Should().BeEquivalentTo(new[] { a0, i2, i3});
+        await Assert.That(obsListDerived.Count).IsEqualTo(3);
+        await Assert.That(obsListDerived.Items).IsEquivalentTo(new[] { a0, i2, i3 });
     }
 
-    [Fact]
-    public void AutoRefreshWithObservablePredicate1()
+    [Test]
+    public async Task AutoRefreshWithObservablePredicate1()
     {
         var item1 = new ActivableItem
         {
@@ -59,7 +66,7 @@ public class AutoRefreshFilter
         var items = new SourceList<ActivableItem>();
         items.Add(item1);
 
-        var filterSubject = new StateSignal<Func<ActivableItem, bool>>(_ => false);
+        var filterSubject = new ReactiveUI.Primitives.Signals.StateSignal<Func<ActivableItem, bool>>(_ => false);
 
         var obsListDerived = items
             .Connect()
@@ -70,30 +77,30 @@ public class AutoRefreshFilter
 
         // Default filter predicate denies all items
         // The binding collection should stay empty, until the predicate changes
-        obsListDerived.Count.Should().Be(0);
+        await Assert.That(obsListDerived.Count).IsEqualTo(0);
 
         item1.Activated = true;
-        obsListDerived.Count.Should().Be(0);
+        await Assert.That(obsListDerived.Count).IsEqualTo(0);
 
         item1.Activated = false;
-        obsListDerived.Count.Should().Be(0);
+        await Assert.That(obsListDerived.Count).IsEqualTo(0);
 
         item1.Activated = true;
-        obsListDerived.Count.Should().Be(0);
+        await Assert.That(obsListDerived.Count).IsEqualTo(0);
 
         // Changing predicate, all "Activated" items should added to the binding collection
         filterSubject.OnNext(i => i.Activated);
 
-        obsListDerived.Count.Should().Be(1);
-        obsListDerived.Items.Should().BeEquivalentTo(new[] { item1 });
+        await Assert.That(obsListDerived.Count).IsEqualTo(1);
+        await Assert.That(obsListDerived.Items).IsEquivalentTo(new[] { item1 });
 
         // Changing property value
         item1.Activated = false;
-        obsListDerived.Count.Should().Be(0);
+        await Assert.That(obsListDerived.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void AutoRefreshWithObservablePredicate2()
+    [Test]
+    public async Task AutoRefreshWithObservablePredicate2()
     {
         var item1 = new ActivableItem
         {
@@ -103,7 +110,7 @@ public class AutoRefreshFilter
         var items = new ObservableCollection<ActivableItem>();
         items.Add(item1);
 
-        var filterSubject = new StateSignal<Func<ActivableItem, bool>>(_ => false);
+        var filterSubject = new ReactiveUI.Primitives.Signals.StateSignal<Func<ActivableItem, bool>>(_ => false);
 
         var obsListDerived = items
             .ToObservableChangeSet()
@@ -113,30 +120,30 @@ public class AutoRefreshFilter
 
         // Default filter predicate denies all items
         // The binding collection should stay empty, until the predicate changes
-        obsListDerived.Count.Should().Be(0);
+        await Assert.That(obsListDerived.Count).IsEqualTo(0);
 
         item1.Activated = true;
-        obsListDerived.Count.Should().Be(0);
+        await Assert.That(obsListDerived.Count).IsEqualTo(0);
 
         item1.Activated = false;
-        obsListDerived.Count.Should().Be(0);
+        await Assert.That(obsListDerived.Count).IsEqualTo(0);
 
         item1.Activated = true;
-        obsListDerived.Count.Should().Be(0);
+        await Assert.That(obsListDerived.Count).IsEqualTo(0);
 
         // Changing predicate, all "Activated" items should added to the binding collection
         filterSubject.OnNext(i => i.Activated);
 
-        obsListDerived.Count.Should().Be(1);
-        obsListDerived.Items.Should().BeEquivalentTo(new[] { item1 });
+        await Assert.That(obsListDerived.Count).IsEqualTo(1);
+        await Assert.That(obsListDerived.Items).IsEquivalentTo(new[] { item1 });
 
         // Changing property value multiple times
         item1.Activated = false;
         item1.Activated = true;
         item1.Activated = false;
         item1.Activated = true;
-        obsListDerived.Count.Should().Be(1);
-        obsListDerived.Items.Should().BeEquivalentTo(new[] { item1 });
+        await Assert.That(obsListDerived.Count).IsEqualTo(1);
+        await Assert.That(obsListDerived.Items).IsEquivalentTo(new[] { item1 });
     }
 }
 

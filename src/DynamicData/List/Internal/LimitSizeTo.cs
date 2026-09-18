@@ -8,18 +8,6 @@ namespace DynamicData.Reactive.List.Internal;
 
 namespace DynamicData.List.Internal;
 #endif
-#if NET9_0_OR_GREATER
-
-/// <summary>
-/// Provides members for the LimitSizeTo class.
-/// </summary>
-/// <typeparam name="T">The type of the T value.</typeparam>
-/// <param name="sourceList">The sourceList value.</param>
-/// <param name="sizeLimit">The sizeLimit value.</param>
-/// <param name="scheduler">The scheduler value.</param>
-/// <param name="locker">The locker value.</param>
-internal sealed class LimitSizeTo<T>(ISourceList<T> sourceList, int sizeLimit, IScheduler scheduler, Lock locker)
-#else
 
 /// <summary>
 /// Provides members for the LimitSizeTo class.
@@ -30,8 +18,6 @@ internal sealed class LimitSizeTo<T>(ISourceList<T> sourceList, int sizeLimit, I
 /// <param name="scheduler">The scheduler value.</param>
 /// <param name="locker">The locker value.</param>
 internal sealed class LimitSizeTo<T>(ISourceList<T> sourceList, int sizeLimit, IScheduler scheduler, object locker)
-#endif
-
     where T : notnull
 {
     /// <summary>

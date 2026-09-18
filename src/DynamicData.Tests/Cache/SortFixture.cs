@@ -1,5 +1,13 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
@@ -22,8 +30,8 @@ public class SortFixtureWithReorder : IDisposable
         _results = new SortedChangeSetAggregator<Person, string>(_source.Connect().Sort(_comparer));
     }
 
-    [Fact]
-    public void AppendAtBeginning()
+    [Test]
+    public async Task AppendAtBeginning()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -33,15 +41,15 @@ public class SortFixtureWithReorder : IDisposable
 
         _source.AddOrUpdate(insert);
 
-        _results.Data.Count.Should().Be(101, "Should be 101 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(101).Because("Should be 101 people in the cache");
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("_Aaron");
 
-        indexedItem.HasValue.Should().BeTrue();
-        indexedItem.Value.Index.Should().Be(0, "Inserted item should have index of zero");
+        await Assert.That(indexedItem.HasValue).IsTrue();
+        await Assert.That(indexedItem.Value.Index).IsEqualTo(0).Because("Inserted item should have index of zero");
     }
 
-    [Fact]
-    public void AppendAtEnd()
+    [Test]
+    public async Task AppendAtEnd()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -51,18 +59,18 @@ public class SortFixtureWithReorder : IDisposable
 
         _source.AddOrUpdate(insert);
 
-        _results.Data.Count.Should().Be(101, "Should be 101 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(101).Because("Should be 101 people in the cache");
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("zzzzz");
 
-        indexedItem.HasValue.Should().BeTrue();
+        await Assert.That(indexedItem.HasValue).IsTrue();
 
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void AppendInMiddle()
+    [Test]
+    public async Task AppendInMiddle()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -72,18 +80,18 @@ public class SortFixtureWithReorder : IDisposable
 
         _source.AddOrUpdate(insert);
 
-        _results.Data.Count.Should().Be(101, "Should be 101 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(101).Because("Should be 101 people in the cache");
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("Marvin");
 
-        indexedItem.HasValue.Should().BeTrue();
+        await Assert.That(indexedItem.HasValue).IsTrue();
 
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void BatchUpdate1()
+    [Test]
+    public async Task BatchUpdate1()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -105,11 +113,11 @@ public class SortFixtureWithReorder : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void BatchUpdate2()
+    [Test]
+    public async Task BatchUpdate2()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -130,11 +138,11 @@ public class SortFixtureWithReorder : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void BatchUpdate3()
+    [Test]
+    public async Task BatchUpdate3()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -156,11 +164,11 @@ public class SortFixtureWithReorder : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void BatchUpdate4()
+    [Test]
+    public async Task BatchUpdate4()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -183,11 +191,11 @@ public class SortFixtureWithReorder : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void BatchUpdate6()
+    [Test]
+    public async Task BatchUpdate6()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -207,11 +215,11 @@ public class SortFixtureWithReorder : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void BatchUpdateWhereUpdateMovesTheIndexDown()
+    [Test]
+    public async Task BatchUpdateWhereUpdateMovesTheIndexDown()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -236,7 +244,7 @@ public class SortFixtureWithReorder : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
     public void Dispose()
@@ -245,27 +253,27 @@ public class SortFixtureWithReorder : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void DoesNotThrow1()
+    [Test]
+    public async Task DoesNotThrow1()
     {
         var cache = new SourceCache<Data, int>(d => d.Id);
-        var sortPump = new Signal<Unit>();
+        var sortPump = new ReactiveUI.Primitives.Signals.Signal<Unit>();
         var disposable = cache.Connect().Sort(SortExpressionComparer<Data>.Ascending(d => d.Id), sortPump).Subscribe();
 
         disposable.Dispose();
     }
 
-    [Fact]
-    public void DoesNotThrow2()
+    [Test]
+    public async Task DoesNotThrow2()
     {
         var cache = new SourceCache<Data, int>(d => d.Id);
-        var disposable = cache.Connect().Sort(new StateSignal<IComparer<Data>>(SortExpressionComparer<Data>.Ascending(d => d.Id))).Subscribe();
+        var disposable = cache.Connect().Sort(new ReactiveUI.Primitives.Signals.StateSignal<IComparer<Data>>(SortExpressionComparer<Data>.Ascending(d => d.Id))).Subscribe();
 
         disposable.Dispose();
     }
 
-    [Fact]
-    public void InlineUpdateProducesAReplace()
+    [Test]
+    public async Task InlineUpdateProducesAReplace()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -278,11 +286,11 @@ public class SortFixtureWithReorder : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void RemoveFirst()
+    [Test]
+    public async Task RemoveFirst()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -292,18 +300,18 @@ public class SortFixtureWithReorder : IDisposable
 
         _source.Remove(remove.Key);
 
-        _results.Data.Count.Should().Be(99, "Should be 99 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(99).Because("Should be 99 people in the cache");
         //TODO: fixed Text
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
-        indexedItem.HasValue.Should().BeFalse();
+        await Assert.That(indexedItem.HasValue).IsFalse();
 
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void RemoveFromEnd()
+    [Test]
+    public async Task RemoveFromEnd()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -313,18 +321,18 @@ public class SortFixtureWithReorder : IDisposable
 
         _source.Remove(remove.Key);
 
-        _results.Data.Count.Should().Be(99, "Should be 99 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(99).Because("Should be 99 people in the cache");
 
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
-        indexedItem.HasValue.Should().BeFalse();
+        await Assert.That(indexedItem.HasValue).IsFalse();
 
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void RemoveFromMiddle()
+    [Test]
+    public async Task RemoveFromMiddle()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -334,23 +342,23 @@ public class SortFixtureWithReorder : IDisposable
 
         _source.Remove(remove.Key);
 
-        _results.Data.Count.Should().Be(99, "Should be 99 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(99).Because("Should be 99 people in the cache");
 
         //TODO: fixed Text
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
-        indexedItem.HasValue.Should().BeFalse();
+        await Assert.That(indexedItem.HasValue).IsFalse();
 
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void SortAfterFilter()
+    [Test]
+    public async Task SortAfterFilter()
     {
         var source = new SourceCache<Person, string>(p => p.Key);
 
-        var filterSubject = new StateSignal<Func<Person, bool>>(p => true);
+        var filterSubject = new ReactiveUI.Primitives.Signals.StateSignal<Func<Person, bool>>(p => true);
 
         var agg = new SortedChangeSetAggregator<ViewModel, TestString>(source.Connect().Filter(filterSubject).Group(x => (TestString)x.Key).Transform(x => new ViewModel(x.Key)).Sort(new ViewModel.Comparer()));
 
@@ -366,12 +374,12 @@ public class SortFixtureWithReorder : IDisposable
         filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact]
-    public void SortAfterFilterList()
+    [Test]
+    public async Task SortAfterFilterList()
     {
         var source = new SourceList<Person>();
 
-        var filterSubject = new StateSignal<Func<Person, bool>>(p => true);
+        var filterSubject = new ReactiveUI.Primitives.Signals.StateSignal<Func<Person, bool>>(p => true);
 
         var agg = source.Connect().Filter(filterSubject).Transform(x => new ViewModel(x.Name)).Sort(new ViewModel.Comparer()).AsAggregator();
 
@@ -387,22 +395,22 @@ public class SortFixtureWithReorder : IDisposable
         filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact]
-    public void SortInitialBatch()
+    [Test]
+    public async Task SortInitialBatch()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
-        _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(100).Because("Should be 100 people in the cache");
 
         var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
         var actualResult = _results.Messages[0].SortedItems.ToList();
 
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
-    [Fact]
-    public void UpdateFirst()
+    [Test]
+    public async Task UpdateFirst()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -412,18 +420,18 @@ public class SortFixtureWithReorder : IDisposable
 
         _source.AddOrUpdate(update);
 
-        _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(100).Because("Should be 100 people in the cache");
         //TODO: fixed Text
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
-        indexedItem.HasValue.Should().BeTrue();
-        ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
+        await Assert.That(indexedItem.HasValue).IsTrue();
+        await Assert.That(ReferenceEquals(update, indexedItem.Value.Value)).IsTrue();
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void UpdateLast()
+    [Test]
+    public async Task UpdateLast()
     {
         //TODO: fixed Text
 
@@ -435,18 +443,18 @@ public class SortFixtureWithReorder : IDisposable
 
         _source.AddOrUpdate(update);
 
-        _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(100).Because("Should be 100 people in the cache");
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
 
-        indexedItem.HasValue.Should().BeTrue();
-        ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
+        await Assert.That(indexedItem.HasValue).IsTrue();
+        await Assert.That(ReferenceEquals(update, indexedItem.Value.Value)).IsTrue();
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void UpdateMiddle()
+    [Test]
+    public async Task UpdateMiddle()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -456,15 +464,15 @@ public class SortFixtureWithReorder : IDisposable
 
         _source.AddOrUpdate(update);
 
-        _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(100).Because("Should be 100 people in the cache");
 
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
 
-        indexedItem.HasValue.Should().BeTrue();
-        ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
+        await Assert.That(indexedItem.HasValue).IsTrue();
+        await Assert.That(ReferenceEquals(update, indexedItem.Value.Value)).IsTrue();
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
     public class Data(int id, string value)
@@ -518,8 +526,8 @@ public class SortFixture : IDisposable
         _results = new SortedChangeSetAggregator<Person, string>(_source.Connect().Sort(_comparer));
     }
 
-    [Fact]
-    public void AppendAtBeginning()
+    [Test]
+    public async Task AppendAtBeginning()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -529,15 +537,15 @@ public class SortFixture : IDisposable
 
         _source.AddOrUpdate(insert);
 
-        _results.Data.Count.Should().Be(101, "Should be 101 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(101).Because("Should be 101 people in the cache");
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("_Aaron");
 
-        indexedItem.HasValue.Should().BeTrue();
-        indexedItem.Value.Index.Should().Be(0, "Inserted item should have index of zero");
+        await Assert.That(indexedItem.HasValue).IsTrue();
+        await Assert.That(indexedItem.Value.Index).IsEqualTo(0).Because("Inserted item should have index of zero");
     }
 
-    [Fact]
-    public void AppendAtEnd()
+    [Test]
+    public async Task AppendAtEnd()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -547,18 +555,18 @@ public class SortFixture : IDisposable
 
         _source.AddOrUpdate(insert);
 
-        _results.Data.Count.Should().Be(101, "Should be 101 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(101).Because("Should be 101 people in the cache");
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("zzzzz");
 
-        indexedItem.HasValue.Should().BeTrue();
+        await Assert.That(indexedItem.HasValue).IsTrue();
 
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void AppendInMiddle()
+    [Test]
+    public async Task AppendInMiddle()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -568,18 +576,18 @@ public class SortFixture : IDisposable
 
         _source.AddOrUpdate(insert);
 
-        _results.Data.Count.Should().Be(101, "Should be 101 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(101).Because("Should be 101 people in the cache");
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("Marvin");
 
-        indexedItem.HasValue.Should().BeTrue();
+        await Assert.That(indexedItem.HasValue).IsTrue();
 
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void BatchUpdate1()
+    [Test]
+    public async Task BatchUpdate1()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -601,11 +609,11 @@ public class SortFixture : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void BatchUpdate2()
+    [Test]
+    public async Task BatchUpdate2()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -626,11 +634,11 @@ public class SortFixture : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void BatchUpdate3()
+    [Test]
+    public async Task BatchUpdate3()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -651,11 +659,11 @@ public class SortFixture : IDisposable
 
         adaptor.Adapt(_results.Messages.Last(), list);
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void BatchUpdate4()
+    [Test]
+    public async Task BatchUpdate4()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -678,11 +686,11 @@ public class SortFixture : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void BatchUpdate6()
+    [Test]
+    public async Task BatchUpdate6()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -702,11 +710,11 @@ public class SortFixture : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void BatchUpdateShiftingIndicies()
+    [Test]
+    public async Task BatchUpdateShiftingIndicies()
     {
         var testData = new[]
         {
@@ -735,11 +743,11 @@ public class SortFixture : IDisposable
 
         adaptor.Adapt(_results.Messages.Last(), list);
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void BatchUpdateWhereUpdateMovesTheIndexDown()
+    [Test]
+    public async Task BatchUpdateWhereUpdateMovesTheIndexDown()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -762,7 +770,7 @@ public class SortFixture : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
     public void Dispose()
@@ -771,27 +779,27 @@ public class SortFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void DoesNotThrow1()
+    [Test]
+    public async Task DoesNotThrow1()
     {
         var cache = new SourceCache<Data, int>(d => d.Id);
-        var sortPump = new Signal<Unit>();
+        var sortPump = new ReactiveUI.Primitives.Signals.Signal<Unit>();
         var disposable = cache.Connect().Sort(SortExpressionComparer<Data>.Ascending(d => d.Id), sortPump).Subscribe();
 
         disposable.Dispose();
     }
 
-    [Fact]
-    public void DoesNotThrow2()
+    [Test]
+    public async Task DoesNotThrow2()
     {
         var cache = new SourceCache<Data, int>(d => d.Id);
-        var disposable = cache.Connect().Sort(new StateSignal<IComparer<Data>>(SortExpressionComparer<Data>.Ascending(d => d.Id))).Subscribe();
+        var disposable = cache.Connect().Sort(new ReactiveUI.Primitives.Signals.StateSignal<IComparer<Data>>(SortExpressionComparer<Data>.Ascending(d => d.Id))).Subscribe();
 
         disposable.Dispose();
     }
 
-    [Fact]
-    public void InlineUpdateProducesAReplace()
+    [Test]
+    public async Task InlineUpdateProducesAReplace()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -804,11 +812,11 @@ public class SortFixture : IDisposable
         adaptor.Adapt(_results.Messages.Last(), list);
 
         var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-        list.Should().BeEquivalentTo(shouldbe);
+        await Assert.That(list).IsEquivalentTo(shouldbe);
     }
 
-    [Fact]
-    public void RemoveFirst()
+    [Test]
+    public async Task RemoveFirst()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -818,18 +826,18 @@ public class SortFixture : IDisposable
 
         _source.Remove(remove.Key);
 
-        _results.Data.Count.Should().Be(99, "Should be 99 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(99).Because("Should be 99 people in the cache");
         //TODO: fixed Text
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
-        indexedItem.HasValue.Should().BeFalse();
+        await Assert.That(indexedItem.HasValue).IsFalse();
 
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void RemoveFromEnd()
+    [Test]
+    public async Task RemoveFromEnd()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -839,18 +847,18 @@ public class SortFixture : IDisposable
 
         _source.Remove(remove.Key);
 
-        _results.Data.Count.Should().Be(99, "Should be 99 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(99).Because("Should be 99 people in the cache");
 
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
-        indexedItem.HasValue.Should().BeFalse();
+        await Assert.That(indexedItem.HasValue).IsFalse();
 
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void RemoveFromMiddle()
+    [Test]
+    public async Task RemoveFromMiddle()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -860,23 +868,23 @@ public class SortFixture : IDisposable
 
         _source.Remove(remove.Key);
 
-        _results.Data.Count.Should().Be(99, "Should be 99 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(99).Because("Should be 99 people in the cache");
 
         //TODO: fixed Text
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
-        indexedItem.HasValue.Should().BeFalse();
+        await Assert.That(indexedItem.HasValue).IsFalse();
 
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void SortAfterFilter()
+    [Test]
+    public async Task SortAfterFilter()
     {
         var source = new SourceCache<Person, string>(p => p.Key);
 
-        var filterSubject = new StateSignal<Func<Person, bool>>(p => true);
+        var filterSubject = new ReactiveUI.Primitives.Signals.StateSignal<Func<Person, bool>>(p => true);
 
         var agg = new SortedChangeSetAggregator<ViewModel, TestString>(source.Connect().Filter(filterSubject).Group(x => (TestString)x.Key).Transform(x => new ViewModel(x.Key)).Sort(new ViewModel.Comparer()));
 
@@ -892,12 +900,12 @@ public class SortFixture : IDisposable
         filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact]
-    public void SortAfterFilterList()
+    [Test]
+    public async Task SortAfterFilterList()
     {
         var source = new SourceList<Person>();
 
-        var filterSubject = new StateSignal<Func<Person, bool>>(p => true);
+        var filterSubject = new ReactiveUI.Primitives.Signals.StateSignal<Func<Person, bool>>(p => true);
 
         var agg = source.Connect().Filter(filterSubject).Transform(x => new ViewModel(x.Name)).Sort(new ViewModel.Comparer()).AsAggregator();
 
@@ -913,22 +921,22 @@ public class SortFixture : IDisposable
         filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Fact]
-    public void SortInitialBatch()
+    [Test]
+    public async Task SortInitialBatch()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
-        _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(100).Because("Should be 100 people in the cache");
 
         var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
         var actualResult = _results.Messages[0].SortedItems.ToList();
 
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
-    [Fact]
-    public void UpdateFirst()
+    [Test]
+    public async Task UpdateFirst()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -938,18 +946,18 @@ public class SortFixture : IDisposable
 
         _source.AddOrUpdate(update);
 
-        _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(100).Because("Should be 100 people in the cache");
         //TODO: fixed Text
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
-        indexedItem.HasValue.Should().BeTrue();
-        ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
+        await Assert.That(indexedItem.HasValue).IsTrue();
+        await Assert.That(ReferenceEquals(update, indexedItem.Value.Value)).IsTrue();
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void UpdateLast()
+    [Test]
+    public async Task UpdateLast()
     {
         //TODO: fixed Text
 
@@ -961,18 +969,18 @@ public class SortFixture : IDisposable
 
         _source.AddOrUpdate(update);
 
-        _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(100).Because("Should be 100 people in the cache");
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
 
-        indexedItem.HasValue.Should().BeTrue();
-        ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
+        await Assert.That(indexedItem.HasValue).IsTrue();
+        await Assert.That(ReferenceEquals(update, indexedItem.Value.Value)).IsTrue();
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
-    [Fact]
-    public void UpdateMiddle()
+    [Test]
+    public async Task UpdateMiddle()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -982,15 +990,15 @@ public class SortFixture : IDisposable
 
         _source.AddOrUpdate(update);
 
-        _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(100).Because("Should be 100 people in the cache");
 
         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
 
-        indexedItem.HasValue.Should().BeTrue();
-        ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
+        await Assert.That(indexedItem.HasValue).IsTrue();
+        await Assert.That(ReferenceEquals(update, indexedItem.Value.Value)).IsTrue();
         var list = _results.Messages[1].SortedItems.ToList();
         var sortedResult = list.OrderBy(p => _comparer).ToList();
-        list.Should().BeEquivalentTo(sortedResult);
+        await Assert.That(list).IsEquivalentTo(sortedResult);
     }
 
     public class Data(int id, string value)

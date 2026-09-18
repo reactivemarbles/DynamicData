@@ -1,5 +1,9 @@
 using Bogus;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
 using System.Collections.Concurrent;
 
@@ -28,13 +32,13 @@ public sealed class MergeChangeSetsFixture : IDisposable
         _animalOwners.Add(_animalOwnerFaker.Generate(InitialOwnerCount));
     }
 
-    [Theory]
-    [InlineData(5, 7)]
-    [InlineData(10, 50)]
+    [Test]
+    [Arguments(5, 7)]
+    [Arguments(10, 50)]
 #if !DEBUG
-    [InlineData(10, 1_000)]
-    [InlineData(200, 500)]
-    [InlineData(1_000, 10)]
+    [Arguments(10, 1_000)]
+    [Arguments(200, 500)]
+    [Arguments(1_000, 10)]
 #endif
     public async Task MultiThreadedStressTest(int ownerCount, int animalCount)
     {
@@ -102,11 +106,11 @@ public sealed class MergeChangeSetsFixture : IDisposable
         while (addingAnimals);
 
         // Verify the results
-        CheckResultContents(addedOwners.ToList(), results);
+        await CheckResultContents(addedOwners.ToList(), results);
     }
 
-    [Fact]
-    public void NullChecks()
+    [Test]
+    public async Task NullChecks()
     {
         // Arrange
         var nullChangeSetObs = (IObservable<IObservable<IChangeSet<int>>>)null!;
@@ -115,13 +119,13 @@ public sealed class MergeChangeSetsFixture : IDisposable
         var checkParam1 = () => nullChangeSetObs.MergeChangeSets();
 
         // Assert
-        nullChangeSetObs.Should().BeNull();
+        await Assert.That(nullChangeSetObs).IsNull();
 
-        checkParam1.Should().Throw<ArgumentNullException>();
+        await Assert.That(checkParam1).Throws<ArgumentNullException>();
     }
 
-    [Fact]
-    public void ResultContainsAllInitialChildrenObsObs()
+    [Test]
+    public async Task ResultContainsAllInitialChildrenObsObs()
     {
         // Arrange
         var obs = GetObservableObservable();
@@ -130,11 +134,11 @@ public sealed class MergeChangeSetsFixture : IDisposable
         using var results = obs.MergeChangeSets().AsAggregator();
 
         // Assert
-        CheckResultContents(_animalOwners, results);
+        await CheckResultContents(_animalOwners, results);
     }
 
-    [Fact]
-    public void ResultContainsAllInitialChildrenEnum()
+    [Test]
+    public async Task ResultContainsAllInitialChildrenEnum()
     {
         // Arrange
         var obs = GetEnumerableObservable();
@@ -143,11 +147,11 @@ public sealed class MergeChangeSetsFixture : IDisposable
         using var results = obs.MergeChangeSets().AsAggregator();
 
         // Assert
-        CheckResultContents(_animalOwners, results);
+        await CheckResultContents(_animalOwners, results);
     }
 
-    [Fact]
-    public void ResultEmptyIfSourceIsClearedObs()
+    [Test]
+    public async Task ResultEmptyIfSourceIsClearedObs()
     {
         // Arrange
         var obs = GetObservableObservable();
@@ -157,11 +161,11 @@ public sealed class MergeChangeSetsFixture : IDisposable
         _animalOwners.ForEach(owner => owner.Animals.Clear());
 
         // Assert
-        results.Data.Count.Should().Be(0);
+        await Assert.That(results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void ResultEmptyIfSourceIsClearedEnum()
+    [Test]
+    public async Task ResultEmptyIfSourceIsClearedEnum()
     {
         // Arrange
         var obs = GetEnumerableObservable();
@@ -171,10 +175,10 @@ public sealed class MergeChangeSetsFixture : IDisposable
         _animalOwners.ForEach(owner => owner.Animals.Clear());
 
         // Assert
-        results.Data.Count.Should().Be(0);
+        await Assert.That(results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
+    [Test]
     public async Task ResultContainsChildrenAddedWithAddRangeObs()
     {
         // Arrange
@@ -185,11 +189,11 @@ public sealed class MergeChangeSetsFixture : IDisposable
         var added = (await ForOwnersAsync(UseAddRange)).SelectMany(list => list).ToList();
 
         // Assert
-        added.Should().BeSubsetOf(results.Data.Items);
-        CheckResultContents(_animalOwners, results);
+        await Assert.That(added.Except(results.Data.Items).Any()).IsFalse();
+        await CheckResultContents(_animalOwners, results);
     }
 
-    [Fact]
+    [Test]
     public async Task ResultContainsChildrenAddedWithAddRangeEnum()
     {
         // Arrange
@@ -200,11 +204,11 @@ public sealed class MergeChangeSetsFixture : IDisposable
         var added = (await ForOwnersAsync(UseAddRange)).SelectMany(list => list).ToList();
 
         // Assert
-        added.Should().BeSubsetOf(results.Data.Items);
-        CheckResultContents(_animalOwners, results);
+        await Assert.That(added.Except(results.Data.Items).Any()).IsFalse();
+        await CheckResultContents(_animalOwners, results);
     }
 
-    [Fact]
+    [Test]
     public async Task ResultContainsChildrenAddedWithAddObs()
     {
         // Arrange
@@ -215,11 +219,11 @@ public sealed class MergeChangeSetsFixture : IDisposable
         var added = await ForOwnersAsync(UseAdd);
 
         // Assert
-        added.Should().BeSubsetOf(results.Data.Items);
-        CheckResultContents(_animalOwners, results);
+        await Assert.That(added.Except(results.Data.Items).Any()).IsFalse();
+        await CheckResultContents(_animalOwners, results);
     }
 
-    [Fact]
+    [Test]
     public async Task ResultContainsChildrenAddedWithAddEnum()
     {
         // Arrange
@@ -230,9 +234,9 @@ public sealed class MergeChangeSetsFixture : IDisposable
         await ForOwnersAsync(owner => owner.Animals.Add(_animalFaker.Generate()));
 
         // Assert
-        CheckResultContents(_animalOwners, results);
+        await CheckResultContents(_animalOwners, results);
     }
-    [Fact]
+    [Test]
     public async Task ResultContainsChildrenAddedWithInsertObs()
     {
         // Arrange
@@ -243,11 +247,11 @@ public sealed class MergeChangeSetsFixture : IDisposable
         var added = await ForOwnersAsync(UseInsert);
 
         // Assert
-        added.Should().BeSubsetOf(results.Data.Items);
-        CheckResultContents(_animalOwners, results);
+        await Assert.That(added.Except(results.Data.Items).Any()).IsFalse();
+        await CheckResultContents(_animalOwners, results);
     }
 
-    [Fact]
+    [Test]
     public async Task ResultContainsChildrenAddedWithInsertEnum()
     {
         // Arrange
@@ -258,11 +262,11 @@ public sealed class MergeChangeSetsFixture : IDisposable
         var added = await ForOwnersAsync(UseInsert);
 
         // Assert
-        added.Should().BeSubsetOf(results.Data.Items);
-        CheckResultContents(_animalOwners, results);
+        await Assert.That(added.Except(results.Data.Items).Any()).IsFalse();
+        await CheckResultContents(_animalOwners, results);
     }
 
-    [Fact]
+    [Test]
     public async Task ResultContainsCorrectItemsAfterChildReplacementObs()
     {
         // Arrange
@@ -273,12 +277,12 @@ public sealed class MergeChangeSetsFixture : IDisposable
         var replacements = await ForOwnersAsync(ReplaceAnimal);
 
         // Assert
-        replacements.Select(r => r.New).Should().BeSubsetOf(results.Data.Items);
-        replacements.Select(r => r.Old).ForEach(old => results.Data.Items.Should().NotContain(old));
-        CheckResultContents(_animalOwners, results);
+        await Assert.That(replacements.Select(r => r.New).Except(results.Data.Items).Any()).IsFalse();
+        await Assert.That(replacements.Select(r => r.Old).All(old => !results.Data.Items.Contains(old))).IsTrue();
+        await CheckResultContents(_animalOwners, results);
     }
 
-    [Fact]
+    [Test]
     public async Task ResultContainsCorrectItemsAfterChildReplacementEnum()
     {
         // Arrange
@@ -289,13 +293,13 @@ public sealed class MergeChangeSetsFixture : IDisposable
         var replacements = await ForOwnersAsync(ReplaceAnimal);
 
         // Assert
-        replacements.Select(r => r.New).Should().BeSubsetOf(results.Data.Items);
-        replacements.Select(r => r.Old).ForEach(old => results.Data.Items.Should().NotContain(old));
-        CheckResultContents(_animalOwners, results);
+        await Assert.That(replacements.Select(r => r.New).Except(results.Data.Items).Any()).IsFalse();
+        await Assert.That(replacements.Select(r => r.Old).All(old => !results.Data.Items.Contains(old))).IsTrue();
+        await CheckResultContents(_animalOwners, results);
     }
 
-    [Fact]
-    public void ResultFailsIfSourceFails()
+    [Test]
+    public async Task ResultFailsIfSourceFails()
     {
         // Arrange
         var expectedError = new Exception("Expected");
@@ -306,11 +310,11 @@ public sealed class MergeChangeSetsFixture : IDisposable
         using var results = obs.Concat(throwObservable).MergeChangeSets().AsAggregator();
 
         // Assert
-        results.Exception.Should().Be(expectedError);
+        await Assert.That(results.Exception).IsEqualTo(expectedError);
     }
 
-    [Fact]
-    public void ResultFailsIfAnyChildChangeSetFails()
+    [Test]
+    public async Task ResultFailsIfAnyChildChangeSetFails()
     {
         // Arrange
         var expectedError = new Exception("Test exception");
@@ -321,13 +325,13 @@ public sealed class MergeChangeSetsFixture : IDisposable
         using var results = obs.MergeChangeSets().AsAggregator();
 
         // Assert
-        results.Exception.Should().Be(expectedError);
+        await Assert.That(results.Exception).IsEqualTo(expectedError);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void ResultCompletesOnlyWhenSourceAndAllChildrenComplete(bool completeAll)
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task ResultCompletesOnlyWhenSourceAndAllChildrenComplete(bool completeAll)
     {
         // Arrange
         var obs = GetObservableObservable();
@@ -337,15 +341,15 @@ public sealed class MergeChangeSetsFixture : IDisposable
         _animalOwners.Skip(completeAll ? 0 : 1).ForEach(owner => owner.Animals.Dispose());
 
         // Assert
-        results.IsCompleted.Should().Be(completeAll);
+        await Assert.That(results.IsCompleted).IsEqualTo(completeAll);
     }
 
-    [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public void MergedObservableRespectsCompletableFlag(bool completeSource, bool completeChildren)
+    [Test]
+    [Arguments(false, false)]
+    [Arguments(false, true)]
+    [Arguments(true, false)]
+    [Arguments(true, true)]
+    public async Task MergedObservableRespectsCompletableFlag(bool completeSource, bool completeChildren)
     {
         // Arrange
         var obs = GetEnumerableObservable();
@@ -355,13 +359,13 @@ public sealed class MergeChangeSetsFixture : IDisposable
         _animalOwners.Skip(completeChildren ? 0 : 1).ForEach(owner => owner.Animals.Dispose());
 
         // Assert
-        results.IsCompleted.Should().Be(completeSource && completeChildren);
+        await Assert.That(results.IsCompleted).IsEqualTo(completeSource && completeChildren);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void EnumObservableUsesTheScheduler(bool advance)
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task EnumObservableUsesTheScheduler(bool advance)
     {
         // Arrange
         var scheduler = new TestScheduler();
@@ -377,12 +381,12 @@ public sealed class MergeChangeSetsFixture : IDisposable
         // Assert
         if (advance)
         {
-            CheckResultContents(_animalOwners, results);
+            await CheckResultContents(_animalOwners, results);
         }
         else
         {
-            results.Data.Count.Should().Be(0);
-            results.Messages.Count.Should().Be(0);
+            await Assert.That(results.Data.Count).IsEqualTo(0);
+            await Assert.That(results.Messages.Count).IsEqualTo(0);
         }
     }
 
@@ -391,13 +395,13 @@ public sealed class MergeChangeSetsFixture : IDisposable
         _animalOwners.ForEach(owner => owner.Dispose());
     }
 
-    private static void CheckResultContents(IList<AnimalOwner> expectedOwners, ChangeSetAggregator<Animal> animalResults)
+    private static async Task CheckResultContents(IList<AnimalOwner> expectedOwners, ChangeSetAggregator<Animal> animalResults)
     {
         var expectedAnimals = expectedOwners.SelectMany(owner => owner.Animals.Items).ToList();
 
         // These should be subsets of each other, so check one subset and the size
-        expectedAnimals.Should().BeSubsetOf(animalResults.Data.Items);
-        animalResults.Data.Items.Count.Should().Be(expectedAnimals.Count);
+        await Assert.That(expectedAnimals.Except(animalResults.Data.Items).Any()).IsFalse();
+        await Assert.That(animalResults.Data.Items.Count).IsEqualTo(expectedAnimals.Count);
     }
 
     Task ForOwnersAsync(Action<AnimalOwner> action) => Task.WhenAll(_animalOwners.Select(owner => Task.Run(() => action(owner))));

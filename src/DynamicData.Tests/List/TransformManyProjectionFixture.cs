@@ -1,4 +1,8 @@
-﻿using DynamicData.Binding;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
+using DynamicData.Binding;
+#endif
 
 namespace DynamicData.Tests.List;
 
@@ -15,8 +19,8 @@ public class TransformManyProjectionFixture : IDisposable
         _results = _source.Connect().AutoRefreshOnObservable(self => self.Children.ToObservableChangeSet()).TransformMany(parent => parent.Children.Select(c => new ProjectedNestedChild(parent, c)), new ProjectNestedChildEqualityComparer()).AsObservableList();
     }
 
-    [Fact]
-    public void AddRange()
+    [Test]
+    public async Task AddRange()
     {
         var children = new[]
         {
@@ -37,8 +41,8 @@ public class TransformManyProjectionFixture : IDisposable
 
         _source.AddRange(parents);
 
-        _results.Count.Should().Be(5);
-        _results.Items.Should().BeEquivalentTo(parents.SelectMany(p => p.Children.Take(5).Select(c => new ProjectedNestedChild(p, c))));
+        await Assert.That(_results.Count).IsEqualTo(5);
+        await Assert.That(_results.Items).IsEquivalentTo(parents.SelectMany(p => p.Children.Take(5).Select(c => new ProjectedNestedChild(p, c))));
     }
 
     public void Dispose()
@@ -47,8 +51,8 @@ public class TransformManyProjectionFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void RemoveChild()
+    [Test]
+    public async Task RemoveChild()
     {
         var children = new[]
         {
@@ -71,12 +75,12 @@ public class TransformManyProjectionFixture : IDisposable
 
         //remove a child
         parents[1].Children.Remove(children[3]);
-        _results.Count.Should().Be(4);
-        _results.Items.Should().BeEquivalentTo(parents.SelectMany(p => p.Children.Where(child => child.Name != "D").Select(c => new ProjectedNestedChild(p, c))));
+        await Assert.That(_results.Count).IsEqualTo(4);
+        await Assert.That(_results.Items).IsEquivalentTo(parents.SelectMany(p => p.Children.Where(child => child.Name != "D").Select(c => new ProjectedNestedChild(p, c))));
     }
 
-    [Fact]
-    public void RemoveParent()
+    [Test]
+    public async Task RemoveParent()
     {
         var children = new[]
         {
@@ -99,8 +103,8 @@ public class TransformManyProjectionFixture : IDisposable
 
         //remove a parent and check children have moved
         _source.Remove(parents[0]);
-        _results.Count.Should().Be(3);
-        _results.Items.Should().BeEquivalentTo(parents.Skip(1).SelectMany(p => p.Children.Select(c => new ProjectedNestedChild(p, c))));
+        await Assert.That(_results.Count).IsEqualTo(3);
+        await Assert.That(_results.Items).IsEquivalentTo(parents.Skip(1).SelectMany(p => p.Children.Select(c => new ProjectedNestedChild(p, c))));
     }
 
     private class ClassWithNestedObservableCollection(int id, IEnumerable<NestedChild> animals)

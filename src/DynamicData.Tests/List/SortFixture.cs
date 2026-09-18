@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.List;
@@ -10,11 +14,11 @@ public class SortChangedFixture
     /// <summary>
     /// See https://github.com/reactivemarbles/DynamicData/issues/473
     /// </summary>
-    [Fact]
-    public void SortsWithoutError()
+    [Test]
+    public async Task SortsWithoutError()
     {
         var source = new SourceList<ListItem>();
-        var sorter = new Signal<IComparer<ListItem>>();
+        var sorter = new ReactiveUI.Primitives.Signals.Signal<IComparer<ListItem>>();
 
         source.AddRange(Enumerable.Range(1, 10).Select(i => new ListItem(i)));
 
@@ -23,11 +27,11 @@ public class SortChangedFixture
             .Bind(out var bound)
             .Subscribe();
 
-        bound.Select(x => x.Number).Should().BeInAscendingOrder();
+        await Assert.That(bound.Select(x => x.Number)).IsInOrder();
 
         sorter.OnNext(SortExpressionComparer<ListItem>.Descending(x => x.Number));
 
-        bound.Select(x => x.Number).Should().BeInDescendingOrder();
+        await Assert.That(bound.Select(x => x.Number)).IsInDescendingOrder();
     }
 
     private class ListItem(int number) : IComparable<ListItem>
@@ -35,7 +39,7 @@ public class SortChangedFixture
         public int Number { get; } = number;
 
         public int CompareTo(ListItem? other) => DefaultComparer.Compare(this, other);
-            
+
     }
 }
 
@@ -61,8 +65,8 @@ public class SortFixture : IDisposable
         _source.Dispose();
     }
 
-    [Fact]
-    public void Insert()
+    [Test]
+    public async Task Insert()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
@@ -70,13 +74,13 @@ public class SortFixture : IDisposable
         var shouldbefirst = new Person("__A", 99);
         _source.Add(shouldbefirst);
 
-        _results.Data.Count.Should().Be(101, "Should be 100 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(101).Because("Should be 100 people in the cache");
 
-        _results.Data.Items[0].Should().Be(shouldbefirst);
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(shouldbefirst);
     }
 
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         var people = _generator.Take(100).ToList();
         _source.AddRange(people);
@@ -85,17 +89,17 @@ public class SortFixture : IDisposable
         people.RemoveAt(20);
         _source.RemoveAt(20);
 
-        _results.Data.Count.Should().Be(99, "Should be 99 people in the cache");
-        _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
-        _results.Messages[1].First().Item.Current.Should().Be(toRemove, "Incorrect item removed");
+        await Assert.That(_results.Data.Count).IsEqualTo(99).Because("Should be 99 people in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 update messages");
+        await Assert.That(_results.Messages[1].First().Item.Current).IsEqualTo(toRemove).Because("Incorrect item removed");
 
         var expectedResult = people.OrderBy(p => p, _comparer);
         var actualResult = _results.Data.Items;
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
-    [Fact]
-    public void RemoveManyOdds()
+    [Test]
+    public async Task RemoveManyOdds()
     {
         var people = _generator.Take(100).ToList();
         _source.AddRange(people);
@@ -104,48 +108,48 @@ public class SortFixture : IDisposable
 
         _source.RemoveMany(odd);
 
-        _results.Data.Count.Should().Be(50, "Should be 99 people in the cache");
-        _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
+        await Assert.That(_results.Data.Count).IsEqualTo(50).Because("Should be 99 people in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 update messages");
 
         var expectedResult = people.Except(odd).OrderByDescending(p => p, _comparer).ToArray();
         var actualResult = _results.Data.Items;
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
-    [Fact]
-    public void RemoveManyOrdered()
+    [Test]
+    public async Task RemoveManyOrdered()
     {
         var people = _generator.Take(100).ToList();
         _source.AddRange(people);
 
         _source.RemoveMany(people.OrderBy(p => p, _comparer).Skip(10).Take(90));
 
-        _results.Data.Count.Should().Be(10, "Should be 10 people in the cache");
-        _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
+        await Assert.That(_results.Data.Count).IsEqualTo(10).Because("Should be 10 people in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 update messages");
 
         var expectedResult = people.OrderBy(p => p, _comparer).Take(10);
         var actualResult = _results.Data.Items;
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
-    [Fact]
-    public void RemoveManyReverseOrdered()
+    [Test]
+    public async Task RemoveManyReverseOrdered()
     {
         var people = _generator.Take(100).ToList();
         _source.AddRange(people);
 
         _source.RemoveMany(people.OrderByDescending(p => p, _comparer).Skip(10).Take(90));
 
-        _results.Data.Count.Should().Be(10, "Should be 99 people in the cache");
-        _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
+        await Assert.That(_results.Data.Count).IsEqualTo(10).Because("Should be 99 people in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 update messages");
 
         var expectedResult = people.OrderByDescending(p => p, _comparer).Take(10);
         var actualResult = _results.Data.Items;
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
-    [Fact]
-    public void Replace()
+    [Test]
+    public async Task Replace()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
@@ -153,22 +157,22 @@ public class SortFixture : IDisposable
         var shouldbefirst = new Person("__A", 99);
         _source.ReplaceAt(10, shouldbefirst);
 
-        _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(100).Because("Should be 100 people in the cache");
 
-        _results.Data.Items[0].Should().Be(shouldbefirst);
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(shouldbefirst);
     }
 
-    [Fact]
-    public void SortInitialBatch()
+    [Test]
+    public async Task SortInitialBatch()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
 
-        _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(100).Because("Should be 100 people in the cache");
 
         var expectedResult = people.OrderBy(p => p, _comparer);
         var actualResult = _results.Data.Items;
 
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 }

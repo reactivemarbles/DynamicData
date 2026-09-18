@@ -1,4 +1,8 @@
-﻿using DynamicData.Cache.Internal;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Cache.Internal;
+#else
+using DynamicData.Cache.Internal;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Kernal;
@@ -15,33 +19,33 @@ public class CacheUpdaterFixture
         _updater = new CacheUpdater<Person, string>(_cache);
     }
 
-    [Fact]
-    public void Add()
+    [Test]
+    public async Task Add()
     {
         var person = new Person("Adult1", 50);
         _updater.AddOrUpdate(person, "Adult1");
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
-        _cache.Lookup("Adult1").Value.Should().Be(person);
-        _cache.Count.Should().Be(1);
-        updates.Count.Should().Be(1);
-        updates.First().Should().Be(new Change<Person, string>(ChangeReason.Add, person.Name, person), "Should be 1 updates");
+        await Assert.That(_cache.Lookup("Adult1").Value).IsEqualTo(person);
+        await Assert.That(_cache.Count).IsEqualTo(1);
+        await Assert.That(updates.Count).IsEqualTo(1);
+        await Assert.That(updates.First()).IsEqualTo(new Change<Person, string>(ChangeReason.Add, person.Name, person)).Because("Should be 1 updates");
     }
 
-    [Fact]
-    public void AttemptedRemovalOfANonExistentKeyWillBeIgnored()
+    [Test]
+    public async Task AttemptedRemovalOfANonExistentKeyWillBeIgnored()
     {
         const string key = "Adult1";
 
         _updater.Remove(key);
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
-        _cache.Count.Should().Be(0);
-        updates.Count.Should().Be(0, "Should be 0 updates");
+        await Assert.That(_cache.Count).IsEqualTo(0);
+        await Assert.That(updates.Count).IsEqualTo(0).Because("Should be 0 updates");
     }
 
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         const string key = "Adult1";
 
@@ -50,14 +54,14 @@ public class CacheUpdaterFixture
         _updater.Remove(key);
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
-        _cache.Count.Should().Be(0);
-        updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(1);
-        updates.Count(update => update.Reason == ChangeReason.Remove).Should().Be(1);
-        updates.Count.Should().Be(2);
+        await Assert.That(_cache.Count).IsEqualTo(0);
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Add)).IsEqualTo(1);
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Remove)).IsEqualTo(1);
+        await Assert.That(updates.Count).IsEqualTo(2);
     }
 
-    [Fact]
-    public void Update()
+    [Test]
+    public async Task Update()
     {
         const string key = "Adult1";
 
@@ -67,10 +71,10 @@ public class CacheUpdaterFixture
         _updater.AddOrUpdate(updated, key);
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
-        _cache.Lookup(key).Value.Should().Be(updated);
-        _cache.Count.Should().Be(1);
-        updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(1);
-        updates.Count(update => update.Reason == ChangeReason.Update).Should().Be(1);
-        updates.Count.Should().Be(2);
+        await Assert.That(_cache.Lookup(key).Value).IsEqualTo(updated);
+        await Assert.That(_cache.Count).IsEqualTo(1);
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Add)).IsEqualTo(1);
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Update)).IsEqualTo(1);
+        await Assert.That(updates.Count).IsEqualTo(2);
     }
 }

@@ -86,7 +86,7 @@ public static partial class ObservableCacheEx
                 long orderItemWasAdded = -1;
                 var sizeLimiter = new SizeLimiter<TObject, TKey>(sizeLimit);
 
-                return source.Connect().Finally(observer.OnCompleted).ObserveOn(scheduler ?? GlobalConfig.DefaultScheduler).Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded))).Select(sizeLimiter.CloneAndReturnExpiredOnly).Where(expired => expired.Length != 0).Subscribe(
+                return source.Connect().ObserveOn(scheduler ?? GlobalConfig.DefaultScheduler).Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded))).Select(sizeLimiter.CloneAndReturnExpiredOnly).Where(expired => expired.Length != 0).Subscribe(
                     toRemove =>
                     {
                         try
@@ -98,7 +98,9 @@ public static partial class ObservableCacheEx
                         {
                             observer.OnError(ex);
                         }
-                    });
+                    },
+                    observer.OnError,
+                    observer.OnCompleted);
             });
     }
 }

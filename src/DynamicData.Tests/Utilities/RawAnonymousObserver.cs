@@ -1,4 +1,4 @@
-﻿namespace DynamicData.Tests.Utilities;
+namespace DynamicData.Tests.Utilities;
 
 internal static class RawAnonymousObserver
 {
@@ -32,10 +32,10 @@ internal class RawAnonymousObserver<T>
 
     public void OnCompleted()
         => _onCompleted.Invoke();
-    
+
     public void OnError(Exception error)
         => _onError.Invoke(error);
-    
+
     public void OnNext(T value)
         => _onNext.Invoke(value);
 }

@@ -1,83 +1,87 @@
-﻿using System.Globalization;
+using System.Globalization;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Kernal;
 
 public class OptionFixture
 {
-    [Fact]
-    public void ImplictCastHasValue()
+    [Test]
+    public async Task ImplictCastHasValue()
     {
         var person = new Person("Name", 20);
-        Optional<Person> option = person;
+        ReactiveUI.Primitives.Optional<Person> option = person;
 
-        option.HasValue.Should().BeTrue();
-        ReferenceEquals(person, option.Value).Should().BeTrue();
+        await Assert.That(option.HasValue).IsTrue();
+        await Assert.That(ReferenceEquals(person, option.Value)).IsTrue();
     }
 
-    [Fact]
-    public void OptionElseInvokedIfOptionHasNoValue()
+    [Test]
+    public async Task OptionElseInvokedIfOptionHasNoValue()
     {
-        Optional<Person>? source = null;
+        ReactiveUI.Primitives.Optional<Person>? source = null;
 
         var ifactioninvoked = false;
         var elseactioninvoked = false;
 
         source.IfHasValue(p => ifactioninvoked = true).Else(() => elseactioninvoked = true);
 
-        ifactioninvoked.Should().BeFalse();
-        elseactioninvoked.Should().BeTrue();
+        await Assert.That(ifactioninvoked).IsFalse();
+        await Assert.That(elseactioninvoked).IsTrue();
     }
 
-    [Fact]
-    public void OptionIfHasValueInvokedIfOptionHasValue()
+    [Test]
+    public async Task OptionIfHasValueInvokedIfOptionHasValue()
     {
-        Optional<Person> source = new Person("A", 1);
+        ReactiveUI.Primitives.Optional<Person> source = new Person("A", 1);
 
         var ifactioninvoked = false;
         var elseactioninvoked = false;
 
         source.IfHasValue(p => ifactioninvoked = true).Else(() => elseactioninvoked = true);
 
-        ifactioninvoked.Should().BeTrue();
-        elseactioninvoked.Should().BeFalse();
+        await Assert.That(ifactioninvoked).IsTrue();
+        await Assert.That(elseactioninvoked).IsFalse();
     }
 
-    [Fact]
-    public void OptionNoneHasNoValue()
+    [Test]
+    public async Task OptionNoneHasNoValue()
     {
-        var option = Optional<IChangeSet<Person, string>>.None;
-        option.HasValue.Should().BeFalse();
+        var option = ReactiveUI.Primitives.Optional<IChangeSet<Person, string>>.None;
+        await Assert.That(option.HasValue).IsFalse();
     }
 
-    [Fact]
-    public void OptionSetToNullHasNoValue1()
-    {
-        Person person = default!;
-        var option = Optional<Person>.Some(person);
-        option.HasValue.Should().BeFalse();
-    }
-
-    [Fact]
-    public void OptionSetToNullHasNoValue2()
+    [Test]
+    public async Task OptionSetToNullHasNoValue1()
     {
         Person person = default!;
-        Optional<Person> option = person;
-        option.HasValue.Should().BeFalse();
+        var option = ReactiveUI.Primitives.Optional<Person>.Some(person);
+        await Assert.That(option.HasValue).IsFalse();
     }
 
-    [Fact]
-    public void OptionSomeHasValue()
+    [Test]
+    public async Task OptionSetToNullHasNoValue2()
+    {
+        Person person = default!;
+        ReactiveUI.Primitives.Optional<Person> option = person;
+        await Assert.That(option.HasValue).IsFalse();
+    }
+
+    [Test]
+    public async Task OptionSomeHasValue()
     {
         var person = new Person("Name", 20);
-        var option = Optional<Person>.Some(person);
-        option.HasValue.Should().BeTrue();
-        ReferenceEquals(person, option.Value).Should().BeTrue();
+        var option = ReactiveUI.Primitives.Optional<Person>.Some(person);
+        await Assert.That(option.HasValue).IsTrue();
+        await Assert.That(ReferenceEquals(person, option.Value)).IsTrue();
     }
 
-    [Fact]
-    public void OptionConvertThrowsIfConverterIsNull()
+    [Test]
+    public async Task OptionConvertThrowsIfConverterIsNull()
     {
         var caught = false;
 
@@ -85,183 +89,183 @@ public class OptionFixture
 
         try
         {
-            Optional<string>.None.Convert(converter!);
+            ReactiveUI.Primitives.Optional<string>.None.Convert(converter!);
         }
         catch (ArgumentNullException)
         {
             caught = true;
         }
 
-        caught.Should().BeTrue();
+        await Assert.That(caught).IsTrue();
     }
 
-    [Fact]
-    public void OptionConvertToOptionalInvokesConverterWithValue()
+    [Test]
+    public async Task OptionConvertToOptionalInvokesConverterWithValue()
     {
-        var option = Optional<string>.Some(string.Empty);
+        var option = ReactiveUI.Primitives.Optional<string>.Some(string.Empty);
         var invoked = false;
 
-        Optional<string> Converter(string input)
+        ReactiveUI.Primitives.Optional<string> Converter(string input)
         {
             invoked = true;
-            return Optional<string>.Some(input);
+            return ReactiveUI.Primitives.Optional<string>.Some(input);
         }
 
         var result = option.Convert(Converter);
 
-        invoked.Should().BeTrue();
-        result.HasValue.Should().BeTrue();
+        await Assert.That(invoked).IsTrue();
+        await Assert.That(result.HasValue).IsTrue();
     }
 
-    [Fact]
-    public void OptionConvertToOptionalInvokesConverterOnlyWithValue()
+    [Test]
+    public async Task OptionConvertToOptionalInvokesConverterOnlyWithValue()
     {
-        var option = Optional<string>.None;
+        var option = ReactiveUI.Primitives.Optional<string>.None;
         var invoked = false;
 
-        Optional<string> Converter(string input)
+        ReactiveUI.Primitives.Optional<string> Converter(string input)
         {
             invoked = true;
-            return Optional<string>.Some(input);
+            return ReactiveUI.Primitives.Optional<string>.Some(input);
         }
 
         var result = option.Convert(Converter);
 
-        invoked.Should().BeFalse();
-        result.HasValue.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
+        await Assert.That(result.HasValue).IsFalse();
     }
 
-    [Fact]
-    public void OptionConvertToOptionalCanReturnValue()
+    [Test]
+    public async Task OptionConvertToOptionalCanReturnValue()
     {
         const int TestData = 37;
 
-        var option = Optional<string>.Some(TestData.ToString());
+        var option = ReactiveUI.Primitives.Optional<string>.Some(TestData.ToString());
 
         var result = option.Convert(ParseInt);
 
-        result.HasValue.Should().BeTrue();
-        result.Value.Should().Be(TestData);
+        await Assert.That(result.HasValue).IsTrue();
+        await Assert.That(result.Value).IsEqualTo(TestData);
     }
 
-    [Fact]
-    public void OptionConvertToOptionalCanReturnNone()
+    [Test]
+    public async Task OptionConvertToOptionalCanReturnNone()
     {
-        var option = Optional<string>.Some("Not An Int");
+        var option = ReactiveUI.Primitives.Optional<string>.Some("Not An Int");
 
         var result = option.Convert(ParseInt);
 
-        result.HasValue.Should().BeFalse();
+        await Assert.That(result.HasValue).IsFalse();
     }
 
-    [Fact]
-    public void OptionConvertToOptionalThrowsIfConverterIsNull()
+    [Test]
+    public async Task OptionConvertToOptionalThrowsIfConverterIsNull()
     {
         var caught = false;
 
-        Func<string, Optional<string>>? converter = null;
+        Func<string, ReactiveUI.Primitives.Optional<string>>? converter = null;
 
         try
         {
-            Optional<string>.None.Convert(converter!);
+            ReactiveUI.Primitives.Optional<string>.None.Convert(converter!);
         }
         catch (ArgumentNullException)
         {
             caught = true;
         }
 
-        caught.Should().BeTrue();
+        await Assert.That(caught).IsTrue();
     }
 
-    [Fact]
-    public void OptionOrElseInvokesWithoutValue()
+    [Test]
+    public async Task OptionOrElseInvokesWithoutValue()
     {
-        var option = Optional<string>.None;
+        var option = ReactiveUI.Primitives.Optional<string>.None;
         var invoked = false;
 
-        Optional<string> Fallback()
+        ReactiveUI.Primitives.Optional<string> Fallback()
         {
             invoked = true;
-            return Optional<string>.None;
+            return ReactiveUI.Primitives.Optional<string>.None;
         }
 
         var result = option.OrElse(Fallback);
 
-        invoked.Should().BeTrue();
+        await Assert.That(invoked).IsTrue();
     }
 
-    [Fact]
-    public void OptionOrElseInvokesOnlyWithoutValue()
+    [Test]
+    public async Task OptionOrElseInvokesOnlyWithoutValue()
     {
-        var option = Optional<string>.Some(string.Empty);
+        var option = ReactiveUI.Primitives.Optional<string>.Some(string.Empty);
         var invoked = false;
 
-        Optional<string> Fallback()
+        ReactiveUI.Primitives.Optional<string> Fallback()
         {
             invoked = true;
-            return Optional<string>.None;
+            return ReactiveUI.Primitives.Optional<string>.None;
         }
 
         var result = option.OrElse(Fallback);
 
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
     }
 
-    [Fact]
-    public void OptionOrElseCanReturnValue()
+    [Test]
+    public async Task OptionOrElseCanReturnValue()
     {
         const string TestString = nameof(TestString);
 
-        var option = Optional<string>.None;
+        var option = ReactiveUI.Primitives.Optional<string>.None;
         var result = option.OrElse(() => TestString);
 
-        result.HasValue.Should().BeTrue();
-        result.Value.Should().Be(TestString);
+        await Assert.That(result.HasValue).IsTrue();
+        await Assert.That(result.Value).IsEqualTo(TestString);
     }
 
-    [Fact]
-    public void OptionOrElseCanReturnNone()
+    [Test]
+    public async Task OptionOrElseCanReturnNone()
     {
-        var option = Optional<string>.None;
-        var result = option.OrElse(() => Optional<string>.None);
+        var option = ReactiveUI.Primitives.Optional<string>.None;
+        var result = option.OrElse(() => ReactiveUI.Primitives.Optional<string>.None);
 
-        result.HasValue.Should().BeFalse();
+        await Assert.That(result.HasValue).IsFalse();
     }
 
-    [Fact]
-    public void OptionOrElseCanBeChained()
+    [Test]
+    public async Task OptionOrElseCanBeChained()
     {
         const int Expected = unchecked((int)0xc001d00d);
 
-        var option = Optional<string>.None;
-        var result = option.OrElse(() => Optional<string>.None)
-                                      .OrElse(() => Optional<string>.Some(Expected.ToString("x")))
+        var option = ReactiveUI.Primitives.Optional<string>.None;
+        var result = option.OrElse(() => ReactiveUI.Primitives.Optional<string>.None)
+                                      .OrElse(() => ReactiveUI.Primitives.Optional<string>.Some(Expected.ToString("x")))
                                       .Convert(s => ParseInt(s).OrElse(() => ParseHex(s)));
 
-        result.HasValue.Should().BeTrue();
-        result.Value.Should().Be(Expected);
+        await Assert.That(result.HasValue).IsTrue();
+        await Assert.That(result.Value).IsEqualTo(Expected);
     }
 
-    [Fact]
-    public void OptionOrElseThrowsIfFallbackIsNull()
+    [Test]
+    public async Task OptionOrElseThrowsIfFallbackIsNull()
     {
         var caught = false;
 
         try
         {
-            Optional<string>.None.OrElse(null!);
+            ReactiveUI.Primitives.Optional<string>.None.OrElse(null!);
         }
         catch (ArgumentNullException)
         {
             caught = true;
         }
 
-        caught.Should().BeTrue();
+        await Assert.That(caught).IsTrue();
     }
 
-    private static Optional<int> ParseInt(string input) =>
-        int.TryParse(input, out var result) ? Optional<int>.Some(result) : Optional<int>.None;
+    private static ReactiveUI.Primitives.Optional<int> ParseInt(string input) =>
+        int.TryParse(input, out var result) ? ReactiveUI.Primitives.Optional<int>.Some(result) : ReactiveUI.Primitives.Optional<int>.None;
 
-    private static Optional<int> ParseHex(string input) =>
-        int.TryParse(input, NumberStyles.HexNumber, null, out var result) ? Optional<int>.Some(result) : Optional<int>.None;
+    private static ReactiveUI.Primitives.Optional<int> ParseHex(string input) =>
+        int.TryParse(input, NumberStyles.HexNumber, null, out var result) ? ReactiveUI.Primitives.Optional<int>.Some(result) : ReactiveUI.Primitives.Optional<int>.None;
 }

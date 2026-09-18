@@ -1,6 +1,6 @@
 // CrossCacheDeadlockRepro.cs
 // Reproduction for: Cross-cache deadlock when concurrent updates notify subscribers that modify other SourceCache instances
-// Requires: DynamicData 9.x, xunit, FluentAssertions
+// Requires: DynamicData 9.x.
 //
 // This test deadlocks on DynamicData main. It should complete in under 10 seconds.
 
@@ -11,8 +11,8 @@ public class CrossCacheDeadlockRepro : IDisposable
     private readonly SourceCache<string, int> _cacheA = new(static x => x.GetHashCode());
     private readonly SourceCache<string, int> _cacheB = new(static x => x.GetHashCode());
 
-    [Fact]
-    public void ConcurrentPopulateIntoShouldNotDeadlock()
+    [Test]
+    public async Task ConcurrentPopulateIntoShouldNotDeadlock()
     {
         // Arrange
         using var destination = new SourceCache<string, int>(static x => x.GetHashCode());
@@ -43,8 +43,8 @@ public class CrossCacheDeadlockRepro : IDisposable
             TimeSpan.FromSeconds(10));
 
         // Assert
-        completed.Should().BeTrue("concurrent PopulateInto should not deadlock");
-        count.Should().BeGreaterThan(0, "destination should have received changeset notifications");
+        await Assert.That(completed).IsTrue();
+        await Assert.That(count).IsGreaterThan(0);
     }
 
     public void Dispose()

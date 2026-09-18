@@ -1,5 +1,9 @@
 using Bogus;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
@@ -34,13 +38,13 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         _animalResults = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect()).AsAggregator();
     }
 
-    [Theory]
-    [InlineData(5, 7)]
-    [InlineData(10, 50)]
+    [Test]
+    [Arguments(5, 7)]
+    [Arguments(10, 50)]
 #if !DEBUG
-    [InlineData(10, 1_000)]
-    [InlineData(200, 500)]
-    [InlineData(1_000, 10)]
+    [Arguments(10, 1_000)]
+    [Arguments(200, 500)]
+    [Arguments(1_000, 10)]
 #endif
     public async Task MultiThreadedStressTest(int ownerCount, int animalCount)
     {
@@ -110,11 +114,11 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Verify the results against the aggregator wired into the same Publish chain
         // that cacheCompleted observes.
-        CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
+        await CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
     }
 
-    [Fact]
-    public void NullChecks()
+    [Test]
+    public async Task NullChecks()
     {
         // Arrange
         var emptyChangeSetObs = Observable.Empty<IChangeSet<int, int>>();
@@ -131,34 +135,34 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         var checkParam4 = () => emptyChangeSetObs.MergeManyChangeSets(nullSelector);
 
         // Assert
-        emptyChangeSetObs.Should().NotBeNull();
-        emptyKeySelector.Should().NotBeNull();
-        emptySelector.Should().NotBeNull();
-        nullChangeSetObs.Should().BeNull();
-        nullKeySelector.Should().BeNull();
-        nullSelector.Should().BeNull();
+        await Assert.That(emptyChangeSetObs).IsNotNull();
+        await Assert.That(emptyKeySelector).IsNotNull();
+        await Assert.That(emptySelector).IsNotNull();
+        await Assert.That(nullChangeSetObs).IsNull();
+        await Assert.That(nullKeySelector).IsNull();
+        await Assert.That(nullSelector).IsNull();
 
-        checkParam1.Should().Throw<ArgumentNullException>();
-        checkParam2.Should().Throw<ArgumentNullException>();
-        checkParam3.Should().Throw<ArgumentNullException>();
-        checkParam4.Should().Throw<ArgumentNullException>();
+        await Assert.That(checkParam1).Throws<ArgumentNullException>();
+        await Assert.That(checkParam2).Throws<ArgumentNullException>();
+        await Assert.That(checkParam3).Throws<ArgumentNullException>();
+        await Assert.That(checkParam4).Throws<ArgumentNullException>();
     }
 
-    [Fact]
-    public void ResultContainsAllInitialChildren()
+    [Test]
+    public async Task ResultContainsAllInitialChildren()
     {
         // Arrange
 
         // Act
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(1);
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(1);
+        await CheckResultContents();
     }
 
-    [Fact]
-    public void ResultContainsChildrenFromAddedParents()
+    [Test]
+    public async Task ResultContainsChildrenFromAddedParents()
     {
         // Arrange
         var addThis = _animalOwnerFaker.Generate();
@@ -167,14 +171,14 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         _animalOwners.AddOrUpdate(addThis);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount + 1);
-        _animalResults.Messages.Count.Should().Be(2);
-        addThis.Animals.Items.ForEach(added => _animalResults.Data.Items.Should().Contain(added));
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount + 1);
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(2);
+        foreach (var added in addThis.Animals.Items) { await Assert.That(_animalResults.Data.Items).Contains(added); }
+        await CheckResultContents();
     }
 
-    [Fact]
-    public void ResultDoesNotContainChildrenFromParentsRemovedWithRemove()
+    [Test]
+    public async Task ResultDoesNotContainChildrenFromParentsRemovedWithRemove()
     {
         // Arrange
         var removeThis = _randomizer.ListItem(_animalOwners.Items.ToList());
@@ -183,15 +187,15 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         _animalOwners.Remove(removeThis);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount - 1);
-        _animalResults.Messages.Count.Should().Be(2);
-        removeThis.Animals.Items.ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount - 1);
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(2);
+        foreach (var removed in removeThis.Animals.Items) { await Assert.That(_animalResults.Data.Items).DoesNotContain(removed); }
+        await CheckResultContents();
         removeThis.Dispose();
     }
 
-    [Fact]
-    public void ResultDoesNotContainChildrenFromParentsBatchRemoved()
+    [Test]
+    public async Task ResultDoesNotContainChildrenFromParentsBatchRemoved()
     {
         // Arrange
         var removeThese = _randomizer.ListItems(_animalOwners.Items.ToList(), RemoveRangeSize);
@@ -200,15 +204,15 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         _animalOwners.Remove(removeThese);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount - RemoveRangeSize);
-        _animalResults.Messages.Count.Should().Be(2);
-        removeThese.SelectMany(owner => owner.Animals.Items).ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount - RemoveRangeSize);
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(2);
+        foreach (var removed in removeThese.SelectMany(owner => owner.Animals.Items)) { await Assert.That(_animalResults.Data.Items).DoesNotContain(removed); }
+        await CheckResultContents();
         removeThese.ForEach(owner => owner.Dispose());
     }
 
-    [Fact]
-    public void ResultContainsCorrectItemsAfterParentUpdate()
+    [Test]
+    public async Task ResultContainsCorrectItemsAfterParentUpdate()
     {
         // Arrange
         var replaceThis = _randomizer.ListItem(_animalOwners.Items.ToList());
@@ -218,16 +222,16 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         _animalOwners.AddOrUpdate(withThis);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount); // Owner Count should not change
-        _animalResults.Messages.Count.Should().Be(2); // 2 = Initial Add and one changeset with remove old items / add new items
-        replaceThis.Animals.Items.ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
-        withThis.Animals.Items.ForEach(added => _animalResults.Data.Items.Should().Contain(added));
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount); // Owner Count should not change
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(2); // 2 = Initial Add and one changeset with remove old items / add new items
+        foreach (var removed in replaceThis.Animals.Items) { await Assert.That(_animalResults.Data.Items).DoesNotContain(removed); }
+        foreach (var added in withThis.Animals.Items) { await Assert.That(_animalResults.Data.Items).Contains(added); }
+        await CheckResultContents();
         replaceThis.Dispose();
     }
 
-    [Fact]
-    public void ResultEmptyIfSourceIsCleared()
+    [Test]
+    public async Task ResultEmptyIfSourceIsCleared()
     {
         // Arrange
         var items = _animalOwners.Items.ToList();
@@ -236,14 +240,14 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         _animalOwners.Clear();
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(0);
-        _animalResults.Data.Count.Should().Be(0);
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(0);
+        await Assert.That(_animalResults.Data.Count).IsEqualTo(0);
+        await CheckResultContents();
         items.ForEach(owner => owner.Dispose());
     }
 
-    [Fact]
-    public void ResultContainsChildrenAddedWithAddRange()
+    [Test]
+    public async Task ResultContainsChildrenAddedWithAddRange()
     {
         // Arrange
         var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
@@ -253,15 +257,15 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         _animalOwners.Items.ForEach(owner => owner.Animals.AddRange(_animalFaker.Generate(AddRangeSize).With(added => totalAdded.AddRange(added))));
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(1 + InitialOwnerCount); // Initial + 1 for each Range Added
-        totalAdded.ForEach(animal => _animalResults.Data.Items.Should().Contain(animal));
-        _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount + totalAdded.Count);
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(1 + InitialOwnerCount); // Initial + 1 for each Range Added
+        foreach (var animal in totalAdded) { await Assert.That(_animalResults.Data.Items).Contains(animal); }
+        await Assert.That(_animalOwners.Items.Sum(owner => owner.Animals.Count)).IsEqualTo(initialCount + totalAdded.Count);
+        await CheckResultContents();
     }
 
-    [Fact]
-    public void ResultContainsChildrenAddedWithInsert()
+    [Test]
+    public async Task ResultContainsChildrenAddedWithInsert()
     {
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
@@ -273,16 +277,16 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         randomOwner.Animals.Insert(insertIndex, insertThis);
 
         // Assert
-        randomOwner.Animals.Items.ElementAt(insertIndex).Should().Be(insertThis);
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(2);
-        _animalResults.Data.Items.Should().Contain(insertThis);
-        _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount + 1);
-        CheckResultContents();
+        await Assert.That(randomOwner.Animals.Items.ElementAt(insertIndex)).IsEqualTo(insertThis);
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(2);
+        await Assert.That(_animalResults.Data.Items).Contains(insertThis);
+        await Assert.That(_animalOwners.Items.Sum(owner => owner.Animals.Count)).IsEqualTo(initialCount + 1);
+        await CheckResultContents();
     }
 
-    [Fact]
-    public void ResultDoesNotContainChildrenRemovedWithRemove()
+    [Test]
+    public async Task ResultDoesNotContainChildrenRemovedWithRemove()
     {
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
@@ -293,15 +297,15 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         randomOwner.Animals.Remove(removeThis);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(2);
-        _animalResults.Data.Items.Should().NotContain(removeThis);
-        _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount - 1);
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(2);
+        await Assert.That(_animalResults.Data.Items).DoesNotContain(removeThis);
+        await Assert.That(_animalOwners.Items.Sum(owner => owner.Animals.Count)).IsEqualTo(initialCount - 1);
+        await CheckResultContents();
     }
 
-    [Fact]
-    public void ResultDoesNotContainChildrenRemovedWithRemoveAt()
+    [Test]
+    public async Task ResultDoesNotContainChildrenRemovedWithRemoveAt()
     {
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
@@ -313,15 +317,15 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         randomOwner.Animals.RemoveAt(removeIndex);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(2);
-        _animalResults.Data.Items.Should().NotContain(removeThis);
-        _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount - 1);
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(2);
+        await Assert.That(_animalResults.Data.Items).DoesNotContain(removeThis);
+        await Assert.That(_animalOwners.Items.Sum(owner => owner.Animals.Count)).IsEqualTo(initialCount - 1);
+        await CheckResultContents();
     }
 
-    [Fact]
-    public void ResultDoesNotContainChildrenRemovedWithRemoveRange()
+    [Test]
+    public async Task ResultDoesNotContainChildrenRemovedWithRemoveRange()
     {
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
@@ -333,14 +337,14 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         randomOwner.Animals.RemoveRange(removeIndex, removeCount);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(2);
-        removeThese.ForEach(removed => randomOwner.Animals.Items.Should().NotContain(removed));
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(2);
+        foreach (var removed in removeThese) { await Assert.That(randomOwner.Animals.Items).DoesNotContain(removed); }
+        await CheckResultContents();
     }
 
-    [Fact]
-    public void ResultDoesNotContainChildrenRemovedWithRemoveMany()
+    [Test]
+    public async Task ResultDoesNotContainChildrenRemovedWithRemoveMany()
     {
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
@@ -351,14 +355,14 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         randomOwner.Animals.RemoveMany(removeThese);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(2);
-        removeThese.ForEach(removed => randomOwner.Animals.Items.Should().NotContain(removed));
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(2);
+        foreach (var removed in removeThese) { await Assert.That(randomOwner.Animals.Items).DoesNotContain(removed); }
+        await CheckResultContents();
     }
 
-    [Fact]
-    public void ResultContainsCorrectItemsAfterChildReplacement()
+    [Test]
+    public async Task ResultContainsCorrectItemsAfterChildReplacement()
     {
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
@@ -369,15 +373,15 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         randomOwner.Animals.Replace(replaceThis, withThis);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(2);
-        randomOwner.Animals.Items.Should().NotContain(replaceThis);
-        randomOwner.Animals.Items.Should().Contain(withThis);
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(2);
+        await Assert.That(randomOwner.Animals.Items).DoesNotContain(replaceThis);
+        await Assert.That(randomOwner.Animals.Items).Contains(withThis);
+        await CheckResultContents();
     }
 
-    [Fact]
-    public void ResultContainsCorrectItemsAfterChildClear()
+    [Test]
+    public async Task ResultContainsCorrectItemsAfterChildClear()
     {
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
@@ -387,19 +391,19 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         randomOwner.Animals.Clear();
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalResults.Messages.Count.Should().Be(2);
-        randomOwner.Animals.Count.Should().Be(0);
-        removedAnimals.ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
-        CheckResultContents();
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(_animalResults.Messages.Count).IsEqualTo(2);
+        await Assert.That(randomOwner.Animals.Count).IsEqualTo(0);
+        foreach (var removed in removedAnimals) { await Assert.That(_animalResults.Data.Items).DoesNotContain(removed); }
+        await CheckResultContents();
     }
 
-    [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public void ResultCompletesOnlyWhenSourceAndAllChildrenComplete(bool completeSource, bool completeChildren)
+    [Test]
+    [Arguments(false, false)]
+    [Arguments(false, true)]
+    [Arguments(true, false)]
+    [Arguments(true, true)]
+    public async Task ResultCompletesOnlyWhenSourceAndAllChildrenComplete(bool completeSource, bool completeChildren)
     {
         // Arrange
 
@@ -411,12 +415,12 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         }
 
         // Assert
-        _animalOwnerResults.IsCompleted.Should().Be(completeSource);
-        _animalResults.IsCompleted.Should().Be(completeSource && completeChildren);
+        await Assert.That(_animalOwnerResults.IsCompleted).IsEqualTo(completeSource);
+        await Assert.That(_animalResults.IsCompleted).IsEqualTo(completeSource && completeChildren);
     }
 
-    [Fact]
-    public void ResultFailsIfSourceFails()
+    [Test]
+    public async Task ResultFailsIfSourceFails()
     {
         // Arrange
         var expectedError = new Exception("Expected");
@@ -427,7 +431,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         _animalOwners.Dispose();
 
         // Assert
-        results.Exception.Should().Be(expectedError);
+        await Assert.That(results.Exception).IsEqualTo(expectedError);
     }
 
     public void Dispose()
@@ -446,23 +450,28 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         return sameId;
     }
 
-    private void CheckResultContents() => CheckResultContents(_animalOwners.Items, _animalOwnerResults, _animalResults);
+    private Task CheckResultContents() => CheckResultContents(_animalOwners.Items, _animalOwnerResults, _animalResults);
 
-    private static void CheckResultContents(IEnumerable<AnimalOwner> owners, ChangeSetAggregator<AnimalOwner, Guid> ownerResults, ChangeSetAggregator<Animal> animalResults)
+    private static async Task CheckResultContents(IEnumerable<AnimalOwner> owners, ChangeSetAggregator<AnimalOwner, Guid> ownerResults, ChangeSetAggregator<Animal> animalResults)
     {
         var expectedOwners = owners.ToList();
+        var expectedOwnerIds = new HashSet<Guid>(expectedOwners.Select(owner => owner.Id));
+        var actualOwnerIds = new HashSet<Guid>(ownerResults.Data.Items.Select(owner => owner.Id));
 
-        // These should be subsets of each other
-        expectedOwners.Should().BeSubsetOf(ownerResults.Data.Items);
-        ownerResults.Data.Items.Count.Should().Be(expectedOwners.Count);
+        await Assert.That(actualOwnerIds.SetEquals(expectedOwnerIds)).IsTrue().Because("owner result ids should match the source owner ids");
 
-        // All owner animals should be in the results
-        foreach (var owner in owners)
-        {
-            owner.Animals.Items.Should().BeSubsetOf(animalResults.Data.Items);
-        }
+        var expectedAnimalCountsById = expectedOwners
+            .SelectMany(owner => owner.Animals.Items)
+            .GroupBy(animal => animal.Id)
+            .ToDictionary(group => group.Key, group => group.Count());
 
-        // Results should not have more than the total number of animals
-        animalResults.Data.Count.Should().Be(owners.Sum(owner => owner.Animals.Count));
+        var actualAnimalCountsById = animalResults.Data.Items
+            .GroupBy(animal => animal.Id)
+            .ToDictionary(group => group.Key, group => group.Count());
+
+        await Assert.That(actualAnimalCountsById.Count).IsEqualTo(expectedAnimalCountsById.Count).Because("animal result ids should match the source animal ids");
+        await Assert.That(actualAnimalCountsById.All(pair => expectedAnimalCountsById.TryGetValue(pair.Key, out var expectedCount) && expectedCount == pair.Value))
+            .IsTrue()
+            .Because("animal result id multiplicities should match the source animal id multiplicities");
     }
 }

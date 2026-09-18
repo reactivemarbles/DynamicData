@@ -37,25 +37,13 @@ internal sealed class MergeMany<T, TDestination>(IObservable<IChangeSet<T>> sour
             observer =>
             {
                 var counter = new SubscriptionCounter();
-                var locker = InternalEx.NewLock();
+                var locker = InternalEx.NewMonitorGate();
                 var disposable = _source.Concat(counter.DeferCleanup)
                                                 .SubscribeMany(t => SubscribeChild(t, locker, counter, observer))
                                                 .Subscribe(_ => { }, observer.OnError, observer.OnCompleted);
 
                 return new CompositeDisposable(disposable, counter);
             });
-#if NET9_0_OR_GREATER
-
-    /// <summary>
-    /// Executes the SubscribeChild operation.
-    /// </summary>
-    /// <param name="item">The item value.</param>
-    /// <param name="locker">The locker value.</param>
-    /// <param name="counter">The counter value.</param>
-    /// <param name="observer">The observer value.</param>
-    /// <returns>The result of the operation.</returns>
-    private IDisposable SubscribeChild(T item, Lock locker, SubscriptionCounter counter, IObserver<TDestination> observer)
-#else
 
     /// <summary>
     /// Executes the SubscribeChild operation.
@@ -66,7 +54,6 @@ internal sealed class MergeMany<T, TDestination>(IObservable<IChangeSet<T>> sour
     /// <param name="observer">The observer value.</param>
     /// <returns>The result of the operation.</returns>
     private IDisposable SubscribeChild(T item, object locker, SubscriptionCounter counter, IObserver<TDestination> observer)
-#endif
     {
         counter.Added();
         try
@@ -80,10 +67,10 @@ internal sealed class MergeMany<T, TDestination>(IObservable<IChangeSet<T>> sour
         }
     }
 
-/// <summary>
-/// Provides members for the SubscriptionCounter class.
-/// </summary>
-private sealed class SubscriptionCounter : IDisposable
+    /// <summary>
+    /// Provides members for the SubscriptionCounter class.
+    /// </summary>
+    private sealed class SubscriptionCounter : IDisposable
     {
         /// <summary>
         /// The _subject field.

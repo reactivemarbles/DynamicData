@@ -2,8 +2,8 @@ namespace DynamicData.Tests.List;
 
 public class ToCollectionFixture
 {
-    [Fact]
-    public void ToCollectionTest()
+    [Test]
+    public async Task ToCollectionTest()
     {
         var list = new SourceList<string>();
         //   var collection = Observable.Defer(() =>  list.Connect().ToCollection());
@@ -14,7 +14,7 @@ public class ToCollectionFixture
         collection.Subscribe(x => res2 = x);
         list.Add("1");
         list.Add("2");
-        res1?.Count.Should().Be(2);
-        res2?.Count.Should().Be(2);
+        await Assert.That(res1?.Count).IsEqualTo(2);
+        await Assert.That(res2?.Count).IsEqualTo(2);
     }
 }

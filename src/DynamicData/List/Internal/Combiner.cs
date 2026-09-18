@@ -28,7 +28,7 @@ internal sealed class Combiner<T>(ICollection<IObservable<IChangeSet<T>>> source
     /// <summary>
     /// The _locker field.
     /// </summary>
-    private readonly Lock _locker = new();
+    private readonly object _locker = new();
 
     /// <summary>
     /// The _source field.

@@ -2,11 +2,13 @@ using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
 
+[InheritsTests]
 public class ExceptFixture : ExceptFixtureBase
 {
     protected override IObservable<IChangeSet<Person, string>> CreateObservable() => _targetSource.Connect().Except(_exceptSource.Connect());
 }
 
+[InheritsTests]
 public class ExceptCollectionFixture : ExceptFixtureBase
 {
     protected override IObservable<IChangeSet<Person, string>> CreateObservable()
@@ -39,37 +41,37 @@ public abstract class ExceptFixtureBase : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void DoNotIncludeExceptListItems()
+    [Test]
+    public async Task DoNotIncludeExceptListItems()
     {
         var person = new Person("Adult1", 50);
         _exceptSource.AddOrUpdate(person);
         _targetSource.AddOrUpdate(person);
 
-        _results.Messages.Count.Should().Be(0, "Should have no updates");
-        _results.Data.Count.Should().Be(0, "Cache should have no items");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("Should have no updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Cache should have no items");
     }
 
-    [Fact]
-    public void RemovedAnItemFromExceptThenIncludesTheItem()
+    [Test]
+    public async Task RemovedAnItemFromExceptThenIncludesTheItem()
     {
         var person = new Person("Adult1", 50);
         _exceptSource.AddOrUpdate(person);
         _targetSource.AddOrUpdate(person);
 
         _exceptSource.Remove(person);
-        _results.Messages.Count.Should().Be(1, "Should be 2 updates");
-        _results.Data.Count.Should().Be(1, "Cache should have no items");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 2 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Cache should have no items");
     }
 
-    [Fact]
-    public void UpdatingOneSourceOnlyProducesResult()
+    [Test]
+    public async Task UpdatingOneSourceOnlyProducesResult()
     {
         var person = new Person("Adult1", 50);
         _targetSource.AddOrUpdate(person);
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
     }
 
     protected abstract IObservable<IChangeSet<Person, string>> CreateObservable();

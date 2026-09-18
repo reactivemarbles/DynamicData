@@ -1,4 +1,4 @@
-﻿namespace DynamicData.Tests.Utilities;
+namespace DynamicData.Tests.Utilities;
 
 internal static class RawAnonymousObservable
 {

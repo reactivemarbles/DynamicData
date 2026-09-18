@@ -4,9 +4,11 @@
 #if REACTIVE_SHIM
 
 using DynamicData.Reactive.Binding;
+using DynamicData.Reactive.Cache.Internal;
 #else
 
 using DynamicData.Binding;
+using DynamicData.Cache.Internal;
 #endif
 
 // ReSharper disable once CheckNamespace
@@ -48,13 +50,14 @@ public static partial class ObservableCacheEx
         source = source ?? throw new ArgumentNullException(nameof(source));
         expression = expression ?? throw new ArgumentNullException(nameof(expression));
 
-        return source.Sort(
+        return new Sort<TObject, TKey>(
+            source,
             sortOrder switch
             {
                 SortDirection.Descending => SortExpressionComparer<TObject>.Descending(expression),
                 _ => SortExpressionComparer<TObject>.Ascending(expression),
             },
             sortOptimisations,
-            resetThreshold);
+            resetThreshold: resetThreshold).Run();
     }
 }

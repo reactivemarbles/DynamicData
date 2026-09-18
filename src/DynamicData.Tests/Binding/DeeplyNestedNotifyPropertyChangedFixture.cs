@@ -1,13 +1,17 @@
 using System.Diagnostics;
 
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 
 namespace DynamicData.Tests.Binding;
 
 public class DeeplyNestedNotifyPropertyChangedFixture
 {
-    [Fact]
-    public void DepthOfOne()
+    [Test]
+    public async Task DepthOfOne()
     {
         var instance = new ClassA { Name = "Someone" };
 
@@ -16,21 +20,21 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
         var subscription = chain.Subscribe(notification => result = notification?.Value);
 
-        result.Should().Be("Someone");
+        await Assert.That(result).IsEqualTo("Someone");
 
         instance.Name = "Else";
-        result.Should().Be("Else");
+        await Assert.That(result).IsEqualTo("Else");
 
         instance.Name = null;
-        result.Should().Be(null);
+        await Assert.That(result).IsNull();
 
         instance.Name = "NotNull";
-        result.Should().Be("NotNull");
+        await Assert.That(result).IsEqualTo("NotNull");
     }
 
     // Covers https://github.com/reactivemarbles/DynamicData/issues/671
-    [Fact]
-    public void NonObservableChildWithInitialValue()
+    [Test]
+    public async Task NonObservableChildWithInitialValue()
     {
         var source = new ClassC()
         {
@@ -51,30 +55,30 @@ public class DeeplyNestedNotifyPropertyChangedFixture
                 onError: e => error = e,
                 onCompleted: () => isCompleted = true);
 
-        error.Should().BeNull();
-        isCompleted.Should().BeFalse();
-        notifications.Count.Should().Be(1, "a notification was requested for the initial value");
-        notifications[0].Value.Should().Be(source.Child!.Value, "the child object's data value should have been published");
+        await Assert.That(error).IsNull();
+        await Assert.That(isCompleted).IsFalse();
+        await Assert.That(notifications.Count).IsEqualTo(1).Because("a notification was requested for the initial value");
+        await Assert.That(notifications[0].Value).IsEqualTo(source.Child!.Value).Because("the child object's data value should have been published");
 
         source.Child.Value = 2;
 
-        error.Should().BeNull();
-        isCompleted.Should().BeFalse();
-        notifications.Count.Should().Be(1, "the object that was changed does not publish notifications");
+        await Assert.That(error).IsNull();
+        await Assert.That(isCompleted).IsFalse();
+        await Assert.That(notifications.Count).IsEqualTo(1).Because("the object that was changed does not publish notifications");
 
         source.Child = new()
         {
             Value = 3
         };
 
-        error.Should().BeNull();
-        isCompleted.Should().BeFalse();
-        notifications.Count.Should().Be(2, "the parent object should have published a notification for its child being changed");
-        notifications[1].Value.Should().Be(source.Child!.Value, "the child object's data value should have been published");
+        await Assert.That(error).IsNull();
+        await Assert.That(isCompleted).IsFalse();
+        await Assert.That(notifications.Count).IsEqualTo(2).Because("the parent object should have published a notification for its child being changed");
+        await Assert.That(notifications[1].Value).IsEqualTo(source.Child!.Value).Because("the child object's data value should have been published");
     }
 
-    [Fact]
-    public void NonObservableChildWithoutInitialValue()
+    [Test]
+    public async Task NonObservableChildWithoutInitialValue()
     {
         var source = new ClassC()
         {
@@ -95,29 +99,29 @@ public class DeeplyNestedNotifyPropertyChangedFixture
                 onError: e => error = e,
                 onCompleted: () => isCompleted = true);
 
-        error.Should().BeNull();
-        isCompleted.Should().BeFalse();
-        notifications.Should().BeEmpty("no changes have been made");
+        await Assert.That(error).IsNull();
+        await Assert.That(isCompleted).IsFalse();
+        await Assert.That(notifications).IsEmpty();
 
         source.Child.Value = 2;
 
-        error.Should().BeNull();
-        isCompleted.Should().BeFalse();
-        notifications.Should().BeEmpty("the object that was changed does not publish notifications");
+        await Assert.That(error).IsNull();
+        await Assert.That(isCompleted).IsFalse();
+        await Assert.That(notifications).IsEmpty();
 
         source.Child = new()
         {
             Value = 3
         };
 
-        error.Should().BeNull();
-        isCompleted.Should().BeFalse();
-        notifications.Count.Should().Be(1, "the parent object should have published a notification for its child being changed");
-        notifications[0].Value.Should().Be(source.Child!.Value, "the child object's data value should have been published");
+        await Assert.That(error).IsNull();
+        await Assert.That(isCompleted).IsFalse();
+        await Assert.That(notifications.Count).IsEqualTo(1).Because("the parent object should have published a notification for its child being changed");
+        await Assert.That(notifications[0].Value).IsEqualTo(source.Child!.Value).Because("the child object's data value should have been published");
     }
 
-    [Fact]
-    public void NotifiesInitialValue_WithFallback()
+    [Test]
+    public async Task NotifiesInitialValue_WithFallback()
     {
         var instance = new ClassA { Child = new ClassB { Age = 10 } };
 
@@ -128,25 +132,25 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
         var subscription = chain.Subscribe(age => result = age);
 
-        result.Should().Be(10);
+        await Assert.That(result).IsEqualTo(10);
 
         instance.Child.Age = 22;
-        result.Should().Be(22);
+        await Assert.That(result).IsEqualTo(22);
 
         instance.Child = new ClassB { Age = 25 };
-        result.Should().Be(25);
+        await Assert.That(result).IsEqualTo(25);
 
         instance.Child.Age = 26;
-        result.Should().Be(26);
+        await Assert.That(result).IsEqualTo(26);
         instance.Child = null;
-        result.Should().Be(-1);
+        await Assert.That(result).IsEqualTo(-1);
 
         instance.Child = new ClassB { Age = 21 };
-        result.Should().Be(21);
+        await Assert.That(result).IsEqualTo(21);
     }
 
-    [Fact]
-    public void NotifiesInitialValueAndNullChild()
+    [Test]
+    public async Task NotifiesInitialValueAndNullChild()
     {
         var instance = new ClassA();
 
@@ -154,24 +158,24 @@ public class DeeplyNestedNotifyPropertyChangedFixture
         int? result = null;
 
         var subscription = chain.Subscribe(notification => result = notification?.Value);
-        result.Should().Be(null);
+        await Assert.That(result).IsNull();
         instance.Child = new ClassB { Age = 10 };
 
-        result.Should().Be(10);
+        await Assert.That(result).IsEqualTo(10);
 
         instance.Child.Age = 22;
-        result.Should().Be(22);
+        await Assert.That(result).IsEqualTo(22);
 
         instance.Child = new ClassB { Age = 25 };
-        result.Should().Be(25);
+        await Assert.That(result).IsEqualTo(25);
 
         instance.Child.Age = 26;
-        result.Should().Be(26);
+        await Assert.That(result).IsEqualTo(26);
         instance.Child = null;
     }
 
-    [Fact]
-    public void NullChildWithInitialValue()
+    [Test]
+    public async Task NullChildWithInitialValue()
     {
         var instance = new ClassA();
 
@@ -180,23 +184,23 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
         var subscription = chain.Subscribe(notification => result = notification?.Value);
 
-        result.Should().Be(null);
+        await Assert.That(result).IsNull();
 
         instance.Child = new ClassB { Age = 21 };
-        result.Should().Be(21);
+        await Assert.That(result).IsEqualTo(21);
 
         instance.Child.Age = 22;
-        result.Should().Be(22);
+        await Assert.That(result).IsEqualTo(22);
 
         instance.Child = new ClassB { Age = 25 };
-        result.Should().Be(25);
+        await Assert.That(result).IsEqualTo(25);
 
         instance.Child.Age = 30;
-        result.Should().Be(30);
+        await Assert.That(result).IsEqualTo(30);
     }
 
-    [Fact]
-    public void NullChildWithoutInitialValue()
+    [Test]
+    public async Task NullChildWithoutInitialValue()
     {
         var instance = new ClassA();
 
@@ -205,23 +209,23 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
         var subscription = chain.Subscribe(notification => result = notification.Value);
 
-        result.Should().Be(null);
+        await Assert.That(result).IsNull();
 
         instance.Child = new ClassB { Age = 21 };
-        result.Should().Be(21);
+        await Assert.That(result).IsEqualTo(21);
 
         instance.Child.Age = 22;
-        result.Should().Be(22);
+        await Assert.That(result).IsEqualTo(22);
 
         instance.Child = new ClassB { Age = 25 };
-        result.Should().Be(25);
+        await Assert.That(result).IsEqualTo(25);
 
         instance.Child.Age = 30;
-        result.Should().Be(30);
+        await Assert.That(result).IsEqualTo(30);
     }
 
-    [Fact]
-    public void WithoutInitialValue()
+    [Test]
+    public async Task WithoutInitialValue()
     {
         var instance = new ClassA { Name = "TestClass", Child = new ClassB { Age = 10 } };
 
@@ -230,18 +234,18 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
         var subscription = chain.Subscribe(notification => result = notification.Value);
 
-        result.Should().Be(null);
+        await Assert.That(result).IsNull();
 
         instance.Child.Age = 22;
-        result.Should().Be(22);
+        await Assert.That(result).IsEqualTo(22);
 
         instance.Child = new ClassB { Age = 25 };
-        result.Should().Be(25);
+        await Assert.That(result).IsEqualTo(25);
         instance.Child.Age = 30;
-        result.Should().Be(30);
+        await Assert.That(result).IsEqualTo(30);
     }
 
-    //  [Fact]
+    //  [Test]
     //  [Trait("Manual run for benchmarking","xx")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Manual run for benchmarking")]
@@ -254,7 +258,7 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
         var sw = new Stopwatch();
 
-        //  var factory = 
+        //  var factory =
 
         var myObservable = list.Connect().Do(_ => sw.Start()).WhenPropertyChanged(a => a!.Child!.Age, false).Do(_ => sw.Stop()).Subscribe();
 

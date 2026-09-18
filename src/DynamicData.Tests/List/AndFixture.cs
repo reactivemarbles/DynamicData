@@ -1,10 +1,12 @@
 namespace DynamicData.Tests.List;
 
+[InheritsTests]
 public class AndFixture : AndFixtureBase
 {
-    protected override IObservable<IChangeSet<int>> CreateObservable() => _source1.Connect().And(_source2.Connect());
+    protected override IObservable<IChangeSet<int>> CreateObservable() => ObservableListEx.And(_source1.Connect(), _source2.Connect());
 }
 
+[InheritsTests]
 public class AndCollectionFixture : AndFixtureBase
 {
     protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -30,22 +32,22 @@ public abstract class AndFixtureBase : IDisposable
         _results = CreateObservable().AsAggregator();
     }
 
-    [Fact]
-    public void ClearOneClearsResult()
+    [Test]
+    public async Task ClearOneClearsResult()
     {
         _source1.AddRange(Enumerable.Range(1, 5));
         _source2.AddRange(Enumerable.Range(1, 5));
         _source1.Clear();
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void CombineRange()
+    [Test]
+    public async Task CombineRange()
     {
         _source1.AddRange(Enumerable.Range(1, 10));
         _source2.AddRange(Enumerable.Range(6, 10));
-        _results.Data.Count.Should().Be(5);
-        _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5));
+        await Assert.That(_results.Data.Count).IsEqualTo(5);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(Enumerable.Range(6, 5));
     }
 
     public void Dispose()
@@ -55,37 +57,37 @@ public abstract class AndFixtureBase : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void ExcludedWhenItemIsInOneSource()
+    [Test]
+    public async Task ExcludedWhenItemIsInOneSource()
     {
         _source1.Add(1);
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void IncludedWhenItemIsInTwoSources()
+    [Test]
+    public async Task IncludedWhenItemIsInTwoSources()
     {
         _source1.Add(1);
         _source2.Add(1);
-        _results.Data.Count.Should().Be(1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
     }
 
-    [Fact]
-    public void RemovedWhenNoLongerInBoth()
+    [Test]
+    public async Task RemovedWhenNoLongerInBoth()
     {
         _source1.Add(1);
         _source2.Add(1);
         _source1.Remove(1);
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void StartingWithNonEmptySourceProducesNoResult()
+    [Test]
+    public async Task StartingWithNonEmptySourceProducesNoResult()
     {
         _source1.Add(1);
 
         using var result = CreateObservable().AsAggregator();
-        result.Data.Count.Should().Be(0);
+        await Assert.That(result.Data.Count).IsEqualTo(0);
     }
 
     protected abstract IObservable<IChangeSet<int>> CreateObservable();

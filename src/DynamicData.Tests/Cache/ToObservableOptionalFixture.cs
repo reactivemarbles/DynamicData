@@ -21,63 +21,63 @@ public class ToObservableOptionalFixture : IDisposable
         _source.Dispose();
     }
 
-    [Fact]
-    public void NullChecks() => Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.ToObservableOptional<KeyValuePair, string>(null!, string.Empty));
+    [Test]
+    public async Task NullChecks() => await Assert.That(() => ObservableCacheEx.ToObservableOptional<KeyValuePair, string>(null!, string.Empty)).Throws<ArgumentNullException>();
 
-    [Fact]
-    public void AddingToCacheEmitsOptionalSome()
+    [Test]
+    public async Task AddingToCacheEmitsOptionalSome()
     {
         // having
-        var optionals = new List<Optional<KeyValuePair>>();
+        var optionals = new List<ReactiveUI.Primitives.Optional<KeyValuePair>>();
         using var optionalObservable = _source.Connect().ToObservableOptional(Key1).Do(optionals.Add).Subscribe();
 
         // when
         _source.AddOrUpdate(Create(Key1, Value1));
 
         // then
-        _results.Data.Count.Should().Be(1);
-        optionals.Count.Should().Be(1);
-        optionals[0].HasValue.Should().BeTrue();
-        optionals[0].Value.Value.Should().Be(Value1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(optionals.Count).IsEqualTo(1);
+        await Assert.That(optionals[0].HasValue).IsTrue();
+        await Assert.That(optionals[0].Value.Value).IsEqualTo(Value1);
     }
 
-    [Fact]
-    public void AddingOtherKeysDoesNotEmit()
+    [Test]
+    public async Task AddingOtherKeysDoesNotEmit()
     {
         // having
-        var optionals = new List<Optional<KeyValuePair>>();
+        var optionals = new List<ReactiveUI.Primitives.Optional<KeyValuePair>>();
         using var optionalObservable = _source.Connect().ToObservableOptional(Key1).Do(optionals.Add).Subscribe();
 
         // when
         _source.AddOrUpdate(Create(Key2, Value1));
 
         // then
-        _results.Data.Count.Should().Be(1);
-        optionals.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(optionals.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void ExistingValueEmitsOptionalSome()
+    [Test]
+    public async Task ExistingValueEmitsOptionalSome()
     {
         // having
-        var optionals = new List<Optional<KeyValuePair>>();
+        var optionals = new List<ReactiveUI.Primitives.Optional<KeyValuePair>>();
         _source.AddOrUpdate(Create(Key1, Value1));
 
         // when
         using var optionalObservable = _source.Connect().ToObservableOptional(Key1).Do(optionals.Add).Subscribe();
 
         // then
-        _results.Data.Count.Should().Be(1);
-        optionals.Count.Should().Be(1);
-        optionals[0].HasValue.Should().BeTrue();
-        optionals[0].Value.Value.Should().Be(Value1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(optionals.Count).IsEqualTo(1);
+        await Assert.That(optionals[0].HasValue).IsTrue();
+        await Assert.That(optionals[0].Value.Value).IsEqualTo(Value1);
     }
 
-    [Fact]
-    public void RemovingFromCacheEmitsOptionalNone()
+    [Test]
+    public async Task RemovingFromCacheEmitsOptionalNone()
     {
         // having
-        var optionals = new List<Optional<KeyValuePair>>();
+        var optionals = new List<ReactiveUI.Primitives.Optional<KeyValuePair>>();
         using var optionalObservable = _source.Connect().ToObservableOptional(Key1).Do(optionals.Add).Subscribe();
         _source.AddOrUpdate(Create(Key1, Value1));
 
@@ -85,16 +85,16 @@ public class ToObservableOptionalFixture : IDisposable
         _source.RemoveKey(Key1);
 
         // then
-        _results.Data.Count.Should().Be(0);
-        optionals.Count.Should().Be(2);
-        optionals[1].HasValue.Should().BeFalse();
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
+        await Assert.That(optionals.Count).IsEqualTo(2);
+        await Assert.That(optionals[1].HasValue).IsFalse();
     }
 
-    [Fact]
-    public void UpdateCacheEmitsOptionalSome()
+    [Test]
+    public async Task UpdateCacheEmitsOptionalSome()
     {
         // having
-        var optionals = new List<Optional<KeyValuePair>>();
+        var optionals = new List<ReactiveUI.Primitives.Optional<KeyValuePair>>();
         using var optionalObservable = _source.Connect().ToObservableOptional(Key1).Do(optionals.Add).Subscribe();
         _source.AddOrUpdate(Create(Key1, Value1));
 
@@ -102,18 +102,18 @@ public class ToObservableOptionalFixture : IDisposable
         _source.AddOrUpdate(Create(Key1, Value2));
 
         // then
-        _results.Data.Count.Should().Be(1);
-        optionals.Count.Should().Be(2);
-        optionals[1].HasValue.Should().BeTrue();
-        optionals[1].Value.Value.Should().Be(Value2);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(optionals.Count).IsEqualTo(2);
+        await Assert.That(optionals[1].HasValue).IsTrue();
+        await Assert.That(optionals[1].Value.Value).IsEqualTo(Value2);
     }
 
-    [Fact]
-    public void UpdateUsesEqualityComparer()
+    [Test]
+    public async Task UpdateUsesEqualityComparer()
     {
         // having
-        var optionalsCS = new List<Optional<KeyValuePair>>();
-        var optionalsNonCS = new List<Optional<KeyValuePair>>();
+        var optionalsCS = new List<ReactiveUI.Primitives.Optional<KeyValuePair>>();
+        var optionalsNonCS = new List<ReactiveUI.Primitives.Optional<KeyValuePair>>();
         using var optionalCSObservable = _source.Connect().ToObservableOptional(Key1, CaseSensitiveComparer).Do(optionalsCS.Add).Subscribe();
         using var optionalNonCSObservable = _source.Connect().ToObservableOptional(Key1, CaseInsensitiveComparer).Do(optionalsNonCS.Add).Subscribe();
         _source.AddOrUpdate(Create(Key1, Value1));
@@ -122,22 +122,22 @@ public class ToObservableOptionalFixture : IDisposable
         _source.AddOrUpdate(Create(Key1, Value1AllCaps));
 
         // then
-        _results.Data.Count.Should().Be(1);
-        optionalsNonCS.Count.Should().Be(1);
-        optionalsNonCS[0].HasValue.Should().BeTrue();
-        optionalsNonCS[0].Value.Value.Should().Be(Value1);
-        optionalsCS.Count.Should().Be(2);
-        optionalsCS[0].HasValue.Should().BeTrue();
-        optionalsCS[0].Value.Value.Should().Be(Value1);
-        optionalsCS[1].HasValue.Should().BeTrue();
-        optionalsCS[1].Value.Value.Should().Be(Value1AllCaps);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(optionalsNonCS.Count).IsEqualTo(1);
+        await Assert.That(optionalsNonCS[0].HasValue).IsTrue();
+        await Assert.That(optionalsNonCS[0].Value.Value).IsEqualTo(Value1);
+        await Assert.That(optionalsCS.Count).IsEqualTo(2);
+        await Assert.That(optionalsCS[0].HasValue).IsTrue();
+        await Assert.That(optionalsCS[0].Value.Value).IsEqualTo(Value1);
+        await Assert.That(optionalsCS[1].HasValue).IsTrue();
+        await Assert.That(optionalsCS[1].Value.Value).IsEqualTo(Value1AllCaps);
     }
 
-    [Fact]
-    public void UpdateWhenReferenceEqualDoesNotEmit()
+    [Test]
+    public async Task UpdateWhenReferenceEqualDoesNotEmit()
     {
         // having
-        var optionals = new List<Optional<KeyValuePair>>();
+        var optionals = new List<ReactiveUI.Primitives.Optional<KeyValuePair>>();
         using var optionalObservable = _source.Connect().ToObservableOptional(Key1).Do(optionals.Add).Subscribe();
         var kvp = Create(Key1, Value1);
         _source.AddOrUpdate(kvp);
@@ -148,13 +148,13 @@ public class ToObservableOptionalFixture : IDisposable
         _source.AddOrUpdate(kvp);
 
         // then
-        _results.Data.Count.Should().Be(1);
-        optionals.Count.Should().Be(1);
-        optionals[0].HasValue.Should().BeTrue();
-        optionals[0].Value.Value.Should().Be(Value1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(optionals.Count).IsEqualTo(1);
+        await Assert.That(optionals[0].HasValue).IsTrue();
+        await Assert.That(optionals[0].Value.Value).IsEqualTo(Value1);
     }
 
-    [Fact]
+    [Test]
     public async Task InitialOptionalAvoidsNoneAfterSomeRaceConditions()
     {
         await Task.WhenAll(Enumerable.Range(0, 10000).Select(_ => RunTest()));
@@ -163,7 +163,7 @@ public class ToObservableOptionalFixture : IDisposable
         {
             // having
             using ISourceCache<KeyValuePair, string> source = new SourceCache<KeyValuePair, string>(kvp => kvp.Key);
-            var optionals = new List<Optional<KeyValuePair>>();
+            var optionals = new List<ReactiveUI.Primitives.Optional<KeyValuePair>>();
 
             // when
             var addTask = Task.Run(() => source.AddOrUpdate(Create(Key1, Value1)));
@@ -171,71 +171,71 @@ public class ToObservableOptionalFixture : IDisposable
             await addTask;
 
             // then
-            source.Count.Should().Be(1);
-            optionals.Count.Should().BeInRange(1, 2);
-            optionals.Last().HasValue.Should().BeTrue();
-            optionals.Last().Value.Value.Should().Be(Value1);
+            await Assert.That(source.Count).IsEqualTo(1);
+            await Assert.That(optionals.Count >= 1 && optionals.Count <= 2).IsTrue();
+            await Assert.That(optionals.Last().HasValue).IsTrue();
+            await Assert.That(optionals.Last().Value.Value).IsEqualTo(Value1);
             if (optionals.Count > 1)
             {
-                optionals.First().HasValue.Should().BeFalse();
+                await Assert.That(optionals.First().HasValue).IsFalse();
             }
         }
     }
 
-    [Fact]
-    public void InitialOptionalWhenMissingEmitsNone()
+    [Test]
+    public async Task InitialOptionalWhenMissingEmitsNone()
     {
         // having
-        var optionals = new List<Optional<KeyValuePair>>();
+        var optionals = new List<ReactiveUI.Primitives.Optional<KeyValuePair>>();
 
         // when
         using var optionalObservable = _source.Connect().ToObservableOptional(Key1, initialOptionalWhenMissing: true).Do(optionals.Add).Subscribe();
 
         // then
-        _results.Data.Count.Should().Be(0);
-        optionals.Count.Should().Be(1);
-        optionals[0].HasValue.Should().BeFalse();
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
+        await Assert.That(optionals.Count).IsEqualTo(1);
+        await Assert.That(optionals[0].HasValue).IsFalse();
     }
 
-    [Fact]
-    public void InitialOptionalWhenPresentEmitsSome()
+    [Test]
+    public async Task InitialOptionalWhenPresentEmitsSome()
     {
         // having
-        var optionals = new List<Optional<KeyValuePair>>();
+        var optionals = new List<ReactiveUI.Primitives.Optional<KeyValuePair>>();
         _source.AddOrUpdate(Create(Key1, Value1));
 
         // when
         using var optionalObservable = _source.Connect().ToObservableOptional(Key1, initialOptionalWhenMissing: true).Do(optionals.Add).Subscribe();
 
         // then
-        _results.Data.Count.Should().Be(1);
-        optionals.Count.Should().Be(1);
-        optionals[0].HasValue.Should().BeTrue();
-        optionals[0].Value.Value.Should().Be(Value1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(optionals.Count).IsEqualTo(1);
+        await Assert.That(optionals[0].HasValue).IsTrue();
+        await Assert.That(optionals[0].Value.Value).IsEqualTo(Value1);
     }
 
-    [Fact]
-    public void InitialOptionalWhenAddedEmitsNoneThenSome()
+    [Test]
+    public async Task InitialOptionalWhenAddedEmitsNoneThenSome()
     {
         // having
-        var optionals = new List<Optional<KeyValuePair>>();
+        var optionals = new List<ReactiveUI.Primitives.Optional<KeyValuePair>>();
         using var optionalObservable = _source.Connect().ToObservableOptional(Key1, initialOptionalWhenMissing: true).Do(optionals.Add).Subscribe();
 
         // when
         _source.AddOrUpdate(Create(Key1, Value1));
 
         // then
-        _results.Data.Count.Should().Be(1);
-        optionals.Count.Should().Be(2);
-        optionals[0].HasValue.Should().BeFalse();
-        optionals[1].HasValue.Should().BeTrue();
-        optionals[1].Value.Value.Should().Be(Value1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(optionals.Count).IsEqualTo(2);
+        await Assert.That(optionals[0].HasValue).IsFalse();
+        await Assert.That(optionals[1].HasValue).IsTrue();
+        await Assert.That(optionals[1].Value.Value).IsEqualTo(Value1);
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void ObservableCompletesIfAndOnlyIfSourceCompletes(bool completeSource)
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task ObservableCompletesIfAndOnlyIfSourceCompletes(bool completeSource)
     {
         // having
         bool completed = false;
@@ -250,13 +250,13 @@ public class ToObservableOptionalFixture : IDisposable
         _source.Dispose();
 
         // then
-        completed.Should().Be(completeSource);
+        await Assert.That(completed).IsEqualTo(completeSource);
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void ObservableFailsIfAndOnlyIfSourceFails(bool failSource)
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task ObservableFailsIfAndOnlyIfSourceFails(bool failSource)
     {
         // having
         var optionalObservable = _source.Connect();
@@ -272,7 +272,7 @@ public class ToObservableOptionalFixture : IDisposable
         _source.Dispose();
 
         // then
-        receivedError.Should().Be(failSource ? testException : default);
+        await Assert.That(receivedError).IsEqualTo(failSource ? testException : default);
     }
 
     private static KeyValuePair Create(string key, string value) => new(key, value);
@@ -297,4 +297,3 @@ public class ToObservableOptionalFixture : IDisposable
         public string Value { get; } = value;
     }
 }
-

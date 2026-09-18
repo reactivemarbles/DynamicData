@@ -2,7 +2,7 @@ namespace DynamicData.Tests.Cache;
 
 public class TransformTreeFixture : IDisposable
 {
-    private readonly StateSignal<Func<Node<EmployeeDto, int>, bool>> _filter;
+    private readonly ReactiveUI.Primitives.Signals.StateSignal<Func<Node<EmployeeDto, int>, bool>> _filter;
 
     private readonly IObservableCache<Node<EmployeeDto, int>, int> _result;
 
@@ -12,30 +12,30 @@ public class TransformTreeFixture : IDisposable
     {
         _sourceCache = new SourceCache<EmployeeDto, int>(e => e.Id);
 
-        _filter = new StateSignal<Func<Node<EmployeeDto, int>, bool>>(n => n.IsRoot);
+        _filter = new ReactiveUI.Primitives.Signals.StateSignal<Func<Node<EmployeeDto, int>, bool>>(n => n.IsRoot);
 
         _result = _sourceCache.Connect().TransformToTree(e => e.BossId, _filter).AsObservableCache();
     }
 
-    [Fact]
-    public void AddMissingChild()
+    [Test]
+    public async Task AddMissingChild()
     {
         var boss = new EmployeeDto(2) { BossId = 0, Name = "Boss" };
         var minion = new EmployeeDto(1) { BossId = 2, Name = "DogsBody" };
         _sourceCache.AddOrUpdate(boss);
         _sourceCache.AddOrUpdate(minion);
 
-        _result.Count.Should().Be(1);
+        await Assert.That(_result.Count).IsEqualTo(1);
 
         var firstNode = _result.Items[0];
-        firstNode.Item.Should().Be(boss);
+        await Assert.That(firstNode.Item).IsEqualTo(boss);
 
         var childNode = firstNode.Children.Items[0];
-        childNode.Item.Should().Be(minion);
+        await Assert.That(childNode.Item).IsEqualTo(minion);
     }
 
-    [Fact]
-    public void AddMissingParent()
+    [Test]
+    public async Task AddMissingParent()
     {
         var emp10 = new EmployeeDto(10) { BossId = 11, Name = "Employee10" };
         var emp11 = new EmployeeDto(11) { BossId = 0, Name = "Employee11" };
@@ -47,40 +47,40 @@ public class TransformTreeFixture : IDisposable
         _sourceCache.AddOrUpdate(emp12);
         _sourceCache.AddOrUpdate(emp13);
 
-        _result.Count.Should().Be(1);
+        await Assert.That(_result.Count).IsEqualTo(1);
 
         var emp11Node = _result.Lookup(11);
-        emp11Node.HasValue.Should().BeTrue();
-        emp11Node.Value.Children.Count.Should().Be(2);
+        await Assert.That(emp11Node.HasValue).IsTrue();
+        await Assert.That(emp11Node.Value.Children.Count).IsEqualTo(2);
 
         var emp10Node = emp11Node.Value.Children.Lookup(10);
-        emp10Node.HasValue.Should().BeTrue();
-        emp10Node.Value.Children.Count.Should().Be(0);
+        await Assert.That(emp10Node.HasValue).IsTrue();
+        await Assert.That(emp10Node.Value.Children.Count).IsEqualTo(0);
 
         var emp13Node = emp11Node.Value.Children.Lookup(13);
-        emp13Node.HasValue.Should().BeTrue();
-        emp13Node.Value.Children.Count.Should().Be(1);
+        await Assert.That(emp13Node.HasValue).IsTrue();
+        await Assert.That(emp13Node.Value.Children.Count).IsEqualTo(1);
 
         var emp12Node = emp13Node.Value.Children.Lookup(12);
-        emp12Node.HasValue.Should().BeTrue();
-        emp12Node.Value.Children.Count.Should().Be(0);
+        await Assert.That(emp12Node.HasValue).IsTrue();
+        await Assert.That(emp12Node.Value.Children.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void BuildTreeFromMixedData()
+    [Test]
+    public async Task BuildTreeFromMixedData()
     {
         _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
-        _result.Count.Should().Be(2);
+        await Assert.That(_result.Count).IsEqualTo(2);
 
         var firstNode = _result.Items[0];
-        firstNode.Children.Count.Should().Be(3);
+        await Assert.That(firstNode.Children.Count).IsEqualTo(3);
 
         var secondNode = _result.Items.Skip(1).First();
-        secondNode.Children.Count.Should().Be(0);
+        await Assert.That(secondNode.Children.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void ChangeParent()
+    [Test]
+    public async Task ChangeParent()
     {
         _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
 
@@ -95,13 +95,13 @@ public class TransformTreeFixture : IDisposable
         var emp4 = _result.Lookup(1).Value.Children.Lookup(4).Value;
 
         //check boss is = 1
-        emp4.Parent.Value.Item.Id.Should().Be(1);
+        await Assert.That(emp4.Parent.Value.Item.Id).IsEqualTo(1);
 
         //lookup previous boss (emp 4 should no longet be a child)
         var emp3 = _result.Lookup(1).Value.Children.Lookup(3).Value;
 
         //emp 4 must be removed from previous boss's child collection
-        emp3.Children.Lookup(4).HasValue.Should().BeFalse();
+        await Assert.That(emp3.Children.Lookup(4).HasValue).IsFalse();
     }
 
     public void Dispose()
@@ -111,31 +111,31 @@ public class TransformTreeFixture : IDisposable
         _filter.Dispose();
     }
 
-    [Fact]
-    public void RemoveAChildNodeWillPushOrphansUpTheHierachy()
+    [Test]
+    public async Task RemoveAChildNodeWillPushOrphansUpTheHierachy()
     {
         _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
         _sourceCache.Remove(4);
 
         //we expect the children of node 4  to be pushed up become new roots
-        _result.Count.Should().Be(3);
+        await Assert.That(_result.Count).IsEqualTo(3);
 
         var thirdNode = _result.Items.Skip(2).First();
-        thirdNode.Key.Should().Be(5);
+        await Assert.That(thirdNode.Key).IsEqualTo(5);
     }
 
-    [Fact]
-    public void RemoveARootNodeWillPushOrphansUpTheHierachy()
+    [Test]
+    public async Task RemoveARootNodeWillPushOrphansUpTheHierachy()
     {
         _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
         _sourceCache.Remove(1);
 
         //we expect the original children nodes to be pushed up become new roots
-        _result.Count.Should().Be(4);
+        await Assert.That(_result.Count).IsEqualTo(4);
     }
 
-    [Fact]
-    public void UpdateAParentNode()
+    [Test]
+    public async Task UpdateAParentNode()
     {
         _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
 
@@ -146,15 +146,15 @@ public class TransformTreeFixture : IDisposable
         };
 
         _sourceCache.AddOrUpdate(changed);
-        _result.Count.Should().Be(2);
+        await Assert.That(_result.Count).IsEqualTo(2);
 
         var firstNode = _result.Items[0];
-        firstNode.Children.Count.Should().Be(3);
-        firstNode.Item.Name.Should().Be(changed.Name);
+        await Assert.That(firstNode.Children.Count).IsEqualTo(3);
+        await Assert.That(firstNode.Item.Name).IsEqualTo(changed.Name);
     }
 
-    [Fact]
-    public void UpdateChildNode()
+    [Test]
+    public async Task UpdateChildNode()
     {
         _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
 
@@ -165,33 +165,33 @@ public class TransformTreeFixture : IDisposable
         };
 
         _sourceCache.AddOrUpdate(changed);
-        _result.Count.Should().Be(2);
+        await Assert.That(_result.Count).IsEqualTo(2);
 
         var changedNode = _result.Items[0].Children.Items[0];
 
-        changedNode.Parent.Value.Item.Id.Should().Be(1);
-        changedNode.Children.Count.Should().Be(1);
-        changed.Name.Should().Be(changed.Name);
+        await Assert.That(changedNode.Parent.Value.Item.Id).IsEqualTo(1);
+        await Assert.That(changedNode.Children.Count).IsEqualTo(1);
+        await Assert.That(changedNode.Item.Name).IsEqualTo(changed.Name);
     }
 
-    [Fact]
-    public void UseCustomFilter()
+    [Test]
+    public async Task UseCustomFilter()
     {
         _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
 
-        _result.Count.Should().Be(2);
+        await Assert.That(_result.Count).IsEqualTo(2);
 
         _filter.OnNext(node => true);
-        _result.Count.Should().Be(8);
+        await Assert.That(_result.Count).IsEqualTo(8);
 
         _filter.OnNext(node => node.Depth == 3);
-        _result.Count.Should().Be(1);
+        await Assert.That(_result.Count).IsEqualTo(1);
 
         _sourceCache.RemoveKey(5);
-        _result.Count.Should().Be(0);
+        await Assert.That(_result.Count).IsEqualTo(0);
 
         _filter.OnNext(node => node.IsRoot);
-        _result.Count.Should().Be(2);
+        await Assert.That(_result.Count).IsEqualTo(2);
     }
 
     private static IEnumerable<EmployeeDto> CreateEmployees()

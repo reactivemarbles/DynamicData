@@ -1,4 +1,8 @@
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.Cache;
@@ -11,9 +15,9 @@ public class PageFixture : IDisposable
 
     private readonly RandomPersonGenerator _generator = new();
 
-    private readonly ISignal<IPageRequest> _pager;
+    private readonly ReactiveUI.Primitives.Signals.ISignal<IPageRequest> _pager;
 
-    private readonly ISignal<IComparer<Person>> _sort;
+    private readonly ReactiveUI.Primitives.Signals.ISignal<IComparer<Person>> _sort;
 
     private readonly ISourceCache<Person, string> _source;
 
@@ -21,14 +25,14 @@ public class PageFixture : IDisposable
     {
         _source = new SourceCache<Person, string>(p => p.Name);
         _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
-        _sort = new StateSignal<IComparer<Person>>(_comparer);
-        _pager = new StateSignal<IPageRequest>(new PageRequest(1, 25));
+        _sort = new ReactiveUI.Primitives.Signals.StateSignal<IComparer<Person>>(_comparer);
+        _pager = new ReactiveUI.Primitives.Signals.StateSignal<IPageRequest>(new PageRequest(1, 25));
 
         _aggregators = _source.Connect().Sort(_sort, resetThreshold: 200).Page(_pager).AsAggregator();
     }
 
-    [Fact]
-    public void ChangePage()
+    [Test]
+    public async Task ChangePage()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -37,22 +41,22 @@ public class PageFixture : IDisposable
         var expectedResult = people.OrderBy(p => p, _comparer).Skip(25).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
         var actualResult = _aggregators.Messages[1].SortedItems.ToList();
 
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
-    [Fact]
-    public void ChangePageSize()
+    [Test]
+    public async Task ChangePageSize()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
         _pager.OnNext(new PageRequest(1, 50));
 
-        _aggregators.Messages[1].Response.Page.Should().Be(1, "Should be page 1");
+        await Assert.That(_aggregators.Messages[1].Response.Page).IsEqualTo(1).Because("Should be page 1");
 
         var expectedResult = people.OrderBy(p => p, _comparer).Take(50).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
         var actualResult = _aggregators.Messages[1].SortedItems.ToList();
 
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
     public void Dispose()
@@ -63,40 +67,40 @@ public class PageFixture : IDisposable
         _sort.Dispose();
     }
 
-    [Fact]
-    public void PageGreaterThanNumberOfPagesAvailable()
+    [Test]
+    public async Task PageGreaterThanNumberOfPagesAvailable()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
         _pager.OnNext(new PageRequest(10, 25));
 
-        _aggregators.Messages[1].Response.Page.Should().Be(4, "Page should move to the last page");
+        await Assert.That(_aggregators.Messages[1].Response.Page).IsEqualTo(4).Because("Page should move to the last page");
 
         var expectedResult = people.OrderBy(p => p, _comparer).Skip(75).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
         var actualResult = _aggregators.Messages[1].SortedItems.ToList();
 
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
-    [Fact]
-    public void PageInitialBatch()
+    [Test]
+    public async Task PageInitialBatch()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
-        _aggregators.Data.Count.Should().Be(25, "Should be 25 people in the cache");
-        _aggregators.Messages[0].Response.PageSize.Should().Be(25, "Page size should be 25");
-        _aggregators.Messages[0].Response.Page.Should().Be(1, "Should be page 1");
-        _aggregators.Messages[0].Response.Pages.Should().Be(4, "Should be page 4 pages");
+        await Assert.That(_aggregators.Data.Count).IsEqualTo(25).Because("Should be 25 people in the cache");
+        await Assert.That(_aggregators.Messages[0].Response.PageSize).IsEqualTo(25).Because("Page size should be 25");
+        await Assert.That(_aggregators.Messages[0].Response.Page).IsEqualTo(1).Because("Should be page 1");
+        await Assert.That(_aggregators.Messages[0].Response.Pages).IsEqualTo(4).Because("Should be page 4 pages");
 
         var expectedResult = people.OrderBy(p => p, _comparer).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
         var actualResult = _aggregators.Messages[0].SortedItems.ToList();
 
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
-    [Fact]
-    public void ReorderBelowThreshold()
+    [Test]
+    public async Task ReorderBelowThreshold()
     {
         var people = _generator.Take(50).ToArray();
         _source.AddOrUpdate(people);
@@ -106,12 +110,12 @@ public class PageFixture : IDisposable
 
         var expectedResult = people.OrderBy(p => p, changed).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
         var actualResult = _aggregators.Messages.Last().SortedItems.ToList();
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
-    [Fact]
-    public void ThrowsForNegativePage() => Assert.Throws<ArgumentException>(() => _pager.OnNext(new PageRequest(-1, 1)));
+    [Test]
+    public async Task ThrowsForNegativePage() => await Assert.That(() => _pager.OnNext(new PageRequest(-1, 1))).Throws<ArgumentException>();
 
-    [Fact]
-    public void ThrowsForNegativeSizeParameters() => Assert.Throws<ArgumentException>(() => _pager.OnNext(new PageRequest(1, -1)));
+    [Test]
+    public async Task ThrowsForNegativeSizeParameters() => await Assert.That(() => _pager.OnNext(new PageRequest(1, -1))).Throws<ArgumentException>();
 }

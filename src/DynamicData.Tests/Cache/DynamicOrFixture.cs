@@ -25,8 +25,8 @@ public class DynamicOrFixture : IDisposable
         _results = _source.Or().AsAggregator();
     }
 
-    [Fact]
-    public void AddAndRemoveLists()
+    [Test]
+    public async Task AddAndRemoveLists()
     {
         var items = _generator.Take(100).ToArray();
 
@@ -38,14 +38,14 @@ public class DynamicOrFixture : IDisposable
         _source.Add(_source2.Connect());
         _source.Add(_source3.Connect());
 
-        _results.Data.Count.Should().Be(100);
-        _results.Data.Items.Should().BeEquivalentTo(items);
+        await Assert.That(_results.Data.Count).IsEqualTo(100);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(items);
 
         _source.RemoveAt(1);
         var result = items.Take(10).Union(items.Skip(20));
 
-        _results.Data.Count.Should().Be(90);
-        _results.Data.Items.Should().BeEquivalentTo(result);
+        await Assert.That(_results.Data.Count).IsEqualTo(90);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(result);
     }
 
     public void Dispose()
@@ -57,8 +57,8 @@ public class DynamicOrFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void RemoveAllLists()
+    [Test]
+    public async Task RemoveAllLists()
     {
         var items = _generator.Take(100).ToArray();
 
@@ -72,11 +72,11 @@ public class DynamicOrFixture : IDisposable
 
         _source.Clear();
 
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void RemovingFromOneDoesNotFromResult()
+    [Test]
+    public async Task RemovingFromOneDoesNotFromResult()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
@@ -86,12 +86,12 @@ public class DynamicOrFixture : IDisposable
         _source2.AddOrUpdate(person);
 
         _source2.Remove(person);
-        _results.Messages.Count.Should().Be(1, "Should be 2 updates");
-        _results.Data.Count.Should().Be(1, "Cache should have no items");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 2 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Cache should have no items");
     }
 
-    [Fact]
-    public void UpdatingBothProducesResultsAndDoesNotDuplicateTheMessage()
+    [Test]
+    public async Task UpdatingBothProducesResultsAndDoesNotDuplicateTheMessage()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
@@ -99,13 +99,13 @@ public class DynamicOrFixture : IDisposable
         var person = new Person("Adult1", 50);
         _source1.AddOrUpdate(person);
         _source2.AddOrUpdate(person);
-        _results.Messages.Count.Should().Be(1, "Should have no updates");
-        _results.Data.Count.Should().Be(1, "Cache should have no items");
-        _results.Data.Items[0].Should().Be(person, "Should be same person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should have no updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Cache should have no items");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(person).Because("Should be same person");
     }
 
-    [Fact]
-    public void UpdatingOneProducesOnlyOneUpdate()
+    [Test]
+    public async Task UpdatingOneProducesOnlyOneUpdate()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
@@ -116,13 +116,13 @@ public class DynamicOrFixture : IDisposable
 
         var personUpdated = new Person("Adult1", 51);
         _source2.AddOrUpdate(personUpdated);
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Data.Count.Should().Be(1, "Cache should have no items");
-        _results.Data.Items[0].Should().Be(personUpdated, "Should be updated person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Cache should have no items");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(personUpdated).Because("Should be updated person");
     }
 
-    [Fact]
-    public void UpdatingOneSourceOnlyProducesResult()
+    [Test]
+    public async Task UpdatingOneSourceOnlyProducesResult()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
@@ -130,7 +130,7 @@ public class DynamicOrFixture : IDisposable
         var person = new Person("Adult1", 50);
         _source1.AddOrUpdate(person);
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
     }
 }

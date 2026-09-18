@@ -20,43 +20,43 @@ public class TransformFixture : IDisposable
         _results = new ChangeSetAggregator<PersonWithGender>(_source.Connect().Transform(_transformFactory));
     }
 
-    [Fact]
-    public void Add()
+    [Test]
+    public async Task Add()
     {
         var person = new Person("Adult1", 50);
         _source.Add(person);
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].Should().Be(_transformFactory(person), "Should be same person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(_transformFactory(person)).Because("Should be same person");
     }
 
-    [Fact]
-    public void BatchOfUniqueUpdates()
+    [Test]
+    public async Task BatchOfUniqueUpdates()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
 
         _source.AddRange(people);
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Messages[0].Adds.Should().Be(100, "Should return 100 adds");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(100).Because("Should return 100 adds");
 
         var transformed = people.Select(_transformFactory).OrderBy(p => p.Age).ToArray();
-        _results.Data.Items.OrderBy(p => p.Age).Should().BeEquivalentTo(transformed, "Incorrect transform result");
+        await Assert.That(_results.Data.Items.OrderBy(p => p.Age)).IsEquivalentTo(transformed).Because("Incorrect transform result");
     }
 
-    [Fact]
-    public void Clear()
+    [Test]
+    public async Task Clear()
     {
         var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
 
         _source.AddRange(people);
         _source.Clear();
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(100, "Should be 80 addes");
-        _results.Messages[1].Removes.Should().Be(100, "Should be 80 removes");
-        _results.Data.Count.Should().Be(0, "Should be nothing cached");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(100).Because("Should be 80 addes");
+        await Assert.That(_results.Messages[1].Removes).IsEqualTo(100).Because("Should be 80 removes");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be nothing cached");
     }
 
     public void Dispose()
@@ -65,8 +65,8 @@ public class TransformFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         const string key = "Adult1";
         var person = new Person(key, 50);
@@ -74,15 +74,15 @@ public class TransformFixture : IDisposable
         _source.Add(person);
         _source.Remove(person);
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(1, "Should be 80 addes");
-        _results.Messages[1].Removes.Should().Be(1, "Should be 80 removes");
-        _results.Data.Count.Should().Be(0, "Should be nothing cached");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(1).Because("Should be 80 addes");
+        await Assert.That(_results.Messages[1].Removes).IsEqualTo(1).Because("Should be 80 removes");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be nothing cached");
     }
 
-    [Fact]
-    public void RemoveWithoutIndex()
+    [Test]
+    public async Task RemoveWithoutIndex()
     {
         const string key = "Adult1";
         var person = new Person(key, 50);
@@ -92,26 +92,26 @@ public class TransformFixture : IDisposable
         _source.Add(person);
         _source.Remove(person);
 
-        results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        results.Messages[0].Adds.Should().Be(1, "Should be 1 addes");
-        results.Messages[1].Removes.Should().Be(1, "Should be 1 removes");
-        results.Data.Count.Should().Be(0, "Should be nothing cached");
+        await Assert.That(results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(results.Messages[0].Adds).IsEqualTo(1).Because("Should be 1 addes");
+        await Assert.That(results.Messages[1].Removes).IsEqualTo(1).Because("Should be 1 removes");
+        await Assert.That(results.Data.Count).IsEqualTo(0).Because("Should be nothing cached");
     }
 
-    [Fact]
-    public void SameKeyChanges()
+    [Test]
+    public async Task SameKeyChanges()
     {
         var people = Enumerable.Range(1, 10).Select(i => new Person("Name", i)).ToArray();
 
         _source.AddRange(people);
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Messages[0].Adds.Should().Be(10, "Should return 10 adds");
-        _results.Data.Count.Should().Be(10, "Should result in 10 records");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(10).Because("Should return 10 adds");
+        await Assert.That(_results.Data.Count).IsEqualTo(10).Because("Should result in 10 records");
     }
 
-    [Fact]
-    public void Update()
+    [Test]
+    public async Task Update()
     {
         const string key = "Adult1";
         var newperson = new Person(key, 50);
@@ -120,13 +120,13 @@ public class TransformFixture : IDisposable
         _source.Add(newperson);
         _source.Add(updated);
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
-        _results.Messages[0].Replaced.Should().Be(0, "Should be 1 update");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(1).Because("Should be 1 adds");
+        await Assert.That(_results.Messages[0].Replaced).IsEqualTo(0).Because("Should be 1 update");
     }
 
-    [Fact]
-    public void MultipleSubscribersShouldNotShareState()
+    [Test]
+    public async Task MultipleSubscribersShouldNotShareState()
     {
         _source.AddRange(new Person[]
         {
@@ -142,8 +142,8 @@ public class TransformFixture : IDisposable
         transformed.Transform(o => o).Subscribe();
     }
 
-    [Fact]
-    public void TransformOnRefresh()
+    [Test]
+    public async Task TransformOnRefresh()
     {
         var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, 1)).ToArray();
 
@@ -153,34 +153,34 @@ public class TransformFixture : IDisposable
             .Transform(v => v, transformOnRefresh: true).AsAggregator();
         list.AddRange(items);
 
-        results.Data.Count.Should().Be(100);
-        results.Messages.Count.Should().Be(1);
+        await Assert.That(results.Data.Count).IsEqualTo(100);
+        await Assert.That(results.Messages.Count).IsEqualTo(1);
 
         items[0].Age = 10;
-        results.Data.Count.Should().Be(100);
-        results.Messages.Count.Should().Be(2);
+        await Assert.That(results.Data.Count).IsEqualTo(100);
+        await Assert.That(results.Messages.Count).IsEqualTo(2);
 
-        results.Messages[1].First().Reason.Should().Be(ListChangeReason.Replace);
+        await Assert.That(results.Messages[1].First().Reason).IsEqualTo(ListChangeReason.Replace);
 
         //remove an item and check no change is fired
         var toRemove = items[1];
         list.Remove(toRemove);
-        results.Data.Count.Should().Be(99);
-        results.Messages.Count.Should().Be(3);
+        await Assert.That(results.Data.Count).IsEqualTo(99);
+        await Assert.That(results.Messages.Count).IsEqualTo(3);
         toRemove.Age = 100;
-        results.Messages.Count.Should().Be(3);
+        await Assert.That(results.Messages.Count).IsEqualTo(3);
 
         //add it back in and check it updates
         list.Add(toRemove);
-        results.Messages.Count.Should().Be(4);
+        await Assert.That(results.Messages.Count).IsEqualTo(4);
         toRemove.Age = 101;
-        results.Messages.Count.Should().Be(5);
+        await Assert.That(results.Messages.Count).IsEqualTo(5);
 
-        results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Replace);
+        await Assert.That(results.Messages.Last().First().Reason).IsEqualTo(ListChangeReason.Replace);
     }
 
-    [Fact]
-    public void TransformOnReplace()
+    [Test]
+    public async Task TransformOnReplace()
     {
         // Arrange
         var person1 = new Person("Bob", 37);
@@ -192,13 +192,13 @@ public class TransformFixture : IDisposable
         _source.Replace(person1, person2);
 
         // Assert
-        _results.Messages.Count.Should().Be(2, "Should be 2 messages");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].Should().Be(_transformFactory(person2), "Should be same person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 messages");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(_transformFactory(person2)).Because("Should be same person");
     }
 
-    [Fact]
-    public void TransformOnReplaceWithoutIndex()
+    [Test]
+    public async Task TransformOnReplaceWithoutIndex()
     {
         // Arrange
         var person1 = new Person("Bob", 37);
@@ -210,8 +210,8 @@ public class TransformFixture : IDisposable
         _source.Replace(person1, person2);
 
         // Assert
-        results.Messages.Count.Should().Be(2, "Should be 2 messages");
-        results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        results.Data.Items[0].Should().Be(_transformFactory(person2), "Should be same person");
+        await Assert.That(results.Messages.Count).IsEqualTo(2).Because("Should be 2 messages");
+        await Assert.That(results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(results.Data.Items[0]).IsEqualTo(_transformFactory(person2)).Because("Should be same person");
     }
 }

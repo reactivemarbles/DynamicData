@@ -313,9 +313,17 @@ var myPeopleObservable = myPeople.Connect();
 var countObservable = 	 myPeopleObservable.Count();
 var maxObservable = 	 myPeopleObservable.Max(p => p.Age);
 var minObservable = 	 myPeopleObservable.Min(p => p.Age);
-var stdDevObservable =   myPeopleObservable.StdDev(p => p.Age);
+var stdDevObservable =   myPeopleObservable.StdDev(p => p.Age, 0);
 var avgObservable = 	 myPeopleObservable.Avg(p => p.Age);
 ```
+`StdDev` computes the sample standard deviation: `sqrt(M2 / (count - 1))`,
+where `M2` is the sum of squared differences from the mean. For example, values
+`2, 4, 6` produce `2`. It returns the supplied fallback when fewer than two
+values remain. This corrects the earlier formula, which divided by `count - 1`
+after taking the square root. Integral and decimal selectors use decimal
+accumulators, whose central moments must fit in the decimal range; floating-point
+selectors retain double-precision rounding limits.
+
 More aggregating operators will be added soon.
 
 #### Logical Operators

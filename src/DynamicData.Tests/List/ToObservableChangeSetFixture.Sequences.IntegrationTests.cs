@@ -7,25 +7,26 @@ public static partial class ToObservableChangeSetFixture
         public class IntegrationTests
             : IntegrationTestFixtureBase
         {
-            [Theory(Timeout = 60_000)]
-            [InlineData(SchedulerType.Default)]
-            [InlineData(SchedulerType.NewThread)]
-            [InlineData(SchedulerType.TaskPool)]
-            [InlineData(SchedulerType.ThreadPool)]
-            public async Task MultipleSubscriptionsRunInParallel_SchedulerUsageIsThreadSafe(SchedulerType schedulerType)
+            [Test]
+            [Timeout(60_000)]
+            [Arguments(SchedulerType.Default)]
+            [Arguments(SchedulerType.NewThread)]
+            [Arguments(SchedulerType.TaskPool)]
+            [Arguments(SchedulerType.ThreadPool)]
+            public async Task MultipleSubscriptionsRunInParallel_SchedulerUsageIsThreadSafe(SchedulerType schedulerType, CancellationToken cancellationToken)
             {
                 IScheduler scheduler = schedulerType switch
                 {
-                    SchedulerType.Default       => Scheduler.Default,
-                    SchedulerType.NewThread     => new NewThreadScheduler(),
-                    SchedulerType.TaskPool      => TaskPoolScheduler.Default,
-                    SchedulerType.ThreadPool    => ThreadPoolScheduler.Instance,
-                    _                           => throw new ArgumentOutOfRangeException(nameof(schedulerType))
+                    SchedulerType.Default => Scheduler.Default,
+                    SchedulerType.NewThread => new NewThreadScheduler(),
+                    SchedulerType.TaskPool => TaskPoolScheduler.Default,
+                    SchedulerType.ThreadPool => ThreadPoolScheduler.Instance,
+                    _ => throw new ArgumentOutOfRangeException(nameof(schedulerType))
                 };
 
                 using var subscription1 = Observable.Interval(
-                        period:     TimeSpan.FromMilliseconds(5),
-                        scheduler:  scheduler)
+                        period: TimeSpan.FromMilliseconds(5),
+                        scheduler: scheduler)
                     .Take(IntegrationTestItemCount)
                     .Select(id => new[]
                     {
@@ -36,15 +37,15 @@ public static partial class ToObservableChangeSetFixture
                         }
                     })
                     .ToObservableChangeSet(
-                        expireAfter:    Item.SelectLifetime,
-                        scheduler:      scheduler)
+                        expireAfter: Item.SelectLifetime,
+                        scheduler: scheduler)
                     .ValidateSynchronization()
                     .ValidateChangeSets()
                     .RecordListItems(out var results1);
-        
+
                 using var subscription2 = Observable.Interval(
-                        period:     TimeSpan.FromMilliseconds(5),
-                        scheduler:  scheduler)
+                        period: TimeSpan.FromMilliseconds(5),
+                        scheduler: scheduler)
                     .Take(IntegrationTestItemCount)
                     .Select(id => new[]
                     {
@@ -55,23 +56,23 @@ public static partial class ToObservableChangeSetFixture
                         }
                     })
                     .ToObservableChangeSet(
-                        expireAfter:    Item.SelectLifetime,
-                        scheduler:      scheduler)
+                        expireAfter: Item.SelectLifetime,
+                        scheduler: scheduler)
                     .ValidateSynchronization()
                     .ValidateChangeSets()
                     .RecordListItems(out var results2);
 
                 await Task.WhenAll(
                     results1.WhenFinalized,
-                    results2.WhenFinalized);
+                    results2.WhenFinalized).WaitAsync(cancellationToken);
 
-                results1.Error.Should().BeNull();
-                results1.HasCompleted.Should().BeTrue("all changes should have been processed successfully");
-                results1.RecordedItems.Should().BeEmpty("all items should have expired");
+                await Assert.That(results1.Error).IsNull();
+                await Assert.That(results1.HasCompleted).IsTrue().Because("all changes should have been processed successfully");
+                await Assert.That(results1.RecordedItems).IsEmpty().Because("all items should have expired");
 
-                results2.Error.Should().BeNull();
-                results2.HasCompleted.Should().BeTrue("all changes should have been processed successfully");
-                results2.RecordedItems.Should().BeEmpty("all items should have expired");
+                await Assert.That(results2.Error).IsNull();
+                await Assert.That(results2.HasCompleted).IsTrue().Because("all changes should have been processed successfully");
+                await Assert.That(results2.RecordedItems).IsEmpty().Because("all items should have expired");
             }
         }
     }

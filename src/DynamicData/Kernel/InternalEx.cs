@@ -21,6 +21,12 @@ public static class InternalEx
     internal static Lock NewLock() => new();
 
     /// <summary>
+    /// Creates a monitor-backed synchronization gate for APIs that lock on <see cref="object"/>.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
+    internal static object NewMonitorGate() => new();
+
+    /// <summary>
     /// Retries the with back off.
     /// </summary>
     /// <remarks>

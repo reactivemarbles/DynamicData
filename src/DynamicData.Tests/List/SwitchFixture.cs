@@ -6,34 +6,34 @@ public class SwitchFixture : IDisposable
 
     private readonly ISourceList<int> _source;
 
-    private readonly ISignal<ISourceList<int>> _switchable;
+    private readonly ReactiveUI.Primitives.Signals.ISignal<ISourceList<int>> _switchable;
 
     public SwitchFixture()
     {
         _source = new SourceList<int>();
-        _switchable = new StateSignal<ISourceList<int>>(_source);
+        _switchable = new ReactiveUI.Primitives.Signals.StateSignal<ISourceList<int>>(_source);
         _results = _switchable.Switch().AsAggregator();
     }
 
-    [Fact]
-    public void ClearsForNewSource()
+    [Test]
+    public async Task ClearsForNewSource()
     {
         var inital = Enumerable.Range(1, 100).ToArray();
         _source.AddRange(inital);
 
-        _results.Data.Count.Should().Be(100);
+        await Assert.That(_results.Data.Count).IsEqualTo(100);
 
         var newSource = new SourceList<int>();
         _switchable.OnNext(newSource);
 
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
 
         newSource.AddRange(inital);
-        _results.Data.Count.Should().Be(100);
+        await Assert.That(_results.Data.Count).IsEqualTo(100);
 
         var nextUpdates = Enumerable.Range(100, 100).ToArray();
         newSource.AddRange(nextUpdates);
-        _results.Data.Count.Should().Be(200);
+        await Assert.That(_results.Data.Count).IsEqualTo(200);
     }
 
     public void Dispose()
@@ -43,14 +43,14 @@ public class SwitchFixture : IDisposable
         _switchable.Dispose();
     }
 
-    [Fact]
-    public void PoulatesFirstSource()
+    [Test]
+    public async Task PoulatesFirstSource()
     {
         var inital = Enumerable.Range(1, 100).ToArray();
         _source.AddRange(inital);
 
-        _results.Data.Count.Should().Be(100);
+        await Assert.That(_results.Data.Count).IsEqualTo(100);
 
-        inital.Should().BeEquivalentTo(_source.Items);
+        await Assert.That(inital).IsEquivalentTo(_source.Items);
     }
 }
