@@ -10,8 +10,8 @@ namespace DynamicData.List.Linq;
 #endif
 
 /// <summary>
-/// Index to remove the index. This is necessary for WhereReasonAre* operators.
-/// Otherwise these operators could break subsequent operators when the subsequent operator relies on the index.
+/// Removes mutation indices for WhereReasonAre* operators and omits moves.
+/// Refresh notifications retain their required source index.
 /// </summary>
 /// <typeparam name="T">The type of the item.</typeparam>
 /// <param name="changeSet">The changeSet value.</param>
@@ -32,7 +32,11 @@ internal sealed class WithoutIndexEnumerator<T>(IEnumerable<Change<T>> changeSet
                 continue;
             }
 
-            if (change.Type == ChangeType.Item)
+            if (change.Reason == ListChangeReason.Refresh)
+            {
+                yield return change;
+            }
+            else if (change.Type == ChangeType.Item)
             {
                 yield return new Change<T>(change.Reason, change.Item.Current, change.Item.Previous);
             }

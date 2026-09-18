@@ -217,7 +217,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                         }
                         else
                         {
-                            var toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, t));
+                            var toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
 
                             if (toRemove is not null)
                             {
@@ -236,7 +236,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                         }
                         else
                         {
-                            var toRemove = transformed.Where(t => ReferenceEquals(t.Source, t)).ToArray();
+                            var toRemove = transformed.Where(t => item.Range.Any(current => ReferenceEquals(t.Source, current))).ToArray();
                             transformed.RemoveMany(toRemove);
                         }
 

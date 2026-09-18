@@ -16,8 +16,9 @@ public static partial class ObservableListEx
 {
     /// <summary>
     /// Filters the changeset stream to exclude changes with the specified <see cref="ListChangeReason"/> values.
-    /// Index information is stripped from the output because removing some changes invalidates the original index positions.
+    /// Mutation index information is stripped from the output because removing some changes invalidates the original index positions.
     /// The exception is when only <see cref="ListChangeReason.Refresh"/> is excluded, since removing Refresh does not affect index calculations.
+    /// Retained Refresh notifications always keep their required original source index.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to filter by excluding change reasons.</param>

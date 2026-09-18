@@ -129,6 +129,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
 
         _changes.Add(args);
         _innerList.AddRange(args.Range);
+        OnInsertItems(args.Range.Index, args.Range);
     }
 
     /// <summary>

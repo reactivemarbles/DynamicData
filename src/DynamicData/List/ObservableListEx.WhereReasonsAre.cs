@@ -16,7 +16,8 @@ public static partial class ObservableListEx
 {
     /// <summary>
     /// Filters the changeset stream to include only changes with the specified <see cref="ListChangeReason"/> values.
-    /// Index information is stripped from the output because removing some changes invalidates the original index positions.
+    /// Mutation index information is stripped from the output because removing some changes invalidates the original index positions.
+    /// Refresh notifications retain their required original source index; moves are omitted.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to filter by change reason.</param>
@@ -26,7 +27,7 @@ public static partial class ObservableListEx
     /// <exception cref="ArgumentException"><paramref name="reasons"/> is empty.</exception>
     /// <remarks>
     /// <para>Filters individual changes within each changeset. If filtering removes all changes from a changeset, the empty changeset is suppressed via <c>NotEmpty&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c>.</para>
-    /// <para><b>Worth noting:</b> Filtering out <b>Remove</b> changes can cause downstream operators to accumulate items indefinitely (memory leak). Index information is stripped because removing some changes invalidates the original index positions.</para>
+    /// <para><b>Worth noting:</b> Filtering out <b>Remove</b> changes can cause downstream operators to accumulate items indefinitely (memory leak). Mutation index information is stripped because removing some changes invalidates the original index positions.</para>
     /// </remarks>
     /// <seealso><c>WhereReasonsAreNot&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, ListChangeReason[])</c></seealso>
     /// <seealso><c>SuppressRefresh&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>

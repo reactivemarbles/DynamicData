@@ -88,7 +88,7 @@ public static class ChangeSetEx
     }
 
     /// <summary>
-    /// Remove the index from the changes.
+    /// Removes mutation indices and omits moves. Refresh notifications retain their required original source index.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>

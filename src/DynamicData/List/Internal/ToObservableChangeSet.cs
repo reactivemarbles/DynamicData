@@ -264,10 +264,9 @@ private sealed class Subscription
 
                     foreach (var item in upstreamItems)
                     {
-                        if (_limitSizeTo >= 0)
+                        while (_limitSizeTo >= 0 && _downstreamItems.Count >= _limitSizeTo)
                         {
-                            while (_downstreamItems.Count >= _limitSizeTo)
-                                _downstreamItems.RemoveAt(0);
+                            _downstreamItems.RemoveAt(0);
 
                             // Update indexes within the expiration queue, to keep them in-sync with _downstreamItems
                             for (var i = 0; i < _expirationQueue.Count;)
