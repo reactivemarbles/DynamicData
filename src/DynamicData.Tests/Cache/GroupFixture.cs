@@ -9,6 +9,9 @@ using DynamicData.Tests.Domain;
 using FluentAssertions;
 
 using Xunit;
+using System.Reactive;
+using System.Reactive.Concurrency;
+using System.Reactive.Subjects;
 
 namespace DynamicData.Tests.Cache;
 
@@ -263,5 +266,72 @@ public class GroupFixture : IDisposable
         public GroupViewModel(IGroup<Person, string, string> person) => person?.Cache.Connect().Transform(x => new GroupEntryViewModel(x)).Bind(out _entries).Subscribe();
 
         public ReadOnlyObservableCollection<GroupEntryViewModel> Entries => _entries;
+    }
+
+    [Fact]
+    public void CompletesWhenNoRegrouperIsSupplied()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source.Group(p => p.Age).Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue("an absent regrouper can never fire and so must not hold the result open");
+    }
+
+    [Fact]
+    public void DeliversTheErrorWithoutThrowing()
+    {
+        Exception? error = null;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source.Group(p => p.Age).Subscribe(_ => { }, ex => error = ex, () => { });
+
+        source.OnError(new InvalidOperationException("boom"));
+
+        error.Should().BeOfType<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void DeliversTheErrorWhenAResultGroupSourceIsSupplied()
+    {
+        Exception? error = null;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source
+            .Group(p => p.Age, Observable.Never<IDistinctChangeSet<int>>())
+            .Subscribe(_ => { }, ex => error = ex, () => { });
+
+        source.OnError(new InvalidOperationException("boom"));
+
+        error.Should().BeOfType<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void DeliversTerminalEventsFromTheResultGroupSource()
+    {
+        var completed = false;
+
+        using (var source = new Subject<IChangeSet<Person, string>>())
+        using (var groups = new Subject<IDistinctChangeSet<int>>())
+        using (source.Group(p => p.Age, groups).Subscribe(_ => { }, () => completed = true))
+        {
+            groups.OnCompleted();
+        }
+
+        completed.Should().BeTrue("no group can appear once the result group source is finished");
+
+        Exception? error = null;
+
+        using (var source = new Subject<IChangeSet<Person, string>>())
+        using (var groups = new Subject<IDistinctChangeSet<int>>())
+        using (source.Group(p => p.Age, groups).Subscribe(_ => { }, ex => error = ex, () => { }))
+        {
+            groups.OnError(new InvalidOperationException("boom"));
+        }
+
+        error.Should().BeOfType<InvalidOperationException>();
     }
 }

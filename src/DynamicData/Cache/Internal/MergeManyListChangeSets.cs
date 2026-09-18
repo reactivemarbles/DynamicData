@@ -46,11 +46,17 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
                     // Shutdown existing sub (if any) and create a new one
                     // Remove any items from the previous list
                     case ChangeReason.Add or ChangeReason.Update:
-                        AddChildSubscription(change.Current.Source, change.Key);
+                        // The previous child's items have to come out before the replacement is
+                        // subscribed. This tracker appends without checking, unlike the keyed one, so
+                        // subscribing first puts every item in twice and the emitted change set
+                        // carries an Add for something already downstream before the Remove that
+                        // balances it.
                         if (change.Previous.HasValue)
                         {
                             _changeSetMergeTracker.RemoveItems(change.Previous.Value.List);
                         }
+
+                        AddChildSubscription(change.Current.Source, change.Key);
                         break;
 
                     // Shutdown the existing subscription and remove from the cache
