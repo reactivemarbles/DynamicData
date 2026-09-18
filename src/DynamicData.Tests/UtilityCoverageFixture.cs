@@ -273,7 +273,6 @@ public class UtilityCoverageFixture
         var attempts = 0;
         var errors = new List<Exception>();
         var values = new List<int>();
-        var completed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         var source = Observable.Create<int>(
             observer =>
@@ -294,9 +293,7 @@ public class UtilityCoverageFixture
 
         var result = source.RetryWithBackOff<int, InvalidOperationException>((_, count) => count < 3 ? TimeSpan.Zero : null);
 
-        using var subscription = result.Subscribe(values.Add, errors.Add, () => completed.TrySetResult());
-
-        await completed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        using var subscription = result.Subscribe(values.Add, errors.Add);
 
         await Assert.That(values).IsEquivalentTo(new[] { 42 });
         await Assert.That(errors).IsEmpty();

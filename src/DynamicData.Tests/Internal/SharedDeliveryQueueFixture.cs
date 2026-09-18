@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 
 namespace DynamicData.Tests.Internal;
 
+[NotInParallel]
 public class SharedDeliveryQueueFixture
 {
     private readonly Lock _gate = new();
@@ -188,13 +189,13 @@ public class SharedDeliveryQueueFixture
 
         // Park a drain part-way through, so the notifications below get queued rather than
         // delivered inline.
-        var drainer = Task.Run(() =>
+        var drainer = Task.Factory.StartNew(() =>
         {
             using var scope = sub1.AcquireLock();
             scope.EnqueueNext(1);
-        });
+        }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
-        firstIsDelivering.Wait(TimeSpan.FromSeconds(5));
+        await Assert.That(firstIsDelivering.Wait(TimeSpan.FromSeconds(5))).IsTrue();
 
         using (var scope = sub1.AcquireLock())
         {
@@ -207,7 +208,7 @@ public class SharedDeliveryQueueFixture
         }
 
         blockFirst.Set();
-        drainer.Wait(TimeSpan.FromSeconds(5));
+        await Assert.That(drainer.Wait(TimeSpan.FromSeconds(5))).IsTrue();
 
         await Assert.That(delivered).IsEquivalentTo(new[] { "int:1", "int:2", "str:hello" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
@@ -236,13 +237,13 @@ public class SharedDeliveryQueueFixture
             lock (delivered) { delivered.Add($"str:{s}"); }
         }));
 
-        var drainer = Task.Run(() =>
+        var drainer = Task.Factory.StartNew(() =>
         {
             using var scope = sub1.AcquireLock();
             scope.EnqueueNext(0);
-        });
+        }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
-        parked.Wait(TimeSpan.FromSeconds(5));
+        await Assert.That(parked.Wait(TimeSpan.FromSeconds(5))).IsTrue();
 
         using (var scope = sub2.AcquireLock())
         {
@@ -265,7 +266,7 @@ public class SharedDeliveryQueueFixture
         }
 
         block.Set();
-        drainer.Wait(TimeSpan.FromSeconds(5));
+        await Assert.That(drainer.Wait(TimeSpan.FromSeconds(5))).IsTrue();
 
         await Assert.That(delivered).IsEquivalentTo(new[] { "int:0", "str:a", "int:2", "str:b", "int:4" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
@@ -294,13 +295,13 @@ public class SharedDeliveryQueueFixture
             lock (delivered) { delivered.Add($"str:{s}"); }
         }));
 
-        var drainer = Task.Run(() =>
+        var drainer = Task.Factory.StartNew(() =>
         {
             using var scope = sub1.AcquireLock();
             scope.EnqueueNext(0);
-        });
+        }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
-        parked.Wait(TimeSpan.FromSeconds(5));
+        await Assert.That(parked.Wait(TimeSpan.FromSeconds(5))).IsTrue();
 
         using (var scope = sub2.AcquireLock())
         {
@@ -310,7 +311,7 @@ public class SharedDeliveryQueueFixture
         sub2.Dispose();
 
         block.Set();
-        drainer.Wait(TimeSpan.FromSeconds(5));
+        await Assert.That(drainer.Wait(TimeSpan.FromSeconds(5))).IsTrue();
 
         await Assert.That(delivered).IsEquivalentTo(new[] { "int:0" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }

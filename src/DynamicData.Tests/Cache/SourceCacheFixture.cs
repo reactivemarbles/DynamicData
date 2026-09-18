@@ -214,6 +214,7 @@ public class SourceCacheFixture : IDisposable
     }
 
     [Test]
+    [NotInParallel]
     public async Task DirectCrossWriteDoesNotDeadlock()
     {
         const int iterations = 50;

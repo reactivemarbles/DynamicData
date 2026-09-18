@@ -36,7 +36,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
     public MergeManyChangeSetsCacheFixture()
     {
         _randomizer = new(0x03251976);
-        _marketFaker = Fakers.Market.WithSeed(_randomizer);
+        _marketFaker = Fakers.Market.Clone().WithSeed(_randomizer);
         _marketListResults = _marketList.Connect().AsAggregator();
     }
 

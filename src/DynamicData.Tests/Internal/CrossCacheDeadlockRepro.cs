@@ -6,6 +6,7 @@
 
 namespace DynamicData.Tests.Internal;
 
+[NotInParallel]
 public class CrossCacheDeadlockRepro : IDisposable
 {
     private readonly SourceCache<string, int> _cacheA = new(static x => x.GetHashCode());

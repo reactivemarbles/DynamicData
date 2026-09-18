@@ -54,6 +54,11 @@ public static class InternalEx
                         return Observable.Throw<TSource>(error);
                     }
 
+                    if (delay.Value == TimeSpan.Zero)
+                    {
+                        return Retry(failureCount + 1);
+                    }
+
                     return Observable.Timer(delay.Value).SelectMany(Retry(failureCount + 1));
                 });
 
