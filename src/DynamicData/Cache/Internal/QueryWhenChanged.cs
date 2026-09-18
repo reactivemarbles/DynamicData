@@ -49,7 +49,7 @@ internal sealed class QueryWhenChanged<TObject, TKey, TValue>(IObservable<IChang
                     return cache;
                 }).Select(list => new AnonymousQuery<TObject, TKey>(list));
 
-            return new CompositeDisposable(sourceChanged.Merge(inlineChange).SubscribeSafe(observer), shared.Connect(), queue);
+            return new CompositeDisposable(sourceChanged.UnsynchronizedMerge(inlineChange).SubscribeSafe(observer), shared.Connect(), queue);
         });
     }
 }

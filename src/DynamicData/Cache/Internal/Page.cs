@@ -19,7 +19,7 @@ internal sealed class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, 
                 var request = pageRequests.SynchronizeSafe(queue).Select(paginator.Paginate);
                 var dataChange = source.SynchronizeSafe(queue).Select(paginator.Update);
 
-                return new CompositeDisposable(request.Merge(dataChange)
+                return new CompositeDisposable(request.UnsynchronizedMerge(dataChange)
                     .Where(updates => updates is not null)
                     .Select(x => x!)
                     .SubscribeSafe(observer), queue);
