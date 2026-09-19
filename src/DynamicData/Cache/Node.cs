@@ -2,10 +2,12 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Node describing the relationship between and item and it's ancestors and descendent.
@@ -16,11 +18,20 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     where TObject : class
     where TKey : notnull
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    /// <summary>
+    /// The _children field.
+    /// </summary>
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly SourceCache<Node<TObject, TKey>, TKey> _children = new(n => n.Key);
 
+    /// <summary>
+    /// The _cleanUp field.
+    /// </summary>
     private readonly CompositeDisposable _cleanUp;
 
+    /// <summary>
+    /// The _isDisposed field.
+    /// </summary>
     private bool _isDisposed;
 
     /// <summary>
@@ -39,13 +50,13 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <param name="item">The item.</param>
     /// <param name="key">The key.</param>
     /// <param name="parent">The parent.</param>
-    public Node(TObject item, TKey key, in Optional<Node<TObject, TKey>> parent)
+    public Node(TObject item, TKey key, in ReactiveUI.Primitives.Optional<Node<TObject, TKey>> parent)
     {
         Item = item ?? throw new ArgumentNullException(nameof(item));
         Key = key;
         Parent = parent;
         Children = _children.AsObservableCache();
-        _cleanUp = new(Children, _children);
+        _cleanUp = new CompositeDisposable(Children, _children);
     }
 
     /// <summary>
@@ -93,7 +104,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <summary>
     /// Gets the parent if it has one.
     /// </summary>
-    public Optional<Node<TObject, TKey>> Parent { get; internal set; }
+    public ReactiveUI.Primitives.Optional<Node<TObject, TKey>> Parent { get; internal set; }
 
     /// <summary>
     ///  Determines whether the specified objects are equal.
@@ -179,6 +190,10 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
         return $"{Item}{count}";
     }
 
+    /// <summary>
+    /// Executes the Update operation.
+    /// </summary>
+    /// <param name="updateAction">The updateAction value.</param>
     internal void Update(Action<ISourceUpdater<Node<TObject, TKey>, TKey>> updateAction) => _children.Edit(updateAction);
 
     /// <summary>

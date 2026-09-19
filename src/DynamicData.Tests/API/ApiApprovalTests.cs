@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using Xunit;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DynamicData.APITests
 {
@@ -13,7 +11,19 @@ namespace DynamicData.APITests
         /// <summary>
         /// Tests to make sure the API of DynamicData project is approved.
         /// </summary>
-        [Fact]
+        [Test]
         public Task DynamicDataTests() => typeof(VirtualRequest).Assembly.CheckApproval(["DynamicData"]);
+
+        /// <summary>
+        /// Tests to make sure the API of DynamicData.Reactive project is approved.
+        /// </summary>
+        [Test]
+        public Task DynamicDataReactiveTests()
+        {
+            var reactiveAssemblyPath = Path.Combine(AppContext.BaseDirectory, "DynamicData.Reactive.dll");
+            var reactiveAssembly = System.Reflection.Assembly.LoadFrom(reactiveAssemblyPath);
+
+            return reactiveAssembly.CheckApproval(["DynamicData.Reactive"]);
+        }
     }
 }

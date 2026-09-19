@@ -1,11 +1,3 @@
-using System;
-using System.Linq;
-using System.Reactive.Disposables;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.List;
 
 public class SubscribeManyFixture : IDisposable
@@ -26,14 +18,14 @@ public class SubscribeManyFixture : IDisposable
                 }));
     }
 
-    [Fact]
-    public void AddedItemWillbeSubscribed()
+    [Test]
+    public async Task AddedItemWillbeSubscribed()
     {
         _source.Add(new SubscribeableObject(1));
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].IsSubscribed.Should().Be(true, "Should be subscribed");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(_results.Data.Items[0].IsSubscribed).IsTrue().Because("Should be subscribed");
     }
 
     public void Dispose()
@@ -42,7 +34,7 @@ public class SubscribeManyFixture : IDisposable
         _results.Dispose();
     }
 
-    //[Fact]
+    //[Test]
     //public void UpdateUnsubscribesPrevious()
     //{
     //	_source.Add(new SubscribeableObject(1));
@@ -54,28 +46,28 @@ public class SubscribeManyFixture : IDisposable
     //	Assert.AreEqual(false, _results.Messages[1].First().Previous.Value.IsSubscribed, "Previous should not be subscribed");
     //}
 
-    [Fact]
-    public void EverythingIsUnsubscribedWhenStreamIsDisposed()
+    [Test]
+    public async Task EverythingIsUnsubscribedWhenStreamIsDisposed()
     {
         _source.AddRange(Enumerable.Range(1, 10).Select(i => new SubscribeableObject(i)));
         _source.Clear();
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
 
         var items = _results.Messages[0].SelectMany(x => x.Range);
 
-        items.All(d => !d.IsSubscribed).Should().BeTrue();
+        await Assert.That(items.All(d => !d.IsSubscribed)).IsTrue();
     }
 
-    [Fact]
-    public void RemoveIsUnsubscribed()
+    [Test]
+    public async Task RemoveIsUnsubscribed()
     {
         _source.Add(new SubscribeableObject(1));
         _source.RemoveAt(0);
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Data.Count.Should().Be(0, "Should be 0 items in the cache");
-        _results.Messages[1].First().Item.Current.IsSubscribed.Should().Be(false, "Should be be unsubscribed");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be 0 items in the cache");
+        await Assert.That(_results.Messages[1].First().Item.Current.IsSubscribed).IsFalse().Because("Should be be unsubscribed");
     }
 
     private class SubscribeableObject(int id)

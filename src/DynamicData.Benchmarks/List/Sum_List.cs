@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reactive.Subjects;
 
 using BenchmarkDotNet.Attributes;
 
@@ -107,7 +106,7 @@ public class Sum_List
 
     private static void Run(IChangeSet<Item>? seed, IReadOnlyList<IChangeSet<Item>> changeSets)
     {
-        using var source = new Subject<IChangeSet<Item>>();
+        using var source = new Signal<IChangeSet<Item>>();
 
         using var subscription = source
             .Sum(static item => item.Value)

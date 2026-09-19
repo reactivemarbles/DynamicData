@@ -3,7 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 ///   Container to describe a single change to a cache.
@@ -19,7 +23,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
     /// <param name="current">The current.</param>
     /// <param name="index">The index.</param>
     public Change(ListChangeReason reason, T current, int index = -1)
-        : this(reason, current, Optional.None<T>(), index)
+        : this(reason, current, ReactiveUI.Primitives.Optional<T>.None, index)
     {
     }
 
@@ -70,13 +74,13 @@ public sealed class Change<T> : IEquatable<Change<T>>
         }
 
         Reason = ListChangeReason.Moved;
-        Item = new ItemChange<T>(Reason, current, Optional.None<T>(), currentIndex, previousIndex);
+        Item = new ItemChange<T>(Reason, current, ReactiveUI.Primitives.Optional<T>.None, currentIndex, previousIndex);
         Range = RangeChange<T>.Empty;
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Change{T}"/> class.
-    /// Initializes a new instance of the <see cref="Change{TObject, TKey}" /> struct.
+    /// Initializes a new instance of the <see cref="Change{TObject, TKey}"/> struct.
     /// </summary>
     /// <param name="reason">The reason.</param>
     /// <param name="current">The current.</param>
@@ -90,7 +94,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
     /// or
     /// For <see cref="ListChangeReason.Refresh"/>, must supply an index.
     /// </exception>
-    public Change(ListChangeReason reason, T current, in Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
+    public Change(ListChangeReason reason, T current, in ReactiveUI.Primitives.Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
     {
         if (reason == ListChangeReason.Add && previous.HasValue)
         {
@@ -135,11 +139,25 @@ public sealed class Change<T> : IEquatable<Change<T>>
     /// </value>
     public ChangeType Type => Reason.GetChangeType();
 
+    /// <summary>
+    /// Determines whether two <see cref="Change{T}"/> instances are equal.
+    /// </summary>
+    /// <param name="left">The left change to compare.</param>
+    /// <param name="right">The right change to compare.</param>
+    /// <returns><see langword="true"/> when the values are equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator ==(Change<T> left, Change<T> right) => Equals(left, right);
 
+    /// <summary>
+    /// Determines whether two <see cref="Change{T}"/> instances are not equal.
+    /// </summary>
+    /// <param name="left">The left change to compare.</param>
+    /// <param name="right">The right change to compare.</param>
+    /// <returns><see langword="true"/> when the values are not equal; otherwise, <see langword="false"/>.</returns>
     public static bool operator !=(Change<T> left, Change<T> right) => !Equals(left, right);
 
     /// <inheritdoc />
+    /// <param name="other">The other value.</param>
+    /// <returns>The result of the operation.</returns>
     public bool Equals(Change<T>? other)
     {
         if (other is null)
@@ -156,6 +174,8 @@ public sealed class Change<T> : IEquatable<Change<T>>
     }
 
     /// <inheritdoc />
+    /// <param name="obj">The obj value.</param>
+    /// <returns>The result of the operation.</returns>
     public override bool Equals(object? obj)
     {
         if (obj is null)
@@ -177,6 +197,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -189,5 +210,6 @@ public sealed class Change<T> : IEquatable<Change<T>>
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"{Reason}. {Range.Count} changes";
 }

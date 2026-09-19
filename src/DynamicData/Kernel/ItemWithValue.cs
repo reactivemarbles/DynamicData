@@ -1,8 +1,13 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Kernel;
+#else
 
 namespace DynamicData.Kernel;
+#endif
 
 /// <summary>
 /// Container for an item and it's Value from a list.
@@ -13,55 +18,12 @@ namespace DynamicData.Kernel;
 /// Initializes a new instance of the <see cref="ItemWithValue{TObject, TValue}"/> struct.
 /// Initializes a new instance of the <see cref="ItemWithIndex{T}"/> class.
 /// </remarks>
-/// <param name="item">The item.</param>
-/// <param name="value">The Value.</param>
-public readonly struct ItemWithValue<TObject, TValue>(TObject item, TValue value) : IEquatable<ItemWithValue<TObject, TValue>>
+/// <param name="Item">The item.</param>
+/// <param name="Value">The Value.</param>
+public readonly record struct ItemWithValue<TObject, TValue>(TObject Item, TValue Value)
 {
-    /// <summary>
-    /// Gets the item.
-    /// </summary>
-    public TObject Item { get; } = item;
-
-    /// <summary>
-    /// Gets the Value.
-    /// </summary>
-    public TValue Value { get; } = value;
-
-    /// <summary>
-    /// Implements the operator ==.
-    /// </summary>
-    /// <param name="left">The left.</param>
-    /// <param name="right">The right.</param>
-    /// <returns>
-    /// The result of the operator.
-    /// </returns>
-    public static bool operator ==(in ItemWithValue<TObject, TValue> left, in ItemWithValue<TObject, TValue> right) => Equals(left, right);
-
-    /// <summary>
-    /// Implements the operator !=.
-    /// </summary>
-    /// <param name="left">The left.</param>
-    /// <param name="right">The right.</param>
-    /// <returns>
-    /// The result of the operator.
-    /// </returns>
-    public static bool operator !=(in ItemWithValue<TObject, TValue> left, in ItemWithValue<TObject, TValue> right) => !Equals(left, right);
-
     /// <inheritdoc />
-    public bool Equals(ItemWithValue<TObject, TValue> other) => EqualityComparer<TObject>.Default.Equals(Item, other.Item) && EqualityComparer<TValue>.Default.Equals(Value, other.Value);
-
-    /// <inheritdoc />
-    public override bool Equals(object? obj)
-    {
-        if (obj is null)
-        {
-            return false;
-        }
-
-        return obj is ItemWithValue<TObject, TValue> itemWithValue && Equals(itemWithValue);
-    }
-
-    /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -71,5 +33,6 @@ public readonly struct ItemWithValue<TObject, TValue>(TObject item, TValue value
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"{Item} ({Value})";
 }

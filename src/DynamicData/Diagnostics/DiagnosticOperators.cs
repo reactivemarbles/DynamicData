@@ -1,10 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.Diagnostics;
+#else
 
 namespace DynamicData.Diagnostics;
+#endif
 
 /// <summary>
 /// Extensions for diagnostics.
@@ -23,7 +26,7 @@ public static class DiagnosticOperators
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.Scan(
             ChangeSummary.Empty,
@@ -53,7 +56,7 @@ public static class DiagnosticOperators
     public static IObservable<ChangeSummary> CollectUpdateStats<TSource>(this IObservable<IChangeSet<TSource>> source)
         where TSource : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.Scan(
             ChangeSummary.Empty,

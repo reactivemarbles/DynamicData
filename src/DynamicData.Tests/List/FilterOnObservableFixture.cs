@@ -1,33 +1,25 @@
-using System;
-using System.Linq;
-using System.Reactive.Linq;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 //TODO: To optimise this, we need to introduce replace range, or specify a buffer
 
 public class FilterOnObservableFixture
 {
-    [Fact]
-    public void ChangeAValueSoItIsStillInTheFilter()
+    [Test]
+    public async Task ChangeAValueSoItIsStillInTheFilter()
     {
         var people = Enumerable.Range(1, 100).Select(i => new PersonObs("Name" + i, i)).ToArray();
         using var stub = new FilterPropertyStub();
         stub.Source.AddRange(people);
 
         people[50].SetAge(100);
-        stub.Results.Data.Count.Should().Be(82);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(82);
         // initial add range, refreshes to filter out < 18 and then no refresh for the no-op filter change
-        //  stub.Results.Messages.Count.Should().Be(102);
+        // stub.Results.Messages.Count should be 102.
     }
 
-    [Fact]
-    public void ChangeAValueToMatchFilter()
+    [Test]
+    public async Task ChangeAValueToMatchFilter()
     {
         var people = Enumerable.Range(1, 100).Select(i => new PersonObs("Name" + i, i)).ToArray();
         using var stub = new FilterPropertyStub();
@@ -36,71 +28,71 @@ public class FilterOnObservableFixture
         people[20].SetAge(10);
 
         // should have 100-18-1 left
-        stub.Results.Data.Count.Should().Be(81);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(81);
 
         // initial addrange, refreshes to filter out < 18 and then refresh for the filter change
-        //                stub.Results.Messages.Count.Should().Be(1+18+1);
+        // stub.Results.Messages.Count should be 1 + 18 + 1.
     }
 
-    [Fact]
-    public void ChangeAValueToNoLongerMatchFilter()
+    [Test]
+    public async Task ChangeAValueToNoLongerMatchFilter()
     {
         var people = Enumerable.Range(1, 100).Select(i => new PersonObs("Name" + i, i)).ToArray();
         using var stub = new FilterPropertyStub();
         stub.Source.AddRange(people);
 
         // should have 100-18 left
-        stub.Results.Data.Count.Should().Be(82);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(82);
 
-        //  stub.Results.Messages.Count.Should().Be(1+18);
+        // stub.Results.Messages.Count should be 1 + 18.
 
         people[10].SetAge(20);
 
         // should have 82+1 left
-        stub.Results.Data.Count.Should().Be(83);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(83);
 
         // initial addrange, refreshes to filter out < 18 and then one refresh for the filter change
-        //  stub.Results.Messages.Count.Should().Be(1+18+1);
+        // stub.Results.Messages.Count should be 1 + 18 + 1.
     }
 
-    [Fact]
-    public void Clear()
+    [Test]
+    public async Task Clear()
     {
         var people = Enumerable.Range(1, 100).Select(i => new PersonObs("Name" + i, i)).ToArray();
         using var stub = new FilterPropertyStub();
         stub.Source.AddRange(people);
         stub.Source.Clear();
 
-        stub.Results.Data.Count.Should().Be(0);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void InitialValues()
+    [Test]
+    public async Task InitialValues()
     {
         var people = Enumerable.Range(1, 100).Select(i => new PersonObs("Name" + i, i)).ToArray();
         using var stub = new FilterPropertyStub();
         stub.Source.AddRange(people);
 
         // should have 100-18 left
-        stub.Results.Data.Count.Should().Be(82);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(82);
 
         // initial addrange, refreshes to filter out < 18
-        // stub.Results.Messages.Count.Should().Be(1+18);
+        // stub.Results.Messages.Count should be 1 + 18.
 
-        stub.Results.Data.Items.Should().BeEquivalentTo(people.Skip(18));
+        await Assert.That(stub.Results.Data.Items).IsEquivalentTo(people.Skip(18));
     }
 
-    [Fact]
-    public void RemoveRange()
+    [Test]
+    public async Task RemoveRange()
     {
         var people = Enumerable.Range(1, 100).Select(i => new PersonObs("Name" + i, i)).ToArray();
         using var stub = new FilterPropertyStub();
         stub.Source.AddRange(people);
         stub.Source.RemoveRange(89, 10);
 
-        stub.Results.Data.Count.Should().Be(72);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(72);
         // initial addrange, refreshes to filter out < 18 and then removerange
-        //    stub.Results.Messages.Count.Should().Be(1+18+1);
+        // stub.Results.Messages.Count should be 1 + 18 + 1.
     }
 
     private class FilterPropertyStub : IDisposable

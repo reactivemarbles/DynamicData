@@ -1,22 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
-
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for ObservableList.
@@ -28,8 +19,8 @@ public static partial class ObservableListEx
     /// Triggers on <see cref="ListChangeReason.Add"/>, <see cref="ListChangeReason.AddRange"/>, and the new item of <see cref="ListChangeReason.Replace"/>.
     /// </summary>
     /// <typeparam name="T">The type of items in the list.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to observe item additions in.</param>
-    /// <param name="addAction">The <see cref="Action{T}"/> action to invoke for each added item.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to observe item additions in.</param>
+    /// <param name="addAction">The <c>Action&lt;T&gt;</c> action to invoke for each added item.</param>
     /// <returns>A continuation of the source changeset stream, with the side effect applied before forwarding.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="addAction"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -44,15 +35,18 @@ public static partial class ObservableListEx
     /// <item><term>OnError</term><description>If the callback throws, the exception propagates as OnError.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="OnItemRemoved{T}(IObservable{IChangeSet{T}}, Action{T}, bool)"/>
-    /// <seealso cref="OnItemRefreshed{T}(IObservable{IChangeSet{T}}, Action{T})"/>
-    /// <seealso cref="ForEachItemChange{TObject}(IObservable{IChangeSet{TObject}}, Action{ItemChange{TObject}})"/>
-    /// <seealso cref="ObservableCacheEx.OnItemAdded{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Action{TObject})"/>
+    /// <seealso><c>OnItemRemoved&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Action&lt;T&gt;, bool)</c></seealso>
+    /// <seealso><c>OnItemRefreshed&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Action&lt;T&gt;)</c></seealso>
+    /// <seealso><c>ForEachItemChange&lt;TObject&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Action&lt;ItemChange&lt;TObject&gt;&gt;)</c></seealso>
+    /// <seealso><c>ObservableCacheEx.OnItemAdded&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Action&lt;TObject&gt;)</c></seealso>
     public static IObservable<IChangeSet<T>> OnItemAdded<T>(
                 this IObservable<IChangeSet<T>> source,
                 Action<T> addAction)
             where T : notnull
-        => List.Internal.OnItemAdded<T>.Create(
-            source: source,
-            addAction: addAction);
+    {
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        return List.Internal.OnItemAdded<T>.Create(
+                source: source,
+                addAction: addAction);
+    }
 }

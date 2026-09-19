@@ -1,16 +1,9 @@
-using System;
-using System.Linq;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.List;
 
 public class DynamicOrRefreshFixture
 {
-    [Fact]
-    public void RefreshPassesThrough()
+    [Test]
+    public async Task RefreshPassesThrough()
     {
         var source1 = new SourceList<Item>();
         var source2 = new SourceList<Item>();
@@ -23,10 +16,10 @@ public class DynamicOrRefreshFixture
 
         source1.Items.ElementAt(0).Name = "Test";
 
-        results.Data.Count.Should().Be(2);
-        results.Messages.Count.Should().Be(3);
-        results.Messages[2].Refreshes.Should().Be(1);
-        results.Messages[2].First().Item.Current.Should().Be(source1.Items[0]);
+        await Assert.That(results.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Messages.Count).IsEqualTo(3);
+        await Assert.That(results.Messages[2].Refreshes).IsEqualTo(1);
+        await Assert.That(results.Messages[2].First().Item.Current).IsEqualTo(source1.Items[0]);
     }
 }
 
@@ -51,8 +44,8 @@ public class DynamicOrFixture : IDisposable
         _results = _source.Or().AsAggregator();
     }
 
-    [Fact]
-    public void AddAndRemoveLists()
+    [Test]
+    public async Task AddAndRemoveLists()
     {
         _source1.AddRange(Enumerable.Range(1, 5));
         _source2.AddRange(Enumerable.Range(6, 5));
@@ -64,30 +57,30 @@ public class DynamicOrFixture : IDisposable
 
         var result = Enumerable.Range(1, 5).Union(Enumerable.Range(6, 5)).Union(Enumerable.Range(100, 5));
 
-        _results.Data.Count.Should().Be(15);
-        _results.Data.Items.Should().BeEquivalentTo(result);
+        await Assert.That(_results.Data.Count).IsEqualTo(15);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(result);
 
         _source.RemoveAt(1);
-        _results.Data.Count.Should().Be(10);
+        await Assert.That(_results.Data.Count).IsEqualTo(10);
 
         result = Enumerable.Range(1, 5).Union(Enumerable.Range(100, 5));
-        _results.Data.Items.Should().BeEquivalentTo(result);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(result);
     }
 
-    [Fact]
-    public void ClearOnlyClearsOneSource()
+    [Test]
+    public async Task ClearOnlyClearsOneSource()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
         _source1.AddRange(Enumerable.Range(1, 5));
         _source2.AddRange(Enumerable.Range(6, 5));
         _source1.Clear();
-        _results.Data.Count.Should().Be(5);
-        _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5));
+        await Assert.That(_results.Data.Count).IsEqualTo(5);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(Enumerable.Range(6, 5));
     }
 
-    [Fact]
-    public void ClearSource()
+    [Test]
+    public async Task ClearSource()
     {
         _source1.Add(0);
         _source2.Add(1);
@@ -95,18 +88,18 @@ public class DynamicOrFixture : IDisposable
         _source.Add(_source2.Connect());
         _source.Clear();
 
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void CombineRange()
+    [Test]
+    public async Task CombineRange()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
         _source1.AddRange(Enumerable.Range(1, 5));
         _source2.AddRange(Enumerable.Range(6, 5));
-        _results.Data.Count.Should().Be(10);
-        _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 10));
+        await Assert.That(_results.Data.Count).IsEqualTo(10);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(Enumerable.Range(1, 10));
     }
 
     public void Dispose()
@@ -118,30 +111,30 @@ public class DynamicOrFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void IncludedWhenItemIsInOneSource()
+    [Test]
+    public async Task IncludedWhenItemIsInOneSource()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
         _source1.Add(1);
 
-        _results.Data.Count.Should().Be(1);
-        _results.Data.Items[0].Should().Be(1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(1);
     }
 
-    [Fact]
-    public void IncludedWhenItemIsInTwoSources()
+    [Test]
+    public async Task IncludedWhenItemIsInTwoSources()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
         _source1.Add(1);
         _source2.Add(1);
-        _results.Data.Count.Should().Be(1);
-        _results.Data.Items[0].Should().Be(1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(1);
     }
 
-    [Fact]
-    public void ItemIsReplaced()
+    [Test]
+    public async Task ItemIsReplaced()
     {
         _source1.Add(0);
         _source2.Add(1);
@@ -149,13 +142,13 @@ public class DynamicOrFixture : IDisposable
         _source.Add(_source2.Connect());
         _source1.ReplaceAt(0, 9);
 
-        _results.Data.Count.Should().Be(2);
-        _results.Messages.Count.Should().Be(3);
-        _results.Data.Items.Should().BeEquivalentTo(new[] { 9, 1});
+        await Assert.That(_results.Data.Count).IsEqualTo(2);
+        await Assert.That(_results.Messages.Count).IsEqualTo(3);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(new[] { 9, 1 });
     }
 
-    [Fact]
-    public void RemoveAllLists()
+    [Test]
+    public async Task RemoveAllLists()
     {
         _source1.AddRange(Enumerable.Range(1, 5));
 
@@ -168,16 +161,16 @@ public class DynamicOrFixture : IDisposable
         _source2.AddRange(Enumerable.Range(6, 5));
         _source.Clear();
 
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void RemovedWhenNoLongerInEither()
+    [Test]
+    public async Task RemovedWhenNoLongerInEither()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
         _source1.Add(1);
         _source1.Remove(1);
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 }

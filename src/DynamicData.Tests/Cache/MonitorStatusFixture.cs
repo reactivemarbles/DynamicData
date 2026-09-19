@@ -1,39 +1,35 @@
-﻿using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
-
-using FluentAssertions;
-
-using Xunit;
+#endif
 
 namespace DynamicData.Tests.Cache;
 
 public class MonitorStatusFixture
 {
-    [Fact]
-    public void InitialiStatusIsLoadding()
+    [Test]
+    public async Task InitialiStatusIsLoadding()
     {
         var invoked = false;
         var status = ConnectionStatus.Pending;
-        var subscription = new Subject<int>().MonitorStatus().Subscribe(
+        var subscription = new ReactiveUI.Primitives.Signals.Signal<int>().MonitorStatus().Subscribe(
             s =>
             {
                 invoked = true;
                 status = s;
             });
-        invoked.Should().BeTrue();
-        status.Should().Be(ConnectionStatus.Pending, "No status has been received");
+        await Assert.That(invoked).IsTrue();
+        await Assert.That(status).IsEqualTo(ConnectionStatus.Pending).Because("No status has been received");
         subscription.Dispose();
     }
 
-    [Fact]
-    public void MultipleInvokesDoNotCallLoadedAgain()
+    [Test]
+    public async Task MultipleInvokesDoNotCallLoadedAgain()
     {
         var invoked = false;
         var invocations = 0;
-        var subject = new Subject<int>();
+        var subject = new ReactiveUI.Primitives.Signals.Signal<int>();
         var subscription = subject.MonitorStatus().Where(status => status == ConnectionStatus.Loaded).Subscribe(
             s =>
             {
@@ -45,17 +41,17 @@ public class MonitorStatusFixture
         subject.OnNext(1);
         subject.OnNext(1);
 
-        invoked.Should().BeTrue();
-        invocations.Should().Be(1, "Status should be ConnectionStatus.Loaded");
+        await Assert.That(invoked).IsTrue();
+        await Assert.That(invocations).IsEqualTo(1).Because("Status should be ConnectionStatus.Loaded");
         subscription.Dispose();
     }
 
-    [Fact]
-    public void SetToError()
+    [Test]
+    public async Task SetToError()
     {
         var invoked = false;
         var status = ConnectionStatus.Pending;
-        var subject = new Subject<int>();
+        var subject = new ReactiveUI.Primitives.Signals.Signal<int>();
         Exception exception;
 
         var subscription = subject.MonitorStatus().Subscribe(
@@ -69,16 +65,16 @@ public class MonitorStatusFixture
         subject.OnError(new Exception("Test"));
         subscription.Dispose();
 
-        invoked.Should().BeTrue();
-        status.Should().Be(ConnectionStatus.Errored, "Status should be ConnectionStatus.Faulted");
+        await Assert.That(invoked).IsTrue();
+        await Assert.That(status).IsEqualTo(ConnectionStatus.Errored).Because("Status should be ConnectionStatus.Faulted");
     }
 
-    [Fact]
-    public void SetToLoaded()
+    [Test]
+    public async Task SetToLoaded()
     {
         var invoked = false;
         var status = ConnectionStatus.Pending;
-        var subject = new Subject<int>();
+        var subject = new ReactiveUI.Primitives.Signals.Signal<int>();
         var subscription = subject.MonitorStatus().Subscribe(
             s =>
             {
@@ -87,8 +83,8 @@ public class MonitorStatusFixture
             });
 
         subject.OnNext(1);
-        invoked.Should().BeTrue();
-        status.Should().Be(ConnectionStatus.Loaded, "Status should be ConnectionStatus.Loaded");
+        await Assert.That(invoked).IsTrue();
+        await Assert.That(status).IsEqualTo(ConnectionStatus.Loaded).Because("Status should be ConnectionStatus.Loaded");
         subscription.Dispose();
     }
 }

@@ -1,10 +1,4 @@
-﻿using System;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -21,8 +15,8 @@ public class TransformManySimpleFixture : IDisposable
         _results = _source.Connect().TransformMany(p => p.Relations, p => p.Name).AsAggregator();
     }
 
-    [Fact]
-    public void Adds()
+    [Test]
+    public async Task Adds()
     {
         var parent = new PersonWithChildren(
             "parent",
@@ -34,11 +28,11 @@ public class TransformManySimpleFixture : IDisposable
                 new("Child3", 3)
             });
         _source.AddOrUpdate(parent);
-        _results.Data.Count.Should().Be(3, "Should be 4 in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(3).Because("Should be 4 in the cache");
 
-        _results.Data.Lookup("Child1").HasValue.Should().BeTrue();
-        _results.Data.Lookup("Child2").HasValue.Should().BeTrue();
-        _results.Data.Lookup("Child3").HasValue.Should().BeTrue();
+        await Assert.That(_results.Data.Lookup("Child1").HasValue).IsTrue();
+        await Assert.That(_results.Data.Lookup("Child2").HasValue).IsTrue();
+        await Assert.That(_results.Data.Lookup("Child3").HasValue).IsTrue();
     }
 
     public void Dispose()
@@ -47,8 +41,8 @@ public class TransformManySimpleFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         var parent = new PersonWithChildren(
             "parent",
@@ -59,11 +53,11 @@ public class TransformManySimpleFixture : IDisposable
             });
         _source.AddOrUpdate(parent);
         _source.Remove(parent);
-        _results.Data.Count.Should().Be(0, "Should be 4 in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be 4 in the cache");
     }
 
-    [Fact]
-    public void RemovewithIncompleteChildren()
+    [Test]
+    public async Task RemovewithIncompleteChildren()
     {
         var parent1 = new PersonWithChildren(
             "parent",
@@ -82,11 +76,11 @@ public class TransformManySimpleFixture : IDisposable
                 new("Child1", 1), new("Child3", 3)
             });
         _source.Remove(parent2);
-        _results.Data.Count.Should().Be(0, "Should be 0 in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be 0 in the cache");
     }
 
-    [Fact]
-    public void UpdateWithLessChildren()
+    [Test]
+    public async Task UpdateWithLessChildren()
     {
         var parent1 = new PersonWithChildren(
             "parent",
@@ -105,13 +99,13 @@ public class TransformManySimpleFixture : IDisposable
                 new("Child1", 1), new("Child3", 3),
             });
         _source.AddOrUpdate(parent2);
-        _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
-        _results.Data.Lookup("Child1").HasValue.Should().BeTrue();
-        _results.Data.Lookup("Child3").HasValue.Should().BeTrue();
+        await Assert.That(_results.Data.Count).IsEqualTo(2).Because("Should be 2 in the cache");
+        await Assert.That(_results.Data.Lookup("Child1").HasValue).IsTrue();
+        await Assert.That(_results.Data.Lookup("Child3").HasValue).IsTrue();
     }
 
-    [Fact]
-    public void UpdateWithMultipleChanges()
+    [Test]
+    public async Task UpdateWithMultipleChanges()
     {
         var parent1 = new PersonWithChildren(
             "parent",
@@ -130,9 +124,9 @@ public class TransformManySimpleFixture : IDisposable
                 new("Child1", 1), new("Child3", 3), new("Child5", 3),
             });
         _source.AddOrUpdate(parent2);
-        _results.Data.Count.Should().Be(3, "Should be 2 in the cache");
-        _results.Data.Lookup("Child1").HasValue.Should().BeTrue();
-        _results.Data.Lookup("Child3").HasValue.Should().BeTrue();
-        _results.Data.Lookup("Child5").HasValue.Should().BeTrue();
+        await Assert.That(_results.Data.Count).IsEqualTo(3).Because("Should be 2 in the cache");
+        await Assert.That(_results.Data.Lookup("Child1").HasValue).IsTrue();
+        await Assert.That(_results.Data.Lookup("Child3").HasValue).IsTrue();
+        await Assert.That(_results.Data.Lookup("Child5").HasValue).IsTrue();
     }
 }

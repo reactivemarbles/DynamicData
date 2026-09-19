@@ -1,21 +1,13 @@
-using System;
-using System.Linq;
-using System.Reactive.Concurrency;
-
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
 namespace DynamicData.Tests.Cache;
 
 public static partial class AutoRefreshFixture
 {
+    [InheritsTests]
     public class WithoutPropertyAccessor
         : Base
     {
-        [Fact]
-        public void PropertyChangedNotificationDoesNotSpecifyPropertyName_ItemRefreshes()
+        [Test]
+        public async Task PropertyChangedNotificationDoesNotSpecifyPropertyName_ItemRefreshes()
         {
             // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
@@ -23,9 +15,8 @@ public static partial class AutoRefreshFixture
             var item1 = new Item() { Id = 1 };
             var item2 = new Item() { Id = 2 };
             var item3 = new Item() { Id = 3 };
-            
+
             source.AddOrUpdate(new[] { item1, item2, item3 });
-            
 
             // UUT Initialization
             using var subscription = BuildUut(source.Connect())
@@ -33,32 +24,31 @@ public static partial class AutoRefreshFixture
                 .ValidateChangeSets(Item.SelectId)
                 .RecordCacheItems(out var results);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Count.Should().Be(1, "the initial changeset should propagate");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "3 items were added to the source");
-            results.HasCompleted.Should().BeFalse("the source has not completed");
-
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("the initial changeset should propagate");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(source.Items).Because("3 items were added to the source");
+            await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
             // UUT Action
             item2.RaiseAllPropertiesChanged();
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 item published a property change notification");
-            results.RecordedChangeSets.Skip(1).First().Count.Should().Be(1, "1 item published a property change notification");
-            results.RecordedChangeSets.Skip(1).First().Refreshes.Should().Be(1, "1 item published a property change notification");
-            results.RecordedChangeSets.Skip(1).First().First().Current.Should().Be(item2, "item #2 published a property change notification");
-            results.RecordedItemsByKey.Values.Should().BeEquivalentTo(source.Items, "no source operations were performed");
-            results.HasCompleted.Should().BeFalse("the source has not completed");
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets.Skip(1).Count()).IsEqualTo(1).Because("1 item published a property change notification");
+            await Assert.That(results.RecordedChangeSets.Skip(1).First().Count).IsEqualTo(1).Because("1 item published a property change notification");
+            await Assert.That(results.RecordedChangeSets.Skip(1).First().Refreshes).IsEqualTo(1).Because("1 item published a property change notification");
+            await Assert.That(results.RecordedChangeSets.Skip(1).First().First().Current).IsEqualTo(item2).Because("item #2 published a property change notification");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(source.Items).Because("no source operations were performed");
+            await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
         }
-            
+
         protected override IObservable<IChangeSet<Item, int>> BuildUut(
-                IObservable<IChangeSet<Item, int>>  source,
-                TimeSpan?                           changeSetBuffer         = null,
-                TimeSpan?                           propertyChangeThrottle  = null,
-                IScheduler?                         scheduler               = null)
+                IObservable<IChangeSet<Item, int>> source,
+                TimeSpan? changeSetBuffer = null,
+                TimeSpan? propertyChangeThrottle = null,
+                IScheduler? scheduler = null)
             => source.AutoRefresh(
-                changeSetBuffer:        changeSetBuffer,
+                changeSetBuffer: changeSetBuffer,
                 propertyChangeThrottle: propertyChangeThrottle,
-                scheduler:              scheduler);
+                scheduler: scheduler);
     }
 }

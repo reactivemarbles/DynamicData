@@ -1,11 +1,4 @@
-using System;
-using System.Collections.Generic;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -17,8 +10,8 @@ public class ForEachChangeFixture : IDisposable
 
     public void Dispose() => _source.Dispose();
 
-    [Fact]
-    public void Test()
+    [Test]
+    public async Task Test()
     {
         var messages = new List<Change<Person, string>>();
         var messageWriter = _source.Connect().ForEachChange(messages.Add).Subscribe();
@@ -26,6 +19,6 @@ public class ForEachChangeFixture : IDisposable
         _source.AddOrUpdate(new RandomPersonGenerator().Take(100));
         messageWriter.Dispose();
 
-        messages.Count.Should().Be(100);
+        await Assert.That(messages.Count).IsEqualTo(100);
     }
 }

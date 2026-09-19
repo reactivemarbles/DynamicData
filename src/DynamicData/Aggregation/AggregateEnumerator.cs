@@ -1,16 +1,26 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections;
-using System.Diagnostics.CodeAnalysis;
-using DynamicData.Cache;
+namespace DynamicData.Reactive.Aggregation;
+#else
 
 namespace DynamicData.Aggregation;
+#endif
 
+/// <summary>
+/// Provides members for the AggregateEnumerator class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
 internal sealed class AggregateEnumerator<T>(IChangeSet<T> source) : IAggregateChangeSet<T>
     where T : notnull
 {
+    /// <summary>
+    /// Executes the GetEnumerator operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IEnumerator<AggregateItem<T>> GetEnumerator()
     {
         foreach (var change in source)
@@ -50,16 +60,33 @@ internal sealed class AggregateEnumerator<T>(IChangeSet<T> source) : IAggregateC
         }
     }
 
+    /// <summary>
+    /// Executes the GetEnumerator operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
+/// <summary>
+/// Provides members for the AggregateEnumerator class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="source">The source value.</param>
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same name, different generics.")]
 internal sealed class AggregateEnumerator<TObject, TKey>(IChangeSet<TObject, TKey> source) : IAggregateChangeSet<TObject>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly ChangeSet<TObject, TKey> _source = source.ToConcreteType();
 
+    /// <summary>
+    /// Executes the GetEnumerator operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IEnumerator<AggregateItem<TObject>> GetEnumerator()
     {
         foreach (var change in _source)
@@ -85,5 +112,9 @@ internal sealed class AggregateEnumerator<TObject, TKey>(IChangeSet<TObject, TKe
         }
     }
 
+    /// <summary>
+    /// Executes the GetEnumerator operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

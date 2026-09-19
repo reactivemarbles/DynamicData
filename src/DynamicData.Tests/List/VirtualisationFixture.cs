@@ -1,13 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
@@ -15,7 +6,7 @@ public class VirtualisationFixture : IDisposable
 {
     private readonly RandomPersonGenerator _generator = new();
 
-    private readonly ISubject<VirtualRequest> _requestSubject = new BehaviorSubject<VirtualRequest>(new VirtualRequest(0, 25));
+    private readonly ReactiveUI.Primitives.Signals.ISignal<VirtualRequest> _requestSubject = new ReactiveUI.Primitives.Signals.StateSignal<VirtualRequest>(new VirtualRequest(0, 25));
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -31,10 +22,11 @@ public class VirtualisationFixture : IDisposable
     {
         _source.Dispose();
         _results.Dispose();
+        _requestSubject.Dispose();
     }
 
-    [Fact]
-    public void InsertAfterPageProducesNothing()
+    [Test]
+    public async Task InsertAfterPageProducesNothing()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
@@ -42,11 +34,11 @@ public class VirtualisationFixture : IDisposable
         var expected = people.Take(25).ToArray();
 
         _source.InsertRange(_generator.Take(100), 50);
-        _results.Data.Items.Should().BeEquivalentTo(expected);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(expected);
     }
 
-    [Fact]
-    public void InsertInPageReflectsChange()
+    [Test]
+    public async Task InsertInPageReflectsChange()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
@@ -57,24 +49,24 @@ public class VirtualisationFixture : IDisposable
         var message = _results.Messages[1].ElementAt(0);
         var removedPerson = people.ElementAt(24);
 
-        _results.Data.Items.ElementAt(10).Should().Be(newPerson);
-        message.Item.Current.Should().Be(removedPerson);
-        message.Reason.Should().Be(ListChangeReason.Remove);
+        await Assert.That(_results.Data.Items.ElementAt(10)).IsEqualTo(newPerson);
+        await Assert.That(message.Item.Current).IsEqualTo(removedPerson);
+        await Assert.That(message.Reason).IsEqualTo(ListChangeReason.Remove);
     }
 
-    [Fact]
-    public void MoveToNextPage()
+    [Test]
+    public async Task MoveToNextPage()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
         _requestSubject.OnNext(new VirtualRequest(25, 25));
 
         var expected = people.Skip(25).Take(25).ToArray();
-        _results.Data.Items.Should().BeEquivalentTo(expected);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(expected);
     }
 
-    [Fact]
-    public void MoveWithinSamePage()
+    [Test]
+    public async Task MoveWithinSamePage()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
@@ -82,11 +74,11 @@ public class VirtualisationFixture : IDisposable
         _source.Move(0, 10);
 
         var actualPersonAtIndex10 = _results.Data.Items.ElementAt(10);
-        actualPersonAtIndex10.Should().Be(personToMove);
+        await Assert.That(actualPersonAtIndex10).IsEqualTo(personToMove);
     }
 
-    [Fact]
-    public void MoveWithinSamePage2()
+    [Test]
+    public async Task MoveWithinSamePage2()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
@@ -94,11 +86,11 @@ public class VirtualisationFixture : IDisposable
         _source.Move(10, 0);
 
         var actualPersonAtIndex0 = _results.Data.Items.ElementAt(0);
-        actualPersonAtIndex0.Should().Be(personToMove);
+        await Assert.That(actualPersonAtIndex0).IsEqualTo(personToMove);
     }
 
-    [Fact]
-    public void RemoveBeforeShiftsPage()
+    [Test]
+    public async Task RemoveBeforeShiftsPage()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
@@ -106,33 +98,32 @@ public class VirtualisationFixture : IDisposable
         _source.RemoveAt(0);
         var expected = people.Skip(26).Take(25).ToArray();
 
-        _results.Data.Items.Should().BeEquivalentTo(expected);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(expected);
 
         var removedMessage = _results.Messages[2].ElementAt(0);
         var removedPerson = people.ElementAt(25);
-        removedMessage.Item.Current.Should().Be(removedPerson);
-        removedMessage.Reason.Should().Be(ListChangeReason.Remove);
+        await Assert.That(removedMessage.Item.Current).IsEqualTo(removedPerson);
+        await Assert.That(removedMessage.Reason).IsEqualTo(ListChangeReason.Remove);
 
         var addedMessage = _results.Messages[2].ElementAt(1);
         var addedPerson = people.ElementAt(50);
-        addedMessage.Item.Current.Should().Be(addedPerson);
-        addedMessage.Reason.Should().Be(ListChangeReason.Add);
+        await Assert.That(addedMessage.Item.Current).IsEqualTo(addedPerson);
+        await Assert.That(addedMessage.Reason).IsEqualTo(ListChangeReason.Add);
     }
 
-    [Fact]
-    public void VirtualiseInitial()
+    [Test]
+    public async Task VirtualiseInitial()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddRange(people);
 
         var expected = people.Take(25).ToArray();
 
-        _results.Data.Items.Should().BeEquivalentTo(expected);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(expected);
     }
 
-
-    [Fact]
-    public void DoesNotThrowWithDuplicates()
+    [Test]
+    public async Task DoesNotThrowWithDuplicates()
     {
         // see https://github.com/reactivemarbles/DynamicData/issues/540
 
@@ -141,10 +132,10 @@ public class VirtualisationFixture : IDisposable
         var source = new SourceList<string>();
         source.AddRange(Enumerable.Repeat("item", 10));
         source.Connect()
-            .Virtualise(new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 3)))
+            .Virtualise(new ReactiveUI.Primitives.Signals.StateSignal<IVirtualRequest>(new VirtualRequest(0, 3)))
             .Clone(result)
             .Subscribe();
 
-        result.Count.Should().Be(1);
+        await Assert.That(result.Count).IsEqualTo(1);
     }
 }

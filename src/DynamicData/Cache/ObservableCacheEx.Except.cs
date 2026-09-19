@@ -1,24 +1,22 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -31,20 +29,20 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to combine.</param>
-    /// <param name="others">The additional <see cref="IObservable{IChangeSet{TObject, TKey}}"/> streams to combine with.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to combine.</param>
+    /// <param name="others">The additional <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> streams to combine with.</param>
     /// <returns>An observable which emits change sets.</returns>
     /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// others.
     /// </exception>
-    /// <seealso cref="ObservableListEx.Except"/>
+    /// <seealso><c>ObservableListEx.Except</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params IObservable<IChangeSet<TObject, TKey>>[] others)
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         if (others is null || others.Length == 0)
         {
@@ -60,7 +58,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="sources">The <see cref="ICollection{T}"/> of streams to combine.</param>
+    /// <param name="sources">The <c>ICollection&lt;T&gt;</c> of streams to combine.</param>
     /// <returns>An observable which emits change sets.</returns>
     /// <exception cref="ArgumentNullException">
     /// source
@@ -71,7 +69,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentExceptionHelper.ThrowIfNull(sources);
 
         return sources.Combine(CombineOperator.Except);
     }
@@ -82,13 +80,13 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="sources">The <see cref="IObservableList{T}"/> of streams to combine.</param>
+    /// <param name="sources">The <c>IObservableList&lt;T&gt;</c> of streams to combine.</param>
     /// <returns>An observable which emits change sets.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> sources)
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentExceptionHelper.ThrowIfNull(sources);
 
         return sources.Combine(CombineOperator.Except);
     }
@@ -99,13 +97,13 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="sources">The <see cref="IObservableList{IObservableCache{TObject, TKey}}"/> of changeset streams to combine.</param>
+    /// <param name="sources">The <c>IObservableList&lt;IObservableCache&lt;TObject, TKey&gt;&gt;</c> of changeset streams to combine.</param>
     /// <returns>An observable which emits change sets.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> sources)
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentExceptionHelper.ThrowIfNull(sources);
 
         return sources.Combine(CombineOperator.Except);
     }
@@ -116,13 +114,13 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="sources">The <see cref="IObservableList{ISourceCache{TObject, TKey}}"/> of changeset streams to combine.</param>
+    /// <param name="sources">The <c>IObservableList&lt;ISourceCache&lt;TObject, TKey&gt;&gt;</c> of changeset streams to combine.</param>
     /// <returns>An observable which emits change sets.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservableList<ISourceCache<TObject, TKey>> sources)
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentExceptionHelper.ThrowIfNull(sources);
 
         return sources.Combine(CombineOperator.Except);
     }

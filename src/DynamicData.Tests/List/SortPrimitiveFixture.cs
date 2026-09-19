@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
-
-using FluentAssertions;
-
-using Xunit;
+#endif
 
 namespace DynamicData.Tests.List;
 
@@ -30,19 +26,19 @@ public class SortPrimitiveFixture : IDisposable
         _source.Dispose();
     }
 
-    [Fact]
-    public void RemoveRandomSorts()
+    [Test]
+    public async Task RemoveRandomSorts()
     {
         //seems an odd test but believe me it catches  exceptions when sorting on primitives
         var items = Enumerable.Range(1, 100).OrderBy(_ => Guid.NewGuid()).ToArray();
         _source.AddRange(items);
 
-        _results.Data.Count.Should().Be(100);
+        await Assert.That(_results.Data.Count).IsEqualTo(100);
 
         var expectedResult = items.OrderBy(p => p, _comparer);
         var actualResult = _results.Data.Items;
 
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
 
         for (var i = 0; i < 50; i++)
         {

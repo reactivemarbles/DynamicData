@@ -1,15 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Reactive.Linq;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Binding;
 
@@ -32,13 +26,10 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
         _binder = _source.Connect().Sort(_comparer, resetThreshold: 25).Bind(_collection).Subscribe();
     }
 
-
-    [Fact]
-    public void ResetThresholdsForBinding_ObservableCollection()
+    [Test]
+    public async Task ResetThresholdsForBinding_ObservableCollection()
     {
         var people = _generator.Take(100).ToArray();
-
-
 
         // check whether reset is fired with different params
         var test1 = Test();
@@ -46,11 +37,10 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
         var test3 = Test(new BindingOptions(105, ResetOnFirstTimeLoad: false));
         var test4 = Test(BindingOptions.NeverFireReset());
 
-
-        test1.action.Should().Be(NotifyCollectionChangedAction.Reset);
-        test2.action.Should().Be(NotifyCollectionChangedAction.Reset);
-        test3.action.Should().Be(NotifyCollectionChangedAction.Add);
-        test4.action.Should().Be(NotifyCollectionChangedAction.Add);
+        await Assert.That(test1.action).IsEqualTo(NotifyCollectionChangedAction.Reset);
+        await Assert.That(test2.action).IsEqualTo(NotifyCollectionChangedAction.Reset);
+        await Assert.That(test3.action).IsEqualTo(NotifyCollectionChangedAction.Add);
+        await Assert.That(test4.action).IsEqualTo(NotifyCollectionChangedAction.Add);
 
         return;
 
@@ -68,7 +58,6 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
                     result = events;
                 });
 
-
             var binder = options == null
                 ? _source.Connect().Sort(_comparer).Bind(list).Subscribe()
                 : _source.Connect().Sort(_comparer).Bind(list, options.Value).Subscribe();
@@ -80,11 +69,10 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
         }
     }
 
-    [Fact]
-    public void ResetThresholdsForBinding_ReadonlyObservableCollection()
+    [Test]
+    public async Task ResetThresholdsForBinding_ReadonlyObservableCollection()
     {
         var people = _generator.Take(100).ToArray();
-
 
         // check whether reset is fired with different params
         var test1 = Test();
@@ -92,11 +80,10 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
         var test3 = Test(new BindingOptions(105, ResetOnFirstTimeLoad: false));
         var test4 = Test(BindingOptions.NeverFireReset());
 
-
-        test1.action.Should().Be(NotifyCollectionChangedAction.Reset);
-        test2.action.Should().Be(NotifyCollectionChangedAction.Reset);
-        test3.action.Should().Be(NotifyCollectionChangedAction.Add);
-        test4.action.Should().Be(NotifyCollectionChangedAction.Add);
+        await Assert.That(test1.action).IsEqualTo(NotifyCollectionChangedAction.Reset);
+        await Assert.That(test2.action).IsEqualTo(NotifyCollectionChangedAction.Reset);
+        await Assert.That(test3.action).IsEqualTo(NotifyCollectionChangedAction.Add);
+        await Assert.That(test4.action).IsEqualTo(NotifyCollectionChangedAction.Add);
 
         return;
 
@@ -108,8 +95,8 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
             ReadOnlyObservableCollection<Person> list;
             //var list = new ObservableCollectionExtended<Person>();
 
-            var binder = options == null 
-                ? _source.Connect().Sort(_comparer).Bind(out list).Subscribe() 
+            var binder = options == null
+                ? _source.Connect().Sort(_comparer).Bind(out list).Subscribe()
                 : _source.Connect().Sort(_comparer).Bind(out list, options.Value).Subscribe();
 
             using var listEvents = list.ObserveCollectionChanges().Take(1)
@@ -125,41 +112,41 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
         }
     }
 
-    [Fact]
-    public void AddToSourceAddsToDestination()
+    [Test]
+    public async Task AddToSourceAddsToDestination()
     {
         var person = new Person("Adult1", 50);
         _source.AddOrUpdate(person);
 
-        _collection.Count.Should().Be(1, "Should be 1 item in the collection");
-        _collection.First().Should().Be(person, "Should be same person");
+        await Assert.That(_collection.Count).IsEqualTo(1).Because("Should be 1 item in the collection");
+        await Assert.That(_collection.First()).IsEqualTo(person).Because("Should be same person");
     }
 
-    [Fact]
-    public void BatchAdd()
+    [Test]
+    public async Task BatchAdd()
     {
         var people = _generator.Take(100).ToList();
         _source.AddOrUpdate(people);
 
-        _collection.Count.Should().Be(100, "Should be 100 items in the collection");
-        _collection.Should().BeEquivalentTo(_collection, "Collections should be equivalent");
+        await Assert.That(_collection.Count).IsEqualTo(100).Because("Should be 100 items in the collection");
+        await Assert.That(_collection).IsEquivalentTo(_collection).Because("Collections should be equivalent");
     }
 
-    [Fact]
-    public void BatchRemove()
+    [Test]
+    public async Task BatchRemove()
     {
         var people = _generator.Take(100).ToList();
         _source.AddOrUpdate(people);
         _source.Clear();
-        _collection.Count.Should().Be(0, "Should be 100 items in the collection");
+        await Assert.That(_collection.Count).IsEqualTo(0).Because("Should be 100 items in the collection");
     }
 
-    [Fact]
-    public void CollectionIsInSortOrder()
+    [Test]
+    public async Task CollectionIsInSortOrder()
     {
         _source.AddOrUpdate(_generator.Take(100));
         var sorted = _source.Items.OrderBy(p => p, _comparer).ToList();
-        sorted.Should().BeEquivalentTo(_collection.ToList());
+        await Assert.That(sorted).IsEquivalentTo(_collection.ToList());
     }
 
     public void Dispose()
@@ -168,35 +155,37 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
         _source.Dispose();
     }
 
-    [Fact]
-    public void LargeUpdateInvokesAReset()
+    [Test]
+    public async Task LargeUpdateInvokesAReset()
     {
         //update once as initial load is always a reset
         _source.AddOrUpdate(new Person("Me", 21));
 
         var invoked = false;
+        NotifyCollectionChangedAction? action = null;
         _collection.CollectionChanged += (sender, e) =>
         {
             invoked = true;
-            e.Action.Should().Be(NotifyCollectionChangedAction.Reset);
+            action = e.Action;
         };
         _source.AddOrUpdate(_generator.Take(100));
 
-        invoked.Should().BeTrue();
+        await Assert.That(invoked).IsTrue();
+        await Assert.That(action).IsEqualTo(NotifyCollectionChangedAction.Reset);
     }
 
-    [Fact]
-    public void RemoveSourceRemovesFromTheDestination()
+    [Test]
+    public async Task RemoveSourceRemovesFromTheDestination()
     {
         var person = new Person("Adult1", 50);
         _source.AddOrUpdate(person);
         _source.Remove(person);
 
-        _collection.Count.Should().Be(0, "Should be 1 item in the collection");
+        await Assert.That(_collection.Count).IsEqualTo(0).Because("Should be 1 item in the collection");
     }
 
-    [Fact]
-    public void SmallChangeDoesNotInvokeReset()
+    [Test]
+    public async Task SmallChangeDoesNotInvokeReset()
     {
         //update once as initial load is always a reset
         _source.AddOrUpdate(new Person("Me", 21));
@@ -213,12 +202,12 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
         };
         _source.AddOrUpdate(_generator.Take(24));
 
-        invoked.Should().BeTrue();
-        resetInvoked.Should().BeFalse();
+        await Assert.That(invoked).IsTrue();
+        await Assert.That(resetInvoked).IsFalse();
     }
 
-    [Fact]
-    public void TreatMovesAsRemoveAdd()
+    [Test]
+    public async Task TreatMovesAsRemoveAdd()
     {
         var cache = new SourceCache<Person, string>(p => p.Name);
 
@@ -248,20 +237,20 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
                 throw new InvalidOperationException(nameof(latestSetWithMoves));
             }
 
-            latestSetWithoutMoves.Removes.Should().Be(1);
-            latestSetWithoutMoves.Adds.Should().Be(1);
-            latestSetWithoutMoves.Moves.Should().Be(0);
-            latestSetWithoutMoves.Updates.Should().Be(0);
+            await Assert.That(latestSetWithoutMoves.Removes).IsEqualTo(1);
+            await Assert.That(latestSetWithoutMoves.Adds).IsEqualTo(1);
+            await Assert.That(latestSetWithoutMoves.Moves).IsEqualTo(0);
+            await Assert.That(latestSetWithoutMoves.Updates).IsEqualTo(0);
 
-            latestSetWithMoves.Moves.Should().Be(1);
-            latestSetWithMoves.Updates.Should().Be(0);
-            latestSetWithMoves.Removes.Should().Be(0);
-            latestSetWithMoves.Adds.Should().Be(0);
+            await Assert.That(latestSetWithMoves.Moves).IsEqualTo(1);
+            await Assert.That(latestSetWithMoves.Updates).IsEqualTo(0);
+            await Assert.That(latestSetWithMoves.Removes).IsEqualTo(0);
+            await Assert.That(latestSetWithMoves.Adds).IsEqualTo(0);
         }
     }
 
-    [Fact]
-    public void UpdateToSourceSendsRemoveAndAddIfSortingIsAffected()
+    [Test]
+    public async Task UpdateToSourceSendsRemoveAndAddIfSortingIsAffected()
     {
         var person1 = new Person("Adult1", 10);
         var person2 = new Person("Adult2", 11);
@@ -282,18 +271,17 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
             }
         }
 
-        actions.Should().Equal(NotifyCollectionChangedAction.Remove, NotifyCollectionChangedAction.Add);
-        collection.Should().Equal(person2Updated, person1);
+        await Assert.That(actions).IsEquivalentTo(new[] { NotifyCollectionChangedAction.Remove, NotifyCollectionChangedAction.Add }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(collection).IsEquivalentTo(new[] { person2Updated, person1 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void UpdateToSourceSendsReplaceIfSortingIsNotAffected()
+    [Test]
+    public async Task UpdateToSourceSendsReplaceIfSortingIsNotAffected()
     {
-        RunTest(true);
-        RunTest(false);
+        await RunTest(true);
+        await RunTest(false);
 
-
-        void RunTest(bool useReplace)
+        async Task RunTest(bool useReplace)
         {
             var collection = new ObservableCollectionExtended<Person>();
 
@@ -316,26 +304,26 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
 
             if (useReplace)
             {
-                action.Should().Be(NotifyCollectionChangedAction.Replace, "The notification type should be Replace");
+                await Assert.That(action).IsEqualTo(NotifyCollectionChangedAction.Replace).Because("The notification type should be Replace");
             }
             else
             {
-                action.Should().Be(NotifyCollectionChangedAction.Add, "The notification type should be Add");
+                await Assert.That(action).IsEqualTo(NotifyCollectionChangedAction.Add).Because("The notification type should be Add");
             }
 
-            collection.Should().Equal(person1, person2Updated);
+            await Assert.That(collection).IsEquivalentTo(new[] { person1, person2Updated }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
         }
     }
 
-    [Fact]
-    public void UpdateToSourceUpdatesTheDestination()
+    [Test]
+    public async Task UpdateToSourceUpdatesTheDestination()
     {
         var person = new Person("Adult1", 50);
         var personUpdated = new Person("Adult1", 51);
         _source.AddOrUpdate(person);
         _source.AddOrUpdate(personUpdated);
 
-        _collection.Count.Should().Be(1, "Should be 1 item in the collection");
-        _collection.First().Should().Be(personUpdated, "Should be updated person");
+        await Assert.That(_collection.Count).IsEqualTo(1).Because("Should be 1 item in the collection");
+        await Assert.That(_collection.First()).IsEqualTo(personUpdated).Because("Should be updated person");
     }
 }

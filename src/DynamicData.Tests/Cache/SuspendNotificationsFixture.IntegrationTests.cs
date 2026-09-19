@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -15,8 +12,8 @@ public static partial class SuspendNotificationsFixture
     public sealed class IntegrationTests
         : IntegrationTestFixtureBase
     {
-        [Fact]
-        public void ResumeDeliversPendingChangesWithoutHoldingTheLock()
+        [Test]
+        public async Task ResumeDeliversPendingChangesWithoutHoldingTheLock()
         {
             // On resume, the changes accumulated while suspended must be delivered to
             // subscribers WITHOUT the cache lock held. A subscriber that blocks mid-delivery
@@ -50,7 +47,7 @@ public static partial class SuspendNotificationsFixture
             // slow subscriber, which blocks partway through.
             var resumeThread = new Thread(suspend.Dispose) { IsBackground = true };
             resumeThread.Start();
-            deliveryStarted.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue("delivery of pending changes should have started");
+            await Assert.That(deliveryStarted.Wait(TimeSpan.FromSeconds(10))).IsTrue().Because("delivery of pending changes should have started");
 
             // While delivery is blocked, a concurrent lock-requiring operation must complete
             // promptly. It cannot if the delivery is happening under the cache lock. The
@@ -60,21 +57,22 @@ public static partial class SuspendNotificationsFixture
             {
                 cache.SuspendNotifications().Dispose();
                 concurrentOpDone.Set();
-            }) { IsBackground = true };
+            })
+            { IsBackground = true };
             concurrentThread.Start();
 
             var completedWhileBlocked = concurrentOpDone.Wait(TimeSpan.FromSeconds(10));
 
             releaseDelivery.Set();
-            resumeThread.Join(TimeSpan.FromSeconds(30)).Should().BeTrue("resume should complete");
-            concurrentThread.Join(TimeSpan.FromSeconds(30)).Should().BeTrue("concurrent operation should complete");
+            await Assert.That(resumeThread.Join(TimeSpan.FromSeconds(30))).IsTrue().Because("resume should complete");
+            await Assert.That(concurrentThread.Join(TimeSpan.FromSeconds(30))).IsTrue().Because("concurrent operation should complete");
 
-            completedWhileBlocked.Should().BeTrue("a concurrent operation must not block while pending changes are delivered; the lock must not be held during delivery");
-            cache.Count.Should().Be(10, "all items should be present after resume");
+            await Assert.That(completedWhileBlocked).IsTrue().Because("a concurrent operation must not block while pending changes are delivered; the lock must not be held during delivery");
+            await Assert.That(cache.Count).IsEqualTo(10).Because("all items should be present after resume");
         }
 
-        [Fact]
-        public void StaleResumeSignalIsSuppressedByConcurrentReSuspend()
+        [Test]
+        public async Task StaleResumeSignalIsSuppressedByConcurrentReSuspend()
         {
             // Deterministic reproduction of the suspend/resume state-divergence race (#1131).
             // Resume decrements the suspend count in one step and emits its resume signal in a
@@ -110,7 +108,7 @@ public static partial class SuspendNotificationsFixture
             // the accumulated changes to the blocking subscriber, parks BEFORE the resume signal.
             var resumeThread = new Thread(suspend1.Dispose) { IsBackground = true };
             resumeThread.Start();
-            deliveryStarted.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue("delivery should have started");
+            await Assert.That(deliveryStarted.Wait(TimeSpan.FromSeconds(10))).IsTrue().Because("delivery should have started");
 
             // The resume thread is parked after decrementing the count but before signalling
             // resume. Re-suspend and connect a new subscriber while the count is transiently zero.
@@ -119,104 +117,101 @@ public static partial class SuspendNotificationsFixture
 
             // Let the resume thread proceed to its now-stale resume signal.
             releaseDelivery.Set();
-            resumeThread.Join(TimeSpan.FromSeconds(30)).Should().BeTrue("resume should complete");
+            await Assert.That(resumeThread.Join(TimeSpan.FromSeconds(30))).IsTrue().Because("resume should complete");
 
             // The late subscriber connected while re-suspended: it must NOT have activated,
             // because notifications ARE suspended (suspend2 is active). The stale resume signal
             // must be suppressed by re-checking the suspend count.
-            lateResults.Messages.Count.Should().Be(0, "a connection made during re-suspension must not activate on a stale resume signal");
-            lateResults.Data.Count.Should().Be(0, "no data should be delivered while suspended");
+            await Assert.That(lateResults.Messages.Count).IsEqualTo(0).Because("a connection made during re-suspension must not activate on a stale resume signal");
+            await Assert.That(lateResults.Data.Count).IsEqualTo(0).Because("no data should be delivered while suspended");
 
             // Releasing the real suspension delivers the data normally.
             suspend2.Dispose();
-            lateResults.Data.Count.Should().Be(dataSet.Count, "all data should arrive once truly resumed");
-            lateResults.Messages.Count.Should().Be(1, "a single changeset on the real resume");
+            await Assert.That(lateResults.Data.Count).IsEqualTo(dataSet.Count).Because("all data should arrive once truly resumed");
+            await Assert.That(lateResults.Messages.Count).IsEqualTo(1).Because("a single changeset on the real resume");
         }
 
-            [Fact]
-            public async Task ResumeSignalUnderLockPreventsStaleSnapshotFromReSuspend()
+        [Test]
+        public async Task ResumeSignalUnderLockPreventsStaleSnapshotFromReSuspend()
+        {
+            // Verifies that a deferred Connect subscriber never sees data written during
+            // a re-suspension. The resume signal fires under the lock (reentrant), so the
+            // deferred subscriber activates and takes its snapshot before any other thread
+            // can re-suspend or write new data.
+            //
+            // A slow first subscriber blocks delivery of accumulated changes, creating a
+            // window where the main thread re-suspends and writes a second batch. The
+            // deferred subscriber's snapshot must contain only the first batch.
+            using var cache = new SourceCache<int, int>(static x => x);
+            var dataSet1 = Enumerable.Range(0, 100).ToList();
+            var dataSet2 = Enumerable.Range(1000, 100).ToList();
+            var allData = dataSet1.Concat(dataSet2).ToList();
+
+            using var delivering = new SemaphoreSlim(0, 1);
+            using var proceedWithResuspend = new SemaphoreSlim(0, 1);
+
+            var suspend1 = cache.SuspendNotifications();
+            cache.AddOrUpdate(dataSet1);
+
+            // First subscriber blocks on delivery to hold the delivery thread
+            var firstDelivery = true;
+            using var slowSub = cache.Connect().Subscribe(_ =>
             {
-                // Verifies that a deferred Connect subscriber never sees data written during
-                // a re-suspension. The resume signal fires under the lock (reentrant), so the
-                // deferred subscriber activates and takes its snapshot before any other thread
-                // can re-suspend or write new data.
-                //
-                // A slow first subscriber blocks delivery of accumulated changes, creating a
-                // window where the main thread re-suspends and writes a second batch. The
-                // deferred subscriber's snapshot must contain only the first batch.
-                using var cache = new SourceCache<int, int>(static x => x);
-                var dataSet1 = Enumerable.Range(0, 100).ToList();
-                var dataSet2 = Enumerable.Range(1000, 100).ToList();
-                var allData = dataSet1.Concat(dataSet2).ToList();
-
-                using var delivering = new SemaphoreSlim(0, 1);
-                using var proceedWithResuspend = new SemaphoreSlim(0, 1);
-
-                var suspend1 = cache.SuspendNotifications();
-                cache.AddOrUpdate(dataSet1);
-
-                // First subscriber blocks on delivery to hold the delivery thread
-                var firstDelivery = true;
-                using var slowSub = cache.Connect().Subscribe(_ =>
+                if (firstDelivery)
                 {
-                    if (firstDelivery)
-                    {
-                        firstDelivery = false;
-                        delivering.Release();
-                        proceedWithResuspend.Wait(TimeSpan.FromSeconds(5));
-                    }
-                });
-
-                // Deferred subscriber — will activate when resume signal fires
-                using var results = cache.Connect().AsAggregator();
-                results.Messages.Count.Should().Be(0, "no messages during suspension");
-
-                // Resume on background thread — delivery blocks on slow subscriber
-                var resumeTask = Task.Run(() => suspend1.Dispose());
-                (await delivering.WaitAsync(TimeSpan.FromSeconds(5))).Should().BeTrue("delivery should have started");
-
-                // Re-suspend and write second batch while delivery is blocked
-                var suspend2 = cache.SuspendNotifications();
-                cache.AddOrUpdate(dataSet2);
-
-                // dataSet2 must not appear in any message received so far
-                foreach (var msg in results.Messages)
-                {
-                    foreach (var change in msg)
-                    {
-                        change.Key.Should().BeInRange(0, 99,
-                            "deferred subscriber should only have first-batch keys before second resume");
-                    }
+                    firstDelivery = false;
+                    delivering.Release();
+                    proceedWithResuspend.Wait(TimeSpan.FromSeconds(5));
                 }
+            });
 
-                // Unblock delivery
-                proceedWithResuspend.Release();
-                await resumeTask;
+            // Deferred subscriber — will activate when resume signal fires
+            using var results = cache.Connect().AsAggregator();
+            await Assert.That(results.Messages.Count).IsEqualTo(0).Because("no messages during suspension");
 
-                // Only dataSet1 should have been delivered — dataSet2 is held by second suspension
-                results.Summary.Overall.Adds.Should().Be(dataSet1.Count,
-                    $"exactly {dataSet1.Count} adds before second resume — dataSet2 must be held by suspension");
-                results.Messages.Should().HaveCount(1, "exactly one message (snapshot of dataSet1)");
-                results.Messages[0].Adds.Should().Be(dataSet1.Count);
-                results.Messages[0].Select(c => c.Key).Should().Equal(dataSet1,
-                    "snapshot should contain exactly first-batch keys in order");
+            // Resume on background thread — delivery blocks on slow subscriber
+            var resumeTask = Task.Run(() => suspend1.Dispose());
+            await Assert.That((await delivering.WaitAsync(TimeSpan.FromSeconds(5)))).IsTrue().Because("delivery should have started");
 
-                // Resume second suspension — dataSet2 arrives now
-                suspend2.Dispose();
+            // Re-suspend and write second batch while delivery is blocked
+            var suspend2 = cache.SuspendNotifications();
+            cache.AddOrUpdate(dataSet2);
 
-                results.Summary.Overall.Adds.Should().Be(allData.Count, $"exactly {allData.Count} adds total");
-                results.Summary.Overall.Removes.Should().Be(0, "no removes");
-                results.Messages.Should().HaveCount(2, "two messages: snapshot + second batch");
-                results.Messages[1].Adds.Should().Be(dataSet2.Count);
-                results.Messages[1].Select(c => c.Key).Should().Equal(dataSet2,
-                    "second message should contain exactly second-batch keys in order");
-                results.Data.Count.Should().Be(allData.Count);
-                results.Data.Keys.OrderBy(k => k).Should().Equal(allData);
-                results.Error.Should().BeNull();
-                results.IsCompleted.Should().BeFalse();
+            // dataSet2 must not appear in any message received so far
+            foreach (var msg in results.Messages)
+            {
+                foreach (var change in msg)
+                {
+                    await Assert.That(change.Key is >= 0 and <= 99)
+                        .IsTrue().Because("deferred subscriber should only have first-batch keys before second resume");
+                }
             }
 
-        [Fact]
+            // Unblock delivery
+            proceedWithResuspend.Release();
+            await resumeTask;
+
+            // Only dataSet1 should have been delivered — dataSet2 is held by second suspension
+            await Assert.That(results.Summary.Overall.Adds).IsEqualTo(dataSet1.Count).Because($"exactly {dataSet1.Count} adds before second resume — dataSet2 must be held by suspension");
+            await Assert.That(results.Messages).HasCount(1).Because("exactly one message (snapshot of dataSet1)");
+            await Assert.That(results.Messages[0].Adds).IsEqualTo(dataSet1.Count);
+            await Assert.That(results.Messages[0].Select(c => c.Key)).IsEquivalentTo(dataSet1).Because("snapshot should contain exactly first-batch keys in order");
+
+            // Resume second suspension — dataSet2 arrives now
+            suspend2.Dispose();
+
+            await Assert.That(results.Summary.Overall.Adds).IsEqualTo(allData.Count).Because($"exactly {allData.Count} adds total");
+            await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0).Because("no removes");
+            await Assert.That(results.Messages).HasCount(2).Because("two messages: snapshot + second batch");
+            await Assert.That(results.Messages[1].Adds).IsEqualTo(dataSet2.Count);
+            await Assert.That(results.Messages[1].Select(c => c.Key)).IsEquivalentTo(dataSet2).Because("second message should contain exactly second-batch keys in order");
+            await Assert.That(results.Data.Count).IsEqualTo(allData.Count);
+            await Assert.That(results.Data.Keys.OrderBy(k => k)).IsEquivalentTo(allData);
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.IsCompleted).IsFalse();
+        }
+
+        [Test]
         public async Task SuspensionsAreThreadSafe()
         {
             // Arrange
@@ -233,12 +228,12 @@ public static partial class SuspendNotificationsFixture
             await Task.Run(suspend.Dispose);
 
             // Assert
-            results.Data.Count.Should().Be(100, "Should receive data after resume");
-            results.Messages.Count.Should().Be(1, "Should receive single changeset on resume");
-            results.Messages[0].Adds.Should().Be(100, "Should have 100 adds");
+            await Assert.That(results.Data.Count).IsEqualTo(100).Because("Should receive data after resume");
+            await Assert.That(results.Messages.Count).IsEqualTo(1).Because("Should receive single changeset on resume");
+            await Assert.That(results.Messages[0].Adds).IsEqualTo(100).Because("Should have 100 adds");
         }
 
-        [Fact]
+        [Test]
         public async Task ConcurrentSuspendDuringResumeDoesNotCorrupt()
         {
             // Stress test: races resume against re-suspend on two threads.
@@ -276,15 +271,14 @@ public static partial class SuspendNotificationsFixture
                 cache.AddOrUpdate(dataSet2);
                 suspend2.Dispose();
 
-                results.Summary.Overall.Adds.Should().Be(allData.Count, $"iteration {iter}: exactly {allData.Count} adds");
-                results.Summary.Overall.Removes.Should().Be(0, $"iteration {iter}: no removes");
-                results.Summary.Overall.Updates.Should().Be(0, $"iteration {iter}: no updates because keys don't overlap");
-                results.Data.Count.Should().Be(allData.Count, $"iteration {iter}: {allData.Count} items in final state");
-                results.Data.Keys.OrderBy(k => k).Should().Equal(allData, $"iteration {iter}: all keys present in order");
-                results.Error.Should().BeNull($"iteration {iter}: no errors");
-                results.IsCompleted.Should().BeFalse($"iteration {iter}: not completed");
+                await Assert.That(results.Summary.Overall.Adds).IsEqualTo(allData.Count).Because($"iteration {iter}: exactly {allData.Count} adds");
+                await Assert.That(results.Summary.Overall.Removes).IsEqualTo(0).Because($"iteration {iter}: no removes");
+                await Assert.That(results.Summary.Overall.Updates).IsEqualTo(0).Because($"iteration {iter}: no updates because keys don't overlap");
+                await Assert.That(results.Data.Count).IsEqualTo(allData.Count).Because($"iteration {iter}: {allData.Count} items in final state");
+                await Assert.That(results.Data.Keys.OrderBy(k => k)).IsEquivalentTo(allData).Because($"iteration {iter}: all keys present in order");
+                await Assert.That(results.Error).IsNull().Because($"iteration {iter}: no errors");
+                await Assert.That(results.IsCompleted).IsFalse().Because($"iteration {iter}: not completed");
             }
         }
     }
 }
-

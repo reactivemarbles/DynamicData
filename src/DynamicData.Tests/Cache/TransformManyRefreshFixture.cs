@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -22,8 +15,8 @@ public class TransformManyRefreshFixture : IDisposable
         _results = _source.Connect().AutoRefresh().TransformMany(p => p.Friends, p => p.Name).AsAggregator();
     }
 
-    [Fact]
-    public void AutoRefresh()
+    [Test]
+    public async Task AutoRefresh()
     {
         var person = new PersonWithFriends("Person", 50);
         _source.AddOrUpdate(person);
@@ -34,13 +27,13 @@ public class TransformManyRefreshFixture : IDisposable
             new PersonWithFriends("Friend2", 45)
         };
 
-        _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
-        _results.Data.Lookup("Friend1").HasValue.Should().BeTrue();
-        _results.Data.Lookup("Friend2").HasValue.Should().BeTrue();
+        await Assert.That(_results.Data.Count).IsEqualTo(2).Because("Should be 2 in the cache");
+        await Assert.That(_results.Data.Lookup("Friend1").HasValue).IsTrue();
+        await Assert.That(_results.Data.Lookup("Friend2").HasValue).IsTrue();
     }
 
-    [Fact]
-    public void AutoRefreshOnOtherProperty()
+    [Test]
+    public async Task AutoRefreshOnOtherProperty()
     {
         var friends = new List<PersonWithFriends> { new("Friend1", 40) };
         var person = new PersonWithFriends("Person", 50, friends);
@@ -49,13 +42,13 @@ public class TransformManyRefreshFixture : IDisposable
         friends.Add(new PersonWithFriends("Friend2", 45));
         person.Age = 55;
 
-        _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
-        _results.Data.Lookup("Friend1").HasValue.Should().BeTrue();
-        _results.Data.Lookup("Friend2").HasValue.Should().BeTrue();
+        await Assert.That(_results.Data.Count).IsEqualTo(2).Because("Should be 2 in the cache");
+        await Assert.That(_results.Data.Lookup("Friend1").HasValue).IsTrue();
+        await Assert.That(_results.Data.Lookup("Friend2").HasValue).IsTrue();
     }
 
-    [Fact]
-    public void DirectRefresh()
+    [Test]
+    public async Task DirectRefresh()
     {
         var friends = new List<PersonWithFriends> { new("Friend1", 40) };
         var person = new PersonWithFriends("Person", 50, friends);
@@ -64,9 +57,9 @@ public class TransformManyRefreshFixture : IDisposable
         friends.Add(new PersonWithFriends("Friend2", 45));
         _source.Refresh(person);
 
-        _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
-        _results.Data.Lookup("Friend1").HasValue.Should().BeTrue();
-        _results.Data.Lookup("Friend2").HasValue.Should().BeTrue();
+        await Assert.That(_results.Data.Count).IsEqualTo(2).Because("Should be 2 in the cache");
+        await Assert.That(_results.Data.Lookup("Friend1").HasValue).IsTrue();
+        await Assert.That(_results.Data.Lookup("Friend2").HasValue).IsTrue();
     }
 
     public void Dispose()

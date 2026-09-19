@@ -1,23 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Binding;
 
 public class NotifyPropertyChangedExFixture
 {
-    [Theory, InlineData(true), InlineData(false)]
-    public void SubscribeToPropertyChangeForAllItemsInList(bool notifyOnInitialValue)
+    [Test, Arguments(true), Arguments(false)]
+    public async Task SubscribeToPropertyChangeForAllItemsInList(bool notifyOnInitialValue)
     {
         var lastChange = new PropertyValue<Person, int>(new Person(), -1);
         var source = new SourceList<Person>();
@@ -29,25 +24,25 @@ public class NotifyPropertyChangedExFixture
 
         if (notifyOnInitialValue)
         {
-            anotherPerson.Should().Be(lastChange.Sender);
-            lastChange.Value.Should().Be(10);
+            await Assert.That(anotherPerson).IsEqualTo(lastChange.Sender);
+            await Assert.That(lastChange.Value).IsEqualTo(10);
         }
         else
         {
-            lastChange.Sender.Name.Should().Be("unknown");
-            lastChange.Value.Should().Be(-1);
+            await Assert.That(lastChange.Sender.Name).IsEqualTo("unknown");
+            await Assert.That(lastChange.Value).IsEqualTo(-1);
         }
 
         person.Age = 12;
-        lastChange.Sender.Should().Be(person);
-        lastChange.Value.Should().Be(12);
+        await Assert.That(lastChange.Sender).IsEqualTo(person);
+        await Assert.That(lastChange.Value).IsEqualTo(12);
         anotherPerson.Age = 13;
-        lastChange.Sender.Should().Be(anotherPerson);
-        lastChange.Value.Should().Be(13);
+        await Assert.That(lastChange.Sender).IsEqualTo(anotherPerson);
+        await Assert.That(lastChange.Value).IsEqualTo(13);
     }
 
-    [Theory, InlineData(true), InlineData(false)]
-    public void SubscribeToProperyChangedOnASingleItem(bool notifyOnInitialValue)
+    [Test, Arguments(true), Arguments(false)]
+    public async Task SubscribeToProperyChangedOnASingleItem(bool notifyOnInitialValue)
     {
         var lastChange = new PropertyValue<Person, int>(new Person(), -1);
         var person = new Person("Name", 10);
@@ -55,39 +50,39 @@ public class NotifyPropertyChangedExFixture
 
         if (notifyOnInitialValue)
         {
-            lastChange.Sender.Should().Be(person);
-            lastChange.Value.Should().Be(10);
+            await Assert.That(lastChange.Sender).IsEqualTo(person);
+            await Assert.That(lastChange.Value).IsEqualTo(10);
         }
         else
         {
-            lastChange.Sender.Name.Should().Be("unknown");
-            lastChange.Value.Should().Be(-1);
+            await Assert.That(lastChange.Sender.Name).IsEqualTo("unknown");
+            await Assert.That(lastChange.Value).IsEqualTo(-1);
         }
 
         person.Age = 12;
-        lastChange.Sender.Should().Be(person);
-        lastChange.Value.Should().Be(12);
+        await Assert.That(lastChange.Sender).IsEqualTo(person);
+        await Assert.That(lastChange.Value).IsEqualTo(12);
         person.Age = 13;
-        lastChange.Sender.Should().Be(person);
-        lastChange.Value.Should().Be(13);
+        await Assert.That(lastChange.Sender).IsEqualTo(person);
+        await Assert.That(lastChange.Value).IsEqualTo(13);
     }
 
-    [Theory, InlineData(true), InlineData(false)]
-    public void SubscribeToValueChangedOnASingleItem(bool notifyOnInitialValue)
+    [Test, Arguments(true), Arguments(false)]
+    public async Task SubscribeToValueChangedOnASingleItem(bool notifyOnInitialValue)
     {
         var age = -1;
         var person = new Person("Name", 10);
         person.WhenValueChanged(p => p.Age, notifyOnInitialValue).Subscribe(i => age = i);
 
-        (notifyOnInitialValue ? 10 : -1).Should().Be(age);
+        await Assert.That((notifyOnInitialValue ? 10 : -1)).IsEqualTo(age);
         person.Age = 12;
-        age.Should().Be(12);
+        await Assert.That(age).IsEqualTo(12);
         person.Age = 13;
-        age.Should().Be(13);
+        await Assert.That(age).IsEqualTo(13);
     }
 
-    [Theory, InlineData(true), InlineData(false)]
-    public void SubscribeToValueChangeForAllItemsInList(bool notifyOnInitialValue)
+    [Test, Arguments(true), Arguments(false)]
+    public async Task SubscribeToValueChangeForAllItemsInList(bool notifyOnInitialValue)
     {
         var lastAgeChange = -1;
         var source = new SourceList<Person>();
@@ -97,80 +92,80 @@ public class NotifyPropertyChangedExFixture
         source.Add(person);
         source.Add(anotherPerson);
 
-        (notifyOnInitialValue ? 10 : -1).Should().Be(lastAgeChange);
+        await Assert.That((notifyOnInitialValue ? 10 : -1)).IsEqualTo(lastAgeChange);
         person.Age = 12;
-        lastAgeChange.Should().Be(12);
+        await Assert.That(lastAgeChange).IsEqualTo(12);
         anotherPerson.Age = 13;
-        lastAgeChange.Should().Be(13);
+        await Assert.That(lastAgeChange).IsEqualTo(13);
     }
-    
-    [Fact]
-    public void CastToNullable()
+
+    [Test]
+    public async Task CastToNullable()
     {
         var parent = new TestEntity()
         {
             Id = 1,
             Age = 10
         };
-        
+
         using var subscription = parent.WhenValueChanged(
-                propertyAccessor:       static entity => (int?)entity.Child.Age,
-                notifyOnInitialValue:   true,
-                fallbackValue:          static () => null)
+                propertyAccessor: static entity => (int?)entity.Child.Age,
+                notifyOnInitialValue: true,
+                fallbackValue: static () => null)
             .RecordValues(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("additional changes could be made");
-        results.RecordedValues.Should().ContainSingle("an initial value should have been published");
-        results.RecordedValues[0].Should().Be(null, "the target entity has no child");
-        
+
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.HasCompleted).IsFalse();
+        await Assert.That(results.RecordedValues).HasSingleItem();
+        await Assert.That(results.RecordedValues[0]).IsNull().Because("the target entity has no child");
+
         var child = new TestEntity()
         {
             Id = 2,
             Age = 5
         };
         parent.Child = child;
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("additional changes could be made");
-        results.RecordedValues.Skip(1).Should().ContainSingle("a single change was performed");
-        results.RecordedValues.Skip(1).First().Should().Be(child.Age, "a child of age 5 was added");
-        
+
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.HasCompleted).IsFalse();
+        await Assert.That(results.RecordedValues.Skip(1)).HasSingleItem();
+        await Assert.That(results.RecordedValues.Skip(1).First()).IsEqualTo(child.Age).Because("a child of age 5 was added");
+
         child.Age = 6;
 
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("additional changes could be made");
-        results.RecordedValues.Skip(2).Should().ContainSingle("a single change was performed");
-        results.RecordedValues.Skip(2).First().Should().Be(child.Age, "the child entity's age was changed");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.HasCompleted).IsFalse();
+        await Assert.That(results.RecordedValues.Skip(2)).HasSingleItem();
+        await Assert.That(results.RecordedValues.Skip(2).First()).IsEqualTo(child.Age).Because("the child entity's age was changed");
     }
-    
+
     public class TestEntity
         : INotifyPropertyChanged
     {
         public long Id { get; init; }
-        
+
         public int Age
         {
             get;
             set => SetPropertyField(ref field, value);
         }
-        
+
         public TestEntity? Child
         {
             get;
             set => SetPropertyField(ref field, value);
-        } 
-            
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
-            
+
         protected void SetPropertyField<T>(
-            ref                 T       field,
-                                T       value,
-            [CallerMemberName]  string? propertyName = null)
+            ref T field,
+                                T value,
+            [CallerMemberName] string? propertyName = null)
         {
             if (EqualityComparer<T>.Default.Equals(field, value))
                 return;
-            
+
             field = value;
 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

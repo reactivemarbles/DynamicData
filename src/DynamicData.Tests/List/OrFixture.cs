@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.List;
 
+[InheritsTests]
 public class OrFixture : OrFixtureBase
 {
     protected override IObservable<IChangeSet<int>> CreateObservable() => _source1.Connect().Or(_source2.Connect());
 }
 
+[InheritsTests]
 public class OrCollectionFixture : OrFixtureBase
 {
     protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -24,8 +18,8 @@ public class OrCollectionFixture : OrFixtureBase
 
 public class OrRefreshFixture
 {
-    [Fact]
-    public void RefreshPassesThrough()
+    [Test]
+    public async Task RefreshPassesThrough()
     {
         SourceList<Item> source1 = new();
         source1.Add(new Item("A"));
@@ -36,17 +30,17 @@ public class OrRefreshFixture
         var results = list.Or().AsAggregator();
         source1.Items.ElementAt(0).Name = "Test";
 
-        results.Data.Count.Should().Be(2);
-        results.Messages.Count.Should().Be(3);
-        results.Messages[2].Refreshes.Should().Be(1);
-        results.Messages[2].First().Item.Current.Should().Be(source1.Items[0]);
+        await Assert.That(results.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Messages.Count).IsEqualTo(3);
+        await Assert.That(results.Messages[2].Refreshes).IsEqualTo(1);
+        await Assert.That(results.Messages[2].First().Item.Current).IsEqualTo(source1.Items[0]);
     }
 }
 
 public class OrReplaceFixture
 {
-    [Fact]
-    public void ItemIsReplaced()
+    [Test]
+    public async Task ItemIsReplaced()
     {
         var item1 = new Item("A");
         var item2 = new Item("B");
@@ -61,9 +55,9 @@ public class OrReplaceFixture
         var results = list.Or().AsAggregator();
         source1.ReplaceAt(0, item1Replacement);
 
-        results.Data.Count.Should().Be(2);
-        results.Messages.Count.Should().Be(3);
-        results.Data.Items.Should().BeEquivalentTo(new[] { item1Replacement, item2});
+        await Assert.That(results.Data.Count).IsEqualTo(2);
+        await Assert.That(results.Messages.Count).IsEqualTo(3);
+        await Assert.That(results.Data.Items).IsEquivalentTo(new[] { item1Replacement, item2 });
     }
 }
 
@@ -83,23 +77,23 @@ public abstract class OrFixtureBase : IDisposable
         _results = CreateObservable().AsAggregator();
     }
 
-    [Fact]
-    public void ClearOnlyClearsOneSource()
+    [Test]
+    public async Task ClearOnlyClearsOneSource()
     {
         _source1.AddRange(Enumerable.Range(1, 5));
         _source2.AddRange(Enumerable.Range(6, 5));
         _source1.Clear();
-        _results.Data.Count.Should().Be(5);
-        _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5));
+        await Assert.That(_results.Data.Count).IsEqualTo(5);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(Enumerable.Range(6, 5));
     }
 
-    [Fact]
-    public void CombineRange()
+    [Test]
+    public async Task CombineRange()
     {
         _source1.AddRange(Enumerable.Range(1, 5));
         _source2.AddRange(Enumerable.Range(6, 5));
-        _results.Data.Count.Should().Be(10);
-        _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 10));
+        await Assert.That(_results.Data.Count).IsEqualTo(10);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(Enumerable.Range(1, 10));
     }
 
     public void Dispose()
@@ -109,30 +103,30 @@ public abstract class OrFixtureBase : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void IncludedWhenItemIsInOneSource()
+    [Test]
+    public async Task IncludedWhenItemIsInOneSource()
     {
         _source1.Add(1);
 
-        _results.Data.Count.Should().Be(1);
-        _results.Data.Items[0].Should().Be(1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(1);
     }
 
-    [Fact]
-    public void IncludedWhenItemIsInTwoSources()
+    [Test]
+    public async Task IncludedWhenItemIsInTwoSources()
     {
         _source1.Add(1);
         _source2.Add(1);
-        _results.Data.Count.Should().Be(1);
-        _results.Data.Items[0].Should().Be(1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(1);
     }
 
-    [Fact]
-    public void RemovedWhenNoLongerInEither()
+    [Test]
+    public async Task RemovedWhenNoLongerInEither()
     {
         _source1.Add(1);
         _source1.Remove(1);
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
     protected abstract IObservable<IChangeSet<int>> CreateObservable();

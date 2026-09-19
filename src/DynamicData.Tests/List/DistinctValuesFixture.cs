@@ -1,11 +1,4 @@
-using System;
-using System.Linq;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
@@ -21,8 +14,8 @@ public class DistinctValuesFixture : IDisposable
         _results = _source.Connect().DistinctValues(p => p.Age).AsAggregator();
     }
 
-    [Fact]
-    public void AddingRemovedItem()
+    [Test]
+    public async Task AddingRemovedItem()
     {
         var person = new Person("A", 20);
 
@@ -30,13 +23,13 @@ public class DistinctValuesFixture : IDisposable
         _source.Remove(person);
         _source.Add(person);
 
-        _results.Messages.Count.Should().Be(3, "Should be 2 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(3).Because("Should be 2 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
 
-        _results.Data.Items.Should().BeEquivalentTo(new[] { 20 });
-        _results.Messages.ElementAt(0).Adds.Should().Be(1, "First message should be an add");
-        _results.Messages.ElementAt(1).Removes.Should().Be(1, "Second message should be a remove");
-        _results.Messages.ElementAt(2).Adds.Should().Be(1, "Third message should be an add");
+        await Assert.That(_results.Data.Items).IsEquivalentTo(new[] { 20 });
+        await Assert.That(_results.Messages.ElementAt(0).Adds).IsEqualTo(1).Because("First message should be an add");
+        await Assert.That(_results.Messages.ElementAt(1).Removes).IsEqualTo(1).Because("Second message should be a remove");
+        await Assert.That(_results.Messages.ElementAt(2).Adds).IsEqualTo(1).Because("Third message should be an add");
     }
 
     public void Dispose()
@@ -45,8 +38,8 @@ public class DistinctValuesFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void DuplicatedResultsResultInNoAdditionalMessage()
+    [Test]
+    public async Task DuplicatedResultsResultInNoAdditionalMessage()
     {
         _source.Edit(
             list =>
@@ -56,23 +49,23 @@ public class DistinctValuesFixture : IDisposable
                 list.Add(new Person("Person1", 20));
             });
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 update message");
-        _results.Data.Count.Should().Be(1, "Should be 1 items in the cache");
-        _results.Data.Items[0].Should().Be(20, "Should 20");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 update message");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 items in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(20).Because("Should 20");
     }
 
-    [Fact]
-    public void FiresAddWhenaNewItemIsAdded()
+    [Test]
+    public async Task FiresAddWhenaNewItemIsAdded()
     {
         _source.Add(new Person("Person1", 20));
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].Should().Be(20, "Should 20");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(20).Because("Should 20");
     }
 
-    [Fact]
-    public void FiresBatchResultOnce()
+    [Test]
+    public async Task FiresBatchResultOnce()
     {
         _source.Edit(
             list =>
@@ -82,39 +75,39 @@ public class DistinctValuesFixture : IDisposable
                 list.Add(new Person("Person3", 22));
             });
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(3, "Should be 3 items in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(3).Because("Should be 3 items in the cache");
 
-        _results.Data.Items.Should().BeEquivalentTo(new[] { 20, 21, 22 });
-        _results.Data.Items[0].Should().Be(20, "Should 20");
+        await Assert.That(_results.Data.Items).IsEquivalentTo(new[] { 20, 21, 22 });
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(20).Because("Should 20");
     }
 
-    [Fact]
-    public void RemovingAnItemRemovesTheDistinct()
+    [Test]
+    public async Task RemovingAnItemRemovesTheDistinct()
     {
         var person = new Person("Person1", 20);
 
         _source.Add(person);
         _source.Remove(person);
-        _results.Messages.Count.Should().Be(2, "Should be 1 update message");
-        _results.Data.Count.Should().Be(0, "Should be 1 items in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 1 update message");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be 1 items in the cache");
 
-        _results.Messages.First().Adds.Should().Be(1, "First message should be an add");
-        _results.Messages.Skip(1).First().Removes.Should().Be(1, "Second messsage should be a remove");
+        await Assert.That(_results.Messages.First().Adds).IsEqualTo(1).Because("First message should be an add");
+        await Assert.That(_results.Messages.Skip(1).First().Removes).IsEqualTo(1).Because("Second messsage should be a remove");
     }
 
-    [Fact]
-    public void Replacing()
+    [Test]
+    public async Task Replacing()
     {
         var person = new Person("A", 20);
         var replaceWith = new Person("A", 21);
 
         _source.Add(person);
         _source.Replace(person, replaceWith);
-        _results.Messages.Count.Should().Be(2, "Should be 1 update message");
-        _results.Data.Count.Should().Be(1, "Should be 1 items in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 1 update message");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 items in the cache");
 
-        _results.Messages.First().Adds.Should().Be(1, "First message should be an add");
-        _results.Messages.Skip(1).First().Count.Should().Be(2, "Second messsage should be an add an a remove");
+        await Assert.That(_results.Messages.First().Adds).IsEqualTo(1).Because("First message should be an add");
+        await Assert.That(_results.Messages.Skip(1).First().Count).IsEqualTo(2).Because("Second messsage should be an add an a remove");
     }
 }

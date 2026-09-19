@@ -1,18 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
 public class OnItemFixture
 {
-    [Fact]
-    public void OnItemAddCalled()
+    [Test]
+    public async Task OnItemAddCalled()
     {
         var called = false;
         var source = new SourceCache<Person, int>(x => x.Age);
@@ -22,11 +20,11 @@ public class OnItemFixture
         var person = new Person("A", 1);
 
         source.AddOrUpdate(person);
-        Assert.True(called);
+        await Assert.That(called).IsTrue();
     }
 
-    [Fact]
-    public void OnItemRefreshedCalled()
+    [Test]
+    public async Task OnItemRefreshedCalled()
     {
         var called = false;
         var source = new SourceCache<Person, int>(x => x.Age);
@@ -34,15 +32,15 @@ public class OnItemFixture
         var person = new Person("A", 1);
         source.AddOrUpdate(person);
 
-        source.Connect().AutoRefresh(x=>x.Age).OnItemRefreshed(_ => called = true).Subscribe();
+        source.Connect().AutoRefresh(x => x.Age).OnItemRefreshed(_ => called = true).Subscribe();
 
         person.Age += 1;
 
-        Assert.True(called);
+        await Assert.That(called).IsTrue();
     }
 
-    [Fact]
-    public void OnItemRemovedCalled()
+    [Test]
+    public async Task OnItemRemovedCalled()
     {
         var called = false;
         var source = new SourceCache<Person, int>(x => x.Age);
@@ -52,12 +50,12 @@ public class OnItemFixture
         var person = new Person("A", 1);
         source.AddOrUpdate(person);
         source.Remove(person);
-        Assert.True(called);
+        await Assert.That(called).IsTrue();
     }
 
-    [Fact]
+    [Test]
     [Description("Test for https://github.com/reactivemarbles/DynamicData/issues/613")]
-    public void OnItemRemovedNotCalledForUpdate()
+    public async Task OnItemRemovedNotCalledForUpdate()
     {
         var called = false;
         var source = new SourceCache<Person, int>(x => x.Age);
@@ -67,11 +65,11 @@ public class OnItemFixture
         source.AddOrUpdate(new Person("A", 1));
         source.AddOrUpdate(new Person("A", 2));
 
-        called.Should().Be(false);
+        await Assert.That(called).IsFalse();
     }
 
-    [Fact]
-    public void OnItemUpdatedCalled()
+    [Test]
+    public async Task OnItemUpdatedCalled()
     {
         var called = false;
         var source = new SourceCache<Person, int>(x => x.Age);
@@ -82,12 +80,12 @@ public class OnItemFixture
         source.AddOrUpdate(person);
         var update = new Person("B", 1);
         source.AddOrUpdate(update);
-        Assert.True(called);
+        await Assert.That(called).IsTrue();
     }
 
-    [Fact]
+    [Test]
     [Description("Test for https://github.com/reactivemarbles/DynamicData/issues/268")]
-    public void ListAndCacheShouldHaveEquivalentBehaviour()
+    public async Task ListAndCacheShouldHaveEquivalentBehaviour()
     {
         var source = new ObservableCollection<Item>
         {
@@ -109,12 +107,12 @@ public class OnItemFixture
             .Bind(out var cacheOutput)
             .Subscribe();
 
-        Assert.Equal(listOutput, cacheOutput, new ProxyEqualityComparer());
+        await Assert.That(cacheOutput).IsEquivalentTo(listOutput, ProxyEqualityComparer.Instance);
 
         list.Dispose();
         cache.Dispose();
 
-        Assert.Equal(listOutput, cacheOutput, new ProxyEqualityComparer());
+        await Assert.That(cacheOutput).IsEquivalentTo(listOutput, ProxyEqualityComparer.Instance);
     }
 
     public class Item
@@ -128,11 +126,12 @@ public class OnItemFixture
 
         public bool? Active { get; set; }
 
-
     }
 
     public class ProxyEqualityComparer : IEqualityComparer<Proxy>
     {
+        public static readonly ProxyEqualityComparer Instance = new();
+
         public bool Equals(Proxy x, Proxy y) => x?.Item.Id == y?.Item.Id && x.Active == y.Active;
 
         public int GetHashCode(Proxy obj) => HashCode.Combine(obj?.Active, obj.Item);

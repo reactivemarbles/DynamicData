@@ -1,38 +1,26 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-using Xunit;
-
 using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
 
 namespace DynamicData.Tests.Cache;
 
 public static partial class FilterFixture
 {
+    [InheritsTests]
     public sealed class Static
         : Base
     {
-        [Fact]
-        public void FilterIsNull_ThrowsException()
-            => FluentActions.Invoking(static () => ObservableCacheEx.Filter(
-                    source:     Observable.Empty<IChangeSet<Item, int>>(),
-                    filter:     null!))
-                .Should()
-                .Throw<ArgumentNullException>();
+        [Test]
+        public async Task FilterIsNull_ThrowsException()
+            => await Assert.That(() => ObservableCacheEx.Filter(
+                    source: Observable.Empty<IChangeSet<Item, int>>(),
+                    filter: null!)).Throws<ArgumentNullException>();
 
-        [Theory]
-        [InlineData(StreamCompletionStrategy.Asynchronous)]
-        [InlineData(StreamCompletionStrategy.Immediate)]
-        public void SourceCompletes_CompletionPropagates(StreamCompletionStrategy completionStrategy)
+        [Test]
+        [Arguments(StreamCompletionStrategy.Asynchronous)]
+        [Arguments(StreamCompletionStrategy.Immediate)]
+        public async Task SourceCompletes_CompletionPropagates(StreamCompletionStrategy completionStrategy)
         {
             // Setup
             using var source = new TestSourceCache<Item, int>(Item.SelectId);
-
 
             // UUT Initialization & Action
             if (completionStrategy is StreamCompletionStrategy.Immediate)
@@ -47,21 +35,19 @@ public static partial class FilterFixture
             if (completionStrategy is StreamCompletionStrategy.Asynchronous)
                 source.Complete();
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Should().BeEmpty("no source operations were performed");
-            results.HasCompleted.Should().BeTrue("the source has completed");
-
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no source operations were performed");
+            await Assert.That(results.HasCompleted).IsTrue().Because("the source has completed");
 
             // Final verification
-            results.ShouldNotSupportSorting("sorting is not supported by filter operators");
+            await results.ShouldNotSupportSorting("sorting is not supported by filter operators");
         }
 
-        [Fact]
-        public void SubscriptionIsDisposed_SubscriptionDisposalPropagates()
+        [Test]
+        public async Task SubscriptionIsDisposed_SubscriptionDisposalPropagates()
         {
             // Setup
-            using var source = new Subject<IChangeSet<Item, int>>();
-
+            using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
             // UUT Intialization
             using var subscription = source
@@ -70,27 +56,26 @@ public static partial class FilterFixture
                 .ValidateChangeSets(Item.SelectId)
                 .RecordCacheItems(out var results);
 
-            results.Error.Should().BeNull();
-            results.RecordedChangeSets.Should().BeEmpty("no source operations were performed");
-            results.RecordedItemsByKey.Values.Should().BeEmpty("the source has not initialized");
-            results.HasCompleted.Should().BeFalse("the source has not completed");
-
+            await Assert.That(results.Error).IsNull();
+            await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no source operations were performed");
+            await Assert.That(results.RecordedItemsByKey.Values).IsEmpty().Because("the source has not initialized");
+            await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
             // UUT Action
             subscription.Dispose();
 
-            source.HasObservers.Should().BeFalse("subscription disposal should propagate to all sources");
+            await Assert.That(source.HasObservers).IsFalse().Because("subscription disposal should propagate to all sources");
         }
 
         protected override IObservable<IChangeSet<Item, int>> BuildUut(
-                IObservable<IChangeSet<Item, int>>  source,
-                Func<Item, bool>                    predicate,
-                bool                                suppressEmptyChangeSets)
+                IObservable<IChangeSet<Item, int>> source,
+                Func<Item, bool> predicate,
+                bool suppressEmptyChangeSets)
             => source.Filter(
-                filter:                     predicate,
-                suppressEmptyChangeSets:    suppressEmptyChangeSets);
-        [Fact]
-        public void AutoRefreshRemoveKeyFilterUpdate_CollectionUpdated()
+                filter: predicate,
+                suppressEmptyChangeSets: suppressEmptyChangeSets);
+        [Test]
+        public async Task AutoRefreshRemoveKeyFilterUpdate_CollectionUpdated()
         {
             RandomPersonGenerator generator = new();
             using var source = new SourceCache<Person, string>(p => p.Key);
@@ -105,17 +90,17 @@ public static partial class FilterFixture
                 .Subscribe();
             source.AddOrUpdate(people);
 
-            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+            await Assert.That(collection).IsEquivalentTo(people.Where(x => x.Age < average));
 
             foreach (var person in people)
             {
                 person.Age = person.Age + 1;
             }
-            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+            await Assert.That(collection).IsEquivalentTo(people.Where(x => x.Age < average));
         }
 
-        [Fact]
-        public void AutoRefreshFilterRemoveKeyUpdate_CollectionUpdated()
+        [Test]
+        public async Task AutoRefreshFilterRemoveKeyUpdate_CollectionUpdated()
         {
             RandomPersonGenerator generator = new();
             using var source = new SourceCache<Person, string>(p => p.Key);
@@ -130,13 +115,13 @@ public static partial class FilterFixture
                 .Subscribe();
             source.AddOrUpdate(people);
 
-            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+            await Assert.That(collection).IsEquivalentTo(people.Where(x => x.Age < average));
 
             foreach (var person in people)
             {
                 person.Age = person.Age + 1;
             }
-            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+            await Assert.That(collection).IsEquivalentTo(people.Where(x => x.Age < average));
         }
     }
 

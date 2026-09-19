@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive.Linq;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -20,8 +10,8 @@ public class GroupFixture : IDisposable
 
     public GroupFixture() => _source = new SourceCache<Person, string>(p => p.Name);
 
-    [Fact]
-    public void Kaboom()
+    [Test]
+    public async Task Kaboom()
     {
         SourceCache<Mytype, int> cache = new(x => x.Key);
         List<Mytype> listWithDuplicates =
@@ -50,32 +40,36 @@ public class GroupFixture : IDisposable
         public override string ToString() => $"{Key}, {Grouping}";
     }
 
-    [Fact]
-    public void Add()
+    [Test]
+    public async Task Add()
     {
         var called = false;
+        var observedCounts = new List<int>();
+        var observedReasons = new List<ChangeReason>();
         var subscriber = _source.Connect().Group(p => p.Age).Subscribe(
             updates =>
             {
-                updates.Count.Should().Be(1, "Should be 1 add");
-                updates.First().Reason.Should().Be(ChangeReason.Add);
+                observedCounts.Add(updates.Count);
+                observedReasons.Add(updates.First().Reason);
                 called = true;
             });
         _source.AddOrUpdate(new Person("Person1", 20));
 
         subscriber.Dispose();
-        called.Should().BeTrue();
+        await Assert.That(called).IsTrue();
+        await Assert.That(observedCounts).IsEquivalentTo(new[] { 1 });
+        await Assert.That(observedReasons).IsEquivalentTo(new[] { ChangeReason.Add });
     }
 
-    [Fact]
-    public void AddItemAfterUpdateItemProcessAdd()
+    [Test]
+    public async Task AddItemAfterUpdateItemProcessAdd()
     {
         var subscriber = _source.Connect().Group(x => x.Name[0].ToString()).Transform(x => new GroupViewModel(x)).Bind(out _entries).Subscribe();
 
         _source.Edit(x => x.AddOrUpdate(new Person("Adam", 1)));
 
         var firstGroup = _entries.First();
-        firstGroup.Entries.Count.Should().Be(1);
+        await Assert.That(firstGroup.Entries.Count).IsEqualTo(1);
 
         _source.Edit(
             x =>
@@ -84,36 +78,34 @@ public class GroupFixture : IDisposable
                 x.AddOrUpdate(new Person("Alfred", 1)); // add
             });
 
-        firstGroup.Entries.Count.Should().Be(2);
+        await Assert.That(firstGroup.Entries.Count).IsEqualTo(2);
 
         subscriber.Dispose();
     }
 
     public void Dispose() => _source.Dispose();
 
-    [Fact]
-    public void FiresCompletedWhenDisposed()
+    [Test]
+    public async Task FiresCompletedWhenDisposed()
     {
         var completed = false;
         var subscriber = _source.Connect().Group(p => p.Age).Subscribe(updates => { }, () => completed = true);
         _source.Dispose();
         subscriber.Dispose();
-        completed.Should().BeTrue();
+        await Assert.That(completed).IsTrue();
     }
 
-    [Fact]
-    public void FiresManyValueForBatchOfDifferentAdds()
+    [Test]
+    public async Task FiresManyValueForBatchOfDifferentAdds()
     {
         var called = false;
+        var observedCounts = new List<int>();
+        var observedReasons = new List<ChangeReason>();
         var subscriber = _source.Connect().Group(p => p.Age).Subscribe(
             updates =>
             {
-                updates.Count.Should().Be(4, "Should be 4 adds");
-                foreach (var update in updates)
-                {
-                    update.Reason.Should().Be(ChangeReason.Add);
-                }
-
+                observedCounts.Add(updates.Count);
+                observedReasons.AddRange(updates.Select(update => update.Reason));
                 called = true;
             });
         _source.Edit(
@@ -126,18 +118,22 @@ public class GroupFixture : IDisposable
             });
 
         subscriber.Dispose();
-        called.Should().BeTrue();
+        await Assert.That(called).IsTrue();
+        await Assert.That(observedCounts).IsEquivalentTo(new[] { 4 });
+        await Assert.That(observedReasons).IsEquivalentTo(Enumerable.Repeat(ChangeReason.Add, 4));
     }
 
-    [Fact]
-    public void FiresOnlyOnceForABatchOfUniqueValues()
+    [Test]
+    public async Task FiresOnlyOnceForABatchOfUniqueValues()
     {
         var called = false;
+        var observedCounts = new List<int>();
+        var observedReasons = new List<ChangeReason>();
         var subscriber = _source.Connect().Group(p => p.Age).Subscribe(
             updates =>
             {
-                updates.Count.Should().Be(1, "Should be 1 add");
-                updates.First().Reason.Should().Be(ChangeReason.Add);
+                observedCounts.Add(updates.Count);
+                observedReasons.Add(updates.First().Reason);
                 called = true;
             });
         _source.Edit(
@@ -150,23 +146,23 @@ public class GroupFixture : IDisposable
             });
 
         subscriber.Dispose();
-        called.Should().BeTrue();
+        await Assert.That(called).IsTrue();
+        await Assert.That(observedCounts).IsEquivalentTo(new[] { 1 });
+        await Assert.That(observedReasons).IsEquivalentTo(new[] { ChangeReason.Add });
     }
 
-    [Fact]
-    public void FiresRemoveWhenEmptied()
+    [Test]
+    public async Task FiresRemoveWhenEmptied()
     {
         var called = false;
+        var observedCounts = new List<int>();
+        var observedReasons = new List<ChangeReason>();
         //skip first one a this is setting up the stream
         var subscriber = _source.Connect().Group(p => p.Age).Skip(1).Subscribe(
             updates =>
             {
-                updates.Count.Should().Be(1, "Should be 1 update");
-                foreach (var update in updates)
-                {
-                    update.Reason.Should().Be(ChangeReason.Remove);
-                }
-
+                observedCounts.Add(updates.Count);
+                observedReasons.AddRange(updates.Select(update => update.Reason));
                 called = true;
             });
         var person = new Person("Person1", 20);
@@ -177,56 +173,62 @@ public class GroupFixture : IDisposable
         _source.Remove(person);
 
         subscriber.Dispose();
-        called.Should().BeTrue();
+        await Assert.That(called).IsTrue();
+        await Assert.That(observedCounts).IsEquivalentTo(new[] { 1 });
+        await Assert.That(observedReasons).IsEquivalentTo(new[] { ChangeReason.Remove });
     }
 
-    [Fact]
-    public void ReceivesUpdateWhenFeederIsInvoked()
+    [Test]
+    public async Task ReceivesUpdateWhenFeederIsInvoked()
     {
         var called = false;
         var subscriber = _source.Connect().Group(p => p.Age).Subscribe(updates => called = true);
         _source.AddOrUpdate(new Person("Person1", 20));
         subscriber.Dispose();
-        called.Should().BeTrue();
+        await Assert.That(called).IsTrue();
     }
 
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         var called = false;
+        var observedCounts = new List<int>();
+        var observedReasons = new List<ChangeReason>();
         var subscriber = _source.Connect().Group(p => p.Age).Skip(1).Subscribe(
             updates =>
             {
-                updates.Count.Should().Be(1, "Should be 1 add");
-                updates.First().Reason.Should().Be(ChangeReason.Remove);
+                observedCounts.Add(updates.Count);
+                observedReasons.Add(updates.First().Reason);
                 called = true;
             });
         _source.AddOrUpdate(new Person("Person1", 20));
         _source.Remove(new Person("Person1", 20));
         subscriber.Dispose();
-        called.Should().BeTrue();
+        await Assert.That(called).IsTrue();
+        await Assert.That(observedCounts).IsEquivalentTo(new[] { 1 });
+        await Assert.That(observedReasons).IsEquivalentTo(new[] { ChangeReason.Remove });
     }
 
-    [Fact]
-    public void UpdateAnItemWillChangedThegroup()
+    [Test]
+    public async Task UpdateAnItemWillChangedThegroup()
     {
         var called = false;
         var subscriber = _source.Connect().Group(p => p.Age).Subscribe(updates => called = true);
         _source.AddOrUpdate(new Person("Person1", 20));
         _source.AddOrUpdate(new Person("Person1", 21));
         subscriber.Dispose();
-        called.Should().BeTrue();
+        await Assert.That(called).IsTrue();
     }
 
-    [Fact]
-    public void UpdateItemAfterAddItemProcessAdd()
+    [Test]
+    public async Task UpdateItemAfterAddItemProcessAdd()
     {
         var subscriber = _source.Connect().Group(x => x.Name[0].ToString()).Transform(x => new GroupViewModel(x)).Bind(out _entries).Subscribe();
 
         _source.Edit(x => x.AddOrUpdate(new Person("Adam", 1)));
 
         var firstGroup = _entries.First();
-        firstGroup.Entries.Count.Should().Be(1);
+        await Assert.That(firstGroup.Entries.Count).IsEqualTo(1);
 
         _source.Edit(
             x =>
@@ -235,20 +237,20 @@ public class GroupFixture : IDisposable
                 x.AddOrUpdate(new Person("Adam", 3)); // update
             });
 
-        firstGroup.Entries.Count.Should().Be(2);
+        await Assert.That(firstGroup.Entries.Count).IsEqualTo(2);
 
         subscriber.Dispose();
     }
 
-    [Fact]
-    public void UpdateNotPossible()
+    [Test]
+    public async Task UpdateNotPossible()
     {
         var called = false;
         var subscriber = _source.Connect().Group(p => p.Age).Skip(1).Subscribe(updates => called = true);
         _source.AddOrUpdate(new Person("Person1", 20));
         _source.AddOrUpdate(new Person("Person1", 20));
         subscriber.Dispose();
-        called.Should().BeFalse();
+        await Assert.That(called).IsFalse();
     }
 
     public class GroupEntryViewModel(Person person)

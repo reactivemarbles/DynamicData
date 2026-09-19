@@ -1,13 +1,4 @@
-using System;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Subjects;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -25,7 +16,7 @@ public class GroupControllerForFilteredItemsFixture : IDisposable
         return p.Age <= 60 ? AgeBracket.Adult : AgeBracket.Pensioner;
     };
 
-    private readonly ISubject<Unit> _refreshSubject = new Subject<Unit>();
+    private readonly ReactiveUI.Primitives.Signals.Signal<Unit> _refreshSubject = new ReactiveUI.Primitives.Signals.Signal<Unit>();
 
     private readonly ISourceCache<Person, string> _source;
 
@@ -49,10 +40,11 @@ public class GroupControllerForFilteredItemsFixture : IDisposable
     {
         _source.Dispose();
         _grouped.Dispose();
+        _refreshSubject.Dispose();
     }
 
-    [Fact]
-    public void RegroupRecaluatesGroupings()
+    [Test]
+    public async Task RegroupRecaluatesGroupings()
     {
         var p1 = new Person("P1", 10);
         var p2 = new Person("P2", 15);
@@ -62,9 +54,9 @@ public class GroupControllerForFilteredItemsFixture : IDisposable
 
         _source.AddOrUpdate(people);
 
-        IsContainedIn("P1", AgeBracket.Under20).Should().BeTrue();
-        IsContainedIn("P2", AgeBracket.Under20).Should().BeTrue();
-        IsContainedIn("P3", AgeBracket.Adult).Should().BeTrue();
+        await Assert.That(IsContainedIn("P1", AgeBracket.Under20)).IsTrue();
+        await Assert.That(IsContainedIn("P2", AgeBracket.Under20)).IsTrue();
+        await Assert.That(IsContainedIn("P3", AgeBracket.Adult)).IsTrue();
 
         p1.Age = 60;
         p2.Age = 80;
@@ -73,15 +65,15 @@ public class GroupControllerForFilteredItemsFixture : IDisposable
 
         _refreshSubject.OnNext(Unit.Default);
 
-        IsContainedIn("P1", AgeBracket.Adult).Should().BeTrue();
-        IsContainedIn("P3", AgeBracket.Under20).Should().BeTrue();
+        await Assert.That(IsContainedIn("P1", AgeBracket.Adult)).IsTrue();
+        await Assert.That(IsContainedIn("P3", AgeBracket.Under20)).IsTrue();
 
-        IsContainedOnlyInOneGroup("P1").Should().BeTrue();
-        IsContainedOnlyInOneGroup("P2").Should().BeTrue();
+        await Assert.That(IsContainedOnlyInOneGroup("P1")).IsTrue();
+        await Assert.That(IsContainedOnlyInOneGroup("P2")).IsTrue();
     }
 
-    [Fact]
-    public void RegroupRecaluatesGroupings2()
+    [Test]
+    public async Task RegroupRecaluatesGroupings2()
     {
         var p1 = new Person("P1", 10);
         var p2 = new Person("P2", 15);
@@ -91,10 +83,10 @@ public class GroupControllerForFilteredItemsFixture : IDisposable
 
         _source.AddOrUpdate(people);
 
-        IsContainedIn("P1", AgeBracket.Under20).Should().BeTrue();
-        IsContainedIn("P2", AgeBracket.Under20).Should().BeTrue();
-        IsContainedIn("P3", AgeBracket.Adult).Should().BeTrue();
-        IsContainedIn("P4", AgeBracket.Pensioner).Should().BeFalse();
+        await Assert.That(IsContainedIn("P1", AgeBracket.Under20)).IsTrue();
+        await Assert.That(IsContainedIn("P2", AgeBracket.Under20)).IsTrue();
+        await Assert.That(IsContainedIn("P3", AgeBracket.Adult)).IsTrue();
+        await Assert.That(IsContainedIn("P4", AgeBracket.Pensioner)).IsFalse();
 
         p1.Age = 60;
         p2.Age = 80;
@@ -105,15 +97,15 @@ public class GroupControllerForFilteredItemsFixture : IDisposable
 
         _source.Refresh(new[] { p1, p2, p3, p4 });
 
-        IsContainedIn("P1", AgeBracket.Adult).Should().BeTrue();
-        IsContainedIn("P2", AgeBracket.Pensioner).Should().BeFalse();
-        IsContainedIn("P3", AgeBracket.Under20).Should().BeTrue();
-        IsContainedIn("P4", AgeBracket.Adult).Should().BeTrue();
+        await Assert.That(IsContainedIn("P1", AgeBracket.Adult)).IsTrue();
+        await Assert.That(IsContainedIn("P2", AgeBracket.Pensioner)).IsFalse();
+        await Assert.That(IsContainedIn("P3", AgeBracket.Under20)).IsTrue();
+        await Assert.That(IsContainedIn("P4", AgeBracket.Adult)).IsTrue();
 
-        IsContainedOnlyInOneGroup("P1").Should().BeTrue();
-        IsNotContainedAnyWhere("P2").Should().BeTrue();
-        IsContainedOnlyInOneGroup("P3").Should().BeTrue();
-        IsContainedOnlyInOneGroup("P4").Should().BeTrue();
+        await Assert.That(IsContainedOnlyInOneGroup("P1")).IsTrue();
+        await Assert.That(IsNotContainedAnyWhere("P2")).IsTrue();
+        await Assert.That(IsContainedOnlyInOneGroup("P3")).IsTrue();
+        await Assert.That(IsContainedOnlyInOneGroup("P4")).IsTrue();
     }
 
     private bool IsContainedIn(string name, AgeBracket bracket)

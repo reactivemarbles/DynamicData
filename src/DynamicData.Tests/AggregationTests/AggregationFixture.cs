@@ -1,13 +1,14 @@
-using System;
-using System.Reactive.Linq;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Aggregation;
+#else
 using DynamicData.Aggregation;
+#endif
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.AggregationTests;
 
@@ -44,8 +45,8 @@ public class AggregationFixture : IDisposable
             });
     }
 
-    [Fact]
-    public void CanAccumulate()
+    [Test]
+    public async Task CanAccumulate()
     {
         var latest = 0;
         var counter = 0;
@@ -61,15 +62,15 @@ public class AggregationFixture : IDisposable
         _source.AddOrUpdate(new Person("B", 20));
         _source.AddOrUpdate(new Person("C", 30));
 
-        counter.Should().Be(3, "Should be 3 updates");
-        latest.Should().Be(60, "Accumulated value should be 60");
+        await Assert.That(counter).IsEqualTo(3).Because("Should be 3 updates");
+        await Assert.That(latest).IsEqualTo(60).Because("Accumulated value should be 60");
         _source.AddOrUpdate(new Person("A", 5));
 
         accumulator.Dispose();
     }
 
-    [Fact]
-    public void CanHandleUpdatedItem()
+    [Test]
+    public async Task CanHandleUpdatedItem()
     {
         var latest = 0;
         var counter = 0;
@@ -84,8 +85,8 @@ public class AggregationFixture : IDisposable
         _source.AddOrUpdate(new Person("A", 10));
         _source.AddOrUpdate(new Person("A", 15));
 
-        counter.Should().Be(2, "Should be 2 updates");
-        latest.Should().Be(15, "Accumulated value should be 60");
+        await Assert.That(counter).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(latest).IsEqualTo(15).Because("Accumulated value should be 60");
         accumulator.Dispose();
     }
 

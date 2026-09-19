@@ -1,22 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
-
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for ObservableList.
@@ -28,7 +19,7 @@ public static partial class ObservableListEx
     /// Internally defers until loaded, then skips the first emission.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to skip the initial changeset.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to skip the initial changeset.</param>
     /// <returns>A list changeset stream that omits the initial snapshot.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -37,15 +28,15 @@ public static partial class ObservableListEx
     /// initial snapshot, those items are silently dropped while downstream consumers remain unaware of them.
     /// Any later <b>Refresh</b>, <b>Replace</b>, <b>Remove</b>, or <b>Moved</b> change targeting one of those
     /// dropped items will throw because the downstream collection has no record of them. Only use this against
-    /// a source you know starts empty (for example, a <see cref="ISourceList{T}"/> that has not yet been populated).
+    /// a source you know starts empty (for example, a <c>ISourceList&lt;T&gt;</c> that has not yet been populated).
     /// </para>
     /// </remarks>
-    /// <seealso cref="DeferUntilLoaded{T}(IObservable{IChangeSet{T}})"/>
-    /// <seealso cref="StartWithEmpty{T}(IObservable{IChangeSet{T}})"/>
+    /// <seealso><c>DeferUntilLoaded&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>
+    /// <seealso><c>StartWithEmpty&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<T>> SkipInitial<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.DeferUntilLoaded().Skip(1);
     }

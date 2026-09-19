@@ -1,21 +1,9 @@
-﻿#region
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Experimental;
+#else
 using DynamicData.Experimental;
+#endif
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
-
-#endregion
 
 namespace DynamicData.Tests.Cache;
 
@@ -48,18 +36,18 @@ public class WatcherFixture : IDisposable
             });
     }
 
-    [Fact]
-    public void AddNew()
+    [Test]
+    public async Task AddNew()
     {
         var person = new Person("Adult1", 50);
         _source.AddOrUpdate(person);
 
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
 
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
         var result = _results.Data.Items[0];
-        result.UpdateCount.Should().Be(1, "Person should have received 1 update");
-        result.Completed.Should().Be(false, "Person should have received 1 update");
+        await Assert.That(result.UpdateCount).IsEqualTo(1).Because("Person should have received 1 update");
+        await Assert.That(result.Completed).IsFalse().Because("Person should have received 1 update");
     }
 
     public void Dispose()
@@ -70,8 +58,8 @@ public class WatcherFixture : IDisposable
         _watcher.Dispose();
     }
 
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         var person = new Person("Adult1", 50);
         _source.AddOrUpdate(person);
@@ -80,16 +68,16 @@ public class WatcherFixture : IDisposable
         _source.Remove(person.Key);
 
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(11).Ticks);
-        _results.Messages.Count.Should().Be(2, "Should be 1 updates");
-        _results.Data.Count.Should().Be(0, "Should be 0 item in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be 0 item in the cache");
 
         var secondResult = _results.Messages[1].First();
-        secondResult.Current.UpdateCount.Should().Be(1, "Second Person should have received 1 update");
-        secondResult.Current.Completed.Should().Be(true, "Second person  should have received 1 update");
+        await Assert.That(secondResult.Current.UpdateCount).IsEqualTo(1).Because("Second Person should have received 1 update");
+        await Assert.That(secondResult.Current.Completed).IsTrue().Because("Second person  should have received 1 update");
     }
 
-    [Fact]
-    public void Update()
+    [Test]
+    public async Task Update()
     {
         var first = new Person("Adult1", 50);
         var second = new Person("Adult1", 51);
@@ -99,16 +87,16 @@ public class WatcherFixture : IDisposable
         _source.AddOrUpdate(second);
 
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
-        _results.Messages.Count.Should().Be(2, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
 
         var secondResult = _results.Messages[1].First();
-        secondResult.Previous.Value.UpdateCount.Should().Be(1, "Second Person should have received 1 update");
-        secondResult.Previous.Value.Completed.Should().Be(true, "Second person  should have received 1 update");
+        await Assert.That(secondResult.Previous.Value.UpdateCount).IsEqualTo(1).Because("Second Person should have received 1 update");
+        await Assert.That(secondResult.Previous.Value.Completed).IsTrue().Because("Second person  should have received 1 update");
     }
 
-    [Fact]
-    public void Watch()
+    [Test]
+    public async Task Watch()
     {
         var person = new Person("Adult1", 50);
         _source.AddOrUpdate(person);
@@ -117,8 +105,8 @@ public class WatcherFixture : IDisposable
         var watch = _watcher.Watch("Adult1").Subscribe(result.Add);
 
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
-        result.Count.Should().Be(1, "Should be 1 updates");
-        result[0].Current.Should().Be(person, "Should be 1 item in the cache");
+        await Assert.That(result.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(result[0].Current).IsEqualTo(person).Because("Should be 1 item in the cache");
 
         _source.Edit(updater => updater.Remove(("Adult1")));
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(500).Ticks);
@@ -126,8 +114,8 @@ public class WatcherFixture : IDisposable
         watch.Dispose();
     }
 
-    [Fact]
-    public void WatchMany()
+    [Test]
+    public async Task WatchMany()
     {
         _source.AddOrUpdate(new Person("Adult1", 50));
 
@@ -137,30 +125,30 @@ public class WatcherFixture : IDisposable
         var watch3 = _watcher.Watch("Adult1").Subscribe(result.Add);
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
 
-        result.Count.Should().Be(3, "Should be 3 updates");
+        await Assert.That(result.Count).IsEqualTo(3).Because("Should be 3 updates");
         foreach (var update in result)
         {
-            update.Reason.Should().Be(ChangeReason.Add, "Change reason should be add");
+            await Assert.That(update.Reason).IsEqualTo(ChangeReason.Add).Because("Change reason should be add");
         }
 
         result.Clear();
 
         _source.AddOrUpdate(new Person("Adult1", 51));
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(500).Ticks);
-        result.Count.Should().Be(3, "Should be 3 updates");
+        await Assert.That(result.Count).IsEqualTo(3).Because("Should be 3 updates");
         foreach (var update in result)
         {
-            update.Reason.Should().Be(ChangeReason.Update, "Change reason should be add");
+            await Assert.That(update.Reason).IsEqualTo(ChangeReason.Update).Because("Change reason should be add");
         }
 
         result.Clear();
 
         _source.Remove("Adult1");
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(500).Ticks);
-        result.Count.Should().Be(3, "Should be 3 updates");
+        await Assert.That(result.Count).IsEqualTo(3).Because("Should be 3 updates");
         foreach (var update in result)
         {
-            update.Reason.Should().Be(ChangeReason.Remove, "Change reason should be add");
+            await Assert.That(update.Reason).IsEqualTo(ChangeReason.Remove).Because("Change reason should be add");
         }
 
         result.Clear();

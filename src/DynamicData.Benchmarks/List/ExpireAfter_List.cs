@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
-
-using BenchmarkDotNet.Attributes;
-
-using Bogus;
+﻿using Bogus;
 
 namespace DynamicData.Benchmarks.List;
 

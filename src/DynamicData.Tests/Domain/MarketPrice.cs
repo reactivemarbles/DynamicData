@@ -1,5 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Bogus;
@@ -55,14 +53,16 @@ internal sealed class MarketPrice
 
     private class CurrentPriceEqualityComparer : IEqualityComparer<MarketPrice>
     {
-        public virtual bool Equals([DisallowNull] MarketPrice x, [DisallowNull] MarketPrice y) => x.MarketId.Equals(x.MarketId) && x.ItemId == y.ItemId && x.Price == y.Price;
-        [SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations", Justification = "Suppressed for Net 9.0")]
-        public int GetHashCode([DisallowNull] MarketPrice obj) => throw new NotImplementedException();
+        public virtual bool Equals([DisallowNull] MarketPrice x, [DisallowNull] MarketPrice y) => x.ItemId == y.ItemId && x.Price == y.Price;
+
+        public virtual int GetHashCode([DisallowNull] MarketPrice obj) => HashCode.Combine(obj.ItemId, obj.Price);
     }
 
     private sealed class TimeStampPriceEqualityComparer : CurrentPriceEqualityComparer, IEqualityComparer<MarketPrice>
     {
         public override bool Equals([DisallowNull] MarketPrice x, [DisallowNull] MarketPrice y) => base.Equals(x, y) && x.TimeStamp == y.TimeStamp;
+
+        public override int GetHashCode([DisallowNull] MarketPrice obj) => HashCode.Combine(base.GetHashCode(obj), obj.TimeStamp);
     }
 
     private sealed class LowestPriceComparer : IComparer<MarketPrice>

@@ -1,18 +1,11 @@
-using System;
-using System.Linq;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
 public class DeferAnsdSkipFixture
 {
-    [Fact]
-    public void DeferUntilLoadedDoesNothingUntilDataHasBeenReceived()
+    [Test]
+    public async Task DeferUntilLoadedDoesNothingUntilDataHasBeenReceived()
     {
         var updateReceived = false;
         IChangeSet<Person, string>? result = null;
@@ -27,23 +20,23 @@ public class DeferAnsdSkipFixture
             });
 
         var person = new Person("Test", 1);
-        updateReceived.Should().BeFalse();
+        await Assert.That(updateReceived).IsFalse();
         cache.AddOrUpdate(person);
 
-        updateReceived.Should().BeTrue();
+        await Assert.That(updateReceived).IsTrue();
 
         if (result is null)
         {
             throw new InvalidOperationException(nameof(result));
         }
 
-        result.Adds.Should().Be(1);
-        result.First().Current.Should().Be(person);
+        await Assert.That(result.Adds).IsEqualTo(1);
+        await Assert.That(result.First().Current).IsEqualTo(person);
         deferStream.Dispose();
     }
 
-    [Fact]
-    public void SkipInitialDoesNotReturnTheFirstBatchOfData()
+    [Test]
+    public async Task SkipInitialDoesNotReturnTheFirstBatchOfData()
     {
         var updateReceived = false;
 
@@ -51,14 +44,14 @@ public class DeferAnsdSkipFixture
 
         var deferStream = cache.Connect().SkipInitial().Subscribe(changes => updateReceived = true);
 
-        updateReceived.Should().BeFalse();
+        await Assert.That(updateReceived).IsFalse();
 
         cache.AddOrUpdate(new Person("P1", 1));
 
-        updateReceived.Should().BeFalse();
+        await Assert.That(updateReceived).IsFalse();
 
         cache.AddOrUpdate(new Person("P2", 2));
-        updateReceived.Should().BeTrue();
+        await Assert.That(updateReceived).IsTrue();
         deferStream.Dispose();
     }
 }

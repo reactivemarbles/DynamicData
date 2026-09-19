@@ -1,13 +1,3 @@
-using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public class TrueForAnyFixture : IDisposable
@@ -24,8 +14,8 @@ public class TrueForAnyFixture : IDisposable
 
     public void Dispose() => _source.Dispose();
 
-    [Fact]
-    public void InitialItemReturnsFalseWhenObservaleHasNoValue()
+    [Test]
+    public async Task InitialItemReturnsFalseWhenObservaleHasNoValue()
     {
         bool? valueReturned = null;
         var subscribed = _observable.Subscribe(result => { valueReturned = result; });
@@ -33,14 +23,14 @@ public class TrueForAnyFixture : IDisposable
         var item = new ObjectWithObservable(1);
         _source.AddOrUpdate(item);
 
-        valueReturned.HasValue.Should().BeTrue();
-        valueReturned!.Value.Should().Be(false, "The intial value should be false");
+        await Assert.That(valueReturned.HasValue).IsTrue();
+        await Assert.That(valueReturned!.Value).IsFalse().Because("The intial value should be false");
 
         subscribed.Dispose();
     }
 
-    [Fact]
-    public void InlineObservableChangeProducesResult()
+    [Test]
+    public async Task InlineObservableChangeProducesResult()
     {
         bool? valueReturned = null;
         var subscribed = _observable.Subscribe(result => { valueReturned = result; });
@@ -49,13 +39,13 @@ public class TrueForAnyFixture : IDisposable
         item.InvokeObservable(true);
         _source.AddOrUpdate(item);
 
-        valueReturned.HasValue.Should().BeTrue();
-        valueReturned!.Value.Should().Be(true, "Value should be true");
+        await Assert.That(valueReturned.HasValue).IsTrue();
+        await Assert.That(valueReturned!.Value).IsTrue().Because("Value should be true");
         subscribed.Dispose();
     }
 
-    [Fact]
-    public void MultipleValuesReturnTrue()
+    [Test]
+    public async Task MultipleValuesReturnTrue()
     {
         bool? valueReturned = null;
         var subscribed = _observable.Subscribe(result => { valueReturned = result; });
@@ -72,16 +62,16 @@ public class TrueForAnyFixture : IDisposable
             throw new InvalidOperationException(nameof(valueReturned));
         }
 
-        valueReturned.Value.Should().Be(false, "Value should be false");
+        await Assert.That(valueReturned.Value).IsFalse().Because("Value should be false");
 
         item1.InvokeObservable(true);
-        valueReturned.Value.Should().Be(true, "Value should be true");
+        await Assert.That(valueReturned.Value).IsTrue().Because("Value should be true");
         subscribed.Dispose();
     }
 
     // https://github.com/reactivemarbles/DynamicData/issues/922
-    [Fact]
-    public void ValuesPublishedOnSubscriptionDoNotTriggerPrematureOutput()
+    [Test]
+    public async Task ValuesPublishedOnSubscriptionDoNotTriggerPrematureOutput()
     {
         var item1 = new ObjectWithObservable(1);
         var item2 = new ObjectWithObservable(2);
@@ -95,13 +85,13 @@ public class TrueForAnyFixture : IDisposable
             .ValidateSynchronization()
             .RecordValues(out var results);
 
-        results.RecordedValues.Count.Should().Be(1, because: "No items were added to the source, and no value changes were made to the items");
-        results.RecordedValues[0].Should().Be(true, because: "One of the two items in the source has a true value");
+        await Assert.That(results.RecordedValues.Count).IsEqualTo(1).Because("No items were added to the source, and no value changes were made to the items");
+        await Assert.That(results.RecordedValues[0]).IsTrue().Because("One of the two items in the source has a true value");
     }
 
-    private class ObjectWithObservable(int id)
+    private class ObjectWithObservable(int id) : IDisposable
     {
-        private readonly ISubject<bool> _changed = new Subject<bool>();
+        private readonly ReactiveUI.Primitives.Signals.ISignal<bool> _changed = new ReactiveUI.Primitives.Signals.Signal<bool>();
 
         public int Id { get; } = id;
 
@@ -113,6 +103,11 @@ public class TrueForAnyFixture : IDisposable
         {
             Value = value;
             _changed.OnNext(value);
+        }
+
+        public void Dispose()
+        {
+            _changed.Dispose();
         }
     }
 }

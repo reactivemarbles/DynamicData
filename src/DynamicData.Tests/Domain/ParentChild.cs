@@ -1,4 +1,4 @@
-﻿namespace DynamicData.Tests.Domain;
+namespace DynamicData.Tests.Domain;
 
 public class ParentChild(Person child, Person parent)
 {

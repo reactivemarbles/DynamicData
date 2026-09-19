@@ -1,18 +1,39 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
-internal sealed class Transform<TDestination, TSource, TKey>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>>? exceptionCallback = null, bool transformOnRefresh = false)
+/// <summary>
+/// Provides members for the Transform class.
+/// </summary>
+/// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+/// <typeparam name="TSource">The type of the TSource value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
+/// <param name="source">The source value.</param>
+/// <param name="transformFactory">The transformFactory value.</param>
+/// <param name="exceptionCallback">The exceptionCallback value.</param>
+/// <param name="transformOnRefresh">The transformOnRefresh value.</param>
+internal sealed class Transform<TDestination, TSource, TKey>(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, ReactiveUI.Primitives.Optional<TSource>, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>>? exceptionCallback = null, bool transformOnRefresh = false)
     where TDestination : notnull
     where TSource : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Defer(RunImpl);
 
+    /// <summary>
+    /// Executes the RunImpl operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TDestination, TKey>> RunImpl() => source.Scan(
                 (ChangeAwareCache<TDestination, TKey>?)null,
                 (cache, changes) =>

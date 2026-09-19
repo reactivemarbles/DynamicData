@@ -1,18 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.List;
 
+[InheritsTests]
 public class ExceptFixture : ExceptFixtureBase
 {
     protected override IObservable<IChangeSet<int>> CreateObservable() => Source1.Connect().Except(Source2.Connect());
 }
 
+[InheritsTests]
 public class ExceptCollectionFixture : ExceptFixtureBase
 {
     protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -38,42 +32,42 @@ public abstract class ExceptFixtureBase : IDisposable
         _results = CreateObservable().AsAggregator();
     }
 
-    [Fact]
-    public void AddedWhenNoLongerInSecond()
+    [Test]
+    public async Task AddedWhenNoLongerInSecond()
     {
         Source1.Add(1);
         Source2.Add(1);
         Source2.Remove(1);
-        _results.Data.Count.Should().Be(1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
     }
 
-    [Fact]
-    public void ClearFirstClearsResult()
+    [Test]
+    public async Task ClearFirstClearsResult()
     {
         Source1.AddRange(Enumerable.Range(1, 5));
         Source2.AddRange(Enumerable.Range(1, 5));
         Source1.Clear();
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void ClearSecondEnsuresFirstIsIncluded()
+    [Test]
+    public async Task ClearSecondEnsuresFirstIsIncluded()
     {
         Source1.AddRange(Enumerable.Range(1, 5));
         Source2.AddRange(Enumerable.Range(1, 5));
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
         Source2.Clear();
-        _results.Data.Count.Should().Be(5);
-        _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 5));
+        await Assert.That(_results.Data.Count).IsEqualTo(5);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(Enumerable.Range(1, 5));
     }
 
-    [Fact]
-    public void CombineRange()
+    [Test]
+    public async Task CombineRange()
     {
         Source1.AddRange(Enumerable.Range(1, 10));
         Source2.AddRange(Enumerable.Range(6, 10));
-        _results.Data.Count.Should().Be(5);
-        _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 5));
+        await Assert.That(_results.Data.Count).IsEqualTo(5);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(Enumerable.Range(1, 5));
     }
 
     public void Dispose()
@@ -83,26 +77,26 @@ public abstract class ExceptFixtureBase : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void ExcludedWhenItemIsInTwoSources()
+    [Test]
+    public async Task ExcludedWhenItemIsInTwoSources()
     {
         Source1.Add(1);
         Source2.Add(1);
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void IncludedWhenItemIsInOneSource()
+    [Test]
+    public async Task IncludedWhenItemIsInOneSource()
     {
         Source1.Add(1);
-        _results.Data.Count.Should().Be(1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
     }
 
-    [Fact]
-    public void NothingFromOther()
+    [Test]
+    public async Task NothingFromOther()
     {
         Source2.Add(1);
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
     protected abstract IObservable<IChangeSet<int>> CreateObservable();

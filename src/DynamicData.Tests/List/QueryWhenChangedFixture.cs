@@ -1,10 +1,4 @@
-using System;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
@@ -20,8 +14,8 @@ public class QueryWhenChangedFixture : IDisposable
         _results = new ChangeSetAggregator<Person>(_source.Connect(p => p.Age > 20));
     }
 
-    [Fact]
-    public void CanHandleAddsAndUpdates()
+    [Test]
+    public async Task CanHandleAddsAndUpdates()
     {
         var invoked = false;
         var subscription = _source.Connect().QueryWhenChanged(q => q.Count).Subscribe(query => invoked = true);
@@ -30,57 +24,57 @@ public class QueryWhenChangedFixture : IDisposable
         _source.Add(person);
         _source.Remove(person);
 
-        invoked.Should().BeTrue();
+        await Assert.That(invoked).IsTrue();
         subscription.Dispose();
     }
 
-    [Fact]
-    public void ChangeInvokedOnNext()
+    [Test]
+    public async Task ChangeInvokedOnNext()
     {
         var invoked = false;
 
         var subscription = _source.Connect().QueryWhenChanged().Subscribe(x => invoked = true);
 
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
 
         _source.Add(new Person("A", 1));
-        invoked.Should().BeTrue();
+        await Assert.That(invoked).IsTrue();
 
         subscription.Dispose();
     }
 
-    [Fact]
-    public void ChangeInvokedOnNext_WithSelector()
+    [Test]
+    public async Task ChangeInvokedOnNext_WithSelector()
     {
         var invoked = false;
 
         var subscription = _source.Connect().QueryWhenChanged(query => query.Count).Subscribe(x => invoked = true);
 
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
 
         _source.Add(new Person("A", 1));
-        invoked.Should().BeTrue();
+        await Assert.That(invoked).IsTrue();
 
         subscription.Dispose();
     }
 
-    [Fact]
-    public void ChangeInvokedOnSubscriptionIfItHasData()
+    [Test]
+    public async Task ChangeInvokedOnSubscriptionIfItHasData()
     {
         var invoked = false;
         _source.Add(new Person("A", 1));
         var subscription = _source.Connect().QueryWhenChanged().Subscribe(x => invoked = true);
-        invoked.Should().BeTrue();
+        await Assert.That(invoked).IsTrue();
         subscription.Dispose();
     }
 
-    [Fact]
-    public void ChangeInvokedOnSubscriptionIfItHasData_WithSelector()
+    [Test]
+    public async Task ChangeInvokedOnSubscriptionIfItHasData_WithSelector()
     {
         var invoked = false;
         _source.Add(new Person("A", 1));
         var subscription = _source.Connect().QueryWhenChanged(query => query.Count).Subscribe(x => invoked = true);
-        invoked.Should().BeTrue();
+        await Assert.That(invoked).IsTrue();
         subscription.Dispose();
     }
 

@@ -2,134 +2,169 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Threading;
-using FluentAssertions;
-using Xunit;
-
 namespace DynamicData.Tests.Internal;
 
 public sealed class SwappableLockFixture
 {
 #if NET9_0_OR_GREATER
 
-    [Fact]
-    public void CreateAndEnter_AcquiresLock()
+    [Test]
+    public async Task CreateAndEnter_AcquiresLock()
     {
         var gate = new Lock();
+        bool isHeld;
 
-        using var swappable = SwappableLock.CreateAndEnter(gate);
+        using (SwappableLock.CreateAndEnter(gate))
+        {
+            isHeld = gate.IsHeldByCurrentThread;
+        }
 
-        gate.IsHeldByCurrentThread.Should().BeTrue();
+        await Assert.That(isHeld).IsTrue();
     }
 
-    [Fact]
-    public void Dispose_ReleasesLock()
+    [Test]
+    public async Task Dispose_ReleasesLock()
     {
         var gate = new Lock();
-        var swappable = SwappableLock.CreateAndEnter(gate);
+        bool isHeld;
 
-        swappable.Dispose();
+        {
+            var swappable = SwappableLock.CreateAndEnter(gate);
+            swappable.Dispose();
 
-        gate.IsHeldByCurrentThread.Should().BeFalse();
+            isHeld = gate.IsHeldByCurrentThread;
+        }
+
+        await Assert.That(isHeld).IsFalse();
     }
 
-    [Fact]
-    public void Dispose_IsIdempotent()
+    [Test]
+    public async Task Dispose_IsIdempotent()
     {
         var gate = new Lock();
-        var swappable = SwappableLock.CreateAndEnter(gate);
+        bool isHeld;
 
-        swappable.Dispose();
-        swappable.Dispose();
+        {
+            var swappable = SwappableLock.CreateAndEnter(gate);
+            swappable.Dispose();
+            swappable.Dispose();
 
-        gate.IsHeldByCurrentThread.Should().BeFalse();
+            isHeld = gate.IsHeldByCurrentThread;
+        }
+
+        await Assert.That(isHeld).IsFalse();
     }
 
-    [Fact]
-    public void SwapTo_AcquiresNewAndReleasesOld()
+    [Test]
+    public async Task SwapTo_AcquiresNewAndReleasesOld()
     {
         var first = new Lock();
         var second = new Lock();
+        bool firstIsHeld;
+        bool secondIsHeld;
 
-        using var swappable = SwappableLock.CreateAndEnter(first);
-        swappable.SwapTo(second);
+        using (var swappable = SwappableLock.CreateAndEnter(first))
+        {
+            swappable.SwapTo(second);
 
-        first.IsHeldByCurrentThread.Should().BeFalse();
-        second.IsHeldByCurrentThread.Should().BeTrue();
+            firstIsHeld = first.IsHeldByCurrentThread;
+            secondIsHeld = second.IsHeldByCurrentThread;
+        }
+
+        await Assert.That(firstIsHeld).IsFalse();
+        await Assert.That(secondIsHeld).IsTrue();
     }
 
-    [Fact]
-    public void SwapTo_ChainedSwaps()
+    [Test]
+    public async Task SwapTo_ChainedSwaps()
     {
         var a = new Lock();
         var b = new Lock();
         var c = new Lock();
+        bool aIsHeld;
+        bool bIsHeld;
+        bool cIsHeld;
 
-        using var swappable = SwappableLock.CreateAndEnter(a);
-        swappable.SwapTo(b);
-        swappable.SwapTo(c);
+        using (var swappable = SwappableLock.CreateAndEnter(a))
+        {
+            swappable.SwapTo(b);
+            swappable.SwapTo(c);
 
-        a.IsHeldByCurrentThread.Should().BeFalse();
-        b.IsHeldByCurrentThread.Should().BeFalse();
-        c.IsHeldByCurrentThread.Should().BeTrue();
+            aIsHeld = a.IsHeldByCurrentThread;
+            bIsHeld = b.IsHeldByCurrentThread;
+            cIsHeld = c.IsHeldByCurrentThread;
+        }
+
+        await Assert.That(aIsHeld).IsFalse();
+        await Assert.That(bIsHeld).IsFalse();
+        await Assert.That(cIsHeld).IsTrue();
     }
 
-    [Fact]
-    public void SwapTo_WithoutCreate_Throws()
+    [Test]
+    public async Task SwapTo_WithoutCreate_Throws()
     {
         var gate = new Lock();
-        var swappable = new SwappableLock();
+        var threw = false;
 
         try
         {
+            var swappable = new SwappableLock();
             swappable.SwapTo(gate);
-            throw new Xunit.Sdk.XunitException("Expected InvalidOperationException");
         }
         catch (InvalidOperationException)
         {
+            threw = true;
         }
+
+        await Assert.That(threw).IsTrue();
     }
 
-    [Fact]
-    public void Dispose_AfterSwap_ReleasesSwappedLock()
+    [Test]
+    public async Task Dispose_AfterSwap_ReleasesSwappedLock()
     {
         var first = new Lock();
         var second = new Lock();
+        bool firstIsHeld;
+        bool secondIsHeld;
 
-        var swappable = SwappableLock.CreateAndEnter(first);
-        swappable.SwapTo(second);
-        swappable.Dispose();
+        {
+            var swappable = SwappableLock.CreateAndEnter(first);
+            swappable.SwapTo(second);
+            swappable.Dispose();
 
-        first.IsHeldByCurrentThread.Should().BeFalse();
-        second.IsHeldByCurrentThread.Should().BeFalse();
+            firstIsHeld = first.IsHeldByCurrentThread;
+            secondIsHeld = second.IsHeldByCurrentThread;
+        }
+
+        await Assert.That(firstIsHeld).IsFalse();
+        await Assert.That(secondIsHeld).IsFalse();
     }
 
 #else
 
-    [Fact]
-    public void CreateAndEnter_AcquiresLock()
+    [Test]
+    public async Task CreateAndEnter_AcquiresLock()
     {
         var gate = new object();
 
         using var swappable = SwappableLock.CreateAndEnter(gate);
 
-        Monitor.IsEntered(gate).Should().BeTrue();
+        await Assert.That(Monitor.IsEntered(gate)).IsTrue();
     }
 
-    [Fact]
-    public void Dispose_ReleasesLock()
+    [Test]
+    public async Task Dispose_ReleasesLock()
     {
         var gate = new object();
         var swappable = SwappableLock.CreateAndEnter(gate);
 
         swappable.Dispose();
 
-        Monitor.IsEntered(gate).Should().BeFalse();
+        await Assert.That(Monitor.IsEntered(gate)).IsFalse();
     }
 
-    [Fact]
-    public void Dispose_IsIdempotent()
+    [Test]
+    public async Task Dispose_IsIdempotent()
     {
         var gate = new object();
         var swappable = SwappableLock.CreateAndEnter(gate);
@@ -137,11 +172,11 @@ public sealed class SwappableLockFixture
         swappable.Dispose();
         swappable.Dispose();
 
-        Monitor.IsEntered(gate).Should().BeFalse();
+        await Assert.That(Monitor.IsEntered(gate)).IsFalse();
     }
 
-    [Fact]
-    public void SwapTo_AcquiresNewAndReleasesOld()
+    [Test]
+    public async Task SwapTo_AcquiresNewAndReleasesOld()
     {
         var first = new object();
         var second = new object();
@@ -149,12 +184,12 @@ public sealed class SwappableLockFixture
         using var swappable = SwappableLock.CreateAndEnter(first);
         swappable.SwapTo(second);
 
-        Monitor.IsEntered(first).Should().BeFalse();
-        Monitor.IsEntered(second).Should().BeTrue();
+        await Assert.That(Monitor.IsEntered(first)).IsFalse();
+        await Assert.That(Monitor.IsEntered(second)).IsTrue();
     }
 
-    [Fact]
-    public void SwapTo_ChainedSwaps()
+    [Test]
+    public async Task SwapTo_ChainedSwaps()
     {
         var a = new object();
         var b = new object();
@@ -164,29 +199,22 @@ public sealed class SwappableLockFixture
         swappable.SwapTo(b);
         swappable.SwapTo(c);
 
-        Monitor.IsEntered(a).Should().BeFalse();
-        Monitor.IsEntered(b).Should().BeFalse();
-        Monitor.IsEntered(c).Should().BeTrue();
+        await Assert.That(Monitor.IsEntered(a)).IsFalse();
+        await Assert.That(Monitor.IsEntered(b)).IsFalse();
+        await Assert.That(Monitor.IsEntered(c)).IsTrue();
     }
 
-    [Fact]
-    public void SwapTo_WithoutCreate_Throws()
+    [Test]
+    public async Task SwapTo_WithoutCreate_Throws()
     {
         var gate = new object();
         var swappable = new SwappableLock();
 
-        try
-        {
-            swappable.SwapTo(gate);
-            throw new Xunit.Sdk.XunitException("Expected InvalidOperationException");
-        }
-        catch (InvalidOperationException)
-        {
-        }
+        await Assert.That(() => swappable.SwapTo(gate)).Throws<InvalidOperationException>();
     }
 
-    [Fact]
-    public void Dispose_AfterSwap_ReleasesSwappedLock()
+    [Test]
+    public async Task Dispose_AfterSwap_ReleasesSwappedLock()
     {
         var first = new object();
         var second = new object();
@@ -195,19 +223,19 @@ public sealed class SwappableLockFixture
         swappable.SwapTo(second);
         swappable.Dispose();
 
-        Monitor.IsEntered(first).Should().BeFalse();
-        Monitor.IsEntered(second).Should().BeFalse();
+        await Assert.That(Monitor.IsEntered(first)).IsFalse();
+        await Assert.That(Monitor.IsEntered(second)).IsFalse();
     }
 
-    [Fact]
-    public void SwapTo_SameLock_WorksWithReentrantMonitor()
+    [Test]
+    public async Task SwapTo_SameLock_WorksWithReentrantMonitor()
     {
         var gate = new object();
 
         using var swappable = SwappableLock.CreateAndEnter(gate);
         swappable.SwapTo(gate);
 
-        Monitor.IsEntered(gate).Should().BeTrue();
+        await Assert.That(Monitor.IsEntered(gate)).IsTrue();
     }
 
 #endif

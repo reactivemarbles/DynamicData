@@ -1,19 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Disposables;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
 // Bind to a list
+[InheritsTests]
 public sealed class SortByAndBindToList : SortAndBindFixture
 
 {
@@ -26,14 +21,14 @@ public sealed class SortByAndBindToList : SortAndBindFixture
     }
 }
 
-
 // Bind to a list
-public sealed class SortAndBindToList: SortAndBindFixture
+[InheritsTests]
+public sealed class SortAndBindToList : SortAndBindFixture
 
 {
     protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
     {
-        var list  = new List<Person>(100);
+        var list = new List<Person>(100);
         var aggregator = _source.Connect().SortAndBind(list, _comparer).AsAggregator();
 
         return (aggregator, list);
@@ -41,6 +36,7 @@ public sealed class SortAndBindToList: SortAndBindFixture
 }
 
 // Bind to a list using default comparer
+[InheritsTests]
 public sealed class SortAndBindToListDefaultComparer : SortAndBindFixture
 
 {
@@ -54,6 +50,7 @@ public sealed class SortAndBindToListDefaultComparer : SortAndBindFixture
 }
 
 // Bind to an observable collection
+[InheritsTests]
 public sealed class SortAndBindToObservableCollection : SortAndBindFixture
 
 {
@@ -65,8 +62,8 @@ public sealed class SortAndBindToObservableCollection : SortAndBindFixture
     }
 }
 
-
 // Bind to a binding list
+[InheritsTests]
 public sealed class SortAndBindToBindingList : SortAndBindFixture
 
 {
@@ -78,9 +75,9 @@ public sealed class SortAndBindToBindingList : SortAndBindFixture
     }
 }
 
-
 // Bind to a readonly observable collection
-public sealed class SortAndBindToReadOnlyObservableCollection: SortAndBindFixture
+[InheritsTests]
+public sealed class SortAndBindToReadOnlyObservableCollection : SortAndBindFixture
 {
     protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
     {
@@ -91,17 +88,19 @@ public sealed class SortAndBindToReadOnlyObservableCollection: SortAndBindFixtur
 }
 
 // Bind to a readonly observable collection using binary search
+[InheritsTests]
 public sealed class SortAndBindWithBinarySearch1 : SortAndBindFixture
 {
     protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
     {
-        var options = new SortAndBindOptions { UseBinarySearch = true, UseReplaceForUpdates = false};
+        var options = new SortAndBindOptions { UseBinarySearch = true, UseReplaceForUpdates = false };
         var aggregator = _source.Connect().SortAndBind(out var list, _comparer, options).AsAggregator();
 
         return (aggregator, list);
     }
 }
 
+[InheritsTests]
 public sealed class SortAndBindWithBinarySearch2 : SortAndBindFixture
 {
     protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
@@ -113,19 +112,19 @@ public sealed class SortAndBindWithBinarySearch2 : SortAndBindFixture
     }
 }
 
-public class SortAndBindBinarySearch_ForSameKeyAndObjectValues: IDisposable
+public class SortAndBindBinarySearch_ForSameKeyAndObjectValues : IDisposable
 {
     private readonly List<int> _target = new();
-    private readonly SourceCache<int, int> _strings = new(i=> i);
+    private readonly SourceCache<int, int> _strings = new(i => i);
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void UpdateAnyWhereShouldNotBreak(bool useReplaceForUpdates)
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task UpdateAnyWhereShouldNotBreak(bool useReplaceForUpdates)
     {
         var options = new SortAndBindOptions { UseBinarySearch = true, UseReplaceForUpdates = useReplaceForUpdates };
 
-        using var subscription = _strings.Connect().SortAndBind(_target, SortExpressionComparer<int>.Ascending(i=>i), options).Subscribe();
+        using var subscription = _strings.Connect().SortAndBind(_target, SortExpressionComparer<int>.Ascending(i => i), options).Subscribe();
 
         var items = Enumerable.Range(1, 10).ToList();
 
@@ -134,15 +133,14 @@ public class SortAndBindBinarySearch_ForSameKeyAndObjectValues: IDisposable
         _strings.AddOrUpdate(5);
         _strings.AddOrUpdate(10);
 
-        _target.SequenceEqual(items).Should().BeTrue();
+        await Assert.That(_target.SequenceEqual(items)).IsTrue();
     }
 
     public void Dispose() => _strings.Dispose();
 }
 
-
-
 // Bind to a readonly observable collection - using default comparer
+[InheritsTests]
 public sealed class SortAndBindToReadOnlyObservableCollectionDefaultComparer : SortAndBindFixture
 {
     protected override (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests()
@@ -153,7 +151,7 @@ public sealed class SortAndBindToReadOnlyObservableCollectionDefaultComparer : S
     }
 }
 
-public sealed class SortAndBindWithResetOptions: IDisposable
+public sealed class SortAndBindWithResetOptions : IDisposable
 {
 
     private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
@@ -161,43 +159,41 @@ public sealed class SortAndBindWithResetOptions: IDisposable
 
     private readonly List<NotifyCollectionChangedEventArgs> _collectionChangedEventArgs = new();
 
-    [Fact]
+    [Test]
     [Description("Check reset is fired  when below threshold only.  Historically first time load always fired reset for first time load.")]
-    public void FiresResetWhenThresholdIsMet()
+    public async Task FiresResetWhenThresholdIsMet()
     {
         var options = new SortAndBindOptions { ResetThreshold = 10 };
-        
+
         using var sorted = _source.Connect().SortAndBind(out var list, _comparer, options).Subscribe();
         using var collectionChangedEvents = list.ObserveCollectionChanges().Select(e => e.EventArgs).Subscribe(_collectionChangedEventArgs.Add);
 
         // fire 5 changes, should always reset because it's below the threshold
         _source.AddOrUpdate(Enumerable.Range(0, 5).Select(i => new Person($"P{i}", i)));
-        _collectionChangedEventArgs.Count.Should().Be(5);
-        _collectionChangedEventArgs.All(a=>a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
+        await Assert.That(_collectionChangedEventArgs.Count).IsEqualTo(5);
+        await Assert.That(_collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add)).IsTrue();
 
-        
         _collectionChangedEventArgs.Clear();
 
         // fire 15 changes, we should get a refresh event
         _source.AddOrUpdate(Enumerable.Range(10, 15).Select(i => new Person($"P{i}", i)));
-        _collectionChangedEventArgs.Count.Should().Be(1);
-        _collectionChangedEventArgs[0].Action.Should().Be(NotifyCollectionChangedAction.Reset);
+        await Assert.That(_collectionChangedEventArgs.Count).IsEqualTo(1);
+        await Assert.That(_collectionChangedEventArgs[0].Action).IsEqualTo(NotifyCollectionChangedAction.Reset);
 
         _collectionChangedEventArgs.Clear();
 
         // fires further 5 changes, should result individual notifications
         _source.AddOrUpdate(Enumerable.Range(-10, 5).Select(i => new Person($"P{i}", i)));
-        _collectionChangedEventArgs.Count.Should().Be(5);
-        _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
+        await Assert.That(_collectionChangedEventArgs.Count).IsEqualTo(5);
+        await Assert.That(_collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add)).IsTrue();
 
-        list.Count.Should().Be(25);
+        await Assert.That(list.Count).IsEqualTo(25);
 
     }
 
-
-    [Fact]
+    [Test]
     [Description("Check reset is not fired")]
-    public void NeverFireReset()
+    public async Task NeverFireReset()
     {
         var options = new SortAndBindOptions { ResetThreshold = int.MaxValue };
 
@@ -206,59 +202,54 @@ public sealed class SortAndBindWithResetOptions: IDisposable
 
         // fire 5 changes, should not reset because it's below the threshold
         _source.AddOrUpdate(Enumerable.Range(0, 5).Select(i => new Person($"P{i}", i)));
-        _collectionChangedEventArgs.Count.Should().Be(5);
-        _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
-
+        await Assert.That(_collectionChangedEventArgs.Count).IsEqualTo(5);
+        await Assert.That(_collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add)).IsTrue();
 
         _collectionChangedEventArgs.Clear();
 
         // fire 15 changes, we should get a refresh event
         _source.AddOrUpdate(Enumerable.Range(10, 15).Select(i => new Person($"P{i}", i)));
-        _collectionChangedEventArgs.Count.Should().Be(15);
-        _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
-        
-        list.Count.Should().Be(20);
+        await Assert.That(_collectionChangedEventArgs.Count).IsEqualTo(15);
+        await Assert.That(_collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add)).IsTrue();
+
+        await Assert.That(list.Count).IsEqualTo(20);
 
     }
 
-    [Fact]
+    [Test]
     [Description("Check reset is fired  on first time load. This checks historic first time load opt-in.")]
-    public void FireResetOnFirstTimeLoad()
+    public async Task FireResetOnFirstTimeLoad()
     {
-        var options = new SortAndBindOptions { ResetThreshold = 10, ResetOnFirstTimeLoad  = true};
+        var options = new SortAndBindOptions { ResetThreshold = 10, ResetOnFirstTimeLoad = true };
 
         using var sorted = _source.Connect().SortAndBind(out var list, _comparer, options).Subscribe();
         using var collectionChangedEvents = list.ObserveCollectionChanges().Select(e => e.EventArgs).Subscribe(_collectionChangedEventArgs.Add);
 
         // fire 5 changes, should always reset even though it's below the threshold
         _source.AddOrUpdate(Enumerable.Range(0, 5).Select(i => new Person($"P{i}", i)));
-        _collectionChangedEventArgs.Count.Should().Be(1);
-        _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Reset).Should().BeTrue();
-
+        await Assert.That(_collectionChangedEventArgs.Count).IsEqualTo(1);
+        await Assert.That(_collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Reset)).IsTrue();
 
         _collectionChangedEventArgs.Clear();
 
         // fire 15 changes, we should get a refresh event
         _source.AddOrUpdate(Enumerable.Range(10, 15).Select(i => new Person($"P{i}", i)));
-        _collectionChangedEventArgs.Count.Should().Be(1);
-        _collectionChangedEventArgs[0].Action.Should().Be(NotifyCollectionChangedAction.Reset);
+        await Assert.That(_collectionChangedEventArgs.Count).IsEqualTo(1);
+        await Assert.That(_collectionChangedEventArgs[0].Action).IsEqualTo(NotifyCollectionChangedAction.Reset);
 
         _collectionChangedEventArgs.Clear();
 
         // fires further 5 changes, should result individual notifications
         _source.AddOrUpdate(Enumerable.Range(-10, 5).Select(i => new Person($"P{i}", i)));
-        _collectionChangedEventArgs.Count.Should().Be(5);
-        _collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add).Should().BeTrue();
+        await Assert.That(_collectionChangedEventArgs.Count).IsEqualTo(5);
+        await Assert.That(_collectionChangedEventArgs.All(a => a.Action == NotifyCollectionChangedAction.Add)).IsTrue();
 
-        list.Count.Should().Be(25);
+        await Assert.That(list.Count).IsEqualTo(25);
 
     }
 
-
-
     public void Dispose() => _source.Dispose();
 }
-
 
 public abstract class SortAndBindFixture : IDisposable
 {
@@ -269,7 +260,6 @@ public abstract class SortAndBindFixture : IDisposable
 
     protected readonly IComparer<Person> _comparer = Person.DefaultComparer;
     protected readonly ISourceCache<Person, string> _source = new SourceCache<Person, string>(p => p.Key);
-
 
     public SortAndBindFixture()
     {
@@ -287,36 +277,34 @@ public abstract class SortAndBindFixture : IDisposable
 
     }
 
-
     protected abstract (ChangeSetAggregator<Person, string> Aggregrator, IList<Person> List) SetUpTests();
 
-
-    [Fact]
-    public void InsertAtBeginning()
+    [Test]
+    public async Task InsertAtBeginning()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
         // check initial data set is sorted
-        _boundList.Count.Should().Be(100);
-        _boundList.SequenceEqual(people.OrderBy(p => p, _comparer)).Should().BeTrue();
+        await Assert.That(_boundList.Count).IsEqualTo(100);
+        await Assert.That(_boundList.SequenceEqual(people.OrderBy(p => p, _comparer))).IsTrue();
 
         //create age 0 to ensure it is inserted first
         var insert = new Person("_Aaron", 0);
         _source.AddOrUpdate(insert);
 
-        _boundList.Count.Should().Be(101);
+        await Assert.That(_boundList.Count).IsEqualTo(101);
 
         var firstItem = _boundList[0];
 
-        insert.Should().Be(firstItem);
+        await Assert.That(insert).IsEqualTo(firstItem);
 
-        _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
+        await Assert.That(_boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer))).IsTrue();
 
     }
 
-    [Fact]
-    public void InsertAtEnd()
+    [Test]
+    public async Task InsertAtEnd()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
@@ -325,65 +313,61 @@ public abstract class SortAndBindFixture : IDisposable
 
         _source.AddOrUpdate(toInsert);
 
-        _boundList.Count.Should().Be(101);
-        
-        var last = _boundList[^1];
-        last.Should().Be(toInsert);
+        await Assert.That(_boundList.Count).IsEqualTo(101);
 
-        _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
+        var last = _boundList[^1];
+        await Assert.That(last).IsEqualTo(toInsert);
+
+        await Assert.That(_boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer))).IsTrue();
     }
 
-
-    [Fact]
-    public void InsertInMiddle()
+    [Test]
+    public async Task InsertInMiddle()
     {
-        _source.AddOrUpdate(Enumerable.Range(0,100).Select(i=> new Person($"P{i}",i)));
+        _source.AddOrUpdate(Enumerable.Range(0, 100).Select(i => new Person($"P{i}", i)));
 
         //create age 0 to ensure it is inserted first
         var insert = new Person("Marvin", 50);
 
         _source.AddOrUpdate(insert);
 
-        _boundList.Count.Should().Be(101);
+        await Assert.That(_boundList.Count).IsEqualTo(101);
 
         var index = _boundList.IndexOf(insert);
 
-        index.Should().Be(50);
+        await Assert.That(index).IsEqualTo(50);
 
-        _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
+        await Assert.That(_boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer))).IsTrue();
     }
 
-
-    [Fact]
-    public void InsertSameLocation()
+    [Test]
+    public async Task InsertSameLocation()
     {
         _source.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new Person($"P{i}", i * 10)));
 
         // each of these changes should result in index 1
-        UpdateAndAssetPosition(new Person("P2", 15), 1);
-        UpdateAndAssetPosition(new Person("P2", 20), 1);
-        UpdateAndAssetPosition(new Person("P2", 25), 1);
+        await UpdateAndAssetPosition(new Person("P2", 15), 1);
+        await UpdateAndAssetPosition(new Person("P2", 20), 1);
+        await UpdateAndAssetPosition(new Person("P2", 25), 1);
 
-        void UpdateAndAssetPosition(Person person, int expectedIndex)
+        async Task UpdateAndAssetPosition(Person person, int expectedIndex)
         {
             _source.AddOrUpdate(person);
 
             // check the item has been replaced
-            _boundList.Count(p => p.Key == person.Key).Should().Be(1);
+            await Assert.That(_boundList.Count(p => p.Key == person.Key)).IsEqualTo(1);
 
-            _boundList[expectedIndex].Should().Be(person);
+            await Assert.That(_boundList[expectedIndex]).IsEqualTo(person);
 
         }
 
-        _boundList.Count.Should().Be(10);
+        await Assert.That(_boundList.Count).IsEqualTo(10);
 
-  
-        _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
+        await Assert.That(_boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer))).IsTrue();
     }
 
-
-    [Fact]
-    public void Refresh()
+    [Test]
+    public async Task Refresh()
     {
         _source.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new Person($"P{i}", i * 10)));
 
@@ -392,35 +376,32 @@ public abstract class SortAndBindFixture : IDisposable
         var toRefresh = _boundList[1];
 
         // there will all result in the same position
-        RefreshAtAndAssetPosition(toRefresh, p=>p.Age =15, 1);
-        RefreshAtAndAssetPosition(toRefresh, p => p.Age = 20, 1);
-        RefreshAtAndAssetPosition(toRefresh, p => p.Age = 25, 1);
-
+        await RefreshAtAndAssetPosition(toRefresh, p => p.Age = 15, 1);
+        await RefreshAtAndAssetPosition(toRefresh, p => p.Age = 20, 1);
+        await RefreshAtAndAssetPosition(toRefresh, p => p.Age = 25, 1);
 
         // move after
-        RefreshAtAndAssetPosition(toRefresh, p => p.Age = 45, 3);
+        await RefreshAtAndAssetPosition(toRefresh, p => p.Age = 45, 3);
 
-        void RefreshAtAndAssetPosition(Person person, Action<Person> action,int expectedIndex)
+        async Task RefreshAtAndAssetPosition(Person person, Action<Person> action, int expectedIndex)
         {
             action(person);
-            _source.Edit(innerCache=> innerCache.Refresh(person.Key));
+            _source.Edit(innerCache => innerCache.Refresh(person.Key));
 
             // check the item has been replaced
-            _boundList.Count(p => p.Key == person.Key).Should().Be(1);
+            await Assert.That(_boundList.Count(p => p.Key == person.Key)).IsEqualTo(1);
 
-            _boundList[expectedIndex].Should().Be(person);
+            await Assert.That(_boundList[expectedIndex]).IsEqualTo(person);
 
         }
 
-        _boundList.Count.Should().Be(10);
+        await Assert.That(_boundList.Count).IsEqualTo(10);
 
-
-        _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
+        await Assert.That(_boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer))).IsTrue();
     }
 
-
-    [Fact]
-    public void BatchOfVariousChanges()
+    [Test]
+    public async Task BatchOfVariousChanges()
     {
         var people = Enumerable.Range(0, 100).Select(i => new Person($"P{i}", i)).ToArray();
         _source.AddOrUpdate(people);
@@ -449,12 +430,11 @@ public abstract class SortAndBindFixture : IDisposable
 
         var expectedInOrder = expected.OrderBy(p => p, _comparer).ToList();
 
-        expectedInOrder.SequenceEqual(_boundList).Should().BeTrue();
+        await Assert.That(expectedInOrder.SequenceEqual(_boundList)).IsTrue();
     }
 
-
-    [Fact]
-    public void BatchOfVariousEndingInClear()
+    [Test]
+    public async Task BatchOfVariousEndingInClear()
     {
         var people = _generator.Take(10).ToArray();
         _source.AddOrUpdate(people);
@@ -466,26 +446,23 @@ public abstract class SortAndBindFixture : IDisposable
                 updater.Clear();
             });
 
-        _boundList.Count.Should().Be(0);
+        await Assert.That(_boundList.Count).IsEqualTo(0);
 
     }
 
-
-    [Fact]
-    public void LargeBatchChange()
+    [Test]
+    public async Task LargeBatchChange()
     {
         // this should produce what are effectively 2 resets for the bound collection
         _source.AddOrUpdate(Enumerable.Range(0, 100).Select(i => new Person($"P{i}", i)));
         _source.AddOrUpdate(Enumerable.Range(100, 100).Select(i => new Person($"P{i}", i)));
 
-
-        _boundList.Count.Should().Be(200);
-        _boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer)).Should().BeTrue();
+        await Assert.That(_boundList.Count).IsEqualTo(200);
+        await Assert.That(_boundList.SequenceEqual(_source.Items.OrderBy(p => p, _comparer))).IsTrue();
     }
 
-
-    [Fact]
-    public void BatchUpdateShiftingIndicies()
+    [Test]
+    public async Task BatchUpdateShiftingIndicies()
     {
         var testData = new[]
         {
@@ -516,76 +493,70 @@ public abstract class SortAndBindFixture : IDisposable
             new Person("G", 14)
         };
 
-        _boundList.SequenceEqual(expected).Should().BeTrue();
+        await Assert.That(_boundList.SequenceEqual(expected)).IsTrue();
     }
 
-
-
-    [Fact]
-    public void RemoveFirst()
+    [Test]
+    public async Task RemoveFirst()
     {
         var people = _generator.Take(100).ToList();
         _source.AddOrUpdate(people);
 
-        _boundList.Count.Should().Be(100);
+        await Assert.That(_boundList.Count).IsEqualTo(100);
 
         _source.Remove(people[0].Key);
-        _boundList.Count.Should().Be(99);
+        await Assert.That(_boundList.Count).IsEqualTo(99);
 
         people.RemoveAt(0);
 
-        people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
+        await Assert.That(people.OrderBy(p => p, _comparer).SequenceEqual(_boundList)).IsTrue();
 
     }
 
-    [Fact]
-    public void RemoveFromEnd()
+    [Test]
+    public async Task RemoveFromEnd()
     {
         var people = _generator.Take(100).ToList();
         _source.AddOrUpdate(people);
 
-        _boundList.Count.Should().Be(100);
+        await Assert.That(_boundList.Count).IsEqualTo(100);
 
         _source.Remove(people[99].Key);
-        _boundList.Count.Should().Be(99);
-
+        await Assert.That(_boundList.Count).IsEqualTo(99);
 
         people.RemoveAt(99);
-        people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
+        await Assert.That(people.OrderBy(p => p, _comparer).SequenceEqual(_boundList)).IsTrue();
     }
 
-    [Fact]
-    public void RemoveFromMiddle()
+    [Test]
+    public async Task RemoveFromMiddle()
     {
         var people = _generator.Take(100).ToList();
         _source.AddOrUpdate(people);
 
-        _boundList.Count.Should().Be(100);
+        await Assert.That(_boundList.Count).IsEqualTo(100);
 
         _source.Remove(people[50].Key);
-        _boundList.Count.Should().Be(99);
-
+        await Assert.That(_boundList.Count).IsEqualTo(99);
 
         people.RemoveAt(IndexFromKey(people[50].Key));
         int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
 
-    
-        people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
+        await Assert.That(people.OrderBy(p => p, _comparer).SequenceEqual(_boundList)).IsTrue();
     }
 
-
-    [Fact]
-    public void SortInitialBatch()
+    [Test]
+    public async Task SortInitialBatch()
     {
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
-      
-        _boundList.Count.Should().Be(100);
-        people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
+
+        await Assert.That(_boundList.Count).IsEqualTo(100);
+        await Assert.That(people.OrderBy(p => p, _comparer).SequenceEqual(_boundList)).IsTrue();
     }
 
-    [Fact]
-    public void UpdateFirst()
+    [Test]
+    public async Task UpdateFirst()
     {
         var people = _generator.Take(100).ToList();
         _source.AddOrUpdate(people);
@@ -594,19 +565,17 @@ public abstract class SortAndBindFixture : IDisposable
 
         var update = new Person(toUpdate.Name, toUpdate.Age + 5);
 
-
         _source.AddOrUpdate(new Person(toUpdate.Name, toUpdate.Age + 5));
 
         people[IndexFromKey(update.Key)] = new Person(toUpdate.Name, toUpdate.Age + 5);
-       
+
         int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
 
-
-        people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
+        await Assert.That(people.OrderBy(p => p, _comparer).SequenceEqual(_boundList)).IsTrue();
     }
 
-    [Fact]
-    public void UpdateLast()
+    [Test]
+    public async Task UpdateLast()
     {
         var people = _generator.Take(100).ToList();
         _source.AddOrUpdate(people);
@@ -619,12 +588,11 @@ public abstract class SortAndBindFixture : IDisposable
 
         int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
 
-        people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
+        await Assert.That(people.OrderBy(p => p, _comparer).SequenceEqual(_boundList)).IsTrue();
     }
 
-
-    [Fact]
-    public void UpdateMiddle()
+    [Test]
+    public async Task UpdateMiddle()
     {
         //TODO: fixed Text
 
@@ -639,7 +607,7 @@ public abstract class SortAndBindFixture : IDisposable
 
         int IndexFromKey(string key) => people.FindIndex(p => p.Key == key);
 
-        people.OrderBy(p => p, _comparer).SequenceEqual(_boundList).Should().BeTrue();
+        await Assert.That(people.OrderBy(p => p, _comparer).SequenceEqual(_boundList)).IsTrue();
 
     }
 
@@ -649,4 +617,3 @@ public abstract class SortAndBindFixture : IDisposable
         _results.Dispose();
     }
 }
-

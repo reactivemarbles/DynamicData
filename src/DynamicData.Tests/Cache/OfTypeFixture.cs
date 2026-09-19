@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Bogus;
 using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-using FluentAssertions;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace DynamicData.Tests.Cache;
 
@@ -34,17 +27,18 @@ public class OfTypeFixture : IDisposable
 
     private readonly ChangeSetAggregator<CatPerson, string> _catPersonResults;
 
-    public OfTypeFixture(ITestOutputHelper testOutputHelper)
+    public OfTypeFixture()
     {
         _randomizer = new(0x3737_ddcc);
         _personFaker = new Faker<Person>().CustomInstantiator(faker => new Person(faker.Person.FullName)).WithSeed(_randomizer);
         _catPersonFaker = new Faker<CatPerson>().CustomInstantiator(faker => new CatPerson(faker.Person.FullName, $"{faker.Hacker.Adjective()} the {faker.Hacker.Noun()}")).WithSeed(_randomizer);
-        _personResults = _sourceCache.Connect().TestSpy(testOutputHelper, "Cache").AsAggregator();
-        _catPersonResults = _sourceCache.Connect().OfType<Person, string, CatPerson>().TestSpy(testOutputHelper, "OfType").AsAggregator();
+        var testOutput = TestContext.Current?.OutputWriter;
+        _personResults = _sourceCache.Connect().TestSpy(testOutput, "Cache").AsAggregator();
+        _catPersonResults = _sourceCache.Connect().OfType<Person, string, CatPerson>().TestSpy(testOutput, "OfType").AsAggregator();
     }
 
-    [Fact]
-    public void AddedItemsAreInResults()
+    [Test]
+    public async Task AddedItemsAreInResults()
     {
         // Arrange
         var people = _personFaker.Generate(AddCount);
@@ -53,15 +47,15 @@ public class OfTypeFixture : IDisposable
         _sourceCache.AddOrUpdate(people);
         _sourceCache.AddOrUpdate(catPeople);
 
-        _personResults.Summary.Overall.Adds.Should().Be(AddCount * 2);
-        _personResults.Messages.Count.Should().Be(2);
-        _catPersonResults.Summary.Overall.Adds.Should().Be(AddCount);
-        _catPersonResults.Messages.Count.Should().Be(1);
-        CheckResults();
+        await Assert.That(_personResults.Summary.Overall.Adds).IsEqualTo(AddCount * 2);
+        await Assert.That(_personResults.Messages.Count).IsEqualTo(2);
+        await Assert.That(_catPersonResults.Summary.Overall.Adds).IsEqualTo(AddCount);
+        await Assert.That(_catPersonResults.Messages.Count).IsEqualTo(1);
+        await CheckResults();
     }
 
-    [Fact]
-    public void RemovedItemsAreNotResults()
+    [Test]
+    public async Task RemovedItemsAreNotResults()
     {
         var people = _personFaker.Generate(AddCount);
         var catPeople = _catPersonFaker.Generate(AddCount);
@@ -71,17 +65,17 @@ public class OfTypeFixture : IDisposable
         _sourceCache.Remove(_randomizer.ListItems(people, RemoveCount));
         _sourceCache.Remove(_randomizer.ListItems(catPeople, RemoveCount));
 
-        _personResults.Summary.Overall.Adds.Should().Be(AddCount * 2);
-        _personResults.Summary.Overall.Removes.Should().Be(RemoveCount * 2);
-        _personResults.Messages.Count.Should().Be(4);
-        _catPersonResults.Summary.Overall.Adds.Should().Be(AddCount);
-        _catPersonResults.Summary.Overall.Removes.Should().Be(RemoveCount);
-        _catPersonResults.Messages.Count.Should().Be(2);
-        CheckResults();
+        await Assert.That(_personResults.Summary.Overall.Adds).IsEqualTo(AddCount * 2);
+        await Assert.That(_personResults.Summary.Overall.Removes).IsEqualTo(RemoveCount * 2);
+        await Assert.That(_personResults.Messages.Count).IsEqualTo(4);
+        await Assert.That(_catPersonResults.Summary.Overall.Adds).IsEqualTo(AddCount);
+        await Assert.That(_catPersonResults.Summary.Overall.Removes).IsEqualTo(RemoveCount);
+        await Assert.That(_catPersonResults.Messages.Count).IsEqualTo(2);
+        await CheckResults();
     }
 
-    [Fact]
-    public void UpdateResultsAreCorrect()
+    [Test]
+    public async Task UpdateResultsAreCorrect()
     {
         // Arrange
         var people = _personFaker.Generate(AddCount);
@@ -102,14 +96,14 @@ public class OfTypeFixture : IDisposable
         _sourceCache.AddOrUpdate(updated);
 
         // Assert
-        _personResults.Summary.Overall.Adds.Should().Be(AddCount * 2);
-        _personResults.Summary.Overall.Updates.Should().Be(UpdateCount);
-        _personResults.Messages.Count.Should().Be(3);
-        _catPersonResults.Summary.Overall.Adds.Should().Be(AddCount + nonToCatCount);
-        _catPersonResults.Summary.Overall.Removes.Should().Be(catToNonCount);
-        _catPersonResults.Summary.Overall.Updates.Should().Be(catToCatCount);
-        _catPersonResults.Messages.Count.Should().Be(2);
-        CheckResults();
+        await Assert.That(_personResults.Summary.Overall.Adds).IsEqualTo(AddCount * 2);
+        await Assert.That(_personResults.Summary.Overall.Updates).IsEqualTo(UpdateCount);
+        await Assert.That(_personResults.Messages.Count).IsEqualTo(3);
+        await Assert.That(_catPersonResults.Summary.Overall.Adds).IsEqualTo(AddCount + nonToCatCount);
+        await Assert.That(_catPersonResults.Summary.Overall.Removes).IsEqualTo(catToNonCount);
+        await Assert.That(_catPersonResults.Summary.Overall.Updates).IsEqualTo(catToCatCount);
+        await Assert.That(_catPersonResults.Messages.Count).IsEqualTo(2);
+        await CheckResults();
     }
 
     public void Dispose()
@@ -131,13 +125,13 @@ public class OfTypeFixture : IDisposable
         return new CatPerson(newCp.Name, newCp.CatName, id);
     }
 
-    private void CheckResults()
+    private async Task CheckResults()
     {
         var expectedPeople = _sourceCache.Items;
         var expectedCatPeople = expectedPeople.OfType<CatPerson>();
 
-        _personResults.Data.Items.Should().BeEquivalentTo(expectedPeople);
-        _catPersonResults.Data.Items.Should().BeEquivalentTo(expectedCatPeople);
+        await Assert.That(_personResults.Data.Items).IsEquivalentTo(expectedPeople);
+        await Assert.That(_catPersonResults.Data.Items).IsEquivalentTo(expectedCatPeople);
     }
 
     private interface ICatPerson

@@ -1,11 +1,9 @@
-using System.Linq;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Cache.Internal;
+#else
 using DynamicData.Cache.Internal;
+#endif
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Kernal;
 
@@ -21,75 +19,75 @@ public class SourceUpdaterFixture
         _updater = new CacheUpdater<Person, string>(_cache, p => p.Name);
     }
 
-    [Fact]
-    public void Add()
+    [Test]
+    public async Task Add()
     {
         var person = new Person("Adult1", 50);
         _updater.AddOrUpdate(person);
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
-        _cache.Lookup("Adult1").Value.Should().Be(person);
-        _cache.Count.Should().Be(1);
-        updates.Count.Should().Be(1);
-        updates.First().Should().Be(new Change<Person, string>(ChangeReason.Add, person.Name, person), "Should be 1 updates");
+        await Assert.That(_cache.Lookup("Adult1").Value).IsEqualTo(person);
+        await Assert.That(_cache.Count).IsEqualTo(1);
+        await Assert.That(updates.Count).IsEqualTo(1);
+        await Assert.That(updates.First()).IsEqualTo(new Change<Person, string>(ChangeReason.Add, person.Name, person)).Because("Should be 1 updates");
     }
 
-    [Fact]
-    public void AttemptedRemovalOfANonExistentKeyWillBeIgnored()
+    [Test]
+    public async Task AttemptedRemovalOfANonExistentKeyWillBeIgnored()
     {
         const string key = "Adult1";
 
         _updater.Remove(key);
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
-        _cache.Count.Should().Be(0);
-        updates.Count.Should().Be(0, "Should be 0 updates");
+        await Assert.That(_cache.Count).IsEqualTo(0);
+        await Assert.That(updates.Count).IsEqualTo(0).Because("Should be 0 updates");
     }
 
-    [Fact]
-    public void BatchOfUniqueUpdates()
+    [Test]
+    public async Task BatchOfUniqueUpdates()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         _updater.AddOrUpdate(people);
         var updates = _cache.CaptureChanges();
 
-        _cache.Items.ToArray().Should().BeEquivalentTo(people);
-        _cache.Count.Should().Be(100);
-        updates.Adds.Should().Be(100);
-        updates.Count.Should().Be(100);
+        await Assert.That(_cache.Items.ToArray()).IsEquivalentTo(people);
+        await Assert.That(_cache.Count).IsEqualTo(100);
+        await Assert.That(updates.Adds).IsEqualTo(100);
+        await Assert.That(updates.Count).IsEqualTo(100);
     }
 
-    [Fact]
-    public void BatchRemoves()
+    [Test]
+    public async Task BatchRemoves()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         _updater.AddOrUpdate(people);
         _updater.Remove(people);
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
-        _cache.Count.Should().Be(0, "Everything should be removed");
-        updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(100);
-        updates.Count(update => update.Reason == ChangeReason.Remove).Should().Be(100);
-        updates.Count.Should().Be(200);
+        await Assert.That(_cache.Count).IsEqualTo(0).Because("Everything should be removed");
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Add)).IsEqualTo(100);
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Remove)).IsEqualTo(100);
+        await Assert.That(updates.Count).IsEqualTo(200);
     }
 
-    [Fact]
-    public void BatchSuccessiveUpdates()
+    [Test]
+    public async Task BatchSuccessiveUpdates()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name1", i)).ToArray();
         _updater.AddOrUpdate(people);
 
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
-        _cache.Lookup("Name1").Value.Age.Should().Be(100);
-        _cache.Count.Should().Be(1, "Successive updates should replace cache value");
-        updates.Count(update => update.Reason == ChangeReason.Update).Should().Be(99);
-        updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(1);
-        updates.Count.Should().Be(100);
+        await Assert.That(_cache.Lookup("Name1").Value.Age).IsEqualTo(100);
+        await Assert.That(_cache.Count).IsEqualTo(1).Because("Successive updates should replace cache value");
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Update)).IsEqualTo(99);
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Add)).IsEqualTo(1);
+        await Assert.That(updates.Count).IsEqualTo(100);
     }
 
-    [Fact]
-    public void CanRemove()
+    [Test]
+    public async Task CanRemove()
     {
         const string key = "Adult1";
 
@@ -98,14 +96,14 @@ public class SourceUpdaterFixture
         _updater.Remove(person);
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
-        _cache.Count.Should().Be(0);
-        updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(1);
-        updates.Count(update => update.Reason == ChangeReason.Remove).Should().Be(1);
-        updates.Count.Should().Be(2);
+        await Assert.That(_cache.Count).IsEqualTo(0);
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Add)).IsEqualTo(1);
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Remove)).IsEqualTo(1);
+        await Assert.That(updates.Count).IsEqualTo(2);
     }
 
-    [Fact]
-    public void CanUpdate()
+    [Test]
+    public async Task CanUpdate()
     {
         const string key = "Adult1";
 
@@ -115,29 +113,29 @@ public class SourceUpdaterFixture
         _updater.AddOrUpdate(updated);
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
-        _cache.Lookup(key).Value.Should().Be(updated);
-        _cache.Count.Should().Be(1);
-        updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(1);
-        updates.Count(update => update.Reason == ChangeReason.Update).Should().Be(1);
-        updates.Count.Should().Be(2);
+        await Assert.That(_cache.Lookup(key).Value).IsEqualTo(updated);
+        await Assert.That(_cache.Count).IsEqualTo(1);
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Add)).IsEqualTo(1);
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Update)).IsEqualTo(1);
+        await Assert.That(updates.Count).IsEqualTo(2);
     }
 
-    [Fact]
-    public void Clear()
+    [Test]
+    public async Task Clear()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         _updater.AddOrUpdate(people);
         _updater.Clear();
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
-        _cache.Count.Should().Be(0, "Everything should be removed");
-        updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(100);
-        updates.Count(update => update.Reason == ChangeReason.Remove).Should().Be(100);
-        updates.Count.Should().Be(200);
+        await Assert.That(_cache.Count).IsEqualTo(0).Because("Everything should be removed");
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Add)).IsEqualTo(100);
+        await Assert.That(updates.Count(update => update.Reason == ChangeReason.Remove)).IsEqualTo(100);
+        await Assert.That(updates.Count).IsEqualTo(200);
     }
 
-    [Fact]
-    public void NullSelectorWillThrow()
+    [Test]
+    public async Task NullSelectorWillThrow()
     {
         // Assert.Throws<ArgumentNullException>(() => new SourceUpdater<Person, string>(_cache, new KeySelector<Person, string>(null)));
     }

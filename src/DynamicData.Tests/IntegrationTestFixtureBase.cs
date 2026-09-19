@@ -1,9 +1,6 @@
-﻿using Xunit;
-
 namespace DynamicData.Tests;
 
-[Collection(CollectionName)]
-[CollectionDefinition(CollectionName, DisableParallelization = true)]
+[NotInParallel]
 public class IntegrationTestFixtureBase
 {
     public const string CollectionName

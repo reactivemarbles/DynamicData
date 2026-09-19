@@ -1,9 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Represents a group which provides an update after any value within the group changes.
@@ -50,5 +54,5 @@ public interface IGrouping<TObject, TKey, out TGroupKey>
     /// </remarks>
     /// <param name="key">The key.</param>
     /// <returns>The value that is looked up.</returns>
-    Optional<TObject> Lookup(TKey key);
+    ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key);
 }

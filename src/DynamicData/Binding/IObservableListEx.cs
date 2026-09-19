@@ -1,21 +1,23 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 /// <summary>
-/// Extensions to convert a dynamic stream out to an <see cref="IObservableList{T}"/>.
+/// Extensions to convert a dynamic stream out to an <c>IObservableList&lt;T&gt;</c>.
 /// </summary>
 public static class IObservableListEx
 {
     /// <summary>
-    /// Binds the results to the specified <see cref="IObservableList{T}"/>. Unlike
-    /// binding to a <see cref="ReadOnlyObservableCollection{T}"/> which loses the
-    /// ability to refresh items, binding to an <see cref="IObservableList{T}"/>.
+    /// Binds the results to the specified <c>IObservableList&lt;T&gt;</c>. Unlike
+    /// binding to a <c>ReadOnlyObservableCollection&lt;T&gt;</c> which loses the
+    /// ability to refresh items, binding to an <c>IObservableList&lt;T&gt;</c>.
     /// allows for refresh changes to be preserved and keeps the list read-only.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -26,10 +28,7 @@ public static class IObservableListEx
     public static IObservable<IChangeSet<TObject>> BindToObservableList<TObject>(this IObservable<IChangeSet<TObject>> source, out IObservableList<TObject> observableList)
         where TObject : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         // Load our source list with the change set.
         // Each change set we need to convert to remove the key.
@@ -43,9 +42,9 @@ public static class IObservableListEx
     }
 
     /// <summary>
-    /// Binds the results to the specified <see cref="IObservableList{T}"/>. Unlike
-    /// binding to a <see cref="ReadOnlyObservableCollection{T}"/> which loses the
-    /// ability to refresh items, binding to an <see cref="IObservableList{T}"/>.
+    /// Binds the results to the specified <c>IObservableList&lt;T&gt;</c>. Unlike
+    /// binding to a <c>ReadOnlyObservableCollection&lt;T&gt;</c> which loses the
+    /// ability to refresh items, binding to an <c>IObservableList&lt;T&gt;</c>.
     /// allows for refresh changes to be preserved and keeps the list read-only.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -58,10 +57,7 @@ public static class IObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         // Load our source list with the change set.
         // Each change set we need to convert to remove the key.
@@ -75,9 +71,9 @@ public static class IObservableListEx
     }
 
     /// <summary>
-    /// Binds the results to the specified <see cref="IObservableList{T}"/>. Unlike
-    /// binding to a <see cref="ReadOnlyObservableCollection{T}"/> which loses the
-    /// ability to refresh items, binding to an <see cref="IObservableList{T}"/>.
+    /// Binds the results to the specified <c>IObservableList&lt;T&gt;</c>. Unlike
+    /// binding to a <c>ReadOnlyObservableCollection&lt;T&gt;</c> which loses the
+    /// ability to refresh items, binding to an <c>IObservableList&lt;T&gt;</c>.
     /// allows for refresh changes to be preserved and keeps the list read-only.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -90,10 +86,7 @@ public static class IObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         // Load our source list with the change set.
         // Each change set we need to convert to remove the key.
@@ -135,14 +128,14 @@ public static class IObservableListEx
     }
 
     /// <summary>
-    /// Converts a <see cref="IChangeSet{TObject, TKey}"/> to <see cref="IChangeSet{TObject}"/>
+    /// Converts a <c>IChangeSet&lt;TObject, TKey&gt;</c> to <c>IChangeSet&lt;TObject&gt;</c>
     /// which allows for binding a cache to a list.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="changeSetWithKey">The source change set.</param>
     /// <param name="list">The list needed to support refresh.</param>
-    /// <returns>The down casted <see cref="IChangeSet{TObject}"/>.</returns>
+    /// <returns>The down casted <c>IChangeSet&lt;TObject&gt;</c>.</returns>
     private static ChangeSet<TObject> RemoveKey<TObject, TKey>(this IChangeSet<TObject, TKey> changeSetWithKey, IExtendedList<TObject> list)
         where TObject : notnull
         where TKey : notnull

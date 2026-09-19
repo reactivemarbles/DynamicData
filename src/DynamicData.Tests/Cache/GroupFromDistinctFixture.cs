@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -29,8 +25,8 @@ public class GroupFromDistinctFixture : IDisposable
         _employmentCache?.Dispose();
     }
 
-    [Fact]
-    public void GroupFromDistinct()
+    [Test]
+    public async Task GroupFromDistinct()
     {
         const int numberOfPeople = 1000;
         var random = new Random();
@@ -53,14 +49,17 @@ public class GroupFromDistinctFixture : IDisposable
         _personCache.AddOrUpdate(people);
         _employmentCache.AddOrUpdate(emphistory);
 
-        allpeopleWithEmpHistory.Count.Should().Be(numberOfPeople);
-        allpeopleWithEmpHistory.Items.SelectMany(d => d.EmploymentData.Items).Count().Should().Be(emphistory.Count);
+        await Assert.That(allpeopleWithEmpHistory.Count).IsEqualTo(numberOfPeople);
+        await Assert.That(allpeopleWithEmpHistory.Items.SelectMany(d => d.EmploymentData.Items).Count()).IsEqualTo(emphistory.Count);
 
         //check grouped items have the same key as the parent
-        allpeopleWithEmpHistory.Items.ForEach(p => { p.EmploymentData.Items.All(emph => emph.Name == p.Person).Should().BeTrue(); });
+        foreach (var personWithEmployment in allpeopleWithEmpHistory.Items)
+        {
+            await Assert.That(personWithEmployment.EmploymentData.Items.All(employment => employment.Name == personWithEmployment.Person)).IsTrue();
+        }
 
         _personCache.Edit(updater => updater.Remove("Person1"));
-        allpeopleWithEmpHistory.Count.Should().Be(numberOfPeople - 1);
+        await Assert.That(allpeopleWithEmpHistory.Count).IsEqualTo(numberOfPeople - 1);
         _employmentCache.Edit(updater => updater.Remove(emphistory));
         allpeopleWithEmpHistory.Dispose();
     }

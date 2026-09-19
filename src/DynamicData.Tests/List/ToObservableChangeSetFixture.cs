@@ -1,15 +1,13 @@
-﻿using System;
-
 namespace DynamicData.Tests.List;
 
 public static partial class ToObservableChangeSetFixture
 {
     public const int IntegrationTestItemCount
-        #if RELEASE
+#if RELEASE
         = 1_000;
-        #else
+#else
         = 100;
-        #endif
+#endif
 
     public enum SchedulerType
     {

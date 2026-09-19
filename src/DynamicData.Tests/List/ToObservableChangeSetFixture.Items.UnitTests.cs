@@ -1,15 +1,3 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using Microsoft.Reactive.Testing;
-
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
 namespace DynamicData.Tests.List;
 
 public static partial class ToObservableChangeSetFixture
@@ -18,14 +6,13 @@ public static partial class ToObservableChangeSetFixture
     {
         public class UnitTests
         {
-            [Fact]
-            public void ExpireAfterThrows_ErrorPropagates()
+            [Test]
+            public async Task ExpireAfterThrows_ErrorPropagates()
             {
                 // Setup
-                using var source = new Subject<Item>();
+                using var source = new ReactiveUI.Primitives.Signals.Signal<Item>();
 
                 var error = new Exception("Test Exception");
-
 
                 // UUT Initialization
                 using var subscription = source
@@ -36,11 +23,10 @@ public static partial class ToObservableChangeSetFixture
                     .ValidateChangeSets()
                     .RecordListItems(out var results);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
-                results.RecordedItems.Should().BeEmpty("no items have been emitted by the source");
-                results.HasCompleted.Should().BeFalse("the source has not completed");
-
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("an initial changeset should always be emitted");
+                await Assert.That(results.RecordedItems).IsEmpty().Because("no items have been emitted by the source");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action
                 var item1 = new Item() { Id = 1 };
@@ -48,17 +34,16 @@ public static partial class ToObservableChangeSetFixture
                 source.OnNext(new Item() { Id = 2, Error = error });
                 source.OnNext(new Item() { Id = 3 });
 
-                results.Error.Should().BeSameAs(error);
-                results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 item was emitted before an error occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1 }, "1 item was emitted before an error occurred");
+                await Assert.That(results.Error).IsSameReferenceAs(error);
+                await Assert.That(results.RecordedChangeSets.Skip(1).Count()).IsEqualTo(1).Because("1 item was emitted before an error occurred");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item1 }).Because("1 item was emitted before an error occurred");
             }
 
-            [Fact]
-            public void SizeLimitIsExceeded_OldestItemsAreRemoved()
+            [Test]
+            public async Task SizeLimitIsExceeded_OldestItemsAreRemoved()
             {
                 // Setup
-                using var source = new Subject<Item>();
-
+                using var source = new ReactiveUI.Primitives.Signals.Signal<Item>();
 
                 // UUT Initialization
                 using var subscription = source
@@ -67,11 +52,10 @@ public static partial class ToObservableChangeSetFixture
                     .ValidateChangeSets()
                     .RecordListItems(out var results);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
-                results.RecordedItems.Should().BeEmpty("no items have been emitted");
-                results.HasCompleted.Should().BeFalse("the source has not completed");
-
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("an initial changeset should always be emitted");
+                await Assert.That(results.RecordedItems).IsEmpty().Because("no items have been emitted");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action: Not enough items to reach the limit
                 var item1 = new Item() { Id = 1 };
@@ -86,260 +70,222 @@ public static partial class ToObservableChangeSetFixture
                 var item4 = new Item() { Id = 4 };
                 source.OnNext(item4);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Skip(1).Count().Should().Be(4, "4 items were emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2, item3, item4 },
-                    because: "4 items were emitted",
-                    config: options => options.WithStrictOrdering());
-                results.HasCompleted.Should().BeFalse("the source has not completed");
-
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Skip(1).Count()).IsEqualTo(4).Because("4 items were emitted");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item1, item2, item3, item4 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("4 items were emitted");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action: Limit is reached
                 var item5 = new Item() { Id = 5 };
                 source.OnNext(item5);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Skip(5).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2, item3, item4, item5 }, 
-                    because: "1 item was emitted",
-                    config: options => options.WithStrictOrdering());
-                results.HasCompleted.Should().BeFalse("the source has not completed");
-
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Skip(5).Count()).IsEqualTo(1).Because("1 item was emitted");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item1, item2, item3, item4, item5 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("1 item was emitted");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action: New item exceeds the limit
                 var item6 = new Item() { Id = 6 };
                 source.OnNext(item6);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Skip(6).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item2, item3, item4, item5, item6 }, 
-                    because: "1 item was emitted, and 1 was evicted",
-                    config: options => options.WithStrictOrdering());
-                results.HasCompleted.Should().BeFalse("the source has not completed");
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Skip(6).Count()).IsEqualTo(1).Because("1 item was emitted");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item2, item3, item4, item5, item6 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("1 item was emitted, and 1 was evicted");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
             }
 
-            [Theory]
-            [InlineData(SourceType.Asynchronous)]
-            [InlineData(SourceType.Immediate)]
-            public void SourceCompletesWhenExpirationsArePending_CompletionWaitsForExpirations(SourceType sourceType)
+            [Test]
+            [Arguments(SourceType.Asynchronous)]
+            [Arguments(SourceType.Immediate)]
+            public async Task SourceCompletesWhenExpirationsArePending_CompletionWaitsForExpirations(SourceType sourceType)
             {
                 // Setup
                 var item = new Item() { Id = 1, Lifetime = TimeSpan.FromSeconds(10) };
 
                 var source = sourceType switch
                 {
-                    SourceType.Asynchronous => new Subject<Item>(),
-                    SourceType.Immediate    => Observable.Return(item),
-                    _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
+                    SourceType.Asynchronous => new ReactiveUI.Primitives.Signals.Signal<Item>(),
+                    SourceType.Immediate => Observable.Return(item),
+                    _ => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
-            
-                var scheduler = new TestScheduler();
 
+                var scheduler = new TestScheduler();
 
                 // UUT Initialization & Action
                 using var subscription = source
                     .ToObservableChangeSet(
-                        expireAfter:    Item.SelectLifetime,
-                        scheduler:      scheduler)
+                        expireAfter: Item.SelectLifetime,
+                        scheduler: scheduler)
                     .ValidateSynchronization()
                     .ValidateChangeSets()
                     .RecordListItems(out var results);
 
-                if (source is Subject<Item> subject)
+                if (source is ReactiveUI.Primitives.Signals.Signal<Item> subject)
                 {
                     subject.OnNext(item);
                     subject.OnCompleted();
                 }
 
-                results.Error.Should().BeNull();
+                await Assert.That(results.Error).IsNull();
                 if (sourceType is SourceType.Asynchronous)
-                    results.RecordedChangeSets.Count.Should().Be(2, "1 item was emitted, after initialization");
+                    await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(2).Because("1 item was emitted, after initialization");
                 else
-                    results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item }, 
-                    because: "1 item was emitted",
-                    config: options => options.WithStrictOrdering());
-                results.HasCompleted.Should().BeFalse("1 item has yet to expire");
-
+                    await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("an initial changeset should always be emitted");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("1 item was emitted");
+                await Assert.That(results.HasCompleted).IsFalse().Because("1 item has yet to expire");
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(10).Ticks);
 
-                results.Error.Should().BeNull();
+                await Assert.That(results.Error).IsNull();
                 if (sourceType is SourceType.Asynchronous)
-                    results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "1 item should have expired");
+                    await Assert.That(results.RecordedChangeSets.Skip(2).Count()).IsEqualTo(1).Because("1 item should have expired");
                 else
-                    results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 item should have expired");
-                results.RecordedItems.Should().BeEmpty("all items have expired");
-                results.HasCompleted.Should().BeTrue("the source, and all outstanding expirations, have completed");
+                    await Assert.That(results.RecordedChangeSets.Skip(1).Count()).IsEqualTo(1).Because("1 item should have expired");
+                await Assert.That(results.RecordedItems).IsEmpty().Because("all items have expired");
+                await Assert.That(results.HasCompleted).IsTrue().Because("the source, and all outstanding expirations, have completed");
             }
 
-            [Theory]
-            [InlineData(SourceType.Asynchronous)]
-            [InlineData(SourceType.Immediate)]
-            public void SourceCompletesWhenNoExpirationsArePending_CompletionPropagates(SourceType sourceType)
+            [Test]
+            [Arguments(SourceType.Asynchronous)]
+            [Arguments(SourceType.Immediate)]
+            public async Task SourceCompletesWhenNoExpirationsArePending_CompletionPropagates(SourceType sourceType)
             {
                 // Setup
                 var item = new Item() { Id = 1 };
 
                 var source = sourceType switch
                 {
-                    SourceType.Asynchronous => new Subject<Item>(),
-                    SourceType.Immediate    => Observable.Return(item),
-                    _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
+                    SourceType.Asynchronous => new ReactiveUI.Primitives.Signals.Signal<Item>(),
+                    SourceType.Immediate => Observable.Return(item),
+                    _ => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
-            
-                var scheduler = new TestScheduler();
 
+                var scheduler = new TestScheduler();
 
                 // UUT Initialization & Action
                 using var subscription = source
                     .ToObservableChangeSet(
-                        expireAfter:    Item.SelectLifetime,
-                        scheduler:      scheduler)
+                        expireAfter: Item.SelectLifetime,
+                        scheduler: scheduler)
                     .ValidateSynchronization()
                     .ValidateChangeSets()
                     .RecordListItems(out var results);
 
-                if (source is Subject<Item> subject)
+                if (source is ReactiveUI.Primitives.Signals.Signal<Item> subject)
                 {
                     subject.OnNext(item);
                     subject.OnCompleted();
                 }
 
-                results.Error.Should().BeNull();
+                await Assert.That(results.Error).IsNull();
                 if (sourceType is SourceType.Asynchronous)
-                    results.RecordedChangeSets.Count.Should().Be(2, "1 item was emitted, after initialization");
+                    await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(2).Because("1 item was emitted, after initialization");
                 else
-                    results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item }, 
-                    because: "1 item was emitted",
-                    config: options => options.WithStrictOrdering());
-                results.HasCompleted.Should().BeTrue("the source has completed, and no items remain to be expired");
+                    await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("an initial changeset should always be emitted");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("1 item was emitted");
+                await Assert.That(results.HasCompleted).IsTrue().Because("the source has completed, and no items remain to be expired");
             }
 
-            [Fact]
-            public void SourceEmitsItems_ItemsAreAddedAndRemovedWhenExpired()
+            [Test]
+            public async Task SourceEmitsItems_ItemsAreAddedAndRemovedWhenExpired()
             {
                 // Setup
-                using var source = new Subject<Item>();
+                using var source = new ReactiveUI.Primitives.Signals.Signal<Item>();
 
                 var scheduler = new TestScheduler();
-
 
                 // UUT Initialization
                 using var subscription = source
                     .ToObservableChangeSet(
-                        expireAfter:    Item.SelectLifetime,
-                        scheduler:      scheduler)
+                        expireAfter: Item.SelectLifetime,
+                        scheduler: scheduler)
                     .ValidateSynchronization()
                     .ValidateChangeSets()
                     .RecordListItems(out var results);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
-                results.RecordedItems.Should().BeEmpty("no items have been emitted");
-                results.HasCompleted.Should().BeFalse("the source has not completed");
-
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("an initial changeset should always be emitted");
+                await Assert.That(results.RecordedItems).IsEmpty().Because("no items have been emitted");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action
                 var item1 = new Item() { Id = 1, Lifetime = TimeSpan.FromSeconds(3) };
                 source.OnNext(item1);
                 scheduler.AdvanceBy(1);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1 }, 
-                    because: "1 item was emitted",
-                    config: options => options.WithStrictOrdering());
-                results.HasCompleted.Should().BeFalse("the source has not completed");
-
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Skip(1).Count()).IsEqualTo(1).Because("1 item was emitted");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item1 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("1 item was emitted");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action
                 var item2 = new Item() { Id = 2 };
                 source.OnNext(item2);
                 scheduler.AdvanceBy(1);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 }, 
-                    because: "1 item was emitted",
-                    config: options => options.WithStrictOrdering());
-                results.HasCompleted.Should().BeFalse("the source has not completed");
-
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Skip(2).Count()).IsEqualTo(1).Because("1 item was emitted");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item1, item2 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("1 item was emitted");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action
                 var item3 = new Item() { Id = 3, Lifetime = TimeSpan.FromSeconds(1) };
                 source.OnNext(item3);
                 scheduler.AdvanceBy(1);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "1 item was emitted");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2, item3 }, 
-                    because: "1 item was emitted",
-                    config: options => options.WithStrictOrdering());
-                results.HasCompleted.Should().BeFalse("the source has not completed");
-
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Skip(3).Count()).IsEqualTo(1).Because("1 item was emitted");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item1, item2, item3 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("1 item was emitted");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(1).Ticks);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Skip(4).Count().Should().Be(1, "1 expiration should have occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 }, 
-                    because: "1 item expired, and 1 had its lifetime extended",
-                    config: options => options.WithStrictOrdering());
-                results.HasCompleted.Should().BeFalse("the source has not completed");
-
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Skip(4).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item1, item2 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("1 item expired, and 1 had its lifetime extended");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(2).Ticks);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Skip(5).Should().BeEmpty("no expirations should have occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item1, item2 }, 
-                    because: "no changes were made",
-                    config: options => options.WithStrictOrdering());
-                results.HasCompleted.Should().BeFalse("the source has not completed");
-
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Skip(5)).IsEmpty().Because("no expirations should have occurred");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item1, item2 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("no changes were made");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(3).Ticks);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Skip(5).Count().Should().Be(1, "1 expiration should have occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item2 }, 
-                    because: "1 item reached its expiration",
-                    config: options => options.WithStrictOrdering());
-                results.HasCompleted.Should().BeFalse("the source has not completed");
-
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Skip(5).Count()).IsEqualTo(1).Because("1 expiration should have occurred");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item2 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("1 item reached its expiration");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
 
                 // UUT Action
                 scheduler.AdvanceTo(TimeSpan.FromSeconds(4).Ticks);
 
-                results.Error.Should().BeNull();
-                results.RecordedChangeSets.Skip(6).Should().BeEmpty("no expirations should have occurred");
-                results.RecordedItems.Should().BeEquivalentTo(new[] { item2 }, 
-                    because: "no changes were made",
-                    config: options => options.WithStrictOrdering());
-                results.HasCompleted.Should().BeFalse("the source has not completed");
+                await Assert.That(results.Error).IsNull();
+                await Assert.That(results.RecordedChangeSets.Skip(6)).IsEmpty().Because("no expirations should have occurred");
+                await Assert.That(results.RecordedItems).IsEquivalentTo(new[] { item2 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("no changes were made");
+                await Assert.That(results.HasCompleted).IsFalse().Because("the source has not completed");
             }
 
-            [Theory]
-            [InlineData(SourceType.Asynchronous)]
-            [InlineData(SourceType.Immediate)]
-            public void SourceFails_ErrorPropagates(SourceType sourceType)
+            [Test]
+            [Arguments(SourceType.Asynchronous)]
+            [Arguments(SourceType.Immediate)]
+            public async Task SourceFails_ErrorPropagates(SourceType sourceType)
             {
                 // Setup
                 var error = new Exception("Test Exception");
 
                 var source = sourceType switch
-                { 
-                    SourceType.Asynchronous => new Subject<Item>(),
-                    SourceType.Immediate    => Observable.Throw<Item>(error),
-                    _                       => throw new ArgumentOutOfRangeException(nameof(sourceType))
+                {
+                    SourceType.Asynchronous => new ReactiveUI.Primitives.Signals.Signal<Item>(),
+                    SourceType.Immediate => Observable.Throw<Item>(error),
+                    _ => throw new ArgumentOutOfRangeException(nameof(sourceType))
                 };
-
 
                 // UUT Initialization & Action
                 using var subscription = source
@@ -348,22 +294,22 @@ public static partial class ToObservableChangeSetFixture
                     .ValidateChangeSets()
                     .RecordListItems(out var results);
 
-                if (source is Subject<Item> subject)
+                if (source is ReactiveUI.Primitives.Signals.Signal<Item> subject)
                     subject.OnError(error);
 
-                results.Error.Should().BeSameAs(error, "errors should propagate");
+                await Assert.That(results.Error).IsSameReferenceAs(error).Because("errors should propagate");
                 if (sourceType is SourceType.Asynchronous)
-                    results.RecordedChangeSets.Count.Should().Be(1, "an initial changeset should always be emitted");
+                    await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("an initial changeset should always be emitted");
                 else
-                    results.RecordedChangeSets.Should().BeEmpty("an error occurred during initialization");
-                results.RecordedItems.Should().BeEmpty("no items were emitted");
+                    await Assert.That(results.RecordedChangeSets).IsEmpty().Because("an error occurred during initialization");
+                await Assert.That(results.RecordedItems).IsEmpty().Because("no items were emitted");
             }
 
-            [Fact]
-            public void SourceIsNull_ThrowsException()
-                => FluentActions.Invoking(() => ObservableListEx.ToObservableChangeSet(
+            [Test]
+            public async Task SourceIsNull_ThrowsException()
+                => await Assert.That(() => ObservableListEx.ToObservableChangeSet(
                         source: (null as IObservable<Item>)!))
-                    .Should().Throw<ArgumentNullException>();
+                    .Throws<ArgumentNullException>();
         }
     }
 }

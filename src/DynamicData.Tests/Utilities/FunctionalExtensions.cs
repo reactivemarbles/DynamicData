@@ -1,5 +1,3 @@
-﻿using System;
-
 namespace DynamicData.Tests.Utilities;
 
 internal static class FunctionalExtensions

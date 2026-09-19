@@ -1,49 +1,38 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
 namespace DynamicData.Tests.List;
 
 public class OnItemRemovedFixture
 {
     // https://github.com/reactivemarbles/DynamicData/issues/1061
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void SubscriberDoesNotHandleErrors_ErrorBubblesUpstream(bool invokeOnUnsubscribe)
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task SubscriberDoesNotHandleErrors_ErrorBubblesUpstream(bool invokeOnUnsubscribe)
     {
         using var source = new TestSourceList<int>();
 
         using var subscription = source.Connect()
             .OnItemRemoved(
-                removeAction:           static _ => { },
-                invokeOnUnsubscribe:    invokeOnUnsubscribe)
+                removeAction: static _ => { },
+                invokeOnUnsubscribe: invokeOnUnsubscribe)
             .Subscribe();
-        
+
         var error = new Exception("Test");
 
-        FluentActions.Invoking(() => source.SetError(error))
-            .Should()
-            .Throw<Exception>("errors not handled by the subscriber should propagate upstream to the caller")
-            .Which
-            .Should().BeSameAs(error);
+        var exception = await Assert.That(() => source.SetError(error))
+            .Throws<Exception>().Because("errors not handled by the subscriber should propagate upstream to the caller");
+
+        await Assert.That(exception).IsSameReferenceAs(error);
     }
 
-    [Theory]
-    [InlineData(0,  0,  0)]
-    [InlineData(1,  0,  0)]
-    [InlineData(1,  0,  1)]
-    [InlineData(5,  0,  1)]
-    [InlineData(5,  2,  1)]
-    [InlineData(5,  1,  3)]
-    [InlineData(5,  0,  5)]
-    public void InvokeOnUnsubscribeIsRequested_RemoveActionIsInvokedForEachRemainingItemOnCompletion(
+    [Test]
+    [Arguments(0, 0, 0)]
+    [Arguments(1, 0, 0)]
+    [Arguments(1, 0, 1)]
+    [Arguments(5, 0, 1)]
+    [Arguments(5, 2, 1)]
+    [Arguments(5, 1, 3)]
+    [Arguments(5, 0, 5)]
+    public async Task InvokeOnUnsubscribeIsRequested_RemoveActionIsInvokedForEachRemainingItemOnCompletion(
         int initialItemCount,
         int removalIndex,
         int removalCount)
@@ -54,26 +43,25 @@ public class OnItemRemovedFixture
             source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         var subscription = source.Connect()
             .OnItemRemoved(
-                removeAction:           removeActionInvocations.Add,
-                invokeOnUnsubscribe:    true)
+                removeAction: removeActionInvocations.Add,
+                invokeOnUnsubscribe: true)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
         if (initialItemCount is 0)
-            results.RecordedChangeSets.Should().BeEmpty("there were no initial items to be published");
+            await Assert.That(results.RecordedChangeSets).IsEmpty().Because("there were no initial items to be published");
         else
-            results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+            await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("the initial items should have been published");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
-        removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items have been removed from the collection");
 
         // UUT Setup: Remove some items, to ensure correct tracking of remaining items.
         var removedItems = source.Items
@@ -85,33 +73,33 @@ public class OnItemRemovedFixture
             source.RemoveRange(
                 index: removalIndex,
                 count: removalCount);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
         if (removalCount is 0)
-            results.RecordedChangeSets.Should().BeEmpty("no items should have been removed");
+            await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no items should have been removed");
         else
-            results.RecordedChangeSets.Should().ContainSingle($"{removalCount} item{((removalCount is 1) ? "" : "s")} should have been removed");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
-        
-        removeActionInvocations.Should().BeEquivalentTo(removedItems, options => options.WithoutStrictOrdering(), "the removal action should be invoked for every removed item");
+            await Assert.That(results.RecordedChangeSets).HasSingleItem().Because($"{removalCount} item{((removalCount is 1) ? "" : "s")} should have been removed");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
+
+        await Assert.That(removeActionInvocations).IsEquivalentTo(removedItems, TUnit.Assertions.Enums.CollectionOrdering.Any).Because("the removal action should be invoked for every removed item");
         removeActionInvocations.Clear();
-        
+
         // UUT Action
         subscription.Dispose();
-        
-        removeActionInvocations.Should().BeEquivalentTo(source.Items, options => options.WithoutStrictOrdering(), "the removal action should be invoked for all all remaining items");
+
+        await Assert.That(removeActionInvocations).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Any).Because("the removal action should be invoked for all all remaining items");
     }
 
-    [Theory]
-    [InlineData(0,  0,  0)]
-    [InlineData(1,  0,  0)]
-    [InlineData(1,  0,  1)]
-    [InlineData(5,  0,  1)]
-    [InlineData(5,  2,  1)]
-    [InlineData(5,  1,  3)]
-    [InlineData(5,  0,  5)]
-    public void InvokeOnUnsubscribeIsNotRequested_RemoveActionIsNotInvokedOnCompletion(
+    [Test]
+    [Arguments(0, 0, 0)]
+    [Arguments(1, 0, 0)]
+    [Arguments(1, 0, 1)]
+    [Arguments(5, 0, 1)]
+    [Arguments(5, 2, 1)]
+    [Arguments(5, 1, 3)]
+    [Arguments(5, 0, 5)]
+    public async Task InvokeOnUnsubscribeIsNotRequested_RemoveActionIsNotInvokedOnCompletion(
         int initialItemCount,
         int removalIndex,
         int removalCount)
@@ -122,26 +110,25 @@ public class OnItemRemovedFixture
             source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         var subscription = source.Connect()
             .OnItemRemoved(
-                removeAction:           removeActionInvocations.Add,
-                invokeOnUnsubscribe:    false)
+                removeAction: removeActionInvocations.Add,
+                invokeOnUnsubscribe: false)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
         if (initialItemCount is 0)
-            results.RecordedChangeSets.Should().BeEmpty("there were no initial items to be published");
+            await Assert.That(results.RecordedChangeSets).IsEmpty().Because("there were no initial items to be published");
         else
-            results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+            await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("the initial items should have been published");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
-        removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items have been removed from the collection");
 
         // UUT Setup: Remove some items, to ensure correct tracking of remaining items.
         var removedItems = source.Items
@@ -153,32 +140,32 @@ public class OnItemRemovedFixture
             source.RemoveRange(
                 index: removalIndex,
                 count: removalCount);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
         if (removalCount is 0)
-            results.RecordedChangeSets.Should().BeEmpty("no items should have been removed");
+            await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no items should have been removed");
         else
-            results.RecordedChangeSets.Should().ContainSingle($"{removalCount} item{((removalCount is 1) ? "" : "s")} should have been removed");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
-        
-        removeActionInvocations.Should().BeEquivalentTo(removedItems, options => options.WithoutStrictOrdering(), "the removal action should be invoked for every removed item");
+            await Assert.That(results.RecordedChangeSets).HasSingleItem().Because($"{removalCount} item{((removalCount is 1) ? "" : "s")} should have been removed");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
+
+        await Assert.That(removeActionInvocations).IsEquivalentTo(removedItems, TUnit.Assertions.Enums.CollectionOrdering.Any).Because("the removal action should be invoked for every removed item");
         removeActionInvocations.Clear();
-        
+
         // UUT Action
         subscription.Dispose();
-        
-        removeActionInvocations.Should().BeEmpty("the removal action should not be invoked upon unsubscription");
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("the removal action should not be invoked upon unsubscription");
     }
 
-    [Theory]
-    [InlineData(0,  0)]
-    [InlineData(1,  0)]
-    [InlineData(1,  1)]
-    [InlineData(5,  0)]
-    [InlineData(5,  2)]
-    [InlineData(5,  5)]
-    public void ItemIsAdded_RemoveActionIsNotInvoked(
+    [Test]
+    [Arguments(0, 0)]
+    [Arguments(1, 0)]
+    [Arguments(1, 1)]
+    [Arguments(5, 0)]
+    [Arguments(5, 2)]
+    [Arguments(5, 5)]
+    public async Task ItemIsAdded_RemoveActionIsNotInvoked(
         int initialItemCount,
         int insertionIndex)
     {
@@ -188,46 +175,45 @@ public class OnItemRemovedFixture
             source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(removeActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
         if (initialItemCount is 0)
-            results.RecordedChangeSets.Should().BeEmpty("there were no initial items to be published");
+            await Assert.That(results.RecordedChangeSets).IsEmpty().Because("there were no initial items to be published");
         else
-            results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+            await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("the initial items should have been published");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
-        removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items have been removed from the collection");
 
         // UUT Action
         source.Insert(
-            index:  insertionIndex,
-            item:   initialItemCount);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("an item was refreshed within the collection");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+            index: insertionIndex,
+            item: initialItemCount);
 
-        removeActionInvocations.Should().BeEmpty("no items were removed from the collection");
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("an item was refreshed within the collection");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items were removed from the collection");
     }
 
-    [Theory]
-    [InlineData(2,  0,  1)]
-    [InlineData(2,  1,  0)]
-    [InlineData(5,  0,  4)]
-    [InlineData(5,  4,  0)]
-    [InlineData(5,  1,  3)]
-    [InlineData(5,  3,  1)]
-    public void ItemIsMoved_RemoveActionIsNotInvoked(
+    [Test]
+    [Arguments(2, 0, 1)]
+    [Arguments(2, 1, 0)]
+    [Arguments(5, 0, 4)]
+    [Arguments(5, 4, 0)]
+    [Arguments(5, 1, 3)]
+    [Arguments(5, 3, 1)]
+    public async Task ItemIsMoved_RemoveActionIsNotInvoked(
         int initialItemCount,
         int originalIndex,
         int destinationIndex)
@@ -237,41 +223,40 @@ public class OnItemRemovedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(removeActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("the initial items should have been published");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
-        removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items have been removed from the collection");
 
         // UUT Action
         source.Move(
-            original:       originalIndex,
-            destination:    destinationIndex);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("an item was moved within the collection");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+            original: originalIndex,
+            destination: destinationIndex);
 
-        removeActionInvocations.Should().BeEmpty("no items were removed from the collection");
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("an item was moved within the collection");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items were removed from the collection");
     }
 
-    [Theory]
-    [InlineData(1,  0)]
-    [InlineData(5,  0)]
-    [InlineData(5,  2)]
-    [InlineData(5,  4)]
-    public void ItemIsRemoved_RemoveActionIsInvoked(
+    [Test]
+    [Arguments(1, 0)]
+    [Arguments(5, 0)]
+    [Arguments(5, 2)]
+    [Arguments(5, 4)]
+    public async Task ItemIsRemoved_RemoveActionIsInvoked(
         int initialItemCount,
         int removalIndex)
     {
@@ -281,41 +266,40 @@ public class OnItemRemovedFixture
             source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(removeActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("the initial items should have been published");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
-        removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items have been removed from the collection");
 
         // UUT Action
         var removedItem = source.Items[removalIndex];
         source.RemoveAt(removalIndex);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("an item was removed from the collection");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
 
-        removeActionInvocations.Should().ContainSingle("an item was removed from the collection");
-        removeActionInvocations.ElementAt(0).Should().Be(removedItem, "an item was removed from the collection");
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("an item was removed from the collection");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
+
+        await Assert.That(removeActionInvocations).HasSingleItem().Because("an item was removed from the collection");
+        await Assert.That(removeActionInvocations.ElementAt(0)).IsEqualTo(removedItem).Because("an item was removed from the collection");
     }
 
-    [Theory]
-    [InlineData(1,  0)]
-    [InlineData(5,  0)]
-    [InlineData(5,  2)]
-    [InlineData(5,  4)]
-    public void ItemIsRefreshed_RemoveActionIsNotInvoked(
+    [Test]
+    [Arguments(1, 0)]
+    [Arguments(5, 0)]
+    [Arguments(5, 2)]
+    [Arguments(5, 4)]
+    public async Task ItemIsRefreshed_RemoveActionIsNotInvoked(
         int initialItemCount,
         int refreshIndex)
     {
@@ -324,39 +308,38 @@ public class OnItemRemovedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(removeActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("the initial items should have been published");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
-        removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items have been removed from the collection");
 
         // UUT Action
         source.Refresh(refreshIndex);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("an item was refreshed within the collection");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
 
-        removeActionInvocations.Should().BeEmpty("no items were removed from the collection");
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("an item was refreshed within the collection");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items were removed from the collection");
     }
 
-    [Theory]
-    [InlineData(1,  0)]
-    [InlineData(5,  0)]
-    [InlineData(5,  2)]
-    [InlineData(5,  4)]
-    public void ItemIsReplaced_RemoveActionIsInvokedForOldItem(
+    [Test]
+    [Arguments(1, 0)]
+    [Arguments(5, 0)]
+    [Arguments(5, 2)]
+    [Arguments(5, 4)]
+    public async Task ItemIsReplaced_RemoveActionIsInvokedForOldItem(
         int initialItemCount,
         int replacementIndex)
     {
@@ -365,44 +348,43 @@ public class OnItemRemovedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(removeActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("the initial items should have been published");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
-        removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items have been removed from the collection");
 
         // UUT Action
         var replacedItem = source.Items[replacementIndex];
         source.ReplaceAt(
-            index:  replacementIndex,
-            item:   initialItemCount);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("an item was replaced within the collection");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+            index: replacementIndex,
+            item: initialItemCount);
 
-        removeActionInvocations.Should().ContainSingle("an item was replaced within the collection");
-        removeActionInvocations.ElementAt(0).Should().Be(replacedItem, "an item was replaced within the collection");
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("an item was replaced within the collection");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
+
+        await Assert.That(removeActionInvocations).HasSingleItem().Because("an item was replaced within the collection");
+        await Assert.That(removeActionInvocations.ElementAt(0)).IsEqualTo(replacedItem).Because("an item was replaced within the collection");
     }
 
-    [Theory]
-    [InlineData(1,  0,  1)]
-    [InlineData(5,  0,  1)]
-    [InlineData(5,  2,  1)]
-    [InlineData(5,  1,  3)]
-    [InlineData(5,  0,  5)]
-    public void ItemRangeIsRemoved_RemoveActionIsInvokedForEachItem(
+    [Test]
+    [Arguments(1, 0, 1)]
+    [Arguments(5, 0, 1)]
+    [Arguments(5, 2, 1)]
+    [Arguments(5, 1, 3)]
+    [Arguments(5, 0, 5)]
+    public async Task ItemRangeIsRemoved_RemoveActionIsInvokedForEachItem(
         int initialItemCount,
         int removalIndex,
         int removalCount)
@@ -412,23 +394,22 @@ public class OnItemRemovedFixture
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(
-                removeAction:           removeActionInvocations.Add,
-                invokeOnUnsubscribe:    true)
+                removeAction: removeActionInvocations.Add,
+                invokeOnUnsubscribe: true)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("the initial items should have been published");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
-        removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items have been removed from the collection");
 
         // UUT Action
         var removedItems = source.Items
@@ -439,59 +420,58 @@ public class OnItemRemovedFixture
         source.RemoveRange(
             index: removalIndex,
             count: removalCount);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle($"{removalCount} item{((removalCount is 1) ? "" : "s")} should have been removed");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
-        
-        removeActionInvocations.Should().BeEquivalentTo(removedItems, options => options.WithoutStrictOrdering(), "the removal action should be invoked for every removed item");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because($"{removalCount} item{((removalCount is 1) ? "" : "s")} should have been removed");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
+
+        await Assert.That(removeActionInvocations).IsEquivalentTo(removedItems, TUnit.Assertions.Enums.CollectionOrdering.Any).Because("the removal action should be invoked for every removed item");
     }
 
-    [Theory]
-    [InlineData(1)]
-    [InlineData(5)]
-    public void ItemsAreCleared_RemoveActionIsInvokedForEachItem(int initialItemCount)
+    [Test]
+    [Arguments(1)]
+    [Arguments(5)]
+    public async Task ItemsAreCleared_RemoveActionIsInvokedForEachItem(int initialItemCount)
     {
         using var source = new TestSourceList<int>();
 
         source.AddRange(Enumerable.Range(1, initialItemCount));
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(removeActionInvocations.Add)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("the initial items should have been published");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
-        removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items have been removed from the collection");
 
         // UUT Action
         var clearedItems = source.Items
             .ToArray();
 
         source.Clear();
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("all items in the collection should have been removed");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
-        
-        removeActionInvocations.Should().BeEquivalentTo(clearedItems, options => options.WithoutStrictOrdering(), "the removal action should be invoked for every removed item");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("all items in the collection should have been removed");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
+
+        await Assert.That(removeActionInvocations).IsEquivalentTo(clearedItems, TUnit.Assertions.Enums.CollectionOrdering.Any).Because("the removal action should be invoked for every removed item");
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void SourceCompletesAsynchronously_CompletionPropagates(bool invokeOnUnsubscribe)
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task SourceCompletesAsynchronously_CompletionPropagates(bool invokeOnUnsubscribe)
     {
         using var source = new TestSourceList<int>();
 
@@ -503,41 +483,40 @@ public class OnItemRemovedFixture
         });
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(
-                removeAction:           removeActionInvocations.Add,
-                invokeOnUnsubscribe:    invokeOnUnsubscribe)
+                removeAction: removeActionInvocations.Add,
+                invokeOnUnsubscribe: invokeOnUnsubscribe)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("the initial items should have been published");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
-        removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items have been removed from the collection");
 
         // UUT Action
         source.Complete();
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeTrue("the source has completed");
-        results.RecordedChangeSets.Should().BeEmpty("no changes were made to the collection");
-        
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsTrue().Because("the source has completed");
+        await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no changes were made to the collection");
+
         if (invokeOnUnsubscribe)
-            removeActionInvocations.Should().BeEquivalentTo(source.Items, options => options.WithoutStrictOrdering(), "the operator was instructed to invoke the removal action all remaining items, upon stream completion");
+            await Assert.That(removeActionInvocations).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Any).Because("the operator was instructed to invoke the removal action all remaining items, upon stream completion");
         else
-            removeActionInvocations.Should().BeEmpty("the operator was instructed to not invoke the removal action, upon stream completion");
+            await Assert.That(removeActionInvocations).IsEmpty().Because("the operator was instructed to not invoke the removal action, upon stream completion");
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void SourceCompletesImmediately_CompletionPropagates(bool invokeOnUnsubscribe)
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task SourceCompletesImmediately_CompletionPropagates(bool invokeOnUnsubscribe)
     {
         using var source = new TestSourceList<int>();
 
@@ -548,32 +527,32 @@ public class OnItemRemovedFixture
             3
         });
         source.Complete();
-        
+
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction & Action
         using var subscription = source.Connect()
             .OnItemRemoved(
-                removeAction:           removeActionInvocations.Add,
-                invokeOnUnsubscribe:    invokeOnUnsubscribe)
+                removeAction: removeActionInvocations.Add,
+                invokeOnUnsubscribe: invokeOnUnsubscribe)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeTrue("the source has completed");
-        results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
-        
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsTrue().Because("the source has completed");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("the initial items should have been published");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
+
         if (invokeOnUnsubscribe)
-            removeActionInvocations.Should().BeEquivalentTo(source.Items, options => options.WithoutStrictOrdering(), "the operator was instructed to invoke the removal action all remaining items, upon stream completion");
+            await Assert.That(removeActionInvocations).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Any).Because("the operator was instructed to invoke the removal action all remaining items, upon stream completion");
         else
-            removeActionInvocations.Should().BeEmpty("the operator was instructed to not invoke the removal action, upon stream completion");
+            await Assert.That(removeActionInvocations).IsEmpty().Because("the operator was instructed to not invoke the removal action, upon stream completion");
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void SourceFailsAsynchronously_CompletionPropagates(bool invokeOnUnsubscribe)
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task SourceFailsAsynchronously_CompletionPropagates(bool invokeOnUnsubscribe)
     {
         using var source = new TestSourceList<int>();
 
@@ -585,41 +564,40 @@ public class OnItemRemovedFixture
         });
 
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction
         using var subscription = source.Connect()
             .OnItemRemoved(
-                removeAction:           removeActionInvocations.Add,
-                invokeOnUnsubscribe:    invokeOnUnsubscribe)
+                removeAction: removeActionInvocations.Add,
+                invokeOnUnsubscribe: invokeOnUnsubscribe)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.HasCompleted.Should().BeFalse("the source can still publish notifications");
-        results.RecordedChangeSets.Should().ContainSingle("the initial items should have been published");
-        results.RecordedItems.Should().BeEquivalentTo(source.Items, options => options.WithStrictOrdering(), "all collection changes should propagate downstream");
+
+        await Assert.That(results.Error).IsNull().Because("no errors should have occurred");
+        await Assert.That(results.HasCompleted).IsFalse().Because("the source can still publish notifications");
+        await Assert.That(results.RecordedChangeSets).HasSingleItem().Because("the initial items should have been published");
+        await Assert.That(results.RecordedItems).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("all collection changes should propagate downstream");
         results.ClearChangeSets();
-        
-        removeActionInvocations.Should().BeEmpty("no items have been removed from the collection");
-        
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because("no items have been removed from the collection");
 
         // UUT Action
         var error = new Exception();
         source.SetError(error);
-        
-        results.Error.Should().BeSameAs(error, "errors within the stream should propagate");
-        results.RecordedChangeSets.Should().BeEmpty("no changes were made to the collection");
-        
+
+        await Assert.That(results.Error).IsSameReferenceAs(error).Because("errors within the stream should propagate");
+        await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no changes were made to the collection");
+
         if (invokeOnUnsubscribe)
-            removeActionInvocations.Should().BeEquivalentTo(source.Items, options => options.WithoutStrictOrdering(), "the operator was instructed to invoke the removal action all remaining items, upon stream failure");
+            await Assert.That(removeActionInvocations).IsEquivalentTo(source.Items, TUnit.Assertions.Enums.CollectionOrdering.Any).Because("the operator was instructed to invoke the removal action all remaining items, upon stream failure");
         else
-            removeActionInvocations.Should().BeEmpty("the operator was instructed to not invoke the removal action, upon stream failure");
+            await Assert.That(removeActionInvocations).IsEmpty().Because("the operator was instructed to not invoke the removal action, upon stream failure");
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void SourceFailsImmediately_CompletionPropagates(bool invokeOnUnsubscribe)
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task SourceFailsImmediately_CompletionPropagates(bool invokeOnUnsubscribe)
     {
         using var source = new TestSourceList<int>();
 
@@ -631,21 +609,21 @@ public class OnItemRemovedFixture
         });
         var error = new Exception();
         source.SetError(error);
-        
+
         var removeActionInvocations = new List<int>();
-        
+
         // UUT Construction & Action
         using var subscription = source.Connect()
             .OnItemRemoved(
-                removeAction:           removeActionInvocations.Add,
-                invokeOnUnsubscribe:    invokeOnUnsubscribe)
+                removeAction: removeActionInvocations.Add,
+                invokeOnUnsubscribe: invokeOnUnsubscribe)
             .ValidateChangeSets()
             .RecordListItems(out var results);
-        
-        results.Error.Should().BeSameAs(error, "errors within the stream should propagate");
-        results.RecordedChangeSets.Should().BeEmpty("an error occurred during subscription");
-        
-        removeActionInvocations.Should().BeEmpty(invokeOnUnsubscribe
+
+        await Assert.That(results.Error).IsSameReferenceAs(error).Because("errors within the stream should propagate");
+        await Assert.That(results.RecordedChangeSets).IsEmpty().Because("an error occurred during subscription");
+
+        await Assert.That(removeActionInvocations).IsEmpty().Because(invokeOnUnsubscribe
             ? "the initial items in the collection were never published"
             : "the operator was instructed to not invoke the removal action, upon stream failure");
     }

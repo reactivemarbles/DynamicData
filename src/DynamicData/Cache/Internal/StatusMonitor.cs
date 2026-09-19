@@ -1,19 +1,29 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the StatusMonitor class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="source">The source value.</param>
 internal sealed class StatusMonitor<T>(IObservable<T> source)
 {
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<ConnectionStatus> Run() => Observable.Create<ConnectionStatus>(
             observer =>
             {
-                var statusSubject = new Subject<ConnectionStatus>();
+                var statusSubject = new Signal<ConnectionStatus>();
                 var status = ConnectionStatus.Pending;
 
                 void Error(Exception ex)

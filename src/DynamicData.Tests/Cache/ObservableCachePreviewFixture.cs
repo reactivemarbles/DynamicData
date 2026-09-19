@@ -1,9 +1,4 @@
-﻿using System;
-using System.Linq;
-
 using DynamicData.Tests.Domain;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -19,28 +14,33 @@ public class ObservableCachePreviewFixture : IDisposable
         _results = _source.Connect().AsAggregator();
     }
 
-    [Fact]
-    public void ChangesAreNotYetAppliedDuringPreview()
+    [Test]
+    public async Task ChangesAreNotYetAppliedDuringPreview()
     {
         _source.Clear();
 
         // On preview, make sure the list is empty
+        var countDuringPreview = -1;
+        var anyItemsDuringPreview = true;
         var d = _source.Preview().Subscribe(
             _ =>
             {
-                Assert.True(_source.Count == 0);
-                Assert.True(_source.Items.Any() == false);
+                countDuringPreview = _source.Count;
+                anyItemsDuringPreview = _source.Items.Any();
             });
 
         // Trigger a change
         _source.AddOrUpdate(new Person("A", 1));
 
+        await Assert.That(countDuringPreview).IsEqualTo(0);
+        await Assert.That(anyItemsDuringPreview).IsFalse();
+
         // Cleanup
         d.Dispose();
     }
 
-    [Fact]
-    public void ConnectPreviewPredicateIsApplied()
+    [Test]
+    public async Task ConnectPreviewPredicateIsApplied()
     {
         _source.Clear();
 
@@ -52,10 +52,10 @@ public class ObservableCachePreviewFixture : IDisposable
         _source.AddOrUpdate(new Person("B", 2));
         _source.AddOrUpdate(new Person("C", 3));
 
-        Assert.True(aggregator.Messages.Count == 1);
-        Assert.True(aggregator.Messages[0].Count == 1);
-        Assert.True(aggregator.Messages[0].First().Key == "B");
-        Assert.True(aggregator.Messages[0].First().Reason == ChangeReason.Add);
+        await Assert.That(aggregator.Messages.Count == 1).IsTrue();
+        await Assert.That(aggregator.Messages[0].Count == 1).IsTrue();
+        await Assert.That(aggregator.Messages[0].First().Key == "B").IsTrue();
+        await Assert.That(aggregator.Messages[0].First().Reason == ChangeReason.Add).IsTrue();
 
         // Cleanup
         aggregator.Dispose();
@@ -67,21 +67,34 @@ public class ObservableCachePreviewFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void NoChangesAllowedDuringPreview()
+    [Test]
+    public async Task NoChangesAllowedDuringPreview()
     {
         // On preview, try adding an arbitrary item
-        var d = _source.Preview().Subscribe(_ => Assert.Throws<InvalidOperationException>(() => _source.AddOrUpdate(new Person("A", 1))));
+        Exception? receivedException = null;
+        var d = _source.Preview().Subscribe(_ =>
+        {
+            try
+            {
+                _source.AddOrUpdate(new Person("A", 1));
+            }
+            catch (Exception exception)
+            {
+                receivedException = exception;
+            }
+        });
 
         // Trigger a change
         _source.AddOrUpdate(new Person("B", 2));
+
+        await Assert.That(receivedException).IsTypeOf<InvalidOperationException>();
 
         // Cleanup
         d.Dispose();
     }
 
-    [Fact]
-    public void PreviewEventsAreCorrect()
+    [Test]
+    public async Task PreviewEventsAreCorrect()
     {
         var person = new Person("A", 1);
 
@@ -95,44 +108,52 @@ public class ObservableCachePreviewFixture : IDisposable
                 l.AddOrUpdate(new[] { new Person("B", 2), new Person("C", 3) });
             });
 
-        Assert.True(preview.Messages.SequenceEqual(connect.Messages));
-        Assert.True(_source.KeyValues.OrderBy(t => t.Value.Age).Select(t => t.Value.Age).SequenceEqual(new[] { 2, 3 }));
+        await Assert.That(preview.Messages.SequenceEqual(connect.Messages)).IsTrue();
+        await Assert.That(_source.KeyValues.OrderBy(t => t.Value.Age).Select(t => t.Value.Age).SequenceEqual(new[] { 2, 3 })).IsTrue();
     }
 
-    [Fact]
-    public void RecursiveEditsHavePostponedEvents()
+    [Test]
+    public async Task RecursiveEditsHavePostponedEvents()
     {
         var person = new Person("A", 1);
 
         var preview = _source.Preview().AsAggregator();
         var connect = _source.Connect().AsAggregator();
+        var previewCountDuringEdit = -1;
+        var connectCountDuringEdit = -1;
         _source.Edit(
             l =>
             {
                 _source.Edit(l2 => l2.AddOrUpdate(person));
-                Assert.Equal(0, preview.Messages.Count);
-                Assert.Equal(0, connect.Messages.Count);
+                previewCountDuringEdit = preview.Messages.Count;
+                connectCountDuringEdit = connect.Messages.Count;
             });
 
-        Assert.Equal(1, preview.Messages.Count);
-        Assert.Equal(1, connect.Messages.Count);
+        await Assert.That(previewCountDuringEdit).IsEqualTo(0);
+        await Assert.That(connectCountDuringEdit).IsEqualTo(0);
+        await Assert.That(preview.Messages.Count).IsEqualTo(1);
+        await Assert.That(connect.Messages.Count).IsEqualTo(1);
 
-        Assert.True(_source.Items.SequenceEqual(new[] { person }));
+        await Assert.That(_source.Items.SequenceEqual(new[] { person })).IsTrue();
     }
 
-    [Fact]
-    public void RecursiveEditsWork()
+    [Test]
+    public async Task RecursiveEditsWork()
     {
         var person = new Person("A", 1);
 
+        Person[] sourceItemsDuringEdit = [];
+        Person[] updaterItemsDuringEdit = [];
         _source.Edit(
             l =>
             {
                 _source.AddOrUpdate(person);
-                Assert.True(_source.Items.SequenceEqual(new[] { person }));
-                Assert.True(l.Items.SequenceEqual(new[] { person }));
+                sourceItemsDuringEdit = _source.Items.ToArray();
+                updaterItemsDuringEdit = l.Items.ToArray();
             });
 
-        Assert.True(_source.Items.SequenceEqual(new[] { person }));
+        await Assert.That(sourceItemsDuringEdit.SequenceEqual(new[] { person })).IsTrue();
+        await Assert.That(updaterItemsDuringEdit.SequenceEqual(new[] { person })).IsTrue();
+        await Assert.That(_source.Items.SequenceEqual(new[] { person })).IsTrue();
     }
 }

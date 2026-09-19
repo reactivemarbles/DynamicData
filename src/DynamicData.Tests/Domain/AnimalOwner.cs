@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.ObjectModel;
-using System.Reactive.Disposables;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 
 namespace DynamicData.Tests.Domain;
 

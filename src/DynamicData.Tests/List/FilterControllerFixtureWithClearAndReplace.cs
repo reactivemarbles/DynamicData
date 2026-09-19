@@ -1,18 +1,10 @@
-using System;
-using System.Linq;
-using System.Reactive.Subjects;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
 public class FilterControllerFixtureWithClearAndReplace : IDisposable
 {
-    private readonly ISubject<Func<Person, bool>> _filter;
+    private readonly ReactiveUI.Primitives.Signals.ISignal<Func<Person, bool>> _filter;
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -21,35 +13,35 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
     public FilterControllerFixtureWithClearAndReplace()
     {
         _source = new SourceList<Person>();
-        _filter = new BehaviorSubject<Func<Person, bool>>(p => p.Age > 20);
+        _filter = new ReactiveUI.Primitives.Signals.StateSignal<Func<Person, bool>>(p => p.Age > 20);
         _results = _source.Connect().Filter(_filter, ListFilterPolicy.ClearAndReplace).AsAggregator();
     }
 
     /* Should be the same as standard lambda filter */
 
-    [Fact]
-    public void AddMatched()
+    [Test]
+    public async Task AddMatched()
     {
         var person = new Person("Adult1", 50);
         _source.Add(person);
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        _results.Data.Items[0].Should().Be(person, "Should be same person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(person).Because("Should be same person");
     }
 
-    [Fact]
-    public void AddNotMatched()
+    [Test]
+    public async Task AddNotMatched()
     {
         var person = new Person("Adult1", 10);
         _source.Add(person);
 
-        _results.Messages.Count.Should().Be(0, "Should have no item updates");
-        _results.Data.Count.Should().Be(0, "Cache should have no items");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("Should have no item updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Cache should have no items");
     }
 
-    [Fact]
-    public void AddNotMatchedAndUpdateMatched()
+    [Test]
+    public async Task AddNotMatchedAndUpdateMatched()
     {
         const string key = "Adult1";
         var notmatched = new Person(key, 19);
@@ -62,47 +54,47 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
                 updater.Add(matched);
             });
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Messages[0].First().Range.First().Should().Be(matched, "Should be same person");
-        _results.Data.Items[0].Should().Be(matched, "Should be same person");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Messages[0].First().Range.First()).IsEqualTo(matched).Because("Should be same person");
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(matched).Because("Should be same person");
     }
 
-    [Fact]
-    public void AttemptedRemovalOfANonExistentKeyWillBeIgnored()
+    [Test]
+    public async Task AttemptedRemovalOfANonExistentKeyWillBeIgnored()
     {
         _source.Remove(new Person("A", 1));
-        _results.Messages.Count.Should().Be(0, "Should be 0 updates");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("Should be 0 updates");
     }
 
-    [Fact]
-    public void BatchOfUniqueUpdates()
+    [Test]
+    public async Task BatchOfUniqueUpdates()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
 
         _source.AddRange(people);
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Messages[0].Adds.Should().Be(80, "Should return 80 adds");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(80).Because("Should return 80 adds");
 
         var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Age).ToArray();
-        _results.Data.Items.OrderBy(p => p.Age).Should().BeEquivalentTo(filtered, "Incorrect Filter result");
+        await Assert.That(_results.Data.Items.OrderBy(p => p.Age)).IsEquivalentTo(filtered).Because("Incorrect Filter result");
     }
 
-    [Fact]
-    public void BatchRemoves()
+    [Test]
+    public async Task BatchRemoves()
     {
         var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
 
         _source.AddRange(people);
         _source.Clear();
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(80, "Should be 80 addes");
-        _results.Messages[1].Removes.Should().Be(80, "Should be 80 removes");
-        _results.Data.Count.Should().Be(0, "Should be nothing cached");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(80).Because("Should be 80 addes");
+        await Assert.That(_results.Messages[1].Removes).IsEqualTo(80).Because("Should be 80 removes");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be nothing cached");
     }
 
-    [Fact]
-    public void BatchSuccessiveUpdates()
+    [Test]
+    public async Task BatchSuccessiveUpdates()
     {
         var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
         foreach (var person in people)
@@ -111,54 +103,55 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
             _source.Add(person1);
         }
 
-        _results.Messages.Count.Should().Be(80, "Should be 80 messages");
-        _results.Data.Count.Should().Be(80, "Should be 80 in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(80).Because("Should be 80 messages");
+        await Assert.That(_results.Data.Count).IsEqualTo(80).Because("Should be 80 in the cache");
         var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Age).ToArray();
-        _results.Data.Items.OrderBy(p => p.Age).Should().BeEquivalentTo(filtered, "Incorrect Filter result");
+        await Assert.That(_results.Data.Items.OrderBy(p => p.Age)).IsEquivalentTo(filtered).Because("Incorrect Filter result");
     }
 
-    [Fact]
-    public void ChangeFilter()
+    [Test]
+    public async Task ChangeFilter()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
 
         _source.AddRange(people);
-        _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(80).Because("Should be 80 people in the cache");
 
         _filter.OnNext(p => p.Age <= 50);
-        _results.Data.Count.Should().Be(50, "Should be 50 people in the cache");
-        _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
+        await Assert.That(_results.Data.Count).IsEqualTo(50).Because("Should be 50 people in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 update messages");
 
-        _results.Data.Items.All(p => p.Age <= 50).Should().BeTrue();
+        await Assert.That(_results.Data.Items.All(p => p.Age <= 50)).IsTrue();
     }
 
-    [Fact]
-    public void Clear()
+    [Test]
+    public async Task Clear()
     {
         var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
         _source.AddRange(people);
         _source.Clear();
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(80, "Should be 80 addes");
-        _results.Messages[1].Removes.Should().Be(80, "Should be 80 removes");
-        _results.Data.Count.Should().Be(0, "Should be nothing cached");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(80).Because("Should be 80 addes");
+        await Assert.That(_results.Messages[1].Removes).IsEqualTo(80).Because("Should be 80 removes");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be nothing cached");
     }
 
     public void Dispose()
     {
         _source.Dispose();
         _results.Dispose();
+        _filter.Dispose();
     }
 
-    [Fact]
-    public void ReevaluateFilter()
+    [Test]
+    public async Task ReevaluateFilter()
     {
         //re-evaluate for inline changes
         var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToArray();
 
         _source.AddRange(people);
-        _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(80).Because("Should be 80 people in the cache");
 
         foreach (var person in people)
         {
@@ -167,10 +160,10 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
 
         _filter.OnNext(p => p.Age > 20);
 
-        _results.Data.Count.Should().Be(90);
-        _results.Messages.Count.Should().Be(2);
-        _results.Messages[1].Removes.Should().Be(80);
-        _results.Messages[1].Adds.Should().Be(90);
+        await Assert.That(_results.Data.Count).IsEqualTo(90);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2);
+        await Assert.That(_results.Messages[1].Removes).IsEqualTo(80);
+        await Assert.That(_results.Messages[1].Adds).IsEqualTo(90);
 
         foreach (var person in people)
         {
@@ -179,12 +172,12 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
 
         _filter.OnNext(p => p.Age > 20);
 
-        _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
-        _results.Messages.Count.Should().Be(3, "Should be 3 update messages");
+        await Assert.That(_results.Data.Count).IsEqualTo(80).Because("Should be 80 people in the cache");
+        await Assert.That(_results.Messages.Count).IsEqualTo(3).Because("Should be 3 update messages");
     }
 
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         const string key = "Adult1";
         var person = new Person(key, 50);
@@ -192,15 +185,15 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
         _source.Add(person);
         _source.Remove(person);
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(1, "Should be 80 addes");
-        _results.Messages[1].Removes.Should().Be(1, "Should be 80 removes");
-        _results.Data.Count.Should().Be(0, "Should be nothing cached");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(1).Because("Should be 80 addes");
+        await Assert.That(_results.Messages[1].Removes).IsEqualTo(1).Because("Should be 80 removes");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should be nothing cached");
     }
 
-    [Fact]
-    public void SameKeyChanges()
+    [Test]
+    public async Task SameKeyChanges()
     {
         const string key = "Adult1";
 
@@ -213,12 +206,12 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
                 //    updater.Remove(key);
             });
 
-        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        _results.Messages[0].Adds.Should().Be(3, "Should be 3 adds");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(3).Because("Should be 3 adds");
     }
 
-    [Fact]
-    public void UpdateMatched()
+    [Test]
+    public async Task UpdateMatched()
     {
         const string key = "Adult1";
         var newperson = new Person(key, 50);
@@ -227,13 +220,13 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
         _source.Add(newperson);
         _source.Replace(newperson, updated);
 
-        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
-        _results.Messages[1].Replaced.Should().Be(1, "Should be 1 update");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(_results.Messages[0].Adds).IsEqualTo(1).Because("Should be 1 adds");
+        await Assert.That(_results.Messages[1].Replaced).IsEqualTo(1).Because("Should be 1 update");
     }
 
-    [Fact]
-    public void UpdateNotMatched()
+    [Test]
+    public async Task UpdateNotMatched()
     {
         const string key = "Adult1";
         var newperson = new Person(key, 10);
@@ -242,14 +235,14 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
         _source.Add(newperson);
         _source.Replace(newperson, updated);
 
-        _results.Messages.Count.Should().Be(0, "Should be no updates");
-        _results.Data.Count.Should().Be(0, "Should nothing cached");
+        await Assert.That(_results.Messages.Count).IsEqualTo(0).Because("Should be no updates");
+        await Assert.That(_results.Data.Count).IsEqualTo(0).Because("Should nothing cached");
     }
 
-    [Fact]
-    public void VeryLargeDataSet()
+    [Test]
+    public async Task VeryLargeDataSet()
     {
-        var filter = new BehaviorSubject<Func<int, bool>>(i => false);
+        var filter = new ReactiveUI.Primitives.Signals.StateSignal<Func<int, bool>>(i => false);
         var source = new SourceList<int>();
 
         var result = source.Connect().Filter(filter, ListFilterPolicy.ClearAndReplace).AsObservableList();

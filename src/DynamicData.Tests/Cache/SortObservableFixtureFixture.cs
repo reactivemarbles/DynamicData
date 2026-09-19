@@ -1,14 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -18,8 +13,7 @@ public class SortObservableFixture : IDisposable
 
     private readonly SortExpressionComparer<Person> _comparer;
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "By Design.")]
-    private readonly BehaviorSubject<IComparer<Person>> _comparerObservable;
+    private readonly ReactiveUI.Primitives.Signals.StateSignal<IComparer<Person>> _comparerObservable;
 
     private readonly RandomPersonGenerator _generator = new();
 
@@ -30,15 +24,15 @@ public class SortObservableFixture : IDisposable
     public SortObservableFixture()
     {
         _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
-        _comparerObservable = new BehaviorSubject<IComparer<Person>>(_comparer);
+        _comparerObservable = new ReactiveUI.Primitives.Signals.StateSignal<IComparer<Person>>(_comparer);
         _cache = new SourceCache<Person, string>(p => p.Name);
         //  _sortController = new SortController<Person>(_comparer);
 
         _results = new SortedChangeSetAggregator<Person, string>(_cache.Connect().Sort(_comparerObservable, resetThreshold: 25));
     }
 
-    [Fact]
-    public void ChangeSort()
+    [Test]
+    public async Task ChangeSort()
     {
         var people = _generator.Take(100).ToArray();
         _cache.AddOrUpdate(people);
@@ -50,11 +44,11 @@ public class SortObservableFixture : IDisposable
         var actualResult = _results.Messages[0].SortedItems.ToList();
         var movesCount = _results.Messages[0].Moves;
 
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
-    [Fact]
-    public void ChangeSortAboveThreshold()
+    [Test]
+    public async Task ChangeSortAboveThreshold()
     {
         var people = _generator.Take(30).ToArray();
         _cache.AddOrUpdate(people);
@@ -66,12 +60,12 @@ public class SortObservableFixture : IDisposable
         var items = _results.Messages.Last().SortedItems;
         var actualResult = items.ToList();
         var sortReason = items.SortReason;
-        actualResult.Should().BeEquivalentTo(expectedResult);
-        sortReason.Should().Be(SortReason.Reset);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
+        await Assert.That(sortReason).IsEqualTo(SortReason.Reset);
     }
 
-    [Fact]
-    public void ChangeSortWithinThreshold()
+    [Test]
+    public async Task ChangeSortWithinThreshold()
     {
         var people = _generator.Take(20).ToArray();
         _cache.AddOrUpdate(people);
@@ -83,8 +77,8 @@ public class SortObservableFixture : IDisposable
         var items = _results.Messages.Last().SortedItems;
         var actualResult = items.ToList();
         var sortReason = items.SortReason;
-        actualResult.Should().BeEquivalentTo(expectedResult);
-        sortReason.Should().Be(SortReason.Reorder);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
+        await Assert.That(sortReason).IsEqualTo(SortReason.Reorder);
     }
 
     public void Dispose()
@@ -92,10 +86,11 @@ public class SortObservableFixture : IDisposable
         _cache.Dispose();
         _results.Dispose();
         _comparerObservable.OnCompleted();
+        _comparerObservable.Dispose();
     }
 
-    [Fact]
-    public void InlineChanges()
+    [Test]
+    public async Task InlineChanges()
     {
         var people = _generator.Take(10000).ToArray();
         _cache.AddOrUpdate(people);
@@ -110,7 +105,7 @@ public class SortObservableFixture : IDisposable
 
         var expected = people.OrderBy(t => t, _comparer).ToList();
         var actual = _results.Messages.Last().SortedItems.Select(kv => kv.Value).ToList();
-        actual.Should().BeEquivalentTo(expected);
+        await Assert.That(actual).IsEquivalentTo(expected);
 
         var list = new ObservableCollectionExtended<Person>();
         var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
@@ -119,11 +114,11 @@ public class SortObservableFixture : IDisposable
             adaptor.Adapt(message, list);
         }
 
-        list.Should().BeEquivalentTo(expected);
+        await Assert.That(list).IsEquivalentTo(expected);
     }
 
-    [Fact]
-    public void Reset()
+    [Test]
+    public async Task Reset()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).OrderBy(x => Guid.NewGuid()).ToArray();
         _cache.AddOrUpdate(people);
@@ -132,20 +127,20 @@ public class SortObservableFixture : IDisposable
 
         var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
         var actualResult = _results.Messages[2].SortedItems.ToList();
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 
-    [Fact]
-    public void SortInitialBatch()
+    [Test]
+    public async Task SortInitialBatch()
     {
         var people = _generator.Take(100).ToArray();
         _cache.AddOrUpdate(people);
 
-        _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
+        await Assert.That(_results.Data.Count).IsEqualTo(100).Because("Should be 100 people in the cache");
 
         var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
         var actualResult = _results.Messages[0].SortedItems.ToList();
 
-        actualResult.Should().BeEquivalentTo(expectedResult);
+        await Assert.That(actualResult).IsEquivalentTo(expectedResult);
     }
 }

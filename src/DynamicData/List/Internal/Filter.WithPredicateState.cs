@@ -1,18 +1,36 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Linq;
-
-using DynamicData.Internal;
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the Filter class.
+/// </summary>
 internal static partial class Filter
 {
-    public static class WithPredicateState<T, TState>
+/// <summary>
+/// Provides members for the WithPredicateState class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <typeparam name="TState">The type of the TState value.</typeparam>
+public static class WithPredicateState<T, TState>
         where T : notnull
     {
+        /// <summary>
+        /// Executes the Create operation.
+        /// </summary>
+        /// <param name="source">The source value.</param>
+        /// <param name="predicateState">The predicateState value.</param>
+        /// <param name="predicate">The predicate value.</param>
+        /// <param name="filterPolicy">The filterPolicy value.</param>
+        /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
+        /// <returns>The result of the operation.</returns>
         public static IObservable<IChangeSet<T>> Create(
             IObservable<IChangeSet<T>> source,
             IObservable<TState> predicateState,
@@ -20,9 +38,9 @@ internal static partial class Filter
             ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff,
             bool suppressEmptyChangeSets = true)
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            predicateState.ThrowArgumentNullExceptionIfNull(nameof(predicateState));
-            predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+            ArgumentExceptionHelper.ThrowIfNull(source);
+            ArgumentExceptionHelper.ThrowIfNull(predicateState);
+            ArgumentExceptionHelper.ThrowIfNull(predicate);
 
             if (!EnumEx.IsDefined(filterPolicy))
                 throw new ArgumentException($"Invalid {nameof(ListFilterPolicy)} value {filterPolicy}");
@@ -47,24 +65,83 @@ internal static partial class Filter
             });
         }
 
-        private abstract class SubscriptionBase
+/// <summary>
+/// Provides members for the SubscriptionBase class.
+/// </summary>
+private abstract class SubscriptionBase
             : IDisposable
         {
+            /// <summary>
+            /// The _downstreamChangesBuffer field.
+            /// </summary>
             private readonly List<Change<T>> _downstreamChangesBuffer;
+
+            /// <summary>
+            /// The _downstreamObserver field.
+            /// </summary>
             private readonly IObserver<IChangeSet<T>> _downstreamObserver;
+
+            /// <summary>
+            /// The _itemsBuffer field.
+            /// </summary>
             private readonly List<T> _itemsBuffer;
+
+            /// <summary>
+            /// The _itemStates field.
+            /// </summary>
             private readonly List<ItemState> _itemStates;
+
+            /// <summary>
+            /// The _itemStatesBuffer field.
+            /// </summary>
             private readonly List<ItemState> _itemStatesBuffer;
+
+            /// <summary>
+            /// The _predicate field.
+            /// </summary>
             private readonly Func<TState, T, bool> _predicate;
+
+            /// <summary>
+            /// The _suppressEmptyChangeSets field.
+            /// </summary>
             private readonly bool _suppressEmptyChangeSets;
 
+            /// <summary>
+            /// The _hasPredicateStateCompleted field.
+            /// </summary>
             private bool _hasPredicateStateCompleted;
+
+            /// <summary>
+            /// The _hasSourceCompleted field.
+            /// </summary>
             private bool _hasSourceCompleted;
+
+            /// <summary>
+            /// The _isLatestPredicateStateValid field.
+            /// </summary>
             private bool _isLatestPredicateStateValid;
+
+            /// <summary>
+            /// The _latestPredicateState field.
+            /// </summary>
             private TState _latestPredicateState;
+
+            /// <summary>
+            /// The _predicateStateSubscription field.
+            /// </summary>
             private IDisposable? _predicateStateSubscription;
+
+            /// <summary>
+            /// The _sourceSubscription field.
+            /// </summary>
             private IDisposable? _sourceSubscription;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="SubscriptionBase"/> class.
+            /// </summary>
+            /// <param name="downstreamObserver">The downstreamObserver value.</param>
+            /// <param name="predicate">The predicate value.</param>
+            /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
             protected SubscriptionBase(
                 IObserver<IChangeSet<T>> downstreamObserver,
                 Func<TState, T, bool> predicate,
@@ -80,78 +157,155 @@ internal static partial class Filter
                 _itemStatesBuffer = new();
                 _latestPredicateState = default!;
             }
-
             // Keeping subscriptions out of the constructor prevents subscriptions that emit immediately from triggering virtual method calls within the constructor.
+
+            /// <summary>
+            /// Executes the Activate operation.
+            /// </summary>
+            /// <param name="predicateState">The predicateState value.</param>
+            /// <param name="source">The source value.</param>
             public void Activate(
                 IObservable<TState> predicateState,
                 IObservable<IChangeSet<T>> source)
             {
                 var onError = OnError;
+                var predicateStateSubscription = new SingleAssignmentDisposable();
+                var sourceSubscription = new SingleAssignmentDisposable();
 
-                _predicateStateSubscription = predicateState
-                    .SubscribeSafe(
-                        onNext: OnPredicateStateNext,
-                        onError: onError,
-                        onCompleted: OnPredicateStateCompleted);
+                _predicateStateSubscription = predicateStateSubscription;
+                _sourceSubscription = sourceSubscription;
 
-                _sourceSubscription = source
-                    .SubscribeSafe(
-                        onNext: OnSourceNext,
-                        onError: onError,
-                        onCompleted: OnSourceCompleted);
+                predicateStateSubscription.Disposable = predicateState.SubscribeSafe(Observer.Create<TState>(
+                    onNext: OnPredicateStateNext,
+                    onError: onError,
+                    onCompleted: OnPredicateStateCompleted));
+
+                sourceSubscription.Disposable = PrimitivesLinqExtensions.SubscribeSafe(
+                    source,
+                    onNext: OnSourceNext,
+                    onError: onError,
+                    onCompleted: OnSourceCompleted);
             }
 
+            /// <summary>
+            /// Executes the Dispose operation.
+            /// </summary>
             public void Dispose()
             {
                 _predicateStateSubscription?.Dispose();
                 _sourceSubscription?.Dispose();
             }
 
+            /// <summary>
+            /// Gets the DownstreamChangesBuffer value.
+            /// </summary>
             protected List<Change<T>> DownstreamChangesBuffer
                 => _downstreamChangesBuffer;
 
+            /// <summary>
+            /// Gets the IsLatestPredicateStateValid value.
+            /// </summary>
             protected bool IsLatestPredicateStateValid
                 => _isLatestPredicateStateValid;
 
+            /// <summary>
+            /// Gets the ItemsBuffer value.
+            /// </summary>
             protected List<T> ItemsBuffer
                 => _itemsBuffer;
 
+            /// <summary>
+            /// Gets the ItemStates value.
+            /// </summary>
             protected List<ItemState> ItemStates
                 => _itemStates;
 
+            /// <summary>
+            /// Gets the ItemStatesBuffer value.
+            /// </summary>
             protected List<ItemState> ItemStatesBuffer
                 => _itemStatesBuffer;
 
+            /// <summary>
+            /// Gets the LatestPredicateState value.
+            /// </summary>
             protected TState LatestPredicateState
                 => _latestPredicateState;
 
+            /// <summary>
+            /// Gets the Predicate value.
+            /// </summary>
             protected Func<TState, T, bool> Predicate
                 => _predicate;
 
+            /// <summary>
+            /// Executes the PerformAdd operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected abstract void PerformAdd(ItemChange<T> change);
 
+            /// <summary>
+            /// Executes the PerformAddRange operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected abstract void PerformAddRange(RangeChange<T> change);
 
+            /// <summary>
+            /// Executes the PerformClear operation.
+            /// </summary>
             protected abstract void PerformClear();
 
+            /// <summary>
+            /// Executes the PerformMove operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected abstract void PerformMove(ItemChange<T> change);
 
+            /// <summary>
+            /// Executes the PerformReFilter operation.
+            /// </summary>
             protected abstract void PerformReFilter();
 
+            /// <summary>
+            /// Executes the PerformRefresh operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected abstract void PerformRefresh(ItemChange<T> change);
 
+            /// <summary>
+            /// Executes the PerformRemove operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected abstract void PerformRemove(ItemChange<T> change);
 
+            /// <summary>
+            /// Executes the PerformRemoveRange operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected abstract void PerformRemoveRange(RangeChange<T> change);
 
+            /// <summary>
+            /// Executes the PerformReplace operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected abstract void PerformReplace(ItemChange<T> change);
 
+            /// <summary>
+            /// Gets the DownstreamSynchronizationGate value.
+            /// </summary>
             private object DownstreamSynchronizationGate
                 => _downstreamChangesBuffer;
 
+            /// <summary>
+            /// Gets the UpstreamSynchronizationGate value.
+            /// </summary>
             private object UpstreamSynchronizationGate
                 => _itemStates;
 
+            /// <summary>
+            /// Executes the AssembleDownstreamChanges operation.
+            /// </summary>
+            /// <returns>The result of the operation.</returns>
             private IChangeSet<T> AssembleDownstreamChanges()
             {
                 if (_downstreamChangesBuffer.Count is 0)
@@ -163,6 +317,10 @@ internal static partial class Filter
                 return downstreamChanges;
             }
 
+            /// <summary>
+            /// Executes the OnError operation.
+            /// </summary>
+            /// <param name="error">The error value.</param>
             private void OnError(Exception error)
             {
                 var hasUpstreamLock = false;
@@ -194,6 +352,9 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the OnPredicateStateCompleted operation.
+            /// </summary>
             private void OnPredicateStateCompleted()
             {
                 var hasUpstreamLock = false;
@@ -208,6 +369,9 @@ internal static partial class Filter
                     // no matter how many items come through from source, so just go ahead and complete now.
                     if (_hasSourceCompleted || (!_isLatestPredicateStateValid && _suppressEmptyChangeSets))
                     {
+                        _predicateStateSubscription?.Dispose();
+                        _sourceSubscription?.Dispose();
+
                         Monitor.Enter(DownstreamSynchronizationGate, ref hasDownstreamLock);
 
                         if (hasUpstreamLock)
@@ -229,6 +393,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the OnPredicateStateNext operation.
+            /// </summary>
+            /// <param name="predicateState">The predicateState value.</param>
             private void OnPredicateStateNext(TState predicateState)
             {
                 var hasUpstreamLock = false;
@@ -267,6 +435,9 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the OnSourceCompleted operation.
+            /// </summary>
             private void OnSourceCompleted()
             {
                 var hasUpstreamLock = false;
@@ -281,6 +452,9 @@ internal static partial class Filter
                     // and the source has reported that it'll never change, so go ahead and complete now.
                     if (_hasPredicateStateCompleted || ((_itemStates.Count is 0) && _suppressEmptyChangeSets))
                     {
+                        _predicateStateSubscription?.Dispose();
+                        _sourceSubscription?.Dispose();
+
                         Monitor.Enter(DownstreamSynchronizationGate, ref hasDownstreamLock);
 
                         if (hasUpstreamLock)
@@ -302,6 +476,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the OnSourceNext operation.
+            /// </summary>
+            /// <param name="upstreamChanges">The upstreamChanges value.</param>
             private void OnSourceNext(IChangeSet<T> upstreamChanges)
             {
                 var hasUpstreamLock = false;
@@ -375,17 +553,35 @@ internal static partial class Filter
                 }
             }
 
-            protected readonly struct ItemState
+/// <summary>
+/// Represents the ItemState value.
+/// </summary>
+protected readonly struct ItemState
             {
+                /// <summary>
+                /// Gets or sets the FilteredIndex value.
+                /// </summary>
                 public required int? FilteredIndex { get; init; }
 
+                /// <summary>
+                /// Gets or sets the Item value.
+                /// </summary>
                 public required T Item { get; init; }
             }
         }
 
-        private sealed class CalculateDiffSubscription
+/// <summary>
+/// Provides members for the CalculateDiffSubscription class.
+/// </summary>
+private sealed class CalculateDiffSubscription
             : SubscriptionBase
         {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="CalculateDiffSubscription"/> class.
+            /// </summary>
+            /// <param name="downstreamObserver">The downstreamObserver value.</param>
+            /// <param name="predicate">The predicate value.</param>
+            /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
             public CalculateDiffSubscription(
                     IObserver<IChangeSet<T>> downstreamObserver,
                     Func<TState, T, bool> predicate,
@@ -397,6 +593,10 @@ internal static partial class Filter
             {
             }
 
+            /// <summary>
+            /// Executes the PerformAdd operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformAdd(ItemChange<T> change)
             {
                 var isIncluded = IsLatestPredicateStateValid && Predicate.Invoke(LatestPredicateState, change.Current);
@@ -441,6 +641,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformAddRange operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformAddRange(RangeChange<T> change)
             {
                 var nextFilteredIndex = 0;
@@ -500,6 +704,9 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformClear operation.
+            /// </summary>
             protected override void PerformClear()
             {
                 ItemsBuffer.EnsureCapacity(ItemStates.Count);
@@ -520,6 +727,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformMove operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformMove(ItemChange<T> change)
             {
                 var itemState = ItemStates[change.PreviousIndex];
@@ -606,6 +817,9 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformReFilter operation.
+            /// </summary>
             protected override void PerformReFilter()
             {
                 var nextFilteredIndex = 0;
@@ -660,6 +874,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformRefresh operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformRefresh(ItemChange<T> change)
             {
                 var itemState = ItemStates[change.CurrentIndex];
@@ -737,6 +955,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformRemove operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformRemove(ItemChange<T> change)
             {
                 var itemState = ItemStates[change.CurrentIndex];
@@ -763,6 +985,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformRemoveRange operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformRemoveRange(RangeChange<T> change)
             {
                 ItemsBuffer.EnsureCapacity(change.Count);
@@ -805,6 +1031,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformReplace operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformReplace(ItemChange<T> change)
             {
                 var itemState = ItemStates[change.CurrentIndex];
@@ -900,11 +1130,23 @@ internal static partial class Filter
             }
         }
 
-        private sealed class ClearAndReplaceSubscription
+/// <summary>
+/// Provides members for the ClearAndReplaceSubscription class.
+/// </summary>
+private sealed class ClearAndReplaceSubscription
             : SubscriptionBase
         {
+            /// <summary>
+            /// The _filteredCount field.
+            /// </summary>
             private int _filteredCount;
 
+            /// <summary>
+            /// Initializes a new instance of the <see cref="ClearAndReplaceSubscription"/> class.
+            /// </summary>
+            /// <param name="downstreamObserver">The downstreamObserver value.</param>
+            /// <param name="predicate">The predicate value.</param>
+            /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
             public ClearAndReplaceSubscription(
                     IObserver<IChangeSet<T>> downstreamObserver,
                     Func<TState, T, bool> predicate,
@@ -916,6 +1158,10 @@ internal static partial class Filter
             {
             }
 
+            /// <summary>
+            /// Executes the PerformAdd operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformAdd(ItemChange<T> change)
             {
                 var isIncluded = IsLatestPredicateStateValid && Predicate.Invoke(LatestPredicateState, change.Current);
@@ -939,6 +1185,10 @@ internal static partial class Filter
                     });
             }
 
+            /// <summary>
+            /// Executes the PerformAddRange operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformAddRange(RangeChange<T> change)
             {
                 var priorFilteredCount = _filteredCount;
@@ -977,6 +1227,9 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformClear operation.
+            /// </summary>
             protected override void PerformClear()
             {
                 // Not using ItemsBuffer, because we already know the exact size we need, so we can allocate a fresh one and use it directly.
@@ -998,6 +1251,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformMove operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformMove(ItemChange<T> change)
             {
                 // We're not supporting propagation of move changes, but we do still need to process them, to keep ItemStates correct.
@@ -1006,6 +1263,9 @@ internal static partial class Filter
                 ItemStates.Insert(change.CurrentIndex, itemState);
             }
 
+            /// <summary>
+            /// Executes the PerformReFilter operation.
+            /// </summary>
             protected override void PerformReFilter()
             {
                 var nextFilteredIndex = 0;
@@ -1077,6 +1337,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformRefresh operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformRefresh(ItemChange<T> change)
             {
                 var itemState = ItemStates[change.CurrentIndex];
@@ -1134,6 +1398,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformRemove operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformRemove(ItemChange<T> change)
             {
                 var itemState = ItemStates[change.CurrentIndex];
@@ -1162,6 +1430,10 @@ internal static partial class Filter
                 }
             }
 
+            /// <summary>
+            /// Executes the PerformRemoveRange operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformRemoveRange(RangeChange<T> change)
             {
                 for (var index = change.Index; index < change.Index + change.Count; ++index)
@@ -1192,6 +1464,10 @@ internal static partial class Filter
                 ItemStates.RemoveRange(change.Index, change.Count);
             }
 
+            /// <summary>
+            /// Executes the PerformReplace operation.
+            /// </summary>
+            /// <param name="change">The change value.</param>
             protected override void PerformReplace(ItemChange<T> change)
             {
                 var itemState = ItemStates[change.CurrentIndex];

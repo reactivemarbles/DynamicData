@@ -1,11 +1,3 @@
-using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public class MergeManyItemsFixture : IDisposable
@@ -16,15 +8,16 @@ public class MergeManyItemsFixture : IDisposable
 
     public void Dispose() => _source.Dispose();
 
-    [Fact]
-    public void EverythingIsUnsubscribedWhenStreamIsDisposed()
+    [Test]
+    public async Task EverythingIsUnsubscribedWhenStreamIsDisposed()
     {
         var invoked = false;
+        var observedIds = new List<int>();
         var stream = _source.Connect().MergeManyItems(o => o.Observable).Subscribe(
             o =>
             {
                 invoked = true;
-                (o.Item.Id == 1).Should().BeTrue();
+                observedIds.Add(o.Item.Id);
             });
 
         var item = new ObjectWithObservable(1);
@@ -33,55 +26,60 @@ public class MergeManyItemsFixture : IDisposable
         stream.Dispose();
 
         item.InvokeObservable(true);
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
+        await Assert.That(observedIds).IsEmpty();
     }
 
-    [Fact]
-    public void InvocationOnlyWhenChildIsInvoked()
+    [Test]
+    public async Task InvocationOnlyWhenChildIsInvoked()
     {
         var invoked = false;
+        var observedIds = new List<int>();
 
         var stream = _source.Connect().MergeManyItems(o => o.Observable).Subscribe(
             o =>
             {
                 invoked = true;
-                (o.Item.Id == 1).Should().BeTrue();
+                observedIds.Add(o.Item.Id);
             });
 
         var item = new ObjectWithObservable(1);
         _source.AddOrUpdate(item);
 
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
 
         item.InvokeObservable(true);
-        invoked.Should().BeTrue();
+        await Assert.That(invoked).IsTrue();
+        await Assert.That(observedIds).IsEquivalentTo(new[] { 1 });
         stream.Dispose();
     }
 
-    [Fact]
-    public void RemovedItemWillNotCauseInvocation()
+    [Test]
+    public async Task RemovedItemWillNotCauseInvocation()
     {
         var invoked = false;
+        var observedIds = new List<int>();
         var stream = _source.Connect().MergeManyItems(o => o.Observable).Subscribe(
             o =>
             {
                 invoked = true;
-                (o.Item.Id == 1).Should().BeTrue();
+                observedIds.Add(o.Item.Id);
             });
 
         var item = new ObjectWithObservable(1);
         _source.AddOrUpdate(item);
         _source.Remove(item);
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
 
         item.InvokeObservable(true);
-        invoked.Should().BeFalse();
+        await Assert.That(invoked).IsFalse();
+        await Assert.That(observedIds).IsEmpty();
         stream.Dispose();
     }
 
-    private class ObjectWithObservable(int id)
+    private class ObjectWithObservable(int id) : IDisposable
     {
-        private readonly ISubject<bool> _changed = new Subject<bool>();
+        private readonly ReactiveUI.Primitives.Signals.Signal<bool> _changed = new ReactiveUI.Primitives.Signals.Signal<bool>();
 
         private bool _value;
 
@@ -93,6 +91,10 @@ public class MergeManyItemsFixture : IDisposable
         {
             _value = value;
             _changed.OnNext(value);
+        }
+        public void Dispose()
+        {
+            _changed.Dispose();
         }
     }
 }

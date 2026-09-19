@@ -1,26 +1,14 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Reactive.Threading.Tasks;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Bogus;
 
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
-using DynamicData.Kernel;
-
-using FluentAssertions;
-
-using Xunit;
+#endif
 
 namespace DynamicData.Tests.Cache;
 
@@ -176,7 +164,7 @@ public sealed class CrossCacheDeadlockStressTest
     // The Test
     // ════════════════════════════════════════════════════════════════
 
-    [Fact]
+    [Test]
     public async Task AllOperators_CrossCache_NoDeadlock_CorrectResults()
     {
         // ── Derive ALL test parameters from seeded Randomizer ────────
@@ -217,16 +205,16 @@ public sealed class CrossCacheDeadlockStressTest
         using var treeSource = new SourceCache<StressMarket, int>(m => m.Id);
 
         // ── Subjects for dynamic parameters ─────────────────────────
-        using var pageRequests = new BehaviorSubject<IPageRequest>(new PageRequest(1, pageSize));
-        using var virtualRequests = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, virtualSize));
-        using var pauseBatch = new BehaviorSubject<bool>(false);
-        using var forceTransform = new Subject<Func<StressMarket, bool>>();
-        using var switchSource = new BehaviorSubject<IObservable<IChangeSet<StressMarket, int>>>(sourceA.Connect());
-        using var comparerSubject = new BehaviorSubject<IComparer<StressMarket>>(RatingDescComparer.Instance);
+        using var pageRequests = new ReactiveUI.Primitives.Signals.StateSignal<IPageRequest>(new PageRequest(1, pageSize));
+        using var virtualRequests = new ReactiveUI.Primitives.Signals.StateSignal<IVirtualRequest>(new VirtualRequest(0, virtualSize));
+        using var pauseBatch = new ReactiveUI.Primitives.Signals.StateSignal<bool>(false);
+        using var forceTransform = new ReactiveUI.Primitives.Signals.Signal<Func<StressMarket, bool>>();
+        using var switchSource = new ReactiveUI.Primitives.Signals.StateSignal<IObservable<IChangeSet<StressMarket, int>>>(sourceA.Connect());
+        using var comparerSubject = new ReactiveUI.Primitives.Signals.StateSignal<IComparer<StressMarket>>(RatingDescComparer.Instance);
 
         // Stop signal for operators with a library gap — they don't forward OnCompleted:
         // Static Combiner (Or/And/Except), BatchIf, TransformToTree, Switch
-        using var stopSignal = new Subject<Unit>();
+        using var stopSignal = new ReactiveUI.Primitives.Signals.Signal<Unit>();
 
         // ── Completion tracking ─────────────────────────────────────
         var completionTasks = new List<Task>();
@@ -374,7 +362,7 @@ public sealed class CrossCacheDeadlockStressTest
                 .TakeUntil(stopSignal));
 
         var andCache = TrackCache(
-            sourceA.Connect().And(sourceB.Connect())                           // And [1]
+            And(sourceA.Connect(), sourceB.Connect())                           // And [1]
                 .TakeUntil(stopSignal));
 
         var exceptCache = TrackCache(
@@ -476,8 +464,8 @@ public sealed class CrossCacheDeadlockStressTest
                 .TakeUntil(stopSignal));
 
         // Second Page + Virtualise + BatchIf uses on sourceB
-        using var pageBSubject = new BehaviorSubject<IPageRequest>(new PageRequest(1, pageSize));
-        using var pauseB = new BehaviorSubject<bool>(false);
+        using var pageBSubject = new ReactiveUI.Primitives.Signals.StateSignal<IPageRequest>(new PageRequest(1, pageSize));
+        using var pauseB = new ReactiveUI.Primitives.Signals.StateSignal<bool>(false);
 
         var pageBCache = TrackCache(
             sourceB.Connect()
@@ -486,7 +474,7 @@ public sealed class CrossCacheDeadlockStressTest
                 .BatchIf(pauseB, false, (TimeSpan?)null)                       // BatchIf [2]
                 .TakeUntil(stopSignal));
 
-        using var virtBRequests = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, virtualSize));
+        using var virtBRequests = new ReactiveUI.Primitives.Signals.StateSignal<IVirtualRequest>(new VirtualRequest(0, virtualSize));
         var virtBCache = TrackCache(
             sourceB.Connect()
                 .Sort(PriorityAscComparer.Instance)                            // Sort [4]
@@ -538,7 +526,7 @@ public sealed class CrossCacheDeadlockStressTest
         completionNames.Add("QueryWhenChanged-A");
 
         // Second Switch + GroupOnImmutable + GroupOnObservable
-        using var switchSource2 = new BehaviorSubject<IObservable<IChangeSet<StressMarket, int>>>(sourceB.Connect());
+        using var switchSource2 = new ReactiveUI.Primitives.Signals.StateSignal<IObservable<IChangeSet<StressMarket, int>>>(sourceB.Connect());
         var switchCache2 = TrackCache(
             switchSource2.Switch()                                             // Switch [2]
                 .TakeUntil(stopSignal));
@@ -574,7 +562,7 @@ public sealed class CrossCacheDeadlockStressTest
                 .TakeUntil(stopSignal));
 
         var andCache2 = TrackCache(
-            sourceB.Connect().And(sourceA.Connect())                           // And [2]
+            And(sourceB.Connect(), sourceA.Connect())                           // And [2]
                 .TakeUntil(stopSignal));
 
         var exceptCache2 = TrackCache(
@@ -657,7 +645,7 @@ public sealed class CrossCacheDeadlockStressTest
         var finalAKeys = new HashSet<int>(sourceA.Keys);
         var finalBKeys = new HashSet<int>(sourceB.Keys);
 
-        // 2. Complete all BehaviorSubjects so multi-source operators can complete
+        // 2. Complete all StateSignals so multi-source operators can complete
         forceTransform.OnCompleted();
         pageRequests.OnCompleted();
         pageBSubject.OnCompleted();
@@ -689,7 +677,7 @@ public sealed class CrossCacheDeadlockStressTest
             var pending = completionTasks.Select((t2, i) => new { Index = i, t2.Status, Name = completionNames[i] })
                 .Where(x => x.Status != TaskStatus.RanToCompletion)
                 .Select(x => $"[{x.Index}] {x.Name} ({x.Status})").ToList();
-            pending.Should().BeEmpty($"all {completionTasks.Count} tasks should finish within {timeoutSeconds}s. Pending: {string.Join(", ", pending)}");
+            await Assert.That(pending).IsEmpty().Because($"all {completionTasks.Count} tasks should finish within {timeoutSeconds}s. Pending: {string.Join(", ", pending)}");
         }
 
         // ════════════════════════════════════════════════════════════
@@ -697,93 +685,82 @@ public sealed class CrossCacheDeadlockStressTest
         // ════════════════════════════════════════════════════════════
 
         // Flow 1: Forward — filtered, transformed, paged subset of sourceA
-        forwardTarget.Count.Should().BeGreaterThan(0, "Flow1 should produce results");
-        forwardTarget.Count.Should().BeLessThanOrEqualTo(pageSize, "Page should limit");
-        forwardTarget.Items.Should().OnlyContain(m => m.Name.StartsWith("F-"), "Transform prefixes 'F-'");
-        forwardTarget.Items.Should().OnlyContain(
-            m => m.Rating >= ratingThreshold * transformMultiplier,
-            "Transform multiplies rating of items that passed filter");
-        forwardRemovals.Should().BeGreaterThan(0, "OnItemRemoved fires on rating mutation exits");
+        await Assert.That(forwardTarget.Count).IsGreaterThan(0).Because("Flow1 should produce results");
+        await Assert.That(forwardTarget.Count).IsLessThanOrEqualTo(pageSize).Because("Page should limit");
+        await Assert.That(forwardTarget.Items).ContainsOnly(m => m.Name.StartsWith("F-")).Because("Transform prefixes 'F-'");
+        await Assert.That(forwardTarget.Items).ContainsOnly(
+                    m => m.Rating >= ratingThreshold * transformMultiplier)
+                    .Because("Transform multiplies rating of items that passed filter");
+        await Assert.That(forwardRemovals).IsGreaterThan(0).Because("OnItemRemoved fires on rating mutation exits");
 
         // Flow 2: Reverse — filtered, sorted, virtualized, transformed subset of sourceB
-        reverseTarget.Count.Should().BeGreaterThan(0, "Flow2 should produce results");
-        reverseTarget.Count.Should().BeLessThanOrEqualTo(virtualSize, "Virtualise limits");
-        reverseTarget.Items.Should().OnlyContain(m => m.Name.StartsWith("R-"), "Transform prefixes 'R-'");
+        await Assert.That(reverseTarget.Count).IsGreaterThan(0).Because("Flow2 should produce results");
+        await Assert.That(reverseTarget.Count).IsLessThanOrEqualTo(virtualSize).Because("Virtualise limits");
+        await Assert.That(reverseTarget.Items).ContainsOnly(m => m.Name.StartsWith("R-")).Because("Transform prefixes 'R-'");
 
         // Flow 3: Joins — verify mathematical relationships hold
         // Each cache may see a slightly different snapshot due to bidirectional flow timing,
         // but the set-theoretic relationships must hold within each cache's own view.
-        fullJoinCache.Items.Should().OnlyContain(m => m.Name.StartsWith("FJ-"), "FullJoin prefixes 'FJ-'");
-        innerJoinCache.Items.Should().OnlyContain(m => m.Name.StartsWith("IJ-"), "InnerJoin prefixes 'IJ-'");
-        leftJoinCache.Items.Should().OnlyContain(m => m.Name.StartsWith("LJ-"), "LeftJoin prefixes 'LJ-'");
-        rightJoinCache.Items.Should().OnlyContain(m => m.Name.StartsWith("RJ-"), "RightJoin prefixes 'RJ-'");
+        await Assert.That(fullJoinCache.Items).ContainsOnly(m => m.Name.StartsWith("FJ-")).Because("FullJoin prefixes 'FJ-'");
+        await Assert.That(innerJoinCache.Items).ContainsOnly(m => m.Name.StartsWith("IJ-")).Because("InnerJoin prefixes 'IJ-'");
+        await Assert.That(leftJoinCache.Items).ContainsOnly(m => m.Name.StartsWith("LJ-")).Because("LeftJoin prefixes 'LJ-'");
+        await Assert.That(rightJoinCache.Items).ContainsOnly(m => m.Name.StartsWith("RJ-")).Because("RightJoin prefixes 'RJ-'");
 
         // InnerJoin keys ⊂ FullJoin keys (intersection ⊂ union)
-        new HashSet<int>(innerJoinCache.Keys).IsSubsetOf(new HashSet<int>(fullJoinCache.Keys)).Should()
-            .BeTrue("InnerJoin ⊂ FullJoin");
+        await Assert.That(new HashSet<int>(innerJoinCache.Keys).IsSubsetOf(new HashSet<int>(fullJoinCache.Keys))).IsTrue().Because("InnerJoin subset FullJoin");
         // InnerJoin must have at least the overlapping keys
-        innerJoinCache.Count.Should().BeGreaterThanOrEqualTo(overlappingCount,
-            "InnerJoin finds at least overlapping items");
+        await Assert.That(innerJoinCache.Count).IsGreaterThanOrEqualTo(overlappingCount).Because("InnerJoin finds at least overlapping items");
 
         // Flow 4: Combiners — Or and Merged share the same Publish, so they're identical
-        orCache.Keys.Should().BeEquivalentTo(mergedCache.Keys, "Or = Merged (same Publish sources)");
+        await Assert.That(orCache.Keys).IsEquivalentTo(mergedCache.Keys).Because("Or = Merged (same Publish sources)");
         // And ⊂ Or
-        new HashSet<int>(andCache.Keys).IsSubsetOf(new HashSet<int>(orCache.Keys)).Should()
-            .BeTrue("And ⊂ Or");
+        await Assert.That(new HashSet<int>(andCache.Keys).IsSubsetOf(new HashSet<int>(orCache.Keys))).IsTrue().Because("And subset Or");
         // Except ∩ And = ∅
-        new HashSet<int>(exceptCache.Keys).Overlaps(andCache.Keys).Should()
-            .BeFalse("Except ∩ And = ∅");
+        await Assert.That(new HashSet<int>(exceptCache.Keys).Overlaps(andCache.Keys)).IsFalse().Because("Except and And should not overlap");
         // Except ∪ And ∪ (items only in B) = Or
         var exceptPlusAnd = new HashSet<int>(exceptCache.Keys);
         exceptPlusAnd.UnionWith(andCache.Keys);
-        exceptPlusAnd.IsSubsetOf(new HashSet<int>(orCache.Keys)).Should()
-            .BeTrue("Except ∪ And ⊂ Or");
+        await Assert.That(exceptPlusAnd.IsSubsetOf(new HashSet<int>(orCache.Keys))).IsTrue().Because("Except and And union subset Or");
 
         // Second joins — cross-verify with first joins (same sources, same completion)
-        leftJoin2Cache.Keys.Should().BeEquivalentTo(rightJoinCache.Keys, "LeftJoin2(B×A) = RightJoin(A×B)");
-        leftJoin2Cache.Items.Should().OnlyContain(m => m.Name.StartsWith("LJ2-"), "LeftJoin2 prefixes");
-        rightJoin2Cache.Keys.Should().BeEquivalentTo(leftJoinCache.Keys, "RightJoin2(B×A) = LeftJoin(A×B)");
-        rightJoin2Cache.Items.Should().OnlyContain(m => m.Name.StartsWith("RJ2-"), "RightJoin2 prefixes");
-        orCache2.Keys.Should().BeEquivalentTo(orCache.Keys, "Or2 = Or (same sources, same completion)");
-        andCache2.Keys.Should().BeEquivalentTo(andCache.Keys, "And2 = And (same sources)");
-        mergedCache2.Keys.Should().BeEquivalentTo(mergedCache.Keys, "MergedCache2 = Merged (same sources)");
+        await Assert.That(leftJoin2Cache.Keys).IsEquivalentTo(rightJoinCache.Keys).Because("LeftJoin2(B×A) = RightJoin(A×B)");
+        await Assert.That(leftJoin2Cache.Items).ContainsOnly(m => m.Name.StartsWith("LJ2-")).Because("LeftJoin2 prefixes");
+        await Assert.That(rightJoin2Cache.Keys).IsEquivalentTo(leftJoinCache.Keys).Because("RightJoin2(B×A) = LeftJoin(A×B)");
+        await Assert.That(rightJoin2Cache.Items).ContainsOnly(m => m.Name.StartsWith("RJ2-")).Because("RightJoin2 prefixes");
+        await Assert.That(orCache2.Keys).IsEquivalentTo(orCache.Keys).Because("Or2 = Or (same sources, same completion)");
+        await Assert.That(andCache2.Keys).IsEquivalentTo(andCache.Keys).Because("And2 = And (same sources)");
+        await Assert.That(mergedCache2.Keys).IsEquivalentTo(mergedCache.Keys).Because("MergedCache2 = Merged (same sources)");
 
         // Flow 5: Groups — verify grouping preserves all items from same snapshot
-        groupCache.Items.Select(m => m.Region).Distinct().Count().Should()
-            .BeGreaterThan(1, "GroupOn creates multiple regions");
-        immGroupAgg.Data.Count.Should().BeGreaterThan(1, "GroupOnImmutable produces groups");
-        immGroupBAgg.Data.Count.Should().BeGreaterThan(1, "GroupOnImmutable(B) produces groups");
+        await Assert.That(groupCache.Items.Select(m => m.Region).Distinct().Count()).IsGreaterThan(1).Because("GroupOn creates multiple regions");
+        await Assert.That(immGroupAgg.Data.Count).IsGreaterThan(1).Because("GroupOnImmutable produces groups");
+        await Assert.That(immGroupBAgg.Data.Count).IsGreaterThan(1).Because("GroupOnImmutable(B) produces groups");
 
         // Flow 6: MergeManyChangeSets — exact price key verification
         // MMCS(child/A) and MMCS(source/A) see the same sourceA markets, same price keys
-        childPriceCache.Keys.Should().BeEquivalentTo(sourcePriceACache.Keys,
-            "MMCS(child/A) = MMCS(source/A) — same source markets, same price keys");
-        childPriceBCache.Keys.Should().BeEquivalentTo(sourcePriceCache.Keys,
-            "MMCS(child/B) = MMCS(source/B) — same source markets, same price keys");
+        await Assert.That(childPriceCache.Keys).IsEquivalentTo(sourcePriceACache.Keys).Because("MMCS(child/A) = MMCS(source/A) — same source markets, same price keys");
+        await Assert.That(childPriceBCache.Keys).IsEquivalentTo(sourcePriceCache.Keys).Because("MMCS(child/B) = MMCS(source/B) — same source markets, same price keys");
 
         // Flow 7: SortAndBind — exact count matching sourceA
-        boundListA.Count.Should().Be(leftJoinCache.Count, "SortAndBind = LeftJoin count (both see all sourceA)");
-        boundListB.Count.Should().Be(leftJoinCache.Count, "SortAndBind(obs) = LeftJoin count");
+        await Assert.That(boundListA.Count).IsEqualTo(leftJoinCache.Count).Because("SortAndBind = LeftJoin count (both see all sourceA)");
+        await Assert.That(boundListB.Count).IsEqualTo(leftJoinCache.Count).Because("SortAndBind(obs) = LeftJoin count");
         for (var i = 1; i < boundListB.Count; i++)
-            boundListB[i - 1].Priority.Should().BeLessThanOrEqualTo(boundListB[i].Priority,
-                "SortAndBind(obs) re-sorted by priority after comparer switch");
+            await Assert.That(boundListB[i - 1].Priority).IsLessThanOrEqualTo(boundListB[i].Priority).Because("SortAndBind(obs) re-sorted by priority after comparer switch");
 
         // Switch: after switching, should have items from the switched-to source
-        switchCache.Count.Should().BeGreaterThan(0, "Switch (switched to B) has items");
-        switchCache2.Count.Should().BeGreaterThan(0, "Switch2 (switched to A) has items");
+        await Assert.That(switchCache.Count).IsGreaterThan(0).Because("Switch (switched to B) has items");
+        await Assert.That(switchCache2.Count).IsGreaterThan(0).Because("Switch2 (switched to A) has items");
 
-        pageBCache.Count.Should().BeGreaterThan(0, "Page(B) produces results");
-        pageBCache.Count.Should().BeLessThanOrEqualTo(pageSize, "Page(B) respects page limit");
-        virtBCache.Count.Should().BeGreaterThan(0, "Virtualise(B) produces results");
-        virtBCache.Count.Should().BeLessThanOrEqualTo(virtualSize, "Virtualise(B) respects virtual limit");
+        await Assert.That(pageBCache.Count).IsGreaterThan(0).Because("Page(B) produces results");
+        await Assert.That(pageBCache.Count).IsLessThanOrEqualTo(pageSize).Because("Page(B) respects page limit");
+        await Assert.That(virtBCache.Count).IsGreaterThan(0).Because("Virtualise(B) produces results");
+        await Assert.That(virtBCache.Count).IsLessThanOrEqualTo(virtualSize).Because("Virtualise(B) respects virtual limit");
 
         // Flow 8: TransformMany — exact price key sets from original markets
         var expectedPriceKeysA = new HashSet<int>(marketsA.SelectMany(m => m.Prices.Keys));
-        new HashSet<int>(allPricesACache.Keys).IsSupersetOf(expectedPriceKeysA).Should()
-            .BeTrue("TransformMany(A) contains all original sourceA prices");
+        await Assert.That(new HashSet<int>(allPricesACache.Keys).IsSupersetOf(expectedPriceKeysA)).IsTrue().Because("TransformMany(A) contains all original sourceA prices");
         var expectedPriceKeysB = new HashSet<int>(marketsB.SelectMany(m => m.Prices.Keys));
-        new HashSet<int>(allPricesBCache.Keys).IsSupersetOf(expectedPriceKeysB).Should()
-            .BeTrue("TransformMany(B) contains all original sourceB prices");
+        await Assert.That(new HashSet<int>(allPricesBCache.Keys).IsSupersetOf(expectedPriceKeysB)).IsTrue().Because("TransformMany(B) contains all original sourceB prices");
 
         // TransformToTree
         static int CountAll(IEnumerable<Node<StressMarket, int>> nodes)
@@ -793,17 +770,15 @@ public sealed class CrossCacheDeadlockStressTest
             return c;
         }
 
-        CountAll(treeCache.Items).Should().Be(treeCount, "Tree has all markets across depths");
-        treeCache.Items.Any(n => n.Children.Count > 0).Should().BeTrue("Tree has child nodes");
-        treeCache2.Count.Should().BeGreaterThan(0, "Tree2 produces results");
-
-        
+        await Assert.That(CountAll(treeCache.Items)).IsEqualTo(treeCount).Because("Tree has all markets across depths");
+        await Assert.That(treeCache.Items.Any(n => n.Children.Count > 0)).IsTrue().Because("Tree has child nodes");
+        await Assert.That(treeCache2.Count).IsGreaterThan(0).Because("Tree2 produces results");
 
         // Side chains
-        lastQuery.Should().NotBeNull("QueryWhenChanged(B) fired");
-        lastQueryA.Should().NotBeNull("QueryWhenChanged(A) fired");
-        sortVirtResults.Data.Count.Should().BeLessThanOrEqualTo(virtualSize, "SortAndVirtualize respects limit");
-        sortVirtAResults.Data.Count.Should().BeLessThanOrEqualTo(virtualSize, "SortAndVirtualize(A) respects limit");
+        await Assert.That(lastQuery).IsNotNull().Because("QueryWhenChanged(B) fired");
+        await Assert.That(lastQueryA).IsNotNull().Because("QueryWhenChanged(A) fired");
+        await Assert.That(sortVirtResults.Data.Count).IsLessThanOrEqualTo(virtualSize).Because("SortAndVirtualize respects limit");
+        await Assert.That(sortVirtAResults.Data.Count).IsLessThanOrEqualTo(virtualSize).Because("SortAndVirtualize(A) respects limit");
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -865,5 +840,16 @@ public sealed class CrossCacheDeadlockStressTest
         for (var i = 0; i < source.Count; i++)
             result[i % partitions].Add(source[i]);
         return result;
+    }
+
+    private static IObservable<IChangeSet<StressMarket, int>> And(
+        IObservable<IChangeSet<StressMarket, int>> source,
+        IObservable<IChangeSet<StressMarket, int>> other)
+    {
+#if REACTIVE_TESTS
+        return DynamicData.Reactive.ObservableCacheEx.And(source, other);
+#else
+        return DynamicData.ObservableCacheEx.And(source, other);
+#endif
     }
 }

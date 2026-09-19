@@ -4,14 +4,15 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reactive.Disposables;
 
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
 
-using FluentAssertions;
 
-using Xunit;
 
 #endregion
 
@@ -21,7 +22,6 @@ public class RemoveKeyFixture : IDisposable
 {
     private readonly RandomPersonGenerator _generator = new();
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Handled with CompositeDisposable")]
     private readonly ISourceCache<Person, string> _source;
 
     private readonly CompositeDisposable _cleanup = new();
@@ -29,13 +29,16 @@ public class RemoveKeyFixture : IDisposable
     public RemoveKeyFixture()
     {
         _source = new SourceCache<Person, string>(p => p.Key);
-        _cleanup.Add(_source);
     }
 
-    public void Dispose() => _cleanup.Dispose();
+    public void Dispose()
+    {
+        _cleanup.Dispose();
+        _source.Dispose();
+    }
 
-    [Fact]
-    public void CacheRemoveKey_Add_KeyIsRemoved()
+    [Test]
+    public async Task CacheRemoveKey_Add_KeyIsRemoved()
     {
         ReadOnlyObservableCollection<Person> collection;
         _cleanup.Add(
@@ -47,11 +50,11 @@ public class RemoveKeyFixture : IDisposable
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
-        Assert.Equivalent(people, collection);
+        await Assert.That(collection).IsEquivalentTo(people);
     }
 
-    [Fact]
-    public void CacheRemoveKey_Filter_ItemsFilterKeyIsRemoved()
+    [Test]
+    public async Task CacheRemoveKey_Filter_ItemsFilterKeyIsRemoved()
     {
         var people = _generator.Take(100).ToArray();
         var average = people.Average(x => x.Age);
@@ -66,11 +69,11 @@ public class RemoveKeyFixture : IDisposable
         );
         _source.AddOrUpdate(people);
 
-        Assert.Equivalent(people.Where(x => x.Age < average), collection);
+        await Assert.That(collection).IsEquivalentTo(people.Where(x => x.Age < average));
     }
 
-    [Fact]
-    public void CacheRemoveKey_AutoRefreshUpdateITems_CollectionUpdated()
+    [Test]
+    public async Task CacheRemoveKey_AutoRefreshUpdateITems_CollectionUpdated()
     {
         ReadOnlyObservableCollection<Person> collection;
         _cleanup.Add(
@@ -83,13 +86,13 @@ public class RemoveKeyFixture : IDisposable
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
-        Assert.Equivalent(people, collection);
+        await Assert.That(collection).IsEquivalentTo(people);
 
         foreach (var person in people)
         {
             person.Age = person.Age + 1;
         }
-        Assert.Equivalent(people, collection);
+        await Assert.That(collection).IsEquivalentTo(people);
     }
 
 }

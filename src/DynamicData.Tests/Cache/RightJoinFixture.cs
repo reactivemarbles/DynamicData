@@ -1,12 +1,8 @@
-using System;
-using System.Linq;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
+#endif
 
 namespace DynamicData.Tests.Cache;
 
@@ -26,8 +22,8 @@ public class RightJoinFixture : IDisposable
         _result = _left.Connect().RightJoin(_right.Connect(), meta => meta.Name, (key, device, meta) => new DeviceWithMetadata(key, device, meta)).AsAggregator();
     }
 
-    [Fact]
-    public void AddLeftOnly()
+    [Test]
+    public async Task AddLeftOnly()
     {
         _left.Edit(
             innerCache =>
@@ -37,11 +33,11 @@ public class RightJoinFixture : IDisposable
                 innerCache.AddOrUpdate(new Device("Device3"));
             });
 
-        _result.Data.Count.Should().Be(0);
+        await Assert.That(_result.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void AddLeftThenRight()
+    [Test]
+    public async Task AddLeftThenRight()
     {
         _left.Edit(
             innerCache =>
@@ -54,44 +50,44 @@ public class RightJoinFixture : IDisposable
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
-                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1, "Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2, "Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3, "Device3"));
             });
 
-        _result.Data.Count.Should().Be(3);
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
 
-        _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
+        await Assert.That(_result.Data.Items.All(dwm => dwm.Device != ReactiveUI.Primitives.Optional<Device>.None)).IsTrue();
     }
 
-    [Fact]
-    public void AddRightOnly()
+    [Test]
+    public async Task AddRightOnly()
     {
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
-                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1, "Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2, "Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3, "Device3"));
             });
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Lookup(1).HasValue.Should().BeTrue();
-        _result.Data.Lookup(2).HasValue.Should().BeTrue();
-        _result.Data.Lookup(3).HasValue.Should().BeTrue();
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Lookup(1).HasValue).IsTrue();
+        await Assert.That(_result.Data.Lookup(2).HasValue).IsTrue();
+        await Assert.That(_result.Data.Lookup(3).HasValue).IsTrue();
 
-        _result.Data.Items.All(dwm => dwm.Device == Optional<Device>.None).Should().BeTrue();
+        await Assert.That(_result.Data.Items.All(dwm => dwm.Device == ReactiveUI.Primitives.Optional<Device>.None)).IsTrue();
     }
 
-    [Fact]
-    public void AddRightThenLeft()
+    [Test]
+    public async Task AddRightThenLeft()
     {
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
-                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1, "Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2, "Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3, "Device3"));
             });
 
         _left.Edit(
@@ -102,9 +98,9 @@ public class RightJoinFixture : IDisposable
                 innerCache.AddOrUpdate(new Device("Device3"));
             });
 
-        _result.Data.Count.Should().Be(3);
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
 
-        _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
+        await Assert.That(_result.Data.Items.All(dwm => dwm.Device != ReactiveUI.Primitives.Optional<Device>.None)).IsTrue();
     }
 
     public void Dispose()
@@ -114,8 +110,8 @@ public class RightJoinFixture : IDisposable
         _result.Dispose();
     }
 
-    [Fact]
-    public void RefreshRightKey()
+    [Test]
+    public async Task RefreshRightKey()
     {
         _left.Edit(
             innerCache =>
@@ -128,51 +124,47 @@ public class RightJoinFixture : IDisposable
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
-                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1, "Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2, "Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3, "Device3"));
             });
 
         var refreshItem = _right.Lookup(2).Value;
-
 
         // Change pairing
         refreshItem.Name = "Device3";
         _right.Refresh(refreshItem);
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain(("Device2", 2));
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device3", 2));
-
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).DoesNotContain(("Device2", 2));
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).Contains(("Device3", 2));
 
         // Remove pairing
         refreshItem.Name = "Device4";
         _right.Refresh(refreshItem);
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain(("Device3", 2));
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain((null, 2));
-
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).DoesNotContain(("Device3", 2));
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).Contains((null, 2));
 
         // Restore pairing
         refreshItem.Name = "Device2";
         _right.Refresh(refreshItem);
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain((null, 2));
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device2", 2));
-
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).DoesNotContain((null, 2));
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).Contains(("Device2", 2));
 
         // No change
         _right.Refresh(refreshItem);
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain((null, 2));
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device2", 2));
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).DoesNotContain((null, 2));
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).Contains(("Device2", 2));
     }
 
-    [Fact]
-    public void RemoveVarious()
+    [Test]
+    public async Task RemoveVarious()
     {
         _left.Edit(
             innerCache =>
@@ -185,30 +177,30 @@ public class RightJoinFixture : IDisposable
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
-                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1, "Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2, "Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3, "Device3"));
             });
 
         _right.Remove(3);
 
-        _result.Data.Count.Should().Be(2);
-        _result.Data.Items.Count(dwm => dwm.Device != Optional<Device>.None).Should().Be(2);
+        await Assert.That(_result.Data.Count).IsEqualTo(2);
+        await Assert.That(_result.Data.Items.Count(dwm => dwm.Device != ReactiveUI.Primitives.Optional<Device>.None)).IsEqualTo(2);
 
         _left.Remove("Device1");
-        _result.Data.Lookup(1).HasValue.Should().BeTrue();
-        _result.Data.Items.Count(dwm => dwm.Device == Optional<Device>.None).Should().Be(1);
+        await Assert.That(_result.Data.Lookup(1).HasValue).IsTrue();
+        await Assert.That(_result.Data.Items.Count(dwm => dwm.Device == ReactiveUI.Primitives.Optional<Device>.None)).IsEqualTo(1);
     }
 
-    [Fact]
-    public void UpdateRight()
+    [Test]
+    public async Task UpdateRight()
     {
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
-                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1, "Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2, "Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3, "Device3"));
             });
 
         _left.Edit(
@@ -219,13 +211,13 @@ public class RightJoinFixture : IDisposable
                 innerCache.AddOrUpdate(new Device("Device3"));
             });
 
-        _result.Data.Count.Should().Be(3);
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
 
-        _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
+        await Assert.That(_result.Data.Items.All(dwm => dwm.Device != ReactiveUI.Primitives.Optional<Device>.None)).IsTrue();
     }
 
-    [Fact]
-    public void UpdateRightKey()
+    [Test]
+    public async Task UpdateRightKey()
     {
         _left.Edit(
             innerCache =>
@@ -238,46 +230,42 @@ public class RightJoinFixture : IDisposable
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
-                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1, "Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2, "Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3, "Device3"));
             });
 
-        
         // Change pairing
-        _right.AddOrUpdate(new DeviceMetaData(2,"Device3"));
+        _right.AddOrUpdate(new DeviceMetaData(2, "Device3"));
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain(("Device2", 2));
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device3", 2));
-
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).DoesNotContain(("Device2", 2));
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).Contains(("Device3", 2));
 
         // Remove pairing
-        _right.AddOrUpdate(new DeviceMetaData(2,"Device4"));
+        _right.AddOrUpdate(new DeviceMetaData(2, "Device4"));
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain(("Device3", 2));
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain((null, 2));
-
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).DoesNotContain(("Device3", 2));
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).Contains((null, 2));
 
         // Restore pairing
-        _right.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+        _right.AddOrUpdate(new DeviceMetaData(2, "Device2"));
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain((null, 2));
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device2", 2));
-
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).DoesNotContain((null, 2));
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).Contains(("Device2", 2));
 
         // No change
-        _right.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+        _right.AddOrUpdate(new DeviceMetaData(2, "Device2"));
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().NotContain((null, 2));
-        _result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key)).Should().Contain(("Device2", 2));
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).DoesNotContain((null, 2));
+        await Assert.That(_result.Data.Items.Select(pair => (pair.Device.ValueOrDefault()?.Name, pair.MetaData.Key))).Contains(("Device2", 2));
     }
 
-    [Fact]
-    public void MultipleRight()
+    [Test]
+    public async Task MultipleRight()
     {
         _left.Edit(
             innerCache =>
@@ -290,18 +278,18 @@ public class RightJoinFixture : IDisposable
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device3")); // deliberate!
-                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1, "Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2, "Device3")); // deliberate!
+                innerCache.AddOrUpdate(new DeviceMetaData(3, "Device3"));
             });
 
-        _result.Data.Count.Should().Be(3);
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
 
-        _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
+        await Assert.That(_result.Data.Items.All(dwm => dwm.Device != ReactiveUI.Primitives.Optional<Device>.None)).IsTrue();
     }
 
-    [Fact]
-    public void MoreRight()
+    [Test]
+    public async Task MoreRight()
     {
         _left.Edit(
             innerCache =>
@@ -314,40 +302,40 @@ public class RightJoinFixture : IDisposable
         _right.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
-                innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2")); 
-                innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
-                innerCache.AddOrUpdate(new DeviceMetaData(4,"Device4"));
+                innerCache.AddOrUpdate(new DeviceMetaData(1, "Device1"));
+                innerCache.AddOrUpdate(new DeviceMetaData(2, "Device2"));
+                innerCache.AddOrUpdate(new DeviceMetaData(3, "Device3"));
+                innerCache.AddOrUpdate(new DeviceMetaData(4, "Device4"));
             });
 
-        _result.Data.Count.Should().Be(4);
+        await Assert.That(_result.Data.Count).IsEqualTo(4);
 
-        _result.Data.Lookup(4).HasValue.Should().BeTrue();
-        _result.Data.Items.Count(dwm => dwm.Device == Optional<Device>.None).Should().Be(1);
+        await Assert.That(_result.Data.Lookup(4).HasValue).IsTrue();
+        await Assert.That(_result.Data.Items.Count(dwm => dwm.Device == ReactiveUI.Primitives.Optional<Device>.None)).IsEqualTo(1);
     }
 
-    [Fact]
-    public void InitializationWaitsForBothSources()
+    [Test]
+    public async Task InitializationWaitsForBothSources()
     {
         var left = new[] { 1, 2, 3 };
         var right = new[] { 4, 6, 2 };
 
         ObservableCacheEx
             .RightJoin(
-                left:               left.AsObservableChangeSet(static left => 2 * left),
-                right:              right.AsObservableChangeSet(static right => right),
-                rightKeySelector:   static right => right,
-                resultSelector:     static (left, right) => (left: left.HasValue ? left.Value : default(int?), right))
+                left: left.AsObservableChangeSet(static left => 2 * left),
+                right: right.AsObservableChangeSet(static right => right),
+                rightKeySelector: static right => right,
+                resultSelector: static (left, right) => (left: left.HasValue ? left.Value : default(int?), right))
             .ValidateSynchronization()
             .ValidateChangeSets(static pair => pair.right)
             .RecordCacheItems(out var results);
 
-        results.Error.Should().BeNull();
+        await Assert.That(results.Error).IsNull();
 
-        results.RecordedChangeSets.Count.Should().Be(1, "Initialization should only emit one changeset.");
-        results.RecordedChangeSets[0].Should().OnlyContain(change => change.Reason == ChangeReason.Add, "Initialization should only emit Add changes.");
+        await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("Initialization should only emit one changeset.");
+        await Assert.That(results.RecordedChangeSets[0]).ContainsOnly(change => change.Reason == ChangeReason.Add).Because("Initialization should only emit Add changes.");
 
-        results.RecordedItemsByKey.Values.Should().OnlyContain(pair => (2 * pair.left) == pair.right, "Source items should have been joined correctly");
+        await Assert.That(results.RecordedItemsByKey.Values).ContainsOnly(pair => (2 * pair.left) == pair.right).Because("Source items should have been joined correctly");
     }
 
     public class Device(string name) : IEquatable<Device>
@@ -418,15 +406,15 @@ public class RightJoinFixture : IDisposable
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((DeviceMetaData) obj);
+            return Equals((DeviceMetaData)obj);
         }
 
         public override int GetHashCode() => HashCode.Combine(IsAutoConnect, Key, Name);
     }
 
-    public class DeviceWithMetadata(int key, Optional<Device> device, DeviceMetaData metaData) : IEquatable<DeviceWithMetadata>
+    public class DeviceWithMetadata(int key, ReactiveUI.Primitives.Optional<Device> device, DeviceMetaData metaData) : IEquatable<DeviceWithMetadata>
     {
-        public Optional<Device> Device { get; } = device;
+        public ReactiveUI.Primitives.Optional<Device> Device { get; } = device;
 
         public int Key { get; } = key;
 

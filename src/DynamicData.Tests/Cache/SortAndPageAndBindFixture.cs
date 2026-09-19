@@ -1,16 +1,13 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
-
+[InheritsTests]
 public sealed class SortAndPageAndBindWithImplicitOptionsFixtureReadOnlyCollection : SortAndPageAndBindFixtureBase
 {
     protected override (ChangeSetAggregator<Person, string> aggregator, IList<Person> list) SetUpTests()
@@ -26,6 +23,7 @@ public sealed class SortAndPageAndBindWithImplicitOptionsFixtureReadOnlyCollecti
     }
 }
 
+[InheritsTests]
 public sealed class SortAndPageAndBindFixtureReadOnlyCollection : SortAndPageAndBindFixtureBase
 {
     protected override (ChangeSetAggregator<Person, string> aggregator, IList<Person> list) SetUpTests()
@@ -40,6 +38,7 @@ public sealed class SortAndPageAndBindFixtureReadOnlyCollection : SortAndPageAnd
     }
 }
 
+[InheritsTests]
 public sealed class SortAndPageAndBindWithImplicitOptionsFixture : SortAndPageAndBindFixtureBase
 {
     protected override (ChangeSetAggregator<Person, string> aggregator, IList<Person> list) SetUpTests()
@@ -56,6 +55,7 @@ public sealed class SortAndPageAndBindWithImplicitOptionsFixture : SortAndPageAn
     }
 }
 
+[InheritsTests]
 public sealed class SortAndPageAndBindFixture : SortAndPageAndBindFixtureBase
 {
     protected override (ChangeSetAggregator<Person, string> aggregator, IList<Person> list) SetUpTests()
@@ -76,7 +76,7 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
 
     protected readonly SourceCache<Person, string> Source = new(p => p.Name);
     protected readonly IComparer<Person> Comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
-    protected readonly ISubject<IPageRequest> PageRequests = new BehaviorSubject<IPageRequest>(new PageRequest(0, 25));
+    private protected readonly ReactiveUI.Primitives.Signals.ISignal<IPageRequest> PageRequests = new ReactiveUI.Primitives.Signals.StateSignal<IPageRequest>(new PageRequest(0, 25));
 
     protected readonly ChangeSetAggregator<Person, string> Aggregator;
     protected readonly IList<Person> List;
@@ -94,12 +94,13 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
         List = args.list;
     }
 
-
     protected abstract (ChangeSetAggregator<Person, string> aggregator, IList<Person> list) SetUpTests();
 
+    private static async Task AssertPeopleAreEquivalent(IEnumerable<Person> actual, IEnumerable<Person> expected) =>
+        await Assert.That(actual).IsEquivalentTo(expected, Person.NameAgeGenderComparer, TUnit.Assertions.Enums.CollectionOrdering.Matching);
 
-    [Fact]
-    public void PageGreaterThanNumberOfPagesAvailable()
+    [Test]
+    public async Task PageGreaterThanNumberOfPagesAvailable()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid());
         Source.AddOrUpdate(people);
@@ -109,12 +110,11 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
 
         var expectedResult = people.OrderBy(p => p, Comparer).Skip(75).Take(25).ToList();
 
-        List.Should().BeEquivalentTo(expectedResult);
+        await AssertPeopleAreEquivalent(List, expectedResult);
     }
 
-
-    [Fact]
-    public void OverlappingShift()
+    [Test]
+    public async Task OverlappingShift()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid());
         Source.AddOrUpdate(people);
@@ -123,11 +123,11 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
 
         // for first batch, it should use the results of the _PageRequests subject (if a behaviour subject is used).
         var expectedResult = people.OrderBy(p => p, Comparer).Skip(20).Take(10).ToList();
-        List.Should().BeEquivalentTo(expectedResult);
+        await AssertPeopleAreEquivalent(List, expectedResult);
     }
 
-    [Fact]
-    public void AddFirstInRange()
+    [Test]
+    public async Task AddFirstInRange()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid()).ToList();
         Source.AddOrUpdate(people);
@@ -136,29 +136,28 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
         var person = new Person("_FirstPerson", 1);
         Source.AddOrUpdate(person);
 
-        Aggregator.Messages.Count.Should().Be(2);
+        await Assert.That(Aggregator.Messages.Count).IsEqualTo(2);
 
         var changes = Aggregator.Messages[1];
-        changes.Count.Should().Be(2);
+        await Assert.That(changes.Count).IsEqualTo(2);
 
         var firstChange = changes.First();
-        firstChange.Reason.Should().Be(ChangeReason.Remove);
-        firstChange.Current.Should().Be(new Person("P025", 25));
+        await Assert.That(firstChange.Reason).IsEqualTo(ChangeReason.Remove);
+        await Assert.That(Person.NameAgeGenderComparer.Equals(firstChange.Current, new Person("P025", 25))).IsTrue();
 
         var secondChange = changes.Skip(1).First();
-        secondChange.Reason.Should().Be(ChangeReason.Add);
-        secondChange.Current.Should().Be(person);
+        await Assert.That(secondChange.Reason).IsEqualTo(ChangeReason.Add);
+        await Assert.That(secondChange.Current).IsEqualTo(person);
 
         // check for correctness of resulting collection
         people.Add(person);
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
-        List.SequenceEqual(expectedResult).Should().Be(true);
+        await Assert.That(List.SequenceEqual(expectedResult, Person.NameAgeGenderComparer)).IsTrue();
     }
 
-
-    [Fact]
-    public void AddOutsideOfRange()
+    [Test]
+    public async Task AddOutsideOfRange()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid()).ToList();
         Source.AddOrUpdate(people);
@@ -168,47 +167,46 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
         Source.AddOrUpdate(person);
 
         // only the initials message should have been received
-        Aggregator.Messages.Count.Should().Be(1);
-
+        await Assert.That(Aggregator.Messages.Count).IsEqualTo(1);
 
         people.Add(person);
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
-        List.SequenceEqual(expectedResult).Should().Be(true);
+        await Assert.That(List.SequenceEqual(expectedResult, Person.NameAgeGenderComparer)).IsTrue();
     }
 
-    [Fact]
-    public void UpdateMoveOutOfRange()
+    [Test]
+    public async Task UpdateMoveOutOfRange()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid()).ToList();
         Source.AddOrUpdate(people);
+        var oldPerson = people.Single(p => p.Name == "P012");
 
         // Change an item so it moves from in range to out of range
         var person = new Person("P012", 50);
         Source.AddOrUpdate(person);
 
-        Aggregator.Messages.Count.Should().Be(2);
+        await Assert.That(Aggregator.Messages.Count).IsEqualTo(2);
 
         var changes = Aggregator.Messages[1];
-        changes.Count.Should().Be(2);
-
+        await Assert.That(changes.Count).IsEqualTo(2);
 
         var firstChange = changes.First();
-        firstChange.Reason.Should().Be(ChangeReason.Remove);
-        firstChange.Current.Should().Be(new Person("P012", 50));
+        await Assert.That(firstChange.Reason).IsEqualTo(ChangeReason.Remove);
+        await Assert.That(ReferenceEquals(firstChange.Current, oldPerson)).IsTrue();
 
         var secondChange = changes.Skip(1).First();
-        secondChange.Reason.Should().Be(ChangeReason.Add);
-        secondChange.Current.Should().Be(new Person("P026", 26));
+        await Assert.That(secondChange.Reason).IsEqualTo(ChangeReason.Add);
+        await Assert.That(Person.NameAgeGenderComparer.Equals(secondChange.Current, new Person("P026", 26))).IsTrue();
 
         // check for correctness of resulting collection
         people = people.OrderBy(p => p, Comparer).ToList();
         people[11] = person;
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
-        List.SequenceEqual(expectedResult).Should().Be(true);
+        await Assert.That(List.SequenceEqual(expectedResult, Person.NameAgeGenderComparer)).IsTrue();
     }
-    [Fact]
-    public void UpdateStayRange()
+    [Test]
+    public async Task UpdateStayRange()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid()).ToList();
         Source.AddOrUpdate(people);
@@ -217,28 +215,26 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
         var person = new Person("P012", -1);
         Source.AddOrUpdate(person);
 
-        Aggregator.Messages.Count.Should().Be(2);
+        await Assert.That(Aggregator.Messages.Count).IsEqualTo(2);
 
         var changes = Aggregator.Messages[1];
-        changes.Count.Should().Be(1);
+        await Assert.That(changes.Count).IsEqualTo(1);
 
         var firstChange = changes.First();
-        firstChange.Reason.Should().Be(ChangeReason.Update);
-        firstChange.Current.Should().Be(new Person("P012", -1));
-        firstChange.Previous.Value.Should().Be(new Person("P012", 12));
+        await Assert.That(firstChange.Reason).IsEqualTo(ChangeReason.Update);
+        await Assert.That(Person.NameAgeGenderComparer.Equals(firstChange.Current, new Person("P012", -1))).IsTrue();
+        await Assert.That(Person.NameAgeGenderComparer.Equals(firstChange.Previous.Value, new Person("P012", 12))).IsTrue();
 
         // check for correctness of resulting collection
         people = people.OrderBy(p => p, Comparer).ToList();
         people[11] = person;
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
-        List.SequenceEqual(expectedResult).Should().Be(true);
+        await Assert.That(List.SequenceEqual(expectedResult, Person.NameAgeGenderComparer)).IsTrue();
     }
 
-
-
-    [Fact]
-    public void UpdateOutOfRange()
+    [Test]
+    public async Task UpdateOutOfRange()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid()).ToList();
         Source.AddOrUpdate(people);
@@ -248,16 +244,15 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
         Source.AddOrUpdate(person);
 
         // only the initials message should have been received
-        Aggregator.Messages.Count.Should().Be(1);
+        await Assert.That(Aggregator.Messages.Count).IsEqualTo(1);
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
 
-        List.SequenceEqual(expectedResult).Should().Be(true);
+        await Assert.That(List.SequenceEqual(expectedResult, Person.NameAgeGenderComparer)).IsTrue();
     }
 
-
-    [Fact]
-    public void RemoveRange()
+    [Test]
+    public async Task RemoveRange()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid()).ToList();
         Source.AddOrUpdate(people);
@@ -266,29 +261,29 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
         var person = new Person("P012", 12);
         Source.Remove(person);
 
-        Aggregator.Messages.Count.Should().Be(2);
+        await Assert.That(Aggregator.Messages.Count).IsEqualTo(2);
 
         var changes = Aggregator.Messages[1];
-        changes.Count.Should().Be(2);
+        await Assert.That(changes.Count).IsEqualTo(2);
 
         var firstChange = changes.First();
-        firstChange.Reason.Should().Be(ChangeReason.Remove);
-        firstChange.Current.Should().Be(person);
+        await Assert.That(firstChange.Reason).IsEqualTo(ChangeReason.Remove);
+        await Assert.That(firstChange.Current).IsEqualTo(person);
 
         var secondChange = changes.Skip(1).First();
-        secondChange.Reason.Should().Be(ChangeReason.Add);
-        secondChange.Current.Should().Be(new Person("P026", 26));
+        await Assert.That(secondChange.Reason).IsEqualTo(ChangeReason.Add);
+        await Assert.That(Person.NameAgeGenderComparer.Equals(secondChange.Current, new Person("P026", 26))).IsTrue();
 
         // check for correctness of resulting collection
         people.Remove(person);
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
 
-        List.SequenceEqual(expectedResult).Should().Be(true);
+        await Assert.That(List.SequenceEqual(expectedResult, Person.NameAgeGenderComparer)).IsTrue();
     }
 
-    [Fact]
-    public void RemoveOutOfRange()
+    [Test]
+    public async Task RemoveOutOfRange()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid()).ToList();
         Source.AddOrUpdate(people);
@@ -298,16 +293,15 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
         Source.Remove(person);
 
         // only the initials message should have been received
-        Aggregator.Messages.Count.Should().Be(1);
+        await Assert.That(Aggregator.Messages.Count).IsEqualTo(1);
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
 
-        List.SequenceEqual(expectedResult).Should().Be(true);
+        await Assert.That(List.SequenceEqual(expectedResult, Person.NameAgeGenderComparer)).IsTrue();
     }
 
-
-    [Fact]
-    public void RefreshInRange()
+    [Test]
+    public async Task RefreshInRange()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid()).ToList();
         Source.AddOrUpdate(people);
@@ -315,17 +309,17 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
         var person = people.Single(p => p.Name == "P012");
         Source.Refresh(person);
 
-        Aggregator.Messages.Count.Should().Be(2);
+        await Assert.That(Aggregator.Messages.Count).IsEqualTo(2);
 
         var changes = Aggregator.Messages[1];
-        changes.Count.Should().Be(1);
+        await Assert.That(changes.Count).IsEqualTo(1);
 
         var firstChange = changes.First();
-        firstChange.Reason.Should().Be(ChangeReason.Refresh);
+        await Assert.That(firstChange.Reason).IsEqualTo(ChangeReason.Refresh);
     }
 
-    [Fact]
-    public void RefreshWithInlineChangeInRange()
+    [Test]
+    public async Task RefreshWithInlineChangeInRange()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid()).ToList();
         Source.AddOrUpdate(people);
@@ -336,21 +330,21 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
         person.Age = 5;
         Source.Refresh(person);
 
-        Aggregator.Messages.Count.Should().Be(2);
+        await Assert.That(Aggregator.Messages.Count).IsEqualTo(2);
 
         var changes = Aggregator.Messages[1];
-        changes.Count.Should().Be(1);
+        await Assert.That(changes.Count).IsEqualTo(1);
 
         var firstChange = changes.First();
-        firstChange.Reason.Should().Be(ChangeReason.Refresh);
+        await Assert.That(firstChange.Reason).IsEqualTo(ChangeReason.Refresh);
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
 
-        List.SequenceEqual(expectedResult).Should().Be(true);
+        await Assert.That(List.SequenceEqual(expectedResult, Person.NameAgeGenderComparer)).IsTrue();
     }
 
-    [Fact]
-    public void RefreshWithInlineChangeOutsideRange()
+    [Test]
+    public async Task RefreshWithInlineChangeOutsideRange()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person($"P{i:000}", i)).OrderBy(p => Guid.NewGuid()).ToList();
         Source.AddOrUpdate(people);
@@ -361,30 +355,29 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
         person.Age = 50;
         Source.Refresh(person);
 
-        Aggregator.Messages.Count.Should().Be(2);
+        await Assert.That(Aggregator.Messages.Count).IsEqualTo(2);
 
         var changes = Aggregator.Messages[1];
-        changes.Count.Should().Be(2);
+        await Assert.That(changes.Count).IsEqualTo(2);
 
         var firstChange = changes.First();
-        firstChange.Reason.Should().Be(ChangeReason.Remove);
-        firstChange.Current.Should().Be(new Person("P012", 50));
+        await Assert.That(firstChange.Reason).IsEqualTo(ChangeReason.Remove);
+        await Assert.That(Person.NameAgeGenderComparer.Equals(firstChange.Current, new Person("P012", 50))).IsTrue();
 
         var secondChange = changes.Skip(1).First();
-        secondChange.Reason.Should().Be(ChangeReason.Add);
-        secondChange.Current.Should().Be(new Person("P026", 26));
-
+        await Assert.That(secondChange.Reason).IsEqualTo(ChangeReason.Add);
+        await Assert.That(Person.NameAgeGenderComparer.Equals(secondChange.Current, new Person("P026", 26))).IsTrue();
 
         var expectedResult = people.OrderBy(p => p, Comparer).Take(25).ToList();
 
-        List.SequenceEqual(expectedResult).Should().Be(true);
+        await Assert.That(List.SequenceEqual(expectedResult, Person.NameAgeGenderComparer)).IsTrue();
     }
-
 
     public void Dispose()
     {
         Source.Dispose();
         Aggregator.Dispose();
         PageRequests.OnCompleted();
+        PageRequests.Dispose();
     }
 }

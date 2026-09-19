@@ -1,17 +1,15 @@
-﻿using System;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading.Tasks;
-
 using Bogus;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
-
 using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Cache;
@@ -29,10 +27,10 @@ public class GroupOnObservableFixture : IDisposable
     private const int RemoveCount = 37;
     private const int UpdateCount = 101;
 #endif
-    private readonly SourceCache<Person, string> _cache = new (p => p.UniqueKey);
+    private readonly SourceCache<Person, string> _cache = new(p => p.UniqueKey);
     private readonly ChangeSetAggregator<Person, string> _results;
     private readonly GroupChangeSetAggregator<Person, string, Color> _groupResults;
-    private readonly Subject<Unit> _grouperShutdown;
+    private readonly ReactiveUI.Primitives.Signals.Signal<Unit> _grouperShutdown;
     private readonly Faker<Person> _faker;
     private readonly Randomizer _randomizer = new(0x3141_5926);
 
@@ -44,8 +42,8 @@ public class GroupOnObservableFixture : IDisposable
         _groupResults = _cache.Connect().GroupOnObservable(CreateFavoriteColorObservable).AsAggregator();
     }
 
-    [Fact]
-    public void ResultContainsAllInitialChildren()
+    [Test]
+    public async Task ResultContainsAllInitialChildren()
     {
         // Arrange
 
@@ -53,14 +51,14 @@ public class GroupOnObservableFixture : IDisposable
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount);
-        _results.Messages.Count.Should().Be(1, "The child observables fire on subscription so everything should appear as a single changeset");
-        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().Be(1));
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount);
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("The child observables fire on subscription so everything should appear as a single changeset");
+        foreach (var group in _groupResults.Groups.Items) { await Assert.That(group.Messages.Count).IsEqualTo(1); }
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultContainsAddedValues()
+    [Test]
+    public async Task ResultContainsAddedValues()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -69,14 +67,14 @@ public class GroupOnObservableFixture : IDisposable
         _cache.AddOrUpdate(_faker.Generate(AddCount));
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount + AddCount);
-        _results.Messages.Count.Should().Be(2, "Initial Adds and then the subsequent Additions should each be a single message");
-        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount + AddCount);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("Initial Adds and then the subsequent Additions should each be a single message");
+        foreach (var group in _groupResults.Groups.Items) { await Assert.That(group.Messages.Count).IsLessThanOrEqualTo(2); }
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultDoesNotContainRemovedValues()
+    [Test]
+    public async Task ResultDoesNotContainRemovedValues()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -85,14 +83,14 @@ public class GroupOnObservableFixture : IDisposable
         _cache.RemoveKeys(_randomizer.ListItems(_cache.Items.ToList(), RemoveCount).Select(p => p.UniqueKey));
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount - RemoveCount);
-        _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
-        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount - RemoveCount);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("1 for Adds and 1 for Removes");
+        foreach (var group in _groupResults.Groups.Items) { await Assert.That(group.Messages.Count).IsLessThanOrEqualTo(2); }
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultContainsUpdatedValues()
+    [Test]
+    public async Task ResultContainsUpdatedValues()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -103,14 +101,14 @@ public class GroupOnObservableFixture : IDisposable
         _cache.AddOrUpdate(replacements);
 
         // Assert
-        _results.Data.Count.Should().Be(InitialCount, "Only replacements were made");
-        _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Updates");
-        _groupResults.Groups.Items.ForEach(group => group.Messages.Count.Should().BeLessThanOrEqualTo(2));
-        VerifyGroupingResults();
+        await Assert.That(_results.Data.Count).IsEqualTo(InitialCount).Because("Only replacements were made");
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("1 for Adds and 1 for Updates");
+        foreach (var group in _groupResults.Groups.Items) { await Assert.That(group.Messages.Count).IsLessThanOrEqualTo(2); }
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void GroupRemovedWhenEmpty()
+    [Test]
+    public async Task GroupRemovedWhenEmpty()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -122,17 +120,17 @@ public class GroupOnObservableFixture : IDisposable
         _cache.Edit(updater => updater.Remove(updater.Items.Where(p => p.FavoriteColor == removeColor).Select(p => p.UniqueKey)));
 
         // Assert
-        _cache.Items.Select(p => p.FavoriteColor).Distinct().Count().Should().Be(colorCount - 1);
-        _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
-        _groupResults.Data.Count.Should().Be(colorCount - 1, "{0} colors were used and then all of the {1} were removed", colorCount, removeColor);
-        _groupResults.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
-        _groupResults.Summary.Overall.Adds.Should().Be(colorCount);
-        _groupResults.Summary.Overall.Removes.Should().Be(1);
-        VerifyGroupingResults();
+        await Assert.That(_cache.Items.Select(p => p.FavoriteColor).Distinct().Count()).IsEqualTo(colorCount - 1);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("1 for Adds and 1 for Removes");
+        await Assert.That(_groupResults.Data.Count).IsEqualTo(colorCount - 1).Because($"{colorCount} colors were used and then all of the {removeColor} were removed");
+        await Assert.That(_groupResults.Messages.Count).IsEqualTo(2).Because("1 for Adds and 1 for Removes");
+        await Assert.That(_groupResults.Summary.Overall.Adds).IsEqualTo(colorCount);
+        await Assert.That(_groupResults.Summary.Overall.Removes).IsEqualTo(1);
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void GroupNotRemovedIfAddedBackImmediately()
+    [Test]
+    public async Task GroupNotRemovedIfAddedBackImmediately()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -150,18 +148,18 @@ public class GroupOnObservableFixture : IDisposable
         });
 
         // Assert
-        _cache.Items.Select(p => p.FavoriteColor).Distinct().Count().Should().Be(colorCount);
-        _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Other Added Value");
-        _groupResults.Data.Count.Should().Be(colorCount);
-        _groupResults.Messages.Count.Should().Be(1, "Shouldn't be removed/re-added");
-        _groupResults.Summary.Overall.Adds.Should().Be(colorCount);
-        _groupResults.Summary.Overall.Removes.Should().Be(0);
-        _groupResults.Groups.Lookup(removeColor).Value.Data.Count.Should().Be(1, "All the {0} were removed and then 1 was added back", removeColor);
-        VerifyGroupingResults();
+        await Assert.That(_cache.Items.Select(p => p.FavoriteColor).Distinct().Count()).IsEqualTo(colorCount);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("1 for Adds and 1 for Other Added Value");
+        await Assert.That(_groupResults.Data.Count).IsEqualTo(colorCount);
+        await Assert.That(_groupResults.Messages.Count).IsEqualTo(1).Because("Shouldn't be removed/re-added");
+        await Assert.That(_groupResults.Summary.Overall.Adds).IsEqualTo(colorCount);
+        await Assert.That(_groupResults.Summary.Overall.Removes).IsEqualTo(0);
+        await Assert.That(_groupResults.Groups.Lookup(removeColor).Value.Data.Count).IsEqualTo(1).Because($"All the {removeColor} were removed and then 1 was added back");
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void GroupingSequenceCompletesWhenEmpty()
+    [Test]
+    public async Task GroupingSequenceCompletesWhenEmpty()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -178,12 +176,12 @@ public class GroupOnObservableFixture : IDisposable
         _cache.Edit(updater => updater.Remove(updater.Items.Where(p => p.FavoriteColor == removeColor).Select(p => p.UniqueKey)));
 
         // Assert
-        results.IsCompleted.Should().BeTrue();
-        VerifyGroupingResults();
+        await Assert.That(results.IsCompleted).IsTrue();
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void AllSequencesShouldCompleteWhenSourceAndGroupingObservablesComplete()
+    [Test]
+    public async Task AllSequencesShouldCompleteWhenSourceAndGroupingObservablesComplete()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -197,12 +195,12 @@ public class GroupOnObservableFixture : IDisposable
         _grouperShutdown.OnNext(Unit.Default);
 
         // Assert
-        results.IsCompleted.Should().BeTrue();
-        VerifyGroupingResults();
+        await Assert.That(results.IsCompleted).IsTrue();
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void AllGroupsRemovedWhenCleared()
+    [Test]
+    public async Task AllGroupsRemovedWhenCleared()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -213,15 +211,15 @@ public class GroupOnObservableFixture : IDisposable
         _cache.Clear();
 
         // Assert
-        _cache.Items.Count.Should().Be(0);
-        _results.Messages.Count.Should().Be(2, "1 for Adds and 1 for Removes");
-        _groupResults.Summary.Overall.Adds.Should().Be(colorCount);
-        _groupResults.Summary.Overall.Removes.Should().Be(colorCount);
-        VerifyGroupingResults();
+        await Assert.That(_cache.Items.Count).IsEqualTo(0);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2).Because("1 for Adds and 1 for Removes");
+        await Assert.That(_groupResults.Summary.Overall.Adds).IsEqualTo(colorCount);
+        await Assert.That(_groupResults.Summary.Overall.Removes).IsEqualTo(colorCount);
+        await VerifyGroupingResults();
     }
 
-    [Fact]
-    public void ResultsContainsCorrectRegroupedValues()
+    [Test]
+    public async Task ResultsContainsCorrectRegroupedValues()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -230,10 +228,10 @@ public class GroupOnObservableFixture : IDisposable
         Enumerable.Range(0, UpdateCount).ForEach(_ => RandomFavoriteColorChange());
 
         // Assert
-        VerifyGroupingResults();
+        await VerifyGroupingResults();
     }
 
-    [Fact]
+    [Test]
     public async Task ResultsContainsCorrectRegroupedValuesAsync()
     {
         // Arrange
@@ -244,15 +242,15 @@ public class GroupOnObservableFixture : IDisposable
         await Task.WhenAll(tasks.ToArray());
 
         // Assert
-        VerifyGroupingResults();
+        await VerifyGroupingResults();
     }
 
-    [Theory]
-    [InlineData(false, false)]
-    [InlineData(true, false)]
-    [InlineData(false, true)]
-    [InlineData(true, true)]
-    public void ResultCompletesOnlyWhenSourceAndAllGroupingObservablesComplete(bool completeSource, bool completeGroups)
+    [Test]
+    [Arguments(false, false)]
+    [Arguments(true, false)]
+    [Arguments(false, true)]
+    [Arguments(true, true)]
+    public async Task ResultCompletesOnlyWhenSourceAndAllGroupingObservablesComplete(bool completeSource, bool completeGroups)
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -268,12 +266,12 @@ public class GroupOnObservableFixture : IDisposable
         }
 
         // Assert
-        _results.IsCompleted.Should().Be(completeSource);
-        _groupResults.IsCompleted.Should().Be(completeGroups && completeSource);
+        await Assert.That(_results.IsCompleted).IsEqualTo(completeSource);
+        await Assert.That(_groupResults.IsCompleted).IsEqualTo(completeGroups && completeSource);
     }
 
-    [Fact]
-    public void ResultFailsIfSourceFails()
+    [Test]
+    public async Task ResultFailsIfSourceFails()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -285,11 +283,11 @@ public class GroupOnObservableFixture : IDisposable
         _cache.Dispose();
 
         // Assert
-        results.Error.Should().Be(expectedError);
+        await Assert.That(results.Error).IsEqualTo(expectedError);
     }
 
-    [Fact]
-    public void ResultFailsIfGroupObservableFails()
+    [Test]
+    public async Task ResultFailsIfGroupObservableFails()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -300,11 +298,11 @@ public class GroupOnObservableFixture : IDisposable
         using var results = _cache.Connect().GroupOnObservable((person, key) => CreateFavoriteColorObservable(person, key).Take(1).Concat(throwObservable)).AsAggregator();
 
         // Assert
-        results.Error.Should().Be(expectedError);
+        await Assert.That(results.Error).IsEqualTo(expectedError);
     }
 
-    [Fact]
-    public void OnErrorFiresIfSelectorThrows()
+    [Test]
+    public async Task OnErrorFiresIfSelectorThrows()
     {
         // Arrange
         _cache.AddOrUpdate(_faker.Generate(InitialCount));
@@ -314,7 +312,7 @@ public class GroupOnObservableFixture : IDisposable
         using var results = _cache.Connect().GroupOnObservable<Person, string, Color>(_ => throw expectedError).AsAggregator();
 
         // Assert
-        results.Error.Should().Be(expectedError);
+        await Assert.That(results.Error).IsEqualTo(expectedError);
     }
 
     public void Dispose()
@@ -335,23 +333,23 @@ public class GroupOnObservableFixture : IDisposable
         }
     }
 
-    private void VerifyGroupingResults() =>
+    private Task VerifyGroupingResults() =>
         VerifyGroupingResults(_cache, _results, _groupResults);
 
-    private static void VerifyGroupingResults(ISourceCache<Person, string> cache, ChangeSetAggregator<Person, string> cacheResults, GroupChangeSetAggregator<Person, string, Color> groupResults)
+    private static async Task VerifyGroupingResults(ISourceCache<Person, string> cache, ChangeSetAggregator<Person, string> cacheResults, GroupChangeSetAggregator<Person, string, Color> groupResults)
     {
         var expectedPersons = cache.Items.ToList();
         var expectedGroupings = cache.Items.GroupBy(p => p.FavoriteColor).ToList();
 
         // These datasets should be equivalent
-        expectedPersons.Should().BeEquivalentTo(cacheResults.Data.Items);
-        groupResults.Groups.Keys.Should().BeEquivalentTo(expectedGroupings.Select(g => g.Key));
+        await Assert.That(expectedPersons).IsEquivalentTo(cacheResults.Data.Items);
+        await Assert.That(groupResults.Groups.Keys).IsEquivalentTo(expectedGroupings.Select(g => g.Key));
 
         // Check each group
-        expectedGroupings.ForEach(grouping => grouping.Should().BeEquivalentTo(groupResults.Groups.Lookup(grouping.Key).Value.Data.Items));
+        foreach (var grouping in expectedGroupings) { await Assert.That(grouping).IsEquivalentTo(groupResults.Groups.Lookup(grouping.Key).Value.Data.Items); }
 
         // No groups should be empty
-        groupResults.Groups.Items.ForEach(group => group.Data.Count.Should().BeGreaterThan(0, "Empty groups should be removed"));
+        foreach (var group in groupResults.Groups.Items) { await Assert.That(group.Data.Count).IsGreaterThan(0).Because("Empty groups should be removed"); }
     }
 
     private IObservable<Color> CreateFavoriteColorObservable(Person person, string key) =>

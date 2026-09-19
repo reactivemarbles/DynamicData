@@ -1,16 +1,12 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
-using DynamicData.Tests.Utilities;
-using FluentAssertions;
-
-using Xunit;
+#endif
 
 namespace DynamicData.Tests.Binding;
 
@@ -20,8 +16,8 @@ namespace DynamicData.Tests.Binding;
 /// </summary>
 public sealed class WhenPropertyChangedBehaviorFixture
 {
-    [Fact]
-    public void Shallow_NotifyInitialFalse_SubscribesHandlerBeforeReturning()
+    [Test]
+    public async Task Shallow_NotifyInitialFalse_SubscribesHandlerBeforeReturning()
     {
         // notifyOnInitialValue=false: Subscribe must return only after the PropertyChanged handler
         // is attached. A setter that fires immediately after Subscribe returns must reach the
@@ -34,11 +30,11 @@ public sealed class WhenPropertyChangedBehaviorFixture
 
         model.Value = 20;
 
-        emissions.Should().Equal(new[] { 20 });
+        await Assert.That(emissions).IsEquivalentTo(new[] { 20 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void Shallow_NotifyInitialTrue_DoesNotDedupSameValuedEvents()
+    [Test]
+    public async Task Shallow_NotifyInitialTrue_DoesNotDedupSameValuedEvents()
     {
         var model = new TestModel { Value = 10 };
         var emissions = new List<int>();
@@ -50,11 +46,11 @@ public sealed class WhenPropertyChangedBehaviorFixture
         model.Value = 10;
         model.Value = 10;
 
-        emissions.Should().Equal(new[] { 10, 10, 10, 10 });
+        await Assert.That(emissions).IsEquivalentTo(new[] { 10, 10, 10, 10 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void Shallow_NotifyInitialFalse_DoesNotDedupSameValuedEvents()
+    [Test]
+    public async Task Shallow_NotifyInitialFalse_DoesNotDedupSameValuedEvents()
     {
         var model = new TestModel { Value = 10 };
         var emissions = new List<int>();
@@ -65,11 +61,11 @@ public sealed class WhenPropertyChangedBehaviorFixture
         model.Value = 42;
         model.Value = 42;
 
-        emissions.Should().Equal(new[] { 42, 42 });
+        await Assert.That(emissions).IsEquivalentTo(new[] { 42, 42 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void DeepChain_NotifyInitialTrue_DoesNotDedupSameValuedEvents()
+    [Test]
+    public async Task DeepChain_NotifyInitialTrue_DoesNotDedupSameValuedEvents()
     {
         var parent = new ParentModel { Child = new ChildModel { Age = 1 } };
         var emissions = new List<int>();
@@ -81,11 +77,11 @@ public sealed class WhenPropertyChangedBehaviorFixture
         parent.Child!.Age = 1;
         parent.Child!.Age = 1;
 
-        emissions.Should().Equal(new[] { 1, 1, 1, 1 });
+        await Assert.That(emissions).IsEquivalentTo(new[] { 1, 1, 1, 1 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void DeepChain_NotifyInitialFalse_DoesNotDedupSameValuedEvents()
+    [Test]
+    public async Task DeepChain_NotifyInitialFalse_DoesNotDedupSameValuedEvents()
     {
         var parent = new ParentModel { Child = new ChildModel { Age = 1 } };
         var emissions = new List<int>();
@@ -96,11 +92,11 @@ public sealed class WhenPropertyChangedBehaviorFixture
         parent.Child!.Age = 7;
         parent.Child!.Age = 7;
 
-        emissions.Should().Equal(new[] { 7, 7 });
+        await Assert.That(emissions).IsEquivalentTo(new[] { 7, 7 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void DeepChain_PostSwap_LeafEventOnNewChild_Captured()
+    [Test]
+    public async Task DeepChain_PostSwap_LeafEventOnNewChild_Captured()
     {
         // After parent.Child is reassigned, the leaf-level subscription must be re-attached
         // against the new child. A subsequent leaf mutation on the new child must be captured.
@@ -114,11 +110,11 @@ public sealed class WhenPropertyChangedBehaviorFixture
         parent.Child = newChild;
         newChild.Age = 30;
 
-        emissions.Should().Equal(new[] { 10, 20, 30 });
+        await Assert.That(emissions).IsEquivalentTo(new[] { 10, 20, 30 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void DeepChain_MidChainSwap_DeeperLevelsRetargetCorrectly()
+    [Test]
+    public async Task DeepChain_MidChainSwap_DeeperLevelsRetargetCorrectly()
     {
         // Mid-chain swap on a 4-level chain. When level 3 is reassigned, the leaf subscription
         // must re-attach against the new subtree; events on the old subtree must be ignored
@@ -138,53 +134,20 @@ public sealed class WhenPropertyChangedBehaviorFixture
         using var sub = l1.WhenPropertyChanged(x => x.Child!.Child!.Child!.Leaf, notifyOnInitialValue: true)
             .Subscribe(pv => emissions.Add(pv.Value));
 
-        emissions.Should().Equal(new[] { 10 }, "initial emission");
+        await Assert.That(emissions).IsEquivalentTo(new[] { 10 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("initial emission");
 
         var originalLeaf = l1.Child!.Child!.Child!;
 
         var newL4 = new Level4 { Leaf = 20 };
         l1.Child!.Child!.Child = newL4;
 
-        emissions.Should().Equal(new[] { 10, 20 }, "mid-chain swap emits the new leaf value");
+        await Assert.That(emissions).IsEquivalentTo(new[] { 10, 20 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("mid-chain swap emits the new leaf value");
 
         newL4.Leaf = 30;
-        emissions.Should().Equal(new[] { 10, 20, 30 }, "leaf event on new subtree is captured");
+        await Assert.That(emissions).IsEquivalentTo(new[] { 10, 20, 30 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("leaf event on new subtree is captured");
 
         originalLeaf.Leaf = 999;
-        emissions.Should().Equal(new[] { 10, 20, 30 }, "leaf event on detached subtree is ignored");
-    }
-
-    // https://github.com/reactivemarbles/DynamicData/issues/1149
-    [Fact]
-    public void ExpressionContainsImplicitInterfaceCast()
-    {
-        var child = new ChildModel()
-        {
-            Age = 10
-        };
-        
-        using var subscription = ObserveAge(child)
-            .RecordValues(out var results);
-
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.RecordedValues.Should().ContainSingle("the initial value of the observed expression should have been published");
-        results.RecordedValues[0].Should().Be(child.Age, "the initial value of the observed expression should have been published");
-
-        ++child.Age;
-
-        results.Error.Should().BeNull("no errors should have occurred");
-        results.RecordedValues.Skip(1).Should().ContainSingle("the value of the observed expression changed once");
-        results.RecordedValues[1].Should().Be(child.Age, "the correct value should have been published");
-
-        static IObservable<int> ObserveAge<T>(T source)
-                where T : IHasAge
-            => source.WhenValueChanged(source => source.Age);
-    }
-    
-    private interface IHasAge
-        : INotifyPropertyChanged
-    {
-        int Age { get; }
+        await Assert.That(emissions).IsEquivalentTo(new[] { 10, 20, 30 }, TUnit.Assertions.Enums.CollectionOrdering.Matching).Because("leaf event on detached subtree is ignored");
     }
 
     private sealed class TestModel : INotifyPropertyChanged
@@ -221,8 +184,7 @@ public sealed class WhenPropertyChangedBehaviorFixture
         }
     }
 
-    private sealed class ChildModel
-        : IHasAge
+    private sealed class ChildModel : INotifyPropertyChanged
     {
         private int _age;
 

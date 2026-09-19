@@ -1,30 +1,23 @@
-using System;
-using System.Linq;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
 public class FilterOnPropertyFixture
 {
-    [Fact]
-    public void ChangeAValueSoItIsStillInTheFilter()
+    [Test]
+    public async Task ChangeAValueSoItIsStillInTheFilter()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         using var stub = new FilterPropertyStub();
         stub.Source.AddRange(people);
 
         people[50].Age = 100;
-        stub.Results.Messages.Count.Should().Be(2);
-        stub.Results.Data.Count.Should().Be(82);
+        await Assert.That(stub.Results.Messages.Count).IsEqualTo(2);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(82);
     }
 
-    [Fact]
-    public void ChangeAValueToMatchFilter()
+    [Test]
+    public async Task ChangeAValueToMatchFilter()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         using var stub = new FilterPropertyStub();
@@ -32,12 +25,12 @@ public class FilterOnPropertyFixture
 
         people[20].Age = 10;
 
-        stub.Results.Messages.Count.Should().Be(2);
-        stub.Results.Data.Count.Should().Be(81);
+        await Assert.That(stub.Results.Messages.Count).IsEqualTo(2);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(81);
     }
 
-    [Fact]
-    public void ChangeAValueToNoLongerMatchFilter()
+    [Test]
+    public async Task ChangeAValueToNoLongerMatchFilter()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         using var stub = new FilterPropertyStub();
@@ -45,43 +38,43 @@ public class FilterOnPropertyFixture
 
         people[10].Age = 20;
 
-        stub.Results.Messages.Count.Should().Be(2);
-        stub.Results.Data.Count.Should().Be(83);
+        await Assert.That(stub.Results.Messages.Count).IsEqualTo(2);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(83);
     }
 
-    [Fact]
-    public void Clear()
+    [Test]
+    public async Task Clear()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         using var stub = new FilterPropertyStub();
         stub.Source.AddRange(people);
         stub.Source.Clear();
 
-        stub.Results.Data.Count.Should().Be(0);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void InitialValues()
+    [Test]
+    public async Task InitialValues()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         using var stub = new FilterPropertyStub();
         stub.Source.AddRange(people);
 
-        stub.Results.Messages.Count.Should().Be(1);
-        stub.Results.Data.Count.Should().Be(82);
+        await Assert.That(stub.Results.Messages.Count).IsEqualTo(1);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(82);
 
-        stub.Results.Data.Items.Should().BeEquivalentTo(people.Skip(18));
+        await Assert.That(stub.Results.Data.Items).IsEquivalentTo(people.Skip(18));
     }
 
-    [Fact]
-    public void RemoveRange()
+    [Test]
+    public async Task RemoveRange()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         using var stub = new FilterPropertyStub();
         stub.Source.AddRange(people);
         stub.Source.RemoveRange(89, 10);
 
-        stub.Results.Data.Count.Should().Be(72);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(72);
     }
 
     private class FilterPropertyStub : IDisposable

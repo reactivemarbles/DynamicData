@@ -1,18 +1,33 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Kernel;
+#else
 
 namespace DynamicData.Kernel;
+#endif
 
 /// <summary>
 /// Continuation container used for the else operator on an option object.
 /// </summary>
 public sealed class OptionElse
 {
+    /// <summary>
+    /// The NoAction field.
+    /// </summary>
     internal static readonly OptionElse NoAction = new(false);
 
+    /// <summary>
+    /// The _shouldRunAction field.
+    /// </summary>
     private readonly bool _shouldRunAction;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OptionElse"/> class.
+    /// </summary>
+    /// <param name="shouldRunAction">The shouldRunAction value.</param>
     internal OptionElse(bool shouldRunAction = true) => _shouldRunAction = shouldRunAction;
 
     /// <summary>
@@ -22,7 +37,7 @@ public sealed class OptionElse
     /// <exception cref="ArgumentNullException">action.</exception>
     public void Else(Action action)
     {
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentExceptionHelper.ThrowIfNull(action);
 
         if (_shouldRunAction)
         {

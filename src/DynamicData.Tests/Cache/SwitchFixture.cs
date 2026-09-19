@@ -1,65 +1,53 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading;
 using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
 public class SwitchFixture
 {
-    [Fact]
-    public void ClearsForNewSource()
+    [Test]
+    public async Task ClearsForNewSource()
     {
         using var source = new SourceCache<Person, string>(p => p.Name);
-        using var switchable = new BehaviorSubject<ISourceCache<Person, string>>(source);
+        using var switchable = new ReactiveUI.Primitives.Signals.StateSignal<ISourceCache<Person, string>>(source);
         var results = switchable.Switch().AsAggregator();
-
 
         var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
         source.AddOrUpdate(inital);
 
-        results.Data.Count.Should().Be(100);
+        await Assert.That(results.Data.Count).IsEqualTo(100);
 
         var newSource = new SourceCache<Person, string>(p => p.Name);
         switchable.OnNext(newSource);
 
-        results.Data.Count.Should().Be(0);
+        await Assert.That(results.Data.Count).IsEqualTo(0);
 
         newSource.AddOrUpdate(inital);
-        results.Data.Count.Should().Be(100);
+        await Assert.That(results.Data.Count).IsEqualTo(100);
 
         var nextUpdates = Enumerable.Range(101, 100).Select(i => new Person("Person" + i, i)).ToArray();
         newSource.AddOrUpdate(nextUpdates);
-        results.Data.Count.Should().Be(200);
+        await Assert.That(results.Data.Count).IsEqualTo(200);
     }
 
-    [Fact]
-    public void PoulatesFirstSource()
+    [Test]
+    public async Task PoulatesFirstSource()
     {
         using var source = new SourceCache<Person, string>(p => p.Name);
-        using var switchable = new BehaviorSubject<ISourceCache<Person, string>>(source);
+        using var switchable = new ReactiveUI.Primitives.Signals.StateSignal<ISourceCache<Person, string>>(source);
         var results = switchable.Switch().AsAggregator();
-
 
         var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
         source.AddOrUpdate(inital);
 
-        results.Data.Count.Should().Be(100);
+        await Assert.That(results.Data.Count).IsEqualTo(100);
     }
 
-    [Fact]
-    public void PropagatesOuterErrors()
+    [Test]
+    public async Task PropagatesOuterErrors()
     {
         using var source = new SourceCache<Person, string>(p => p.Name);
-        using var switchable = new BehaviorSubject<ISourceCache<Person, string>>(source);
+        using var switchable = new ReactiveUI.Primitives.Signals.StateSignal<ISourceCache<Person, string>>(source);
         var results = switchable.Switch().AsAggregator();
-
 
         var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
         source.AddOrUpdate(inital);
@@ -67,69 +55,68 @@ public class SwitchFixture
         var error = new Exception("Test");
         switchable.OnError(error);
 
-        results.Error.Should().Be(error);
+        await Assert.That(results.Error).IsEqualTo(error);
     }
 
-    [Fact]
-    public void PropagatesInnerErrors()
+    [Test]
+    public async Task PropagatesInnerErrors()
     {
         using var source = new SourceCache<Person, string>(p => p.Name);
-        using var switchable = new BehaviorSubject<IObservable<IChangeSet<Person, string>>>(source.Connect());
+        using var switchable = new ReactiveUI.Primitives.Signals.StateSignal<IObservable<IChangeSet<Person, string>>>(source.Connect());
         var results = switchable.Switch().AsAggregator();
-
 
         var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
         source.AddOrUpdate(inital);
 
-        using var source2 = new BehaviorSubject<IChangeSet<Person, string>>(ChangeSet<Person, string>.Empty);
+        using var source2 = new ReactiveUI.Primitives.Signals.StateSignal<IChangeSet<Person, string>>(ChangeSet<Person, string>.Empty);
 
         switchable.OnNext(source2);
 
         var error = new Exception("Test");
         source2.OnError(error);
 
-        results.Error.Should().Be(error);
+        await Assert.That(results.Error).IsEqualTo(error);
     }
 
-    [Fact]
-    public void CompletesWhenSourcesAndInnerComplete()
+    [Test]
+    public async Task CompletesWhenSourcesAndInnerComplete()
     {
         using var source = new SourceCache<Person, string>(p => p.Name);
-        using var switchable = new BehaviorSubject<IObservable<IChangeSet<Person, string>>>(source.Connect());
+        using var switchable = new ReactiveUI.Primitives.Signals.StateSignal<IObservable<IChangeSet<Person, string>>>(source.Connect());
         using var results = switchable.Switch().AsAggregator();
 
         source.AddOrUpdate(Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray());
 
         switchable.OnCompleted();
-        results.IsCompleted.Should().BeFalse("the inner sequence is still running");
+        await Assert.That(results.IsCompleted).IsFalse().Because("the inner sequence is still running");
 
         source.Dispose();
 
-        results.IsCompleted.Should().BeTrue("both the sources and the inner sequence have completed");
-        results.Error.Should().BeNull();
-        results.Data.Count.Should().Be(100, "all data should have been received before completion");
+        await Assert.That(results.IsCompleted).IsTrue().Because("both the sources and the inner sequence have completed");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.Data.Count).IsEqualTo(100).Because("all data should have been received before completion");
     }
 
-    [Fact]
-    public void DoesNotCompleteWhileInnerIsStillRunning()
+    [Test]
+    public async Task DoesNotCompleteWhileInnerIsStillRunning()
     {
         using var source = new SourceCache<Person, string>(p => p.Name);
-        using var switchable = new BehaviorSubject<IObservable<IChangeSet<Person, string>>>(source.Connect());
+        using var switchable = new ReactiveUI.Primitives.Signals.StateSignal<IObservable<IChangeSet<Person, string>>>(source.Connect());
         using var results = switchable.Switch().AsAggregator();
 
         switchable.OnCompleted();
         source.AddOrUpdate(new Person("Person1", 1));
 
-        results.IsCompleted.Should().BeFalse("the inner sequence has not completed");
-        results.Data.Count.Should().Be(1, "changes should still flow after the sources sequence completes");
+        await Assert.That(results.IsCompleted).IsFalse().Because("the inner sequence has not completed");
+        await Assert.That(results.Data.Count).IsEqualTo(1).Because("changes should still flow after the sources sequence completes");
     }
 
-    [Fact]
-    public void DoesNotCompleteWhenOnlyASupersededInnerCompletes()
+    [Test]
+    public async Task DoesNotCompleteWhenOnlyASupersededInnerCompletes()
     {
         using var first = new SourceCache<Person, string>(p => p.Name);
         using var second = new SourceCache<Person, string>(p => p.Name);
-        using var switchable = new BehaviorSubject<IObservable<IChangeSet<Person, string>>>(first.Connect());
+        using var switchable = new ReactiveUI.Primitives.Signals.StateSignal<IObservable<IChangeSet<Person, string>>>(first.Connect());
         using var results = switchable.Switch().AsAggregator();
 
         switchable.OnNext(second.Connect());
@@ -137,72 +124,72 @@ public class SwitchFixture
 
         first.Dispose();
 
-        results.IsCompleted.Should().BeFalse("the superseded sequence is not the current one");
+        await Assert.That(results.IsCompleted).IsFalse().Because("the superseded sequence is not the current one");
 
         second.AddOrUpdate(new Person("Person1", 1));
-        results.Data.Count.Should().Be(1, "the current sequence should still be delivering");
+        await Assert.That(results.Data.Count).IsEqualTo(1).Because("the current sequence should still be delivering");
 
         second.Dispose();
-        results.IsCompleted.Should().BeTrue("the current sequence has now completed");
+        await Assert.That(results.IsCompleted).IsTrue().Because("the current sequence has now completed");
     }
 
-    [Fact]
-    public void CompletesWhenSourcesAndInnerCompleteSynchronously()
+    [Test]
+    public async Task CompletesWhenSourcesAndInnerCompleteSynchronously()
     {
         using var results = Observable.Return(Observable.Empty<IChangeSet<Person, string>>()).Switch().AsAggregator();
 
-        results.IsCompleted.Should().BeTrue("everything completed during subscription");
-        results.Error.Should().BeNull();
+        await Assert.That(results.IsCompleted).IsTrue().Because("everything completed during subscription");
+        await Assert.That(results.Error).IsNull();
     }
 
-    [Fact]
-    public void DeliversChangesEmittedBeforeSynchronousCompletion()
+    [Test]
+    public async Task DeliversChangesEmittedBeforeSynchronousCompletion()
     {
         var change = new ChangeSet<Person, string> { new(ChangeReason.Add, "Person1", new Person("Person1", 1)) };
         using var results = Observable.Return(Observable.Return((IChangeSet<Person, string>)change)).Switch().AsAggregator();
 
-        results.Data.Count.Should().Be(1, "changes emitted before a synchronous completion must not be lost");
-        results.IsCompleted.Should().BeTrue("the source completed");
-        results.Error.Should().BeNull();
+        await Assert.That(results.Data.Count).IsEqualTo(1).Because("changes emitted before a synchronous completion must not be lost");
+        await Assert.That(results.IsCompleted).IsTrue().Because("the source completed");
+        await Assert.That(results.Error).IsNull();
     }
 
-    [Fact]
-    public void IgnoresChangesFromASupersededSource()
+    [Test]
+    public async Task IgnoresChangesFromASupersededSource()
     {
-        using var first = new Subject<IChangeSet<Person, string>>();
-        using var second = new Subject<IChangeSet<Person, string>>();
-        using var switchable = new BehaviorSubject<IObservable<IChangeSet<Person, string>>>(first);
+        using var first = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Person, string>>();
+        using var second = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Person, string>>();
+        using var switchable = new ReactiveUI.Primitives.Signals.StateSignal<IObservable<IChangeSet<Person, string>>>(first);
         using var results = switchable.Switch().AsAggregator();
 
         first.OnNext(new ChangeSet<Person, string> { new(ChangeReason.Add, "Person1", new Person("Person1", 1)) });
-        results.Data.Count.Should().Be(1);
+        await Assert.That(results.Data.Count).IsEqualTo(1);
 
         switchable.OnNext(second);
-        results.Data.Count.Should().Be(0, "moving to a new source drops what the previous one contributed");
+        await Assert.That(results.Data.Count).IsEqualTo(0).Because("moving to a new source drops what the previous one contributed");
 
         first.OnNext(new ChangeSet<Person, string> { new(ChangeReason.Add, "Person2", new Person("Person2", 2)) });
 
-        results.Data.Count.Should().Be(0, "a superseded source must not be able to write into the result");
-        results.Error.Should().BeNull();
+        await Assert.That(results.Data.Count).IsEqualTo(0).Because("a superseded source must not be able to write into the result");
+        await Assert.That(results.Error).IsNull();
     }
 
-    [Fact]
-    public void PropagatesInnerErrorsRaisedSynchronously()
+    [Test]
+    public async Task PropagatesInnerErrorsRaisedSynchronously()
     {
         var error = new Exception("Test");
         using var results = Observable.Return(Observable.Throw<IChangeSet<Person, string>>(error)).Switch().AsAggregator();
 
-        results.Error.Should().Be(error, "the error was raised during subscription");
+        await Assert.That(results.Error).IsEqualTo(error).Because("the error was raised during subscription");
     }
 
-    [Fact]
-    public void DoesNotHoldALockWhileDeliveringDownstream()
+    [Test]
+    public async Task DoesNotHoldALockWhileDeliveringDownstream()
     {
         // Observable.Switch holds its gate for the whole of downstream delivery, which is the shape that
         // deadlocks when a pipeline crosses into another cache. Delivery has to go through the queue, which
         // enqueues and returns, so a producer is never held up by whatever a subscriber is doing.
-        using var switchable = new Subject<IObservable<IChangeSet<Person, string>>>();
-        using var first = new Subject<IChangeSet<Person, string>>();
+        using var switchable = new ReactiveUI.Primitives.Signals.Signal<IObservable<IChangeSet<Person, string>>>();
+        using var first = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Person, string>>();
 
         using var isDelivering = new ManualResetEventSlim(false);
         using var release = new ManualResetEventSlim(false);
@@ -218,9 +205,9 @@ public class SwitchFixture
         var deliverer = new Thread(() => first.OnNext(new ChangeSet<Person, string> { new(ChangeReason.Add, "a", new Person("a", 1)) })) { IsBackground = true };
         deliverer.Start();
 
-        isDelivering.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue("the subscriber should have been handed the change");
+        await Assert.That(isDelivering.Wait(TimeSpan.FromSeconds(10))).IsTrue().Because("the subscriber should have been handed the change");
 
-        var producer = new Thread(() => switchable.OnNext(new Subject<IChangeSet<Person, string>>())) { IsBackground = true };
+        var producer = new Thread(() => switchable.OnNext(new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Person, string>>())) { IsBackground = true };
         producer.Start();
 
         var producerFinished = producer.Join(TimeSpan.FromSeconds(2));
@@ -229,11 +216,11 @@ public class SwitchFixture
         deliverer.Join(TimeSpan.FromSeconds(10));
         producer.Join(TimeSpan.FromSeconds(10));
 
-        producerFinished.Should().BeTrue("writing to the source must not block while a subscriber holds onto a notification");
+        await Assert.That(producerFinished).IsTrue().Because("writing to the source must not block while a subscriber holds onto a notification");
     }
 
-    [Fact]
-    public void IgnoresErrorsFromASupersededSource()
+    [Test]
+    public async Task IgnoresErrorsFromASupersededSource()
     {
         // Switching away from a source means anything it produces afterwards belongs to a source that
         // is no longer selected, and that includes its failures. Ordinarily disposal stops a
@@ -248,21 +235,21 @@ public class SwitchFixture
             return Disposable.Empty;
         });
 
-        using var switchable = new Subject<IObservable<IChangeSet<Person, string>>>();
-        using var current = new Subject<IChangeSet<Person, string>>();
+        using var switchable = new ReactiveUI.Primitives.Signals.Signal<IObservable<IChangeSet<Person, string>>>();
+        using var current = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Person, string>>();
 
         using var results = switchable.Switch().AsAggregator();
 
         switchable.OnNext(superseded);
         switchable.OnNext(current);
 
-        supersededObserver.Should().NotBeNull("the superseded source should have been subscribed");
+        await Assert.That(supersededObserver).IsNotNull().Because("the superseded source should have been subscribed");
         supersededObserver!.OnError(new Exception("Test"));
 
-        results.Error.Should().BeNull("the failed source had already been switched away from");
+        await Assert.That(results.Error).IsNull().Because("the failed source had already been switched away from");
 
         current.OnNext(new ChangeSet<Person, string> { new(ChangeReason.Add, "a", new Person("a", 1)) });
 
-        results.Data.Count.Should().Be(1, "the selected source should still be delivering");
+        await Assert.That(results.Data.Count).IsEqualTo(1).Because("the selected source should still be delivering");
     }
 }

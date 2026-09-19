@@ -1,14 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
@@ -16,8 +6,8 @@ public class BufferInitialFixture
 {
     private static readonly ICollection<Person> People = Enumerable.Range(1, 10_000).Select(i => new Person(i.ToString(), i)).ToList();
 
-    [Fact]
-    public void BufferInitial()
+    [Test]
+    public async Task BufferInitial()
     {
         var scheduler = new TestScheduler();
 
@@ -28,17 +18,17 @@ public class BufferInitialFixture
             cache.Add(item);
         }
 
-        aggregator.Data.Count.Should().Be(0);
-        aggregator.Messages.Count.Should().Be(0);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(0);
+        await Assert.That(aggregator.Messages.Count).IsEqualTo(0);
 
         scheduler.Start();
 
-        aggregator.Data.Count.Should().Be(10_000);
-        aggregator.Messages.Count.Should().Be(1);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(10_000);
+        await Assert.That(aggregator.Messages.Count).IsEqualTo(1);
 
         cache.Add(new Person("_New", 1));
 
-        aggregator.Data.Count.Should().Be(10_001);
-        aggregator.Messages.Count.Should().Be(2);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(10_001);
+        await Assert.That(aggregator.Messages.Count).IsEqualTo(2);
     }
 }

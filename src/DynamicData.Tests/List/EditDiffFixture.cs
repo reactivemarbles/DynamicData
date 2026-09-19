@@ -1,11 +1,4 @@
-﻿using System;
-using System.Linq;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
@@ -22,19 +15,19 @@ public class EditDiffFixture : IDisposable
         _cache.AddRange(Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray());
     }
 
-    [Fact]
-    public void Amends()
+    [Test]
+    public async Task Amends()
     {
         var newList = Enumerable.Range(5, 3).Select(i => new Person("Name" + i, i + 10)).ToArray();
         _cache.EditDiff(newList, Person.NameAgeGenderComparer);
 
-        _cache.Count.Should().Be(3);
+        await Assert.That(_cache.Count).IsEqualTo(3);
 
         var lastChange = _result.Messages.Last();
-        lastChange.Adds.Should().Be(3);
-        lastChange.Removes.Should().Be(10);
+        await Assert.That(lastChange.Adds).IsEqualTo(3);
+        await Assert.That(lastChange.Removes).IsEqualTo(10);
 
-        _cache.Items.Should().BeEquivalentTo(newList);
+        await Assert.That(_cache.Items).IsEquivalentTo(newList, Person.NameAgeGenderComparer);
     }
 
     public void Dispose()
@@ -43,59 +36,59 @@ public class EditDiffFixture : IDisposable
         _result.Dispose();
     }
 
-    [Fact]
-    public void EditWithSameData()
+    [Test]
+    public async Task EditWithSameData()
     {
         var newPeople = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
 
         _cache.EditDiff(newPeople, Person.NameAgeGenderComparer);
 
-        _cache.Count.Should().Be(10);
-        _cache.Items.Should().BeEquivalentTo(newPeople);
-        _result.Messages.Count.Should().Be(1);
+        await Assert.That(_cache.Count).IsEqualTo(10);
+        await Assert.That(_cache.Items).IsEquivalentTo(newPeople, Person.NameAgeGenderComparer);
+        await Assert.That(_result.Messages.Count).IsEqualTo(1);
     }
 
-    [Fact]
-    public void New()
+    [Test]
+    public async Task New()
     {
         var newPeople = Enumerable.Range(1, 15).Select(i => new Person("Name" + i, i)).ToArray();
 
         _cache.EditDiff(newPeople, Person.NameAgeGenderComparer);
 
-        _cache.Count.Should().Be(15);
-        _cache.Items.Should().BeEquivalentTo(newPeople);
+        await Assert.That(_cache.Count).IsEqualTo(15);
+        await Assert.That(_cache.Items).IsEquivalentTo(newPeople, Person.NameAgeGenderComparer);
         var lastChange = _result.Messages.Last();
-        lastChange.Adds.Should().Be(5);
+        await Assert.That(lastChange.Adds).IsEqualTo(5);
     }
 
-    [Fact]
-    public void Removes()
+    [Test]
+    public async Task Removes()
     {
         var newList = Enumerable.Range(1, 7).Select(i => new Person("Name" + i, i)).ToArray();
         _cache.EditDiff(newList, Person.NameAgeGenderComparer);
 
-        _cache.Count.Should().Be(7);
+        await Assert.That(_cache.Count).IsEqualTo(7);
 
         var lastChange = _result.Messages.Last();
-        lastChange.Adds.Should().Be(0);
-        lastChange.Removes.Should().Be(3);
+        await Assert.That(lastChange.Adds).IsEqualTo(0);
+        await Assert.That(lastChange.Removes).IsEqualTo(3);
 
-        _cache.Items.Should().BeEquivalentTo(newList);
+        await Assert.That(_cache.Items).IsEquivalentTo(newList, Person.NameAgeGenderComparer);
     }
 
-    [Fact]
-    public void VariousChanges()
+    [Test]
+    public async Task VariousChanges()
     {
         var newList = Enumerable.Range(6, 10).Select(i => new Person("Name" + i, i)).ToArray();
 
         _cache.EditDiff(newList, Person.NameAgeGenderComparer);
 
-        _cache.Count.Should().Be(10);
+        await Assert.That(_cache.Count).IsEqualTo(10);
 
         var lastChange = _result.Messages.Last();
-        lastChange.Adds.Should().Be(5);
-        lastChange.Removes.Should().Be(5);
+        await Assert.That(lastChange.Adds).IsEqualTo(5);
+        await Assert.That(lastChange.Removes).IsEqualTo(5);
 
-        _cache.Items.Should().BeEquivalentTo(newList);
+        await Assert.That(_cache.Items).IsEquivalentTo(newList, Person.NameAgeGenderComparer);
     }
 }

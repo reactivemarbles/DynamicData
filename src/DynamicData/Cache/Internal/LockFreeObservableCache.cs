@@ -1,13 +1,15 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
+#endif
 
 /// <summary>
 /// An observable cache which exposes an update API. Used at the root
@@ -20,19 +22,37 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     where TObject : notnull
     where TKey : notnull
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<IChangeSet<TObject, TKey>> _changes = new();
+    /// <summary>
+    /// The _changes field.
+    /// </summary>
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Signal<IChangeSet<TObject, TKey>> _changes = new();
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<IChangeSet<TObject, TKey>> _changesPreview = new();
+    /// <summary>
+    /// The _changesPreview field.
+    /// </summary>
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Signal<IChangeSet<TObject, TKey>> _changesPreview = new();
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<int> _countChanged = new();
+    /// <summary>
+    /// The _countChanged field.
+    /// </summary>
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Signal<int> _countChanged = new();
 
+    /// <summary>
+    /// The _cleanUp field.
+    /// </summary>
     private readonly IDisposable _cleanUp;
 
+    /// <summary>
+    /// The _innerCache field.
+    /// </summary>
     private readonly ChangeAwareCache<TObject, TKey> _innerCache = new();
 
+    /// <summary>
+    /// The _updater field.
+    /// </summary>
     private readonly ICacheUpdater<TObject, TKey> _updater;
 
     /// <summary>
@@ -41,6 +61,8 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     /// <param name="source">The source.</param>
     public LockFreeObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
+        ArgumentExceptionHelper.ThrowIfNull(source);
+
         _updater = new CacheUpdater<TObject, TKey>(_innerCache);
 
         var loader = source.Select(
@@ -91,6 +113,9 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     public IReadOnlyDictionary<TKey, TObject> KeyValues => new Dictionary<TKey, TObject>(_innerCache.GetDictionary());
 
     /// <inheritdoc />
+    /// <param name="predicate">The predicate value.</param>
+    /// <param name="suppressEmptyChangeSets">The suppressEmptyChangeSets value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => Observable.Defer(
             () =>
             {
@@ -118,10 +143,7 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     /// <param name="editAction">The edit action.</param>
     public void Edit(Action<ICacheUpdater<TObject, TKey>> editAction)
     {
-        if (editAction is null)
-        {
-            throw new ArgumentNullException(nameof(editAction));
-        }
+        ArgumentExceptionHelper.ThrowIfNull(editAction);
 
         editAction(_updater);
         _changes.OnNext(_innerCache.CaptureChanges());
@@ -135,9 +157,11 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     /// <remarks>
     /// Fast indexed lookup.
     /// </remarks>
-    public Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
+    public ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
     /// <inheritdoc />
+    /// <param name="predicate">The predicate value.</param>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
 
     /// <summary>

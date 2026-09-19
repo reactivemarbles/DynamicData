@@ -1,12 +1,20 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Diagnostics.CodeAnalysis;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 /// <summary>
 /// Adaptor to reflect a change set into an observable list.
@@ -19,7 +27,7 @@ namespace DynamicData.Binding;
 /// <param name="refreshThreshold">The number of changes before a Reset event is used.</param>
 /// <param name="allowReplace"> Use replace instead of remove / add for updates. </param>
 /// <param name="resetOnFirstTimeLoad"> Should a reset be fired for a first time load.This option is due to historic reasons where a reset would be fired for the first time load regardless of the number of changes.</param>
-/// <exception cref="System.ArgumentNullException">collection.</exception>
+/// <exception cref="ArgumentNullException">collection.</exception>
 public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection, int refreshThreshold,
 #pragma warning disable CS9113 // Parameter is unread.
     bool allowReplace = true,
@@ -28,7 +36,14 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
 
     where T : notnull
 {
+    /// <summary>
+    /// The _collection field.
+    /// </summary>
     private readonly IObservableCollection<T> _collection = collection ?? throw new ArgumentNullException(nameof(collection));
+
+    /// <summary>
+    /// The _loaded field.
+    /// </summary>
     private bool _loaded;
 
     /// <summary>
@@ -56,7 +71,7 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
     /// <param name="changes">The changes.</param>
     public void Adapt(IChangeSet<T> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
 
         if (changes.TotalChanges - changes.Refreshes > refreshThreshold || (!_loaded && resetOnFirstTimeLoad))
         {
@@ -91,7 +106,14 @@ public class ObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 2
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _cache field.
+    /// </summary>
     private readonly Cache<TObject, TKey> _cache = new();
+
+    /// <summary>
+    /// The _loaded field.
+    /// </summary>
     private bool _loaded;
 
     /// <summary>
@@ -110,8 +132,8 @@ public class ObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 2
     /// <param name="collection">The collection.</param>
     public void Adapt(IChangeSet<TObject, TKey> changes, IObservableCollection<TObject> collection)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
-        collection.ThrowArgumentNullExceptionIfNull(nameof(collection));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
+        ArgumentExceptionHelper.ThrowIfNull(collection);
 
         _cache.Clone(changes);
 
@@ -132,6 +154,11 @@ public class ObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 2
         }
     }
 
+    /// <summary>
+    /// Executes the DoUpdate operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    /// <param name="list">The list value.</param>
     private void DoUpdate(IChangeSet<TObject, TKey> changes, IObservableCollection<TObject> list)
     {
         foreach (var change in changes.ToConcreteType())

@@ -1,15 +1,25 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+using DynamicData.Reactive.Binding;
+#else
 
 using DynamicData.Binding;
+#endif
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Options for the sort and virtualize operator.
 /// </summary>
-public record struct SortAndVirtualizeOptions()
+public readonly record struct SortAndVirtualizeOptions()
 {
     /// <summary>
     /// The sort reset threshold ie the number of changes before a reset is fired.

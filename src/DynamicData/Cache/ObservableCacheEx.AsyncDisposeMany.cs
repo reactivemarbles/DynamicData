@@ -1,24 +1,15 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -37,10 +28,10 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of items in the cache.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to track for async disposal on removal.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to track for async disposal on removal.</param>
     /// <param name="disposalsCompletedAccessor">
     /// <para>
-    /// Invoked once per subscription, providing an <see cref="IObservable{Unit}"/> that signals when all
+    /// Invoked once per subscription, providing an <c>IObservable&lt;Unit&gt;</c> that signals when all
     /// <see cref="IAsyncDisposable.DisposeAsync()"/> calls have finished. The signal emits a single value
     /// and then completes.
     /// </para>
@@ -68,7 +59,7 @@ public static partial class ObservableCacheEx
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="disposalsCompletedAccessor"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="DisposeMany{TObject,TKey}"/>
+    /// <seealso><c>DisposeMany&lt;TObject,TKey&gt;</c></seealso>
     public static IObservable<IChangeSet<TObject, TKey>> AsyncDisposeMany<TObject, TKey>(
                 this IObservable<IChangeSet<TObject, TKey>> source,
                 Action<IObservable<Unit>> disposalsCompletedAccessor)

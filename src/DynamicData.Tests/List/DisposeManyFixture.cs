@@ -1,22 +1,14 @@
-using System;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.List;
 
 public sealed class DisposeManyFixture : IDisposable
 {
-    private readonly Subject<IChangeSet<DisposableObject>> _changeSetsSource;
+    private readonly ReactiveUI.Primitives.Signals.Signal<IChangeSet<DisposableObject>> _changeSetsSource;
 
     private readonly SourceList<DisposableObject> _itemsSource;
 
     private readonly ChangeSetAggregator<DisposableObject> _results;
+
+    private readonly List<DisposableObject> _itemsDisposedBeforeDownstreamNotification = [];
 
     public DisposeManyFixture()
     {
@@ -29,26 +21,34 @@ public sealed class DisposeManyFixture : IDisposable
                     foreach (var change in changeSet)
                     {
                         if (change.Item.Current is not null)
-                            change.Item.Current.IsDisposed.Should().BeFalse("items should not be disposed until after downstream notifications are processed");
+                            TrackIfDisposed(change.Item.Current);
 
                         if (change.Item.Previous.HasValue)
-                            change.Item.Previous.Value.IsDisposed.Should().BeFalse("items should not be disposed until after downstream notifications are processed");
+                            TrackIfDisposed(change.Item.Previous.Value);
 
                         if (change.Range is not null)
                             foreach (var item in change.Range)
-                                item.IsDisposed.Should().BeFalse("items should not be disposed until after downstream notifications are processed");
+                                TrackIfDisposed(item);
                     }
                 },
                 onError: _ =>
                 {
-                    foreach(var item in _itemsSource.Items)
-                        item.IsDisposed.Should().BeFalse("items should not be disposed until after downstream notifications are processed");
+                    foreach (var item in _itemsSource.Items)
+                        TrackIfDisposed(item);
                 },
                 onCompleted: () =>
                 {
-                    foreach(var item in _itemsSource.Items)
-                        item.IsDisposed.Should().BeFalse("items should not be disposed until after downstream notifications are processed");
+                    foreach (var item in _itemsSource.Items)
+                        TrackIfDisposed(item);
                 }));
+    }
+
+    private void TrackIfDisposed(DisposableObject item)
+    {
+        if (item.IsDisposed)
+        {
+            _itemsDisposedBeforeDownstreamNotification.Add(item);
+        }
     }
 
     public void Dispose()
@@ -58,26 +58,27 @@ public sealed class DisposeManyFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
+    [Test]
     // Verifies https://github.com/reactivemarbles/DynamicData/issues/668
-    public void ErrorsArePropagated()
+    public async Task ErrorsArePropagated()
     {
         var error = new Exception("Test Exception");
 
         var source = Observable.Throw<IChangeSet<object>>(error)
             .DisposeMany();
 
-        FluentActions.Invoking(() => source.Subscribe()).Should().Throw<Exception>().Which.Should().BeSameAs(error);
+        var exception = await Assert.That(() => source.Subscribe()).Throws<Exception>();
+        await Assert.That(exception).IsSameReferenceAs(error);
 
         var receivedError = null as Exception;
         source.Subscribe(
             onNext: static _ => { },
             onError: error => receivedError = error);
-        receivedError.Should().BeSameAs(error);
+        await Assert.That(receivedError).IsSameReferenceAs(error);
     }
 
-    [Fact]
-    public void ItemsAreDisposedAfterRemovalOrReplacement()
+    [Test]
+    public async Task ItemsAreDisposedAfterRemovalOrReplacement()
     {
         var items = Enumerable.Range(1, 10)
             .Select(id => new DisposableObject(id))
@@ -99,15 +100,16 @@ public sealed class DisposeManyFixture : IDisposable
             new(ListChangeReason.Refresh, current: _itemsSource.Items[0], index: 0)
         });
 
-        _results.Exception.Should().BeNull();
-        _results.Messages.Count.Should().Be(11, "11 updates were made to the source");
-        _results.Data.Count.Should().Be(3, "3 items were not removed from the list");
-        _results.Data.Items.All(item => item.IsDisposed).Should().BeFalse("items remaining in the list should not be disposed");
-        items.Except(_results.Data.Items).All(item => item.IsDisposed).Should().BeTrue("items removed from the list should be disposed");
+        await Assert.That(_results.Exception).IsNull();
+        await Assert.That(_itemsDisposedBeforeDownstreamNotification).IsEmpty().Because("items should not be disposed until after downstream notifications are processed");
+        await Assert.That(_results.Messages.Count).IsEqualTo(11).Because("11 updates were made to the source");
+        await Assert.That(_results.Data.Count).IsEqualTo(3).Because("3 items were not removed from the list");
+        await Assert.That(_results.Data.Items.All(item => item.IsDisposed)).IsFalse().Because("items remaining in the list should not be disposed");
+        await Assert.That(items.Except(_results.Data.Items).All(item => item.IsDisposed)).IsTrue().Because("items removed from the list should be disposed");
     }
 
-    [Fact]
-    public void RemainingItemsAreDisposedAfterCompleted()
+    [Test]
+    public async Task RemainingItemsAreDisposedAfterCompleted()
     {
         _itemsSource.AddRange(new[]
         {
@@ -118,30 +120,32 @@ public sealed class DisposeManyFixture : IDisposable
         _itemsSource.Dispose();
         _changeSetsSource.OnCompleted();
 
-        _results.Exception.Should().BeNull();
-        _results.Messages.Count.Should().Be(1, "1 update was made to the list");
-        _results.Data.Count.Should().Be(3, "3 items were not removed from the list");
-        _results.Data.Items.All(item => item.IsDisposed).Should().BeTrue("items remaining in the list should be disposed");
+        await Assert.That(_results.Exception).IsNull();
+        await Assert.That(_itemsDisposedBeforeDownstreamNotification).IsEmpty().Because("items should not be disposed until after downstream notifications are processed");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("1 update was made to the list");
+        await Assert.That(_results.Data.Count).IsEqualTo(3).Because("3 items were not removed from the list");
+        await Assert.That(_results.Data.Items.All(item => item.IsDisposed)).IsTrue().Because("items remaining in the list should be disposed");
     }
 
-    [Fact]
-    public void RemainingItemsAreDisposedAfterError()
+    [Test]
+    public async Task RemainingItemsAreDisposedAfterError()
     {
         _itemsSource.Add(new(1));
-        
+
         var error = new Exception("Test Exception");
         _changeSetsSource.OnError(error);
 
         _itemsSource.Add(new(2));
 
-        _results.Exception.Should().Be(error);
-        _results.Messages.Count.Should().Be(1, "1 update was made to the list");
-        _results.Data.Count.Should().Be(1, "1 item was not removed from the list");
-        _results.Data.Items.All(item => item.IsDisposed).Should().BeTrue("Items remaining in the list should be disposed");
+        await Assert.That(_results.Exception).IsEqualTo(error);
+        await Assert.That(_itemsDisposedBeforeDownstreamNotification).IsEmpty().Because("items should not be disposed until after downstream notifications are processed");
+        await Assert.That(_results.Messages.Count).IsEqualTo(1).Because("1 update was made to the list");
+        await Assert.That(_results.Data.Count).IsEqualTo(1).Because("1 item was not removed from the list");
+        await Assert.That(_results.Data.Items.All(item => item.IsDisposed)).IsTrue().Because("Items remaining in the list should be disposed");
     }
 
-    [Fact]
-    public void RemainingItemsAreDisposedAfterUnsubscription()
+    [Test]
+    public async Task RemainingItemsAreDisposedAfterUnsubscription()
     {
         var items = new[]
         {
@@ -154,7 +158,7 @@ public sealed class DisposeManyFixture : IDisposable
 
         _results.Dispose();
 
-        items.All(item => item.IsDisposed).Should().BeTrue("Items remaining in the list should be disposed");
+        await Assert.That(items.All(item => item.IsDisposed)).IsTrue().Because("Items remaining in the list should be disposed");
     }
 
     private class DisposableObject(int id) : IDisposable

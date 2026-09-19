@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
-using  DynamicData.Binding;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
+using DynamicData.Binding;
+#endif
 using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Binding;
 
@@ -21,25 +17,25 @@ public class AvaloniaDictionaryFixture
     public AvaloniaDictionaryFixture()
     {
         _collection = new AvaloniaDictionary<string, Person>();
-        _results =  _collection.ToObservableChangeSet<AvaloniaDictionary<string, Person>, KeyValuePair<string, Person>>()
-            .Transform(x=>x.Value)
+        _results = _collection.ToObservableChangeSet<AvaloniaDictionary<string, Person>, KeyValuePair<string, Person>>()
+            .Transform(x => x.Value)
             .AsAggregator();
     }
 
-    [Fact]
-    public void Add()
+    [Test]
+    public async Task Add()
     {
-        var person = new Person("Someone",10, "M");
+        var person = new Person("Someone", 10, "M");
 
         _collection.Add("Someone", person);
 
-        _results.Messages.Count.Should().Be(2);
-        _results.Data.Count.Should().Be(1);
-        _results.Data.Items[0].Should().Be(person);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(person);
     }
 
-    [Fact]
-    public void Replace()
+    [Test]
+    public async Task Replace()
     {
         var person1 = new Person("Someone", 10, "M");
         var person2 = new Person("Someone", 11, "M");
@@ -47,23 +43,21 @@ public class AvaloniaDictionaryFixture
         _collection.Add("Someone", person1);
         _collection["Someone"] = person2;
 
-        _results.Data.Count.Should().Be(1);
-        _results.Data.Items[0].Should().Be(person2);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(person2);
     }
 
-
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         var person = new Person("Someone", 10, "M");
 
         _collection.Add("Someone", person);
         _collection.Remove(person.Key);
 
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 }
-
 
 public interface IAvaloniaDictionary<TKey, TValue>
     : IDictionary<TKey, TValue>,
@@ -73,7 +67,6 @@ public interface IAvaloniaDictionary<TKey, TValue>
 {
 }
 
-
 public interface IAvaloniaReadOnlyDictionary<TKey, TValue>
     : IReadOnlyDictionary<TKey, TValue>,
         INotifyCollectionChanged,
@@ -81,7 +74,6 @@ public interface IAvaloniaReadOnlyDictionary<TKey, TValue>
     where TKey : notnull
 {
 }
-
 
 /*
   Copied from Avalionia because an issue was raised due to compatibility issues with ToObservableChangeSet().
@@ -202,7 +194,6 @@ public class AvaloniaDictionary<TKey, TValue> : IAvaloniaDictionary<TKey, TValue
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(CommonPropertyNames.IndexerName));
 
-
         if (CollectionChanged != null)
         {
             var e = new NotifyCollectionChangedEventArgs(
@@ -293,7 +284,6 @@ public class AvaloniaDictionary<TKey, TValue> : IAvaloniaDictionary<TKey, TValue
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs($"{CommonPropertyNames.IndexerName}[{key}]"));
-
 
         if (CollectionChanged != null)
         {

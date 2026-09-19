@@ -1,12 +1,14 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.Internal;
+#else
 namespace DynamicData.Internal;
+#endif
 
 /// <summary>
 /// Base class for subscriptions that need to manage child subscriptions and emit updates
@@ -26,10 +28,12 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     where TChild : notnull
 {
     private readonly KeyedDisposable<TKey> _childSubscriptions = new();
+    private readonly Dictionary<TKey, long> _activeChildSubscriptionIds = [];
     private readonly SingleAssignmentDisposable _parentSubscription = new();
     private readonly SharedDeliveryQueue _queue;
     private readonly IObserver<TObserver> _observer;
     private int _subscriptionCounter = 1; // Starts at 1 for the parent subscription
+    private long _childSubscriptionId;
     private int _frameDepth;
     private bool _isCompleted;
     private bool _hasTerminated;
@@ -63,6 +67,9 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         // Add a new subscription. Do first so cleanup of existing subs doesn't trigger OnCompleted.
         Interlocked.Increment(ref _subscriptionCounter);
 
+        var subscriptionId = ++_childSubscriptionId;
+        _activeChildSubscriptionIds[parentKey] = subscriptionId;
+
         // Create a container for the Disposable and add to the KeyedDisposable
         var disposableContainer = _childSubscriptions.Add(parentKey, new SingleAssignmentDisposable());
 
@@ -75,24 +82,26 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         // on normal completion (not disposal), so RemoveChildSubscription is NOT called when the
         // parent disposes child subscriptions during Dispose(). This asymmetry is intentional:
         // disposal cleanup is handled by KeyedDisposable, not by individual completion callbacks.
-        disposableContainer.Disposable = observable
-            .Finally(CheckCompleted)
-            .SubscribeSafe(
-                onNext: val => DeliverChild(val, parentKey),
-                onError: TerminalError,
-                onCompleted: () => CompleteChild(parentKey));
+        disposableContainer.Disposable = PrimitivesLinqExtensions.SubscribeSafe(
+            observable.Finally(CheckCompleted),
+            onNext: val => DeliverChild(val, parentKey, subscriptionId),
+            onError: TerminalError,
+            onCompleted: () => CompleteChild(parentKey, subscriptionId));
     }
 
-    protected void RemoveChildSubscription(TKey parentKey) => _childSubscriptions.Remove(parentKey);
+    protected void RemoveChildSubscription(TKey parentKey)
+    {
+        _activeChildSubscriptionIds.Remove(parentKey);
+        _childSubscriptions.Remove(parentKey);
+    }
 
     protected void CreateParentSubscription(IObservable<IChangeSet<TParent, TKey>> source) =>
         _parentSubscription.Disposable =
-            source
-                .SynchronizeSafe(_queue)
-                .SubscribeSafe(
-                    onNext: DeliverParent,
-                    onError: TerminalError,
-                    onCompleted: CompleteParent);
+            PrimitivesLinqExtensions.SubscribeSafe(
+                source.SynchronizeSafe(_queue),
+                onNext: DeliverParent,
+                onError: TerminalError,
+                onCompleted: CompleteParent);
 
     protected virtual void Dispose(bool disposing)
     {
@@ -120,14 +129,27 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
 
     private void DeliverParent(IChangeSet<TParent, TKey> changes)
     {
+        if (_hasTerminated)
+        {
+            return;
+        }
+
         using var frame = BeginFrame();
         ParentOnNext(changes);
     }
 
-    private void DeliverChild(TChild child, TKey parentKey)
+    private void DeliverChild(TChild child, TKey parentKey, long subscriptionId)
     {
+        if (_hasTerminated)
+        {
+            return;
+        }
+
         using var frame = BeginFrame();
-        ChildOnNext(child, parentKey);
+        if (IsActiveChildSubscription(parentKey, subscriptionId))
+        {
+            ChildOnNext(child, parentKey);
+        }
     }
 
     private void CompleteParent()
@@ -136,11 +158,22 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
         CheckCompleted();
     }
 
-    private void CompleteChild(TKey parentKey)
+    private void CompleteChild(TKey parentKey, long subscriptionId)
     {
+        if (_hasTerminated)
+        {
+            return;
+        }
+
         using var frame = BeginFrame();
-        RemoveChildSubscription(parentKey);
+        if (IsActiveChildSubscription(parentKey, subscriptionId))
+        {
+            RemoveChildSubscription(parentKey);
+        }
     }
+
+    private bool IsActiveChildSubscription(TKey parentKey, long subscriptionId) =>
+        _activeChildSubscriptionIds.TryGetValue(parentKey, out var activeSubscriptionId) && activeSubscriptionId == subscriptionId;
 
     /// <summary>
     /// Opens a delivery frame that stays open until the returned <see cref="FrameTracker"/> is disposed.
@@ -162,7 +195,7 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
     /// </summary>
     private void EndFrame()
     {
-        if (--_frameDepth != 0)
+        if (--_frameDepth != 0 || _hasTerminated)
         {
             return;
         }
@@ -178,6 +211,11 @@ internal abstract class CacheParentSubscription<TParent, TKey, TChild, TObserver
 
     private void TerminalError(Exception error)
     {
+        if (_hasTerminated)
+        {
+            return;
+        }
+
         _hasTerminated = true;
         _observer.OnError(error);
     }

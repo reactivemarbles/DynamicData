@@ -1,22 +1,20 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
+using DynamicData.Reactive.List.Internal;
+#else
+
 using DynamicData.List.Internal;
-using DynamicData.List.Linq;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for ObservableList.
@@ -28,7 +26,7 @@ public static partial class ObservableListEx
     /// All remaining tracked items are disposed when the stream finalizes (OnCompleted, OnError, or subscription disposal).
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to track for disposal on removal.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;T&gt;&gt;</c> to track for disposal on removal.</param>
     /// <returns>A continuation of the source changeset stream with disposal side effects applied.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
@@ -47,13 +45,13 @@ public static partial class ObservableListEx
     /// </list>
     /// <para><b>Worth noting:</b> Disposal happens after the changeset is delivered downstream, so subscribers see the change before items are disposed.</para>
     /// </remarks>
-    /// <seealso cref="OnItemRemoved{T}(IObservable{IChangeSet{T}}, Action{T}, bool)"/>
-    /// <seealso cref="SubscribeMany{T}(IObservable{IChangeSet{T}}, Func{T, IDisposable})"/>
-    /// <seealso cref="ObservableCacheEx.DisposeMany{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
+    /// <seealso><c>OnItemRemoved&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Action&lt;T&gt;, bool)</c></seealso>
+    /// <seealso><c>SubscribeMany&lt;T&gt;(IObservable&lt;IChangeSet&lt;T&gt;&gt;, Func&lt;T, IDisposable&gt;)</c></seealso>
+    /// <seealso><c>ObservableCacheEx.DisposeMany&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<T>> DisposeMany<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return new DisposeMany<T>(source).Run();
     }

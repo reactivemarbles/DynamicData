@@ -1,16 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
@@ -20,8 +8,8 @@ public class FromAsyncFixture
 
     public FromAsyncFixture() => _scheduler = new TestScheduler();
 
-    [Fact]
-    public void CanLoadFromTask()
+    [Test]
+    public async Task CanLoadFromTask()
     {
         Task<IEnumerable<Person>> Loader()
         {
@@ -32,11 +20,11 @@ public class FromAsyncFixture
 
         var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet().AsObservableList();
 
-        data.Count.Should().Be(100);
+        await Assert.That(data.Count).IsEqualTo(100);
     }
 
-    [Fact]
-    public void HandlesErrorsInObservable()
+    [Test]
+    public async Task HandlesErrorsInObservable()
     {
         Task<IEnumerable<Person>> Loader()
         {
@@ -48,11 +36,11 @@ public class FromAsyncFixture
 
         var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet().Subscribe((changes) => { }, ex => error = ex);
 
-        error.Should().NotBeNull();
+        await Assert.That(error).IsNotNull();
     }
 
-    [Fact]
-    public void HandlesErrorsObservableList()
+    [Test]
+    public async Task HandlesErrorsObservableList()
     {
         Task<IEnumerable<Person>> Loader()
         {
@@ -66,6 +54,6 @@ public class FromAsyncFixture
 
         var subscribed = data.Connect().Subscribe(changes => { }, ex => error = ex);
 
-        error.Should().NotBeNull();
+        await Assert.That(error).IsNotNull();
     }
 }

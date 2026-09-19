@@ -1,28 +1,16 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public sealed class FilterImmutableFixture
 {
-    [Fact]
-    public void ItemsAreManipulated_UnmatchedItemsAreExcludedAndIndexesAreDiscarded()
+    [Test]
+    public async Task ItemsAreManipulated_UnmatchedItemsAreExcludedAndIndexesAreDiscarded()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
-
 
         // Add items
         var item1 = new Item() { Id = 1, IsIncluded = true };
@@ -33,10 +21,9 @@ public sealed class FilterImmutableFixture
             new(reason: ChangeReason.Add, key: item2.Id, current: item2, index: 1)
         });
 
-        results.Error.Should().BeNull();
-        results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "2 items were added, with 1 excluded");
-
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1 }).Because("2 items were added, with 1 excluded");
 
         // Replace items, changing inclusion
         var item3 = new Item() { Id = item1.Id, IsIncluded = false };
@@ -47,10 +34,9 @@ public sealed class FilterImmutableFixture
             new(reason: ChangeReason.Update, key: item4.Id, current: item4, previous: item2, currentIndex: 1, previousIndex: 1)
         });
 
-        results.Error.Should().BeNull();
-        results.RecordedChangeSets.Skip(1).Count().Should().Be(1, "1 source operation was performed");
-        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item4 }, "2 items were replaced, with 1 excluded");
-
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.RecordedChangeSets.Skip(1).Count()).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item4 }).Because("2 items were replaced, with 1 excluded");
 
         // Replace items, not changing inclusion
         var item5 = new Item() { Id = item3.Id, IsIncluded = false };
@@ -61,10 +47,9 @@ public sealed class FilterImmutableFixture
             new(reason: ChangeReason.Update, key: item6.Id, current: item6, previous: item4, currentIndex: 1, previousIndex: 1)
         });
 
-        results.Error.Should().BeNull();
-        results.RecordedChangeSets.Skip(2).Count().Should().Be(1, "1 source operation was performed");
-        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item6 }, "2 items were replaced, with 1 excluded");
-
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.RecordedChangeSets.Skip(2).Count()).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item6 }).Because("2 items were replaced, with 1 excluded");
 
         // Refresh items
         source.OnNext(new ChangeSet<Item, int>()
@@ -73,10 +58,9 @@ public sealed class FilterImmutableFixture
             new(reason: ChangeReason.Refresh, key: item6.Id, current: item6, index: 1)
         });
 
-        results.Error.Should().BeNull();
-        results.RecordedChangeSets.Skip(3).Count().Should().Be(1, "1 source operation was performed");
-        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item6 }, "2 items were refreshed, with 1 excluded");
-
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.RecordedChangeSets.Skip(3).Count()).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item6 }).Because("2 items were refreshed, with 1 excluded");
 
         // Remove items
         source.OnNext(new ChangeSet<Item, int>()
@@ -85,25 +69,23 @@ public sealed class FilterImmutableFixture
             new(reason: ChangeReason.Remove, key: item6.Id, current: item6, index: 1)
         });
 
-        results.Error.Should().BeNull();
-        results.RecordedChangeSets.Skip(4).Count().Should().Be(1, "1 source operation was performed");
-        results.RecordedItemsByKey.Should().BeEmpty("2 items were removed, with one excluded");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.RecordedChangeSets.Skip(4).Count()).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.RecordedItemsByKey).IsEmpty().Because("2 items were removed, with one excluded");
 
 
-        results.RecordedChangeSets.SelectMany(static changes => changes).Should().AllSatisfy(
-            change =>
-            {
-                change.CurrentIndex.Should().Be(-1);
-                change.PreviousIndex.Should().Be(-1);
-            },
-            because: "indexes should not be preserved");
-        results.HasCompleted.Should().BeFalse();
+        foreach (var change in results.RecordedChangeSets.SelectMany(static changes => changes))
+        {
+            await Assert.That(change.CurrentIndex).IsEqualTo(-1).Because("indexes should not be preserved");
+            await Assert.That(change.PreviousIndex).IsEqualTo(-1).Because("indexes should not be preserved");
+        }
+        await Assert.That(results.HasCompleted).IsFalse();
     }
 
-    [Fact]
-    public void ItemsAreMoved_ChangesAreNotPropagated()
+    [Test]
+    public async Task ItemsAreMoved_ChangesAreNotPropagated()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)
@@ -122,7 +104,6 @@ public sealed class FilterImmutableFixture
         });
         var changeSetsBeforeMove = results.RecordedChangeSets.Count;
 
-
         // Move items
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -130,21 +111,20 @@ public sealed class FilterImmutableFixture
             new(reason: ChangeReason.Moved, key: item2.Id, current: item2, previous: default, currentIndex: 0, previousIndex: 1)
         });
 
-        results.Error.Should().BeNull();
-        results.RecordedChangeSets.Skip(changeSetsBeforeMove).Should().BeEmpty("move operations should not be propagated");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.RecordedChangeSets.Skip(changeSetsBeforeMove)).IsEmpty().Because("move operations should not be propagated");
     }
 
-    [Fact]
-    public void PredicateIsNull_ThrowsException()
-        => FluentActions.Invoking(() => Observable
+    [Test]
+    public async Task PredicateIsNull_ThrowsException()
+        => await Assert.That(() => Observable
                 .Never<IChangeSet<Item, int>>()
-                .FilterImmutable(predicate: null!))
-            .Should().Throw<ArgumentNullException>();
+                .FilterImmutable(predicate: null!)).Throws<ArgumentNullException>();
 
-    [Fact]
-    public void PredicateThrows_ExceptionIsCaptured()
+    [Test]
+    public async Task PredicateThrows_ExceptionIsCaptured()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
         var error = new Exception();
 
@@ -153,28 +133,26 @@ public sealed class FilterImmutableFixture
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
 
-
         var item1 = new Item() { Id = 1, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
         {
             new(reason: ChangeReason.Add, key: item1.Id, current: item1)
         });
 
-        results.Error.Should().Be(error);
-        results.RecordedChangeSets.Should().BeEmpty("no source operations should have been processed");
-        results.HasCompleted.Should().BeFalse();
+        await Assert.That(results.Error).IsEqualTo(error);
+        await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no source operations should have been processed");
+        await Assert.That(results.HasCompleted).IsFalse();
     }
 
-    [Fact]
-    public void SourceCompletes_CompletionIsPropagated()
+    [Test]
+    public async Task SourceCompletes_CompletionIsPropagated()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
-
 
         var item1 = new Item() { Id = 1, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
@@ -183,10 +161,10 @@ public sealed class FilterImmutableFixture
         });
         source.OnCompleted();
 
-        results.Error.Should().BeNull();
-        results.HasCompleted.Should().BeTrue();
-        results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.HasCompleted).IsTrue();
+        await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1 }).Because("1 item was added");
 
 
         // Make sure no extraneous notifications are published.
@@ -196,11 +174,11 @@ public sealed class FilterImmutableFixture
             new(reason: ChangeReason.Add, key: item2.Id, current: item2)
         });
 
-        results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations should have been processed");
+        await Assert.That(results.RecordedChangeSets.Skip(1)).IsEmpty().Because("no source operations should have been processed");
     }
 
-    [Fact]
-    public void SourceCompletesImmediately_CompletionIsPropagated()
+    [Test]
+    public async Task SourceCompletesImmediately_CompletionIsPropagated()
     {
         var item1 = new Item() { Id = 1, IsIncluded = true };
 
@@ -221,17 +199,16 @@ public sealed class FilterImmutableFixture
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
 
-
-        results.Error.Should().BeNull();
-        results.HasCompleted.Should().BeTrue();
-        results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.HasCompleted).IsTrue();
+        await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1 }).Because("1 item was added");
     }
 
-    [Fact]
-    public void SourceErrors_ErrorIsPropagated()
+    [Test]
+    public async Task SourceErrors_ErrorIsPropagated()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
         var error = new Exception();
 
@@ -240,7 +217,6 @@ public sealed class FilterImmutableFixture
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
 
-
         var item1 = new Item() { Id = 1, IsIncluded = true };
         source.OnNext(new ChangeSet<Item, int>()
         {
@@ -248,10 +224,10 @@ public sealed class FilterImmutableFixture
         });
         source.OnError(error);
 
-        results.Error.Should().Be(error);
-        results.HasCompleted.Should().BeFalse();
-        results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
+        await Assert.That(results.Error).IsEqualTo(error);
+        await Assert.That(results.HasCompleted).IsFalse();
+        await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1 }).Because("1 item was added");
 
 
         // Make sure no extraneous notifications are published.
@@ -261,11 +237,11 @@ public sealed class FilterImmutableFixture
             new(reason: ChangeReason.Add, key: item2.Id, current: item2)
         });
 
-        results.RecordedChangeSets.Skip(1).Should().BeEmpty("no source operations should have been processed");
+        await Assert.That(results.RecordedChangeSets.Skip(1)).IsEmpty().Because("no source operations should have been processed");
     }
 
-    [Fact]
-    public void SourceErrorsImmediately_ErrorIsPropagated()
+    [Test]
+    public async Task SourceErrorsImmediately_ErrorIsPropagated()
     {
         var item1 = new Item() { Id = 1, IsIncluded = true };
         var error = new Exception();
@@ -287,24 +263,22 @@ public sealed class FilterImmutableFixture
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
 
-
-        results.Error.Should().Be(error);
-        results.HasCompleted.Should().BeFalse();
-        results.RecordedChangeSets.Count.Should().Be(1, "1 source operation was performed");
-        results.RecordedItemsByKey.Values.Should().BeEquivalentTo(new[] { item1 }, "1 item was added");
+        await Assert.That(results.Error).IsEqualTo(error);
+        await Assert.That(results.HasCompleted).IsFalse();
+        await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(1).Because("1 source operation was performed");
+        await Assert.That(results.RecordedItemsByKey.Values).IsEquivalentTo(new[] { item1 }).Because("1 item was added");
     }
 
-    [Fact]
-    public void SourceIsNull_ThrowsException()
-        => FluentActions.Invoking(() => ObservableCacheEx.FilterImmutable(
+    [Test]
+    public async Task SourceIsNull_ThrowsException()
+        => await Assert.That(() => ObservableCacheEx.FilterImmutable(
             source: (null as IObservable<IChangeSet<Item, int>>)!,
-            predicate: Item.Predicate))
-        .Should().Throw<ArgumentNullException>();
+            predicate: Item.Predicate)).Throws<ArgumentNullException>();
 
-    [Fact]
-    public void SuppressEmptyChangesetsIsFalse_EmptyChangesetsArePublished()
+    [Test]
+    public async Task SuppressEmptyChangesetsIsFalse_EmptyChangesetsArePublished()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .FilterImmutable(
@@ -313,34 +287,32 @@ public sealed class FilterImmutableFixture
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
 
-
         ManipulateExcludedItems(source);
 
-        results.Error.Should().BeNull();
-        results.HasCompleted.Should().BeFalse();
-        results.RecordedChangeSets.Count.Should().Be(5, "5 source operations were performed");
-        results.RecordedChangeSets.Should().AllSatisfy(changes => changes.Should().BeEmpty(), "no included items were manipulated");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.HasCompleted).IsFalse();
+        await Assert.That(results.RecordedChangeSets.Count).IsEqualTo(5).Because("5 source operations were performed");
+        foreach (var changes in results.RecordedChangeSets) { await Assert.That(changes).IsEmpty().Because("no included items were manipulated"); }
     }
 
-    [Fact]
-    public void SuppressEmptyChangesetsIsTrue_EmptyChangesetsAreNotPublished()
+    [Test]
+    public async Task SuppressEmptyChangesetsIsTrue_EmptyChangesetsAreNotPublished()
     {
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)
             .ValidateChangeSets(Item.KeySelector)
             .RecordCacheItems(out var results);
 
-
         ManipulateExcludedItems(source);
 
-        results.Error.Should().BeNull();
-        results.HasCompleted.Should().BeFalse();
-        results.RecordedChangeSets.Should().BeEmpty("no source operations should have generated changes");
+        await Assert.That(results.Error).IsNull();
+        await Assert.That(results.HasCompleted).IsFalse();
+        await Assert.That(results.RecordedChangeSets).IsEmpty().Because("no source operations should have generated changes");
     }
 
-    private static void ManipulateExcludedItems(ISubject<IChangeSet<Item, int>> source)
+    private static void ManipulateExcludedItems(ReactiveUI.Primitives.Signals.ISignal<IChangeSet<Item, int>> source)
     {
         var item1 = new Item() { Id = 1, IsIncluded = false };
         source.OnNext(new ChangeSet<Item, int>()
@@ -373,13 +345,13 @@ public sealed class FilterImmutableFixture
         });
     }
 
-    [Fact]
-    public void Update_PreviousMatchedCurrentDoesNot_EmitsRemoveCarryingPreviousAsCurrent()
+    [Test]
+    public async Task Update_PreviousMatchedCurrentDoesNot_EmitsRemoveCarryingPreviousAsCurrent()
     {
         // Per Change<T,K> contract, a Remove change carries the item that was removed in Current.
         // For an Update where Previous matched the predicate but Current does not, the item that
         // leaves the filtered view is Previous (it was downstream; Current never reached downstream).
-        using var source = new Subject<IChangeSet<Item, int>>();
+        using var source = new ReactiveUI.Primitives.Signals.Signal<IChangeSet<Item, int>>();
 
         using var subscription = source
             .FilterImmutable(predicate: Item.Predicate)
@@ -400,11 +372,11 @@ public sealed class FilterImmutableFixture
         });
 
         var lastChangeSet = results.RecordedChangeSets[results.RecordedChangeSets.Count - 1];
-        lastChangeSet.Count.Should().Be(1);
+        await Assert.That(lastChangeSet.Count).IsEqualTo(1);
 
         var removeChange = lastChangeSet.Single();
-        removeChange.Reason.Should().Be(ChangeReason.Remove);
-        removeChange.Current.Should().BeSameAs(included, "Remove.Current must carry the item that left downstream (the previously-matching value), not the new value that never reached downstream");
+        await Assert.That(removeChange.Reason).IsEqualTo(ChangeReason.Remove);
+        await Assert.That(removeChange.Current).IsSameReferenceAs(included).Because("Remove.Current must carry the item that left downstream (the previously-matching value), not the new value that never reached downstream");
     }
 
     private class Item

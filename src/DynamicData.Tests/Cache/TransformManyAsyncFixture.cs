@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
 using Bogus;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -36,7 +31,7 @@ public sealed class TransformManyAsyncFixture : IDisposable
 
     public TransformManyAsyncFixture()
     {
-        unchecked{ _randomizer = new Randomizer((int)0xf7ee_bee7); }
+        unchecked { _randomizer = new Randomizer((int)0xf7ee_bee7); }
 
         _animalFaker = Fakers.Animal.Clone().WithSeed(_randomizer);
         _animalOwnerFaker = Fakers.AnimalOwner.Clone().WithSeed(_randomizer).WithInitialAnimals(_animalFaker);
@@ -44,8 +39,8 @@ public sealed class TransformManyAsyncFixture : IDisposable
         _animalOwnerResults = _animalOwners.Connect().AsAggregator();
     }
 
-    [Fact]
-    public void EnumerableResultContainsAllInitialChildrenInSingleChangeSet()
+    [Test]
+    public async Task EnumerableResultContainsAllInitialChildrenInSingleChangeSet()
     {
         // Arrange
         _animalOwners.AddOrUpdate(_animalOwnerFaker.Generate(InitialOwnerCount));
@@ -54,13 +49,13 @@ public sealed class TransformManyAsyncFixture : IDisposable
         using var animalResults = CreateEnumerableChangeSet().AsAggregator();
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        animalResults.Messages.Count.Should().Be(1);
-        CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(animalResults.Messages.Count).IsEqualTo(1);
+        await CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
     }
 
-    [Fact]
-    public void ResultContainsAllInitialChildren()
+    [Test]
+    public async Task ResultContainsAllInitialChildren()
     {
         // Arrange
         _animalOwners.AddOrUpdate(_animalOwnerFaker.Generate(InitialOwnerCount));
@@ -69,13 +64,13 @@ public sealed class TransformManyAsyncFixture : IDisposable
         using var animalResults = CreateObservableCollectionChangeSet().AsAggregator();
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        animalResults.Messages.Count.Should().Be(1);
-        CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(animalResults.Messages.Count).IsEqualTo(1);
+        await CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
     }
 
-    [Fact]
-    public void ResultContainsChildrenFromAddedParents()
+    [Test]
+    public async Task ResultContainsChildrenFromAddedParents()
     {
         // Arrange
         using var animalResults = CreateObservableCollectionChangeSet().AsAggregator();
@@ -84,12 +79,12 @@ public sealed class TransformManyAsyncFixture : IDisposable
         _animalOwners.AddOrUpdate(_animalOwnerFaker.Generate(InitialOwnerCount));
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        animalResults.Messages.Count.Should().Be(1);
-        CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(animalResults.Messages.Count).IsEqualTo(1);
+        await CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
     }
 
-    [Fact]
+    [Test]
     public async Task ResultContainsChildrenFromAddedParentsAsync()
     {
         // Arrange
@@ -103,13 +98,13 @@ public sealed class TransformManyAsyncFixture : IDisposable
         await shared.Take(1);
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        animalResults.Messages.Count.Should().BeGreaterThan(0);
-        CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await Assert.That(animalResults.Messages.Count).IsGreaterThan(0);
+        await CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
     }
 
-    [Fact]
-    public void ResultContainsAddedChildrenFromExistingParents()
+    [Test]
+    public async Task ResultContainsAddedChildrenFromExistingParents()
     {
         // Arrange
         _animalOwners.AddOrUpdate(_animalOwnerFaker.Generate(InitialOwnerCount));
@@ -119,11 +114,11 @@ public sealed class TransformManyAsyncFixture : IDisposable
         _animalOwners.Items.ForEach(owner => owner.AddAnimals(_animalFaker, 1, AddCount));
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
     }
 
-    [Fact]
+    [Test]
     public async Task ResultDoesNotContainChildrenFromRemovedParentsAsync()
     {
         // Arrange
@@ -137,12 +132,12 @@ public sealed class TransformManyAsyncFixture : IDisposable
         await taskTracker.WhenAll();
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount - RemoveCount);
-        CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount - RemoveCount);
+        await CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
     }
 
-    [Fact]
-    public void ResultsWorkWithComparer()
+    [Test]
+    public async Task ResultsWorkWithComparer()
     {
         // Arrange
         using var animalResults = CreateObservableCollectionChangeSet(FamilyKey, comparer: Animal.NameComparer).AsAggregator();
@@ -151,11 +146,11 @@ public sealed class TransformManyAsyncFixture : IDisposable
         _animalOwners.AddOrUpdate(_animalOwnerFaker.Generate(InitialOwnerCount));
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults, FamilyKey, Animal.NameComparer);
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount);
+        await CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults, FamilyKey, Animal.NameComparer);
     }
 
-    [Fact]
+    [Test]
     public async Task ResultsWithObservableCacheChangesAsync()
     {
         // Arrange
@@ -170,14 +165,14 @@ public sealed class TransformManyAsyncFixture : IDisposable
         await taskTracker.WhenAll();
 
         // Assert
-        _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount + ownerAddCount);
-        CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
+        await Assert.That(_animalOwnerResults.Data.Count).IsEqualTo(InitialOwnerCount + ownerAddCount);
+        await CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void ResultCompletesOnlyWhenSourceCompletes(bool completeSource)
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task ResultCompletesOnlyWhenSourceCompletes(bool completeSource)
     {
         // Arrange
         using var animalResults = CreateObservableCollectionChangeSet().AsAggregator();
@@ -190,12 +185,12 @@ public sealed class TransformManyAsyncFixture : IDisposable
         }
 
         // Assert
-        _animalOwnerResults.IsCompleted.Should().Be(completeSource);
-        CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
+        await Assert.That(_animalOwnerResults.IsCompleted).IsEqualTo(completeSource);
+        await CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
     }
 
-    [Fact]
-    public void ResultFailsIfSourceFails()
+    [Test]
+    public async Task ResultFailsIfSourceFails()
     {
         // Arrange
         var expectedError = new Exception("Expected");
@@ -206,7 +201,7 @@ public sealed class TransformManyAsyncFixture : IDisposable
         _animalOwners.Dispose();
 
         // Assert
-        results.Exception.Should().Be(expectedError);
+        await Assert.That(results.Exception).IsEqualTo(expectedError);
     }
 
     public void Dispose()
@@ -223,40 +218,40 @@ public sealed class TransformManyAsyncFixture : IDisposable
         sameId.Animals.AddRange(newOwner.Animals.Items);
         return sameId;
     }
- 
-    private static void CheckResultContents<T>(IEnumerable<AnimalOwner> owners, ChangeSetAggregator<AnimalOwner, Guid> ownerResults, ChangeSetAggregator<Animal, T> animalResults, Func<Animal, T> keySelector, IComparer<Animal> comparer)
+
+    private static async Task CheckResultContents<T>(IEnumerable<AnimalOwner> owners, ChangeSetAggregator<AnimalOwner, Guid> ownerResults, ChangeSetAggregator<Animal, T> animalResults, Func<Animal, T> keySelector, IComparer<Animal> comparer)
         where T : notnull
     {
         var expectedOwners = owners.ToList();
 
         // These should be subsets of each other
-        expectedOwners.Should().BeSubsetOf(ownerResults.Data.Items);
-        ownerResults.Data.Items.Count.Should().Be(expectedOwners.Count);
+        await Assert.That(expectedOwners.Except(ownerResults.Data.Items).Any()).IsFalse();
+        await Assert.That(ownerResults.Data.Items.Count).IsEqualTo(expectedOwners.Count);
 
         var allAnimals = expectedOwners.SelectMany(owner => owner.Animals.Items).ToList();
         var expectedAnimals = allAnimals.GroupBy(keySelector).Select(group => group.OrderBy(a => a, comparer).First()).ToList();
 
-        expectedAnimals.Should().BeSubsetOf(animalResults.Data.Items);
-        animalResults.Data.Count.Should().Be(expectedAnimals.Count);
+        await Assert.That(expectedAnimals.Except(animalResults.Data.Items).Any()).IsFalse();
+        await Assert.That(animalResults.Data.Count).IsEqualTo(expectedAnimals.Count);
     }
 
-    private static void CheckResultContents<T>(IEnumerable<AnimalOwner> owners, ChangeSetAggregator<AnimalOwner, Guid> ownerResults, ChangeSetAggregator<Animal, T> animalResults)
+    private static async Task CheckResultContents<T>(IEnumerable<AnimalOwner> owners, ChangeSetAggregator<AnimalOwner, Guid> ownerResults, ChangeSetAggregator<Animal, T> animalResults)
         where T : notnull
     {
         var expectedOwners = owners.ToList();
 
         // These should be subsets of each other
-        expectedOwners.Should().BeSubsetOf(ownerResults.Data.Items);
-        ownerResults.Data.Items.Count.Should().Be(expectedOwners.Count);
+        await Assert.That(expectedOwners.Except(ownerResults.Data.Items).Any()).IsFalse();
+        await Assert.That(ownerResults.Data.Items.Count).IsEqualTo(expectedOwners.Count);
 
         // All owner animals should be in the results
         foreach (var owner in owners)
         {
-            owner.Animals.Items.Should().BeSubsetOf(animalResults.Data.Items);
+            await Assert.That(owner.Animals.Items.Except(animalResults.Data.Items).Any()).IsFalse();
         }
 
         // Results should not have more than the total number of animals
-        animalResults.Data.Count.Should().Be(owners.Sum(owner => owner.Animals.Count));
+        await Assert.That(animalResults.Data.Count).IsEqualTo(owners.Sum(owner => owner.Animals.Count));
     }
 
     private Func<Task> RandomDelay => () => Task.Delay(_randomizer.Number(MinTaskDelay, MaxTaskDelay));
@@ -311,7 +306,7 @@ public sealed class TransformManyAsyncFixture : IDisposable
 
         public Task Create() => Add(delayFactory());
 
-        public Task Add(Task task) => task.With(t => { lock (_lock) _tasks.Add(task); } );
+        public Task Add(Task task) => task.With(t => { lock (_lock) _tasks.Add(task); });
 
         public IEnumerable<Task> Add(IEnumerable<Task> tasks) => tasks.With(ts => ts.ForEach(t => Add(t)));
 
@@ -354,7 +349,7 @@ public sealed class TransformManyAsyncFixture : IDisposable
 
         private List<Task> GetList()
         {
-            lock(_lock)
+            lock (_lock)
             {
                 var result = _tasks.ToList();
                 _tasks.Clear();

@@ -1,12 +1,8 @@
-using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
-
-using FluentAssertions;
-
-using Xunit;
+#endif
 
 namespace DynamicData.Tests.Binding;
 
@@ -25,62 +21,62 @@ public class ObservableCollectionExtendedToChangeSetFixture : IDisposable
         _results = _target.ToObservableChangeSet().AsAggregator();
     }
 
-    [Fact]
-    public void Add()
+    [Test]
+    public async Task Add()
     {
         _collection.Add(1);
 
-        _results.Messages.Count.Should().Be(2);
-        _results.Data.Count.Should().Be(1);
-        _results.Data.Items[0].Should().Be(1);
+        await Assert.That(_results.Messages.Count).IsEqualTo(2);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
+        await Assert.That(_results.Data.Items[0]).IsEqualTo(1);
     }
 
     public void Dispose() => _results.Dispose();
 
-    [Fact]
-    public void Duplicates()
+    [Test]
+    public async Task Duplicates()
     {
         _collection.Add(1);
         _collection.Add(1);
 
-        _results.Data.Count.Should().Be(2);
+        await Assert.That(_results.Data.Count).IsEqualTo(2);
     }
 
-    [Fact]
-    public void Move()
+    [Test]
+    public async Task Move()
     {
         _collection.AddRange(Enumerable.Range(1, 10));
 
-        _results.Data.Items.Should().BeEquivalentTo(_target);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(_target);
         _collection.Move(5, 8);
-        _results.Data.Items.Should().BeEquivalentTo(_target);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(_target);
 
         _collection.Move(7, 1);
-        _results.Data.Items.Should().BeEquivalentTo(_target);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(_target);
     }
 
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         _collection.AddRange(Enumerable.Range(1, 10));
 
         _collection.Remove(3);
 
-        _results.Data.Count.Should().Be(9);
-        _results.Data.Items.Contains(3).Should().BeFalse();
-        _results.Data.Items.Should().BeEquivalentTo(_target);
+        await Assert.That(_results.Data.Count).IsEqualTo(9);
+        await Assert.That(_results.Data.Items.Contains(3)).IsFalse();
+        await Assert.That(_results.Data.Items).IsEquivalentTo(_target);
     }
 
-    [Fact]
-    public void Replace()
+    [Test]
+    public async Task Replace()
     {
         _collection.AddRange(Enumerable.Range(1, 10));
         _collection[8] = 20;
 
-        _results.Data.Items.Should().BeEquivalentTo(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 20, 10 });
+        await Assert.That(_results.Data.Items).IsEquivalentTo(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 20, 10 });
     }
 
-    //[Fact]
+    //[Test]
     //public void ResetFiresClearsAndAdds()
     //{
     //    _collection.AddRange(Enumerable.Range(1, 10));

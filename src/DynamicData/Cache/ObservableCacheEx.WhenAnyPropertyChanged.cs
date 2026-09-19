@@ -1,24 +1,22 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
+using DynamicData.Reactive.Binding;
+#else
+
 using DynamicData.Binding;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -31,7 +29,7 @@ public static partial class ObservableCacheEx
     /// </summary>
     /// <typeparam name="TObject">The type of the object (must implement <see cref="INotifyPropertyChanged"/>).</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to observe property changes on items in.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;</c> to observe property changes on items in.</param>
     /// <param name="propertiesToMonitor">The specific property names to monitor.  If empty, all property changes trigger emissions.</param>
     /// <returns>An observable that emits the item itself each time a monitored property changes.</returns>
     /// <remarks>
@@ -50,15 +48,15 @@ public static partial class ObservableCacheEx
     /// <item><term>OnError</term><description>Errors from individual property subscriptions are silently ignored. Source errors terminate the stream.</description></item>
     /// </list>
     /// </remarks>
-    /// <seealso cref="WhenPropertyChanged{TObject, TKey, TValue}"/>
-    /// <seealso cref="WhenValueChanged{TObject, TKey, TValue}"/>
-    /// <seealso cref="AutoRefresh{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, TimeSpan?, TimeSpan?, IScheduler?)"/>
-    /// <seealso cref="ObservableListEx.WhenAnyPropertyChanged"/>
+    /// <seealso><c>WhenPropertyChanged&lt;TObject, TKey, TValue&gt;</c></seealso>
+    /// <seealso><c>WhenValueChanged&lt;TObject, TKey, TValue&gt;</c></seealso>
+    /// <seealso><c>AutoRefresh&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, TimeSpan?, TimeSpan?, IScheduler?)</c></seealso>
+    /// <seealso><c>ObservableListEx.WhenAnyPropertyChanged</c></seealso>
     public static IObservable<TObject?> WhenAnyPropertyChanged<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params string[] propertiesToMonitor)
         where TObject : INotifyPropertyChanged
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentExceptionHelper.ThrowIfNull(source);
 
         return source.MergeMany(t => t.WhenAnyPropertyChanged(propertiesToMonitor));
     }

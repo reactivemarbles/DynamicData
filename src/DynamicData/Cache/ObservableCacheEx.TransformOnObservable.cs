@@ -1,24 +1,22 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
+using DynamicData.Reactive.Cache.Internal;
+#else
+
 using DynamicData.Cache.Internal;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive;
+#else
 
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for dynamic data.
@@ -32,8 +30,8 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TSource">The type of the source items.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TDestination">The type of the transformed items.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TSource, TKey}}"/> to transform using per-item observables.</param>
-    /// <param name="transformFactory">A function that, given a source item and its key, returns an <see cref="IObservable{TDestination}"/> whose emissions become the transformed values.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TSource, TKey&gt;&gt;</c> to transform using per-item observables.</param>
+    /// <param name="transformFactory">A function that, given a source item and its key, returns an <c>IObservable&lt;TDestination&gt;</c> whose emissions become the transformed values.</param>
     /// <returns>An observable changeset where each key's value is the latest emission from its per-item observable.</returns>
     /// <remarks>
     /// <para>
@@ -65,28 +63,36 @@ public static partial class ObservableCacheEx
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="transformFactory"/> is <see langword="null"/>.</exception>
-    /// <seealso cref="Transform{TDestination, TSource, TKey}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, TKey, TDestination}, bool)"/>
-    /// <seealso cref="FilterOnObservable{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{bool}}, TimeSpan?, IScheduler?)"/>
-    /// <seealso cref="GroupOnObservable{TObject, TKey, TGroupKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{TGroupKey}})"/>
+    /// <seealso><c>Transform&lt;TDestination, TSource, TKey&gt;(IObservable&lt;IChangeSet&lt;TSource, TKey&gt;&gt;, Func&lt;TSource, TKey, TDestination&gt;, bool)</c></seealso>
+    /// <seealso><c>FilterOnObservable&lt;TObject, TKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, TKey, IObservable&lt;bool&gt;&gt;, TimeSpan?, IScheduler?)</c></seealso>
+    /// <seealso><c>GroupOnObservable&lt;TObject, TKey, TGroupKey&gt;(IObservable&lt;IChangeSet&lt;TObject, TKey&gt;&gt;, Func&lt;TObject, TKey, IObservable&lt;TGroupKey&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformOnObservable<TSource, TKey, TDestination>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, IObservable<TDestination>> transformFactory)
         where TSource : notnull
         where TKey : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
 
         return new TransformOnObservable<TSource, TKey, TDestination>(source, transformFactory).Run();
     }
 
-    /// <inheritdoc cref="TransformOnObservable{TSource, TKey, TDestination}(IObservable{IChangeSet{TSource, TKey}}, Func{TSource, TKey, IObservable{TDestination}})"/>
+    /// <summary>
+    /// Provides an overload of <c>TransformOnObservable</c> for the supplied arguments.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the TSource value.</typeparam>
+    /// <typeparam name="TKey">The type of the TKey value.</typeparam>
+    /// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
+    /// <param name="source">The source value.</param>
+    /// <param name="transformFactory">The transformFactory value.</param>
+    /// <returns>The resulting observable sequence.</returns>
     /// <remarks>This overload takes a factory that receives only the source item (without the key).</remarks>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformOnObservable<TSource, TKey, TDestination>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, IObservable<TDestination>> transformFactory)
         where TSource : notnull
         where TKey : notnull
         where TDestination : notnull
     {
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        ArgumentExceptionHelper.ThrowIfNull(transformFactory);
 
         return source.TransformOnObservable((obj, _) => transformFactory(obj));
     }

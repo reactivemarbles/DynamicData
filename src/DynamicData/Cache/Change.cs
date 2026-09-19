@@ -1,9 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 ///   Container to describe a single change to a cache.
@@ -22,7 +26,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// <param name="current">The current.</param>
     /// <param name="index">The index.</param>
     public Change(ChangeReason reason, TKey key, TObject current, int index = -1)
-        : this(reason, key, current, Optional.None<TObject>(), index)
+        : this(reason, key, current, ReactiveUI.Primitives.Optional<TObject>.None, index)
     {
     }
 
@@ -53,7 +57,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
         }
 
         Current = current;
-        Previous = Optional.None<TObject>();
+        Previous = ReactiveUI.Primitives.Optional<TObject>.None;
         Key = key;
         Reason = ChangeReason.Moved;
         CurrentIndex = currentIndex;
@@ -74,7 +78,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// or
     /// For <see cref="ChangeReason.Update"/>, must supply previous value.
     /// </exception>
-    public Change(ChangeReason reason, TKey key, TObject current, in Optional<TObject> previous, int currentIndex = -1, int previousIndex = -1)
+    public Change(ChangeReason reason, TKey key, TObject current, in ReactiveUI.Primitives.Optional<TObject> previous, int currentIndex = -1, int previousIndex = -1)
         : this()
     {
         Current = current;
@@ -119,7 +123,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// <para>Gets the item from before the change.</para>
     /// <para>This is only when <see cref="Reason"/> is <see cref="ChangeReason.Update"/>.</para>
     /// </summary>
-    public Optional<TObject> Previous { get; }
+    public ReactiveUI.Primitives.Optional<TObject> Previous { get; }
 
     /// <summary>
     /// <para>Gets the previous index.</para>
@@ -144,9 +148,13 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     public static bool operator !=(in Change<TObject, TKey> left, in Change<TObject, TKey> right) => !left.Equals(right);
 
     /// <inheritdoc />
+    /// <param name="other">The other value.</param>
+    /// <returns>The result of the operation.</returns>
     public bool Equals(Change<TObject, TKey> other) => EqualityComparer<TKey>.Default.Equals(Key, other.Key) && Reason == other.Reason && EqualityComparer<TObject?>.Default.Equals(Current, other.Current) && CurrentIndex == other.CurrentIndex && Previous.Equals(other.Previous) && PreviousIndex == other.PreviousIndex;
 
     /// <inheritdoc />
+    /// <param name="obj">The obj value.</param>
+    /// <returns>The result of the operation.</returns>
     public override bool Equals(object? obj)
     {
         if (obj is null)
@@ -158,6 +166,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -173,5 +182,6 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"{Reason}, Key: {Key}, Current: {Current}, Previous: {Previous}";
 }

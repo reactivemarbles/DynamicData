@@ -1,18 +1,20 @@
-﻿using System;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Cache.Internal;
+#else
 using DynamicData.Cache.Internal;
-using System.Collections.Generic;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+#endif
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
-using Xunit;
+#endif
 
 namespace DynamicData.Tests
 {
     public class EnumerableIListFixture
     {
-        [Fact]
-        public void EnumerableIListTests()
+        [Test]
+        public async Task EnumerableIListTests()
         {
             var data = new byte[40];
             var rng = new Random(1234567);
@@ -27,41 +29,41 @@ namespace DynamicData.Tests
             fixture.Add(lastItem);
             fixture.Insert(0, firstItem);
 
-            Assert.Equal(fixture.Count, listOfRandomFloats.Count);
+            await Assert.That(fixture.Count).IsEqualTo(listOfRandomFloats.Count);
 
-            Assert.True(fixture.IndexOf(lastItem) > 0);
+            await Assert.That(fixture.IndexOf(lastItem) > 0).IsTrue();
 
             fixture.Remove(lastItem);
 
-            Assert.Equal(fixture.Count, listOfRandomFloats.Count);
+            await Assert.That(fixture.Count).IsEqualTo(listOfRandomFloats.Count);
 
             fixture.RemoveAt(0);
 
-            Assert.Equal(fixture[10], listOfRandomFloats[10]);
+            await Assert.That(fixture[10]).IsEqualTo(listOfRandomFloats[10]);
 
             fixture.Clear();
 
-            Assert.True(fixture.Count == 0);
+            await Assert.That(fixture.Count == 0).IsTrue();
         }
 
-        [Fact]
-        public void ExceptionTests()
+        [Test]
+        public async Task ExceptionTests()
         {
-            var exSubject = new Subject<Exception>();
+            var exSubject = new ReactiveUI.Primitives.Signals.Signal<Exception>();
 
             object exceptionRecived = default!;
-            exSubject.ObserveOn(ImmediateScheduler.Instance).Subscribe(ex => { exceptionRecived = ex; });
+            exSubject.ObserveOn(Scheduler.Immediate).Subscribe(ex => { exceptionRecived = ex; });
             exSubject.OnNext(new UnspecifiedIndexException());
 
-            Assert.IsType<UnspecifiedIndexException>(exceptionRecived);
+            await Assert.That(exceptionRecived).IsTypeOf<UnspecifiedIndexException>();
 
             exSubject.OnNext(new KeySelectorException());
 
-            Assert.IsType<KeySelectorException>(exceptionRecived);
+            await Assert.That(exceptionRecived).IsTypeOf<KeySelectorException>();
 
             exSubject.OnNext(new MissingKeyException());
 
-            Assert.IsType<MissingKeyException>(exceptionRecived);            
+            await Assert.That(exceptionRecived).IsTypeOf<MissingKeyException>();
         }
     }
 }

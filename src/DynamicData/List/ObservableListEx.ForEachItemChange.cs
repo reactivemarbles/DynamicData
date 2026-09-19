@@ -1,22 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
-
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Extensions for ObservableList.
@@ -24,27 +15,26 @@ namespace DynamicData;
 public static partial class ObservableListEx
 {
     /// <summary>
-    /// Invokes <paramref name="action"/> for every individual <see cref="ItemChange{TObject}"/> in each changeset.
+    /// Invokes <paramref name="action"/> for every individual <c>ItemChange&lt;TObject&gt;</c> in each changeset.
     /// Range changes are flattened into individual item changes first, so the callback only receives Add, Replace, Remove, and Refresh.
     /// </summary>
     /// <typeparam name="TObject">The type of items in the list.</typeparam>
-    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject}}"/> to observe each item-level change in.</param>
-    /// <param name="action">The <see cref="Action{ItemChange{TObject}}"/> action invoked for each individual item change.</param>
+    /// <param name="source">The source <c>IObservable&lt;IChangeSet&lt;TObject&gt;&gt;</c> to observe each item-level change in.</param>
+    /// <param name="action">The <c>Action&lt;ItemChange&lt;TObject&gt;&gt;</c> action invoked for each individual item change.</param>
     /// <returns>A continuation of the source changeset stream.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="action"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>
-    /// Unlike <see cref="ForEachChange{TObject}(IObservable{IChangeSet{TObject}}, Action{Change{TObject}})"/>, this operator flattens
-    /// <b>AddRange</b>, <b>RemoveRange</b>, and <b>Clear</b> into individual <see cref="ItemChange{TObject}"/> entries before invoking the callback.
+    /// Unlike <c>ForEachChange&lt;TObject&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Action&lt;Change&lt;TObject&gt;&gt;)</c>, this operator flattens
+    /// <b>AddRange</b>, <b>RemoveRange</b>, and <b>Clear</b> into individual <c>ItemChange&lt;TObject&gt;</c> entries before invoking the callback.
     /// </para>
     /// </remarks>
-    /// <seealso cref="ForEachChange{TObject}(IObservable{IChangeSet{TObject}}, Action{Change{TObject}})"/>
+    /// <seealso><c>ForEachChange&lt;TObject&gt;(IObservable&lt;IChangeSet&lt;TObject&gt;&gt;, Action&lt;Change&lt;TObject&gt;&gt;)</c></seealso>
     public static IObservable<IChangeSet<TObject>> ForEachItemChange<TObject>(this IObservable<IChangeSet<TObject>> source, Action<ItemChange<TObject>> action)
         where TObject : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(action);
 
         return source.Do(changes => changes.Flatten().ForEach(action));
     }

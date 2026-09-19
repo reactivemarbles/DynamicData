@@ -1,12 +1,3 @@
-using System;
-using System.Linq;
-
-using DynamicData.Kernel;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public class FullJoinFixture : IDisposable
@@ -25,8 +16,8 @@ public class FullJoinFixture : IDisposable
         _result = _left.Connect().FullJoin(_right.Connect(), meta => meta.Name, (key, device, meta) => new DeviceWithMetadata(key, device, meta)).AsAggregator();
     }
 
-    [Fact]
-    public void AddLeftOnly()
+    [Test]
+    public async Task AddLeftOnly()
     {
         _left.Edit(
             innerCache =>
@@ -36,17 +27,17 @@ public class FullJoinFixture : IDisposable
                 innerCache.AddOrUpdate(new Device("Device3"));
             });
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Lookup("Device1").HasValue.Should().BeTrue();
-        _result.Data.Lookup("Device2").HasValue.Should().BeTrue();
-        _result.Data.Lookup("Device3").HasValue.Should().BeTrue();
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Lookup("Device1").HasValue).IsTrue();
+        await Assert.That(_result.Data.Lookup("Device2").HasValue).IsTrue();
+        await Assert.That(_result.Data.Lookup("Device3").HasValue).IsTrue();
 
-        _result.Data.Items.All(dwm => dwm.MetaData == Optional<DeviceMetaData>.None).Should().BeTrue();
-        _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
+        await Assert.That(_result.Data.Items.All(dwm => dwm.MetaData == ReactiveUI.Primitives.Optional<DeviceMetaData>.None)).IsTrue();
+        await Assert.That(_result.Data.Items.All(dwm => dwm.Device != ReactiveUI.Primitives.Optional<Device>.None)).IsTrue();
     }
 
-    [Fact]
-    public void AddLetThenRight()
+    [Test]
+    public async Task AddLetThenRight()
     {
         _left.Edit(
             innerCache =>
@@ -64,13 +55,13 @@ public class FullJoinFixture : IDisposable
                 innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
             });
 
-        _result.Data.Count.Should().Be(3);
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
 
-        _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
+        await Assert.That(_result.Data.Items.All(dwm => dwm.MetaData != ReactiveUI.Primitives.Optional<DeviceMetaData>.None)).IsTrue();
     }
 
-    [Fact]
-    public void AddRightOnly()
+    [Test]
+    public async Task AddRightOnly()
     {
         _right.Edit(
             innerCache =>
@@ -80,16 +71,16 @@ public class FullJoinFixture : IDisposable
                 innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
             });
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Lookup("Device1").HasValue.Should().BeTrue();
-        _result.Data.Lookup("Device2").HasValue.Should().BeTrue();
-        _result.Data.Lookup("Device3").HasValue.Should().BeTrue();
-        _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
-        _result.Data.Items.All(dwm => dwm.Device == Optional<Device>.None).Should().BeTrue();
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Lookup("Device1").HasValue).IsTrue();
+        await Assert.That(_result.Data.Lookup("Device2").HasValue).IsTrue();
+        await Assert.That(_result.Data.Lookup("Device3").HasValue).IsTrue();
+        await Assert.That(_result.Data.Items.All(dwm => dwm.MetaData != ReactiveUI.Primitives.Optional<DeviceMetaData>.None)).IsTrue();
+        await Assert.That(_result.Data.Items.All(dwm => dwm.Device == ReactiveUI.Primitives.Optional<Device>.None)).IsTrue();
     }
 
-    [Fact]
-    public void AddRightThenLeft()
+    [Test]
+    public async Task AddRightThenLeft()
     {
         _right.Edit(
             innerCache =>
@@ -107,9 +98,9 @@ public class FullJoinFixture : IDisposable
                 innerCache.AddOrUpdate(new Device("Device3"));
             });
 
-        _result.Data.Count.Should().Be(3);
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
 
-        _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
+        await Assert.That(_result.Data.Items.All(dwm => dwm.MetaData != ReactiveUI.Primitives.Optional<DeviceMetaData>.None)).IsTrue();
     }
 
     public void Dispose()
@@ -119,8 +110,8 @@ public class FullJoinFixture : IDisposable
         _result.Dispose();
     }
 
-    [Fact]
-    public void RemoveVarious()
+    [Test]
+    public async Task RemoveVarious()
     {
         _left.Edit(
             innerCache =>
@@ -137,23 +128,23 @@ public class FullJoinFixture : IDisposable
                 innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
                 innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
             });
-        _result.Data.Lookup("Device1").HasValue.Should().BeTrue();
-        _result.Data.Lookup("Device2").HasValue.Should().BeTrue();
-        _result.Data.Lookup("Device3").HasValue.Should().BeTrue();
+        await Assert.That(_result.Data.Lookup("Device1").HasValue).IsTrue();
+        await Assert.That(_result.Data.Lookup("Device2").HasValue).IsTrue();
+        await Assert.That(_result.Data.Lookup("Device3").HasValue).IsTrue();
 
         _right.Remove("Device3");
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.Count(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().Be(2);
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.Count(dwm => dwm.MetaData != ReactiveUI.Primitives.Optional<DeviceMetaData>.None)).IsEqualTo(2);
 
         _left.Remove("Device1");
-        _result.Data.Lookup("Device1").HasValue.Should().BeTrue();
-        _result.Data.Lookup("Device2").HasValue.Should().BeTrue();
-        _result.Data.Lookup("Device3").HasValue.Should().BeTrue();
+        await Assert.That(_result.Data.Lookup("Device1").HasValue).IsTrue();
+        await Assert.That(_result.Data.Lookup("Device2").HasValue).IsTrue();
+        await Assert.That(_result.Data.Lookup("Device3").HasValue).IsTrue();
     }
 
-    [Fact]
-    public void UpdateRight()
+    [Test]
+    public async Task UpdateRight()
     {
         _right.Edit(
             innerCache =>
@@ -171,9 +162,9 @@ public class FullJoinFixture : IDisposable
                 innerCache.AddOrUpdate(new Device("Device3"));
             });
 
-        _result.Data.Count.Should().Be(3);
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
 
-        _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
+        await Assert.That(_result.Data.Items.All(dwm => dwm.MetaData != ReactiveUI.Primitives.Optional<DeviceMetaData>.None)).IsTrue();
     }
 
     public class Device(string name) : IEquatable<Device>
@@ -280,13 +271,13 @@ public class FullJoinFixture : IDisposable
         public override string ToString() => $"Metadata: {Name}. IsAutoConnect = {IsAutoConnect}";
     }
 
-    public class DeviceWithMetadata(string key, Optional<Device> device, Optional<DeviceMetaData> metaData) : IEquatable<DeviceWithMetadata>
+    public class DeviceWithMetadata(string key, ReactiveUI.Primitives.Optional<Device> device, ReactiveUI.Primitives.Optional<DeviceMetaData> metaData) : IEquatable<DeviceWithMetadata>
     {
-        public Optional<Device> Device { get; set; } = device;
+        public ReactiveUI.Primitives.Optional<Device> Device { get; set; } = device;
 
         public string Key { get; } = key;
 
-        public Optional<DeviceMetaData> MetaData { get; } = metaData;
+        public ReactiveUI.Primitives.Optional<DeviceMetaData> MetaData { get; } = metaData;
 
         public static bool operator ==(DeviceWithMetadata left, DeviceWithMetadata right) => Equals(left, right);
 

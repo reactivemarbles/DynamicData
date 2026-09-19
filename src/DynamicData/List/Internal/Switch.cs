@@ -1,17 +1,31 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the Switch class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
+/// <param name="sources">The sources value.</param>
 internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
     where T : notnull
 {
+    /// <summary>
+    /// The _sources field.
+    /// </summary>
     private readonly IObservable<IObservable<IChangeSet<T>>> _sources = sources ?? throw new ArgumentNullException(nameof(sources));
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
@@ -31,7 +45,7 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
                 var isSourceRunning = false;
                 var areSourcesComplete = false;
 
-                var outer = _sources.SubscribeSafe(
+                var outer = _sources.SubscribeSafe(Observer.Create<IObservable<IChangeSet<T>>>(
                     source =>
                     {
                         int id;
@@ -50,7 +64,14 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
 
                         // Subscribed outside the lock. The source may deliver synchronously, and that
                         // delivery takes the lock for itself.
-                        subscription.Disposable = source.SubscribeSafe(
+                        if (id != Volatile.Read(ref active))
+                        {
+                            return;
+                        }
+
+                        var innerSubscription = new SingleAssignmentDisposable();
+                        subscription.Disposable = innerSubscription;
+                        innerSubscription.Disposable = source.SubscribeSafe(Observer.Create<IChangeSet<T>>(
                             changes =>
                             {
                                 using var scope = queue.AcquireLock();
@@ -93,7 +114,7 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
                                 {
                                     scope.EnqueueCompleted();
                                 }
-                            });
+                            }));
                     },
                     queue.OnError,
                     () =>
@@ -107,7 +128,7 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
                         {
                             scope.EnqueueCompleted();
                         }
-                    });
+                    }));
 
                 // Disposal order matters and CompositeDisposable does not specify one. The queue goes first
                 // so that any delivery in flight is finished before the subscriptions feeding it are torn down.

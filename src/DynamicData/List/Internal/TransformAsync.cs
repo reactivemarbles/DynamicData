@@ -1,26 +1,50 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Linq;
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the TransformAsync class.
+/// </summary>
+/// <typeparam name="TSource">The type of the TSource value.</typeparam>
+/// <typeparam name="TDestination">The type of the TDestination value.</typeparam>
 internal sealed class TransformAsync<TSource, TDestination>
     where TSource : notnull
     where TDestination : notnull
 {
-    private readonly Func<TSource, Optional<TDestination>, int, CancellationToken, Task<Transformer<TSource, TDestination>.TransformedItemContainer>> _containerFactory;
+    /// <summary>
+    /// The _containerFactory field.
+    /// </summary>
+    private readonly Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, int, CancellationToken, Task<Transformer<TSource, TDestination>.TransformedItemContainer>> _containerFactory;
 
+    /// <summary>
+    /// The _source field.
+    /// </summary>
     private readonly IObservable<IChangeSet<TSource>> _source;
+
+    /// <summary>
+    /// The _transformOnRefresh field.
+    /// </summary>
     private readonly bool _transformOnRefresh;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TransformAsync{TSource, TDestination}"/> class.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="factory">The factory value.</param>
+    /// <param name="transformOnRefresh">The transformOnRefresh value.</param>
     public TransformAsync(
         IObservable<IChangeSet<TSource>> source,
-        Func<TSource, Optional<TDestination>, int, CancellationToken, Task<TDestination>> factory,
+        Func<TSource, ReactiveUI.Primitives.Optional<TDestination>, int, CancellationToken, Task<TDestination>> factory,
         bool transformOnRefresh)
     {
-        factory.ThrowArgumentNullExceptionIfNull(nameof(factory));
+        ArgumentExceptionHelper.ThrowIfNull(factory);
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _transformOnRefresh = transformOnRefresh;
@@ -31,8 +55,16 @@ internal sealed class TransformAsync<TSource, TDestination>
         };
     }
 
+    /// <summary>
+    /// Executes the Run operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     public IObservable<IChangeSet<TDestination>> Run() => Observable.Defer(RunImpl);
 
+    /// <summary>
+    /// Executes the RunImpl operation.
+    /// </summary>
+    /// <returns>The result of the operation.</returns>
     private IObservable<IChangeSet<TDestination>> RunImpl()
     {
         return Observable.Using(
@@ -50,13 +82,13 @@ internal sealed class TransformAsync<TSource, TDestination>
                             }
                             catch (Exception e) when (e is ObjectDisposedException)
                             {
-                                return Optional.None<ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>>();
+                                return ReactiveUI.Primitives.Optional<ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>>.None;
                             }
 
                             try
                             {
                                 await Transform(state, changes, cancel);
-                                return Optional.Some(state);
+                                return new ReactiveUI.Primitives.Optional<ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>>(state);
                             }
                             finally
                             {
@@ -84,12 +116,19 @@ internal sealed class TransformAsync<TSource, TDestination>
             });
     }
 
+    /// <summary>
+    /// Executes the Transform operation.
+    /// </summary>
+    /// <param name="transformed">The transformed value.</param>
+    /// <param name="changes">The changes value.</param>
+    /// <param name="cancel">Cancels the asynchronous item transformation.</param>
+    /// <returns>The result of the operation.</returns>
     private async Task Transform(
         ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer> transformed,
         IChangeSet<TSource> changes,
         CancellationToken cancel)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
 
         foreach (var item in changes)
         {
@@ -103,7 +142,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                             var container =
                                 await _containerFactory(
                                     item.Item.Current,
-                                    Optional<TDestination>.None,
+                                    ReactiveUI.Primitives.Optional<TDestination>.None,
                                     transformed.Count,
                                     cancel).ConfigureAwait(false);
                             transformed.Add(container);
@@ -113,7 +152,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                             var container =
                                 await _containerFactory(
                                     item.Item.Current,
-                                    Optional<TDestination>.None,
+                                    ReactiveUI.Primitives.Optional<TDestination>.None,
                                     change.CurrentIndex,
                                     cancel).ConfigureAwait(false);
                             transformed.Insert(change.CurrentIndex, container);
@@ -125,7 +164,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                 case ListChangeReason.AddRange:
                     {
                         var startIndex = item.Range.Index < 0 ? transformed.Count : item.Range.Index;
-                        var tasks = item.Range.Select((t, idx) => _containerFactory(t, Optional<TDestination>.None, idx + startIndex, cancel));
+                        var tasks = item.Range.Select((t, idx) => _containerFactory(t, ReactiveUI.Primitives.Optional<TDestination>.None, idx + startIndex, cancel));
                         var containers = await Task.WhenAll(tasks).ConfigureAwait(false);
                         transformed.AddOrInsertRange(containers, item.Range.Index);
                         break;
@@ -136,7 +175,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                         var change = item.Item;
                         if (_transformOnRefresh)
                         {
-                            Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
+                            ReactiveUI.Primitives.Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
                             var container = await _containerFactory(change.Current, previous, change.CurrentIndex, cancel)
                                 .ConfigureAwait(false);
                             transformed[change.CurrentIndex] = container;
@@ -153,7 +192,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                     {
                         var change = item.Item;
 
-                        Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
+                        ReactiveUI.Primitives.Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
                         if (change.CurrentIndex == change.PreviousIndex)
                         {
                             transformed[change.CurrentIndex] = await _containerFactory(change.Current, previous, change.CurrentIndex, cancel);
@@ -161,7 +200,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                         else
                         {
                             transformed.RemoveAt(change.PreviousIndex);
-                            transformed.Insert(change.CurrentIndex, await _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex, cancel));
+                            transformed.Insert(change.CurrentIndex, await _containerFactory(change.Current, ReactiveUI.Primitives.Optional<TDestination>.None, change.CurrentIndex, cancel));
                         }
 
                         break;
@@ -178,7 +217,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                         }
                         else
                         {
-                            var toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, t));
+                            var toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
 
                             if (toRemove is not null)
                             {
@@ -197,7 +236,7 @@ internal sealed class TransformAsync<TSource, TDestination>
                         }
                         else
                         {
-                            var toRemove = transformed.Where(t => ReferenceEquals(t.Source, t)).ToArray();
+                            var toRemove = transformed.Where(t => item.Range.Any(current => ReferenceEquals(t.Source, current))).ToArray();
                             transformed.RemoveMany(toRemove);
                         }
 

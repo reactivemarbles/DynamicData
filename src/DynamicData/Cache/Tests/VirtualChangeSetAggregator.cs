@@ -1,14 +1,20 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+using DynamicData.Reactive.Diagnostics;
+#else
 
 using DynamicData.Diagnostics;
+#endif
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.Tests;
+#else
 namespace DynamicData.Tests;
+#endif
 
 /// <summary>
 /// Aggregates all events and statistics for a virtual change set to help assertions when testing.
@@ -19,8 +25,14 @@ public class VirtualChangeSetAggregator<TObject, TKey> : IDisposable
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _disposer field.
+    /// </summary>
     private readonly IDisposable _disposer;
 
+    /// <summary>
+    /// The _isDisposed field.
+    /// </summary>
     private bool _isDisposed;
 
     /// <summary>
@@ -29,12 +41,13 @@ public class VirtualChangeSetAggregator<TObject, TKey> : IDisposable
     /// <param name="source">The source.</param>
     public VirtualChangeSetAggregator(IObservable<IVirtualChangeSet<TObject, TKey>> source)
     {
+        ArgumentExceptionHelper.ThrowIfNull(source);
+
         var published = source.Publish();
 
-        var error = published.Subscribe(_ => { }, ex => Error = ex);
-        var results = published.Subscribe(updates => Messages.Add(updates));
+        var results = published.Subscribe(updates => Messages.Add(updates), ex => Error = ex);
         Data = published.AsObservableCache();
-        var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary);
+        var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary, _ => { });
 
         var connected = published.Connect();
         _disposer = Disposable.Create(
@@ -43,7 +56,7 @@ public class VirtualChangeSetAggregator<TObject, TKey> : IDisposable
                 connected.Dispose();
                 summariser.Dispose();
                 results.Dispose();
-                error.Dispose();
+                Data.Dispose();
             });
     }
 

@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Microsoft.Reactive.Testing;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -28,8 +24,8 @@ public class FilterOnObservableFixture : IDisposable
         _sourceResults = _source.Connect().AsAggregator();
     }
 
-    [Fact]
-    public void FactoryIsInvoked()
+    [Test]
+    public async Task FactoryIsInvoked()
     {
         // having
         var invoked = false;
@@ -46,14 +42,14 @@ public class FilterOnObservableFixture : IDisposable
         AddPerson(MagicNumber);
 
         // then
-        _sourceResults.Data.Count.Should().Be(1);
-        invoked.Should().BeTrue();
-        val.Should().Be(MagicNumber, "Was value added to cache");
-        Assert.Throws<ArgumentNullException>(() => _source.Connect().FilterOnObservable((Func<Person, IObservable<bool>>)null!));
+        await Assert.That(_sourceResults.Data.Count).IsEqualTo(1);
+        await Assert.That(invoked).IsTrue();
+        await Assert.That(val).IsEqualTo(MagicNumber).Because("Was value added to cache");
+        await Assert.That(() => _source.Connect().FilterOnObservable((Func<Person, IObservable<bool>>)null!)).Throws<ArgumentNullException>();
     }
 
-    [Fact]
-    public void FactoryWithKeyIsInvoked()
+    [Test]
+    public async Task FactoryWithKeyIsInvoked()
     {
         // having
         var invoked = false;
@@ -70,15 +66,15 @@ public class FilterOnObservableFixture : IDisposable
         AddPerson(MagicNumber);
 
         // then
-        _sourceResults.Data.Count.Should().Be(1);
-        invoked.Should().BeTrue();
-        val.Should().Be(MagicNumber, "Was value added to cache");
-        Assert.Throws<ArgumentNullException>(() => _source.Connect().FilterOnObservable((Func<Person, string, IObservable<bool>>)null!));
-        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.FilterOnObservable(null!, (Func<Person, string, IObservable<bool>>)null!));
+        await Assert.That(_sourceResults.Data.Count).IsEqualTo(1);
+        await Assert.That(invoked).IsTrue();
+        await Assert.That(val).IsEqualTo(MagicNumber).Because("Was value added to cache");
+        await Assert.That(() => _source.Connect().FilterOnObservable((Func<Person, string, IObservable<bool>>)null!)).Throws<ArgumentNullException>();
+        await Assert.That(() => ObservableCacheEx.FilterOnObservable(null!, (Func<Person, string, IObservable<bool>>)null!)).Throws<ArgumentNullException>();
     }
 
-    [Fact]
-    public void FilteredOutIfNoObservableValue()
+    [Test]
+    public async Task FilteredOutIfNoObservableValue()
     {
         // having
         using var filterStats = _source.Connect().FilterOnObservable(p => Observable.Never<bool>()).AsAggregator();
@@ -87,14 +83,14 @@ public class FilterOnObservableFixture : IDisposable
         AddPeople(MagicNumber);
 
         // then
-        _sourceResults.Data.Count.Should().Be(MagicNumber);
-        _sourceResults.Messages[0].Adds.Should().Be(MagicNumber);
-        _sourceResults.Messages.Count.Should().Be(1, "Should have all been added at once");
-        filterStats.Messages.Count.Should().Be(0, "All items should be filtered out");
+        await Assert.That(_sourceResults.Data.Count).IsEqualTo(MagicNumber);
+        await Assert.That(_sourceResults.Messages[0].Adds).IsEqualTo(MagicNumber);
+        await Assert.That(_sourceResults.Messages.Count).IsEqualTo(1).Because("Should have all been added at once");
+        await Assert.That(filterStats.Messages.Count).IsEqualTo(0).Because("All items should be filtered out");
     }
 
-    [Fact]
-    public void ObservableFilterUsedToDetermineInclusion()
+    [Test]
+    public async Task ObservableFilterUsedToDetermineInclusion()
     {
         // having
         Predicate<Person> predicate = p => p.Age % 2 == 0;
@@ -107,15 +103,15 @@ public class FilterOnObservableFixture : IDisposable
         AddPeople(MagicNumber).ForEach(p => _ = predicate(p) ? passCount++ : failCount++);
 
         // then
-        _sourceResults.Data.Count.Should().Be(passCount + failCount);
-        filterStats.Data.Count.Should().Be(passCount);
+        await Assert.That(_sourceResults.Data.Count).IsEqualTo(passCount + failCount);
+        await Assert.That(filterStats.Data.Count).IsEqualTo(passCount);
     }
 
-    [Fact]
-    public void ObservableFilterTriggersAddAndRemove()
+    [Test]
+    public async Task ObservableFilterTriggersAddAndRemove()
     {
         // having
-        ISubject<bool> filterSubject = new Subject<bool>();
+        ReactiveUI.Primitives.Signals.ISignal<bool> filterSubject = new ReactiveUI.Primitives.Signals.Signal<bool>();
 
         using var filterStats = _source.Connect().FilterOnObservable(_ => filterSubject).AsAggregator();
 
@@ -126,19 +122,19 @@ public class FilterOnObservableFixture : IDisposable
         filterSubject.OnNext(false);
 
         // then
-        _sourceResults.Data.Count.Should().Be(MagicNumber);
-        _sourceResults.Messages.Count.Should().Be(1, "Should have all been added at once");
-        filterStats.Data.Count.Should().Be(0);
-        filterStats.Messages.Count.Should().Be(MagicNumber*2, "Each should be added and removed");
-        filterStats.Summary.Overall.Adds.Should().Be(MagicNumber);
-        filterStats.Summary.Overall.Removes.Should().Be(MagicNumber);
+        await Assert.That(_sourceResults.Data.Count).IsEqualTo(MagicNumber);
+        await Assert.That(_sourceResults.Messages.Count).IsEqualTo(1).Because("Should have all been added at once");
+        await Assert.That(filterStats.Data.Count).IsEqualTo(0);
+        await Assert.That(filterStats.Messages.Count).IsEqualTo(MagicNumber * 2).Because("Each should be added and removed");
+        await Assert.That(filterStats.Summary.Overall.Adds).IsEqualTo(MagicNumber);
+        await Assert.That(filterStats.Summary.Overall.Removes).IsEqualTo(MagicNumber);
     }
 
-    [Fact]
-    public void ObservableFilterDuplicateValuesHaveNoEffect()
+    [Test]
+    public async Task ObservableFilterDuplicateValuesHaveNoEffect()
     {
         // having
-        ISubject<bool> filterSubject = new Subject<bool>();
+        ReactiveUI.Primitives.Signals.ISignal<bool> filterSubject = new ReactiveUI.Primitives.Signals.Signal<bool>();
 
         using var filterStats = _source.Connect().FilterOnObservable(_ => filterSubject).AsAggregator();
 
@@ -153,19 +149,19 @@ public class FilterOnObservableFixture : IDisposable
         filterSubject.OnNext(true);
 
         // then
-        _sourceResults.Data.Count.Should().Be(MagicNumber);
-        _sourceResults.Messages.Count.Should().Be(1, "Should have all been added at once");
-        filterStats.Data.Count.Should().Be(MagicNumber);
-        filterStats.Messages.Count.Should().Be(MagicNumber, "Each should be added individually");
-        filterStats.Summary.Overall.Adds.Should().Be(MagicNumber);
+        await Assert.That(_sourceResults.Data.Count).IsEqualTo(MagicNumber);
+        await Assert.That(_sourceResults.Messages.Count).IsEqualTo(1).Because("Should have all been added at once");
+        await Assert.That(filterStats.Data.Count).IsEqualTo(MagicNumber);
+        await Assert.That(filterStats.Messages.Count).IsEqualTo(MagicNumber).Because("Each should be added individually");
+        await Assert.That(filterStats.Summary.Overall.Adds).IsEqualTo(MagicNumber);
     }
 
-    [Fact]
-    public void ObservableFilterChangesCanBeBuffered()
+    [Test]
+    public async Task ObservableFilterChangesCanBeBuffered()
     {
         // having
         TestScheduler? scheduler = new TestScheduler();
-        ISubject<bool> filterSubject = new Subject<bool>();
+        ReactiveUI.Primitives.Signals.ISignal<bool> filterSubject = new ReactiveUI.Primitives.Signals.Signal<bool>();
 
         using var filterStats = _source.Connect().FilterOnObservable(_ => filterSubject, TimeSpan.FromSeconds(1), scheduler).AsAggregator();
 
@@ -176,11 +172,11 @@ public class FilterOnObservableFixture : IDisposable
         scheduler.AdvanceBy(TimeSpan.FromSeconds(2).Ticks);
 
         // then
-        _sourceResults.Data.Count.Should().Be(MagicNumber);
-        _sourceResults.Messages.Count.Should().Be(1, "Should have all been added at once");
-        filterStats.Data.Count.Should().Be(MagicNumber);
-        filterStats.Messages.Count.Should().Be(1, "Should have all been added at once");
-        filterStats.Summary.Overall.Adds.Should().Be(MagicNumber);
+        await Assert.That(_sourceResults.Data.Count).IsEqualTo(MagicNumber);
+        await Assert.That(_sourceResults.Messages.Count).IsEqualTo(1).Because("Should have all been added at once");
+        await Assert.That(filterStats.Data.Count).IsEqualTo(MagicNumber);
+        await Assert.That(filterStats.Messages.Count).IsEqualTo(1).Because("Should have all been added at once");
+        await Assert.That(filterStats.Summary.Overall.Adds).IsEqualTo(MagicNumber);
     }
 
     private static Person NewPerson(int n) => new("Name" + n, n);

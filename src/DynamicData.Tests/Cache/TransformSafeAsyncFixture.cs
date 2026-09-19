@@ -1,82 +1,76 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading.Tasks;
-using DynamicData.Cache;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
 public class TransformSafeAsyncFixture
 {
-    [Fact]
-    public void ReTransformAll()
+    [Test]
+    public async Task ReTransformAll()
     {
         var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
-        var forceTransform = new Subject<Unit>();
+        var forceTransform = new ReactiveUI.Primitives.Signals.Signal<Unit>();
 
         using var stub = new TransformStub(forceTransform);
         stub.Source.AddOrUpdate(people);
         forceTransform.OnNext(Unit.Default);
 
-        stub.Results.Messages.Count.Should().Be(2);
-        stub.Results.Messages[1].Updates.Should().Be(10);
+        await Assert.That(stub.Results.Messages.Count).IsEqualTo(2);
+        await Assert.That(stub.Results.Messages[1].Updates).IsEqualTo(10);
 
         for (var i = 1; i <= 10; i++)
         {
             var original = stub.Results.Messages[0].ElementAt(i - 1).Current;
             var updated = stub.Results.Messages[1].ElementAt(i - 1).Current;
 
-            updated.Should().Be(original);
-            ReferenceEquals(original, updated).Should().BeFalse();
+            await Assert.That(updated).IsEqualTo(original);
+            await Assert.That(ReferenceEquals(original, updated)).IsFalse();
         }
     }
 
-    [Fact]
-    public void ReTransformSelected()
+    [Test]
+    public async Task ReTransformSelected()
     {
         var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
-        var forceTransform = new Subject<Func<Person, bool>>();
+        var forceTransform = new ReactiveUI.Primitives.Signals.Signal<Func<Person, bool>>();
 
         using var stub = new TransformStub(forceTransform);
         stub.Source.AddOrUpdate(people);
         forceTransform.OnNext(person => person.Age <= 5);
 
-        stub.Results.Messages.Count.Should().Be(2);
-        stub.Results.Messages[1].Updates.Should().Be(5);
+        await Assert.That(stub.Results.Messages.Count).IsEqualTo(2);
+        await Assert.That(stub.Results.Messages[1].Updates).IsEqualTo(5);
 
         for (int i = 1; i <= 5; i++)
         {
             var original = stub.Results.Messages[0].ElementAt(i - 1).Current;
             var updated = stub.Results.Messages[1].ElementAt(i - 1).Current;
-            updated.Should().Be(original);
-            ReferenceEquals(original, updated).Should().BeFalse();
+            await Assert.That(updated).IsEqualTo(original);
+            await Assert.That(ReferenceEquals(original, updated)).IsFalse();
         }
     }
 
-    [Fact]
+    [Test]
     public async Task Add()
     {
         using var stub = new TransformStub();
         var person = new Person("Adult1", 50);
         stub.Source.AddOrUpdate(person);
 
-        stub.Results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        stub.Results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+        await Assert.That(stub.Results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(1).Because("Should be 1 item in the cache");
 
         var firstPerson = await stub.TransformFactory(person);
 
-        stub.Results.Data.Items[0].Should().Be(firstPerson, "Should be same person");
+        await Assert.That(stub.Results.Data.Items[0]).IsEqualTo(firstPerson).Because("Should be same person");
     }
 
-    [Fact]
-    public void Remove()
+    [Test]
+    public async Task Remove()
     {
         const string key = "Adult1";
         var person = new Person(key, 50);
@@ -85,15 +79,15 @@ public class TransformSafeAsyncFixture
         stub.Source.AddOrUpdate(person);
         stub.Source.Remove(key);
 
-        stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        stub.Results.Messages[0].Adds.Should().Be(1, "Should be 80 adds");
-        stub.Results.Messages[1].Removes.Should().Be(1, "Should be 80 removes");
-        stub.Results.Data.Count.Should().Be(0, "Should be nothing cached");
+        await Assert.That(stub.Results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(stub.Results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(stub.Results.Messages[0].Adds).IsEqualTo(1).Because("Should be 80 adds");
+        await Assert.That(stub.Results.Messages[1].Removes).IsEqualTo(1).Because("Should be 80 removes");
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(0).Because("Should be nothing cached");
     }
 
-    [Fact]
-    public void Update()
+    [Test]
+    public async Task Update()
     {
         const string key = "Adult1";
         var newperson = new Person(key, 50);
@@ -104,28 +98,28 @@ public class TransformSafeAsyncFixture
             stub.Source.AddOrUpdate(newperson);
             stub.Source.AddOrUpdate(updated);
 
-            stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
-            stub.Results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
-            stub.Results.Messages[1].Updates.Should().Be(1, "Should be 1 update");
+            await Assert.That(stub.Results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+            await Assert.That(stub.Results.Messages[0].Adds).IsEqualTo(1).Because("Should be 1 adds");
+            await Assert.That(stub.Results.Messages[1].Updates).IsEqualTo(1).Because("Should be 1 update");
         }
     }
 
-    [Fact]
+    [Test]
     public async Task BatchOfUniqueUpdates()
     {
         var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         using var stub = new TransformStub();
         stub.Source.AddOrUpdate(people);
 
-        stub.Results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        stub.Results.Messages[0].Adds.Should().Be(100, "Should return 100 adds");
+        await Assert.That(stub.Results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(stub.Results.Messages[0].Adds).IsEqualTo(100).Because("Should return 100 adds");
 
         var result = await Task.WhenAll(people.Select(stub.TransformFactory));
         var transformed = result.OrderBy(p => p.Age).ToArray();
-        stub.Results.Data.Items.OrderBy(p => p.Age).Should().BeEquivalentTo(stub.Results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
+        await Assert.That(stub.Results.Data.Items.OrderBy(p => p.Age)).IsEquivalentTo(stub.Results.Data.Items.OrderBy(p => p.Age)).Because("Incorrect transform result");
     }
 
-    [Fact]
+    [Test]
     public async Task SameKeyChanges()
     {
         using var stub = new TransformStub();
@@ -133,19 +127,19 @@ public class TransformSafeAsyncFixture
 
         stub.Source.AddOrUpdate(people);
 
-        stub.Results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        stub.Results.Messages[0].Adds.Should().Be(1, "Should return 1 adds");
-        stub.Results.Messages[0].Updates.Should().Be(9, "Should return 9 adds");
-        stub.Results.Data.Count.Should().Be(1, "Should result in 1 record");
+        await Assert.That(stub.Results.Messages.Count).IsEqualTo(1).Because("Should be 1 updates");
+        await Assert.That(stub.Results.Messages[0].Adds).IsEqualTo(1).Because("Should return 1 adds");
+        await Assert.That(stub.Results.Messages[0].Updates).IsEqualTo(9).Because("Should return 9 adds");
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(1).Because("Should result in 1 record");
 
         var lastTransformed = await stub.TransformFactory(people.Last());
         var onlyItemInCache = stub.Results.Data.Items[0];
 
-        onlyItemInCache.Should().Be(lastTransformed, "Incorrect transform result");
+        await Assert.That(onlyItemInCache).IsEqualTo(lastTransformed).Because("Incorrect transform result");
     }
 
-    [Fact]
-    public void Clear()
+    [Test]
+    public async Task Clear()
     {
         using var stub = new TransformStub();
         var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
@@ -153,14 +147,14 @@ public class TransformSafeAsyncFixture
         stub.Source.AddOrUpdate(people);
         stub.Source.Clear();
 
-        stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        stub.Results.Messages[0].Adds.Should().Be(100, "Should be 80 addes");
-        stub.Results.Messages[1].Removes.Should().Be(100, "Should be 80 removes");
-        stub.Results.Data.Count.Should().Be(0, "Should be nothing cached");
+        await Assert.That(stub.Results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(stub.Results.Messages[0].Adds).IsEqualTo(100).Because("Should be 80 addes");
+        await Assert.That(stub.Results.Messages[1].Removes).IsEqualTo(100).Because("Should be 80 removes");
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(0).Because("Should be nothing cached");
     }
 
-    [Fact]
-    public void HandleError()
+    [Test]
+    public async Task HandleError()
     {
         using var stub = new TransformStub(p =>
         {
@@ -172,20 +166,20 @@ public class TransformSafeAsyncFixture
         var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
         stub.Source.AddOrUpdate(people);
 
-        stub.Results.Error.Should().BeNull();
+        await Assert.That(stub.Results.Error).IsNull();
 
         Exception? error = null;
         stub.Source.Connect()
             .Subscribe(changes => { }, ex => error = ex);
 
-        error.Should().BeNull();
+        await Assert.That(error).IsNull();
 
-        stub.HandledErrors.Count.Should().Be(50);
-        stub.Results.Data.Count.Should().Be(50);
+        await Assert.That(stub.HandledErrors.Count).IsEqualTo(50);
+        await Assert.That(stub.Results.Data.Count).IsEqualTo(50);
     }
 
-    [Theory, InlineData(true), InlineData(false)]
-    public void TransformOnRefresh(bool transformOnRefresh)
+    [Test, Arguments(true), Arguments(false)]
+    public async Task TransformOnRefresh(bool transformOnRefresh)
     {
         int errorCount = 0;
         using var source = new SourceCache<Person, string>(p => p.Name);
@@ -196,20 +190,19 @@ public class TransformSafeAsyncFixture
         var person = new Person("SomeOne", 16);
         source.AddOrUpdate(person);
 
-        results.Data.Count.Should().Be(1);
-        results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be("Child");
+        await Assert.That(results.Data.Count).IsEqualTo(1);
+        await Assert.That(results.Data.Lookup("SomeOne").Value.AgeGroup).IsEqualTo("Child");
 
         person.Age = 21;
 
-
-        results.Data.Count.Should().Be(1);
-        results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be(transformOnRefresh ? "Adult" : "Child");
-        errorCount.Should().Be(0);
+        await Assert.That(results.Data.Count).IsEqualTo(1);
+        await Assert.That(results.Data.Lookup("SomeOne").Value.AgeGroup).IsEqualTo(transformOnRefresh ? "Adult" : "Child");
+        await Assert.That(errorCount).IsEqualTo(0);
     }
 
 
-    [Fact]
-    public void TransformSafeAsyncCancelsTokenOnUnSubscribe()
+    [Test]
+    public async Task TransformSafeAsyncCancelsTokenOnUnSubscribe()
     {
         using var source = new SourceCache<Person, string>(p => p.Name);
         var tcs = new TaskCompletionSource<Person>();
@@ -227,11 +220,11 @@ public class TransformSafeAsyncFixture
         source.AddOrUpdate(new Person());
 
         sub.Dispose();
-        Assert.True(tcs.Task.IsCanceled);
+        await Assert.That(tcs.Task.IsCanceled).IsTrue();
     }
 
 
-    [Theory, InlineData(10), InlineData(100)]
+    [Test, Arguments(10), Arguments(100)]
 
     public async Task WithMaxConcurrency(int maxConcurrency)
     {
@@ -258,15 +251,12 @@ public class TransformSafeAsyncFixture
                 , TransformAsyncOptions.Default with { MaximumConcurrency = maxConcurrency })
             .AsAggregator();
 
-
         source.AddOrUpdate(Enumerable.Range(1, transformCount).Select(l => new Person("Person" + l, l)));
-
 
         await results.Data.CountChanged.Where(c => c == transformCount).Take(1);
 
-        errorCount.Should().Be(0);
+        await Assert.That(errorCount).IsEqualTo(0);
     }
-
 
     private class TransformStub : IDisposable
     {

@@ -1,12 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if SUPPORTS_BINDINGLIST
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive.Binding;
+#else
 namespace DynamicData.Binding;
+#endif
 
 /// <summary>
 /// Represents an adaptor which is used to update a binding list from
@@ -23,12 +24,16 @@ public class SortedBindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAcc
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// The _list field.
+    /// </summary>
     private readonly BindingList<TObject> _list = list ?? throw new ArgumentNullException(nameof(list));
 
     /// <inheritdoc />
+    /// <param name="changes">The changes value.</param>
     public void Adapt(ISortedChangeSet<TObject, TKey> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
 
         switch (changes.SortedItems.SortReason)
         {
@@ -68,6 +73,10 @@ public class SortedBindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAcc
         }
     }
 
+    /// <summary>
+    /// Executes the DoUpdate operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
     private void DoUpdate(ISortedChangeSet<TObject, TKey> changes)
     {
         foreach (var change in changes)

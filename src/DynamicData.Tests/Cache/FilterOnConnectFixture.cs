@@ -1,7 +1,3 @@
-﻿using System.Linq;
-using FluentAssertions;
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 /// <summary>
@@ -9,8 +5,8 @@ namespace DynamicData.Tests.Cache;
 /// </summary>
 public class FilterOnConnectFixture
 {
-    [Fact]
-    public void ClearingSourceCacheWithPredicateShouldClearTheData()
+    [Test]
+    public async Task ClearingSourceCacheWithPredicateShouldClearTheData()
     {
         // having
         var source = new SourceCache<int, int>(it => it);
@@ -21,11 +17,11 @@ public class FilterOnConnectFixture
         source.Clear();
 
         // then
-        results.Data.Count.Should().Be(0, "Should be 0");
+        await Assert.That(results.Data.Count).IsEqualTo(0).Because("Should be 0");
     }
 
-    [Fact]
-    public void UpdatesExistedBeforeConnectWithoutPredicateShouldBeVisibleAsPreviousWhenNewUpdatesTriggered()
+    [Test]
+    public async Task UpdatesExistedBeforeConnectWithoutPredicateShouldBeVisibleAsPreviousWhenNewUpdatesTriggered()
     {
         // having
         var source = new SourceCache<int, int>(it => it);
@@ -36,7 +32,7 @@ public class FilterOnConnectFixture
         source.AddOrUpdate(1);
 
         // then
-        results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        results.Messages[1].First().Previous.HasValue.Should().Be(true, "Should have previous value");
+        await Assert.That(results.Messages.Count).IsEqualTo(2).Because("Should be 2 updates");
+        await Assert.That(results.Messages[1].First().Previous.HasValue).IsTrue().Because("Should have previous value");
     }
 }

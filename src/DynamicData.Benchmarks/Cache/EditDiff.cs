@@ -1,12 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-
-using BenchmarkDotNet.Attributes;
-
-using DynamicData.Kernel;
-
 namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
@@ -49,7 +40,7 @@ public class EditDiff
             .Range(0, MaxItems)
             .Select(n => (n % 2) == 0
                 ? new Person(n, "Name")
-                : Optional.None<Person>())
+                : Optional<Person>.None)
             .ToObservable()
             .EditDiff(p => p.Id)
             .Subscribe();

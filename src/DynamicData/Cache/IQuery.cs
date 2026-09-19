@@ -3,7 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// Exposes internal cache state to enable querying.
@@ -44,5 +48,5 @@ public interface IQuery<TObject, TKey>
     /// </remarks>
     /// <param name="key">The key.</param>
     /// <returns>The looked up value.</returns>
-    Optional<TObject> Lookup(TKey key);
+    ReactiveUI.Primitives.Optional<TObject> Lookup(TKey key);
 }

@@ -3,7 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 // ReSharper disable once CheckNamespace
+#if REACTIVE_SHIM
+namespace DynamicData.Reactive;
+#else
 namespace DynamicData;
+#endif
 
 /// <summary>
 /// An item with it's index.
@@ -34,9 +38,13 @@ public sealed class IndexedItem<TObject, TKey>(TObject value, TKey key, int inde
     public TObject Value { get; } = value;
 
     /// <inheritdoc />
+    /// <param name="obj">The obj value.</param>
+    /// <returns>The result of the operation.</returns>
     public override bool Equals(object? obj) => obj is IndexedItem<TObject, TKey> indexedKey && Equals(indexedKey);
 
     /// <inheritdoc />
+    /// <param name="other">The other value.</param>
+    /// <returns>The result of the operation.</returns>
     public bool Equals(IndexedItem<TObject, TKey>? other)
     {
         if (other is null)
@@ -48,6 +56,7 @@ public sealed class IndexedItem<TObject, TKey>(TObject value, TKey key, int inde
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -60,5 +69,6 @@ public sealed class IndexedItem<TObject, TKey>(TObject value, TKey key, int inde
     }
 
     /// <inheritdoc />
+    /// <returns>The result of the operation.</returns>
     public override string ToString() => $"Value: {Value}, Key: {Key}, CurrentIndex: {Index}";
 }

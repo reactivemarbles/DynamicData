@@ -1,7 +1,8 @@
-using System.Collections.Generic;
-using System.Linq;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
+#endif
 
 namespace DynamicData.Tests.Domain;
 

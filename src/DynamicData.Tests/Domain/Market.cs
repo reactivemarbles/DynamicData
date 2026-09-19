@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Threading;
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
-using DynamicData.Tests.Utilities;
+#endif
 
 namespace DynamicData.Tests.Domain;
 
@@ -87,7 +85,7 @@ internal sealed class Market : IMarket, IDisposable
         })));
 
     public Market RefreshAllPrices(Func<decimal> getNewPrice) => RefreshAllPrices(_ => getNewPrice());
-    
+
     public Market RefreshAllPrices(decimal newPrice) => RefreshAllPrices(_ => newPrice);
 
     public void RemoveAllPrices() => this.With(_ => _latestPrices.Clear());
@@ -127,7 +125,6 @@ internal sealed class Market : IMarket, IDisposable
             y.Rating.CompareTo(x.Rating);
     }
 }
-
 
 internal sealed class FixedMarket : IMarket
 {

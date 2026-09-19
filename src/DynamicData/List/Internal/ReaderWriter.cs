@@ -1,22 +1,39 @@
 // Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.List.Internal;
+#else
 
 namespace DynamicData.List.Internal;
+#endif
 
+/// <summary>
+/// Provides members for the ReaderWriter class.
+/// </summary>
+/// <typeparam name="T">The type of the T value.</typeparam>
 internal sealed class ReaderWriter<T>
     where T : notnull
 {
-#if NET9_0_OR_GREATER
+    /// <summary>
+    /// The _locker field.
+    /// </summary>
     private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
 
+    /// <summary>
+    /// The _data field.
+    /// </summary>
     private ChangeAwareList<T> _data = new();
 
+    /// <summary>
+    /// The _updateInProgress field.
+    /// </summary>
     private bool _updateInProgress;
 
+    /// <summary>
+    /// Gets the Count value.
+    /// </summary>
     public int Count
     {
         get
@@ -28,6 +45,9 @@ internal sealed class ReaderWriter<T>
         }
     }
 
+    /// <summary>
+    /// Gets the Items value.
+    /// </summary>
     public T[] Items
     {
         get
@@ -41,9 +61,14 @@ internal sealed class ReaderWriter<T>
         }
     }
 
+    /// <summary>
+    /// Executes the Write operation.
+    /// </summary>
+    /// <param name="changes">The changes value.</param>
+    /// <returns>The result of the operation.</returns>
     public IChangeSet<T> Write(IChangeSet<T> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentExceptionHelper.ThrowIfNull(changes);
 
         IChangeSet<T> result;
 
@@ -56,9 +81,14 @@ internal sealed class ReaderWriter<T>
         return result;
     }
 
+    /// <summary>
+    /// Executes the Write operation.
+    /// </summary>
+    /// <param name="updateAction">The updateAction value.</param>
+    /// <returns>The result of the operation.</returns>
     public IChangeSet<T> Write(Action<IExtendedList<T>> updateAction)
     {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
         IChangeSet<T> result;
 
@@ -82,7 +112,7 @@ internal sealed class ReaderWriter<T>
     /// <param name="updateAction">The action to perform on the list.</param>
     public void WriteNested(Action<IExtendedList<T>> updateAction)
     {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
 
         lock (_locker)
         {
@@ -95,10 +125,16 @@ internal sealed class ReaderWriter<T>
         }
     }
 
+    /// <summary>
+    /// Executes the WriteWithPreview operation.
+    /// </summary>
+    /// <param name="updateAction">The updateAction value.</param>
+    /// <param name="previewHandler">The previewHandler value.</param>
+    /// <returns>The result of the operation.</returns>
     public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
     {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
-        previewHandler.ThrowArgumentNullExceptionIfNull(nameof(previewHandler));
+        ArgumentExceptionHelper.ThrowIfNull(updateAction);
+        ArgumentExceptionHelper.ThrowIfNull(previewHandler);
 
         IChangeSet<T> result;
 

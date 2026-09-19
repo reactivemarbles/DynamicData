@@ -1,75 +1,83 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
 
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
+namespace DynamicData.Reactive.Cache.Internal;
+#else
 
 namespace DynamicData.Cache.Internal;
-
+#endif
 #if SUPPORTS_ASYNC_DISPOSABLE
+
+/// <summary>
+/// Provides members for the AsyncDisposeMany class.
+/// </summary>
+/// <typeparam name="TObject">The type of the TObject value.</typeparam>
+/// <typeparam name="TKey">The type of the TKey value.</typeparam>
 internal static class AsyncDisposeMany<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// Executes the Create operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+    /// <param name="disposalsCompletedAccessor">The disposalsCompletedAccessor value.</param>
+    /// <returns>The result of the operation.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> Create(
         IObservable<IChangeSet<TObject, TKey>> source,
         Action<IObservable<Unit>> disposalsCompletedAccessor)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        disposalsCompletedAccessor.ThrowArgumentNullExceptionIfNull(nameof(disposalsCompletedAccessor));
+        ArgumentExceptionHelper.ThrowIfNull(source);
+        ArgumentExceptionHelper.ThrowIfNull(disposalsCompletedAccessor);
 
         return Observable
             .Create<IChangeSet<TObject, TKey>>(downstreamObserver =>
             {
+                var gate = new Lock();
                 var itemsByKey = new Dictionary<TKey, TObject>();
-
-                var disposals = new Subject<IObservable<Unit>>();
-                var disposalsCompleted = disposals
-                    .Merge()
-                    .IgnoreElements()
-                    .Concat(Observable.Return(Unit.Default))
-                    .Publish()
-                    .AutoConnect(0);
+                var disposalsCompleted = new ReplaySignal<Unit>(1);
+                var pendingAsyncDisposals = 0;
+                var teardownStarted = false;
+                var teardownCompleted = false;
+                var disposalsFinalized = false;
 
                 disposalsCompletedAccessor.Invoke(disposalsCompleted);
 
-                var sourceSubscription = source
-                    .SynchronizeSafe()
-                    .SubscribeSafe(
-                        onNext: upstreamChanges =>
-                        {
-                            downstreamObserver.OnNext(upstreamChanges);
+                var sourceSubscription = PrimitivesLinqExtensions.SubscribeSafe(
+                    source.SynchronizeSafe(),
+                    onNext: upstreamChanges =>
+                    {
+                        downstreamObserver.OnNext(upstreamChanges);
 
-                            foreach (var change in upstreamChanges.ToConcreteType())
+                        foreach (var change in upstreamChanges.ToConcreteType())
+                        {
+                            switch (change.Reason)
                             {
-                                switch (change.Reason)
-                                {
-                                    case ChangeReason.Update:
-                                        if (change.Previous.HasValue && !EqualityComparer<TObject>.Default.Equals(change.Current, change.Previous.Value))
-                                            TryDisposeItem(change.Previous.Value);
-                                        break;
+                                case ChangeReason.Update:
+                                    if (change.Previous.HasValue && !EqualityComparer<TObject>.Default.Equals(change.Current, change.Previous.Value))
+                                        TryDisposeItem(change.Previous.Value);
+                                    break;
 
-                                    case ChangeReason.Remove:
-                                        TryDisposeItem(change.Current);
-                                        break;
-                                }
+                                case ChangeReason.Remove:
+                                    TryDisposeItem(change.Current);
+                                    break;
                             }
+                        }
 
-                            itemsByKey.Clone(upstreamChanges);
-                        },
-                        onError: error =>
-                        {
-                            downstreamObserver.OnError(error);
-                            TearDown();
-                        },
-                        onCompleted: () =>
-                        {
-                            downstreamObserver.OnCompleted();
-                            TearDown();
-                        });
+                        itemsByKey.Clone(upstreamChanges);
+                    },
+                    onError: error =>
+                    {
+                        downstreamObserver.OnError(error);
+                        TearDown();
+                    },
+                    onCompleted: () =>
+                    {
+                        downstreamObserver.OnCompleted();
+                        TearDown();
+                    });
 
                 return Disposable.Create(() =>
                 {
@@ -79,20 +87,37 @@ internal static class AsyncDisposeMany<TObject, TKey>
 
                 void TearDown()
                 {
-                    if (disposals.HasObservers)
+                    TObject[] items;
+
+                    lock (gate)
                     {
-                        try
-                        {
-                            foreach (var item in itemsByKey.Values)
-                                TryDisposeItem(item);
-                            disposals.OnCompleted();
-                            itemsByKey.Clear();
-                        }
-                        catch (Exception error)
-                        {
-                            disposals.OnError(error);
-                        }
+                        if (teardownStarted)
+                            return;
+
+                        teardownStarted = true;
+                        items = [.. itemsByKey.Values];
+                        itemsByKey.Clear();
                     }
+
+                    try
+                    {
+                        foreach (var item in items)
+                            TryDisposeItem(item);
+                    }
+                    catch (Exception error)
+                    {
+                        TryFailDisposals(error);
+                    }
+
+                    var publishCompleted = false;
+                    lock (gate)
+                    {
+                        teardownCompleted = true;
+                        publishCompleted = TryMarkDisposalsCompleted();
+                    }
+
+                    if (publishCompleted)
+                        PublishDisposalsCompleted();
                 }
 
                 void TryDisposeItem(TObject item)
@@ -100,7 +125,83 @@ internal static class AsyncDisposeMany<TObject, TKey>
                     if (item is IDisposable disposable)
                         disposable.Dispose();
                     else if (item is IAsyncDisposable asyncDisposable)
-                        disposals.OnNext(Observable.FromAsync(() => asyncDisposable.DisposeAsync().AsTask()));
+                        TrackAsyncDisposal(asyncDisposable.DisposeAsync().AsTask());
+                }
+
+                void TrackAsyncDisposal(Task disposalTask)
+                {
+                    lock (gate)
+                    {
+                        ++pendingAsyncDisposals;
+                    }
+
+                    if (disposalTask.IsCompleted)
+                    {
+                        CompleteAsyncDisposal(disposalTask);
+                        return;
+                    }
+
+                    _ = disposalTask.ContinueWith(
+                        static (completedTask, state) => ((Action<Task>)state!).Invoke(completedTask),
+                        (Action<Task>)CompleteAsyncDisposal,
+                        CancellationToken.None,
+                        TaskContinuationOptions.ExecuteSynchronously,
+                        TaskScheduler.Default);
+                }
+
+                void CompleteAsyncDisposal(Task disposalTask)
+                {
+                    if (disposalTask.IsFaulted)
+                    {
+                        TryFailDisposals(disposalTask.Exception.InnerExceptions.Count == 1
+                            ? disposalTask.Exception.InnerException!
+                            : disposalTask.Exception);
+                    }
+                    else if (disposalTask.IsCanceled)
+                    {
+                        TryFailDisposals(new TaskCanceledException(disposalTask));
+                    }
+
+                    var publishCompleted = false;
+                    lock (gate)
+                    {
+                        --pendingAsyncDisposals;
+                        publishCompleted = TryMarkDisposalsCompleted();
+                    }
+
+                    if (publishCompleted)
+                        PublishDisposalsCompleted();
+                }
+
+                bool TryMarkDisposalsCompleted()
+                {
+                    if (!teardownCompleted || pendingAsyncDisposals != 0 || disposalsFinalized)
+                        return false;
+
+                    disposalsFinalized = true;
+                    return true;
+                }
+
+                void PublishDisposalsCompleted()
+                {
+                    disposalsCompleted.OnNext(Unit.Default);
+                    disposalsCompleted.OnCompleted();
+                }
+
+                void TryFailDisposals(Exception error)
+                {
+                    var publishError = false;
+                    lock (gate)
+                    {
+                        if (!disposalsFinalized)
+                        {
+                            disposalsFinalized = true;
+                            publishError = true;
+                        }
+                    }
+
+                    if (publishError)
+                        disposalsCompleted.OnError(error);
                 }
             });
     }

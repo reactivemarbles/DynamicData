@@ -1,10 +1,3 @@
-using System;
-using System.Linq;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.List;
 
 public class DynamicAndFixture : IDisposable
@@ -28,8 +21,8 @@ public class DynamicAndFixture : IDisposable
         _results = _source.And().AsAggregator();
     }
 
-    [Fact]
-    public void AddAndRemoveLists()
+    [Test]
+    public async Task AddAndRemoveLists()
     {
         _source1.AddRange(Enumerable.Range(1, 5));
         _source3.AddRange(Enumerable.Range(1, 5));
@@ -39,40 +32,40 @@ public class DynamicAndFixture : IDisposable
 
         var result = Enumerable.Range(1, 5).ToArray();
 
-        _results.Data.Count.Should().Be(5);
-        _results.Data.Items.Should().BeEquivalentTo(result);
+        await Assert.That(_results.Data.Count).IsEqualTo(5);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(result);
 
         _source2.AddRange(Enumerable.Range(6, 5));
-        _results.Data.Count.Should().Be(5);
+        await Assert.That(_results.Data.Count).IsEqualTo(5);
 
         _source.Add(_source2.Connect());
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
 
         _source.RemoveAt(2);
-        _results.Data.Count.Should().Be(5);
-        _results.Data.Items.Should().BeEquivalentTo(result);
+        await Assert.That(_results.Data.Count).IsEqualTo(5);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(result);
     }
 
-    [Fact]
-    public void ClearOneClearsResult()
+    [Test]
+    public async Task ClearOneClearsResult()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
         _source1.AddRange(Enumerable.Range(1, 5));
         _source2.AddRange(Enumerable.Range(1, 5));
         _source1.Clear();
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void CombineRange()
+    [Test]
+    public async Task CombineRange()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
         _source1.AddRange(Enumerable.Range(1, 10));
         _source2.AddRange(Enumerable.Range(6, 10));
-        _results.Data.Count.Should().Be(5);
-        _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5));
+        await Assert.That(_results.Data.Count).IsEqualTo(5);
+        await Assert.That(_results.Data.Items).IsEquivalentTo(Enumerable.Range(6, 5));
     }
 
     public void Dispose()
@@ -84,33 +77,33 @@ public class DynamicAndFixture : IDisposable
         _results.Dispose();
     }
 
-    [Fact]
-    public void ExcludedWhenItemIsInOneSource()
+    [Test]
+    public async Task ExcludedWhenItemIsInOneSource()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
         _source1.Add(1);
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 
-    [Fact]
-    public void IncludedWhenItemIsInTwoSources()
+    [Test]
+    public async Task IncludedWhenItemIsInTwoSources()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
         _source1.Add(1);
         _source2.Add(1);
-        _results.Data.Count.Should().Be(1);
+        await Assert.That(_results.Data.Count).IsEqualTo(1);
     }
 
-    [Fact]
-    public void RemovedWhenNoLongerInBoth()
+    [Test]
+    public async Task RemovedWhenNoLongerInBoth()
     {
         _source.Add(_source1.Connect());
         _source.Add(_source2.Connect());
         _source1.Add(1);
         _source2.Add(1);
         _source1.Remove(1);
-        _results.Data.Count.Should().Be(0);
+        await Assert.That(_results.Data.Count).IsEqualTo(0);
     }
 }

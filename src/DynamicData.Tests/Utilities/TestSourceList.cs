@@ -1,10 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
 namespace DynamicData.Tests.Utilities;
 
 public sealed class TestSourceList<T>
@@ -12,10 +5,10 @@ public sealed class TestSourceList<T>
     where T : notnull
 {
     private readonly IObservable<int> _countChanged;
-    private readonly BehaviorSubject<Exception?> _error;
-    private readonly BehaviorSubject<bool> _hasCompleted;
-    private readonly Subject<IChangeSet<T>> _refreshRequested;
-    private readonly Subject<IChangeSet<T>> _refreshRequestedPreview;
+    private readonly ReactiveUI.Primitives.Signals.StateSignal<Exception?> _error;
+    private readonly ReactiveUI.Primitives.Signals.StateSignal<bool> _hasCompleted;
+    private readonly ReactiveUI.Primitives.Signals.Signal<IChangeSet<T>> _refreshRequested;
+    private readonly ReactiveUI.Primitives.Signals.Signal<IChangeSet<T>> _refreshRequestedPreview;
     private readonly SourceList<T> _source;
 
     public TestSourceList()
@@ -58,14 +51,14 @@ public sealed class TestSourceList<T>
         _refreshRequested.Dispose();
         _refreshRequestedPreview.Dispose();
     }
-    
+
     public void Edit(Action<IExtendedList<T>> updateAction)
     {
         AssertCanMutate();
 
         _source.Edit(updateAction);
     }
-    
+
     public IObservable<IChangeSet<T>> Preview(Func<T, bool>? predicate = null)
         => WrapStream(Observable.Merge(
             _source.Preview(predicate),
@@ -76,9 +69,9 @@ public sealed class TestSourceList<T>
     {
         var changeSet = new ChangeSet<T>(_source.Items
             .Select((item, index) => new Change<T>(
-                reason:     ListChangeReason.Refresh,
-                current:    item,
-                index:      index)));
+                reason: ListChangeReason.Refresh,
+                current: item,
+                index: index)));
 
         _refreshRequestedPreview.OnNext(changeSet);
         _refreshRequested.OnNext(changeSet);
@@ -104,9 +97,9 @@ public sealed class TestSourceList<T>
     {
         var changeSet = new ChangeSet<T>(indexes
             .Select(index => new Change<T>(
-                reason:     ListChangeReason.Refresh,
-                current:    _source.Items.ElementAt(index),
-                index:      index)));
+                reason: ListChangeReason.Refresh,
+                current: _source.Items.ElementAt(index),
+                index: index)));
 
         _refreshRequestedPreview.OnNext(changeSet);
         _refreshRequested.OnNext(changeSet);
@@ -133,7 +126,7 @@ public sealed class TestSourceList<T>
         {
             var hasCompleted = _hasCompleted
                 .Publish();
-            
+
             var subscription = Observable
                 .Merge(
                     _error
@@ -145,10 +138,10 @@ public sealed class TestSourceList<T>
                 .TakeUntil(hasCompleted
                     .Where(static hasCompleted => hasCompleted))
                 .SubscribeSafe(downstreamObserver);
-            
+
             // Make sure that an initial changeset gets published, before immediate completion.
             var connection = hasCompleted.Connect();
-            
+
             return Disposable.Create(() =>
             {
                 connection.Dispose();

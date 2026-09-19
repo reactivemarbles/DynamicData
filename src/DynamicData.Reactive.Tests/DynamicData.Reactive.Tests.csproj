@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <DefineConstants>$(DefineConstants);REACTIVE_TESTS</DefineConstants>
+    <NoWarn>$(NoWarn);CS0618;CA1801;CA1812;CA1816;CA1062;CA1063;CS8767;CS8602;CS8618;IDE1006</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DynamicData.Reactive\DynamicData.Reactive.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Bogus" Version="35.*" />
+    <PackageReference Include="TUnit" Version="1.68.4" />
+    <PackageReference Include="ReactiveUI.Primitives" Version="8.0.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
+    <PackageReference Include="PublicApiGenerator" Version="11.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="System.Collections.ObjectModel" />
+    <Using Include="System.ComponentModel" />
+    <Using Include="System.Collections" />
+    <Using Include="System.Collections.Specialized" />
+    <Using Include="DynamicData.Reactive" />
+    <Using Include="DynamicData.Reactive.Tests" />
+    <Using Include="DynamicData.Reactive.Internal" />
+    <Using Include="DynamicData.Tests.Utilities" />
+    <Using Include="TUnit.Core" />
+    <Using Include="TUnit.Assertions" />
+    <Using Include="TUnit.Assertions.Extensions" />
+    <Using Include="System.Reactive.Threading.Tasks" />
+    <Using Include="System.Reactive.Linq" />
+    <Using Include="System.Reactive.Concurrency" />
+    <Using Include="ReactiveUI.Primitives.Advanced" />
+    <Using Include="ReactiveUI.Primitives.Advanced.Witness" Alias="Observer" />
+    <Using Include="ReactiveUI.Primitives.Concurrency" />
+    <Using Include="System.Reactive.Unit" Alias="Unit" />
+    <Using Include="System.Reactive.Linq.Observable" Alias="Observable" />
+    <Using Include="ReactiveUI.Primitives.Disposables.Scope" Alias="Disposable" />
+    <Using Include="ReactiveUI.Primitives.Disposables.MultipleDisposable" Alias="CompositeDisposable" />
+    <Using Include="ReactiveUI.Primitives.Disposables.SwapDisposable" Alias="SerialDisposable" />
+    <Using Include="System.Reactive.Concurrency.IScheduler" Alias="IScheduler" />
+    <Using Include="System.Reactive.Concurrency.Scheduler" Alias="Scheduler" />
+    <Using Include="System.Reactive.Concurrency.TaskPoolScheduler" Alias="TaskPoolScheduler" />
+    <Using Include="System.Reactive.Concurrency.ThreadPoolScheduler" Alias="ThreadPoolScheduler" />
+    <Using Include="DynamicData.Tests.Utilities.NewThreadScheduler" Alias="NewThreadScheduler" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../DynamicData.Tests/**/*.cs" Exclude="../DynamicData.Tests/bin/**;../DynamicData.Tests/obj/**;../DynamicData.Tests/API/**" LinkBase="Tests" />
+  </ItemGroup>
+</Project>

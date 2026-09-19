@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Binding;
+#else
 using DynamicData.Binding;
-
-using FluentAssertions;
-
-using Xunit;
+#endif
 
 namespace DynamicData.Tests.Cache;
 
@@ -28,72 +25,72 @@ public class TransformTreeWithRefreshFixture : IDisposable
         _result.Dispose();
     }
 
-    [Fact]
-    public void DoNotUpdateTreeWhenParentIdNotChanged()
+    [Test]
+    public async Task DoNotUpdateTreeWhenParentIdNotChanged()
     {
         _sourceCache.Lookup(1).Value.Name = "Employee11";
         _sourceCache.Lookup(2).Value.Name = "Employee22";
 
         var node1 = _result.Lookup(1);
-        node1.HasValue.Should().BeTrue();
-        node1.Value.Parent.HasValue.Should().BeFalse();
+        await Assert.That(node1.HasValue).IsTrue();
+        await Assert.That(node1.Value.Parent.HasValue).IsFalse();
         var node2 = node1.Value.Children.Lookup(2);
-        node2.HasValue.Should().BeTrue();
-        node2.Value.Parent.HasValue.Should().BeTrue();
-        node2.Value.Parent.Value.Key.Should().Be(1);
+        await Assert.That(node2.HasValue).IsTrue();
+        await Assert.That(node2.Value.Parent.HasValue).IsTrue();
+        await Assert.That(node2.Value.Parent.Value.Key).IsEqualTo(1);
     }
 
-    [Fact]
-    public void UpdateTreeWhenParentIdOfNonRootItemChangedToExistingId()
+    [Test]
+    public async Task UpdateTreeWhenParentIdOfNonRootItemChangedToExistingId()
     {
         _sourceCache.Lookup(2).Value.BossId = 3;
 
         // node 2 added to node 3 children cache
         var node2 = _result.Lookup(1).Value.Children.Lookup(3).Value.Children.Lookup(2);
-        node2.HasValue.Should().BeTrue();
-        node2.Value.IsRoot.Should().BeFalse();
+        await Assert.That(node2.HasValue).IsTrue();
+        await Assert.That(node2.Value.IsRoot).IsFalse();
 
         // node 2 removed from node 1 children cache
-        _result.Lookup(1).Value.Children.Lookup(2).HasValue.Should().BeFalse();
+        await Assert.That(_result.Lookup(1).Value.Children.Lookup(2).HasValue).IsFalse();
     }
 
-    [Fact]
-    public void UpdateTreeWhenParentIdOfNonRootItemChangedToNonExistingId()
+    [Test]
+    public async Task UpdateTreeWhenParentIdOfNonRootItemChangedToNonExistingId()
     {
         _sourceCache.Lookup(2).Value.BossId = 25;
 
         // node 2 added to root
         var node2 = _result.Lookup(2);
-        node2.HasValue.Should().BeTrue();
-        node2.Value.IsRoot.Should().BeTrue();
+        await Assert.That(node2.HasValue).IsTrue();
+        await Assert.That(node2.Value.IsRoot).IsTrue();
 
         // node 2 removed from node 1 children cache
-        _result.Lookup(1).Value.Children.Lookup(2).HasValue.Should().BeFalse();
+        await Assert.That(_result.Lookup(1).Value.Children.Lookup(2).HasValue).IsFalse();
     }
 
-    [Fact]
-    public void UpdateTreeWhenParentIdOfRootItemChangedToExistingId()
+    [Test]
+    public async Task UpdateTreeWhenParentIdOfRootItemChangedToExistingId()
     {
         _sourceCache.Lookup(1).Value.BossId = 7;
 
         // node 1 added to node 7 children cache
         var node1 = _result.Lookup(7).Value.Children.Lookup(1);
-        node1.HasValue.Should().BeTrue();
-        node1.Value.IsRoot.Should().BeFalse();
+        await Assert.That(node1.HasValue).IsTrue();
+        await Assert.That(node1.Value.IsRoot).IsFalse();
 
         // node 1 removed from root
-        _result.Lookup(1).HasValue.Should().BeFalse();
+        await Assert.That(_result.Lookup(1).HasValue).IsFalse();
     }
 
-    [Fact]
-    public void UpdateTreeWhenParentIdOfRootItemChangedToNonExistingId()
+    [Test]
+    public async Task UpdateTreeWhenParentIdOfRootItemChangedToNonExistingId()
     {
         _sourceCache.Lookup(1).Value.BossId = 25;
 
         // node 1 added to node 7 children cache
         var node1 = _result.Lookup(1);
-        node1.HasValue.Should().BeTrue();
-        node1.Value.IsRoot.Should().BeTrue();
+        await Assert.That(node1.HasValue).IsTrue();
+        await Assert.That(node1.Value.IsRoot).IsTrue();
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]

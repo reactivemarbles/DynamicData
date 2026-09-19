@@ -1,13 +1,4 @@
-using System;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
@@ -17,8 +8,8 @@ public class RefCountFixture : IDisposable
 
     public RefCountFixture() => _source = new SourceList<Person>();
 
-    [Fact]
-    public void CanResubscribe()
+    [Test]
+    public async Task CanResubscribe()
     {
         var created = 0;
         var disposals = 0;
@@ -35,12 +26,12 @@ public class RefCountFixture : IDisposable
         subscriber = longChain.Subscribe();
         subscriber.Dispose();
 
-        created.Should().Be(2);
-        disposals.Should().Be(2);
+        await Assert.That(created).IsEqualTo(2);
+        await Assert.That(disposals).IsEqualTo(2);
     }
 
-    [Fact]
-    public void ChainIsInvokedOnceForMultipleSubscribers()
+    [Test]
+    public async Task ChainIsInvokedOnceForMultipleSubscribers()
     {
         var created = 0;
         var disposals = 0;
@@ -57,8 +48,8 @@ public class RefCountFixture : IDisposable
         suscriber2.Dispose();
         suscriber3.Dispose();
 
-        created.Should().Be(1);
-        disposals.Should().Be(1);
+        await Assert.That(created).IsEqualTo(1);
+        await Assert.That(disposals).IsEqualTo(1);
     }
 
     public void Dispose() => _source.Dispose();
@@ -66,7 +57,7 @@ public class RefCountFixture : IDisposable
     // This test is probabilistic, it could be cool to be able to prove RefCount's thread-safety
     // more accurately but I don't think that there is an easy way to do this.
     // At least this test can catch some bugs in the old implementation.
-    //[Fact]
+    //[Test]
     private async Task IsHopefullyThreadSafe()
     {
         var refCount = _source.Connect().RefCount();

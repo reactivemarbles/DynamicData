@@ -1,12 +1,9 @@
-using System;
-using System.Linq;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -22,8 +19,8 @@ public class FullJoinManyFixture : IDisposable
         _result = _people.Connect().FullJoinMany(_people.Connect(), pac => pac.ParentName, (personid, person, grouping) => new ParentAndChildren(personid, person, grouping.Items.Select(p => p).ToArray())).AsAggregator();
     }
 
-    [Fact]
-    public void AddChild()
+    [Test]
+    public async Task AddChild()
     {
         var people = Enumerable.Range(1, 10).Select(
             i =>
@@ -39,20 +36,20 @@ public class FullJoinManyFixture : IDisposable
 
         var updatedPeople = people.Union(new[] { person11 }).ToArray();
 
-        AssertDataIsCorrectlyFormed(updatedPeople);
+        await AssertDataIsCorrectlyFormed(updatedPeople);
     }
 
-    [Fact]
-    public void AddLeftOnly()
+    [Test]
+    public async Task AddLeftOnly()
     {
         var people = Enumerable.Range(1, 1000).Select(i => new Person("Person" + i, i)).ToArray();
 
         _people.AddOrUpdate(people);
-        AssertDataIsCorrectlyFormed(people);
+        await AssertDataIsCorrectlyFormed(people);
     }
 
-    [Fact]
-    public void AddPeopleWithParents()
+    [Test]
+    public async Task AddPeopleWithParents()
     {
         var people = Enumerable.Range(1, 10).Select(
             i =>
@@ -62,7 +59,7 @@ public class FullJoinManyFixture : IDisposable
             }).ToArray();
 
         _people.AddOrUpdate(people);
-        AssertDataIsCorrectlyFormed(people);
+        await AssertDataIsCorrectlyFormed(people);
     }
 
     public void Dispose()
@@ -71,8 +68,8 @@ public class FullJoinManyFixture : IDisposable
         _result.Dispose();
     }
 
-    [Fact]
-    public void RemoveChild()
+    [Test]
+    public async Task RemoveChild()
     {
         var people = Enumerable.Range(1, 10).Select(
             i =>
@@ -88,11 +85,11 @@ public class FullJoinManyFixture : IDisposable
 
         var updatedPeople = people.Where(p => p.Name != last.Name).ToArray();
 
-        AssertDataIsCorrectlyFormed(updatedPeople);
+        await AssertDataIsCorrectlyFormed(updatedPeople);
     }
 
-    [Fact]
-    public void UpdateChild()
+    [Test]
+    public async Task UpdateChild()
     {
         var people = Enumerable.Range(1, 10).Select(
             i =>
@@ -109,11 +106,11 @@ public class FullJoinManyFixture : IDisposable
 
         var updatedPeople = people.Where(p => p.Name != "Person6").Union(new[] { person6 }).ToArray();
 
-        AssertDataIsCorrectlyFormed(updatedPeople);
+        await AssertDataIsCorrectlyFormed(updatedPeople);
     }
 
-    [Fact]
-    public void UpdateParent()
+    [Test]
+    public async Task UpdateParent()
     {
         var people = Enumerable.Range(1, 10).Select(
             i =>
@@ -130,10 +127,10 @@ public class FullJoinManyFixture : IDisposable
 
         var updatedPeople = people.Take(9).Union(new[] { person10 }).ToArray();
 
-        AssertDataIsCorrectlyFormed(updatedPeople);
+        await AssertDataIsCorrectlyFormed(updatedPeople);
     }
 
-    private void AssertDataIsCorrectlyFormed(Person[] allPeople)
+    private async Task AssertDataIsCorrectlyFormed(Person[] allPeople)
     {
         var people = allPeople.ToDictionary(p => p.Name);
         var parentNames = allPeople.Select(p => p.ParentName).Distinct();
@@ -147,21 +144,20 @@ public class FullJoinManyFixture : IDisposable
                 return new ParentAndChildren(key, parent, children);
             }).ToArray();
 
-        _result.Data.Count.Should().Be(all.Length);
+        await Assert.That(_result.Data.Count).IsEqualTo(all.Length);
 
-        all.ForEach(
-            parentAndChild =>
+        foreach (var parentAndChild in all)
+        {
+            var result = parentAndChild.ParentId is null ? null : _result.Data.Lookup(parentAndChild.ParentId).ValueOrDefault();
+
+            if (result is null)
             {
-                var result = parentAndChild.ParentId is null ? null : _result.Data.Lookup(parentAndChild.ParentId).ValueOrDefault();
+                throw new InvalidOperationException(nameof(result));
+            }
 
-                if (result is null)
-                {
-                    throw new InvalidOperationException(nameof(result));
-                }
-
-                var children = result.Children;
-                children.Should().BeEquivalentTo(parentAndChild.Children);
-            });
+            var children = result.Children;
+            await Assert.That(children).IsEquivalentTo(parentAndChild.Children);
+        }
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]

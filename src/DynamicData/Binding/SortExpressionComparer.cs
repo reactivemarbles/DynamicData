@@ -1,8 +1,13 @@
-﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 /// <summary>
 /// Generic sort expression to help create inline sorting for the .Sort(IComparer comparer) operator.
@@ -25,6 +30,9 @@ public class SortExpressionComparer<T> : List<SortExpression<T>>, IComparer<T>
     public static SortExpressionComparer<T> Descending(Func<T, IComparable> expression) => [new(expression, SortDirection.Descending)];
 
     /// <inheritdoc/>
+    /// <param name="x">The x value.</param>
+    /// <param name="y">The y value.</param>
+    /// <returns>The result of the operation.</returns>
     public int Compare(T? x, T? y)
     {
         foreach (var item in this)

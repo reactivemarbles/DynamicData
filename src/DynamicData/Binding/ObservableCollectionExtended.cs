@@ -2,12 +2,14 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Reactive.Disposables;
+#if REACTIVE_SHIM
+
+namespace DynamicData.Reactive.Binding;
+#else
 
 namespace DynamicData.Binding;
+#endif
 
 /// <summary>
 /// An override of observable collection which allows the suspension of notifications.
@@ -15,8 +17,14 @@ namespace DynamicData.Binding;
 /// <typeparam name="T">The type of the item.</typeparam>
 public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObservableCollection<T>, IExtendedList<T>
 {
+    /// <summary>
+    /// The _suspendCount field.
+    /// </summary>
     private bool _suspendCount;
 
+    /// <summary>
+    /// The _suspendNotifications field.
+    /// </summary>
     private bool _suspendNotifications;
 
     /// <summary>
@@ -51,7 +59,7 @@ public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObserva
     /// <exception cref="ArgumentNullException"><paramref name="collection" /> is null.</exception>
     public void AddRange(IEnumerable<T> collection)
     {
-        collection.ThrowArgumentNullExceptionIfNull(nameof(collection));
+        ArgumentExceptionHelper.ThrowIfNull(collection);
 
         foreach (var item in collection)
         {
@@ -60,7 +68,7 @@ public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObserva
     }
 
     /// <summary>
-    /// Inserts the elements of a collection into the <see cref="ObservableCollectionExtended{T}" /> at the specified index.
+    /// Inserts the elements of a collection into the <c>ObservableCollectionExtended&lt;T&gt;</c> at the specified index.
     /// </summary>
     /// <param name="collection">Inserts the items at the specified index.</param>
     /// <param name="index">The zero-based index at which the new elements should be inserted.</param>
@@ -68,7 +76,7 @@ public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObserva
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="index" /> is greater than Count.</exception>
     public void InsertRange(IEnumerable<T> collection, int index)
     {
-        collection.ThrowArgumentNullExceptionIfNull(nameof(collection));
+        ArgumentExceptionHelper.ThrowIfNull(collection);
 
         foreach (var item in collection)
         {
@@ -82,7 +90,7 @@ public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObserva
     /// <param name="items">The items.</param>
     public void Load(IEnumerable<T> items)
     {
-        items.ThrowArgumentNullExceptionIfNull(nameof(items));
+        ArgumentExceptionHelper.ThrowIfNull(items);
 
         CheckReentrancy();
         Clear();
@@ -94,9 +102,9 @@ public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObserva
     }
 
     /// <summary>
-    /// Removes a range of elements from the <see cref="ObservableCollectionExtended{T}"/>.
+    /// Removes a range of elements from the <c>ObservableCollectionExtended&lt;T&gt;</c>.
     /// </summary>
-    /// <param name="index">The zero-based starting index of the range of elements to remove.</param><param name="count">The number of elements to remove.</param><exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is less than 0.-or-<paramref name="count"/> is less than 0.</exception><exception cref="ArgumentException"><paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <see cref="List{T}"/>.</exception>
+    /// <param name="index">The zero-based starting index of the range of elements to remove.</param><param name="count">The number of elements to remove.</param><exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is less than 0.-or-<paramref name="count"/> is less than 0.</exception><exception cref="ArgumentException"><paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <c>List&lt;T&gt;</c>.</exception>
     public void RemoveRange(int index, int count)
     {
         for (var i = 0; i < count; i++)
@@ -164,7 +172,7 @@ public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObserva
     /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
-        e.ThrowArgumentNullExceptionIfNull(nameof(e));
+        ArgumentExceptionHelper.ThrowIfNull(e);
 
         if (_suspendCount && e.PropertyName == "Count")
         {

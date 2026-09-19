@@ -1,12 +1,9 @@
-using System;
-using System.Linq;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
@@ -23,8 +20,8 @@ public class RightJoinManyFixture : IDisposable
         _result = _people.Connect().RightJoinMany(_people.Connect(), pac => pac.ParentName, (personid, person, grouping) => new ParentAndChildren(personid, person, grouping.Items.Select(p => p).ToArray())).AsAggregator();
     }
 
-    [Fact]
-    public void AddChild()
+    [Test]
+    public async Task AddChild()
     {
         var people = Enumerable.Range(1, 10).Select(
             i =>
@@ -40,22 +37,22 @@ public class RightJoinManyFixture : IDisposable
 
         var updatedPeople = people.Union(new[] { person11 }).ToArray();
 
-        AssertDataIsCorrectlyFormed(updatedPeople);
+        await AssertDataIsCorrectlyFormed(updatedPeople);
     }
 
-    [Fact]
-    public void AddLeftOnly()
+    [Test]
+    public async Task AddLeftOnly()
     {
         var people = Enumerable.Range(1, 10).Select(i => new Person("Person" + i, i)).ToArray();
 
         _people.AddOrUpdate(people);
 
-        _result.Data.Count.Should().Be(1);
-        _result.Data.Items[0].Parent.Should().BeNull();
+        await Assert.That(_result.Data.Count).IsEqualTo(1);
+        await Assert.That(_result.Data.Items[0].Parent).IsNull();
     }
 
-    [Fact]
-    public void AddPeopleWithParents()
+    [Test]
+    public async Task AddPeopleWithParents()
     {
         var people = Enumerable.Range(1, 10).Select(
             i =>
@@ -66,7 +63,7 @@ public class RightJoinManyFixture : IDisposable
 
         _people.AddOrUpdate(people);
 
-        AssertDataIsCorrectlyFormed(people);
+        await AssertDataIsCorrectlyFormed(people);
     }
 
     public void Dispose()
@@ -75,57 +72,53 @@ public class RightJoinManyFixture : IDisposable
         _result.Dispose();
     }
 
-    [Fact]
-    public void RefreshRightKey()
+    [Test]
+    public async Task RefreshRightKey()
     {
         _people.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new Person() { Name = "Person #1", ParentName = string.Empty } );
-                innerCache.AddOrUpdate(new Person() { Name = "Person #2", ParentName = "Person #1" } );
-                innerCache.AddOrUpdate(new Person() { Name = "Person #3", ParentName = "Person #2" } );
+                innerCache.AddOrUpdate(new Person() { Name = "Person #1", ParentName = string.Empty });
+                innerCache.AddOrUpdate(new Person() { Name = "Person #2", ParentName = "Person #1" });
+                innerCache.AddOrUpdate(new Person() { Name = "Person #3", ParentName = "Person #2" });
             });
 
         var refreshPerson = _people.Lookup("Person #2").Value;
-
 
         // Change pairing
         refreshPerson.ParentName = "Person #3";
         _people.Refresh(refreshPerson);
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().NotContain(("Person #1", "Person #2"));
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().Contain(("Person #3", "Person #2"));
-
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).DoesNotContain(("Person #1", "Person #2"));
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).Contains(("Person #3", "Person #2"));
 
         // Remove pairing
         refreshPerson.ParentName = "Person #4";
         _people.Refresh(refreshPerson);
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().NotContain(("Person #3", "Person #2"));
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().Contain((null, "Person #2"));
-
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).DoesNotContain(("Person #3", "Person #2"));
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).Contains((null, "Person #2"));
 
         // Restore pairing
         refreshPerson.ParentName = "Person #1";
         _people.Refresh(refreshPerson);
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().NotContain((null, "Person #2"));
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().Contain(("Person #1", "Person #2"));
-
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).DoesNotContain((null, "Person #2"));
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).Contains(("Person #1", "Person #2"));
 
         // No change
         _people.Refresh(refreshPerson);
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().NotContain((null, "Person #2"));
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().Contain(("Person #1", "Person #2"));
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).DoesNotContain((null, "Person #2"));
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).Contains(("Person #1", "Person #2"));
     }
 
-    [Fact]
-    public void RemoveChild()
+    [Test]
+    public async Task RemoveChild()
     {
         var people = Enumerable.Range(1, 10).Select(
             i =>
@@ -141,11 +134,11 @@ public class RightJoinManyFixture : IDisposable
 
         var updatedPeople = people.Where(p => p.Name != last.Name).ToArray();
 
-        AssertDataIsCorrectlyFormed(updatedPeople, last.Name);
+        await AssertDataIsCorrectlyFormed(updatedPeople, last.Name);
     }
 
-    [Fact]
-    public void UpdateChild()
+    [Test]
+    public async Task UpdateChild()
     {
         var people = Enumerable.Range(1, 10).Select(
             i =>
@@ -162,11 +155,11 @@ public class RightJoinManyFixture : IDisposable
 
         var updatedPeople = people.Where(p => p.Name != "Person6").Union(new[] { person6 }).ToArray();
 
-        AssertDataIsCorrectlyFormed(updatedPeople);
+        await AssertDataIsCorrectlyFormed(updatedPeople);
     }
 
-    [Fact]
-    public void UpdateParent()
+    [Test]
+    public async Task UpdateParent()
     {
         var people = Enumerable.Range(1, 10).Select(
             i =>
@@ -183,72 +176,67 @@ public class RightJoinManyFixture : IDisposable
 
         var updatedPeople = people.Take(9).Union(new[] { person10 }).ToArray();
 
-        AssertDataIsCorrectlyFormed(updatedPeople);
+        await AssertDataIsCorrectlyFormed(updatedPeople);
     }
 
-    [Fact]
-    public void UpdateRightKey()
+    [Test]
+    public async Task UpdateRightKey()
     {
         _people.Edit(
             innerCache =>
             {
-                innerCache.AddOrUpdate(new Person() { Name = "Person #1", ParentName = string.Empty } );
-                innerCache.AddOrUpdate(new Person() { Name = "Person #2", ParentName = "Person #1" } );
-                innerCache.AddOrUpdate(new Person() { Name = "Person #3", ParentName = "Person #2" } );
+                innerCache.AddOrUpdate(new Person() { Name = "Person #1", ParentName = string.Empty });
+                innerCache.AddOrUpdate(new Person() { Name = "Person #2", ParentName = "Person #1" });
+                innerCache.AddOrUpdate(new Person() { Name = "Person #3", ParentName = "Person #2" });
             });
 
-        
         // Change pairing
         _people.AddOrUpdate(new Person() { Name = "Person #2", ParentName = "Person #3" });
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().NotContain(("Person #1", "Person #2"));
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().Contain(("Person #3", "Person #2"));
-
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).DoesNotContain(("Person #1", "Person #2"));
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).Contains(("Person #3", "Person #2"));
 
         // Remove pairing
         _people.AddOrUpdate(new Person() { Name = "Person #2", ParentName = "Person #4" });
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().NotContain(("Person #3", "Person #2"));
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().Contain((null, "Person #2"));
-
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).DoesNotContain(("Person #3", "Person #2"));
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).Contains((null, "Person #2"));
 
         // Restore pairing
         _people.AddOrUpdate(new Person() { Name = "Person #2", ParentName = "Person #1" });
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().NotContain((null, "Person #2"));
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().Contain(("Person #1", "Person #2"));
-
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).DoesNotContain((null, "Person #2"));
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).Contains(("Person #1", "Person #2"));
 
         // No change
         _people.AddOrUpdate(new Person() { Name = "Person #2", ParentName = "Person #1" });
 
-        _result.Data.Count.Should().Be(3);
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().NotContain((null, "Person #2"));
-        _result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name))).Should().Contain(("Person #1", "Person #2"));
+        await Assert.That(_result.Data.Count).IsEqualTo(3);
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).DoesNotContain((null, "Person #2"));
+        await Assert.That(_result.Data.Items.SelectMany(family => family.Children.Select(child => (family.Parent?.Name, child.Name)))).Contains(("Person #1", "Person #2"));
     }
 
-    private void AssertDataIsCorrectlyFormed(Person[] allPeople, params string[] missingParents)
+    private async Task AssertDataIsCorrectlyFormed(Person[] allPeople, params string[] missingParents)
     {
         var grouped = allPeople.GroupBy(p => p.ParentName).Where(p => p.Any() && !missingParents.Contains(p.Key)).AsArray();
 
-        _result.Data.Count.Should().Be(grouped.Length);
+        await Assert.That(_result.Data.Count).IsEqualTo(grouped.Length);
 
-        grouped.ForEach(
-            grouping =>
+        foreach (var grouping in grouped)
+        {
+            if (missingParents.Length > 0 && missingParents.Contains(grouping.Key))
             {
-                if (missingParents.Length > 0 && missingParents.Contains(grouping.Key))
-                {
-                    return;
-                }
+                continue;
+            }
 
-                var result = _result.Data.Lookup(grouping.Key).ValueOrThrow(() => new Exception("Missing result for " + grouping.Key));
+            var result = _result.Data.Lookup(grouping.Key).ValueOrThrow(() => new Exception("Missing result for " + grouping.Key));
 
-                var children = result.Children;
-                children.Should().BeEquivalentTo(grouping);
-            });
+            var children = result.Children;
+            await Assert.That(children).IsEquivalentTo(grouping);
+        }
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]

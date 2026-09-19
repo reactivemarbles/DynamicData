@@ -1,8 +1,3 @@
-﻿using System;
-using System.Reactive.Concurrency;
-
-using Microsoft.Reactive.Testing;
-
 namespace DynamicData.Tests.Cache;
 
 public static partial class ExpireAfterFixture

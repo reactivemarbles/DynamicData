@@ -1,19 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
 public class TransformManyObservableCollectionFixture
 {
-    [Fact]
-    public void FlattenObservableCollection()
+    [Test]
+    public async Task FlattenObservableCollection()
     {
         var children = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
 
@@ -37,35 +29,35 @@ public class TransformManyObservableCollectionFixture
         using var aggregator = source.Connect().TransformMany(p => p.Children).AsAggregator();
         source.AddRange(parents);
 
-        aggregator.Data.Count.Should().Be(100);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(100);
 
         //add a child to an observable collection and check the new item is added
         parents[0].Children.Add(new Person("NewlyAddded", 100));
-        aggregator.Data.Count.Should().Be(101);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(101);
 
         ////remove first parent and check children have gone
         source.RemoveAt(0);
-        aggregator.Data.Count.Should().Be(98);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(98);
 
         //check items can be cleared and then added back in
         var childrenInZero = parents[1].Children.ToArray();
         parents[1].Children.Clear();
-        aggregator.Data.Count.Should().Be(96);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(96);
         parents[1].Children.AddRange(childrenInZero);
-        aggregator.Data.Count.Should().Be(98);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(98);
 
         //replace produces an update
         var replacedChild = parents[1].Children[0];
         var replacement = new Person("Replacement", 100);
         parents[1].Children[0] = replacement;
-        aggregator.Data.Count.Should().Be(98);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(98);
 
-        aggregator.Data.Items.Contains(replacement).Should().BeTrue();
-        aggregator.Data.Items.Contains(replacedChild).Should().BeFalse();
+        await Assert.That(aggregator.Data.Items.Contains(replacement)).IsTrue();
+        await Assert.That(aggregator.Data.Items.Contains(replacedChild)).IsFalse();
     }
 
-    [Fact]
-    public void FlattenObservableList()
+    [Test]
+    public async Task FlattenObservableList()
     {
         var children = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
 
@@ -91,36 +83,36 @@ public class TransformManyObservableCollectionFixture
 
         source.AddRange(parents);
 
-        aggregator.Data.Count.Should().Be(100);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(100);
 
         //add a child to an observable collection and check the new item is added
         parents[0].Children.Add(new Person("NewlyAddded", 100));
-        aggregator.Data.Count.Should().Be(101);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(101);
 
         ////remove first parent and check children have gone
         source.RemoveAt(0);
-        aggregator.Data.Count.Should().Be(98);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(98);
 
         //check items can be cleared and then added back in
         var childrenInZero = parents[1].Children.Items.ToArray();
         parents[1].Children.Clear();
-        aggregator.Data.Count.Should().Be(96);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(96);
         parents[1].Children.AddRange(childrenInZero);
-        aggregator.Data.Count.Should().Be(98);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(98);
 
         //replace produces an update
         var replacedChild = at(parents[1].Children.Items, 0);
         var replacement = new Person("Replacement", 100);
         parents[1].Children.ReplaceAt(0, replacement);
-        aggregator.Data.Count.Should().Be(98);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(98);
 
         //replace produces an update
-        aggregator.Data.Items.Contains(replacement).Should().BeTrue();
-        aggregator.Data.Items.Contains(replacedChild).Should().BeFalse();
+        await Assert.That(aggregator.Data.Items.Contains(replacement)).IsTrue();
+        await Assert.That(aggregator.Data.Items.Contains(replacedChild)).IsFalse();
     }
 
-    [Fact]
-    public void FlattenReadOnlyObservableCollection()
+    [Test]
+    public async Task FlattenReadOnlyObservableCollection()
     {
         var children = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
 
@@ -144,36 +136,36 @@ public class TransformManyObservableCollectionFixture
         using var aggregator = source.Connect().TransformMany(p => p.ChildrenReadonly).AsAggregator();
         source.AddRange(parents);
 
-        aggregator.Data.Count.Should().Be(100);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(100);
 
         //add a child to an observable collection and check the new item is added
         parents[0].Children.Add(new Person("NewlyAddded", 100));
-        aggregator.Data.Count.Should().Be(101);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(101);
 
         ////remove first parent and check children have gone
         source.RemoveAt(0);
-        aggregator.Data.Count.Should().Be(98);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(98);
 
         //check items can be cleared and then added back in
         var childrenInZero = parents[1].Children.ToArray();
         parents[1].Children.Clear();
-        aggregator.Data.Count.Should().Be(96);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(96);
         parents[1].Children.AddRange(childrenInZero);
-        aggregator.Data.Count.Should().Be(98);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(98);
 
         //replace produces an update
         var replacedChild = parents[1].Children[0];
         var replacement = new Person("Replacement", 100);
         parents[1].Children[0] = replacement;
-        aggregator.Data.Count.Should().Be(98);
+        await Assert.That(aggregator.Data.Count).IsEqualTo(98);
 
         //replace produces an update
-        aggregator.Data.Items.Contains(replacement).Should().BeTrue();
-        aggregator.Data.Items.Contains(replacedChild).Should().BeFalse();
+        await Assert.That(aggregator.Data.Items.Contains(replacement)).IsTrue();
+        await Assert.That(aggregator.Data.Items.Contains(replacedChild)).IsFalse();
     }
 
-    [Fact]
-    public void ObservableCollectionWithoutInitialData()
+    [Test]
+    public async Task ObservableCollectionWithoutInitialData()
     {
         using var parents = new SourceList<Parent>();
         var collection = parents.Connect().TransformMany(d => d.Children).AsObservableList();
@@ -181,17 +173,17 @@ public class TransformManyObservableCollectionFixture
         var parent = new Parent();
         parents.Add(parent);
 
-        collection.Count.Should().Be(0);
+        await Assert.That(collection.Count).IsEqualTo(0);
 
         parent.Children.Add(new Person("child1", 1));
-        collection.Count.Should().Be(1);
+        await Assert.That(collection.Count).IsEqualTo(1);
 
         parent.Children.Add(new Person("child2", 2));
-        collection.Count.Should().Be(2);
+        await Assert.That(collection.Count).IsEqualTo(2);
     }
 
-    [Fact]
-    public void ObservableListWithoutInitialData()
+    [Test]
+    public async Task ObservableListWithoutInitialData()
     {
         using var parents = new SourceList<ParentDynamic>();
         var collection = parents.Connect().TransformMany(d => d.ChildrenObservable).AsObservableList();
@@ -199,17 +191,17 @@ public class TransformManyObservableCollectionFixture
         var parent = new ParentDynamic();
         parents.Add(parent);
 
-        collection.Count.Should().Be(0);
+        await Assert.That(collection.Count).IsEqualTo(0);
 
         parent.Children.Add(new Person("child1", 1));
-        collection.Count.Should().Be(1);
+        await Assert.That(collection.Count).IsEqualTo(1);
 
         parent.Children.Add(new Person("child2", 2));
-        collection.Count.Should().Be(2);
+        await Assert.That(collection.Count).IsEqualTo(2);
     }
 
-    [Fact]
-    public void ReadOnlyObservableCollectionWithoutInitialData()
+    [Test]
+    public async Task ReadOnlyObservableCollectionWithoutInitialData()
     {
         using var parents = new SourceList<Parent>();
         var collection = parents.Connect().TransformMany(d => d.ChildrenReadonly).AsObservableList();
@@ -217,13 +209,13 @@ public class TransformManyObservableCollectionFixture
         var parent = new Parent();
         parents.Add(parent);
 
-        collection.Count.Should().Be(0);
+        await Assert.That(collection.Count).IsEqualTo(0);
 
         parent.Children.Add(new Person("child1", 1));
-        collection.Count.Should().Be(1);
+        await Assert.That(collection.Count).IsEqualTo(1);
 
         parent.Children.Add(new Person("child2", 2));
-        collection.Count.Should().Be(2);
+        await Assert.That(collection.Count).IsEqualTo(2);
     }
 
     private class Parent

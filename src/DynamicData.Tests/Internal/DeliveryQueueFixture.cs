@@ -1,23 +1,10 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using DynamicData.Internal;
-using FluentAssertions;
-using Xunit;
 
 namespace DynamicData.Tests.Internal;
 
 public class DeliveryQueueFixture
 {
-#if NET9_0_OR_GREATER
     private readonly Lock _gate = new();
-#else
-    private readonly object _gate = new();
-#endif
 
     /// <summary>Helper observer that captures OnNext items into a list.</summary>
     private sealed class ListObserver<T> : IObserver<T>
@@ -55,29 +42,31 @@ public class DeliveryQueueFixture
     }
 
     private static void EnqueueAndDeliver<T>(DeliveryQueue<T> queue, T item)
+        where T : notnull
     {
         using var scope = queue.AcquireLock();
         scope.EnqueueNext(item);
     }
 
     private static void TriggerDelivery<T>(DeliveryQueue<T> queue)
+        where T : notnull
     {
         using var scope = queue.AcquireLock();
     }
 
-    [Fact]
-    public void EnqueueAndDeliverDeliversItem()
+    [Test]
+    public async Task EnqueueAndDeliverDeliversItem()
     {
         var observer = new ListObserver<string>();
         var queue = new DeliveryQueue<string>(_gate, observer);
 
         EnqueueAndDeliver(queue, "A");
 
-        observer.Items.Should().Equal("A");
+        await Assert.That(observer.Items).IsEquivalentTo(new[] { "A" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void DeliverDeliversItemsInFifoOrder()
+    [Test]
+    public async Task DeliverDeliversItemsInFifoOrder()
     {
         var observer = new ListObserver<string>();
         var queue = new DeliveryQueue<string>(_gate, observer);
@@ -89,21 +78,21 @@ public class DeliveryQueueFixture
             scope.EnqueueNext("C");
         }
 
-        observer.Items.Should().Equal("A", "B", "C");
+        await Assert.That(observer.Items).IsEquivalentTo(new[] { "A", "B", "C" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void DeliverWithEmptyQueueIsNoOp()
+    [Test]
+    public async Task DeliverWithEmptyQueueIsNoOp()
     {
         var observer = new ListObserver<string>();
         var queue = new DeliveryQueue<string>(_gate, observer);
 
         TriggerDelivery(queue);
 
-        observer.Items.Should().BeEmpty();
+        await Assert.That(observer.Items).IsEmpty();
     }
 
-    [Fact]
+    [Test]
     public async Task OnlyOneDelivererAtATime()
     {
         var concurrentCount = 0;
@@ -163,12 +152,12 @@ public class DeliveryQueueFixture
 
         await Task.WhenAll(tasks.Append(firstDelivery));
 
-        maxConcurrent.Should().Be(1, "only one thread should be delivering at a time");
-        delivered.Should().HaveCount(101);
+        await Assert.That(maxConcurrent).IsEqualTo(1);
+        await Assert.That(delivered).HasCount(101);
     }
 
-    [Fact]
-    public void SecondWriterItemPickedUpByFirstDeliverer()
+    [Test]
+    public async Task SecondWriterItemPickedUpByFirstDeliverer()
     {
         var observer = new ListObserver<string>();
         DeliveryQueue<string>? q = null;
@@ -188,11 +177,11 @@ public class DeliveryQueueFixture
 
         EnqueueAndDeliver(queue, "A");
 
-        observer.Items.Should().Equal("A", "B");
+        await Assert.That(observer.Items).IsEquivalentTo(new[] { "A", "B" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void ReentrantEnqueueDoesNotRecurse()
+    [Test]
+    public async Task ReentrantEnqueueDoesNotRecurse()
     {
         var callDepth = 0;
         var maxDepth = 0;
@@ -220,12 +209,12 @@ public class DeliveryQueueFixture
 
         EnqueueAndDeliver(queue, "A");
 
-        delivered.Should().Equal("A", "B");
-        maxDepth.Should().Be(1, "delivery callback should not recurse");
+        await Assert.That(delivered).IsEquivalentTo(new[] { "A", "B" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(maxDepth).IsEqualTo(1);
     }
 
-    [Fact]
-    public void ExceptionInDeliveryResetsDeliveryToken()
+    [Test]
+    public async Task ExceptionInDeliveryResetsDeliveryToken()
     {
         var callCount = 0;
         var observer = new DelegateObserver<string>(_ =>
@@ -237,15 +226,15 @@ public class DeliveryQueueFixture
         var queue = new DeliveryQueue<string>(_gate, observer);
 
         var act = () => EnqueueAndDeliver(queue, "A");
-        act.Should().Throw<InvalidOperationException>();
+        await Assert.That(act).Throws<InvalidOperationException>();
 
         EnqueueAndDeliver(queue, "B");
 
-        callCount.Should().Be(2, "delivery should work after exception recovery");
+        await Assert.That(callCount).IsEqualTo(2);
     }
 
-    [Fact]
-    public void RemainingItemsDeliveredAfterExceptionRecovery()
+    [Test]
+    public async Task RemainingItemsDeliveredAfterExceptionRecovery()
     {
         var delivered = new List<string>();
         var shouldThrow = true;
@@ -265,16 +254,16 @@ public class DeliveryQueueFixture
             scope.EnqueueNext("B");
         };
 
-        act.Should().Throw<InvalidOperationException>();
+        await Assert.That(act).Throws<InvalidOperationException>();
 
         shouldThrow = false;
         TriggerDelivery(queue);
 
-        delivered.Should().Equal("B");
+        await Assert.That(delivered).IsEquivalentTo(new[] { "B" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void TerminalCompletedStopsDelivery()
+    [Test]
+    public async Task TerminalCompletedStopsDelivery()
     {
         var observer = new ListObserver<string>();
         var queue = new DeliveryQueue<string>(_gate, observer);
@@ -286,13 +275,13 @@ public class DeliveryQueueFixture
             scope.EnqueueNext("B"); // should be ignored after terminal
         }
 
-        observer.Items.Should().Equal("A");
-        observer.IsCompleted.Should().BeTrue();
-        queue.IsTerminated.Should().BeTrue();
+        await Assert.That(observer.Items).IsEquivalentTo(new[] { "A" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(observer.IsCompleted).IsTrue();
+        await Assert.That(queue.IsTerminated).IsTrue();
     }
 
-    [Fact]
-    public void TerminalErrorStopsDelivery()
+    [Test]
+    public async Task TerminalErrorStopsDelivery()
     {
         var observer = new ListObserver<string>();
         var queue = new DeliveryQueue<string>(_gate, observer);
@@ -305,13 +294,13 @@ public class DeliveryQueueFixture
             scope.EnqueueNext("B"); // should be ignored after terminal
         }
 
-        observer.Items.Should().Equal("A");
-        observer.Error.Should().BeSameAs(error);
-        queue.IsTerminated.Should().BeTrue();
+        await Assert.That(observer.Items).IsEquivalentTo(new[] { "A" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(observer.Error).IsSameReferenceAs(error);
+        await Assert.That(queue.IsTerminated).IsTrue();
     }
 
-    [Fact]
-    public void EnqueueAfterTerminationIsIgnored()
+    [Test]
+    public async Task EnqueueAfterTerminationIsIgnored()
     {
         var observer = new ListObserver<string>();
         var queue = new DeliveryQueue<string>(_gate, observer);
@@ -323,18 +312,18 @@ public class DeliveryQueueFixture
 
         EnqueueAndDeliver(queue, "AFTER");
 
-        observer.Items.Should().BeEmpty();
+        await Assert.That(observer.Items).IsEmpty();
     }
 
-    [Fact]
-    public void IsTerminatedIsFalseInitially()
+    [Test]
+    public async Task IsTerminatedIsFalseInitially()
     {
         var observer = new ListObserver<string>();
         var queue = new DeliveryQueue<string>(_gate, observer);
-        queue.IsTerminated.Should().BeFalse();
+        await Assert.That(queue.IsTerminated).IsFalse();
     }
 
-    [Fact]
+    [Test]
     public async Task ConcurrentEnqueueAllItemsDelivered()
     {
         const int threadCount = 8;
@@ -351,10 +340,10 @@ public class DeliveryQueueFixture
         await Task.WhenAll(tasks);
         TriggerDelivery(queue);
 
-        observer.Items.Count.Should().Be(threadCount * itemsPerThread);
+        await Assert.That(observer.Items.Count).IsEqualTo(threadCount * itemsPerThread);
     }
 
-    [Fact]
+    [Test]
     public async Task ConcurrentEnqueueNoDuplicates()
     {
         const int threadCount = 8;
@@ -371,10 +360,10 @@ public class DeliveryQueueFixture
         await Task.WhenAll(tasks);
         TriggerDelivery(queue);
 
-        observer.Items.Distinct().Count().Should().Be(threadCount * itemsPerThread);
+        await Assert.That(observer.Items.Distinct().Count()).IsEqualTo(threadCount * itemsPerThread);
     }
 
-    [Fact]
+    [Test]
     public async Task ConcurrentEnqueuePreservesPerThreadOrdering()
     {
         const int threadCount = 4;
@@ -395,7 +384,7 @@ public class DeliveryQueueFixture
             .ToDictionary(g => g.Key, g => g.Select(x => x.Seq).ToList());
 
         foreach (var (thread, sequences) in itemsByThread)
-            sequences.Should().BeInAscendingOrder($"items from thread {thread} should preserve enqueue order");
+            await Assert.That(sequences).IsInOrder();
     }
 
     /// <summary>Observer that delegates OnNext to an action.</summary>
@@ -414,8 +403,8 @@ public class DeliveryQueueFixture
         public void OnCompleted() { }
     }
 
-    [Fact]
-    public void DisposeTerminatesQueue()
+    [Test]
+    public async Task DisposeTerminatesQueue()
     {
         var observer = new ListObserver<string>();
         var queue = new DeliveryQueue<string>(_gate, observer);
@@ -423,15 +412,15 @@ public class DeliveryQueueFixture
         EnqueueAndDeliver(queue, "A");
         queue.Dispose();
 
-        queue.IsTerminated.Should().BeTrue();
+        await Assert.That(queue.IsTerminated).IsTrue();
 
         // Further enqueues should be ignored
         EnqueueAndDeliver(queue, "B");
-        observer.Items.Should().Equal("A");
+        await Assert.That(observer.Items).IsEquivalentTo(new[] { "A" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void DisposeClearsPendingItems()
+    [Test]
+    public async Task DisposeClearsPendingItems()
     {
         var observer = new ListObserver<string>();
         var deliveryCount = 0;
@@ -459,12 +448,12 @@ public class DeliveryQueueFixture
         EnqueueAndDeliver(queue, "A");
 
         // Only "A" should be delivered — "B" and "C" were cleared by Dispose
-        observer.Items.Should().Equal("A");
-        queue.IsTerminated.Should().BeTrue();
+        await Assert.That(observer.Items).IsEquivalentTo(new[] { "A" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(queue.IsTerminated).IsTrue();
     }
 
-    [Fact]
-    public void DisposeFromDrainThreadDoesNotDeadlock()
+    [Test]
+    public async Task DisposeFromDrainThreadDoesNotDeadlock()
     {
         var observer = new ListObserver<string>();
         DeliveryQueue<string>? q = null;
@@ -482,10 +471,10 @@ public class DeliveryQueueFixture
         // This should NOT deadlock
         var completed = Task.Run(() => EnqueueAndDeliver(queue, "A"));
         var finished = Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(5))).Result;
-        finished.Should().BeSameAs(completed, "Dispose from drain thread should not deadlock");
+        await Assert.That(finished).IsSameReferenceAs(completed);
     }
 
-    [Fact]
+    [Test]
     public async Task DisposeWaitsForInFlightDelivery()
     {
         var observer = new ListObserver<int>();
@@ -510,18 +499,18 @@ public class DeliveryQueueFixture
 
         // Give terminate a moment to enter spin-wait
         await Task.Delay(100);
-        terminateTask.IsCompleted.Should().BeFalse("should be spinning waiting for delivery");
+        await Assert.That(terminateTask.IsCompleted).IsFalse();
 
         // Release the delivery
         allowDeliveryToFinish.Set();
 
         await Task.WhenAll(deliverTask, terminateTask);
-        queue.IsTerminated.Should().BeTrue();
-        observer.Items.Should().Equal(42);
+        await Assert.That(queue.IsTerminated).IsTrue();
+        await Assert.That(observer.Items).IsEquivalentTo(new[] { 42 }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
     }
 
-    [Fact]
-    public void TerminalItemsDeliveredBeforeTermination()
+    [Test]
+    public async Task TerminalItemsDeliveredBeforeTermination()
     {
         var observer = new ListObserver<string>();
         var queue = new DeliveryQueue<string>(_gate, observer);
@@ -534,13 +523,13 @@ public class DeliveryQueueFixture
             scope.EnqueueNext("C"); // should be ignored — after terminal
         }
 
-        observer.Items.Should().Equal("A", "B");
-        observer.IsCompleted.Should().BeTrue();
-        queue.IsTerminated.Should().BeTrue();
+        await Assert.That(observer.Items).IsEquivalentTo(new[] { "A", "B" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(observer.IsCompleted).IsTrue();
+        await Assert.That(queue.IsTerminated).IsTrue();
     }
 
-    [Fact]
-    public void ErrorTerminatesAndClearsPending()
+    [Test]
+    public async Task ErrorTerminatesAndClearsPending()
     {
         var observer = new ListObserver<string>();
         var queue = new DeliveryQueue<string>(_gate, observer);
@@ -553,8 +542,8 @@ public class DeliveryQueueFixture
             scope.EnqueueNext("B"); // should be ignored
         }
 
-        observer.Items.Should().Equal("A");
-        observer.Error.Should().BeSameAs(error);
-        queue.IsTerminated.Should().BeTrue();
+        await Assert.That(observer.Items).IsEquivalentTo(new[] { "A" }, TUnit.Assertions.Enums.CollectionOrdering.Matching);
+        await Assert.That(observer.Error).IsSameReferenceAs(error);
+        await Assert.That(queue.IsTerminated).IsTrue();
     }
 }

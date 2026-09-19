@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
-
+#if REACTIVE_TESTS
+using DynamicData.Reactive.Kernel;
+#else
 using DynamicData.Kernel;
+#endif
 using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
 
 namespace DynamicData.Tests.List;
 
@@ -18,8 +15,8 @@ public class ForEachChangeFixture : IDisposable
 
     public void Dispose() => _source.Dispose();
 
-    [Fact]
-    public void EachChangeInokesTheCallback()
+    [Test]
+    public async Task EachChangeInokesTheCallback()
     {
         var messages = new List<Change<Person>>();
 
@@ -28,12 +25,12 @@ public class ForEachChangeFixture : IDisposable
         var people = new RandomPersonGenerator().Take(100);
         people.ForEach(_source.Add);
 
-        messages.Count.Should().Be(100);
+        await Assert.That(messages.Count).IsEqualTo(100);
         messageWriter.Dispose();
     }
 
-    [Fact]
-    public void EachItemChangeInokesTheCallbac2()
+    [Test]
+    public async Task EachItemChangeInokesTheCallbac2()
     {
         var messages = new List<ItemChange<Person>>();
 
@@ -42,12 +39,12 @@ public class ForEachChangeFixture : IDisposable
         _source.InsertRange(new RandomPersonGenerator().Take(5), 2);
         _source.AddRange(new RandomPersonGenerator().Take(5));
 
-        messages.Count.Should().Be(15);
+        await Assert.That(messages.Count).IsEqualTo(15);
         messageWriter.Dispose();
     }
 
-    [Fact]
-    public void EachItemChangeInokesTheCallback()
+    [Test]
+    public async Task EachItemChangeInokesTheCallback()
     {
         var messages = new List<ItemChange<Person>>();
 
@@ -55,7 +52,7 @@ public class ForEachChangeFixture : IDisposable
 
         _source.AddRange(new RandomPersonGenerator().Take(100));
 
-        messages.Count.Should().Be(100);
+        await Assert.That(messages.Count).IsEqualTo(100);
         messageWriter.Dispose();
     }
 }
