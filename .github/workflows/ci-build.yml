@@ -61,7 +61,7 @@ jobs:
       working-directory: src
 
     - name: Run Tests
-      run: dotnet test --solution DynamicData.sln --no-build --configuration Release
+      run: dotnet test --solution DynamicData.sln --no-build --configuration Release --max-parallel-test-modules 4 --maximum-parallel-tests 8
       working-directory: src
 
     - name: Pack

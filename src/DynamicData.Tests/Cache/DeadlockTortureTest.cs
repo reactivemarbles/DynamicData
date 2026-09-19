@@ -41,8 +41,8 @@ public sealed class DeadlockTortureTest
             using var bToA = pipeline(sourceB.Connect().Filter(x => x.Name.StartsWith("B"))).PopulateInto(sourceA);
 
             using var barrier = new Barrier(2);
-            var taskA = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceA.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); });
-            var taskB = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceB.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); });
+            var taskA = RunOnDedicatedThread(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceA.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); });
+            var taskB = RunOnDedicatedThread(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceB.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); });
 
             var completed = Task.WhenAll(taskA, taskB);
             if (await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds))) != completed)
@@ -50,6 +50,9 @@ public sealed class DeadlockTortureTest
         }
         return true;
     }
+
+    private static Task RunOnDedicatedThread(Action action) =>
+        Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
     [Test]
     public async Task Sort_DoesNotDeadlock() =>
@@ -148,9 +151,9 @@ await Assert.That((await RunBidirectionalDeadlockTest(s => s.OnItemRemoved(_ => 
             using var barrier = new Barrier(3);
             var tasks = new[]
             {
-                Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) a.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); }),
-                Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) b.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); }),
-                Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) c.AddOrUpdate(new Person("CC-" + iter + "-" + i, i)); }),
+                RunOnDedicatedThread(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) a.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); }),
+                RunOnDedicatedThread(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) b.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); }),
+                RunOnDedicatedThread(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) c.AddOrUpdate(new Person("CC-" + iter + "-" + i, i)); }),
             };
             var completed = Task.WhenAll(tasks);
             await Assert.That((await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds))))).IsSameReferenceAs(completed).Because("iteration " + iter);

@@ -61,7 +61,7 @@ jobs:
         if ($LASTEXITCODE -ne 0) { throw "Sonar scanner initialization failed." }
         dotnet build --no-restore --no-incremental --configuration ${{ matrix.configuration }} -p:ContinuousIntegrationBuild=false DynamicData.sln
         if ($LASTEXITCODE -ne 0) { throw "Coverage build failed." }
-        dotnet test --solution DynamicData.sln --no-build --configuration ${{ matrix.configuration }} --coverage --coverage-settings coverage.config --coverage-output-format xml --results-directory TestResults/coverage
+        dotnet test --solution DynamicData.sln --no-build --configuration ${{ matrix.configuration }} --max-parallel-test-modules 4 --maximum-parallel-tests 8 --coverage --coverage-settings coverage.config --coverage-output-format xml --results-directory TestResults/coverage
         if ($LASTEXITCODE -ne 0) { throw "Coverage tests failed." }
         dotnet sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
       env:
