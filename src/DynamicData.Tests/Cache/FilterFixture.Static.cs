@@ -4,11 +4,15 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
+using Randomizer = Bogus.Randomizer;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
+
+using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Cache;
 
@@ -17,6 +21,11 @@ public static partial class FilterFixture
     public sealed class Static
         : Base
     {
+        private const int RemoveKeySeed = 0x1165;
+
+        public Static(ITestOutputHelper output)
+            => output.WriteLine($"Bogus seed: {RemoveKeySeed}");
+
         [Fact]
         public void FilterIsNull_ThrowsException()
             => FluentActions.Invoking(static () => ObservableCacheEx.Filter(
@@ -89,54 +98,97 @@ public static partial class FilterFixture
             => source.Filter(
                 filter:                     predicate,
                 suppressEmptyChangeSets:    suppressEmptyChangeSets);
+
+        /// <summary>
+        /// List filtering after RemoveKey must remove every item that stops matching, not retain a stale superset.
+        /// </summary>
         [Fact]
         public void AutoRefreshRemoveKeyFilterUpdate_CollectionUpdated()
         {
-            RandomPersonGenerator generator = new();
-            using var source = new SourceCache<Person, string>(p => p.Key);
-            var people = generator.Take(100).ToArray();
-            var average = people.Average(x => x.Age);
+            // Arrange: all generated items start below a derived threshold.
+            var randomizer = new Randomizer(RemoveKeySeed);
+            using var source = new TestSourceCache<Person, string>(static person => person.Key);
+            var people = Fakers.Person.Clone()
+                .UseSeed(randomizer.Int())
+                .Generate(randomizer.Int(3, 8))
+                .ToArray();
+            var exclusiveAge = people.Max(static person => person.Age) + 1;
             ReadOnlyObservableCollection<Person> collection;
             using var subscription = source.Connect()
                 .AutoRefresh(x => x.Age)
                 .RemoveKey()
-                .Filter(x => x.Age < average)
+                .Filter(person => person.Age < exclusiveAge)
+                .ValidateSynchronization()
+                .ValidateChangeSets()
                 .Bind(out collection)
                 .Subscribe();
+
+            // Act: add the initial matching collection.
             source.AddOrUpdate(people);
 
-            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+            // Assert: the complete initial membership is present.
+            Assert.Equivalent(people, collection, strict: true);
 
+            // Act: guarantee one removal while other matching items remain.
+            people[0].Age = exclusiveAge;
+
+            // Assert: a stale entry must not be accepted as an extra member.
+            Assert.Equivalent(people.Where(person => person.Age < exclusiveAge), collection, strict: true);
+
+            // Act: exclude every remaining item.
             foreach (var person in people)
             {
-                person.Age = person.Age + 1;
+                person.Age = exclusiveAge;
             }
-            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+
+            // Assert: strict comparison also rejects stale items when the expectation is empty.
+            Assert.Equivalent(people.Where(person => person.Age < exclusiveAge), collection, strict: true);
         }
 
+        /// <summary>
+        /// Cache filtering before RemoveKey must bind exactly the remaining items, including an empty final result.
+        /// </summary>
         [Fact]
         public void AutoRefreshFilterRemoveKeyUpdate_CollectionUpdated()
         {
-            RandomPersonGenerator generator = new();
-            using var source = new SourceCache<Person, string>(p => p.Key);
-            var people = generator.Take(100).ToArray();
-            var average = people.Average(x => x.Age);
+            // Arrange: all generated items start below a derived threshold.
+            var randomizer = new Randomizer(RemoveKeySeed);
+            using var source = new TestSourceCache<Person, string>(static person => person.Key);
+            var people = Fakers.Person.Clone()
+                .UseSeed(randomizer.Int())
+                .Generate(randomizer.Int(3, 8))
+                .ToArray();
+            var exclusiveAge = people.Max(static person => person.Age) + 1;
             ReadOnlyObservableCollection<Person> collection;
             using var subscription = source.Connect()
                 .AutoRefresh(x => x.Age)
-                .Filter(x => x.Age < average)
+                .Filter(person => person.Age < exclusiveAge)
+                .ValidateSynchronization()
+                .ValidateChangeSets(static person => person.Key)
                 .RemoveKey()
                 .Bind(out collection)
                 .Subscribe();
+
+            // Act: add the initial matching collection.
             source.AddOrUpdate(people);
 
-            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+            // Assert: the complete initial membership is present.
+            Assert.Equivalent(people, collection, strict: true);
 
+            // Act: guarantee one removal while other matching items remain.
+            people[0].Age = exclusiveAge;
+
+            // Assert: a stale entry must not be accepted as an extra member.
+            Assert.Equivalent(people.Where(person => person.Age < exclusiveAge), collection, strict: true);
+
+            // Act: exclude every remaining item.
             foreach (var person in people)
             {
-                person.Age = person.Age + 1;
+                person.Age = exclusiveAge;
             }
-            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+
+            // Assert: strict comparison also rejects stale items when the expectation is empty.
+            Assert.Equivalent(people.Where(person => person.Age < exclusiveAge), collection, strict: true);
         }
     }
 
