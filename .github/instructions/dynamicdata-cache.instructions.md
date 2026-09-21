@@ -826,6 +826,8 @@ Filters Update changes based on reference equality or a custom predicate. If fil
 | `WhenValueChanged(expr)` | Like above but emits just the property value (no sender). |
 | `WhenAnyPropertyChanged()` | Emits the item when **any** property changes (no specific property). |
 
+Property paths used by `WhenPropertyChanged` and `WhenValueChanged` evaluate numeric conversions before subsequent property access.
+
 ---
 
 ## Writing a New Cache Operator

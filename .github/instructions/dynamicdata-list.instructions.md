@@ -500,6 +500,8 @@ myObservable.ToObservableChangeSet(expireAfter: item => TimeSpan.FromMinutes(5))
 
 ### Property Observation
 
+Property paths used by `WhenPropertyChanged` and `WhenValueChanged` evaluate numeric conversions before subsequent property access.
+
 ```csharp
 // Observe a property on all items (requires INotifyPropertyChanged)
 list.Connect()

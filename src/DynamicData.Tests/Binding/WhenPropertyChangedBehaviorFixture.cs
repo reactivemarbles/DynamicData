@@ -6,20 +6,35 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+
+using Bogus;
+
 using DynamicData.Binding;
 using DynamicData.Tests.Utilities;
 using FluentAssertions;
 
 using Xunit;
+using Xunit.Abstractions;
 
 namespace DynamicData.Tests.Binding;
 
 /// <summary>
 /// Single-threaded contract tests for <see cref="NotifyPropertyChangedEx.WhenPropertyChanged{TObject, TProperty}"/>:
-/// handler attachment ordering, no-dedup semantics, deep-chain re-walks on swaps.
+/// handler attachment ordering, expression conversions, no-dedup semantics, deep-chain re-walks on swaps.
 /// </summary>
-public sealed class WhenPropertyChangedBehaviorFixture
+public sealed partial class WhenPropertyChangedBehaviorFixture
 {
+    private readonly Randomizer _randomizer;
+
+    /// <summary>Initializes deterministic inputs for property-observation contracts.</summary>
+    /// <param name="output">Receives the seed used to generate test inputs.</param>
+    public WhenPropertyChangedBehaviorFixture(ITestOutputHelper output)
+    {
+        const int seed = 0x35C1_709B;
+        _randomizer = new Randomizer(seed);
+        output.WriteLine($"{nameof(WhenPropertyChangedBehaviorFixture)} seed: 0x{seed:X8}");
+    }
+
     [Fact]
     public void Shallow_NotifyInitialFalse_SubscribesHandlerBeforeReturning()
     {
@@ -200,6 +215,24 @@ public sealed class WhenPropertyChangedBehaviorFixture
             {
                 _value = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
+            }
+        }
+    }
+
+    /// <summary>An observable model with a numeric property, used to exercise value-changing conversions.</summary>
+    private sealed class ObservablePrice : INotifyPropertyChanged
+    {
+        private double _amount;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public double Amount
+        {
+            get => _amount;
+            set
+            {
+                _amount = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Amount)));
             }
         }
     }
