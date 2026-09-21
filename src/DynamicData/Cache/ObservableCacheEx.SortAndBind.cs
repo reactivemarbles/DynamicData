@@ -9,7 +9,7 @@ using DynamicData.Binding;
 namespace DynamicData;
 
 /// <summary>
-/// ObservableCache extensions for SortAndBind.
+/// Extensions for dynamic data.
 /// </summary>
 public static partial class ObservableCacheEx
 {

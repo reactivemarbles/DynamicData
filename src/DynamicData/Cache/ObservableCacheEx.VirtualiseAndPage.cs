@@ -8,7 +8,7 @@ using DynamicData.Cache.Internal;
 namespace DynamicData;
 
 /// <summary>
-/// ObservableCache extensions for the virtualised group of operators.
+/// Extensions for dynamic data.
 /// </summary>
 public static partial class ObservableCacheEx
 {
