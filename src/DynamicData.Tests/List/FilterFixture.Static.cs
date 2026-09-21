@@ -3,8 +3,10 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
+using Bogus;
 using FluentAssertions;
 using Xunit;
+using Xunit.Abstractions;
 
 using DynamicData.Tests.Utilities;
 
@@ -14,6 +16,84 @@ public static partial class FilterFixture
 {
     public class Static
     {
+        private const int IdentitySeed = 0x1165;
+
+        public Static(ITestOutputHelper output)
+            => output.WriteLine($"Bogus seed: {IdentitySeed}");
+
+        /// <summary>
+        /// Indexed list changes address one occurrence, even when values are equal or share the same reference.
+        /// Refresh, replacement, movement, and removal must preserve the other slots' identities and inclusion states.
+        /// </summary>
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void EqualItemsHaveIndexedChanges_OnlyTheSpecifiedSlotChanges(bool useSameReference)
+        {
+            // Arrange: seed the list with two equal occurrences before subscribing.
+            var randomizer = new Randomizer(IdentitySeed);
+            using var source = new TestSourceList<Item>();
+            var first = new Item { Id = randomizer.Int(), IsIncluded = true };
+            var second = useSameReference ? first : first with { };
+            var replacement = new Item { Id = randomizer.Int(), IsIncluded = true };
+            Assert.Equal(first, second);
+
+            source.AddRange(new[] { first, second });
+
+            using var subscription = source.Connect()
+                .Filter(Item.FilterByIsIncluded)
+                .ValidateSynchronization()
+                .ValidateChangeSets()
+                .RecordListItems(out var results);
+
+            // Assert the initial snapshot retains both occurrences.
+            Assert.Null(results.Error);
+            Assert.Collection(results.RecordedItems,
+                item => Assert.Same(first, item),
+                item => Assert.Same(second, item));
+
+            // Act: re-evaluate only the second slot, even when both slots reference the mutated object.
+            second.IsIncluded = false;
+            source.Refresh(1);
+
+            // Assert: the first slot retains its prior inclusion state until notified.
+            Assert.Null(results.Error);
+            Assert.Same(first, Assert.Single(results.RecordedItems));
+
+            // Act: replace the excluded slot with an included item.
+            source.Edit(items => items[1] = replacement);
+
+            // Assert: the new reference is inserted without replacing the untouched occurrence.
+            Assert.Null(results.Error);
+            Assert.Collection(results.RecordedItems,
+                item => Assert.Same(first, item),
+                item => Assert.Same(replacement, item));
+
+            // Act: move the replacement ahead of the original occurrence.
+            source.Edit(items => items.Move(1, 0));
+
+            // Assert: both exact references follow their indexed positions.
+            Assert.Null(results.Error);
+            Assert.Collection(results.RecordedItems,
+                item => Assert.Same(replacement, item),
+                item => Assert.Same(first, item));
+
+            // Act: remove the original occurrence at its new position.
+            source.RemoveAt(1);
+
+            // Assert: only the replacement remains.
+            Assert.Null(results.Error);
+            Assert.Same(replacement, Assert.Single(results.RecordedItems));
+
+            // Act: refresh the remaining slot after excluding it.
+            replacement.IsIncluded = false;
+            source.Refresh(0);
+
+            // Assert: all notified exclusions have propagated.
+            Assert.Null(results.Error);
+            Assert.Empty(results.RecordedItems);
+        }
+
         [Fact]
         public void DuplicateItemsAreAdded_ItemsAreTrackedSeparately()
         {
