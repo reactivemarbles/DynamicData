@@ -13,8 +13,9 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
 {
     private readonly IObservable<IObservable<IChangeSet<TObject, TKey>>> _sources = sources ?? throw new ArgumentNullException(nameof(sources));
 
-    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
-            observer =>
+    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Using(
+            static () => new SingleAssignmentDisposable(),
+            lifetime => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
                 // Switching is done by hand rather than with Observable.Switch, which holds its gate for
                 // the whole of downstream delivery. The queue enqueues and returns instead, so a producer
@@ -24,101 +25,170 @@ internal sealed class Switch<TObject, TKey>(IObservable<IObservable<IChangeSet<T
 
                 // What the current source has contributed, so that switching away can take it back out.
                 var current = new Cache<TObject, TKey>();
-                var subscription = new SerialDisposable();
+                var outer = new SingleAssignmentDisposable();
 
-                // Identifies the current source. A superseded one may still be mid-delivery, and anything
-                // it produces after this point belongs to a source that has already been switched away from.
-                var activeSourceId = 0;
+                // The holder is also the generation token. Publish it before calling any user code, so
+                // reentrant selection can cancel a subscription whose Subscribe has not yet returned.
+                SingleAssignmentDisposable? activeSubscription = null;
                 var isSourceRunning = false;
                 var areSourcesComplete = false;
+                var isStopped = false;
 
-                var outer = _sources.SubscribeSafe(
-                    source =>
+                // Using owns this slot before activation, including synchronous subscription failures.
+                lifetime.Disposable = Disposable.Create(() =>
+                {
+                    SingleAssignmentDisposable? subscription;
+
+                    // This scope does not drain. Invalidate pending work before waiting for delivery,
+                    // and never run subscription teardown under the queue's gate.
+                    using (queue.AcquireReadLock())
                     {
-                        int sourceId;
+                        isStopped = true;
+                        subscription = activeSubscription;
+                        activeSubscription = null;
+                    }
 
-                        using (var scope = queue.AcquireLock())
-                        {
-                            sourceId = ++activeSourceId;
-                            isSourceRunning = true;
+                    // Finish downstream delivery before tearing down the sources feeding it.
+                    queue.Dispose();
+                    try
+                    {
+                        outer.Dispose();
+                    }
+                    finally
+                    {
+                        subscription?.Dispose();
+                    }
+                });
 
-                            if (current.Count != 0)
-                            {
-                                scope.EnqueueNext(new ChangeSet<TObject, TKey>(
-                                    current.KeyValues.Select(static pair => new Change<TObject, TKey>(ChangeReason.Remove, pair.Key, pair.Value))));
-
-                                current.Clear();
-                            }
-                        }
-
-                        // Subscribed outside the lock. The source may deliver synchronously, and that
-                        // delivery takes the lock for itself.
-                        subscription.Disposable = source.SubscribeSafe(
-                            changes =>
-                            {
-                                using var scope = queue.AcquireLock();
-
-                                if (sourceId != activeSourceId)
-                                {
-                                    return;
-                                }
-
-                                current.Clone(changes);
-
-                                if (changes.Count != 0)
-                                {
-                                    scope.EnqueueNext(changes);
-                                }
-                            },
-                            error =>
-                            {
-                                using var scope = queue.AcquireLock();
-
-                                if (sourceId != activeSourceId)
-                                {
-                                    return;
-                                }
-
-                                scope.EnqueueError(error);
-                            },
-                            () =>
-                            {
-                                using var scope = queue.AcquireLock();
-
-                                if (sourceId != activeSourceId)
-                                {
-                                    return;
-                                }
-
-                                isSourceRunning = false;
-
-                                if (areSourcesComplete)
-                                {
-                                    scope.EnqueueCompleted();
-                                }
-                            });
-                    },
-                    queue.OnError,
+                outer.Disposable = _sources.SubscribeSafe(
+                    SwitchSource,
+                    error => Fail(error, null),
                     () =>
                     {
                         using var scope = queue.AcquireLock();
 
+                        if (isStopped)
+                        {
+                            return;
+                        }
+
                         areSourcesComplete = true;
 
-                        // The current source may still be running, and the result ends only once both have.
+                        // A selected source counts as running even while its subscription is pending.
                         if (!isSourceRunning)
                         {
+                            isStopped = true;
                             scope.EnqueueCompleted();
                         }
                     });
 
-                // Disposal order matters and CompositeDisposable does not specify one. The queue goes first
-                // so that any delivery in flight is finished before the subscriptions feeding it are torn down.
-                return Disposable.Create(() =>
+                return Disposable.Empty;
+
+                void SwitchSource(IObservable<IChangeSet<TObject, TKey>> source)
                 {
-                    queue.Dispose();
-                    outer.Dispose();
-                    subscription.Dispose();
-                });
-            });
+                    SingleAssignmentDisposable subscription;
+                    SingleAssignmentDisposable? previous;
+
+                    // Publish without draining notifications: even a reset callback must not get ahead
+                    // of releasing the previous source's resources.
+                    using (queue.AcquireReadLock())
+                    {
+                        if (isStopped || areSourcesComplete)
+                        {
+                            return;
+                        }
+
+                        subscription = new SingleAssignmentDisposable();
+                        previous = activeSubscription;
+                        activeSubscription = subscription;
+                        isSourceRunning = true;
+                    }
+
+                    // Disposal is user code too: it can select another source or terminate the result.
+                    previous?.Dispose();
+
+                    using (var scope = queue.AcquireLock())
+                    {
+                        if (!IsCurrent(subscription))
+                        {
+                            return;
+                        }
+
+                        if (current.Count != 0)
+                        {
+                            scope.EnqueueNext(new ChangeSet<TObject, TKey>(
+                                current.KeyValues.Select(static pair => new Change<TObject, TKey>(ChangeReason.Remove, pair.Key, pair.Value))));
+
+                            current.Clear();
+                        }
+                    }
+
+                    // Reset delivery is another reentrant boundary. Outer completion alone does not
+                    // cancel this source, but disposal, failure, or a newer selection does.
+                    using (queue.AcquireReadLock())
+                    {
+                        if (!IsCurrent(subscription))
+                        {
+                            return;
+                        }
+                    }
+
+                    // Subscribe outside the gate and assign only to this generation's holder. If a
+                    // synchronous notification selected a newer source, this holder is already disposed
+                    // and disposes the late-returning subscription without touching the newer one.
+                    subscription.Disposable = source.SubscribeSafe(
+                        changes =>
+                        {
+                            using var scope = queue.AcquireLock();
+
+                            if (!IsCurrent(subscription))
+                            {
+                                return;
+                            }
+
+                            current.Clone(changes);
+
+                            if (changes.Count != 0)
+                            {
+                                scope.EnqueueNext(changes);
+                            }
+                        },
+                        error => Fail(error, subscription),
+                        () =>
+                        {
+                            using var scope = queue.AcquireLock();
+
+                            if (!IsCurrent(subscription))
+                            {
+                                return;
+                            }
+
+                            isSourceRunning = false;
+
+                            if (areSourcesComplete)
+                            {
+                                isStopped = true;
+                                scope.EnqueueCompleted();
+                            }
+                        });
+                }
+
+                void Fail(Exception error, SingleAssignmentDisposable? subscription)
+                {
+                    using var scope = queue.AcquireLock();
+
+                    if (isStopped || (subscription is not null && !ReferenceEquals(subscription, activeSubscription)))
+                    {
+                        return;
+                    }
+
+                    // Stop as soon as the terminal notification is queued, not only when it is delivered.
+                    isStopped = true;
+                    scope.EnqueueError(error);
+                }
+
+                // All callers hold the queue gate; notification handlers and handoffs use the same state.
+                bool IsCurrent(SingleAssignmentDisposable subscription) =>
+                    !isStopped && ReferenceEquals(subscription, activeSubscription);
+            }));
 }
