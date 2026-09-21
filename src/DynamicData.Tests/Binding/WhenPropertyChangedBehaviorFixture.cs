@@ -6,20 +6,35 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+
+using Bogus;
+
 using DynamicData.Binding;
 using DynamicData.Tests.Utilities;
 using FluentAssertions;
 
 using Xunit;
+using Xunit.Abstractions;
 
 namespace DynamicData.Tests.Binding;
 
 /// <summary>
 /// Single-threaded contract tests for <see cref="NotifyPropertyChangedEx.WhenPropertyChanged{TObject, TProperty}"/>:
-/// handler attachment ordering, no-dedup semantics, deep-chain re-walks on swaps.
+/// handler attachment ordering, subscription cleanup, expression conversions, no-dedup semantics, and deep-chain swaps.
 /// </summary>
-public sealed class WhenPropertyChangedBehaviorFixture
+public sealed partial class WhenPropertyChangedBehaviorFixture
 {
+    private readonly Randomizer _randomizer;
+
+    /// <summary>Initializes deterministic inputs for property-observation contracts.</summary>
+    /// <param name="output">Receives the seed used to generate test inputs.</param>
+    public WhenPropertyChangedBehaviorFixture(ITestOutputHelper output)
+    {
+        const int seed = 0x35C1_709B;
+        _randomizer = new Randomizer(seed);
+        output.WriteLine($"{nameof(WhenPropertyChangedBehaviorFixture)} seed: 0x{seed:X8}");
+    }
+
     [Fact]
     public void Shallow_NotifyInitialFalse_SubscribesHandlerBeforeReturning()
     {
