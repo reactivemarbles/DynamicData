@@ -47,6 +47,14 @@ public static partial class ObservableCacheEx
     /// <returns>A changeset stream reflecting the items from the most recently emitted inner source.</returns>
     /// <remarks>
     /// <para>On switch: <b>Remove</b> is emitted for all items from the previous source, then <b>Add</b> for all items from the new source.</para>
+    /// <para>
+    /// The previous inner subscription is disposed before the replacement subscribes. If disposal or synchronous
+    /// notification callbacks select a newer source, a superseded pending source cannot replace that newer subscription.
+    /// </para>
+    /// <para>
+    /// Completion of the outer source waits for the selected inner source to complete. An error terminates the result,
+    /// and disposing the result cancels pending source activation as well as the active subscriptions.
+    /// </para>
     /// <para><b>Worth noting:</b> Each switch clears the entire downstream cache before populating from the new source. Subscribers see a full remove-then-add reset on every switch.</para>
     /// <para><b>Also worth noting:</b>This operator intentionally shadows the native <see cref="Observable.Switch{TSource}(IObservable{IObservable{TSource}})"/> operator, as downstream listeners will generally become corrupt when the native operator is used. This is due to its lack of the automatic-clearing behavior mentioned above.</para>
     /// </remarks>
