@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -9,10 +9,11 @@ using FluentAssertions;
 using Microsoft.Reactive.Testing;
 
 using Xunit;
+using Xunit.Abstractions;
 
 namespace DynamicData.Tests.Cache;
 
-public class BatchIfFixture : IDisposable
+public partial class BatchIfFixture : IDisposable
 {
     private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
 
@@ -22,8 +23,9 @@ public class BatchIfFixture : IDisposable
 
     private readonly ISourceCache<Person, string> _source;
 
-    public BatchIfFixture()
+    public BatchIfFixture(ITestOutputHelper output)
     {
+        output.WriteLine($"{nameof(BatchIfFixture)} seed: {OverloadSeed:X8}");
         _scheduler = new TestScheduler();
         _source = new SourceCache<Person, string>(p => p.Key);
         _results = _source.Connect().BatchIf(_pausingSubject, _scheduler).AsAggregator();
