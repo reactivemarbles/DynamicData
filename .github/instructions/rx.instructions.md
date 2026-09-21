@@ -262,6 +262,8 @@ primary.Dispose(); // decrement — resource still alive (dep2 still holds)
 dep2.Dispose();    // decrement to 0 — resource disposed!
 ```
 
+For event-based subscriptions, establish ownership before attaching handlers, reading user properties, or emitting initial values. Initialization can throw before `Observable.Create` receives the subscription disposable. A scoped `RefCountDisposable` can own activation and transfer a dependent lease to Rx only after activation succeeds, ensuring failed initialization releases every installed handler without replacing subscriber exceptions with `OnError`.
+
 ### BooleanDisposable / CancellationDisposable
 
 ```csharp

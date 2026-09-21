@@ -22,8 +22,16 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
     {
         // chain is leaf-first (output of SplitIntoSteps). Reverse once to root-to-leaf order.
         var rootToLeaf = chain.AsEnumerable().Reverse().ToArray();
-        _factory = (source, notifyInitial) => Observable.Create<PropertyValue<TObject, TProperty>>(
-            observer => new DeepChainSubscription(observer, source, rootToLeaf, valueAccessor, notifyInitial));
+        _factory = (source, notifyInitial) => Observable.Create<PropertyValue<TObject, TProperty>>(observer =>
+        {
+            var subscription = new DeepChainSubscription(observer, source, rootToLeaf, valueAccessor, notifyInitial);
+
+            // The scope owns initialization; only successful activation hands a dependent lease to Rx.
+            using var lifetime = new RefCountDisposable(subscription);
+            subscription.Start();
+
+            return lifetime.GetDisposable();
+        });
     }
 
     public ObservablePropertyFactory(Expression<Func<TObject, TProperty>> expression)
@@ -33,8 +41,16 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
         // the high-frequency single-property hot path.
         var memberName = expression.GetProperty().Name;
         var accessor = expression.Compile();
-        _factory = (source, notifyInitial) => Observable.Create<PropertyValue<TObject, TProperty>>(
-            observer => new SinglePropertySubscription(observer, source, memberName, accessor, notifyInitial));
+        _factory = (source, notifyInitial) => Observable.Create<PropertyValue<TObject, TProperty>>(observer =>
+        {
+            var subscription = new SinglePropertySubscription(observer, source, memberName, accessor);
+
+            // The scope releases the handler if activation throws before Rx can receive its lease.
+            using var lifetime = new RefCountDisposable(subscription);
+            subscription.Start(notifyInitial);
+
+            return lifetime.GetDisposable();
+        });
     }
 
     public IObservable<PropertyValue<TObject, TProperty>> Create(TObject source, bool notifyInitial) => _factory(source, notifyInitial);
@@ -43,7 +59,7 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
     // event through a DeliveryQueue. Used for x => x.Prop (depth == 1) where SharedDeliveryQueue
     // and Observable.FromEventPattern would be needless overhead on the hot path.
     //
-    // notifyInitial only controls whether the constructor synthesises an initial emission. There
+    // notifyInitial only controls whether Start synthesises an initial emission. There
     // is no equality dedup at the subscribe seam: a same-valued PropertyChanged firing in the
     // subscribe window is a legitimate event and must be delivered. The "never drop events"
     // contract takes precedence over avoiding a benign duplicate.
@@ -58,27 +74,29 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             IObserver<PropertyValue<TObject, TProperty>> observer,
             TObject source,
             string memberName,
-            Func<TObject, TProperty> accessor,
-            bool notifyInitial)
+            Func<TObject, TProperty> accessor)
         {
             _source = source;
             _memberName = memberName;
             _accessor = accessor;
             _queue = new DeliveryQueue<PropertyValue<TObject, TProperty>>(observer);
-
-            // Attach PropertyChanged handler FIRST so events during the initial read are not missed.
-            _source.PropertyChanged += OnPropertyChanged;
-
-            if (notifyInitial)
-            {
-                EmitCurrent();
-            }
         }
 
         public void Dispose()
         {
             _source.PropertyChanged -= OnPropertyChanged;
             _queue.Dispose();
+        }
+
+        public void Start(bool notifyInitial)
+        {
+            // Attach before reading so changes during initialization are captured.
+            _source.PropertyChanged += OnPropertyChanged;
+
+            if (notifyInitial)
+            {
+                EmitCurrent();
+            }
         }
 
         private void OnPropertyChanged(object? sender, PropertyChangedEventArgs args)
@@ -186,12 +204,6 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
                 var level = i;
                 _levelCallbacks[i] = _ => _signalSub.OnNext(level);
             }
-
-            // Kick off initial chain setup via the drainer. The subscribe thread becomes the
-            // drainer (no one else is draining yet on a fresh subscription) and runs
-            // ProcessSignal(InitialSetupSignal) synchronously, which attaches the chain and
-            // emits the initial value.
-            _signalSub.OnNext(InitialSetupSignal);
         }
 
         public void Dispose()
@@ -205,6 +217,9 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
             _userSub.Dispose();
             _sharedQueue.Dispose();
         }
+
+        // Initial setup uses the same delivery ordering and reentrancy as subsequent changes.
+        public void Start() => _signalSub.OnNext(InitialSetupSignal);
 
         private void ProcessSignal(int level)
         {

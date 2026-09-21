@@ -826,6 +826,8 @@ Filters Update changes based on reference equality or a custom predicate. If fil
 | `WhenValueChanged(expr)` | Like above but emits just the property value (no sender). |
 | `WhenAnyPropertyChanged()` | Emits the item when **any** property changes (no specific property). |
 
+If synchronous initialization fails, every event handler attached during that initialization is released. Subscriber callback exceptions propagate rather than becoming property-access errors.
+
 ---
 
 ## Writing a New Cache Operator
