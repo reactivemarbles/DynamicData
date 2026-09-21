@@ -792,6 +792,8 @@ FIFO eviction when cache exceeds a size limit.
 
 `IObservable<IObservable<IChangeSet<T,K>>>` → subscribes to the latest inner observable, disposing previous.
 
+The previous subscription is released before its replacement starts. Reentrant selection during reset, disposal, or initial delivery cannot activate a superseded source or dispose the newest subscription. Outer completion waits for the selected inner source, while errors and disposal cancel pending activation.
+
 ### RefCount
 
 Shares the upstream subscription with reference counting.
