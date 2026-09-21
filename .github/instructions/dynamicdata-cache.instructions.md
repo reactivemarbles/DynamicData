@@ -701,11 +701,15 @@ Filters the stream to a single key.
 
 Watches a single key and emits `Optional<TObject>` — `Some` when present, `None` when removed.
 
+With `initialOptionalWhenMissing: true`, initial-value selection is serialized with source notifications. The synthetic `None` can only be the first notification. Later `None` values come from source removals, not initialization. Initialization state is independent for each subscription.
+
 ---
 
 ### BatchIf
 
 Buffers changesets while a condition is true, flushes as a single combined changeset when condition becomes false.
+
+The timer overload can omit `initialPauseState`, including calls with a named `timer` and optional `scheduler`. It starts unpaused.
 
 | Input | Behavior |
 |-------|----------|
@@ -792,6 +796,8 @@ FIFO eviction when cache exceeds a size limit.
 
 `IObservable<IObservable<IChangeSet<T,K>>>` → subscribes to the latest inner observable, disposing previous.
 
+The previous subscription is released before its replacement starts. Reentrant selection during reset, disposal, or initial delivery cannot activate a superseded source or dispose the newest subscription. Outer completion waits for the selected inner source, while errors and disposal cancel pending activation.
+
 ### RefCount
 
 Shares the upstream subscription with reference counting.
@@ -808,6 +814,17 @@ Converts `IChangeSet<T,K>` into `IObservable<Change<T,K>>` — one emission per 
 
 Converts `IChangeSet<T,K>` to `IChangeSet<T>` — drops the key to produce a list changeset.
 
+Positions are tracked independently per subscription by cache key, not item equality, so equal values and shared object references remain distinct entries. Partial streams keep unspecified indexes where the observed history cannot establish a position.
+
+| Input | Output |
+|-------|--------|
+| **Add** | Individual Add, preserving the supplied index or unspecified-index marker. |
+| **Update** | Remove of the previous value followed by Add of the current value; known key positions identify the removal. |
+| **Remove** | Individual Remove using the supplied or known key position. |
+| **Refresh** | Self-Replace using the known key position, or unspecified indexes if unknown. |
+| **Moved** | Moved with the supplied positions. |
+| **OnError / OnCompleted** | Forwards the terminal notification. |
+
 ### EnsureUniqueKeys
 
 Validates that all keys in each changeset are unique. Throws if duplicates detected.
@@ -818,6 +835,20 @@ Filters Update changes based on reference equality or a custom predicate. If fil
 
 ---
 
+### StdDev
+
+Computes sample standard deviation as `sqrt(sum((value - mean)^2) / (count - 1))`. The configured fallback is returned when a changeset leaves fewer than two items. Integer selectors retain fractional means and variances.
+
+| Input | Behavior |
+|-------|----------|
+| **Add** | Includes the selected value and emits the updated result. |
+| **Update** | Removes the previous selected value, includes the current value, and emits the updated result. |
+| **Remove** | Removes the selected value and emits the updated result or fallback. |
+| **Refresh / Moved** | Does not adjust the aggregate; the current result is emitted for the changeset. |
+| **OnError / OnCompleted** | Forwards the terminal notification. |
+
+In-place property mutations require recomputation, such as `InvalidateWhen`, rather than a Refresh alone.
+
 ### Property Observation
 
 | Operator | Behavior |
@@ -825,6 +856,8 @@ Filters Update changes based on reference equality or a custom predicate. If fil
 | `WhenPropertyChanged(expr)` | Emits `PropertyValue<T, TProp>` (item + value) when the specified property changes on any item. Subscribes per-item on Add, disposes on Remove. |
 | `WhenValueChanged(expr)` | Like above but emits just the property value (no sender). |
 | `WhenAnyPropertyChanged()` | Emits the item when **any** property changes (no specific property). |
+
+Property paths used by `WhenPropertyChanged` and `WhenValueChanged` evaluate numeric conversions before subsequent property access. If synchronous initialization fails, every event handler attached during that initialization is released. Subscriber callback exceptions propagate rather than becoming property-access errors.
 
 ---
 

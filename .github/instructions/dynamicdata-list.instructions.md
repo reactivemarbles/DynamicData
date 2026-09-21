@@ -498,7 +498,23 @@ myObservable.ToObservableChangeSet(expireAfter: item => TimeSpan.FromMinutes(5))
 
 ---
 
+### StdDev
+
+Computes sample standard deviation as `sqrt(sum((value - mean)^2) / (count - 1))`. The configured fallback is returned when a changeset leaves fewer than two items. Integer selectors retain fractional means and variances.
+
+| Input | Behavior |
+|-------|----------|
+| **Add / AddRange** | Includes the selected values and emits the updated result. |
+| **Replace** | Removes the previous selected value, includes the current value, and emits the updated result. |
+| **Remove / RemoveRange / Clear** | Removes the selected values and emits the updated result or fallback. |
+| **Refresh / Moved** | Does not adjust the aggregate; the current result is emitted for the changeset. |
+| **OnError / OnCompleted** | Forwards the terminal notification. |
+
+In-place property mutations require recomputation, such as `InvalidateWhen`, rather than a Refresh alone.
+
 ### Property Observation
+
+Property paths used by `WhenPropertyChanged` and `WhenValueChanged` evaluate numeric conversions before subsequent property access. If synchronous initialization fails, every event handler attached during that initialization is released. Subscriber callback exceptions propagate rather than becoming property-access errors.
 
 ```csharp
 // Observe a property on all items (requires INotifyPropertyChanged)
@@ -528,6 +544,8 @@ list.Connect()
 cache.Connect()
     .RemoveKey()                           // IChangeSet<T, TKey> → IChangeSet<T>
 ```
+
+`RemoveKey()` tracks known positions by cache key before discarding keys from the output. Equal-valued entries retain separate positions; partial streams preserve unspecified indexes where positions cannot be inferred. Updates remain Remove/Add pairs and refreshes remain self-Replaces.
 
 ---
 
