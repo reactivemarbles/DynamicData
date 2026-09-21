@@ -808,6 +808,17 @@ Converts `IChangeSet<T,K>` into `IObservable<Change<T,K>>` — one emission per 
 
 Converts `IChangeSet<T,K>` to `IChangeSet<T>` — drops the key to produce a list changeset.
 
+Positions are tracked independently per subscription by cache key, not item equality, so equal values and shared object references remain distinct entries. Partial streams keep unspecified indexes where the observed history cannot establish a position.
+
+| Input | Output |
+|-------|--------|
+| **Add** | Individual Add, preserving the supplied index or unspecified-index marker. |
+| **Update** | Remove of the previous value followed by Add of the current value; known key positions identify the removal. |
+| **Remove** | Individual Remove using the supplied or known key position. |
+| **Refresh** | Self-Replace using the known key position, or unspecified indexes if unknown. |
+| **Moved** | Moved with the supplied positions. |
+| **OnError / OnCompleted** | Forwards the terminal notification. |
+
 ### EnsureUniqueKeys
 
 Validates that all keys in each changeset are unique. Throws if duplicates detected.

@@ -529,6 +529,8 @@ cache.Connect()
     .RemoveKey()                           // IChangeSet<T, TKey> → IChangeSet<T>
 ```
 
+`RemoveKey()` tracks known positions by cache key before discarding keys from the output. Equal-valued entries retain separate positions; partial streams preserve unspecified indexes where positions cannot be inferred. Updates remain Remove/Add pairs and refreshes remain self-Replaces.
+
 ---
 
 ## Writing a New List Operator
