@@ -37,6 +37,17 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull => BatchIf(source, pauseIfTrueSelector, false, scheduler);
 
+    /// <inheritdoc cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, IObservable{Unit}, IScheduler)"/>
+    /// <param name="source">The <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to conditionally buffer.</param>
+    /// <param name="pauseIfTrueSelector">An <see cref="IObservable{bool}"/> that enables buffering when it emits <see langword="true"/>.</param>
+    /// <param name="timer">An optional <see cref="IObservable{Unit}"/> whose notifications flush buffered changes.</param>
+    /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
+    /// <remarks>This overload starts unpaused and delegates to the timer overload with <c>initialPauseState: false</c>.</remarks>
+    /// <seealso cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, IObservable{Unit}, IScheduler)"/>
+    public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, IObservable<Unit>? timer, IScheduler? scheduler = null)
+        where TObject : notnull
+        where TKey : notnull => BatchIf(source, pauseIfTrueSelector, false, timer, scheduler);
+
     /// <inheritdoc cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
     /// <remarks>This overload delegates to the primary overload with default <c>initialPauseState: false</c>.</remarks>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, IScheduler? scheduler = null)
@@ -97,6 +108,7 @@ public static partial class ObservableCacheEx
     /// <param name="timer">An optional <see cref="IObservable{Unit}"/> timer. The buffer is flushed each time the timer produces a value, and buffering ceases when it completes.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
     /// <remarks>This overload accepts an explicit timer observable instead of a <see cref="TimeSpan"/> timeout.</remarks>
+    /// <seealso cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, IObservable{Unit}, IScheduler)"/>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, IObservable<Unit>? timer, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull => new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, initialPauseState, timer, scheduler).Run();
