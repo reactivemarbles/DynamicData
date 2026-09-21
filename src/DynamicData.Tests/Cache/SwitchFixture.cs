@@ -11,7 +11,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
-public class SwitchFixture
+public partial class SwitchFixture
 {
     [Fact]
     public void ClearsForNewSource()
