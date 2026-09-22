@@ -108,6 +108,10 @@ jobs:
         }
         Write-Host "OK: no stable $major.$minor.* tag exists; '$env:SEMVER2' is safe to publish."
 
+    - name: Verify release-note invocation
+      shell: pwsh
+      run: .\.github\scripts\Test-ReleaseNotesInvocation.ps1
+
     - name: NuGet Restore
       run: dotnet restore DynamicData.sln
       working-directory: src
@@ -142,7 +146,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
         RELEASE_VERSION: ${{ steps.nbgv.outputs.SemVer2 }}
       shell: pwsh
-      run: git-release-notes --release-version "$env:RELEASE_VERSION" --output-file release-notes.md
+      run: git-release-notes --release-version "$env:RELEASE_VERSION" --head-ref "$env:GITHUB_SHA" --output-file release-notes.md
 
     - name: Create GitHub Release
       env:
