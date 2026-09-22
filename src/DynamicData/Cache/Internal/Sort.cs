@@ -51,9 +51,10 @@ internal sealed class Sort<TObject, TKey>
                     return _source.Select(sorter.Sort).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer);
                 }
 
-                var comparerChanged = (_comparerChangedObservable ?? Observable.Never<IComparer<TObject>>()).SynchronizeSafe(queue).Select(sorter.Sort);
+                // An absent comparer or resort signal will never fire, so it must not hold the merge open.
+                var comparerChanged = (_comparerChangedObservable ?? Observable.Empty<IComparer<TObject>>()).SynchronizeSafe(queue).Select(sorter.Sort);
 
-                var sortAgain = (_resorter ?? Observable.Never<Unit>()).SynchronizeSafe(queue).Select(_ => sorter.Sort());
+                var sortAgain = (_resorter ?? Observable.Empty<Unit>()).SynchronizeSafe(queue).Select(_ => sorter.Sort());
 
                 var dataChanged = _source.SynchronizeSafe(queue).Select(sorter.Sort);
 

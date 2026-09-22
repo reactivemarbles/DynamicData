@@ -44,15 +44,45 @@ internal sealed class BindVirtualized<[DynamicallyAccessedMembers(DynamicallyAcc
             // making the comparedChanged observable to fire. Probably a deadlock
             var changesSubject = new Subject<IChangeSet<TObject, TKey>>();
             var comparerSubject = new ReplaySubject<IComparer<TObject>>(1);
+            var bound = false;
+
+            // Until the first element has supplied the binding options there is nothing standing between the
+            // source and the observer, so terminal events have to reach the observer directly.
+            void Fail(Exception error)
+            {
+                if (bound)
+                {
+                    changesSubject.OnError(error);
+                }
+                else
+                {
+                    observer.OnError(error);
+                }
+            }
+
+            void Finish()
+            {
+                if (bound)
+                {
+                    changesSubject.OnCompleted();
+                }
+                else
+                {
+                    observer.OnCompleted();
+                }
+            }
 
             // once we have the initial values, publish as normal.
             var subsequent = shared
                 .Skip(1)
-                .Subscribe(changesWithContext =>
-                {
-                    comparerSubject.OnNext(changesWithContext.Context.Comparer);
-                    changesSubject.OnNext(changesWithContext);
-                });
+                .Subscribe(
+                    changesWithContext =>
+                    {
+                        comparerSubject.OnNext(changesWithContext.Context.Comparer);
+                        changesSubject.OnNext(changesWithContext);
+                    },
+                    Fail,
+                    Finish);
 
             // extract binding options from the virtual context
             var initial = shared
@@ -70,9 +100,12 @@ internal sealed class BindVirtualized<[DynamicallyAccessedMembers(DynamicallyAcc
                             .SortAndBind(targetList, comparerSubject.DistinctUntilChanged(), extractedOptions)
                             .SubscribeSafe(observer);
 
+                    bound = true;
+
                     comparerSubject.OnNext(changesWithContext.Context.Comparer);
                     changesSubject.OnNext(changesWithContext);
-                });
+                },
+                static _ => { });
 
             return new CompositeDisposable(initial, subscriber, subsequent, shared.Connect());
         });

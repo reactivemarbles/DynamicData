@@ -20,7 +20,7 @@ internal sealed class TransformWithForcedTransform<TDestination, TSource, TKey>(
 
                 // capture all items so we can apply a forced transform
                 var cache = new Cache<TSource, TKey>();
-                var cacheLoader = shared.Subscribe(changes => cache.Clone(changes));
+                var cacheLoader = shared.Subscribe(changes => cache.Clone(changes), static _ => { });
 
                 // create change set of items where force refresh is applied
                 var refresher = forceTransform.SynchronizeSafe(queue).Select(selector => CaptureChanges(cache, selector)).Select(changes => new ChangeSet<TSource, TKey>(changes)).NotEmpty();
