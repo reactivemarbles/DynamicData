@@ -500,6 +500,8 @@ myObservable.ToObservableChangeSet(expireAfter: item => TimeSpan.FromMinutes(5))
 
 ### Property Observation
 
+If synchronous initialization fails, every event handler attached during that initialization is released. Subscriber callback exceptions propagate rather than becoming property-access errors.
+
 ```csharp
 // Observe a property on all items (requires INotifyPropertyChanged)
 list.Connect()
