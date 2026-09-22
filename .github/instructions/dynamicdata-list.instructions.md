@@ -498,6 +498,20 @@ myObservable.ToObservableChangeSet(expireAfter: item => TimeSpan.FromMinutes(5))
 
 ---
 
+### StdDev
+
+Computes sample standard deviation as `sqrt(sum((value - mean)^2) / (count - 1))`. The configured fallback is returned when a changeset leaves fewer than two items. Integer selectors retain fractional means and variances.
+
+| Input | Behavior |
+|-------|----------|
+| **Add / AddRange** | Includes the selected values and emits the updated result. |
+| **Replace** | Removes the previous selected value, includes the current value, and emits the updated result. |
+| **Remove / RemoveRange / Clear** | Removes the selected values and emits the updated result or fallback. |
+| **Refresh / Moved** | Does not adjust the aggregate; the current result is emitted for the changeset. |
+| **OnError / OnCompleted** | Forwards the terminal notification. |
+
+In-place property mutations require recomputation, such as `InvalidateWhen`, rather than a Refresh alone.
+
 ### Property Observation
 
 ```csharp
