@@ -53,11 +53,19 @@ internal static class ExpressionBuilder
 
                 return property.GetValue;
 
-            // I.E. cast operations. Since we're just dealing with everything as `object`, there's really nothing for us
-            // to do. If we cast from `object` to the desired type, we'll just immediately cast back to `object` to
-            // return. The runtime has to resolve and do the correct cast anyway, regardless of what we do here.
-            case UnaryExpression { NodeType: ExpressionType.Convert }:
-                return static target => target;
+            case UnaryExpression { NodeType: ExpressionType.Convert } conversion:
+                // Built-in reference casts and boxing/unboxing preserve a non-null chain target.
+                // Numeric and user-defined conversions must produce the target used by the next step.
+                if (conversion.Method is null && (!conversion.Operand.Type.IsValueType || !conversion.Type.IsValueType))
+                {
+                    return static target => target;
+                }
+
+                var parameter = Expression.Parameter(typeof(object), "target");
+                var operand = Expression.Convert(parameter, conversion.Operand.Type);
+                var converted = conversion.Update(operand);
+
+                return Expression.Lambda<Func<object, object?>>(Expression.Convert(converted, typeof(object)), parameter).Compile();
 
             case null:
                 throw new ArgumentNullException(nameof(source));

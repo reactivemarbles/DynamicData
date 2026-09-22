@@ -245,6 +245,11 @@ public static class NotifyPropertyChangedEx
     /// For an object like Parent.Child.Sibling, sibling is an object so if Child is null, the value null and obtainable and is returned as null.</param>
     /// <returns>A observable which also notifies when the property value changes.</returns>
     /// <exception cref="ArgumentNullException">propertyAccessor.</exception>
+    /// <remarks>
+    /// Property paths can contain reference and numeric conversions. Value-changing conversions are evaluated
+    /// before accessing subsequent properties in the path.
+    /// </remarks>
+    /// <seealso cref="WhenValueChanged{TObject, TProperty}"/>
     public static IObservable<PropertyValue<TObject, TProperty>> WhenPropertyChanged<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> propertyAccessor, bool notifyOnInitialValue = true, Func<TProperty?>? fallbackValue = null)
         where TObject : INotifyPropertyChanged
     {
@@ -267,6 +272,10 @@ public static class NotifyPropertyChangedEx
     /// For example when observing Parent.Child.Age, if Child is null the value is unobtainable as Age is a struct and cannot be set to Null.
     /// For an object like Parent.Child.Sibling, sibling is an object so if Child is null, the value null and obtainable and is returned as null.</param>
     /// <returns>An observable which emits the results.</returns>
+    /// <remarks>
+    /// Supports the property-path conversions described by <see cref="WhenPropertyChanged{TObject, TProperty}"/>.
+    /// </remarks>
+    /// <seealso cref="WhenPropertyChanged{TObject, TProperty}"/>
     public static IObservable<TProperty?> WhenValueChanged<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> propertyAccessor, bool notifyOnInitialValue = true, Func<TProperty>? fallbackValue = null)
         where TObject : INotifyPropertyChanged
     {
