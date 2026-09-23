@@ -1876,6 +1876,9 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Switch<TObject, TKey>(this System.IObservable<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> sources)
             where TObject :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> Switch<TObject, TKey>(this System.IObservable<System.IObservable<DynamicData.IChangeSet<TObject, TKey, DynamicData.VirtualContext<TObject>>>> sources)
+            where TObject :  notnull
+            where TKey :  notnull { }
         public static System.IObservable<System.Collections.Generic.IReadOnlyCollection<TObject>> ToCollection<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<TObject, TKey>> source)
             where TObject :  notnull
             where TKey :  notnull { }
