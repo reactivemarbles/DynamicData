@@ -808,7 +808,7 @@ Converts `IChangeSet<T,K>` into `IObservable<Change<T,K>>` — one emission per 
 
 Converts `IChangeSet<T,K>` to `IChangeSet<T>` — drops the key to produce a list changeset.
 
-Positions are tracked independently per subscription by cache key, not item equality, so equal values and shared object references remain distinct entries. Partial streams keep unspecified indexes where the observed history cannot establish a position.
+Positions are tracked independently per subscription by cache key, not item equality, so equal values and shared object references remain distinct entries. Each subscription starts from an empty list and observes every change applied to it, including the contents of an already populated cache, which arrive through `Connect()` as additions. Under that contract the tracked position is the position the entry occupies in the list that subscription produced. A stream that omits part of its history, such as one taken through `Preview()` after the additions, is outside the contract: positions cannot be recovered from information the stream never carried, so a contradicting change reports an unknown index for that change alone and the remaining positions are left untouched.
 
 | Input | Output |
 |-------|--------|

@@ -28,7 +28,7 @@ public static partial class ObservableCacheEx
 {
     /// <summary>
     /// Strips the key from a cache changeset, converting <see cref="IChangeSet{TObject, TKey}"/> to
-    /// <see cref="IChangeSet{TObject}"/> (list changeset). Cache keys are tracked to supply known list indexes,
+    /// <see cref="IChangeSet{TObject}"/> (list changeset). Cache keys are tracked to supply list indexes,
     /// keeping entries with equal values at distinct positions.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -36,12 +36,34 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to strip keys from, producing an unkeyed list changeset.</param>
     /// <returns>A list changeset stream without key information.</returns>
     /// <remarks>
-    /// Supplied addition, update, removal, and move indexes are preserved. Additions retain unspecified indexes when supplied,
-    /// including the addition produced by an update; their append positions are tracked internally when known.
-    /// Updates produce a removal followed by an addition; refreshes produce a replacement of the item with itself.
-    /// Partial streams retain unspecified indexes where positions cannot be inferred. An unindexed removal or update
-    /// of an untracked key invalidates inferred positions; later indexed changes can establish known positions again.
+    /// Each subscription starts from an empty list and observes every change applied to it, including the contents of
+    /// an already populated cache, which arrive through <see cref="IConnectableCache{TObject, TKey}.Connect"/> as
+    /// additions. Under that contract the key identifies the entry and the tracked position is the position that entry
+    /// occupies in the list this subscription produced, so entries holding equal values stay distinguishable. Supplied
+    /// addition, update, removal, and move indexes are preserved. Updates produce a removal followed by an addition;
+    /// refreshes produce a replacement of the item with itself.
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add</term><description>An <b>Add</b> is emitted. A supplied index is used when it falls within the tracked list; otherwise the entry is appended and reported at the position it took.</description></item>
+    /// <item><term>Update</term><description>A <b>Remove</b> of the previous item at its tracked position, followed by an <b>Add</b> of the current item. The key keeps its identity across the pair.</description></item>
+    /// <item><term>Remove</term><description>A <b>Remove</b> is emitted at the position the key held, and the key stops being tracked.</description></item>
+    /// <item><term>Refresh</term><description>A <b>Replace</b> of the item with itself is emitted, carrying the key's tracked position as both the previous and current index. No position changes.</description></item>
+    /// <item><term>Moved</term><description>A <b>Moved</b> is emitted, carrying the position the key held and the position it now holds.</description></item>
+    /// <item><term>OnError</term><description>Forwarded to the downstream observer. The tracked positions are discarded with the subscription.</description></item>
+    /// <item><term>OnCompleted</term><description>Forwarded to the downstream observer.</description></item>
+    /// </list>
+    /// <para>
+    /// A stream that omits part of its history, such as one taken through
+    /// <see cref="Preview{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/> without the preceding additions, is
+    /// outside this contract. Positions cannot be recovered from information the stream never carried, so no attempt is
+    /// made to reconcile one: a change that contradicts the observed state reports an unknown index for that change
+    /// alone and the remaining positions are left untouched.
+    /// </para>
+    /// <para><b>Worth noting:</b> position tracking is created per subscription and starts empty, so two subscribers
+    /// taken at different times each report positions in the list they themselves produced, and a resubscription
+    /// begins again from an empty list.</para>
     /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <seealso cref="ObservableListEx.AddKey{TObject, TKey}(IObservable{IChangeSet{TObject}}, Func{TObject, TKey})"/>
     /// <seealso cref="ChangeKey{TObject, TSourceKey, TDestinationKey}(IObservable{IChangeSet{TObject, TSourceKey}}, Func{TObject, TDestinationKey})"/>
     public static IObservable<IChangeSet<TObject>> RemoveKey<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
@@ -53,11 +75,8 @@ public static partial class ObservableCacheEx
         return Observable.Defer(
             () =>
             {
-                // Store only observed positions, not placeholders for unobserved items in a partial stream.
-                // Mirror known positions by key so refresh lookup does not scan the ordered list.
-                var keys = new List<ItemWithIndex<TKey>>();
-                var indexesByKey = new Dictionary<TKey, int>();
-                var canInferAppendIndex = true;
+                // Positions are derived on demand, so a removal never rewrites the positions of the entries that follow it.
+                var positions = new KeyPositionIndex<TKey>();
 
                 return source.Select(
                     changes =>
@@ -70,51 +89,36 @@ public static partial class ObservableCacheEx
                             switch (change.Reason)
                             {
                                 case ChangeReason.Add:
-                                    {
-                                        InsertKey(change.Key, change.CurrentIndex);
-                                        result.Add(new Change<TObject>(ListChangeReason.Add, change.Current, change.CurrentIndex));
-                                    }
-
+                                    result.Add(new Change<TObject>(ListChangeReason.Add, change.Current, Insert(change.Key, change.CurrentIndex)));
                                     break;
 
                                 case ChangeReason.Refresh:
                                     {
-                                        // Cache refresh indexes are not positional. Preserve the legacy unknown-index
-                                        // self-replacement when this subscription has not observed the key's position.
-                                        var index = FindIndex(change.Key);
-                                        if (index < 0)
-                                        {
-                                            canInferAppendIndex = false;
-                                        }
-
+                                        // A cache refresh carries no position, so the key's tracked position is the only
+                                        // way to identify the entry.
+                                        var index = Locate(change.Key);
                                         result.Add(new Change<TObject>(ListChangeReason.Replace, change.Current, change.Current, index, index));
                                     }
 
                                     break;
 
                                 case ChangeReason.Moved:
-                                    RemoveKeyPosition(change.Key, change.PreviousIndex);
-                                    InsertKey(change.Key, change.CurrentIndex);
-                                    result.Add(new Change<TObject>(change.Current, change.CurrentIndex, change.PreviousIndex));
+                                    {
+                                        // A move is only ever reported by an indexed source, which supplies both positions.
+                                        var previousIndex = Extract(change.Key);
+                                        var currentIndex = Insert(change.Key, change.CurrentIndex);
+                                        result.Add(new Change<TObject>(change.Current, currentIndex, previousIndex));
+                                    }
+
                                     break;
 
                                 case ChangeReason.Update:
-                                    {
-                                        var previousIndex = RemoveKeyPosition(change.Key, change.PreviousIndex);
-                                        result.Add(new Change<TObject>(ListChangeReason.Remove, change.Previous.Value, previousIndex));
-
-                                        InsertKey(change.Key, change.CurrentIndex);
-                                        result.Add(new Change<TObject>(ListChangeReason.Add, change.Current, change.CurrentIndex));
-                                    }
-
+                                    result.Add(new Change<TObject>(ListChangeReason.Remove, change.Previous.Value, Extract(change.Key)));
+                                    result.Add(new Change<TObject>(ListChangeReason.Add, change.Current, Insert(change.Key, change.CurrentIndex)));
                                     break;
 
                                 case ChangeReason.Remove:
-                                    {
-                                        var index = RemoveKeyPosition(change.Key, change.CurrentIndex);
-                                        result.Add(new Change<TObject>(ListChangeReason.Remove, change.Current, index));
-                                    }
-
+                                    result.Add(new Change<TObject>(ListChangeReason.Remove, change.Current, Extract(change.Key)));
                                     break;
                             }
                         }
@@ -122,106 +126,25 @@ public static partial class ObservableCacheEx
                         return result;
                     });
 
-                int FindIndex(TKey key)
-                    => indexesByKey.TryGetValue(key, out var index) ? index : -1;
+                // The contract is a complete history from an empty list, so a key is tracked exactly when the list this
+                // subscription produced holds it, and the tracked position is authoritative. A change that contradicts
+                // that state is outside the contract: report the legacy unknown index for that change alone, leaving
+                // every other position, which this subscription did emit, intact.
+                int Locate(TKey key)
+                    => positions.TryGetIndex(key, out var index) ? index : -1;
 
-                void InsertKey(TKey key, int suppliedIndex)
+                int Insert(TKey key, int suppliedIndex)
                 {
-                    var index = suppliedIndex >= 0 ? suppliedIndex : canInferAppendIndex ? keys.Count : suppliedIndex;
-                    if (index < 0)
-                    {
-                        // An append after an incomplete history has no known absolute position.
-                        return;
-                    }
+                    if (positions.Contains(key))
+                        return -1;
 
-                    if (index > keys.Count)
-                    {
-                        canInferAppendIndex = false;
-                    }
-
-                    var slot = keys.Count;
-                    while (slot > 0 && keys[slot - 1].Index >= index)
-                    {
-                        --slot;
-                        var item = keys[slot];
-                        if (item.Index == int.MaxValue)
-                        {
-                            // The shifted position is not representable; do not invent a wrapped index.
-                            keys.RemoveAt(slot);
-                            indexesByKey.Remove(item.Item);
-                            canInferAppendIndex = false;
-                        }
-                        else
-                        {
-                            var shiftedIndex = item.Index + 1;
-                            keys[slot] = new ItemWithIndex<TKey>(item.Item, shiftedIndex);
-                            indexesByKey[item.Item] = shiftedIndex;
-                        }
-                    }
-
-                    keys.Insert(slot, new ItemWithIndex<TKey>(key, index));
-                    indexesByKey[key] = index;
-                }
-
-                int RemoveKeyPosition(TKey key, int suppliedIndex)
-                {
-                    // Supplied positions in a complete stream can be read directly.
-                    var knownIndex = canInferAppendIndex
-                        && suppliedIndex >= 0
-                        && suppliedIndex < keys.Count
-                        && EqualityComparer<TKey>.Default.Equals(keys[suppliedIndex].Item, key)
-                            ? suppliedIndex
-                            : FindIndex(key);
-                    var index = suppliedIndex >= 0 ? suppliedIndex : knownIndex >= 0 ? knownIndex : suppliedIndex;
-
-                    if (knownIndex < 0)
-                    {
-                        canInferAppendIndex = false;
-                    }
-
-                    if (index < 0 || (knownIndex >= 0 && index != knownIndex))
-                    {
-                        // An unknown removal location, or a conflicting supplied index, makes subsequent
-                        // inferred positions unsafe. Keep projecting the supplied change instead of throwing.
-                        keys.Clear();
-                        indexesByKey.Clear();
-                        canInferAppendIndex = false;
-                        return index;
-                    }
-
-                    for (var slot = keys.Count - 1; slot >= 0; --slot)
-                    {
-                        var item = keys[slot];
-                        if (item.Index < index)
-                        {
-                            break;
-                        }
-
-                        if (item.Index == index)
-                        {
-                            if (knownIndex >= 0)
-                            {
-                                keys.RemoveAt(slot);
-                                indexesByKey.Remove(item.Item);
-                            }
-                            else
-                            {
-                                // The supplied removal occupies another key's inferred position.
-                                keys.Clear();
-                                indexesByKey.Clear();
-                                canInferAppendIndex = false;
-                            }
-
-                            break;
-                        }
-
-                        var shiftedIndex = item.Index - 1;
-                        keys[slot] = new ItemWithIndex<TKey>(item.Item, shiftedIndex);
-                        indexesByKey[item.Item] = shiftedIndex;
-                    }
-
+                    // An unindexed source supplies no position, so a new entry belongs at the end of the list.
+                    var index = suppliedIndex >= 0 && suppliedIndex <= positions.Count ? suppliedIndex : positions.Count;
+                    positions.InsertAt(index, key);
                     return index;
                 }
+
+                int Extract(TKey key) => positions.Remove(key);
             });
     }
 

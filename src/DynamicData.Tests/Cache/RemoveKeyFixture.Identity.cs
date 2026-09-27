@@ -141,7 +141,7 @@ public partial class RemoveKeyFixture
 
     /// <summary>
     /// Unindexed cache refreshes retain the public self-replacement reason but identify their exact list slot.
-    /// Tracking must preserve the original individual additions and their unspecified append indexes.
+    /// Tracking must preserve the original individual additions, each reporting the slot it was placed in.
     /// </summary>
     [Fact]
     public void RefreshWithoutSourceIndex_IdentifiesTheChangedKey()
@@ -167,13 +167,13 @@ public partial class RemoveKeyFixture
             change =>
             {
                 Assert.Equal(ListChangeReason.Add, change.Reason);
-                Assert.Equal(-1, change.Item.CurrentIndex);
+                Assert.Equal(0, change.Item.CurrentIndex);
                 Assert.Same(first, change.Item.Current);
             },
             change =>
             {
                 Assert.Equal(ListChangeReason.Add, change.Reason);
-                Assert.Equal(-1, change.Item.CurrentIndex);
+                Assert.Equal(1, change.Item.CurrentIndex);
                 Assert.Same(second, change.Item.Current);
             });
 
@@ -250,7 +250,7 @@ public partial class RemoveKeyFixture
             change =>
             {
                 Assert.Equal(ListChangeReason.Add, change.Reason);
-                Assert.Equal(-1, change.Item.CurrentIndex);
+                Assert.Equal(1, change.Item.CurrentIndex);
                 Assert.Same(replacement, change.Item.Current);
             });
         Assert.Null(results.Error);
@@ -454,7 +454,7 @@ public partial class RemoveKeyFixture
             change =>
             {
                 Assert.Equal(ListChangeReason.Add, change.Reason);
-                Assert.Equal(-1, change.Item.CurrentIndex);
+                Assert.Equal(1, change.Item.CurrentIndex);
                 Assert.Same(replacement, change.Item.Current);
             });
 
