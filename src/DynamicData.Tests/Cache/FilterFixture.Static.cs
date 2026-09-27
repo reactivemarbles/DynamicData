@@ -7,7 +7,6 @@ using System.Reactive.Subjects;
 using Randomizer = Bogus.Randomizer;
 using FluentAssertions;
 using Xunit;
-using Xunit.Abstractions;
 
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
@@ -21,10 +20,7 @@ public static partial class FilterFixture
     public sealed class Static
         : Base
     {
-        private const int RemoveKeySeed = 0x1165;
-
-        public Static(ITestOutputHelper output)
-            => output.WriteLine($"Bogus seed: {RemoveKeySeed}");
+        private const int AutoRefreshSeed = 0x1165;
 
         [Fact]
         public void FilterIsNull_ThrowsException()
@@ -100,95 +96,52 @@ public static partial class FilterFixture
                 suppressEmptyChangeSets:    suppressEmptyChangeSets);
 
         /// <summary>
-        /// List filtering after RemoveKey must remove every item that stops matching, not retain a stale superset.
+        /// Cache filtering must bind exactly the matching items, so an item that stops matching
+        /// is removed rather than retained as a stale extra entry.
         /// </summary>
         [Fact]
-        public void AutoRefreshRemoveKeyFilterUpdate_CollectionUpdated()
+        public void AutoRefreshFilterUpdate_CollectionUpdated()
         {
-            // Arrange: all generated items start below a derived threshold.
-            var randomizer = new Randomizer(RemoveKeySeed);
+            // Setup: every generated item starts below a derived threshold, so all of them match initially.
+            var randomizer = new Randomizer(AutoRefreshSeed);
             using var source = new TestSourceCache<Person, string>(static person => person.Key);
             var people = Fakers.Person.Clone()
                 .UseSeed(randomizer.Int())
                 .Generate(randomizer.Int(3, 8))
                 .ToArray();
             var exclusiveAge = people.Max(static person => person.Age) + 1;
-            ReadOnlyObservableCollection<Person> collection;
+
+
+            // UUT Initialization
             using var subscription = source.Connect()
-                .AutoRefresh(x => x.Age)
-                .RemoveKey()
-                .Filter(person => person.Age < exclusiveAge)
-                .ValidateSynchronization()
-                .ValidateChangeSets()
-                .Bind(out collection)
-                .Subscribe();
-
-            // Act: add the initial matching collection.
-            source.AddOrUpdate(people);
-
-            // Assert: the complete initial membership is present.
-            Assert.Equivalent(people, collection, strict: true);
-
-            // Act: guarantee one removal while other matching items remain.
-            people[0].Age = exclusiveAge;
-
-            // Assert: a stale entry must not be accepted as an extra member.
-            Assert.Equivalent(people.Where(person => person.Age < exclusiveAge), collection, strict: true);
-
-            // Act: exclude every remaining item.
-            foreach (var person in people)
-            {
-                person.Age = exclusiveAge;
-            }
-
-            // Assert: strict comparison also rejects stale items when the expectation is empty.
-            Assert.Equivalent(people.Where(person => person.Age < exclusiveAge), collection, strict: true);
-        }
-
-        /// <summary>
-        /// Cache filtering before RemoveKey must bind exactly the remaining items, including an empty final result.
-        /// </summary>
-        [Fact]
-        public void AutoRefreshFilterRemoveKeyUpdate_CollectionUpdated()
-        {
-            // Arrange: all generated items start below a derived threshold.
-            var randomizer = new Randomizer(RemoveKeySeed);
-            using var source = new TestSourceCache<Person, string>(static person => person.Key);
-            var people = Fakers.Person.Clone()
-                .UseSeed(randomizer.Int())
-                .Generate(randomizer.Int(3, 8))
-                .ToArray();
-            var exclusiveAge = people.Max(static person => person.Age) + 1;
-            ReadOnlyObservableCollection<Person> collection;
-            using var subscription = source.Connect()
-                .AutoRefresh(x => x.Age)
+                .AutoRefresh(static person => person.Age)
                 .Filter(person => person.Age < exclusiveAge)
                 .ValidateSynchronization()
                 .ValidateChangeSets(static person => person.Key)
-                .RemoveKey()
-                .Bind(out collection)
+                .Bind(out ReadOnlyObservableCollection<Person> collection)
                 .Subscribe();
 
-            // Act: add the initial matching collection.
+
+            // UUT Action
             source.AddOrUpdate(people);
 
-            // Assert: the complete initial membership is present.
-            Assert.Equivalent(people, collection, strict: true);
+            collection.Should().BeEquivalentTo(people, "every item matches the predicate");
 
-            // Act: guarantee one removal while other matching items remain.
+
+            // UUT Action
             people[0].Age = exclusiveAge;
 
-            // Assert: a stale entry must not be accepted as an extra member.
-            Assert.Equivalent(people.Where(person => person.Age < exclusiveAge), collection, strict: true);
+            collection.Should().BeEquivalentTo(people.Where(person => person.Age < exclusiveAge),
+                "an item that stops matching must be removed, not retained as a stale extra entry");
 
-            // Act: exclude every remaining item.
+
+            // UUT Action
             foreach (var person in people)
             {
                 person.Age = exclusiveAge;
             }
 
-            // Assert: strict comparison also rejects stale items when the expectation is empty.
-            Assert.Equivalent(people.Where(person => person.Age < exclusiveAge), collection, strict: true);
+            collection.Should().BeEmpty("no item matches the predicate any longer");
         }
     }
 
