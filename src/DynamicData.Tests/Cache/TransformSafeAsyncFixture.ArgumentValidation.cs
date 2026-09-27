@@ -5,27 +5,17 @@
 using System;
 using System.Threading.Tasks;
 
-using Randomizer = Bogus.Randomizer;
-
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 
 using FluentAssertions;
 
 using Xunit;
-using Xunit.Abstractions;
 
 namespace DynamicData.Tests.Cache;
 
 public partial class TransformSafeAsyncFixture
 {
-    private const int ArgumentValidationSeed = 0x2409_1165;
-
-    private readonly Randomizer _argumentRandomizer = new(ArgumentValidationSeed);
-
-    public TransformSafeAsyncFixture(ITestOutputHelper output)
-        => output.WriteLine($"{nameof(TransformSafeAsyncFixture)} seed: {ArgumentValidationSeed:X8}");
-
     /// <summary>Verifies that the options overload rejects a null factory without subscribing to the source.</summary>
     [Theory]
     [InlineData(false)]
@@ -37,7 +27,7 @@ public partial class TransformSafeAsyncFixture
 
         if (populateSource)
         {
-            source.AddOrUpdate(new Person(_argumentRandomizer.String2(_argumentRandomizer.Int(5, 20)), _argumentRandomizer.Int(1, 100)));
+            source.AddOrUpdate(new Person("Person", 20));
         }
 
         Func<Person, Optional<Person>, string, Task<Person>>? transformFactory = null;

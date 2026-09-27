@@ -134,9 +134,7 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
         transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
 
         return source.TransformSafeAsync((current, previous, key, cancel) => transformFactory(current, previous, key), errorHandler, options);
     }
