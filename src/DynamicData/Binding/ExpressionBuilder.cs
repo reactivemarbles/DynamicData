@@ -12,16 +12,6 @@ namespace DynamicData.Binding;
 
 internal static class ExpressionBuilder
 {
-    public static IEnumerable<MemberExpression> GetMembers<TObject, TProperty>(this Expression<Func<TObject, TProperty>> source)
-    {
-        var memberExpression = source.Body as MemberExpression;
-        while (memberExpression is not null)
-        {
-            yield return memberExpression;
-            memberExpression = memberExpression.Expression as MemberExpression;
-        }
-    }
-
     internal static Func<object, IObservable<Unit>> CreatePropertyChangedFactory(this Expression source)
     {
         if ((source is not MemberExpression { Member: PropertyInfo property })
@@ -129,26 +119,6 @@ internal static class ExpressionBuilder
         }
 
         return property;
-    }
-
-    internal static string ToCacheKey<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
-        where TObject : INotifyPropertyChanged
-    {
-        var members = expression.GetMembers();
-
-        IEnumerable<string?> GetNames()
-        {
-            var type = typeof(TObject);
-
-            yield return type.Assembly.FullName;
-            yield return type.FullName;
-            foreach (var member in members.Reverse())
-            {
-                yield return member.Member.Name;
-            }
-        }
-
-        return string.Join(".", GetNames());
     }
 
     private static MemberInfo GetMemberInfo(LambdaExpression lambda)

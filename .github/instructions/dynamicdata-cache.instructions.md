@@ -827,6 +827,7 @@ Filters Update changes based on reference equality or a custom predicate. If fil
 | `WhenAnyPropertyChanged()` | Emits the item when **any** property changes (no specific property). |
 
 Property paths used by `WhenPropertyChanged` and `WhenValueChanged` evaluate numeric conversions before subsequent property access.
+Cached factories distinguish the complete member and conversion sequence, including source/result types and conversion methods. Equivalent paths share a factory regardless of lambda parameter names; distinct paths retain independent values and notification sources.
 
 ---
 

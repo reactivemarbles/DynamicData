@@ -219,10 +219,11 @@ public sealed partial class WhenPropertyChangedBehaviorFixture
         }
     }
 
-    /// <summary>An observable model with a numeric property, used to exercise value-changing conversions.</summary>
+    /// <summary>An observable model with numeric properties, used to exercise value-changing conversions.</summary>
     private sealed class ObservablePrice : INotifyPropertyChanged
     {
         private double _amount;
+        private double _otherAmount;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -233,6 +234,16 @@ public sealed partial class WhenPropertyChangedBehaviorFixture
             {
                 _amount = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Amount)));
+            }
+        }
+
+        public double OtherAmount
+        {
+            get => _otherAmount;
+            set
+            {
+                _otherAmount = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OtherAmount)));
             }
         }
     }
