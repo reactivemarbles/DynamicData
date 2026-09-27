@@ -68,6 +68,120 @@ public partial class SwitchFixture
             });
     }
 
+    [Fact]
+    public void ReentrantSelectionDuringSynchronousAddReleasesPreviousSubscriptionBeforeAcquiringResource()
+    {
+        var people = CreateSubscriptionPeople(2);
+        Person? resourceOwner = null;
+        var released = new List<Person>();
+        using var switchable = new Subject<IObservable<IChangeSet<Person, string>>>();
+        using var subscription = switchable.Switch()
+            .ValidateSynchronization()
+            .ValidateChangeSets(person => person.Name)
+            .Do(changes =>
+            {
+                // Selects the replacement before the first Subscribe has returned its disposable.
+                if (changes.Any(change => change.Reason is ChangeReason.Add && change.Key == people[0].Name))
+                    switchable.OnNext(CreateExclusiveSource(people[1]));
+            })
+            .RecordCacheItems(out var results);
+
+        switchable.OnNext(CreateExclusiveSource(people[0]));
+
+        results.Error.Should().BeNull("a reentrant replacement must wait for the in-progress subscription to release the resource");
+        results.RecordedItemsByKey.Should().BeEquivalentTo(new[] { people[1] }.ToDictionary(person => person.Name));
+        resourceOwner.Should().BeSameAs(people[1]);
+        released.Should().Equal(people[0]);
+        results.RecordedChangeSets.SelectMany(changes => changes)
+            .Select(change => (change.Reason, change.Key, change.Current))
+            .Should().Equal(
+                (ChangeReason.Add, people[0].Name, people[0]),
+                (ChangeReason.Remove, people[0].Name, people[0]),
+                (ChangeReason.Add, people[1].Name, people[1]));
+
+        subscription.Dispose();
+
+        resourceOwner.Should().BeNull();
+        released.Should().Equal(people);
+
+        IObservable<IChangeSet<Person, string>> CreateExclusiveSource(Person person) =>
+            Observable.Create<IChangeSet<Person, string>>(observer =>
+            {
+                if (resourceOwner is not null)
+                {
+                    observer.OnError(new InvalidOperationException("The previous subscription still owns the resource."));
+                    return Disposable.Empty;
+                }
+
+                resourceOwner = person;
+                observer.OnNext(AddSubscriptionPerson(person));
+                return Disposable.Create(() =>
+                {
+                    released.Add(person);
+                    resourceOwner = null;
+                });
+            });
+    }
+
+    [Fact]
+    public void ReentrantSelectionDuringTeardownReleasesPreviousSubscriptionBeforeAcquiringResource()
+    {
+        var people = CreateSubscriptionPeople(3);
+        Person? resourceOwner = null;
+        var released = new List<Person>();
+        var supersededSubscriptions = 0;
+        using var switchable = new Subject<IObservable<IChangeSet<Person, string>>>();
+        var superseded = Observable.Defer(() =>
+        {
+            supersededSubscriptions++;
+            return Observable.Never<IChangeSet<Person, string>>();
+        });
+        using var subscription = switchable.Switch()
+            .ValidateSynchronization()
+            .ValidateChangeSets(person => person.Name)
+            .RecordCacheItems(out var results);
+
+        switchable.OnNext(CreateExclusiveSource(people[0], teardown: () => switchable.OnNext(CreateExclusiveSource(people[2]))));
+        switchable.OnNext(superseded);
+
+        supersededSubscriptions.Should().Be(0, "the teardown callback selected a newer source before the replacement could start");
+        results.Error.Should().BeNull("a replacement selected during teardown must wait for that teardown to release the resource");
+        results.RecordedItemsByKey.Should().BeEquivalentTo(new[] { people[2] }.ToDictionary(person => person.Name));
+        resourceOwner.Should().BeSameAs(people[2]);
+        released.Should().Equal(people[0]);
+        results.RecordedChangeSets.SelectMany(changes => changes)
+            .Select(change => (change.Reason, change.Key, change.Current))
+            .Should().Equal(
+                (ChangeReason.Add, people[0].Name, people[0]),
+                (ChangeReason.Remove, people[0].Name, people[0]),
+                (ChangeReason.Add, people[2].Name, people[2]));
+
+        subscription.Dispose();
+
+        resourceOwner.Should().BeNull();
+        released.Should().Equal(people[0], people[2]);
+
+        IObservable<IChangeSet<Person, string>> CreateExclusiveSource(Person person, Action? teardown = null) =>
+            Observable.Create<IChangeSet<Person, string>>(observer =>
+            {
+                if (resourceOwner is not null)
+                {
+                    observer.OnError(new InvalidOperationException("The previous subscription still owns the resource."));
+                    return Disposable.Empty;
+                }
+
+                resourceOwner = person;
+                observer.OnNext(AddSubscriptionPerson(person));
+                return Disposable.Create(() =>
+                {
+                    // Selects the replacement while this teardown still owns the resource.
+                    teardown?.Invoke();
+                    released.Add(person);
+                    resourceOwner = null;
+                });
+            });
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData(NotificationKind.OnCompleted)]
