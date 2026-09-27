@@ -10,8 +10,7 @@ namespace DynamicData.Aggregation;
 /// Extensions for calculating sample standard deviation.
 /// </summary>
 /// <remarks>
-/// Each changeset produces the square root of the sample variance, using the item count minus one as the variance divisor.
-/// When fewer than two items remain, the configured fallback value is returned instead.
+/// When fewer than two items are present, the configured fallback value is returned.
 /// </remarks>
 public static class StdDevEx
 {
@@ -143,7 +142,13 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
-    public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, int> valueSelector, int fallbackValue = 0) => source.StdDevCalc(t => (long)valueSelector(t), fallbackValue, (current, item) => new StdDev<long>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<long>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Math.Sqrt((values.SumOfSquares - (((double)values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1)));
+    public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, int> valueSelector, int fallbackValue = 0) =>
+        source.StdDevCalc(
+            t => (long)valueSelector(t),
+            fallbackValue,
+            (current, item) => new StdDev<long>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
+            (current, item) => new StdDev<long>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
+            IntegralStdDev);
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -154,7 +159,12 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, long> valueSelector, long fallbackValue = 0) =>
-        source.StdDevCalc(valueSelector, fallbackValue, (current, item) => new StdDev<long>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<long>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Math.Sqrt((values.SumOfSquares - (((double)values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1)));
+        source.StdDevCalc(
+            valueSelector,
+            fallbackValue,
+            (current, item) => new StdDev<long>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
+            (current, item) => new StdDev<long>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
+            IntegralStdDev);
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -165,7 +175,12 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<decimal> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, decimal> valueSelector, decimal fallbackValue = 0M) =>
-        source.StdDevCalc(valueSelector, fallbackValue, (current, item) => new StdDev<decimal>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<decimal>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Sqrt((values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1)));
+        source.StdDevCalc(
+            valueSelector,
+            fallbackValue,
+            (current, item) => new StdDev<decimal>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
+            (current, item) => new StdDev<decimal>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
+            values => Sqrt((values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1)));
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -175,7 +190,13 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
-    public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, double> valueSelector, double fallbackValue = 0) => source.StdDevCalc(valueSelector, fallbackValue, (current, item) => new StdDev<double>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<double>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Math.Sqrt((values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1)));
+    public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, double> valueSelector, double fallbackValue = 0) =>
+        source.StdDevCalc(
+            valueSelector,
+            fallbackValue,
+            (current, item) => new StdDev<double>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
+            (current, item) => new StdDev<double>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
+            values => Math.Sqrt((values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1)));
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -185,9 +206,21 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
-    public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, float> valueSelector, float fallbackValue = 0) => source.StdDevCalc(valueSelector, fallbackValue, (current, item) => new StdDev<float>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<float>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Math.Sqrt((values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1)));
+    public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, float> valueSelector, float fallbackValue = 0) =>
+        source.StdDevCalc(
+            valueSelector,
+            fallbackValue,
+            (current, item) => new StdDev<float>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
+            (current, item) => new StdDev<float>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
+            values => Math.Sqrt((values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1)));
 
-    private static IObservable<TResult> StdDevCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, Func<TObject, TValue> valueSelector, TResult fallbackValue, Func<StdDev<TValue>, TValue, StdDev<TValue>> addAction, Func<StdDev<TValue>, TValue, StdDev<TValue>> removeAction, Func<StdDev<TValue>, TResult> resultAction)
+    private static IObservable<TResult> StdDevCalc<TObject, TValue, TResult>(
+        this IObservable<IAggregateChangeSet<TObject>> source,
+        Func<TObject, TValue> valueSelector,
+        TResult fallbackValue,
+        Func<StdDev<TValue>, TValue, StdDev<TValue>> addAction,
+        Func<StdDev<TValue>, TValue, StdDev<TValue>> removeAction,
+        Func<StdDev<TValue>, TResult> resultAction)
     {
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
@@ -195,9 +228,30 @@ public static class StdDevEx
         removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
         resultAction.ThrowArgumentNullExceptionIfNull(nameof(resultAction));
 
-        return source.Scan(default(StdDev<TValue>), (state, changes) =>
-            changes.Aggregate(state, (current, aggregateItem) =>
-                aggregateItem.Type == AggregateType.Add ? addAction(current, valueSelector(aggregateItem.Item)) : removeAction(current, valueSelector(aggregateItem.Item)))).Select(values => values.Count < 2 ? fallbackValue : resultAction(values));
+        return source
+            .Scan(
+                default(StdDev<TValue>),
+                (state, changes) => changes.Aggregate(
+                    state,
+                    (current, aggregateItem) => aggregateItem.Type == AggregateType.Add
+                        ? addAction(current, valueSelector(aggregateItem.Item))
+                        : removeAction(current, valueSelector(aggregateItem.Item))))
+            .Select(values => values.Count < 2 ? fallbackValue : resultAction(values));
+    }
+
+    private static double IntegralStdDev(StdDev<long> values)
+    {
+        // Cross-multiplying keeps the moment subtraction in integer arithmetic. Converting the moments to double first
+        // collapses the difference to zero once they exceed the exactly representable integer range, and dividing before
+        // subtracting truncates the mean. The value below is the sum of squared deviations scaled by Count, which the
+        // matching Count factor in the divisor removes. Decimal carries the products because the long accumulators can
+        // exceed the exact-integer range of double, and by Cauchy-Schwarz both products stay within decimal range
+        // whenever the accumulators themselves have not overflowed. The numerator is therefore exact under that
+        // condition, while the division and square root below still round.
+        var count = (decimal)values.Count;
+        var sumOfItems = (decimal)values.SumOfItems;
+        var scaledSumOfSquaredDeviations = ((decimal)values.SumOfSquares * count) - (sumOfItems * sumOfItems);
+        return Math.Sqrt((double)(scaledSumOfSquaredDeviations / (count * (count - 1))));
     }
 
     private static decimal Sqrt(decimal x, decimal epsilon = 0.0M)
