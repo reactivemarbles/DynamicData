@@ -1,22 +1,4 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Reactive.Threading.Tasks;
-using System.Threading;
-using System.Threading.Tasks;
-using DynamicData.Binding;
-using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-using FluentAssertions;
-using Xunit;
-
-// Aliased rather than importing Bogus wholesale, which would make Person ambiguous against the
-// domain type of the same name.
-using Randomizer = Bogus.Randomizer;
+using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Cache;
 

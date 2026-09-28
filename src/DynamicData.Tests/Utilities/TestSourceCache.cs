@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Kernel;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 public sealed class TestSourceCache<TObject, TKey>
         : ISourceCache<TObject, TKey>

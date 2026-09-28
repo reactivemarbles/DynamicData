@@ -1,12 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public static partial class FilterFixture
 {

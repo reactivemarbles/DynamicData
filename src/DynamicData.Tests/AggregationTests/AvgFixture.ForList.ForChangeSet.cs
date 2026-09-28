@@ -1,10 +1,3 @@
-using DynamicData.Aggregation;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.AggregationTests;
 
 public partial class AvgFixture

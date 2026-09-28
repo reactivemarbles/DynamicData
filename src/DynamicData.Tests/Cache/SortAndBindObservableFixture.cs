@@ -1,14 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-using DynamicData.Binding;
-using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
+using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Cache;
-
 
 // Bind to a readonly observable collection
 public sealed class SortAndBindObservableToReadOnlyObservableCollection : SortAndBindObservableFixture
@@ -46,7 +38,7 @@ public abstract class SortAndBindObservableFixture : IDisposable
     private readonly SortExpressionComparer<Person> _defaultComparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "By Design.")]
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "By Design.")]
     protected readonly BehaviorSubject<IComparer<Person>> ComparerObservable;
 
 

@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Reactive.Linq;
-
 namespace DynamicData.Binding;
 
 /// <summary>
@@ -147,7 +144,7 @@ public static class IObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        var enumerator = new Cache.Internal.RemoveKeyEnumerator<TObject, TKey>(changeSetWithKey, list);
+        var enumerator = new RemoveKeyEnumerator<TObject, TKey>(changeSetWithKey, list);
 
         return new ChangeSet<TObject>(enumerator);
     }

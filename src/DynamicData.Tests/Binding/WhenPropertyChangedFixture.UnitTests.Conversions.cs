@@ -1,14 +1,4 @@
-using System;
-using System.ComponentModel;
-using System.Linq.Expressions;
-
-using FluentAssertions;
-
-using Xunit;
-
-using DynamicData.Binding;
-using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
+using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Binding;
 

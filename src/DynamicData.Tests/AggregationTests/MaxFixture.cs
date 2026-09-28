@@ -1,11 +1,4 @@
-using System;
-
-using DynamicData.Aggregation;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.AggregationTests;
 

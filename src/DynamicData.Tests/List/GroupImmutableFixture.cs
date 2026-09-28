@@ -1,14 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Subjects;
-
-using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+﻿using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.List;
 
