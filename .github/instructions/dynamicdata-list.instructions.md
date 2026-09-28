@@ -514,6 +514,9 @@ In-place property mutations require recomputation, such as `InvalidateWhen`, rat
 
 ### Property Observation
 
+Property paths used by `WhenPropertyChanged` and `WhenValueChanged` evaluate numeric conversions before subsequent property access.
+Cached factories distinguish the complete member and conversion sequence, including source/result types and conversion methods. Equivalent paths share a factory regardless of lambda parameter names; distinct paths retain independent values and notification sources.
+
 ```csharp
 // Observe a property on all items (requires INotifyPropertyChanged)
 list.Connect()
