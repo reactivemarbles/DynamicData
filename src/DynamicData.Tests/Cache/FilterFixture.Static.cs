@@ -4,11 +4,14 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
+using Randomizer = Bogus.Randomizer;
 using FluentAssertions;
 using Xunit;
 
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
+
+using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Cache;
 
@@ -17,6 +20,8 @@ public static partial class FilterFixture
     public sealed class Static
         : Base
     {
+        private const int AutoRefreshSeed = 0x1165;
+
         [Fact]
         public void FilterIsNull_ThrowsException()
             => FluentActions.Invoking(static () => ObservableCacheEx.Filter(
@@ -89,54 +94,54 @@ public static partial class FilterFixture
             => source.Filter(
                 filter:                     predicate,
                 suppressEmptyChangeSets:    suppressEmptyChangeSets);
+
+        /// <summary>
+        /// Cache filtering must bind exactly the matching items, so an item that stops matching
+        /// is removed rather than retained as a stale extra entry.
+        /// </summary>
         [Fact]
-        public void AutoRefreshRemoveKeyFilterUpdate_CollectionUpdated()
+        public void AutoRefreshFilterUpdate_CollectionUpdated()
         {
-            RandomPersonGenerator generator = new();
-            using var source = new SourceCache<Person, string>(p => p.Key);
-            var people = generator.Take(100).ToArray();
-            var average = people.Average(x => x.Age);
-            ReadOnlyObservableCollection<Person> collection;
+            // Setup: every generated item starts below a derived threshold, so all of them match initially.
+            var randomizer = new Randomizer(AutoRefreshSeed);
+            using var source = new TestSourceCache<Person, string>(static person => person.Key);
+            var people = Fakers.Person.Clone()
+                .UseSeed(randomizer.Int())
+                .Generate(randomizer.Int(3, 8))
+                .ToArray();
+            var exclusiveAge = people.Max(static person => person.Age) + 1;
+
+
+            // UUT Initialization
             using var subscription = source.Connect()
-                .AutoRefresh(x => x.Age)
-                .RemoveKey()
-                .Filter(x => x.Age < average)
-                .Bind(out collection)
+                .AutoRefresh(static person => person.Age)
+                .Filter(person => person.Age < exclusiveAge)
+                .ValidateSynchronization()
+                .ValidateChangeSets(static person => person.Key)
+                .Bind(out ReadOnlyObservableCollection<Person> collection)
                 .Subscribe();
+
+
+            // UUT Action
             source.AddOrUpdate(people);
 
-            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+            collection.Should().BeEquivalentTo(people, "every item matches the predicate");
 
+
+            // UUT Action
+            people[0].Age = exclusiveAge;
+
+            collection.Should().BeEquivalentTo(people.Where(person => person.Age < exclusiveAge),
+                "an item that stops matching must be removed, not retained as a stale extra entry");
+
+
+            // UUT Action
             foreach (var person in people)
             {
-                person.Age = person.Age + 1;
+                person.Age = exclusiveAge;
             }
-            Assert.Equivalent(people.Where(x => x.Age < average), collection);
-        }
 
-        [Fact]
-        public void AutoRefreshFilterRemoveKeyUpdate_CollectionUpdated()
-        {
-            RandomPersonGenerator generator = new();
-            using var source = new SourceCache<Person, string>(p => p.Key);
-            var people = generator.Take(100).ToArray();
-            var average = people.Average(x => x.Age);
-            ReadOnlyObservableCollection<Person> collection;
-            using var subscription = source.Connect()
-                .AutoRefresh(x => x.Age)
-                .Filter(x => x.Age < average)
-                .RemoveKey()
-                .Bind(out collection)
-                .Subscribe();
-            source.AddOrUpdate(people);
-
-            Assert.Equivalent(people.Where(x => x.Age < average), collection);
-
-            foreach (var person in people)
-            {
-                person.Age = person.Age + 1;
-            }
-            Assert.Equivalent(people.Where(x => x.Age < average), collection);
+            collection.Should().BeEmpty("no item matches the predicate any longer");
         }
     }
 
