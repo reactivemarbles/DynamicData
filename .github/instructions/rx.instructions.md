@@ -409,9 +409,9 @@ cd.Dispose(); // triggers cancellation
 
 ### Composition First — Observable.Create is a Last Resort
 
-**The Rx contracts are axioms, not guidelines.** `Merge` subscribes sequentially. `Defer` evaluates at subscription time. `Do` fires synchronously during delivery. `Concat` subscribes to the second source only after the first completes. These guarantees are unconditional — they hold in every case, on every scheduler, under every threading model. If they didn't, nothing in Rx would work.
+**Distinguish subscription order from notification order.** `Defer` evaluates at subscription time, `Do` runs during delivery, and `Concat` subscribes to its second source after the first completes. However, an already-subscribed asynchronous input can deliver while another input is being subscribed.
 
-**Trust the contracts completely.** When you compose operators, you can reason about ordering, state, and lifecycle *because* the contracts are absolute. The moment you doubt them and add "safety" wrappers, you've abandoned the very thing that makes Rx code correct by construction.
+**Use the Rx contracts at the actual shared-state boundary.** Per-subscription state is not automatically synchronized. A flag written in an input's `Do` and read by another input's `Defer` can race even when `Merge` subscribes to those inputs sequentially. Put decisions that depend on notification order after the operator that serializes those notifications.
 
 **Before reaching for `Observable.Create`, ask: can this be expressed as a composition of existing operators?** Rx operators already handle subscription lifecycle, error propagation, disposal, and serialization. Manual observer forwarding inside `Observable.Create` reimplements all of that — and introduces bugs that the operators would have prevented.
 
@@ -443,20 +443,26 @@ return Observable.Create<Optional<TObject>>(observer =>
 // Each operator does one thing. The intent is immediately clear.
 return Observable.Defer(() =>
 {
-    var seenValue = false;
+    var isFirstNotification = true;
     return source.ToObservableOptional(key)
-        .Do(_ => seenValue = true)
-        .Merge(Observable.Defer(() => seenValue
-            ? Observable.Empty<Optional<TObject>>()
-            : Observable.Return(Optional.None<TObject>())));
+        .Select(value => (Value: value, IsInitial: false))
+        .Merge(Observable.Return((Value: Optional.None<TObject>(), IsInitial: true)))
+        .Where(notification =>
+        {
+            var shouldEmit = !notification.IsInitial || isFirstNotification;
+            isFirstNotification = false;
+            return shouldEmit;
+        })
+        .Select(notification => notification.Value);
 });
 ```
 
 **Why the composition wins:**
-- `Defer` creates per-subscription state (the `seenValue` bool) — no shared mutable state
-- `Do` captures a side effect without altering the stream — no manual forwarding
-- `Merge` with inner `Defer` evaluates the condition *after* the synchronous subscription phase — the `Defer` factory runs when `Merge` subscribes to its second source, which happens after the first source's synchronous emissions
-- Error propagation, completion, and disposal are all handled by the operators — zero manual wiring
+- `Defer` creates independent first-notification state for every subscription.
+- `Merge` serializes actual values and the initialization marker before the state is inspected or changed.
+- The marker is emitted only when it wins that serialized order; it cannot overwrite a value that has already been delivered.
+- The boolean is updated before downstream delivery, so reentrant input also sees the correct state without an overflowing notification counter.
+- Rx operators retain ownership of error propagation, completion, and disposal.
 
 **When Observable.Create IS appropriate:**
 - You need to manage non-Rx resources (event handlers, timers, native resources) tied to subscription lifetime

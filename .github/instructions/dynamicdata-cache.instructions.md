@@ -701,6 +701,8 @@ Filters the stream to a single key.
 
 Watches a single key and emits `Optional<TObject>` — `Some` when present, `None` when removed.
 
+With `initialOptionalWhenMissing: true`, initial-value selection is serialized with source notifications. The synthetic `None` can only be the first notification. Later `None` values come from source removals, not initialization. Initialization state is independent for each subscription.
+
 ---
 
 ### BatchIf
