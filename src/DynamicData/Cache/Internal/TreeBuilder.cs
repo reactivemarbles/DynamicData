@@ -27,7 +27,8 @@ internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject,
                 var queue = new SharedDeliveryQueue();
                 var reFilterObservable = new BehaviorSubject<Unit>(Unit.Default);
 
-                var allData = _source.SynchronizeSafe(queue).AsObservableCache();
+                // Terminal events do not survive the intermediate caches below, so relay them to the observer.
+                var allData = _source.SynchronizeSafe(queue).Do(static _ => { }, observer.OnError, observer.OnCompleted).AsObservableCache();
 
                 // for each object we need a node which provides
                 // a structure to set the parent and children
@@ -195,7 +196,7 @@ internal sealed class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject,
                         }
 
                         reFilterObservable.OnNext(Unit.Default);
-                    }).DisposeMany().Subscribe();
+                    }).DisposeMany().Subscribe(static _ => { }, static _ => { });
 
                 var filter = _predicateChanged.SynchronizeSafe(queue).CombineLatest(reFilterObservable, (predicate, _) => predicate);
                 var result = allNodes.Connect().Filter(filter).SubscribeSafe(observer);

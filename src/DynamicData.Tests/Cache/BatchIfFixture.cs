@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
@@ -9,6 +9,9 @@ using FluentAssertions;
 using Microsoft.Reactive.Testing;
 
 using Xunit;
+using System.Collections.Generic;
+using System.Reactive;
+using System.Reactive.Concurrency;
 
 namespace DynamicData.Tests.Cache;
 
@@ -139,6 +142,53 @@ public class BatchIfFixture : IDisposable
         //go forward an arbitary amount of time
         _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
         _results.Messages.Count.Should().Be(1, "Should be 1 update");
+    }
+
+    [Fact]
+    public void CompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source.BatchIf(Observable.Return(false), Scheduler.Immediate).Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void FlushesHeldChangesBeforeCompleting()
+    {
+        var received = 0;
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var pause = new BehaviorSubject<bool>(true);
+        using var subscription = source.BatchIf(pause, Scheduler.Immediate).Subscribe(_ => received++, () => completed = true);
+
+        source.OnNext(new ChangeSet<Person, string> { new(ChangeReason.Add, "a", new Person("a", 1)) });
+        source.OnCompleted();
+
+        received.Should().Be(1, "changes held back by the pause would otherwise be lost");
+        completed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void FailsWhenThePauseSelectorFails()
+    {
+        var expectedError = new Exception("Test Exception");
+        var actualError = default(Exception);
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var pause = new Subject<bool>();
+        using var subscription = source.BatchIf(pause, Scheduler.Immediate).Subscribe(_ => { }, error => actualError = error, () => completed = true);
+
+        pause.OnError(expectedError);
+
+        actualError.Should().BeSameAs(expectedError, "a failure of the pause selector belongs to the subscriber, not to whichever thread happened to raise it");
+        completed.Should().BeFalse("the pause selector failed, it did not complete");
     }
 
     [Fact]

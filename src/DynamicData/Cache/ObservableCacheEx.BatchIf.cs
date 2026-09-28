@@ -72,7 +72,7 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Buffered while paused; forwarded immediately while active.</description></item>
     /// <item><term>Remove</term><description>Buffered while paused; forwarded immediately while active.</description></item>
     /// <item><term>Refresh</term><description>Buffered while paused; forwarded immediately while active.</description></item>
-    /// <item><term>OnError</term><description>Buffered data is lost.</description></item>
+    /// <item><term>OnError</term><description>Buffered data is lost. An error from <paramref name="pauseIfTrueSelector"/> terminates the output the same way a source error does.</description></item>
     /// <item><term>OnCompleted</term><description>Any remaining buffered data is flushed before completion.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> If the source completes while paused, buffered data IS flushed before OnCompleted. However, if the source errors while paused, buffered data is lost.</para>

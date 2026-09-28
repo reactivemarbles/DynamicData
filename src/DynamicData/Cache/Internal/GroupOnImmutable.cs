@@ -15,7 +15,9 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
 {
     private readonly Func<TObject, TGroupKey> _groupSelectorKey = groupSelectorKey ?? throw new ArgumentNullException(nameof(groupSelectorKey));
 
-    private readonly IObservable<Unit> _regrouper = regrouper ?? Observable.Never<Unit>();
+    // An absent regrouper means no regroup signal will ever arrive. Never would say one still might,
+    // which leaves the merge below unable to complete when the source does.
+    private readonly IObservable<Unit> _regrouper = regrouper ?? Observable.Empty<Unit>();
 
     private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 

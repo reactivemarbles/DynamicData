@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 
 using DynamicData.Tests.Domain;
@@ -6,6 +6,10 @@ using DynamicData.Tests.Domain;
 using FluentAssertions;
 
 using Xunit;
+using System.Collections.Generic;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace DynamicData.Tests.Cache;
 
@@ -60,5 +64,31 @@ public class DeferAnsdSkipFixture
         cache.AddOrUpdate(new Person("P2", 2));
         updateReceived.Should().BeTrue();
         deferStream.Dispose();
+    }
+
+    [Fact]
+    public void DeferUntilLoadedCompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source.DeferUntilLoaded().Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void SkipInitialCompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source.SkipInitial().Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue("SkipInitial is built on DeferUntilLoaded");
     }
 }

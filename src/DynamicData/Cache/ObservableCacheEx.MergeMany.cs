@@ -49,7 +49,8 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Disposes the previous child subscription and creates a new one for the updated item.</description></item>
     /// <item><term>Remove</term><description>Disposes the child subscription for the removed item.</description></item>
     /// <item><term>Refresh</term><description>No effect on subscriptions. The child observable continues unchanged.</description></item>
-    /// <item><term>OnError</term><description>Errors from child observables are silently swallowed (the child is unsubscribed). Errors from the source changeset stream terminate the merged output.</description></item>
+    /// <item><term>OnError</term><description>An error from a child observable, or from the source changeset stream, terminates the merged output.</description></item>
+    /// <item><term>OnCompleted</term><description>The output completes once the source changeset stream has completed <b>and</b> every active child observable has completed. A child completing on its own does not end the merged output.</description></item>
     /// </list>
     /// <para><b>Worth noting:</b> The output is a plain <see cref="IObservable{TDestination}"/>, not a changeset stream. If you need merged changesets, use <see cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, TKey, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IComparer{TDestination}, IEqualityComparer{TDestination})"/> instead.</para>
     /// </remarks>

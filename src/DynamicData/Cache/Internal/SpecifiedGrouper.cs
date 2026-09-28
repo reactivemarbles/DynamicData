@@ -23,8 +23,9 @@ internal sealed class SpecifiedGrouper<TObject, TKey, TGroupKey>(IObservable<ICh
             {
                 var queue = new SharedDeliveryQueue();
 
-                // create source group cache
-                var sourceGroups = _source.SynchronizeSafe(queue).Group(_groupSelector).DisposeMany().AsObservableCache();
+                // create source group cache. The observer is fed from the result group source below, so the
+                // source's own terminal events would otherwise never reach it.
+                var sourceGroups = _source.SynchronizeSafe(queue).Do(static _ => { }, observer.OnError, observer.OnCompleted).Group(_groupSelector).DisposeMany().AsObservableCache();
 
                 // create parent groups
                 var parentGroups = _resultGroupSource.SynchronizeSafe(queue).Transform(
@@ -53,7 +54,7 @@ internal sealed class SpecifiedGrouper<TObject, TKey, TGroupKey>(IObservable<ICh
                             {
                                 groupToUpdate.Value.Update(updater => updater.Clone(updates));
                             }
-                        })).DisposeMany().Subscribe();
+                        })).DisposeMany().Subscribe(static _ => { }, static _ => { });
 
                 var notifier = parentGroups.Connect().Select(
                     x =>
