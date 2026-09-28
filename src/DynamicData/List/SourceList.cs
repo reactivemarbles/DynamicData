@@ -2,13 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.List.Internal;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
@@ -36,7 +29,7 @@ public sealed class SourceList<T> : ISourceList<T>
 
     private readonly ReaderWriter<T> _readerWriter = new();
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposal is superfluous after completion, and causes a bunch of test failures")]
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposal is superfluous after completion, and causes a bunch of test failures")]
     private readonly Lazy<BehaviorSubject<bool>> _isEditInProgress;
 
     private int _editLevel;

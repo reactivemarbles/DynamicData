@@ -2,20 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 // ReSharper disable once CheckNamespace
 
 namespace DynamicData;
@@ -53,7 +39,8 @@ public static partial class ObservableCacheEx
                 Func<TObject, TimeSpan?> timeSelector)
             where TObject : notnull
             where TKey : notnull
-        => Cache.Internal.ExpireAfter.ForStream<TObject, TKey>.Create(
+        =>
+            Cache.Internal.ExpireAfter.ForStream<TObject, TKey>.Create(
             source: source,
             timeSelector: timeSelector);
 
@@ -67,7 +54,8 @@ public static partial class ObservableCacheEx
                 IScheduler scheduler)
             where TObject : notnull
             where TKey : notnull
-        => Cache.Internal.ExpireAfter.ForStream<TObject, TKey>.Create(
+        =>
+            Cache.Internal.ExpireAfter.ForStream<TObject, TKey>.Create(
             source: source,
             timeSelector: timeSelector,
             scheduler: scheduler);
@@ -86,7 +74,8 @@ public static partial class ObservableCacheEx
                 TimeSpan? pollingInterval)
             where TObject : notnull
             where TKey : notnull
-        => Cache.Internal.ExpireAfter.ForStream<TObject, TKey>.Create(
+        =>
+            Cache.Internal.ExpireAfter.ForStream<TObject, TKey>.Create(
             source: source,
             timeSelector: timeSelector,
             pollingInterval: pollingInterval);
@@ -103,7 +92,8 @@ public static partial class ObservableCacheEx
                 IScheduler scheduler)
             where TObject : notnull
             where TKey : notnull
-        => Cache.Internal.ExpireAfter.ForStream<TObject, TKey>.Create(
+        =>
+            Cache.Internal.ExpireAfter.ForStream<TObject, TKey>.Create(
             source: source,
             timeSelector: timeSelector,
             pollingInterval: pollingInterval,
@@ -133,7 +123,8 @@ public static partial class ObservableCacheEx
                 IScheduler? scheduler = null)
             where TObject : notnull
             where TKey : notnull
-        => Cache.Internal.ExpireAfter.ForSource<TObject, TKey>.Create(
+        =>
+            Cache.Internal.ExpireAfter.ForSource<TObject, TKey>.Create(
             source: source,
             timeSelector: timeSelector,
             pollingInterval: pollingInterval,

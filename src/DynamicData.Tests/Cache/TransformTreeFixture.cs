@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class TransformTreeFixture : IDisposable
 {
@@ -78,7 +69,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void BuildTreeFromMixedData()
     {
-        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
+        _sourceCache.AddOrUpdate(CreateEmployees());
         _result.Count.Should().Be(2);
 
         var firstNode = _result.Items[0];
@@ -91,7 +82,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void ChangeParent()
     {
-        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
+        _sourceCache.AddOrUpdate(CreateEmployees());
 
         _sourceCache.AddOrUpdate(
             new EmployeeDto(4)
@@ -123,7 +114,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void RemoveAChildNodeWillPushOrphansUpTheHierachy()
     {
-        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
+        _sourceCache.AddOrUpdate(CreateEmployees());
         _sourceCache.Remove(4);
 
         //we expect the children of node 4  to be pushed up become new roots
@@ -136,7 +127,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void RemoveARootNodeWillPushOrphansUpTheHierachy()
     {
-        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
+        _sourceCache.AddOrUpdate(CreateEmployees());
         _sourceCache.Remove(1);
 
         //we expect the original children nodes to be pushed up become new roots
@@ -146,7 +137,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void UpdateAParentNode()
     {
-        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
+        _sourceCache.AddOrUpdate(CreateEmployees());
 
         var changed = new EmployeeDto(1)
         {
@@ -165,7 +156,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void UpdateChildNode()
     {
-        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
+        _sourceCache.AddOrUpdate(CreateEmployees());
 
         var changed = new EmployeeDto(2)
         {
@@ -186,7 +177,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void UseCustomFilter()
     {
-        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
+        _sourceCache.AddOrUpdate(CreateEmployees());
 
         _result.Count.Should().Be(2);
 

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.ObjectModel;
-using System.Reactive.Disposables;
-using DynamicData.Binding;
-
-namespace DynamicData.Tests.Domain;
+﻿namespace DynamicData.Tests.Domain;
 
 internal sealed class AnimalOwner(string name, Guid? id = null, bool include = true) : AbstractNotifyPropertyChanged, IDisposable
 {

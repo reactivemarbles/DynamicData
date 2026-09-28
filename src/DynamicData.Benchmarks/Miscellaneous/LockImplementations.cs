@@ -1,6 +1,3 @@
-using System.Threading;
-using BenchmarkDotNet.Attributes;
-
 namespace DynamicData.Benchmarks.Miscellaneous;
 
 [MemoryDiagnoser]

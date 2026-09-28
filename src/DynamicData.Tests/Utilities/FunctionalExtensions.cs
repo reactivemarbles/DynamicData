@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 internal static class FunctionalExtensions
 {

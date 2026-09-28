@@ -3,10 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 #if P_LINQ
-using System.Reactive.Linq;
-
-using DynamicData.Cache.Internal;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
 {

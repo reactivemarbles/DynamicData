@@ -1,14 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Binding;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Cache;
 
@@ -18,7 +8,7 @@ public class SortObservableFixture : IDisposable
 
     private readonly SortExpressionComparer<Person> _comparer;
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "By Design.")]
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "By Design.")]
     private readonly BehaviorSubject<IComparer<Person>> _comparerObservable;
 
     private readonly RandomPersonGenerator _generator = new();

@@ -1,12 +1,4 @@
-using System;
-using System.Linq;
-
-using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Cache;
 
@@ -164,7 +156,7 @@ public class FullJoinManyFixture : IDisposable
             });
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
     private int CalculateParent(int index, int totalPeople)
     {
         if (index < 5)
