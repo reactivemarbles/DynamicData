@@ -9,22 +9,36 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 
+using Bogus;
+
 using DynamicData.Binding;
 using DynamicData.Tests.Utilities;
 using FluentAssertions;
 
 using Xunit;
+using Xunit.Abstractions;
 
 namespace DynamicData.Tests.Binding;
 
 /// <summary>
 /// Single-threaded contract tests for <see cref="NotifyPropertyChangedEx.WhenPropertyChanged{TObject, TProperty}"/>:
-/// handler attachment ordering, subscription cleanup, no-dedup semantics, and deep-chain swaps.
+/// handler attachment ordering, subscription cleanup, expression conversions, no-dedup semantics, and deep-chain re-walks on swaps.
 /// </summary>
-public sealed class WhenPropertyChangedBehaviorFixture
+public sealed partial class WhenPropertyChangedBehaviorFixture
 {
     /// <summary>An arbitrary observed value; these tests assert handler lifetime, not the value itself.</summary>
     private const double ObservedAmount = 41.375;
+
+    private readonly Randomizer _randomizer;
+
+    /// <summary>Initializes deterministic inputs for property-observation contracts.</summary>
+    /// <param name="output">Receives the seed used to generate test inputs.</param>
+    public WhenPropertyChangedBehaviorFixture(ITestOutputHelper output)
+    {
+        const int seed = 0x35C1_709B;
+        _randomizer = new Randomizer(seed);
+        output.WriteLine($"{nameof(WhenPropertyChangedBehaviorFixture)} seed: 0x{seed:X8}");
+    }
 
     [Fact]
     public void Shallow_NotifyInitialFalse_SubscribesHandlerBeforeReturning()
@@ -417,11 +431,15 @@ public sealed class WhenPropertyChangedBehaviorFixture
             because: "synchronous completion must release handlers before Subscribe returns");
     }
 
-    /// <summary>An observable input whose custom event accessors expose property subscription lifetimes.</summary>
-    public sealed class ObservablePrice : INotifyPropertyChanged
+    /// <summary>
+    /// An observable input with numeric properties, whose custom event accessors expose property
+    /// subscription lifetimes and whose getters can be made to fail on demand.
+    /// </summary>
+    private sealed class ObservablePrice : INotifyPropertyChanged
     {
         private double _amount;
         private ObservablePrice? _child;
+        private double _otherAmount;
         private PropertyChangedEventHandler? _propertyChanged;
 
         /// <inheritdoc />
@@ -462,6 +480,17 @@ public sealed class WhenPropertyChangedBehaviorFixture
 
         /// <summary>Gets an optional failure raised when reading <see cref="Amount"/>.</summary>
         public InvalidOperationException? ReadError { get; init; }
+
+        /// <summary>Gets or sets a second amount, used to observe two converted paths on one object.</summary>
+        public double OtherAmount
+        {
+            get => _otherAmount;
+            set
+            {
+                _otherAmount = value;
+                _propertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OtherAmount)));
+            }
+        }
 
         /// <summary>Gets whether any observer has registered a property-change handler.</summary>
         public bool WasSubscribed { get; private set; }
