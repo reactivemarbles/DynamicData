@@ -820,6 +820,20 @@ Filters Update changes based on reference equality or a custom predicate. If fil
 
 ---
 
+### StdDev
+
+Computes sample standard deviation as `sqrt(sum((value - mean)^2) / (count - 1))`. The configured fallback is returned when a changeset leaves fewer than two items. Integer selectors retain fractional means and variances.
+
+| Input | Behavior |
+|-------|----------|
+| **Add** | Includes the selected value and emits the updated result. |
+| **Update** | Removes the previous selected value, includes the current value, and emits the updated result. |
+| **Remove** | Removes the selected value and emits the updated result or fallback. |
+| **Refresh / Moved** | Does not adjust the aggregate; the current result is emitted for the changeset. |
+| **OnError / OnCompleted** | Forwards the terminal notification. |
+
+In-place property mutations require recomputation, such as `InvalidateWhen`, rather than a Refresh alone.
+
 ### Property Observation
 
 | Operator | Behavior |
@@ -827,6 +841,9 @@ Filters Update changes based on reference equality or a custom predicate. If fil
 | `WhenPropertyChanged(expr)` | Emits `PropertyValue<T, TProp>` (item + value) when the specified property changes on any item. Subscribes per-item on Add, disposes on Remove. |
 | `WhenValueChanged(expr)` | Like above but emits just the property value (no sender). |
 | `WhenAnyPropertyChanged()` | Emits the item when **any** property changes (no specific property). |
+
+Property paths used by `WhenPropertyChanged` and `WhenValueChanged` evaluate numeric conversions before subsequent property access.
+Cached factories distinguish the complete member and conversion sequence, including source/result types and conversion methods. Equivalent paths share a factory regardless of lambda parameter names; distinct paths retain independent values and notification sources.
 
 ---
 
