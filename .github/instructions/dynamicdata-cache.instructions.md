@@ -701,11 +701,15 @@ Filters the stream to a single key.
 
 Watches a single key and emits `Optional<TObject>` — `Some` when present, `None` when removed.
 
+With `initialOptionalWhenMissing: true`, initial-value selection is serialized with source notifications. The synthetic `None` can only be the first notification. Later `None` values come from source removals, not initialization. Initialization state is independent for each subscription.
+
 ---
 
 ### BatchIf
 
 Buffers changesets while a condition is true, flushes as a single combined changeset when condition becomes false.
+
+The timer overload can omit `initialPauseState`, including calls with a named `timer` and optional `scheduler`. It starts unpaused.
 
 | Input | Behavior |
 |-------|----------|
@@ -825,6 +829,9 @@ Filters Update changes based on reference equality or a custom predicate. If fil
 | `WhenPropertyChanged(expr)` | Emits `PropertyValue<T, TProp>` (item + value) when the specified property changes on any item. Subscribes per-item on Add, disposes on Remove. |
 | `WhenValueChanged(expr)` | Like above but emits just the property value (no sender). |
 | `WhenAnyPropertyChanged()` | Emits the item when **any** property changes (no specific property). |
+
+Property paths used by `WhenPropertyChanged` and `WhenValueChanged` evaluate numeric conversions before subsequent property access.
+Cached factories distinguish the complete member and conversion sequence, including source/result types and conversion methods. Equivalent paths share a factory regardless of lambda parameter names; distinct paths retain independent values and notification sources.
 
 ---
 

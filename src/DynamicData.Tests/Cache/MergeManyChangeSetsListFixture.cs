@@ -5,6 +5,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using Bogus;
 using DynamicData.Kernel;
@@ -86,9 +87,11 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
                 .Parallelize(animalCount, parallel, obs => obs.StressAddRemove(owner.Animals, _ => GetRemoveTime(), scheduler))
                 .Finally(owner.Animals.Dispose);
 
-        var mergeAnimals = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect());
-
+        var mergeAnimals = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect()).Publish();
         var addingAnimals = true;
+        var cacheCompleted = mergeAnimals.LastOrDefaultAsync().ToTask();
+        using var animalResults = mergeAnimals.AsAggregator();
+        using var connect = mergeAnimals.Connect();
 
         // Start asynchrononously modifying the parent list and the child lists
         using var addAnimals = AddRemoveAnimalsStress(ownerCount, animalCount, Environment.ProcessorCount, TaskPoolScheduler.Default)
@@ -114,8 +117,12 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         }
         while (addingAnimals);
 
-        // Verify the results
-        CheckResultContents();
+        // Wait for the source cache to finish delivering all notifications.
+        await cacheCompleted;
+
+        // Verify the results against the aggregator wired into the same Publish chain
+        // that cacheCompleted observes.
+        CheckResultContents(_animalOwners.Items, _animalOwnerResults, animalResults);
     }
 
     [Fact]

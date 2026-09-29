@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
@@ -13,7 +13,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
-public class TransformSafeAsyncFixture
+public partial class TransformSafeAsyncFixture
 {
     [Fact]
     public void ReTransformAll()
@@ -208,6 +208,29 @@ public class TransformSafeAsyncFixture
     }
 
 
+    [Fact]
+    public void TransformSafeAsyncCancelsTokenOnUnSubscribe()
+    {
+        using var source = new SourceCache<Person, string>(p => p.Name);
+        var tcs = new TaskCompletionSource<Person>();
+        using var sub = source.Connect()
+            .TransformSafeAsync(async (c, p, key, cancel) =>
+            {
+                using (cancel.Register(() => tcs.SetCanceled(), useSynchronizationContext: false))
+                {
+                    return await tcs.Task.ConfigureAwait(false);
+                }
+            },
+            error => Assert.Fail($"Unexpected error: {error}")) // NOTE: Cancellation exception should not be called because the handler should be torn down with subscription
+            .Subscribe();
+
+        source.AddOrUpdate(new Person());
+
+        sub.Dispose();
+        Assert.True(tcs.Task.IsCanceled);
+    }
+
+
     [Theory, InlineData(10), InlineData(100)]
 
     public async Task WithMaxConcurrency(int maxConcurrency)
@@ -215,7 +238,7 @@ public class TransformSafeAsyncFixture
         /* We need to test whether the max concurrency has any effect.
 
              If  maxConcurrency == 100, this test takes a little more than 100 ms
-             If maxConcurrency = 10, this test takes a little more than 1s 
+             If maxConcurrency = 10, this test takes a little more than 1s
 
             So it works, but how can it be tested in a scientific way ??
         */

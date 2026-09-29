@@ -200,7 +200,7 @@ public class TransformAsyncFixture
     }
 
 
-   
+
 
     [Theory, InlineData(true), InlineData(false)]
     public void TransformOnRefresh(bool transformOnRefresh)
@@ -215,7 +215,7 @@ public class TransformAsyncFixture
 
         results.Data.Count.Should().Be(1);
         results.Data.Lookup("SomeOne").Value.AgeGroup.Should().Be("Child");
-        
+
         person.Age = 21;
 
 
@@ -224,7 +224,28 @@ public class TransformAsyncFixture
 
     }
 
-    
+    [Fact]
+    public void TransformAsyncCancelsTokenOnUnSubscribe()
+    {
+        using var source = new SourceCache<Person, string>(p => p.Name);
+        var tcs = new TaskCompletionSource<Person>();
+        using var sub = source.Connect()
+            .TransformAsync(async (c, p, key, cancel) =>
+            {
+                using (cancel.Register(() => tcs.SetCanceled(), useSynchronizationContext: false))
+                {
+                    return await tcs.Task.ConfigureAwait(false);
+                }
+            })
+            .Subscribe();
+
+        source.AddOrUpdate(new Person());
+
+        sub.Dispose();
+        Assert.True(tcs.Task.IsCanceled);
+    }
+
+
     [Theory, InlineData(10), InlineData(100)]
 
     public async Task WithMaxConcurrency(int maxConcurrency)
@@ -232,7 +253,7 @@ public class TransformAsyncFixture
         /* We need to test whether the max concurrency has any effect.
 
              If  maxConcurrency == 100, this test takes a little more than 100 ms
-             If maxConcurrency = 10, this test takes a little more than 1s 
+             If maxConcurrency = 10, this test takes a little more than 1s
 
             So it works, but how can it be tested in a scientific way ??
         */

@@ -8,12 +8,6 @@ namespace DynamicData.Tests.Cache;
 
 public static partial class FilterFixture
 {
-    public enum CompletionStrategy
-    {
-        Immediate,
-        Asynchronous
-    }
-
     public enum EmptyChangesetPolicy
     {
         SuppressEmptyChangesets,

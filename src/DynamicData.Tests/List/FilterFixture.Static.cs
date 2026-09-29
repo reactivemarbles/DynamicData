@@ -1,12 +1,17 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
+using Randomizer = Bogus.Randomizer;
 using FluentAssertions;
 using Xunit;
 
+using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
+
+using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.List;
 
@@ -14,6 +19,8 @@ public static partial class FilterFixture
 {
     public class Static
     {
+        private const int AutoRefreshSeed = 0x1165;
+
         [Fact]
         public void DuplicateItemsAreAdded_ItemsAreTrackedSeparately()
         {
@@ -633,6 +640,55 @@ public static partial class FilterFixture
             subscription.Dispose();
 
             source.HasObservers.Should().BeFalse("subscription disposal should propagate upstream");
+        }
+
+        /// <summary>
+        /// List filtering must bind exactly the matching items, so an item that stops matching
+        /// is removed rather than retained as a stale extra entry.
+        /// </summary>
+        [Fact]
+        public void AutoRefreshFilterUpdate_CollectionUpdated()
+        {
+            // Setup: every generated item starts below a derived threshold, so all of them match initially.
+            var randomizer = new Randomizer(AutoRefreshSeed);
+            using var source = new TestSourceList<Person>();
+            var people = Fakers.Person.Clone()
+                .UseSeed(randomizer.Int())
+                .Generate(randomizer.Int(3, 8))
+                .ToArray();
+            var exclusiveAge = people.Max(static person => person.Age) + 1;
+
+
+            // UUT Initialization
+            using var subscription = source.Connect()
+                .AutoRefresh(static person => person.Age)
+                .Filter(person => person.Age < exclusiveAge)
+                .ValidateSynchronization()
+                .ValidateChangeSets()
+                .Bind(out ReadOnlyObservableCollection<Person> collection)
+                .Subscribe();
+
+
+            // UUT Action
+            source.AddRange(people);
+
+            collection.Should().BeEquivalentTo(people, "every item matches the predicate");
+
+
+            // UUT Action
+            people[0].Age = exclusiveAge;
+
+            collection.Should().BeEquivalentTo(people.Where(person => person.Age < exclusiveAge),
+                "an item that stops matching must be removed, not retained as a stale extra entry");
+
+
+            // UUT Action
+            foreach (var person in people)
+            {
+                person.Age = exclusiveAge;
+            }
+
+            collection.Should().BeEmpty("no item matches the predicate any longer");
         }
     }
 }
