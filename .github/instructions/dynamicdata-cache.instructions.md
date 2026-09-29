@@ -709,6 +709,8 @@ With `initialOptionalWhenMissing: true`, initial-value selection is serialized w
 
 Buffers changesets while a condition is true, flushes as a single combined changeset when condition becomes false.
 
+The timer overload can omit `initialPauseState`, including calls with a named `timer` and optional `scheduler`. It starts unpaused.
+
 | Input | Behavior |
 |-------|----------|
 | **Any (while paused)** | Buffered — combined into internal changeset list. |
