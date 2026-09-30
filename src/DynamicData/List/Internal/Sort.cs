@@ -10,8 +10,9 @@ namespace DynamicData.List.Internal;
 internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? comparer, SortOptions sortOptions, IObservable<Unit>? resort, IObservable<IComparer<T>>? comparerObservable, int resetThreshold)
     where T : notnull
 {
-    private readonly IObservable<IComparer<T>> _comparerObservable = comparerObservable ?? Observable.Never<IComparer<T>>();
-    private readonly IObservable<Unit> _resort = resort ?? Observable.Never<Unit>();
+    // An absent comparer or resort signal will never fire, so it must not hold the merge open.
+    private readonly IObservable<IComparer<T>> _comparerObservable = comparerObservable ?? Observable.Empty<IComparer<T>>();
+    private readonly IObservable<Unit> _resort = resort ?? Observable.Empty<Unit>();
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
     private IComparer<T> _comparer = comparer ?? Comparer<T>.Default;
