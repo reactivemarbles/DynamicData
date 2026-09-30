@@ -1,4 +1,4 @@
-#region
+﻿#region
 
 using System;
 using System.Collections.Generic;
@@ -12,12 +12,13 @@ using DynamicData.Tests.Domain;
 using FluentAssertions;
 
 using Xunit;
+using Xunit.Abstractions;
 
 #endregion
 
 namespace DynamicData.Tests.Cache;
 
-public class RemoveKeyFixture : IDisposable
+public partial class RemoveKeyFixture : IDisposable
 {
     private readonly RandomPersonGenerator _generator = new();
 
@@ -26,8 +27,9 @@ public class RemoveKeyFixture : IDisposable
 
     private readonly CompositeDisposable _cleanup = new();
 
-    public RemoveKeyFixture()
+    public RemoveKeyFixture(ITestOutputHelper output)
     {
+        output.WriteLine($"Bogus seed: {IdentitySeed}");
         _source = new SourceCache<Person, string>(p => p.Key);
         _cleanup.Add(_source);
     }
@@ -47,7 +49,7 @@ public class RemoveKeyFixture : IDisposable
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
-        Assert.Equivalent(people, collection);
+        Assert.Equivalent(people, collection, strict: true);
     }
 
     [Fact]
@@ -66,7 +68,7 @@ public class RemoveKeyFixture : IDisposable
         );
         _source.AddOrUpdate(people);
 
-        Assert.Equivalent(people.Where(x => x.Age < average), collection);
+        Assert.Equivalent(people.Where(x => x.Age < average), collection, strict: true);
     }
 
     [Fact]
@@ -83,13 +85,13 @@ public class RemoveKeyFixture : IDisposable
         var people = _generator.Take(100).ToArray();
         _source.AddOrUpdate(people);
 
-        Assert.Equivalent(people, collection);
+        Assert.Equivalent(people, collection, strict: true);
 
         foreach (var person in people)
         {
             person.Age = person.Age + 1;
         }
-        Assert.Equivalent(people, collection);
+        Assert.Equivalent(people, collection, strict: true);
     }
 
 }
