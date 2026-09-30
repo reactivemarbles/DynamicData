@@ -4,16 +4,10 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsAotCompatible>true</IsAotCompatible>
     <IsPackable>true</IsPackable>
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Reactive" Version="6.1.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="DynamicData.Kernel" />
-    <Using Include="DynamicData.Internal" />
   </ItemGroup>
 
   <PropertyGroup>

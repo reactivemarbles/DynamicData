@@ -2,11 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
 namespace DynamicData.Experimental;
 
 internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
@@ -21,10 +16,10 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
     private readonly object _locker = new();
 #endif
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly IObservableCache<TObject, TKey> _source;
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly IntermediateCache<SubjectWithRefCount<Change<TObject, TKey>>, TKey> _subscribers = new();
 
     public Watcher(IObservable<IChangeSet<TObject, TKey>> source, IScheduler scheduler)

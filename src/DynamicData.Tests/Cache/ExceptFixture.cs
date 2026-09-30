@@ -1,11 +1,4 @@
-using System;
-using System.Collections.Generic;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Cache;
 
@@ -31,7 +24,7 @@ public abstract class ExceptFixtureBase : IDisposable
 
     private readonly ChangeSetAggregator<Person, string> _results;
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2214:Do not call overridable methods in constructors", Justification = "Accepted as part of a test.")]
+    [SuppressMessage("Usage", "CA2214:Do not call overridable methods in constructors", Justification = "Accepted as part of a test.")]
     protected ExceptFixtureBase()
     {
         _targetSource = new SourceCache<Person, string>(p => p.Name);

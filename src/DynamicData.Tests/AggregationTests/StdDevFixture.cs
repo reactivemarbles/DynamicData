@@ -2,20 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Linq;
-using System.Reactive.Linq;
-
-using Bogus;
-
-using DynamicData.Aggregation;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-using Xunit.Abstractions;
-
 namespace DynamicData.Tests.AggregationTests;
 
 /// <summary>Verifies sample standard deviation for the supported numeric overloads.</summary>

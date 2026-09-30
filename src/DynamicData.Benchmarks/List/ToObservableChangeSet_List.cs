@@ -1,10 +1,4 @@
-﻿using System;
-using System.Reactive.Subjects;
-
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Columns;
-
-namespace DynamicData.Benchmarks.List;
+﻿namespace DynamicData.Benchmarks.List;
 
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]

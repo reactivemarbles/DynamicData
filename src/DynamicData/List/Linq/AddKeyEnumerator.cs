@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections;
-
 namespace DynamicData.List.Linq;
 
 internal sealed class AddKeyEnumerator<TObject, TKey>(IChangeSet<TObject> source, Func<TObject, TKey> keySelector) : IEnumerable<Change<TObject, TKey>>

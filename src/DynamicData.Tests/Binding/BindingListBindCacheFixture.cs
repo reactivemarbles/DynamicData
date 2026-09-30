@@ -1,14 +1,6 @@
 ﻿#if SUPPORTS_BINDINGLIST
 
-using System;
-using System.ComponentModel;
-using System.Linq;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
+using Person = DynamicData.Tests.Domain.Person;
 
 namespace DynamicData.Tests.Binding
 {

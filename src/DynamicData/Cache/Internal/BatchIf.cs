@@ -2,11 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, TimeSpan? timeOut, bool initialPauseState = false, IObservable<Unit>? intervalTimer = null, IScheduler? scheduler = null)

@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Reactive.Linq;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
