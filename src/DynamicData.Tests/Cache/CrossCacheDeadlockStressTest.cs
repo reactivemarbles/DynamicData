@@ -31,6 +31,7 @@ namespace DynamicData.Tests.Cache;
 /// but not hardcoded). Proves: no deadlocks, correct final state, Rx compliance.
 /// </summary>
 public sealed class CrossCacheDeadlockStressTest
+    : IntegrationTestFixtureBase
 {
     // ════════════════════════════════════════════════════════════════
     // Bound constants — ONLY the seed and Min/Max bounds are hardcoded.
