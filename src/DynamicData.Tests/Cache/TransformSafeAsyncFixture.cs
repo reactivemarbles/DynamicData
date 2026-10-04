@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
@@ -13,7 +13,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
-public class TransformSafeAsyncFixture
+public partial class TransformSafeAsyncFixture
 {
     [Fact]
     public void ReTransformAll()
