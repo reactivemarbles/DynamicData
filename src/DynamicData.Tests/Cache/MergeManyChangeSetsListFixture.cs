@@ -6,6 +6,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Threading;
 using System.Threading.Tasks;
 using Bogus;
 using DynamicData.Kernel;
@@ -217,6 +218,47 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         removeThese.SelectMany(owner => owner.Animals.Items).ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
         CheckResultContents();
         removeThese.ForEach(owner => owner.Dispose());
+    }
+
+    [Fact(Timeout = 10_000)]
+    public async Task ResultDoesNotContainChildrenFromParentAddedAndRemovedWhileAnotherThreadIsDelivering()
+    {
+        // Arrange
+        using var owners = new SourceCache<AnimalOwner, Guid>(o => o.Id);
+        using var deliveringOwner = _animalOwnerFaker.Generate();
+        using var transientOwner = _animalOwnerFaker.Generate().AddAnimals(_animalFaker, 1, AddRangeSize);
+        owners.AddOrUpdate(deliveringOwner);
+
+        var parked = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var release = new ManualResetEventSlim();
+        var parkNextDelivery = false;
+        using var results = owners.Connect()
+            .MergeManyChangeSets(owner => owner.Animals.Connect())
+            .Do(_ =>
+            {
+                if (parkNextDelivery)
+                {
+                    parkNextDelivery = false;
+                    parked.SetResult();
+                    release.Wait();
+                }
+            })
+            .AsAggregator();
+
+        // Park a delivery on another thread, so that both parent changes queue up behind it. The transient owner's
+        // children are subscribed while its removal is already queued.
+        parkNextDelivery = true;
+        var delivering = Task.Run(() => deliveringOwner.Animals.Add(_animalFaker.Generate()));
+        await parked.Task;
+        owners.AddOrUpdate(transientOwner);
+        owners.Remove(transientOwner);
+
+        // Act
+        release.Set();
+        await delivering;
+
+        // Assert
+        results.Data.Items.Should().BeEquivalentTo(deliveringOwner.Animals.Items);
     }
 
     [Fact]
