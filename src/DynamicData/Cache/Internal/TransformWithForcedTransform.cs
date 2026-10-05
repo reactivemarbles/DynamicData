@@ -25,7 +25,7 @@ internal sealed class TransformWithForcedTransform<TDestination, TSource, TKey>(
                 // create change set of items where force refresh is applied
                 var refresher = forceTransform.SynchronizeSafe(queue).Select(selector => CaptureChanges(cache, selector)).Select(changes => new ChangeSet<TSource, TKey>(changes)).NotEmpty();
 
-                var sourceAndRefreshes = shared.Merge(refresher);
+                var sourceAndRefreshes = shared.UnsynchronizedMerge(refresher);
 
                 // do raw transform
                 var transform = new Transform<TDestination, TSource, TKey>(sourceAndRefreshes, transformFactory, exceptionCallback, true).Run();
