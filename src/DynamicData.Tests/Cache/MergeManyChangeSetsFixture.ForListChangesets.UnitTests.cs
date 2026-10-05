@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Bogus;
 
@@ -318,6 +320,52 @@ public static partial class MergeManyChangeSetsFixture
                 CheckResultContents(animalOwners.Items, animalOwnerResults, animalResults);
                 
                 removeThese.ForEach(owner => owner.Dispose());
+            }
+
+            [Fact(Timeout = 10_000)]
+            public async Task ResultDoesNotContainChildrenFromParentAddedAndRemovedWhileAnotherThreadIsDelivering()
+            {
+                // Arrange
+                using var animalOwners = new SourceCache<AnimalOwner, Guid>(o => o.Id);
+
+                var randomizer = new Randomizer(0x01221948);
+                var animalFaker = Fakers.Animal.Clone().WithSeed(randomizer);
+                var animalOwnerFaker = Fakers.AnimalOwner.Clone().WithSeed(randomizer).WithInitialAnimals(animalFaker);
+
+                using var deliveringOwner = animalOwnerFaker.Generate();
+                using var transientOwner = animalOwnerFaker.Generate().AddAnimals(animalFaker, 1, AddRangeSize);
+                animalOwners.AddOrUpdate(deliveringOwner);
+
+                var parked = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                using var release = new ManualResetEventSlim();
+                var parkNextDelivery = false;
+                using var animalResults = animalOwners.Connect()
+                    .MergeManyChangeSets(owner => owner.Animals.Connect())
+                    .Do(_ =>
+                    {
+                        if (parkNextDelivery)
+                        {
+                            parkNextDelivery = false;
+                            parked.SetResult();
+                            release.Wait();
+                        }
+                    })
+                    .AsAggregator();
+
+                // Park a delivery on another thread, so that both parent changes queue up behind it. The transient
+                // owner's children are subscribed while its removal is already queued.
+                parkNextDelivery = true;
+                var delivering = Task.Run(() => deliveringOwner.Animals.Add(animalFaker.Generate()));
+                await parked.Task;
+                animalOwners.AddOrUpdate(transientOwner);
+                animalOwners.Remove(transientOwner);
+
+                // Act
+                release.Set();
+                await delivering;
+
+                // Assert
+                animalResults.Data.Items.Should().BeEquivalentTo(deliveringOwner.Animals.Items);
             }
 
             [Fact]

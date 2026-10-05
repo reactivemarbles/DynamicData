@@ -19,6 +19,13 @@ namespace DynamicData.Internal;
 /// pipeline that crosses into another cache during delivery cannot deadlock against
 /// a producer on this one.
 /// </para>
+/// <para>
+/// A notification raised synchronously by an observer, on the thread that is delivering,
+/// is delivered inline before that observer returns, as it would be under a reentrant
+/// lock. Notifications other threads queued in the meantime still wait their turn, so an
+/// observer never sees another thread's notification in the middle of its own delivery,
+/// and is never itself re-entered.
+/// </para>
 /// </summary>
 internal sealed class SharedDeliveryQueue : IDisposable
 {
@@ -113,18 +120,25 @@ internal sealed class SharedDeliveryQueue : IDisposable
     internal void ExitLock() => Monitor.Exit(_gate);
 #endif
 
-    internal void ExitLockAndDrain()
+    /// <summary>
+    /// Releases the lock after <paramref name="source"/> has enqueued, and delivers.
+    /// Must be called under the lock.
+    /// </summary>
+    /// <param name="source">The sub-queue that just enqueued.</param>
+    internal void ExitLockAndDrain(DrainableBase source)
     {
         var currentThreadId = Environment.CurrentManagedThreadId;
 
-        // Same-thread reentrant: if we're already draining on this thread, deliver newly
-        // enqueued items inline. This preserves the same delivery order as Synchronize(lock):
-        // child items emitted synchronously during parent delivery are delivered immediately,
-        // not deferred.
+        // Same-thread reentrant: an observer on this thread raised the notification while it was
+        // being delivered, so it is delivered inline, as Synchronize(lock) re-entrancy did. Only
+        // this source is delivered: anything else at the head of the order queue was queued by
+        // another thread, and delivering it here would hand that observer a notification in the
+        // middle of the delivery that is still running.
         if (_drainThreadId == currentThreadId)
         {
+            var inlineCount = _isTerminated ? 0 : source.InlineDeliverableCount;
             ExitLock();
-            DrainPending();
+            DeliverInline(source, inlineCount);
             return;
         }
 
@@ -211,29 +225,72 @@ internal sealed class SharedDeliveryQueue : IDisposable
 
             var source = _order.Dequeue();
 
-            // The source may have been disposed since this entry was recorded, which drops
-            // its pending notifications. Skip the stale entry and take the next one.
+            // The entry is stale if its notification was already delivered inline, or if the source
+            // has been disposed since, which drops its pending notifications. Skip it.
             if (!source.TryStageNext())
             {
                 ExitLock();
                 continue;
             }
 
-            var isError = source.IsStagedError;
-
-            ExitLock();
-
-            source.DeliverStaged();
-
-            if (isError)
+            if (!ExitLockAndDeliverStaged(source))
             {
-                EnterLock();
-                _isTerminated = true;
-                _order.Clear();
-                ExitLock();
                 return false;
             }
         }
+    }
+
+    /// <summary>
+    /// Delivers the oldest <paramref name="count"/> pending notifications of a single source,
+    /// for a notification raised reentrantly on the delivering thread. They include any the
+    /// source queued earlier from other threads, which have to precede it to keep the source's
+    /// own order.
+    /// </summary>
+    /// <param name="source">The source to deliver from.</param>
+    /// <param name="count">The number of notifications to deliver.</param>
+    private void DeliverInline(DrainableBase source, int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            EnterLock();
+
+            if (_isTerminated || !source.TryStageInline())
+            {
+                ExitLock();
+                return;
+            }
+
+            if (!ExitLockAndDeliverStaged(source))
+            {
+                return;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Releases the lock and delivers the notification <paramref name="source"/> has staged,
+    /// terminating the queue if it was an error. Must be called under the lock.
+    /// </summary>
+    /// <param name="source">The source holding the staged notification.</param>
+    /// <returns>True if delivery can continue; false if the queue was terminated.</returns>
+    private bool ExitLockAndDeliverStaged(DrainableBase source)
+    {
+        var isError = source.IsStagedError;
+
+        ExitLock();
+
+        source.DeliverStaged();
+
+        if (!isError)
+        {
+            return true;
+        }
+
+        EnterLock();
+        _isTerminated = true;
+        _order.Clear();
+        ExitLock();
+        return false;
     }
 
     /// <summary>Read-only scoped access. Disposing releases the gate without triggering delivery.</summary>
@@ -277,8 +334,25 @@ internal abstract class DrainableBase
     /// <summary>Gets a value indicating whether the staged notification is an error.</summary>
     internal abstract bool IsStagedError { get; }
 
-    /// <summary>Moves the next pending notification into staging. Returns false if there is nothing to stage.</summary>
+    /// <summary>
+    /// Gets how many pending notifications a reentrant delivery on the draining thread can deliver
+    /// inline: all of them, unless this source is the one being delivered, whose observer must not
+    /// be re-entered. Must be read under the lock.
+    /// </summary>
+    internal abstract int InlineDeliverableCount { get; }
+
+    /// <summary>
+    /// Moves the next pending notification into staging for the drain loop, which has just taken
+    /// one of this source's order entries. Returns false if there is nothing to stage, including
+    /// when the entry belongs to a notification that was already delivered inline.
+    /// </summary>
     internal abstract bool TryStageNext();
+
+    /// <summary>
+    /// Moves the next pending notification into staging for inline delivery, ahead of its order
+    /// entry, which the drain loop then skips. Returns false if there is nothing to stage.
+    /// </summary>
+    internal abstract bool TryStageInline();
 
     /// <summary>Delivers the staged notification to the observer.</summary>
     internal abstract void DeliverStaged();
@@ -295,6 +369,8 @@ internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDispos
     private readonly SharedDeliveryQueue _parent;
     private readonly IObserver<T> _observer;
     private Notification<T> _staged;
+    private int _inlineDeliveredCount;
+    private bool _isDelivering;
     private bool _isRemoved;
 
     internal DeliverySubQueue(SharedDeliveryQueue parent, IObserver<T> observer)
@@ -309,6 +385,9 @@ internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDispos
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _staged.IsError;
     }
+
+    /// <inheritdoc/>
+    internal override int InlineDeliverableCount => _isRemoved || _isDelivering ? 0 : _items.Count;
 
     /// <summary>Acquires the parent gate. Disposing releases the lock and triggers delivery.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -362,6 +441,46 @@ internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDispos
     /// <inheritdoc/>
     internal override bool TryStageNext()
     {
+        // Inline delivery takes this source's oldest notifications, so the oldest order entries
+        // are the ones left without a notification.
+        if (_inlineDeliveredCount != 0)
+        {
+            _inlineDeliveredCount--;
+            return false;
+        }
+
+        return TryStage();
+    }
+
+    /// <inheritdoc/>
+    internal override bool TryStageInline()
+    {
+        if (!TryStage())
+        {
+            return false;
+        }
+
+        _inlineDeliveredCount++;
+        return true;
+    }
+
+    /// <inheritdoc/>
+    internal override void DeliverStaged()
+    {
+        _isDelivering = true;
+        try
+        {
+            _staged.Accept(_observer);
+        }
+        finally
+        {
+            _staged = default;
+            _isDelivering = false;
+        }
+    }
+
+    private bool TryStage()
+    {
         if (_isRemoved || _items.Count == 0)
         {
             return false;
@@ -369,13 +488,6 @@ internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDispos
 
         _staged = _items.Dequeue();
         return true;
-    }
-
-    /// <inheritdoc/>
-    internal override void DeliverStaged()
-    {
-        _staged.Accept(_observer);
-        _staged = default;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -424,7 +536,7 @@ internal sealed class DeliverySubQueue<T> : DrainableBase, IObserver<T>, IDispos
             }
 
             _owner = null;
-            owner._parent.ExitLockAndDrain();
+            owner._parent.ExitLockAndDrain(owner);
         }
     }
 }
