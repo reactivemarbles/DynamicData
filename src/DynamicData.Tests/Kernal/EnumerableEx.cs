@@ -7,15 +7,8 @@ public static class EnumerableEx
 {
     public static IEnumerable<TResult> CurrentNextZip<T, TResult>(this IEnumerable<T> source, Func<T, T?, TResult> selector)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (selector is null)
-        {
-            throw new ArgumentNullException(nameof(selector));
-        }
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(selector);
 
         var enumerator = source.GetEnumerator();
         if (enumerator.MoveNext())
@@ -35,15 +28,8 @@ public static class EnumerableEx
 
     public static IEnumerable<TResult> PrevCurrentNextZip<T, TResult>(this IEnumerable<T> source, Func<T?, T, T?, TResult> selector)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (selector is null)
-        {
-            throw new ArgumentNullException(nameof(selector));
-        }
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(selector);
 
         var enumerator = source.GetEnumerator();
         if (enumerator.MoveNext())
@@ -65,15 +51,8 @@ public static class EnumerableEx
 
     public static IEnumerable<TResult> PrevCurrentZip<T, TResult>(this IEnumerable<T> source, Func<T?, T, TResult> selector)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (selector is null)
-        {
-            throw new ArgumentNullException(nameof(selector));
-        }
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(selector);
 
         var enumerator = source.GetEnumerator();
         if (enumerator.MoveNext())

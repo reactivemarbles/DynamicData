@@ -84,7 +84,7 @@ public static class InternalEx
     /// <returns>A disposable that will stop the schedule.</returns>
     public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, Func<TimeSpan> interval, Action action)
     {
-        interval.ThrowArgumentNullExceptionIfNull(nameof(interval));
+        ArgumentNullException.ThrowIfNull(interval);
 
         return scheduler.Schedule(
             interval(),

@@ -42,7 +42,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        reasons.ThrowArgumentNullExceptionIfNull(nameof(reasons));
+        ArgumentNullException.ThrowIfNull(reasons);
 
         if (reasons.Length == 0)
         {

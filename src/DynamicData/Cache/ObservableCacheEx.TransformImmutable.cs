@@ -58,8 +58,8 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(transformFactory);
 
         return new TransformImmutable<TDestination, TSource, TKey>(
                 source: source,

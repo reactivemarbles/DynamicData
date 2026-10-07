@@ -47,7 +47,7 @@ public static partial class ObservableListEx
     public static IObservable<IEnumerable<T>> LimitSizeTo<T>(this ISourceList<T> source, int sizeLimit, IScheduler? scheduler = null)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         if (sizeLimit <= 0)
         {

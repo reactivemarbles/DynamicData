@@ -116,7 +116,7 @@ public sealed class SourceList<T> : ISourceList<T>
     /// <inheritdoc />
     public void Edit(Action<IExtendedList<T>> updateAction)
     {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentNullException.ThrowIfNull(updateAction);
 
         lock (_locker)
         {

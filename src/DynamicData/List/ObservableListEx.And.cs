@@ -54,7 +54,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> And<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
         where T : notnull
     {
-        others.ThrowArgumentNullExceptionIfNull(nameof(others));
+        ArgumentNullException.ThrowIfNull(others);
 
         return source.Combine(CombineOperator.And, others);
     }

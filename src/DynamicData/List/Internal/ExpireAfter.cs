@@ -19,8 +19,8 @@ internal sealed class ExpireAfter<T>
         TimeSpan? pollingInterval = null,
         IScheduler? scheduler = null)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(timeSelector);
 
         return Observable.Create<IEnumerable<T>>(observer => (pollingInterval is { } pollingIntervalValue)
             ? new PollingSubscription(

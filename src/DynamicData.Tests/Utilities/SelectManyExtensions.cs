@@ -21,15 +21,8 @@ public static class SelectManyExtensions
 
     public static IEnumerable<T> SelectManyRecursive<T>(this IEnumerable<T> source, Func<T, IEnumerable<T>> selector)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (selector is null)
-        {
-            throw new ArgumentNullException(nameof(selector));
-        }
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(selector);
 
         var selectManyRecursive = source as T[] ?? source.ToArray();
         return !selectManyRecursive.Any() ? selectManyRecursive : selectManyRecursive.Concat(selectManyRecursive.SelectMany(i => selector(i).EmptyIfNull()).SelectManyRecursive(selector));

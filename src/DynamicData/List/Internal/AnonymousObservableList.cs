@@ -17,7 +17,7 @@ internal sealed class AnonymousObservableList<T> : IObservableList<T>
 
     public AnonymousObservableList(IObservable<IChangeSet<T>> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         _sourceList = new SourceList<T>(source);
         _cleanUp = _sourceList;

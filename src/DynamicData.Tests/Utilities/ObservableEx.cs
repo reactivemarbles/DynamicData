@@ -18,7 +18,7 @@ internal static class ObservableEx
     public static IObservable<long> Interval(Func<TimeSpan> nextInterval, IScheduler? scheduler = null) =>
         Observable.Create<long>(observer =>
         {
-            _ = nextInterval ?? throw new ArgumentNullException(nameof(nextInterval));
+            ArgumentNullException.ThrowIfNull(nextInterval);
 
             IDisposable ScheduleFirst(IScheduler sch)
             {

@@ -18,7 +18,7 @@ internal sealed class Transformer<TSource, TDestination>
 
     public Transformer(IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
     {
-        factory.ThrowArgumentNullExceptionIfNull(nameof(factory));
+        ArgumentNullException.ThrowIfNull(factory);
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _transformOnRefresh = transformOnRefresh;
@@ -40,7 +40,7 @@ internal sealed class Transformer<TSource, TDestination>
 
     private void Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentNullException.ThrowIfNull(changes);
 
         foreach (var item in changes)
         {

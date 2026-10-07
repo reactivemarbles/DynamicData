@@ -20,7 +20,7 @@ internal sealed class TransformAsync<TSource, TDestination>
         Func<TSource, Optional<TDestination>, int, CancellationToken, Task<TDestination>> factory,
         bool transformOnRefresh)
     {
-        factory.ThrowArgumentNullExceptionIfNull(nameof(factory));
+        ArgumentNullException.ThrowIfNull(factory);
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _transformOnRefresh = transformOnRefresh;
@@ -89,7 +89,7 @@ internal sealed class TransformAsync<TSource, TDestination>
         IChangeSet<TSource> changes,
         CancellationToken cancel)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentNullException.ThrowIfNull(changes);
 
         foreach (var item in changes)
         {

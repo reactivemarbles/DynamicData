@@ -31,7 +31,7 @@ public static partial class ToObservableChangeSetFixture
                     SchedulerType.NewThread     => new NewThreadScheduler(),
                     SchedulerType.TaskPool      => TaskPoolScheduler.Default,
                     SchedulerType.ThreadPool    => ThreadPoolScheduler.Instance,
-                    _                           => throw new ArgumentOutOfRangeException(nameof(SchedulerType))
+                    _                           => throw new ArgumentOutOfRangeException(nameof(schedulerType))
                 };
 
                 using var subscription1 = Observable.Interval(

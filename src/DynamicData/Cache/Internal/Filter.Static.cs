@@ -17,8 +17,8 @@ internal static partial class Filter
             Func<TObject, bool> filter,
             bool suppressEmptyChangeSets)
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            filter.ThrowArgumentNullExceptionIfNull(nameof(filter));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(filter);
 
             return Observable.Create<IChangeSet<TObject, TKey>>(downstreamObserver =>
             {

@@ -55,8 +55,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(destination);
 
         return source.Subscribe(changes => destination.Edit(updater => updater.Clone(changes)));
     }
@@ -69,8 +69,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(destination);
 
         return source.Subscribe(changes => destination.Edit(updater => updater.Clone(changes)));
     }
@@ -83,8 +83,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(destination);
 
         return source.Subscribe(changes => destination.Edit(updater => updater.Clone(changes)));
     }

@@ -51,8 +51,8 @@ public static partial class ObservableCacheEx
         where TObject : class
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pivotOn.ThrowArgumentNullExceptionIfNull(nameof(pivotOn));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(pivotOn);
 
         return new TreeBuilder<TObject, TKey>(source, pivotOn, predicateChanged).Run();
     }
