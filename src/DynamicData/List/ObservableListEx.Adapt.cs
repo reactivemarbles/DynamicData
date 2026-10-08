@@ -48,7 +48,7 @@ public static partial class ObservableListEx
         return Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var locker = new Lock();
                 return source.Synchronize(locker).Select(
                     changes =>
                     {

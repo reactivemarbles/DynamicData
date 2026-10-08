@@ -16,7 +16,7 @@ internal sealed class Virtualiser<T>(IObservable<IChangeSet<T>> source, IObserva
     public IObservable<IVirtualChangeSet<T>> Run() => Observable.Create<IVirtualChangeSet<T>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var locker = new Lock();
                 var all = new List<T>();
                 var virtualised = new ChangeAwareList<T>();
 

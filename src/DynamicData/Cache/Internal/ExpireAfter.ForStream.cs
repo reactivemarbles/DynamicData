@@ -48,6 +48,7 @@ internal static partial class ExpireAfter
             private readonly List<ProposedExpiration> _proposedExpirationsQueue;
             private readonly IScheduler _scheduler;
             private readonly IDisposable _sourceSubscription;
+            private readonly Lock _synchronizationGate;
             private readonly Func<TObject, TimeSpan?> _timeSelector;
 
             private bool _hasSourceCompleted;
@@ -63,13 +64,14 @@ internal static partial class ExpireAfter
                 _timeSelector = timeSelector;
 
                 _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
+                _synchronizationGate = new();
 
                 _expirationDueTimesByKey = [];
                 _itemsCache = new();
                 _proposedExpirationsQueue = [];
 
                 _sourceSubscription = source
-                    .Synchronize(SynchronizationGate)
+                    .Synchronize(_synchronizationGate)
                     .SubscribeSafe(
                         onNext: OnSourceNext,
                         onError: OnSourceError,
@@ -78,7 +80,7 @@ internal static partial class ExpireAfter
 
             public void Dispose()
             {
-                lock (SynchronizationGate)
+                lock (_synchronizationGate)
                 {
                     _sourceSubscription.Dispose();
 
@@ -88,10 +90,6 @@ internal static partial class ExpireAfter
 
             protected IScheduler Scheduler
                 => _scheduler;
-
-            // Instead of using a dedicated _synchronizationGate object, we can save an allocation by using any object that is never exposed to public consumers.
-            protected object SynchronizationGate
-                => _expirationDueTimesByKey;
 
             protected abstract DateTimeOffset? GetNextManagementDueTime();
 
@@ -110,7 +108,7 @@ internal static partial class ExpireAfter
 
             private void ManageExpirations()
             {
-                lock (SynchronizationGate)
+                lock (_synchronizationGate)
                 {
                     // The scheduler only promises "best effort" to cancel scheduled operations, so we need to make sure.
                     if (_nextScheduledManagement is not { } thisScheduledManagement)

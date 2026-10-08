@@ -92,7 +92,7 @@ public static partial class ObservableCacheEx
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
-                source.SynchronizeSafe(InternalEx.NewLock()).Select(
+                source.SynchronizeSafe(new Lock()).Select(
                     changes =>
                     {
                         updater.Adapt(changes, destination);
@@ -217,7 +217,7 @@ public static partial class ObservableCacheEx
 
         return Observable.Create<ISortedChangeSet<TObject, TKey>>(
             observer =>
-                source.SynchronizeSafe(InternalEx.NewLock()).Select(
+                source.SynchronizeSafe(new Lock()).Select(
                     changes =>
                     {
                         updater.Adapt(changes, destination);

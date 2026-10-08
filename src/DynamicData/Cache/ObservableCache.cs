@@ -30,11 +30,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private readonly Lazy<SuspensionTracker> _suspensionTracker;
 
-#if NET9_0_OR_GREATER
     private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
 
     private readonly ReaderWriter<TObject, TKey> _readerWriter;
 

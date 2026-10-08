@@ -54,7 +54,7 @@ public static partial class ObservableListEx
             throw new ArgumentException("sizeLimit cannot be zero", nameof(sizeLimit));
         }
 
-        var locker = InternalEx.NewLock();
+        var locker = new Lock();
         var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? GlobalConfig.DefaultScheduler, locker);
 
         return limiter.Run().Synchronize(locker).Do(source.RemoveMany);

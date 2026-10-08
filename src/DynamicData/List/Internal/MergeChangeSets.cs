@@ -21,7 +21,7 @@ internal sealed class MergeChangeSets<TObject>(IObservable<IObservable<IChangeSe
     public IObservable<IChangeSet<TObject>> Run() => Observable.Create<IChangeSet<TObject>>(
         observer =>
         {
-            var locker = InternalEx.NewLock();
+            var locker = new Lock();
 
             // This is manages all of the changes
             var changeTracker = new ChangeSetMergeTracker<TObject>();

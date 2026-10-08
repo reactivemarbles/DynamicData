@@ -14,12 +14,6 @@ namespace DynamicData.Kernel;
 /// </summary>
 public static class InternalEx
 {
-#if NET9_0_OR_GREATER
-    internal static Lock NewLock() => new();
-#else
-    internal static object NewLock() => new();
-#endif
-
     /// <summary>
     /// Retries the with back off.
     /// </summary>
