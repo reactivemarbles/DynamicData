@@ -176,10 +176,20 @@ internal static partial class Filter
                                 break;
 
                             case ListChangeReason.Remove:
-                                if (upstreamItemsStates[change.Item.CurrentIndex].isIncluded)
-                                    downstreamItems.RemoveAt(change.Item.CurrentIndex - CountExcludedItemsBefore(change.Item.CurrentIndex));
+                                {
+                                    var index = change.Item.ResolveIndexes(upstreamItemsStates, SelectItem).CurrentIndex;
+                                    if (index >= 0)
+                                        RemoveAt(index);
+                                }
+                                break;
 
-                                upstreamItemsStates.RemoveAt(change.Item.CurrentIndex);
+                            case ListChangeReason.RemoveRange when change.Range.Index < 0:
+                                foreach (var item in change.Range)
+                                {
+                                    var index = upstreamItemsStates.IndexOf(item, SelectItem);
+                                    if (index >= 0)
+                                        RemoveAt(index);
+                                }
                                 break;
 
                             case ListChangeReason.RemoveRange:
@@ -211,15 +221,7 @@ internal static partial class Filter
                                 {
                                     var isIncluded = predicate.Invoke(change.Item.Current);
 
-                                    var currentIndex = change.Item.CurrentIndex;
-                                    // A Replace might have a negative CurrentIndex from a Refresh in RemoveKeyEnumerator
-                                    if (currentIndex < 0)
-                                    {
-                                        var previous = upstreamItemsStates.Select(x => x.item)
-                                            .IndexOfOptional(change.Item.Current)
-                                            .ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Item.Current}. Expected to be in the list"));
-                                        currentIndex = previous.Index;
-                                    }
+                                    var currentIndex = change.Item.ResolveIndexes(upstreamItemsStates, SelectItem).CurrentIndex;
                                     var itemState = upstreamItemsStates[currentIndex];
 
                                     upstreamItemsStates[currentIndex] = (
@@ -271,6 +273,16 @@ internal static partial class Filter
                     }
                     return result;
                 }
+
+                void RemoveAt(int index)
+                {
+                    if (upstreamItemsStates[index].isIncluded)
+                        downstreamItems.RemoveAt(index - CountExcludedItemsBefore(index));
+
+                    upstreamItemsStates.RemoveAt(index);
+                }
+
+                static T SelectItem((T item, bool isIncluded) itemState) => itemState.item;
             });
         }
     }
