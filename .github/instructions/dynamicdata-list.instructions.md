@@ -155,11 +155,13 @@ Every operator must accept them. An operator that keeps a positional copy of its
 | **Add** / **AddRange** | Append. |
 | **Remove** | First item equal under `EqualityComparer<T>.Default`. Ignored when absent, as `ListEx.Clone` does. |
 | **RemoveRange** | Each item in turn, as an individual **Remove**. |
-| **Replace** | First item equal to `Previous`, replaced in place. Throws `InvalidOperationException` when absent. |
+| **Replace** | A known `PreviousIndex` is used; otherwise the first item equal to `Previous`. An unknown `CurrentIndex` takes that position, so the replacement is in place. When `Previous` is absent, operators throw `InvalidOperationException`, while `ListEx.Clone` adds the current item instead. |
 
 `UnspecifiedIndexEx.IndexOf` reads through the indexer with a projection, so it allocates nothing and never enumerates a `ChangeAwareList<T>` (whose enumerator copies the list). An operator that only maps indexes without keeping state (such as `Reverse`) passes `-1` through instead of doing arithmetic on it, except where the result is known (an unindexed append becomes index 0 when reversed).
 
-**Worth noting:** `ListEx.Clone` (and therefore `Bind`, `AsObservableList`, `Clone`, `PopulateInto`, `AutoRefresh` and `FilterOnObservable`, which mirror upstream with it) applies an unindexed **Replace** by removing the previous item and appending the current one, rather than in place.
+`ListEx.Clone` and the `BindingList` clone follow the same rules, so `Bind`, `AsObservableList`, `Clone`, `PopulateInto`, `AutoRefresh` and `FilterOnObservable` (which mirror upstream with Clone) agree with the positional operators on where an unindexed change lands. This agreement is required: a stream can mix unindexed changes with indexed ones (a sorted cache through `RemoveKey()`, or `AutoRefresh` injecting indexed Refreshes), and a copy that placed an unindexed Replace anywhere else would apply every later index to the wrong item.
+
+**Worth noting:** `ListEx.Clone` adds the current item when an unindexed Replace names an absent previous item, matching how it ignores an absent Remove, so a stream that omits earlier history (`SkipInitial()`, `Preview()`) keeps binding instead of faulting.
 
 ### ChangeAwareList — How List Operators Build Changesets
 
