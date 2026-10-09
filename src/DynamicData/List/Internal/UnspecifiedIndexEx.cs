@@ -9,9 +9,11 @@ namespace DynamicData.List.Internal;
 /// </summary>
 /// <remarks>
 /// <para>
-/// An unspecified index locates an existing item by <see cref="EqualityComparer{T}.Default"/>, taking the first match,
-/// which is how <see cref="ListEx.Clone{T}(IList{T}, IChangeSet{T})"/> removes such items. An unspecified insertion
-/// index appends. An unspecified <see cref="ListChangeReason.Replace"/> replaces its previous item in place.
+/// An unspecified index locates an existing item by <see cref="EqualityComparer{T}.Default"/>, taking the first match.
+/// An unspecified insertion index appends. A <see cref="ListChangeReason.Replace"/> with an unspecified previous index
+/// locates its previous item that way, and an unspecified current index takes the previous item's position, so the
+/// replacement happens in place. <see cref="ListEx.Clone{T}(IList{T}, IChangeSet{T})"/> applies the same rules, so every
+/// positional copy of a list agrees on where an unindexed change lands.
 /// </para>
 /// <para>
 /// The upstream copy is read through its indexer and a projection, so a lookup allocates nothing and does not
@@ -28,10 +30,11 @@ internal static class UnspecifiedIndexEx
     /// <param name="upstream">The operator's positional copy of its upstream list.</param>
     /// <param name="item">The item to locate.</param>
     /// <param name="selectItem">Projects an element to the upstream item it holds.</param>
+    /// <param name="comparer">The <see cref="IEqualityComparer{T}"/> that matches items, or <see langword="null"/> for <see cref="EqualityComparer{T}.Default"/>.</param>
     /// <returns>The index of the first match, or -1 when no element matches.</returns>
-    public static int IndexOf<TElement, T>(this IList<TElement> upstream, T item, Func<TElement, T> selectItem)
+    public static int IndexOf<TElement, T>(this IList<TElement> upstream, T item, Func<TElement, T> selectItem, IEqualityComparer<T>? comparer = null)
     {
-        var comparer = EqualityComparer<T>.Default;
+        comparer ??= EqualityComparer<T>.Default;
 
         for (var i = 0; i < upstream.Count; ++i)
         {
@@ -61,13 +64,13 @@ internal static class UnspecifiedIndexEx
         {
             ListChangeReason.Add when change.CurrentIndex < 0 => new(ListChangeReason.Add, change.Current, upstream.Count),
             ListChangeReason.Remove when change.CurrentIndex < 0 => new(ListChangeReason.Remove, change.Current, upstream.IndexOf(change.Current, selectItem)),
-            ListChangeReason.Replace when (change.CurrentIndex < 0) || (change.PreviousIndex < 0) => ResolveReplace(change, upstream.IndexOf(change.Previous.Value, selectItem)),
+            ListChangeReason.Replace when (change.CurrentIndex < 0) || (change.PreviousIndex < 0) => ResolveReplace(change, (change.PreviousIndex < 0) ? upstream.IndexOf(change.Previous.Value, selectItem) : change.PreviousIndex),
             _ => change,
         };
 
-    private static ItemChange<T> ResolveReplace<T>(ItemChange<T> change, int index)
+    private static ItemChange<T> ResolveReplace<T>(ItemChange<T> change, int previousIndex)
         where T : notnull
-        => (index < 0)
+        => (previousIndex < 0)
             ? throw new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list")
-            : new(ListChangeReason.Replace, change.Current, change.Previous, index, index);
+            : new(ListChangeReason.Replace, change.Current, change.Previous, (change.CurrentIndex < 0) ? previousIndex : change.CurrentIndex, previousIndex);
 }
