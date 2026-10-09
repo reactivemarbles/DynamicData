@@ -142,6 +142,25 @@ public struct ItemChange<T>
 
 **Key difference from Cache:** List changes are **index-aware**. `Add` has a `CurrentIndex`, `Move` has both `CurrentIndex` and `PreviousIndex`, `Remove` has the index where the item was.
 
+### Unspecified Indexes (-1)
+
+An index of `-1` means the position is **unknown**, and it is a legal part of the list contract. `Add`, `AddRange`, `Remove`, `RemoveRange` and `Replace` may arrive unindexed. `Moved` and `Refresh` always carry an index: the `Change<T>` constructors reject `-1` for them. `Clear` has no index.
+
+Unindexed changes come from `RemoveKey()` on any unsorted cache (every Add, Update, Remove and Refresh), `RemoveIndex()`, `WhereReasonsAre()`, `WhereReasonsAreNot()` with reasons, and any hand-built changeset.
+
+Every operator must accept them. An operator that keeps a positional copy of its upstream list resolves an unspecified index with `UnspecifiedIndexEx` (`List/Internal/UnspecifiedIndexEx.cs`) before applying the change:
+
+| Unindexed change | Resolution |
+|------------------|------------|
+| **Add** / **AddRange** | Append. |
+| **Remove** | First item equal under `EqualityComparer<T>.Default`. Ignored when absent, as `ListEx.Clone` does. |
+| **RemoveRange** | Each item in turn, as an individual **Remove**. |
+| **Replace** | First item equal to `Previous`, replaced in place. Throws `InvalidOperationException` when absent. |
+
+`UnspecifiedIndexEx.IndexOf` reads through the indexer with a projection, so it allocates nothing and never enumerates a `ChangeAwareList<T>` (whose enumerator copies the list). An operator that only maps indexes without keeping state (such as `Reverse`) passes `-1` through instead of doing arithmetic on it, except where the result is known (an unindexed append becomes index 0 when reversed).
+
+**Worth noting:** `ListEx.Clone` (and therefore `Bind`, `AsObservableList`, `Clone`, `PopulateInto`, `AutoRefresh` and `FilterOnObservable`, which mirror upstream with it) applies an unindexed **Replace** by removing the previous item and appending the current one, rather than in place.
+
 ### ChangeAwareList — How List Operators Build Changesets
 
 `ChangeAwareList<T>` is the list equivalent of `ChangeAwareCache<T,K>`. It's a `List<T>` that records every mutation.
@@ -546,6 +565,8 @@ cache.Connect()
     .RemoveKey()                           // IChangeSet<T, TKey> → IChangeSet<T>
 ```
 
+`RemoveKey()` is stateless. From an unsorted cache every change it emits has an unspecified index (`-1`): Update becomes Remove + Add and Refresh becomes a self-Replace, all unindexed. Downstream operators then identify items by equality, so filter, transform and refresh in the cache before `RemoveKey()` where possible, and keep `Equals` consistent with the cache key.
+
 ---
 
 ## Writing a New List Operator
@@ -615,7 +636,8 @@ internal sealed class MyListOperator<T>(IObservable<IChangeSet<T>> source)
 1. Handle **all eight change reasons**: Add, AddRange, Replace, Remove, RemoveRange, Moved, Refresh, Clear
 2. Use `ChangeAwareList<T>` for state management
 3. Pay attention to **index positions** — list changes are index-aware
-4. Never emit empty changesets
-5. Propagate `OnError` and `OnCompleted`
-6. Multiple sources → serialize with `Synchronize(gate)`
+4. Accept **unspecified indexes** (`-1`) on Add, AddRange, Remove, RemoveRange and Replace; resolve them with `UnspecifiedIndexEx` if the operator keeps positional state (see [Unspecified Indexes](#unspecified-indexes--1))
+5. Never emit empty changesets
+6. Propagate `OnError` and `OnCompleted`
+7. Multiple sources → serialize with `Synchronize(gate)`
 7. Write tests (see Testing section in main instructions)
