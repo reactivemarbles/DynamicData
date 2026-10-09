@@ -1,5 +1,7 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Subjects;
 
 using DynamicData.Tests.Domain;
 
@@ -73,5 +75,18 @@ public class GroupOnFixture : IDisposable
 
         var firstGroup = _results.Data.Items[0].List.Items.ToArray();
         firstGroup[0].Should().Be(amended, "Should be same person");
+    }
+
+    [Fact]
+    public void CompletesWhenNoRegrouperIsSupplied()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var subscription = source.GroupOn(p => p.Age).Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue("an absent regrouper can never fire and so must not hold the result open");
     }
 }

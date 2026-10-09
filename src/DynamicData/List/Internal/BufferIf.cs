@@ -31,21 +31,25 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
 
                 var bufferSelector = Observable.Return(initialPauseState).Concat(_pauseIfTrueSelector.Merge(timeoutSubject)).ObserveOn(_scheduler).Synchronize(locker).Publish();
 
-                var pause = bufferSelector.Where(state => state).Subscribe(
-                    _ =>
+                // Handled as a single subscription rather than two filtered ones, so that a failure
+                // of the pause selector has one unambiguous path to the observer instead of either
+                // arriving twice or, as before, escaping unhandled.
+                var pauseOrResume = bufferSelector.Subscribe(
+                    state =>
                     {
-                        paused = true;
-
-                        // add pause timeout if required
-                        if (_timeOut != TimeSpan.Zero)
+                        if (state)
                         {
-                            timeoutSubscriber.Disposable = Observable.Timer(_timeOut, _scheduler).Select(_ => false).SubscribeSafe(timeoutSubject);
-                        }
-                    });
+                            paused = true;
 
-                var resume = bufferSelector.Where(state => !state).Subscribe(
-                    _ =>
-                    {
+                            // add pause timeout if required
+                            if (_timeOut != TimeSpan.Zero)
+                            {
+                                timeoutSubscriber.Disposable = Observable.Timer(_timeOut, _scheduler).Select(static _ => false).SubscribeSafe(timeoutSubject);
+                            }
+
+                            return;
+                        }
+
                         paused = false;
 
                         // publish changes and clear buffer
@@ -59,7 +63,8 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
 
                         // kill off timeout if required
                         timeoutSubscriber.Disposable = Disposable.Empty;
-                    });
+                    },
+                    observer.OnError);
 
                 var updateSubscriber = _source.Synchronize(locker).Subscribe(
                     updates =>
@@ -72,6 +77,18 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
                         {
                             observer.OnNext(updates);
                         }
+                    },
+                    observer.OnError,
+                    () =>
+                    {
+                        // Anything still buffered would otherwise be lost, so flush before finishing.
+                        if (buffer.Count > 0)
+                        {
+                            observer.OnNext(buffer);
+                            buffer = [];
+                        }
+
+                        observer.OnCompleted();
                     });
 
                 var connected = bufferSelector.Connect();
@@ -80,8 +97,7 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
                     () =>
                     {
                         connected.Dispose();
-                        pause.Dispose();
-                        resume.Dispose();
+                        pauseOrResume.Dispose();
                         updateSubscriber.Dispose();
                         timeoutSubject.OnCompleted();
                         timeoutSubscriber.Dispose();
