@@ -546,8 +546,6 @@ cache.Connect()
     .RemoveKey()                           // IChangeSet<T, TKey> → IChangeSet<T>
 ```
 
-`RemoveKey()` tracks positions by cache key before discarding keys from the output. Each subscription starts from an empty list and observes every change applied to it, so equal-valued entries retain separate positions and every emitted index describes the list that subscription produced. Updates remain Remove/Add pairs and refreshes remain self-Replaces. Position lookup, insertion, and removal are expected logarithmic with a linear worst case, so a bulk removal does not rewrite the positions of the surviving entries. A stream that omits part of its history is outside the contract: such a change reports an unknown index rather than a reconstructed one.
-
 ---
 
 ## Writing a New List Operator
