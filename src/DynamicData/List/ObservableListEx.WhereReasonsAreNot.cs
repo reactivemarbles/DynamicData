@@ -39,6 +39,10 @@ public static partial class ObservableListEx
     /// Empty changesets (after filtering) are automatically suppressed. When only <see cref="ListChangeReason.Refresh"/> is excluded,
     /// indices are preserved, since removing Refresh does not affect index calculations.
     /// </para>
+    /// <para>
+    /// Otherwise a <b>Refresh</b> that is not excluded must carry an index, so it is emitted as an unindexed <b>Replace</b> of the item
+    /// with itself, which <see cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/> downstream does not drop. <b>Moved</b> changes are dropped.
+    /// </para>
     /// </remarks>
     /// <seealso cref="WhereReasonsAre{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
     /// <seealso cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/>

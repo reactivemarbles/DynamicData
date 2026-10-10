@@ -36,6 +36,11 @@ public static partial class ObservableListEx
     /// <remarks>
     /// <para>Filters individual changes within each changeset. If filtering removes all changes from a changeset, the empty changeset is suppressed via <see cref="NotEmpty{T}(IObservable{IChangeSet{T}})"/>.</para>
     /// <para><b>Worth noting:</b> Filtering out <b>Remove</b> changes can cause downstream operators to accumulate items indefinitely (memory leak). Index information is stripped because removing some changes invalidates the original index positions.</para>
+    /// <para>
+    /// A <b>Refresh</b> must carry an index, so a matching refresh is emitted as an unindexed <b>Replace</b> of the item with itself, and
+    /// <b>Moved</b> changes are always dropped. <c>WhereReasonsAre(ListChangeReason.Refresh)</c> therefore emits <b>Replace</b> changes, and
+    /// <see cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/> downstream does not drop them.
+    /// </para>
     /// </remarks>
     /// <seealso cref="WhereReasonsAreNot{T}(IObservable{IChangeSet{T}}, ListChangeReason[])"/>
     /// <seealso cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/>

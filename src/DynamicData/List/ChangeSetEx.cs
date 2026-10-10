@@ -85,6 +85,11 @@ public static class ChangeSetEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An enumerable of changes.</returns>
+    /// <remarks>
+    /// <b>Moved</b> changes are dropped, since a move has no meaning without its indexes. A <b>Refresh</b> must carry an index,
+    /// so it becomes an unindexed <b>Replace</b> of the item with itself, the same change
+    /// <see cref="ObservableCacheEx.RemoveKey{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/> emits for a cache refresh.
+    /// </remarks>
     public static IEnumerable<Change<T>> YieldWithoutIndex<T>(this IEnumerable<Change<T>> source)
         where T : notnull
     {
