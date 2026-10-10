@@ -1,4 +1,4 @@
-using Person = DynamicData.Tests.Domain.Person;
+using DynamicData.PLinq;
 
 namespace DynamicData.Tests.Cache;
 

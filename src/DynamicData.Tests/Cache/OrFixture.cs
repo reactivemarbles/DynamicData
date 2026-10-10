@@ -1,5 +1,3 @@
-using Person = DynamicData.Tests.Domain.Person;
-
 namespace DynamicData.Tests.Cache;
 
 public class OrFixture : OrFixtureBase

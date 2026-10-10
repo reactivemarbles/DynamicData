@@ -1,4 +1,4 @@
-using Person = DynamicData.Tests.Domain.Person;
+using DynamicData.Aggregation;
 
 namespace DynamicData.Tests.List;
 

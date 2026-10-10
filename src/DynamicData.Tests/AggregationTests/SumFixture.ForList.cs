@@ -1,3 +1,5 @@
+using DynamicData.Aggregation;
+
 namespace DynamicData.Tests.AggregationTests;
 
 public partial class SumFixture

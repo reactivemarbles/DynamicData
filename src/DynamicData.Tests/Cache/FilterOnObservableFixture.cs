@@ -1,6 +1,4 @@
-﻿using Person = DynamicData.Tests.Domain.Person;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 /// <summary>
 /// Test Fixture for the FilterOnObservable extension method.

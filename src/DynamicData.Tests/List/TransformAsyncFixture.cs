@@ -1,5 +1,3 @@
-using Person = DynamicData.Tests.Domain.Person;
-
 namespace DynamicData.Tests.List;
 
 [Obsolete("Not obsolete - test commented out due to test run freezing on Appveyor")]

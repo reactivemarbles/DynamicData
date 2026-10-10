@@ -1,5 +1,3 @@
-using Person = DynamicData.Tests.Domain.Person;
-
 namespace DynamicData.Tests.Kernal;
 
 public class SourceUpdaterFixture

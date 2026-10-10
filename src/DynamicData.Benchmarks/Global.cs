@@ -21,6 +21,5 @@ global using BenchmarkDotNet.Running;
 
 global using Bogus;
 
-global using DynamicData.Aggregation;
 global using DynamicData.Binding;
 global using DynamicData.Kernel;

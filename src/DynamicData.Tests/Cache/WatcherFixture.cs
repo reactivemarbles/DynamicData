@@ -1,4 +1,4 @@
-﻿using Person = DynamicData.Tests.Domain.Person;
+﻿using DynamicData.Experimental;
 
 namespace DynamicData.Tests.Cache;
 

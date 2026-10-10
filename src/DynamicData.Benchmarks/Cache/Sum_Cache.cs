@@ -1,3 +1,5 @@
+using DynamicData.Aggregation;
+
 namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]

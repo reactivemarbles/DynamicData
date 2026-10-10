@@ -1,4 +1,4 @@
-﻿using Person = DynamicData.Tests.Domain.Person;
+﻿using DynamicData.Alias;
 
 namespace DynamicData.Tests.List;
 

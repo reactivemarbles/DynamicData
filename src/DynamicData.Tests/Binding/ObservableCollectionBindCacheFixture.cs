@@ -1,6 +1,4 @@
-﻿using Person = DynamicData.Tests.Domain.Person;
-
-namespace DynamicData.Tests.Binding;
+﻿namespace DynamicData.Tests.Binding;
 
 public class ObservableCollectionBindCacheFixture : IDisposable
 {

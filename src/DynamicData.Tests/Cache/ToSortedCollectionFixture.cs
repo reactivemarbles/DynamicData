@@ -1,6 +1,4 @@
-﻿using Person = DynamicData.Tests.Domain.Person;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class ToSortedCollectionFixture : IDisposable
 {

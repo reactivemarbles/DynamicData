@@ -1,6 +1,4 @@
-﻿using Person = DynamicData.Tests.Domain.Person;
-
-namespace DynamicData.Tests.Kernal;
+﻿namespace DynamicData.Tests.Kernal;
 
 public class OptionFixture
 {

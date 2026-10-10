@@ -1,6 +1,4 @@
-﻿using Person = DynamicData.Tests.Domain.Person;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public static partial class FilterFixture
 {
