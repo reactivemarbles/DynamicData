@@ -42,13 +42,13 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> Adapt<T>(this IObservable<IChangeSet<T>> source, IChangeSetAdaptor<T> adaptor)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        adaptor.ThrowArgumentNullExceptionIfNull(nameof(adaptor));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(adaptor);
 
         return Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var locker = new Lock();
                 return source.Synchronize(locker).Select(
                     changes =>
                     {

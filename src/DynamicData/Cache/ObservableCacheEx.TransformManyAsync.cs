@@ -58,8 +58,8 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TSourceKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(manySelector);
 
         return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector, keySelector), equalityComparer, comparer).Run();
     }
@@ -84,8 +84,8 @@ public static partial class ObservableCacheEx
         where TSourceKey : notnull
         where TCollection : INotifyCollectionChanged, IEnumerable<TDestination>
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(manySelector);
 
         return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector, keySelector), equalityComparer, comparer).Run();
     }
@@ -110,8 +110,8 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TSourceKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(manySelector);
 
         return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector), equalityComparer, comparer).Run();
     }

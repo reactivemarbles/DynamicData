@@ -50,8 +50,8 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> SubscribeMany<T>(this IObservable<IChangeSet<T>> source, Func<T, IDisposable> subscriptionFactory)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        subscriptionFactory.ThrowArgumentNullExceptionIfNull(nameof(subscriptionFactory));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(subscriptionFactory);
 
         return new SubscribeMany<T>(source, subscriptionFactory).Run();
     }

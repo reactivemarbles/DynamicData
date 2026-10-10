@@ -42,9 +42,9 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<TObject>> ForEachItemChange<TObject>(this IObservable<IChangeSet<TObject>> source, Action<ItemChange<TObject>> action)
         where TObject : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentNullException.ThrowIfNull(action);
 
         return source.Do(changes => changes.Flatten().ForEach(action));
     }

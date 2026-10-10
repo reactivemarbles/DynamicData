@@ -36,7 +36,7 @@ internal static partial class Filter
         public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
                 observer =>
                 {
-                    var locker = InternalEx.NewLock();
+                    var locker = new Lock();
 
                     Func<T, bool> predicate = _ => false;
                     var all = new List<ItemWithMatch>();
