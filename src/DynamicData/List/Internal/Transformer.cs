@@ -143,7 +143,7 @@ internal sealed class Transformer<TSource, TDestination>
                         }
                         else
                         {
-                            var toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
+                            var toRemove = transformed.FirstOrDefault(t => EqualityComparer<TSource>.Default.Equals(t.Source, change.Current));
 
                             if (toRemove is not null)
                             {
@@ -162,8 +162,16 @@ internal sealed class Transformer<TSource, TDestination>
                         }
                         else
                         {
-                            var toRemove = transformed.Where(t => item.Range.Any(current => ReferenceEquals(t.Source, current)));
-                            transformed.RemoveMany(toRemove);
+                            var manyToRemove = new List<TransformedItemContainer>(capacity: item.Range.Count);
+                            foreach (var current in item.Range)
+                            {
+                                var toRemove = transformed.FirstOrDefault(t => EqualityComparer<TSource>.Default.Equals(t.Source, current));
+
+                                if (toRemove is not null)
+                                    manyToRemove.Add(toRemove);
+                            }
+
+                            transformed.RemoveMany(manyToRemove);
                         }
 
                         break;
