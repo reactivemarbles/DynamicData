@@ -148,6 +148,8 @@ An index of `-1` means the position is **unknown**, and it is a legal part of th
 
 Unindexed changes come from `RemoveKey()` on any unsorted cache (every Add, Update, Remove and Refresh), `RemoveIndex()`, `WhereReasonsAre()`, `WhereReasonsAreNot()` with reasons, and any hand-built changeset.
 
+Internal operators must not use `RemoveIndex()` to discard positions they do not need: it cannot represent a **Refresh** without an index. Merging operators ignore child indexes instead, and `TransformMany` applies child changes without their indexes and locates a child **Refresh** by equality.
+
 Every operator must accept them. An operator that keeps a positional copy of its upstream list resolves an unspecified index with `UnspecifiedIndexEx` (`List/Internal/UnspecifiedIndexEx.cs`) before applying the change:
 
 | Unindexed change | Resolution |
@@ -283,6 +285,8 @@ Merges N list changeset streams into one. All changes are forwarded in order.
 
 All changes from any source are forwarded directly to the merged output stream in the order they arrive.
 
+The merged result is maintained by value: child indexes are ignored (they have no meaning in the merged list), a child **Refresh** is forwarded as a **Refresh** of the first equal item in the merged list, and a child **Moved** is dropped. The same applies to both `MergeManyChangeSets` overloads that merge child list changesets.
+
 ---
 
 ### MergeMany
@@ -298,7 +302,7 @@ Subscribes to per-item observables, merges into single `IObservable<TDest>`.
 
 ### MergeManyChangeSets (list → list)
 
-Each item produces `IObservable<IChangeSet<TDest>>`. All flattened into one stream.
+Each item produces `IObservable<IChangeSet<TDest>>`. All flattened into one stream. Child changes are merged by value, as in `MergeChangeSets`, so a child **Refresh** reaches the merged output.
 
 ### MergeManyChangeSets (list → cache)
 
@@ -446,6 +450,8 @@ Side-effect callbacks for specific lifecycle events.
 ### ForEachChange / ForEachItemChange
 
 Side effect per change. `ForEachChange` sees range changes too; `ForEachItemChange` only item-level.
+
+`ForEachItemChange` (and `ChangeSetEx.Flatten()`) splits **AddRange** and **RemoveRange** into **Add** and **Remove** item changes numbered from the range index, or with an unspecified index (`-1`) when the range has none. **Clear** items are numbered from 0, their positions in the cleared list.
 
 ---
 

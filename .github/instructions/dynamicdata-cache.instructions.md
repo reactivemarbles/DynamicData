@@ -599,6 +599,8 @@ Each item produces its own `IObservable<IChangeSet>`. All are merged into a sing
 | **Remove** | Disposes child subscription. Emits Remove for all child items. |
 | **Refresh** | No effect on child subscriptions. |
 
+When the children are list changesets (`IObservable<IChangeSet<TDest>>`), child changes are merged by value: child indexes are ignored, a child **Refresh** becomes a **Refresh** of the first equal merged item, and a child **Moved** is dropped.
+
 ### MergeManyItems
 
 Like MergeMany but wraps each value with its parent item.
