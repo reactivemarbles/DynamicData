@@ -146,9 +146,9 @@ public struct ItemChange<T>
 
 An index of `-1` means the position is **unknown**, and it is a legal part of the list contract. `Add`, `AddRange`, `Remove`, `RemoveRange` and `Replace` may arrive unindexed. `Moved` and `Refresh` always carry an index: the `Change<T>` constructors reject `-1` for them. `Clear` has no index.
 
-Unindexed changes come from `RemoveKey()` on any unsorted cache (every Add, Update, Remove and Refresh), `RemoveIndex()`, `WhereReasonsAre()`, `WhereReasonsAreNot()` with reasons, and any hand-built changeset.
+Unindexed changes come from `RemoveKey()` on any unsorted cache (every Add, Update, Remove and Refresh), `RemoveIndex()`, `WhereReasonsAre()`, `WhereReasonsAreNot()` with reasons, and any hand-built changeset. A producer that strips indexes turns a Refresh into an unindexed **Replace** of the item with itself and drops a Moved, because neither can be unindexed.
 
-Internal operators must not use `RemoveIndex()` to discard positions they do not need: it cannot represent a **Refresh** without an index. Merging operators ignore child indexes instead, and `TransformMany` applies child changes without their indexes and locates a child **Refresh** by equality.
+Internal operators must not use `RemoveIndex()` to discard positions they do not need: it turns a **Refresh** into a **Replace** and drops a **Moved**. Merging operators ignore child indexes instead, and `TransformMany` applies child changes without their indexes and locates a child **Refresh** by equality.
 
 Every operator must accept them. An operator that keeps a positional copy of its upstream list resolves an unspecified index with `UnspecifiedIndexEx` (`List/Internal/UnspecifiedIndexEx.cs`) before applying the change:
 
@@ -507,6 +507,18 @@ list.Connect()
     .WhereReasonsAreNot(reasons)   // exclude specific change reasons
     .FlattenBufferResult()         // flatten IChangeSet<IChangeSet<T>> to IChangeSet<T>
 ```
+
+### RemoveIndex / WhereReasonsAre / WhereReasonsAreNot
+
+All three strip indexes from the changes they pass (`WhereReasonsAreNot(ListChangeReason.Refresh)` alone keeps them, since dropping only refreshes leaves every index valid).
+
+| Input | Output |
+|-------|--------|
+| **Add / AddRange / Remove / RemoveRange / Replace / Clear** | Same reason, unspecified index (`-1`). |
+| **Refresh** | **Replace** of the item with itself, unspecified indexes, because a Refresh must carry an index. Matches what `RemoveKey()` emits for a cache Refresh. |
+| **Moved** | Dropped. |
+
+`WhereReasonsAre(ListChangeReason.Refresh)` therefore emits **Replace** changes, and `SuppressRefresh()` downstream does not drop them. `Transform` re-invokes its factory for them, as for any Replace.
 
 ### ToObservableChangeSet
 
