@@ -11,18 +11,17 @@ internal sealed class ItemChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnumer
 {
     public IEnumerator<ItemChange<T>> GetEnumerator()
     {
-        var lastKnownIndex = 0;
-
         foreach (var change in changeSet)
         {
             if (change.Type == ChangeType.Item)
             {
-                lastKnownIndex = change.Item.CurrentIndex;
                 yield return new ItemChange<T>(change.Reason, change.Item.Current, change.Item.Previous, change.Item.CurrentIndex, change.Item.PreviousIndex);
             }
             else
             {
-                var index = change.Range.Index == -1 ? lastKnownIndex : change.Range.Index;
+                // A Clear holds the whole list in order, so each item's position is its position in the range. Any other
+                // unindexed range gives no positions, so its items stay unindexed.
+                var index = (change.Reason == ListChangeReason.Clear) ? 0 : change.Range.Index;
 
                 foreach (var item in change.Range)
                 {
@@ -41,8 +40,8 @@ internal sealed class ItemChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnumer
                             yield break;
                     }
 
-                    index++;
-                    lastKnownIndex = index;
+                    if (index >= 0)
+                        index++;
                 }
             }
         }

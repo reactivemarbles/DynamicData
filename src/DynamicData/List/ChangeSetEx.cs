@@ -20,6 +20,11 @@ public static class ChangeSetEx
     /// <param name="source">The source.</param>
     /// <returns>An enumerable of change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <remarks>
+    /// <b>AddRange</b> and <b>RemoveRange</b> become <b>Add</b> and <b>Remove</b> item changes numbered from the range index, or with an
+    /// unspecified index of -1 when the range has none. <b>Clear</b> items become <b>Remove</b> item changes numbered from 0, their
+    /// positions in the cleared list. Item changes are returned unchanged.
+    /// </remarks>
     public static IEnumerable<ItemChange<T>> Flatten<T>(this IChangeSet<T> source)
         where T : notnull
     {
