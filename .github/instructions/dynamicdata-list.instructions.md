@@ -142,6 +142,29 @@ public struct ItemChange<T>
 
 **Key difference from Cache:** List changes are **index-aware**. `Add` has a `CurrentIndex`, `Move` has both `CurrentIndex` and `PreviousIndex`, `Remove` has the index where the item was.
 
+### Unspecified Indexes (-1)
+
+An index of `-1` means the position is **unknown**, and it is a legal part of the list contract. `Add`, `AddRange`, `Remove`, `RemoveRange` and `Replace` may arrive unindexed. `Moved` and `Refresh` always carry an index: the `Change<T>` constructors reject `-1` for them. `Clear` has no index.
+
+Unindexed changes come from `RemoveKey()` on any unsorted cache (every Add, Update, Remove and Refresh), `RemoveIndex()`, `WhereReasonsAre()`, `WhereReasonsAreNot()` with reasons, and any hand-built changeset. A producer that strips indexes turns a Refresh into an unindexed **Replace** of the item with itself and drops a Moved, because neither can be unindexed.
+
+Internal operators must not use `RemoveIndex()` to discard positions they do not need: it turns a **Refresh** into a **Replace** and drops a **Moved**. Merging operators ignore child indexes instead, and `TransformMany` applies child changes without their indexes and locates a child **Refresh** by equality.
+
+Every operator must accept them. An operator that keeps a positional copy of its upstream list resolves an unspecified index with `UnspecifiedIndexEx` (`List/Internal/UnspecifiedIndexEx.cs`) before applying the change:
+
+| Unindexed change | Resolution |
+|------------------|------------|
+| **Add** / **AddRange** | Append. |
+| **Remove** | First item equal under `EqualityComparer<T>.Default`. Ignored when absent, as `ListEx.Clone` does. |
+| **RemoveRange** | Each item in turn, as an individual **Remove**. |
+| **Replace** | A known `PreviousIndex` is used; otherwise the first item equal to `Previous`. An unknown `CurrentIndex` takes that position, so the replacement is in place. When `Previous` is absent, operators throw `InvalidOperationException`, while `ListEx.Clone` adds the current item instead. |
+
+`UnspecifiedIndexEx.IndexOf` reads through the indexer with a projection, so it allocates nothing and never enumerates a `ChangeAwareList<T>` (whose enumerator copies the list). An operator that only maps indexes without keeping state (such as `Reverse`) passes `-1` through instead of doing arithmetic on it, except where the result is known (an unindexed append becomes index 0 when reversed).
+
+`ListEx.Clone` and the `BindingList` clone follow the same rules, so `Bind`, `AsObservableList`, `Clone`, `PopulateInto`, `AutoRefresh` and `FilterOnObservable` (which mirror upstream with Clone) agree with the positional operators on where an unindexed change lands. This agreement is required: a stream can mix unindexed changes with indexed ones (a sorted cache through `RemoveKey()`, or `AutoRefresh` injecting indexed Refreshes), and a copy that placed an unindexed Replace anywhere else would apply every later index to the wrong item.
+
+**Worth noting:** `ListEx.Clone` adds the current item when an unindexed Replace names an absent previous item, matching how it ignores an absent Remove, so a stream that omits earlier history (`SkipInitial()`, `Preview()`) keeps binding instead of faulting.
+
 ### ChangeAwareList — How List Operators Build Changesets
 
 `ChangeAwareList<T>` is the list equivalent of `ChangeAwareCache<T,K>`. It's a `List<T>` that records every mutation.
@@ -262,6 +285,8 @@ Merges N list changeset streams into one. All changes are forwarded in order.
 
 All changes from any source are forwarded directly to the merged output stream in the order they arrive.
 
+The merged result is maintained by value: child indexes are ignored (they have no meaning in the merged list), a child **Refresh** is forwarded as a **Refresh** of the first equal item in the merged list, and a child **Moved** is dropped. The same applies to both `MergeManyChangeSets` overloads that merge child list changesets.
+
 ---
 
 ### MergeMany
@@ -277,7 +302,7 @@ Subscribes to per-item observables, merges into single `IObservable<TDest>`.
 
 ### MergeManyChangeSets (list → list)
 
-Each item produces `IObservable<IChangeSet<TDest>>`. All flattened into one stream.
+Each item produces `IObservable<IChangeSet<TDest>>`. All flattened into one stream. Child changes are merged by value, as in `MergeChangeSets`, so a child **Refresh** reaches the merged output.
 
 ### MergeManyChangeSets (list → cache)
 
@@ -426,6 +451,8 @@ Side-effect callbacks for specific lifecycle events.
 
 Side effect per change. `ForEachChange` sees range changes too; `ForEachItemChange` only item-level.
 
+`ForEachItemChange` (and `ChangeSetEx.Flatten()`) splits **AddRange** and **RemoveRange** into **Add** and **Remove** item changes numbered from the range index, or with an unspecified index (`-1`) when the range has none. **Clear** items are numbered from 0, their positions in the cleared list.
+
 ---
 
 ### BufferIf
@@ -480,6 +507,18 @@ list.Connect()
     .WhereReasonsAreNot(reasons)   // exclude specific change reasons
     .FlattenBufferResult()         // flatten IChangeSet<IChangeSet<T>> to IChangeSet<T>
 ```
+
+### RemoveIndex / WhereReasonsAre / WhereReasonsAreNot
+
+All three strip indexes from the changes they pass (`WhereReasonsAreNot(ListChangeReason.Refresh)` alone keeps them, since dropping only refreshes leaves every index valid).
+
+| Input | Output |
+|-------|--------|
+| **Add / AddRange / Remove / RemoveRange / Replace / Clear** | Same reason, unspecified index (`-1`). |
+| **Refresh** | **Replace** of the item with itself, unspecified indexes, because a Refresh must carry an index. Matches what `RemoveKey()` emits for a cache Refresh. |
+| **Moved** | Dropped. |
+
+`WhereReasonsAre(ListChangeReason.Refresh)` therefore emits **Replace** changes, and `SuppressRefresh()` downstream does not drop them. `Transform` re-invokes its factory for them, as for any Replace.
 
 ### ToObservableChangeSet
 
@@ -545,6 +584,8 @@ list.Connect()
 cache.Connect()
     .RemoveKey()                           // IChangeSet<T, TKey> → IChangeSet<T>
 ```
+
+`RemoveKey()` is stateless. From an unsorted cache every change it emits has an unspecified index (`-1`): Update becomes Remove + Add and Refresh becomes a self-Replace, all unindexed. Downstream operators then identify items by equality, so filter, transform and refresh in the cache before `RemoveKey()` where possible, and keep `Equals` consistent with the cache key.
 
 ---
 
@@ -615,7 +656,8 @@ internal sealed class MyListOperator<T>(IObservable<IChangeSet<T>> source)
 1. Handle **all eight change reasons**: Add, AddRange, Replace, Remove, RemoveRange, Moved, Refresh, Clear
 2. Use `ChangeAwareList<T>` for state management
 3. Pay attention to **index positions** — list changes are index-aware
-4. Never emit empty changesets
-5. Propagate `OnError` and `OnCompleted`
-6. Multiple sources → serialize with `Synchronize(gate)`
+4. Accept **unspecified indexes** (`-1`) on Add, AddRange, Remove, RemoveRange and Replace; resolve them with `UnspecifiedIndexEx` if the operator keeps positional state (see [Unspecified Indexes](#unspecified-indexes--1))
+5. Never emit empty changesets
+6. Propagate `OnError` and `OnCompleted`
+7. Multiple sources → serialize with `Synchronize(gate)`
 7. Write tests (see Testing section in main instructions)

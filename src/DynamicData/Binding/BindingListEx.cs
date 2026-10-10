@@ -8,6 +8,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reactive;
 using System.Reactive.Linq;
 
+using DynamicData.List.Internal;
+
 namespace DynamicData.Binding;
 
 /// <summary>
@@ -185,20 +187,14 @@ public static class BindingListEx
                     if (change.CurrentIndex >= 0 && change.CurrentIndex == change.PreviousIndex)
                     {
                         source[change.CurrentIndex] = change.Current;
+                        break;
                     }
-                    else
-                    {
-                        if (change.PreviousIndex == -1)
-                        {
-                            source.Remove(change.Previous.Value);
-                        }
-                        else
-                        {
-                            // is this best? or replace + move?
-                            source.RemoveAt(change.PreviousIndex);
-                        }
 
-                        if (change.CurrentIndex == -1)
+                    var previousIndex = (change.PreviousIndex >= 0) ? change.PreviousIndex : source.IndexOf(change.Previous.Value, static self => self, equalityComparer);
+                    if (previousIndex < 0)
+                    {
+                        // An absent previous item is applied as an addition, as an absent removal is ignored, so a stream that omits earlier history keeps binding.
+                        if (change.CurrentIndex < 0)
                         {
                             source.Add(change.Current);
                         }
@@ -206,6 +202,19 @@ public static class BindingListEx
                         {
                             source.Insert(change.CurrentIndex, change.Current);
                         }
+
+                        break;
+                    }
+
+                    var currentIndex = (change.CurrentIndex >= 0) ? change.CurrentIndex : previousIndex;
+                    if (currentIndex == previousIndex)
+                    {
+                        source[currentIndex] = change.Current;
+                    }
+                    else
+                    {
+                        source.RemoveAt(previousIndex);
+                        source.Insert(currentIndex, change.Current);
                     }
 
                     break;
@@ -232,7 +241,7 @@ public static class BindingListEx
                     }
                     else
                     {
-                        var index = source.IndexOf(change.Current, equalityComparer);
+                        var index = source.IndexOf(change.Current, static self => self, equalityComparer);
                         if (index > -1)
                         {
                             source.RemoveAt(index);

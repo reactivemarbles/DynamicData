@@ -27,6 +27,8 @@ internal sealed class Transformer<TSource, TDestination>
 
     public IObservable<IChangeSet<TDestination>> Run() => Observable.Defer(RunImpl);
 
+    private static TSource SelectSource(TransformedItemContainer container) => container.Source;
+
     private IObservable<IChangeSet<TDestination>> RunImpl() => _source.Scan(new ChangeAwareList<TransformedItemContainer>(), (state, changes) =>
             {
                 Transform(state, changes);
@@ -101,32 +103,17 @@ internal sealed class Transformer<TSource, TDestination>
 
                 case ListChangeReason.Replace:
                     {
-                        var change = item.Item;
+                        var change = item.Item.ResolveIndexes(transformed, SelectSource);
 
-                        if (change.CurrentIndex == -1 || change.PreviousIndex == -1)
+                        Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
+                        if (change.CurrentIndex == change.PreviousIndex)
                         {
-                            // Find the original, with it's corresponding index
-                            var previous = transformed.First(x => x.Source.Equals(change.Previous.Value));
-                            var index = transformed.IndexOf(previous);
-                            if (index == -1)
-                            {
-                                throw new UnspecifiedIndexException($"Cannot find index of {change.Previous.Value}");
-                            }
-
-                            transformed[index] = _containerFactory(change.Current, previous.Destination, index);
+                            transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
                         }
                         else
                         {
-                            Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
-                            if (change.CurrentIndex == change.PreviousIndex)
-                            {
-                                transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
-                            }
-                            else
-                            {
-                                transformed.RemoveAt(change.PreviousIndex);
-                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex));
-                            }
+                            transformed.RemoveAt(change.PreviousIndex);
+                            transformed.Insert(change.CurrentIndex, _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex));
                         }
 
                         break;
@@ -134,21 +121,10 @@ internal sealed class Transformer<TSource, TDestination>
 
                 case ListChangeReason.Remove:
                     {
-                        var change = item.Item;
-                        var hasIndex = change.CurrentIndex >= 0;
-
-                        if (hasIndex)
+                        var index = item.Item.ResolveIndexes(transformed, SelectSource).CurrentIndex;
+                        if (index >= 0)
                         {
-                            transformed.RemoveAt(change.CurrentIndex);
-                        }
-                        else
-                        {
-                            var toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
-
-                            if (toRemove is not null)
-                            {
-                                transformed.Remove(toRemove);
-                            }
+                            transformed.RemoveAt(index);
                         }
 
                         break;
@@ -162,8 +138,14 @@ internal sealed class Transformer<TSource, TDestination>
                         }
                         else
                         {
-                            var toRemove = transformed.Where(t => item.Range.Any(current => ReferenceEquals(t.Source, current)));
-                            transformed.RemoveMany(toRemove);
+                            foreach (var source in item.Range)
+                            {
+                                var index = transformed.IndexOf(source, SelectSource);
+                                if (index >= 0)
+                                {
+                                    transformed.RemoveAt(index);
+                                }
+                            }
                         }
 
                         break;

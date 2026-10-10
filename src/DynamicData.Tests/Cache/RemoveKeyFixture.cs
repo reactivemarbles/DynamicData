@@ -8,10 +8,13 @@ using System.Reactive.Disposables;
 
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
+using DynamicData.Tests.Utilities;
 
 using FluentAssertions;
 
 using Xunit;
+
+using Randomizer = Bogus.Randomizer;
 
 #endregion
 
@@ -92,4 +95,34 @@ public class RemoveKeyFixture : IDisposable
         Assert.Equivalent(people, collection);
     }
 
+    [Fact]
+    public void UnsortedSource_EmitsChangesWithUnspecifiedIndexes()
+    {
+        // Arrange
+        var randomizer = new Randomizer(0x1182);
+        var original = new Person(randomizer.Hash(), randomizer.Int());
+        var updated = new Person(original.Name, randomizer.Int());
+
+        using var subscription = _source.Connect()
+            .RemoveKey()
+            .RecordValues(out var results);
+
+        // Act
+        _source.AddOrUpdate(original);
+        _source.AddOrUpdate(updated);
+        _source.Refresh(updated);
+        _source.RemoveKey(updated.Key);
+
+        // Assert
+        results.Error.Should().BeNull();
+        var changes = results.RecordedValues.SelectMany(static changes => changes).ToArray();
+        changes.Select(static change => (change.Reason, change.Item.CurrentIndex, change.Item.PreviousIndex)).Should().Equal(
+            (ListChangeReason.Add, -1, -1),
+            (ListChangeReason.Remove, -1, -1),
+            (ListChangeReason.Add, -1, -1),
+            (ListChangeReason.Replace, -1, -1),
+            (ListChangeReason.Remove, -1, -1));
+        changes.Select(static change => change.Item.Current).Should().Equal(new[] { original, original, updated, updated, updated }, ReferenceEquals);
+        changes[3].Item.Previous.Value.Should().BeSameAs(updated);
+    }
 }
