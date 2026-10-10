@@ -1,6 +1,3 @@
-using System;
-using System.ComponentModel;
-
 namespace DynamicData.Tests.Binding;
 
 public static partial class WhenPropertyChangedFixture

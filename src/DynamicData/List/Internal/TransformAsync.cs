@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class TransformAsync<TSource, TDestination>
@@ -178,11 +176,16 @@ internal sealed class TransformAsync<TSource, TDestination>
                         }
                         else
                         {
-                            var toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, t));
+                            var indexToRemove = transformed
+                                .Select((pair, index) => (
+                                    sourceItem: pair.Source,
+                                    index: (int?)index))
+                                .FirstOrDefault(pair => EqualityComparer<TSource>.Default.Equals(pair.sourceItem, change.Current))
+                                .index;
 
-                            if (toRemove is not null)
+                            if (indexToRemove is not null)
                             {
-                                transformed.Remove(toRemove);
+                                transformed.RemoveAt(indexToRemove.Value);
                             }
                         }
 
@@ -197,8 +200,20 @@ internal sealed class TransformAsync<TSource, TDestination>
                         }
                         else
                         {
-                            var toRemove = transformed.Where(t => ReferenceEquals(t.Source, t)).ToArray();
-                            transformed.RemoveMany(toRemove);
+                            foreach (var removedItem in item.Range)
+                            {
+                                var indexToRemove = transformed
+                                    .Select((pair, index) => (
+                                        sourceItem: pair.Source,
+                                        index: (int?)index))
+                                    .FirstOrDefault(pair => EqualityComparer<TSource>.Default.Equals(pair.sourceItem, removedItem))
+                                    .index;
+
+                                if (indexToRemove is not null)
+                                {
+                                    transformed.RemoveAt(indexToRemove.Value);
+                                }
+                            }
                         }
 
                         break;

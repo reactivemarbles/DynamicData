@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class OrFixture : OrFixtureBase
 {
@@ -75,7 +67,7 @@ public abstract class OrFixtureBase : IDisposable
 
     private readonly ChangeSetAggregator<int> _results;
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2214:Do not call overridable methods in constructors", Justification = "Accepted as part of a test.")]
+    [SuppressMessage("Usage", "CA2214:Do not call overridable methods in constructors", Justification = "Accepted as part of a test.")]
     protected OrFixtureBase()
     {
         _source1 = new SourceList<int>();

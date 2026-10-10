@@ -1,7 +1,3 @@
-using Bogus;
-
-using DynamicData.Tests.Domain;
-
 namespace DynamicData.Tests.Cache;
 
 public static partial class MergeManyChangeSetsFixture

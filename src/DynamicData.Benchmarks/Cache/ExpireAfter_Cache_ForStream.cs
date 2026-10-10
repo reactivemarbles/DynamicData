@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using BenchmarkDotNet.Attributes;
-
-using Bogus;
-
-namespace DynamicData.Benchmarks.Cache;
+﻿namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]

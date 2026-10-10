@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Reactive.Concurrency;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 public sealed class ValueRecordingObserver<T>
     : RecordingObserverBase<T>

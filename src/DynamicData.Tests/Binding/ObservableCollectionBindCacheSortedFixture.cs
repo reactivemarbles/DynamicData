@@ -1,16 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Reactive.Linq;
-
-using DynamicData.Binding;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-using Xunit;
-
 namespace DynamicData.Tests.Binding;
 
 public class ObservableCollectionBindCacheSortedFixture : IDisposable

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class ReverseFixture : IDisposable
 {

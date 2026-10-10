@@ -89,6 +89,21 @@ src/
 │   └── Domain/                     # Test domain types using Bogus fakers
 ```
 
+## Usings and Namespaces
+
+**Do not add `using` directives to source files.** Each project declares its namespaces once, as `global using` directives in its own `Global.cs` (`src/DynamicData/Global.cs`, `src/DynamicData.Tests/Global.cs`, `src/DynamicData.Benchmarks/Global.cs`). `ImplicitUsings` is disabled, so `Global.cs` is the complete list. If you need a namespace that is not in scope, add it there.
+
+DynamicData's opt-in namespaces are the exception and **must** stay file-level, so a reader can see at the top of the file that familiar names mean something different there:
+
+| Namespace | Why |
+|---|---|
+| `DynamicData.Alias` | Supplies `Select`, `Where` and `SelectMany` for changeset streams. They are more specific than the Rx operators of the same name, so importing globally silently rebinds calls such as `.Where(_ => flag)` to `Filter`. |
+| `DynamicData.Aggregation` | Supplies `Count`, `Sum`, `Avg`, `Maximum` and `Minimum` for changeset streams. `Count()` is more specific than Rx's `Count()` and returns the same type, so importing globally silently turns a count of emitted changesets into a live item count. |
+| `DynamicData.PLinq` | Supplies parallel `Filter`, `Transform`, `TransformSafe` and `SubscribeMany` under the same names as the core operators. |
+| `DynamicData.Experimental` | Unstable API. Opting in should be visible at the call site. |
+
+If a global namespace makes a name ambiguous, qualify the call site or add a global alias in `Global.cs`. Do not move the namespace back into the file. Already handled: `System.Reactive.Notification<T>` is qualified wherever the tests mean the Rx type rather than `DynamicData.Internal.Notification<T>`, and the tests' `Global.cs` aliases `Person` to the domain type so it wins over `Bogus.Person`.
+
 ## Operator Architecture Pattern
 
 Most operators follow the same two-part pattern:

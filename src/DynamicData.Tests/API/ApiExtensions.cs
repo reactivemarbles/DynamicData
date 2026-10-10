@@ -1,12 +1,4 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using PublicApiGenerator;
-using VerifyXunit;
-
-namespace DynamicData.APITests;
+﻿namespace DynamicData.APITests;
 
 /// <summary>
 /// A helper for doing API approvals.

@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections;
-
-using DynamicData.List.Internal;
-
 namespace DynamicData.List.Linq;
 
 internal sealed class UnifiedChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnumerable<UnifiedChange<T>>
