@@ -134,16 +134,24 @@ internal sealed class TransformAsync<TSource, TDestination>
                 case ListChangeReason.Refresh:
                     {
                         var change = item.Item;
+                        var index = change.CurrentIndex;
+
+                        if (index < 0)
+                        {
+                            index = transformed.FindItemIndex(change.Current);
+                            if (index < 0)
+                                break;
+                        }
+
                         if (_transformOnRefresh)
                         {
-                            Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
-                            var container = await _containerFactory(change.Current, previous, change.CurrentIndex, cancel)
+                            var container = await _containerFactory(change.Current, transformed[index].Destination, index, cancel)
                                 .ConfigureAwait(false);
-                            transformed[change.CurrentIndex] = container;
+                            transformed[index] = container;
                         }
                         else
                         {
-                            transformed.RefreshAt(change.CurrentIndex);
+                            transformed.RefreshAt(index);
                         }
 
                         break;
@@ -152,16 +160,23 @@ internal sealed class TransformAsync<TSource, TDestination>
                 case ListChangeReason.Replace:
                     {
                         var change = item.Item;
+                        var currentIndex = change.CurrentIndex;
+                        var previousIndex = change.PreviousIndex;
 
-                        Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
-                        if (change.CurrentIndex == change.PreviousIndex)
+                        if (previousIndex < 0)
+                            previousIndex = transformed.FindItemIndex(change.Previous.Value);
+
+                        if (currentIndex < 0)
+                            currentIndex = previousIndex;
+
+                        if (currentIndex == previousIndex)
                         {
-                            transformed[change.CurrentIndex] = await _containerFactory(change.Current, previous, change.CurrentIndex, cancel);
+                            transformed[currentIndex] = await _containerFactory(change.Current, transformed[previousIndex].Destination, currentIndex, cancel);
                         }
                         else
                         {
-                            transformed.RemoveAt(change.PreviousIndex);
-                            transformed.Insert(change.CurrentIndex, await _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex, cancel));
+                            transformed.RemoveAt(previousIndex);
+                            transformed.Insert(currentIndex, await _containerFactory(change.Current, Optional<TDestination>.None, currentIndex, cancel));
                         }
 
                         break;
@@ -170,27 +185,16 @@ internal sealed class TransformAsync<TSource, TDestination>
                 case ListChangeReason.Remove:
                     {
                         var change = item.Item;
-                        var hasIndex = change.CurrentIndex >= 0;
+                        var index = change.CurrentIndex;
 
-                        if (hasIndex)
+                        if (index < 0)
                         {
-                            transformed.RemoveAt(item.Item.CurrentIndex);
-                        }
-                        else
-                        {
-                            var indexToRemove = transformed
-                                .Select((pair, index) => (
-                                    sourceItem: pair.Source,
-                                    index: (int?)index))
-                                .FirstOrDefault(pair => EqualityComparer<TSource>.Default.Equals(pair.sourceItem, change.Current))
-                                .index;
-
-                            if (indexToRemove is not null)
-                            {
-                                transformed.RemoveAt(indexToRemove.Value);
-                            }
+                            index = transformed.FindItemIndex(change.Current);
+                            if (index < 0)
+                                break;
                         }
 
+                        transformed.RemoveAt(index);
                         break;
                     }
 
@@ -204,17 +208,17 @@ internal sealed class TransformAsync<TSource, TDestination>
                         {
                             foreach (var removedItem in item.Range)
                             {
-                                var indexToRemove = transformed
-                                    .Select((pair, index) => (
-                                        sourceItem: pair.Source,
-                                        index: (int?)index))
-                                    .FirstOrDefault(pair => EqualityComparer<TSource>.Default.Equals(pair.sourceItem, removedItem))
-                                    .index;
-
-                                if (indexToRemove is not null)
+                                var manyToRemove = new List<Transformer<TSource, TDestination>.TransformedItemContainer>(capacity: item.Range.Count);
+                                foreach (var current in item.Range)
                                 {
-                                    transformed.RemoveAt(indexToRemove.Value);
+                                    var index = transformed.FindItemIndex(current);
+                                    if (index < 0)
+                                        continue;
+
+                                    manyToRemove.Add(transformed[index]);
                                 }
+
+                                transformed.RemoveMany(manyToRemove);
                             }
                         }
 

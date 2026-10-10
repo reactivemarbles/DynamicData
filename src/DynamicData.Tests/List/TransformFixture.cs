@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Reactive.Linq;
 
 using DynamicData.Tests.Domain;
+using DynamicData.Tests.Utilities;
 
 using FluentAssertions;
 using Xunit;
@@ -88,7 +90,7 @@ public class TransformFixture : IDisposable
     }
 
     [Fact]
-    public void RemoveWithoutIndex()
+    public void RemoveObjectWithoutIndex()
     {
         const string key = "Adult1";
         var person = new Person(key, 50);
@@ -104,6 +106,66 @@ public class TransformFixture : IDisposable
         results.Data.Count.Should().Be(0, "Should be nothing cached");
     }
 
+    // Mirrors coverage for https://github.com/reactivemarbles/DynamicData/issues/1169
+    [Fact]
+    public void RemoveRangeWithoutIndex()
+    {
+        var source = Enumerable.Empty<IChangeSet<int>>()
+            .Append(new ChangeSet<int>()
+            {
+                new Change<int>(
+                    reason: ListChangeReason.AddRange,
+                    items:  Enumerable.Range(1, 5))
+            })
+            .Append(new ChangeSet<int>()
+            {
+                new Change<int>(
+                    reason: ListChangeReason.RemoveRange,
+                    items:  new[] { 1, 3, 5 })
+            })
+            .ToObservable();
+        
+        using var subscription = source
+            .Transform(static item => item.ToString())
+            .ValidateChangeSets()
+            .RecordListItems(out var results);
+
+        results.Error.Should().BeNull("no errors should have occurred");
+        results.RecordedChangeSets.Count.Should().Be(2, "2 source operations were performed");
+        results.RecordedItems.Should().BeEquivalentTo(new[] { "2", "4" }, static options => options.WithStrictOrdering(), "The odd-numbered items in the list should have been removed");
+        results.HasCompleted.Should().BeTrue("the source, and all asynchronous operations, have completed");
+    }
+
+    // Mirrors coverage for https://github.com/reactivemarbles/DynamicData/issues/1169
+    [Fact]
+    public void RemoveValueWithoutIndex()
+    {
+        var source = Enumerable.Empty<IChangeSet<int>>()
+            .Append(new ChangeSet<int>()
+            {
+                new Change<int>(
+                    reason: ListChangeReason.AddRange,
+                    items:  Enumerable.Range(1, 3))
+            })
+            .Append(new ChangeSet<int>()
+            {
+                new Change<int>(
+                    reason:     ListChangeReason.Remove,
+                    current:    2)
+            })
+            .ToObservable();
+        
+        using var subscription = source
+            .Transform(static item => item.ToString())
+            .ValidateChangeSets()
+            .RecordListItems(out var results);
+
+        results.Error.Should().BeNull("no errors should have occurred");
+        results.RecordedChangeSets.Count.Should().Be(2, "2 source operations were performed");
+        results.RecordedItems.Should().BeEquivalentTo(new[] { "1", "3" }, static options => options.WithStrictOrdering(), "The middle item in the list should have been removed");
+        results.HasCompleted.Should().BeTrue("the source, and all asynchronous operations, have completed");
+    }
+    
     [Fact]
     public void SameKeyChanges()
     {
