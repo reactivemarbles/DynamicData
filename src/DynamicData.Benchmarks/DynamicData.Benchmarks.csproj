@@ -10,8 +10,8 @@
 
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="*" />
-    <PackageReference Include="Bogus" Version="*" />
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="Bogus" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
     <Reference Include="System.Reflection" />

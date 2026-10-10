@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.10" />
+    <PackageVersion Include="System.Reactive" Version="6.1.0" />
+  </ItemGroup>
+
+  <!--
+    Floating versions are allowed only in test and benchmark projects. NuGet rejects any floating PackageVersion visible to a
+    project without CentralPackageFloatingVersionsEnabled, so these versions are hidden from the shipped library entirely.
+  -->
+  <PropertyGroup Condition="$(IsTestProject) OR $(IsBenchmarkProject)">
+    <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
+  </PropertyGroup>
+  <ItemGroup Condition="$(IsTestProject) OR $(IsBenchmarkProject)">
+    <PackageVersion Include="AwesomeAssertions" Version="8.*" />
+    <PackageVersion Include="BenchmarkDotNet" Version="*" />
+    <PackageVersion Include="Bogus" Version="35.*" />
+    <PackageVersion Include="coverlet.collector" Version="6.*" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.*" />
+    <PackageVersion Include="Microsoft.Reactive.Testing" Version="6.*" />
+    <PackageVersion Include="PublicApiGenerator" Version="11.*" />
+    <PackageVersion Include="Verify.Xunit" Version="30.*" />
+    <PackageVersion Include="xunit" Version="2.*" />
+    <PackageVersion Include="xunit.runner.console" Version="2.*" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.*" />
+  </ItemGroup>
+
+  <!-- Build tooling and analyzers, referenced by every matching project as private assets -->
+  <ItemGroup>
+    <GlobalPackageReference Include="Nerdbank.GitVersioning" Version="3.9.50" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(IsTestProject)">
+    <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
+    <GlobalPackageReference Include="Roslynator.Analyzers" Version="4.15.0" />
+    <GlobalPackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+  </ItemGroup>
+</Project>
