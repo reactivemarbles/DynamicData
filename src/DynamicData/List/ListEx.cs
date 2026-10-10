@@ -484,7 +484,7 @@ public static class ListEx
         return (current >= startIndex && current <= endIndex) || (previous >= startIndex && previous <= endIndex);
     }
 
-    private static void Clone<T>(this IList<T> source, Change<T> item, IEqualityComparer<T> equalityComparer)
+    internal static void Clone<T>(this IList<T> source, Change<T> item, IEqualityComparer<T> equalityComparer)
         where T : notnull
     {
         var changeAware = source as ChangeAwareList<T>;

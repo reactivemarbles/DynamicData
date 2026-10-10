@@ -31,9 +31,9 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
             IEqualityComparer<TDestination>? equalityComparer)
             : base(observer)
         {
-            // RemoveIndex outside of the Lock, but add locking before going to ClonedChangeSet so the contents are protected
+            // Add locking before going to ClonedChangeSet so the contents are protected
             CreateParentSubscription(source.Transform((obj, key) =>
-                new ClonedListChangeSet<TDestination>(MakeChildObservable(selector(obj, key).RemoveIndex()), equalityComparer)));
+                new ClonedListChangeSet<TDestination>(MakeChildObservable(selector(obj, key)), equalityComparer)));
         }
 
         protected override void ParentOnNext(IChangeSet<ClonedListChangeSet<TDestination>, TKey> changes)
