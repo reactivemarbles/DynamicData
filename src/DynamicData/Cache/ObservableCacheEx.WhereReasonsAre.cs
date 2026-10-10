@@ -42,8 +42,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        reasons.ThrowArgumentNullExceptionIfNull(nameof(reasons));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(reasons);
 
         if (reasons.Length == 0)
         {

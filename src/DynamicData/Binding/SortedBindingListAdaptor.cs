@@ -28,7 +28,7 @@ public class SortedBindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAcc
     /// <inheritdoc />
     public void Adapt(ISortedChangeSet<TObject, TKey> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentNullException.ThrowIfNull(changes);
 
         switch (changes.SortedItems.SortReason)
         {

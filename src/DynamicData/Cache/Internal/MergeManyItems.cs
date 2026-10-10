@@ -22,10 +22,7 @@ internal sealed class MergeManyItems<TObject, TKey, TDestination>
 
     public MergeManyItems(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
     {
-        if (observableSelector is null)
-        {
-            throw new ArgumentNullException(nameof(observableSelector));
-        }
+        ArgumentNullException.ThrowIfNull(observableSelector);
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _observableSelector = (t, _) => observableSelector(t);

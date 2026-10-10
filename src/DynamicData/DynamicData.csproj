@@ -8,8 +8,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Polyfill" Version="11.4.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="System.Reactive" Version="6.1.0" />
   </ItemGroup>
+
+  <!-- Polyfill config -->
+  <PropertyGroup>
+    <!-- Enables polyfills upon static classes, E.G. ArgumentNullExceptions.ThrowIfNull() -->
+    <PolyArgumentExceptions>true</PolyArgumentExceptions>
+    <!-- Attaches [EmbeddedAttribute] to all polyfills, so test and benchmark projects don't get them via [InternalsVisibleTo] -->
+    <PolyUseEmbeddedAttribute>true</PolyUseEmbeddedAttribute>
+  </PropertyGroup>
 
   <ItemGroup>
     <Using Include="DynamicData.Kernel" />
@@ -23,6 +35,11 @@ Bring the power of Rx to collections using Dynamic Data.
 Dynamic Data is a comprehensive caching and data manipulation solution which introduces domain centric observable collections.
       Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more.
     </Description>
+  </PropertyGroup>
+
+  <!-- For targets that don't support System.Threading.Lock, disable the "Lock cast to object" warning, as this is actually the desired behavior for our partial Lock polyfill -->
+  <PropertyGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
+    <NoWarn>$(NoWarn);CS9216</NoWarn>
   </PropertyGroup>
 
   <!-- AsyncDisposeMany is only supported on platforms that have IAsyncDisposable. -->

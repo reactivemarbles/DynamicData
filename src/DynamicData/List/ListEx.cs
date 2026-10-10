@@ -25,8 +25,8 @@ public static class ListEx
     /// </exception>
     public static void Add<T>(this IList<T> source, IEnumerable<T> items)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        items.ThrowArgumentNullExceptionIfNull(nameof(items));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(items);
 
         items.ForEach(source.Add);
     }
@@ -40,8 +40,8 @@ public static class ListEx
     /// <param name="index">The index.</param>
     public static void AddOrInsertRange<T>(this IList<T> source, IEnumerable<T> items, int index)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        items.ThrowArgumentNullExceptionIfNull(nameof(items));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(items);
 
         switch (source)
         {
@@ -87,8 +87,8 @@ public static class ListEx
     /// </exception>
     public static void AddRange<T>(this IList<T> source, IEnumerable<T> items)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        items.ThrowArgumentNullExceptionIfNull(nameof(items));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(items);
 
         switch (source)
         {
@@ -114,8 +114,8 @@ public static class ListEx
     /// <param name="index">The index.</param>
     public static void AddRange<T>(this IList<T> source, IEnumerable<T> items, int index)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        items.ThrowArgumentNullExceptionIfNull(nameof(items));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(items);
 
         switch (source)
         {
@@ -150,7 +150,7 @@ public static class ListEx
     /// <returns>The index of the specified value in the specified array, if value is found; otherwise, a negative number.</returns>
     public static int BinarySearch<TItem>(this IList<TItem> list, TItem value, IComparer<TItem> comparer)
     {
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentNullException.ThrowIfNull(comparer);
 
         return list.BinarySearch(value, comparer.Compare);
     }
@@ -167,8 +167,8 @@ public static class ListEx
     /// <returns>The index of the specified value in the specified array, if value is found; otherwise, a negative number.</returns>
     public static int BinarySearch<TItem, TSearch>(this IList<TItem> list, TSearch value, Func<TSearch, TItem, int> comparer)
     {
-        list.ThrowArgumentNullExceptionIfNull(nameof(list));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentNullException.ThrowIfNull(list);
+        ArgumentNullException.ThrowIfNull(comparer);
 
         var lower = 0;
         var upper = list.Count - 1;
@@ -238,8 +238,8 @@ public static class ListEx
     public static void Clone<T>(this IList<T> source, IEnumerable<Change<T>> changes, IEqualityComparer<T>? equalityComparer)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(changes);
 
         foreach (var item in changes)
         {
@@ -266,8 +266,8 @@ public static class ListEx
     /// <returns>The index.</returns>
     public static int IndexOf<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> equalityComparer)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        equalityComparer.ThrowArgumentNullExceptionIfNull(nameof(equalityComparer));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(equalityComparer);
 
         var i = 0;
         foreach (var candidate in source)
@@ -311,8 +311,8 @@ public static class ListEx
     /// </exception>
     public static void Remove<T>(this IList<T> source, IEnumerable<T> items)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        items.ThrowArgumentNullExceptionIfNull(nameof(items));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(items);
 
         items.ForEach(t => source.Remove(t));
     }
@@ -330,8 +330,8 @@ public static class ListEx
             across the source collection IndexOf lookups can result in very slow updates
             (especially for subsequent operators)
         */
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        itemsToRemove.ThrowArgumentNullExceptionIfNull(nameof(itemsToRemove));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(itemsToRemove);
 
         var toRemoveArray = itemsToRemove.AsArray();
 
@@ -367,9 +367,9 @@ public static class ListEx
     /// items.</exception>
     public static void Replace<T>(this IList<T> source, T original, T replaceWith)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        original.ThrowArgumentNullExceptionIfNull(nameof(original));
-        replaceWith.ThrowArgumentNullExceptionIfNull(nameof(replaceWith));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(original);
+        ArgumentNullException.ThrowIfNull(replaceWith);
 
         var index = source.IndexOf(original);
         if (index == -1)
@@ -393,10 +393,10 @@ public static class ListEx
     /// items.</exception>
     public static void Replace<T>(this IList<T> source, T original, T replaceWith, IEqualityComparer<T> comparer)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        original.ThrowArgumentNullExceptionIfNull(nameof(original));
-        replaceWith.ThrowArgumentNullExceptionIfNull(nameof(replaceWith));
-        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(original);
+        ArgumentNullException.ThrowIfNull(replaceWith);
+        ArgumentNullException.ThrowIfNull(comparer);
 
         var index = source.IndexOf(original);
         if (index == -1)
@@ -419,9 +419,9 @@ public static class ListEx
     /// <param name="replaceWith">The value to replace with.</param>
     public static void ReplaceOrAdd<T>(this IList<T> source, T original, T replaceWith)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        original.ThrowArgumentNullExceptionIfNull(nameof(original));
-        replaceWith.ThrowArgumentNullExceptionIfNull(nameof(replaceWith));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(original);
+        ArgumentNullException.ThrowIfNull(replaceWith);
 
         var index = source.IndexOf(original);
         if (index == -1)
@@ -627,7 +627,7 @@ public static class ListEx
     /// <exception cref="NotSupportedException">Cannot remove range.</exception>
     private static void RemoveRange<T>(this IList<T> source, int index, int count)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         switch (source)
         {

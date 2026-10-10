@@ -104,7 +104,7 @@ internal sealed class TransformMany<TDestination, TDestinationKey, TSource, TSou
                     (t, _) =>
                     {
                         // Only skip initial for first time Adds where there is initial data records
-                        var locker = InternalEx.NewLock();
+                        var locker = new Lock();
                         var changes = childChanges(t).Synchronize(locker).Skip(1);
                         return new ManyContainer(
                             () =>

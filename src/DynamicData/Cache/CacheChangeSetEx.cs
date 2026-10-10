@@ -44,8 +44,8 @@ internal static class CacheChangeSetEx
         where TDestination : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformer.ThrowArgumentNullExceptionIfNull(nameof(transformer));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(transformer);
 
         var changes = source.Select(change =>
             new Change<TDestination, TKey>(change.Reason, change.Key, transformer(change.Current), change.Previous.Convert(transformer), change.CurrentIndex, change.PreviousIndex));

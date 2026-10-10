@@ -18,7 +18,7 @@ internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache
 
     public AnonymousObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         _cache = new ObservableCache<TObject, TKey>(source);
 

@@ -7,11 +7,22 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
+internal sealed class DynamicCombiner<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IObservableList<IObservable<IChangeSet<TObject, TKey>>> _source = source ?? throw new ArgumentNullException(nameof(source));
+    private readonly IObservableList<IObservable<IChangeSet<TObject, TKey>>> _source;
+    private readonly CombineOperator _type;
+
+    public DynamicCombiner(
+        IObservableList<IObservable<IChangeSet<TObject, TKey>>> source,
+        CombineOperator type)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        _source = source;
+        _type = type;
+    }
 
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
@@ -48,7 +59,7 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
                         // Remove items if required
                         ProcessChanges(resultCache, sourceLists.Items.AsArray(), mc.Cache.KeyValues);
 
-                        if (type == CombineOperator.And || type == CombineOperator.Except)
+                        if (_type == CombineOperator.And || _type == CombineOperator.Except)
                         {
                             var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Cache.KeyValues);
                             ProcessChanges(resultCache, sourceLists.Items.AsArray(), itemsToCheck);
@@ -67,7 +78,7 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
                     {
                         ProcessChanges(resultCache, sourceLists.Items.AsArray(), mc.Current.Cache.KeyValues);
 
-                        if (type == CombineOperator.And || type == CombineOperator.Except)
+                        if (_type == CombineOperator.And || _type == CombineOperator.Except)
                         {
                             ProcessChanges(resultCache, sourceLists.Items.AsArray(), resultCache.KeyValues.ToArray());
                         }
@@ -89,7 +100,7 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
             return false;
         }
 
-        switch (type)
+        switch (_type)
         {
             case CombineOperator.And:
                 {

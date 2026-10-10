@@ -35,8 +35,8 @@ public static partial class ObservableCacheEx
     [Obsolete("This can cause unhandled exception issues so do not use")]
     public static IObservable<T> FinallySafe<T>(this IObservable<T> source, Action finallyAction)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        finallyAction.ThrowArgumentNullExceptionIfNull(nameof(finallyAction));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(finallyAction);
 
         return new FinallySafe<T>(source, finallyAction).Run();
     }
