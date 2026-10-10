@@ -33,7 +33,7 @@ public static partial class ObservableCacheEx
         where TObject : IKey<TKey>
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return source.StartWithItem(item, item.Key);
     }
@@ -52,7 +52,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         var change = new Change<TObject, TKey>(ChangeReason.Add, key, item);
         return source.StartWith(new ChangeSet<TObject, TKey> { change });

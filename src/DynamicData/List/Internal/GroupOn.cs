@@ -27,7 +27,7 @@ internal sealed class GroupOn<TObject, TGroupKey>(IObservable<IChangeSet<TObject
                 // capture the grouping up front which has the benefit that the group key is only selected once
                 var itemsWithGroup = _source.Transform<TObject, ItemWithGroupKey>((t, previous) => new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p => p.Group)), true);
 
-                var locker = InternalEx.NewLock();
+                var locker = new Lock();
                 var shared = itemsWithGroup.Synchronize(locker).Publish();
 
                 var grouper = shared.Select(changes => Process(groupings, groupCache, changes));

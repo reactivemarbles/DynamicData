@@ -43,7 +43,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
         where T : notnull
     {
-        reasons.ThrowArgumentNullExceptionIfNull(nameof(reasons));
+        ArgumentNullException.ThrowIfNull(reasons);
 
         if (reasons.Length == 0)
         {

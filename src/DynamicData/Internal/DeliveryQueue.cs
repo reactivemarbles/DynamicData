@@ -14,11 +14,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
 {
     private readonly Queue<Notification<T>> _queue = new(1);
 
-#if NET9_0_OR_GREATER
     private readonly Lock _gate;
-#else
-    private readonly object _gate;
-#endif
 
     private readonly IObserver<T> _observer;
     private int _drainThreadId = -1;
@@ -30,11 +26,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     /// <param name="observer">The observer that receives delivered items.</param>
     public DeliveryQueue(IObserver<T> observer)
     {
-#if NET9_0_OR_GREATER
         _gate = new Lock();
-#else
-        _gate = new object();
-#endif
         _observer = observer;
     }
 
@@ -43,11 +35,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     /// </summary>
     /// <param name="gate">The lock shared with the caller.</param>
     /// <param name="observer">The observer that receives delivered items.</param>
-#if NET9_0_OR_GREATER
     public DeliveryQueue(Lock gate, IObserver<T> observer)
-#else
-    public DeliveryQueue(object gate, IObserver<T> observer)
-#endif
     {
         _gate = gate;
         _observer = observer;
@@ -118,16 +106,6 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
         scope.EnqueueCompleted();
     }
 
-#if NET9_0_OR_GREATER
-    private void EnterLock() => _gate.Enter();
-
-    private void ExitLock() => _gate.Exit();
-#else
-    private void EnterLock() => Monitor.Enter(_gate);
-
-    private void ExitLock() => Monitor.Exit(_gate);
-#endif
-
     private void EnqueueNotification(Notification<T> item)
     {
         if (_isTerminated)
@@ -141,7 +119,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
     private void ExitLockAndDeliver()
     {
         var shouldDeliver = TryStartDelivery();
-        ExitLock();
+        _gate.Exit();
 
         if (shouldDeliver)
         {
@@ -222,7 +200,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
         internal ScopedAccess(DeliveryQueue<T> owner)
         {
             _owner = owner;
-            owner.EnterLock();
+            owner._gate.Enter();
         }
 
         /// <summary>Enqueues an OnNext notification.</summary>
@@ -258,7 +236,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
         internal ReadOnlyScopedAccess(DeliveryQueue<T> owner)
         {
             _owner = owner;
-            owner.EnterLock();
+            owner._gate.Enter();
         }
 
         /// <summary>Gets whether there are notifications pending delivery.</summary>
@@ -275,7 +253,7 @@ internal sealed class DeliveryQueue<T> : IObserver<T>, IDisposable
             }
 
             _owner = null;
-            owner.ExitLock();
+            owner._gate.Exit();
         }
     }
 }

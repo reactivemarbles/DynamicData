@@ -41,12 +41,8 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> Top<T>(this IObservable<IChangeSet<T>> source, int numberOfItems)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-
-        if (numberOfItems <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(numberOfItems), "Number of items should be greater than zero");
-        }
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(numberOfItems);
 
         return source.Virtualise(Observable.Return(new VirtualRequest(0, numberOfItems)));
     }

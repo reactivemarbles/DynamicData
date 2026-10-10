@@ -33,7 +33,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <param name="items">The items to seed the change aware list with.</param>
     public ChangeAwareList(IEnumerable<T> items)
     {
-        items.ThrowArgumentNullExceptionIfNull(nameof(items));
+        ArgumentNullException.ThrowIfNull(items);
 
         var list = items.ToList();
 
@@ -53,7 +53,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <param name="copyChanges">Should the list of changes also be copied over?.</param>
     public ChangeAwareList(ChangeAwareList<T> list, bool copyChanges)
     {
-        list.ThrowArgumentNullExceptionIfNull(nameof(list));
+        ArgumentNullException.ThrowIfNull(list);
 
         _innerList = new List<T>(list._innerList);
 
@@ -375,15 +375,8 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <param name="index">The index to remove the item at.</param>
     public void RemoveAt(int index)
     {
-        if (index < 0)
-        {
-            throw new ArgumentException($"{nameof(index)} cannot be negative");
-        }
-
-        if (index > _innerList.Count)
-        {
-            throw new ArgumentOutOfRangeException(nameof(index), $"{nameof(index)} cannot be greater than the size of the collection");
-        }
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(index, _innerList.Count);
 
         RemoveItem(index);
     }
@@ -394,10 +387,10 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <param name="index">The zero-based starting index of the range of elements to remove.</param><param name="count">The number of elements to remove.</param><exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is less than 0.-or-<paramref name="count"/> is less than 0.</exception><exception cref="ArgumentException"><paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <see cref="List{T}"/>.</exception>
     public void RemoveRange(int index, int count)
     {
-        if (index >= _innerList.Count || index + count > _innerList.Count)
-        {
-            throw new ArgumentOutOfRangeException(nameof(index));
-        }
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(count, _innerList.Count);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(index, _innerList.Count - count);
 
         var toRemove = _innerList.Skip(index).Take(count).ToList();
         if (toRemove.Count == 0)

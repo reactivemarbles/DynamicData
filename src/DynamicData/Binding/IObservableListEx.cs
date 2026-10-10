@@ -26,10 +26,7 @@ public static class IObservableListEx
     public static IObservable<IChangeSet<TObject>> BindToObservableList<TObject>(this IObservable<IChangeSet<TObject>> source, out IObservableList<TObject> observableList)
         where TObject : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ArgumentNullException.ThrowIfNull(source);
 
         // Load our source list with the change set.
         // Each change set we need to convert to remove the key.
@@ -58,10 +55,7 @@ public static class IObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ArgumentNullException.ThrowIfNull(source);
 
         // Load our source list with the change set.
         // Each change set we need to convert to remove the key.
@@ -90,10 +84,7 @@ public static class IObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ArgumentNullException.ThrowIfNull(source);
 
         // Load our source list with the change set.
         // Each change set we need to convert to remove the key.
