@@ -37,9 +37,9 @@ public static partial class ObservableListEx
         where TObject : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
-        conversionFactory.ThrowArgumentNullExceptionIfNull(nameof(conversionFactory));
+        ArgumentNullException.ThrowIfNull(conversionFactory);
 
         return source.Select(changes => changes.Transform(conversionFactory));
     }

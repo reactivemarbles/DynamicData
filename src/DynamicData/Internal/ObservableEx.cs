@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive;
+using System.Reactive.Linq;
 
 namespace DynamicData.Internal;
 
@@ -19,6 +20,32 @@ internal static class ObservableEx
 
     public static IDisposable SubscribeSafe<T>(this IObservable<T> observable, Action<Exception> onError) =>
         observable.SubscribeSafe(Observer.Create(Stub<T>.Ignore, onError));
+
+    public static IObservable<T> Synchronize<T>(
+            this IObservable<T> source,
+            Lock gate)
+        => Observable.Create<T>(observer => source.SubscribeSafe(
+            onNext: value =>
+            {
+                lock (gate)
+                {
+                    observer.OnNext(value);
+                }
+            },
+            onError: error =>
+            {
+                lock (gate)
+                {
+                    observer.OnError(error);
+                }
+            },
+            onCompleted: () =>
+            {
+                lock (gate)
+                {
+                    observer.OnCompleted();
+                }
+            }));
 
     private static class Stub<T>
     {

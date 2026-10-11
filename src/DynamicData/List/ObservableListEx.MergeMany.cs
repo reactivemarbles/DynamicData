@@ -50,9 +50,9 @@ public static partial class ObservableListEx
     public static IObservable<TDestination> MergeMany<T, TDestination>(this IObservable<IChangeSet<T>> source, Func<T, IObservable<TDestination>> observableSelector)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentNullException.ThrowIfNull(observableSelector);
 
         return new MergeMany<T, TDestination>(source, observableSelector).Run();
     }

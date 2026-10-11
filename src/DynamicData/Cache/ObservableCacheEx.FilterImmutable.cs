@@ -60,8 +60,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(predicate);
 
         return new FilterImmutable<TObject, TKey>(
                 predicate: predicate,

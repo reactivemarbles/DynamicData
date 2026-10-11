@@ -41,11 +41,7 @@ internal static class SynchronizeSafeExtensions
 
     // Routes the source through an implicitly created DeliveryQueue<T>. Drop-in replacement
     // for Observable.Synchronize(locker).
-#if NET9_0_OR_GREATER
     public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, Lock gate) =>
-#else
-    public static IObservable<T> SynchronizeSafe<T>(this IObservable<T> source, object gate) =>
-#endif
         Observable.Create<T>(observer =>
         {
             var queue = new DeliveryQueue<T>(gate, observer);

@@ -13,8 +13,8 @@ internal static class OnItemAdded<T>
         IObservable<IChangeSet<T>> source,
         Action<T> addAction)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(addAction);
 
         return source.Do(changeSet =>
         {

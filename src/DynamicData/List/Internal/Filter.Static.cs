@@ -16,8 +16,8 @@ internal static partial class Filter
             Func<T, bool> predicate,
             bool suppressEmptyChangesets)
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(predicate);
 
             return Observable.Create<IChangeSet<T>>(downstreamObserver =>
             {

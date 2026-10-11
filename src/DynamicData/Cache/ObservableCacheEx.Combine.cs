@@ -29,7 +29,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
@@ -44,7 +44,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
@@ -59,7 +59,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return new DynamicCombiner<TObject, TKey>(source, type).Run();
     }
@@ -68,7 +68,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentNullException.ThrowIfNull(sources);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
@@ -105,7 +105,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        combineTarget.ThrowArgumentNullExceptionIfNull(nameof(combineTarget));
+        ArgumentNullException.ThrowIfNull(combineTarget);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>

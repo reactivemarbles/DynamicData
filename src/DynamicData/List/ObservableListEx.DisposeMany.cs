@@ -53,7 +53,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> DisposeMany<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return new DisposeMany<T>(source).Run();
     }
