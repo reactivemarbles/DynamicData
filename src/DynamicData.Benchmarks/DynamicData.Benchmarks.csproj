@@ -5,7 +5,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <IsPackable>false</IsPackable>
-    <NoWarn>;1591;1701;1702;1705;CA1822;CA1001</NoWarn>
+    <NoWarn>$(NoWarn);CA1822;CA1001</NoWarn>
   </PropertyGroup>
 
 
