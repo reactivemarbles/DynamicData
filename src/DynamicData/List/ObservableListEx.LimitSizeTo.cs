@@ -47,14 +47,14 @@ public static partial class ObservableListEx
     public static IObservable<IEnumerable<T>> LimitSizeTo<T>(this ISourceList<T> source, int sizeLimit, IScheduler? scheduler = null)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         if (sizeLimit <= 0)
         {
             throw new ArgumentException("sizeLimit cannot be zero", nameof(sizeLimit));
         }
 
-        var locker = InternalEx.NewLock();
+        var locker = new Lock();
         var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? GlobalConfig.DefaultScheduler, locker);
 
         return limiter.Run().Synchronize(locker).Do(source.RemoveMany);

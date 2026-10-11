@@ -43,9 +43,9 @@ public static partial class ObservableListEx
     public static IObservable<IVirtualChangeSet<T>> Virtualise<T>(this IObservable<IChangeSet<T>> source, IObservable<IVirtualRequest> requests)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
-        requests.ThrowArgumentNullExceptionIfNull(nameof(requests));
+        ArgumentNullException.ThrowIfNull(requests);
 
         return new Virtualiser<T>(source, requests).Run();
     }

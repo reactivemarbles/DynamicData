@@ -57,7 +57,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject>(this IObservable<IChangeSet<TObject>> source, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return source.AutoRefreshOnObservable(
             t =>
@@ -82,8 +82,8 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TProperty>> propertyAccessor, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        propertyAccessor.ThrowArgumentNullExceptionIfNull(nameof(propertyAccessor));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(propertyAccessor);
 
         return source.AutoRefreshOnObservable(
             t =>

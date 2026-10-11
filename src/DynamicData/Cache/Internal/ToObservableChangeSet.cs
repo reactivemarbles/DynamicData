@@ -65,11 +65,7 @@ internal static class ToObservableChangeSet<TObject, TKey>
         private readonly int _limitSizeTo;
         private readonly IScheduler _scheduler;
         private readonly IDisposable _sourceSubscription;
-        #if NET9_0_OR_GREATER
         private readonly Lock _synchronizationGate;
-        #else
-        private readonly object _synchronizationGate;
-        #endif
 
         private bool _hasInitialized;
         private bool _hasSourceCompleted;

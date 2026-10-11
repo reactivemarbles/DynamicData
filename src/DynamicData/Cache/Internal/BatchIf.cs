@@ -9,22 +9,42 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, TimeSpan? timeOut, bool initialPauseState = false, IObservable<Unit>? intervalTimer = null, IScheduler? scheduler = null)
+internal sealed class BatchIf<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IObservable<bool> _pauseIfTrueSelector = pauseIfTrueSelector ?? throw new ArgumentNullException(nameof(pauseIfTrueSelector));
+    private readonly bool _initialPauseState;
+    private readonly IObservable<Unit>? _intervalTimer;
+    private readonly IObservable<bool> _pauseIfTrueSelector;
+    private readonly IScheduler _scheduler;
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+    private readonly TimeSpan? _timeOut;
 
-    private readonly IScheduler _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
+    public BatchIf(
+        IObservable<IChangeSet<TObject, TKey>> source,
+        IObservable<bool> pauseIfTrueSelector,
+        TimeSpan? timeOut,
+        bool initialPauseState = false,
+        IObservable<Unit>? intervalTimer = null,
+        IScheduler? scheduler = null)
+    {
+        ArgumentNullException.ThrowIfNull(pauseIfTrueSelector);
+        ArgumentNullException.ThrowIfNull(source);
 
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
+        _initialPauseState = initialPauseState;
+        _intervalTimer = intervalTimer;
+        _pauseIfTrueSelector = pauseIfTrueSelector;
+        _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
+        _source = source;
+        _timeOut = timeOut;
+    }
 
     public IObservable<ChangeSet<TObject, TKey>> Run() => Observable.Create<ChangeSet<TObject, TKey>>(
             observer =>
             {
                 var batchedChanges = new List<IChangeSet<TObject, TKey>>();
                 var queue = new SharedDeliveryQueue();
-                var paused = initialPauseState;
+                var paused = _initialPauseState;
                 var timeoutDisposer = new SerialDisposable();
                 var intervalTimerDisposer = new SerialDisposable();
 
@@ -46,18 +66,18 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                 }
 
                 IDisposable IntervalFunction() =>
-                    intervalTimer.SynchronizeSafe(queue).Finally(() => paused = false).Subscribe(
+                    _intervalTimer.SynchronizeSafe(queue).Finally(() => paused = false).Subscribe(
                         _ =>
                         {
                             paused = false;
                             ResumeAction();
-                            if (intervalTimer is not null)
+                            if (_intervalTimer is not null)
                             {
                                 paused = true;
                             }
                         });
 
-                if (intervalTimer is not null)
+                if (_intervalTimer is not null)
                 {
                     intervalTimerDisposer.Disposable = IntervalFunction();
                 }
@@ -69,16 +89,16 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
                         if (!p)
                         {
                             // pause window has closed, so reset timer
-                            if (timeOut.HasValue)
+                            if (_timeOut.HasValue)
                             {
                                 timeoutDisposer.Disposable = Disposable.Empty;
                             }
 
                             ResumeAction();
                         }
-                        else if (timeOut.HasValue)
+                        else if (_timeOut.HasValue)
                         {
-                            timeoutDisposer.Disposable = Observable.Timer(timeOut.Value, _scheduler).SynchronizeSafe(queue).Subscribe(
+                            timeoutDisposer.Disposable = Observable.Timer(_timeOut.Value, _scheduler).SynchronizeSafe(queue).Subscribe(
                                 _ =>
                                 {
                                     paused = false;

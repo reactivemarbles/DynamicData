@@ -34,7 +34,7 @@ public static class BindingListEx
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this BindingList<T> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return ToObservableChangeSet<BindingList<T>, T>(source);
     }
@@ -55,8 +55,8 @@ public static class BindingListEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return ToObservableChangeSet<BindingList<TObject>, TObject>(source).AddKey(keySelector);
     }
@@ -74,7 +74,7 @@ public static class BindingListEx
         where TCollection : IBindingList, IEnumerable<T>
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return Observable.Create<IChangeSet<T>>(
             observer =>
@@ -137,8 +137,8 @@ public static class BindingListEx
         where T : notnull
     {
         // ** Copied from ListEx for binding list specific changes
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(changes);
 
         foreach (var item in changes)
         {
