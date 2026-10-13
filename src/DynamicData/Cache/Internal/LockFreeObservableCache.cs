@@ -43,15 +43,13 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
             {
                 _innerCache.Clone(changes);
                 return _innerCache.CaptureChanges();
-            }).SubscribeSafe(_changes);
+            }).SubscribeSafe(_changes.OnNext, NotifyError, NotifyCompleted);
 
         _cleanUp = Disposable.Create(
             () =>
             {
                 loader.Dispose();
-                _changesPreview.OnCompleted();
-                _changes.OnCompleted();
-                _countChanged.OnCompleted();
+                NotifyCompleted();
             });
     }
 
@@ -62,12 +60,7 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     {
         _updater = new CacheUpdater<TObject, TKey>(_innerCache);
 
-        _cleanUp = Disposable.Create(
-            () =>
-            {
-                _changes.OnCompleted();
-                _countChanged.OnCompleted();
-            });
+        _cleanUp = Disposable.Create(NotifyCompleted);
     }
 
     /// <inheritdoc />
@@ -157,6 +150,22 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
                                 observer.OnNext(change);
                             }
                         }
-                    });
+                    },
+                    observer.OnError,
+                    observer.OnCompleted);
             });
+
+    private void NotifyCompleted()
+    {
+        _changesPreview.OnCompleted();
+        _changes.OnCompleted();
+        _countChanged.OnCompleted();
+    }
+
+    private void NotifyError(Exception error)
+    {
+        _changesPreview.OnError(error);
+        _changes.OnError(error);
+        _countChanged.OnError(error);
+    }
 }
