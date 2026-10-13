@@ -26,7 +26,7 @@ public static partial class ObservableCacheEx
         where TObject : INotifyPropertyChanged
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return source.AutoRefreshOnObservable(
             (t, _) =>
@@ -58,7 +58,7 @@ public static partial class ObservableCacheEx
         where TObject : INotifyPropertyChanged
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return source.AutoRefreshOnObservable(
             (t, _) =>

@@ -35,9 +35,9 @@ public static partial class ObservableListEx
         where TObject : INotifyPropertyChanged
         where TGroup : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
-        propertySelector.ThrowArgumentNullExceptionIfNull(nameof(propertySelector));
+        ArgumentNullException.ThrowIfNull(propertySelector);
 
         return new GroupOnProperty<TObject, TGroup>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
     }

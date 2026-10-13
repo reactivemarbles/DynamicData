@@ -36,7 +36,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         source.Edit(updater => updater.AddOrUpdate(item));
     }
@@ -50,7 +50,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         source.Edit(updater => updater.AddOrUpdate(item, equalityComparer));
     }
@@ -63,7 +63,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         source.Edit(updater => updater.AddOrUpdate(items));
     }
@@ -77,7 +77,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         source.Edit(updater => updater.AddOrUpdate(items, equalityComparer));
     }
@@ -91,8 +91,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        item.ThrowArgumentNullExceptionIfNull(nameof(item));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(item);
 
         source.Edit(updater => updater.AddOrUpdate(item, key));
     }

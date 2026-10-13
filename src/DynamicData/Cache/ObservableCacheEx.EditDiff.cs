@@ -23,9 +23,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        allItems.ThrowArgumentNullExceptionIfNull(nameof(allItems));
-        equalityComparer.ThrowArgumentNullExceptionIfNull(nameof(equalityComparer));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(allItems);
+        ArgumentNullException.ThrowIfNull(equalityComparer);
 
         source.EditDiff(allItems, equalityComparer.Equals);
     }
@@ -53,9 +53,9 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        allItems.ThrowArgumentNullExceptionIfNull(nameof(allItems));
-        areItemsEqual.ThrowArgumentNullExceptionIfNull(nameof(areItemsEqual));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(allItems);
+        ArgumentNullException.ThrowIfNull(areItemsEqual);
 
         var editDiff = new EditDiff<TObject, TKey>(source, areItemsEqual);
         editDiff.Edit(allItems);
@@ -87,8 +87,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return new EditDiffChangeSet<TObject, TKey>(source, keySelector, equalityComparer).Run();
     }
@@ -117,8 +117,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return new EditDiffChangeSetOptional<TObject, TKey>(source, keySelector, equalityComparer).Run();
     }

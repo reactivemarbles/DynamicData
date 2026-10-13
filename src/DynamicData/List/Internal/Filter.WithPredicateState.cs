@@ -16,11 +16,11 @@ internal static partial class Filter
             ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff,
             bool suppressEmptyChangeSets = true)
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            predicateState.ThrowArgumentNullExceptionIfNull(nameof(predicateState));
-            predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(predicateState);
+            ArgumentNullException.ThrowIfNull(predicate);
 
-            if (!EnumEx.IsDefined(filterPolicy))
+            if (!Enum.IsDefined(filterPolicy))
                 throw new ArgumentException($"Invalid {nameof(ListFilterPolicy)} value {filterPolicy}");
 
             return Observable.Create<IChangeSet<T>>(observer =>
@@ -48,11 +48,13 @@ internal static partial class Filter
         {
             private readonly List<Change<T>> _downstreamChangesBuffer;
             private readonly IObserver<IChangeSet<T>> _downstreamObserver;
+            private readonly Lock _downstreamSynchronizationGate;
             private readonly List<T> _itemsBuffer;
             private readonly List<ItemState> _itemStates;
             private readonly List<ItemState> _itemStatesBuffer;
             private readonly Func<TState, T, bool> _predicate;
             private readonly bool _suppressEmptyChangeSets;
+            private readonly Lock _upstreamSynchronizationGate;
 
             private bool _hasPredicateStateCompleted;
             private bool _hasSourceCompleted;
@@ -69,6 +71,9 @@ internal static partial class Filter
                 _downstreamObserver = downstreamObserver;
                 _predicate = predicate;
                 _suppressEmptyChangeSets = suppressEmptyChangeSets;
+
+                _downstreamSynchronizationGate = new();
+                _upstreamSynchronizationGate = new();
 
                 _downstreamChangesBuffer = new();
                 _itemsBuffer = new();
@@ -142,12 +147,6 @@ internal static partial class Filter
 
             protected abstract void PerformReplace(ItemChange<T> change);
 
-            private object DownstreamSynchronizationGate
-                => _downstreamChangesBuffer;
-
-            private object UpstreamSynchronizationGate
-                => _itemStates;
-
             private IChangeSet<T> AssembleDownstreamChanges()
             {
                 if (_downstreamChangesBuffer.Count is 0)
@@ -165,17 +164,19 @@ internal static partial class Filter
                 var hasDownstreamLock = false;
                 try
                 {
-                    Monitor.Enter(UpstreamSynchronizationGate, ref hasUpstreamLock);
+                    _upstreamSynchronizationGate.Enter();
+                    hasUpstreamLock = true;
 
                     _predicateStateSubscription?.Dispose();
                     _sourceSubscription?.Dispose();
 
-                    Monitor.Enter(DownstreamSynchronizationGate, ref hasDownstreamLock);
+                    _downstreamSynchronizationGate.Enter();
+                    hasDownstreamLock = true;
 
                     if (hasUpstreamLock)
                     {
-                        Monitor.Exit(UpstreamSynchronizationGate);
                         hasUpstreamLock = false;
+                        _upstreamSynchronizationGate.Exit();
                     }
 
                     _downstreamObserver.OnError(error);
@@ -183,10 +184,10 @@ internal static partial class Filter
                 finally
                 {
                     if (hasUpstreamLock)
-                        Monitor.Exit(UpstreamSynchronizationGate);
+                        _upstreamSynchronizationGate.Exit();
 
                     if (hasDownstreamLock)
-                        Monitor.Exit(DownstreamSynchronizationGate);
+                        _downstreamSynchronizationGate.Exit();
                 }
             }
 
@@ -196,7 +197,8 @@ internal static partial class Filter
                 var hasDownstreamLock = false;
                 try
                 {
-                    Monitor.Enter(UpstreamSynchronizationGate, ref hasUpstreamLock);
+                    _upstreamSynchronizationGate.Enter();
+                    hasUpstreamLock = true;
 
                     _hasPredicateStateCompleted = true;
 
@@ -204,12 +206,13 @@ internal static partial class Filter
                     // no matter how many items come through from source, so just go ahead and complete now.
                     if (_hasSourceCompleted || (!_isLatestPredicateStateValid && _suppressEmptyChangeSets))
                     {
-                        Monitor.Enter(DownstreamSynchronizationGate, ref hasDownstreamLock);
+                        _downstreamSynchronizationGate.Enter();
+                        hasDownstreamLock = true;
 
                         if (hasUpstreamLock)
                         {
-                            Monitor.Exit(UpstreamSynchronizationGate);
                             hasUpstreamLock = false;
+                            _upstreamSynchronizationGate.Exit();
                         }
 
                         _downstreamObserver.OnCompleted();
@@ -218,10 +221,10 @@ internal static partial class Filter
                 finally
                 {
                     if (hasUpstreamLock)
-                        Monitor.Exit(UpstreamSynchronizationGate);
+                        _upstreamSynchronizationGate.Exit();
 
                     if (hasDownstreamLock)
-                        Monitor.Exit(DownstreamSynchronizationGate);
+                        _downstreamSynchronizationGate.Exit();
                 }
             }
 
@@ -231,7 +234,8 @@ internal static partial class Filter
                 var hasDownstreamLock = false;
                 try
                 {
-                    Monitor.Enter(UpstreamSynchronizationGate, ref hasUpstreamLock);
+                    _upstreamSynchronizationGate.Enter();
+                    hasUpstreamLock = true;
 
                     _latestPredicateState = predicateState;
                     _isLatestPredicateStateValid = true;
@@ -242,12 +246,13 @@ internal static partial class Filter
 
                     if ((downstreamChanges.Count is not 0) || !_suppressEmptyChangeSets)
                     {
-                        Monitor.Enter(DownstreamSynchronizationGate, ref hasDownstreamLock);
+                        _downstreamSynchronizationGate.Enter();
+                        hasDownstreamLock = true;
 
                         if (hasUpstreamLock)
                         {
-                            Monitor.Exit(UpstreamSynchronizationGate);
                             hasUpstreamLock = false;
+                            _upstreamSynchronizationGate.Exit();
                         }
 
                         _downstreamObserver.OnNext(downstreamChanges);
@@ -256,10 +261,10 @@ internal static partial class Filter
                 finally
                 {
                     if (hasUpstreamLock)
-                        Monitor.Exit(UpstreamSynchronizationGate);
+                        _upstreamSynchronizationGate.Exit();
 
                     if (hasDownstreamLock)
-                        Monitor.Exit(DownstreamSynchronizationGate);
+                        _downstreamSynchronizationGate.Exit();
                 }
             }
 
@@ -269,7 +274,8 @@ internal static partial class Filter
                 var hasDownstreamLock = false;
                 try
                 {
-                    Monitor.Enter(UpstreamSynchronizationGate, ref hasUpstreamLock);
+                    _upstreamSynchronizationGate.Enter();
+                    hasUpstreamLock = true;
 
                     _hasSourceCompleted = true;
 
@@ -277,12 +283,13 @@ internal static partial class Filter
                     // and the source has reported that it'll never change, so go ahead and complete now.
                     if (_hasPredicateStateCompleted || ((_itemStates.Count is 0) && _suppressEmptyChangeSets))
                     {
-                        Monitor.Enter(DownstreamSynchronizationGate, ref hasDownstreamLock);
+                        _downstreamSynchronizationGate.Enter();
+                        hasDownstreamLock = true;
 
                         if (hasUpstreamLock)
                         {
-                            Monitor.Exit(UpstreamSynchronizationGate);
                             hasUpstreamLock = false;
+                            _upstreamSynchronizationGate.Exit();
                         }
 
                         _downstreamObserver.OnCompleted();
@@ -291,10 +298,10 @@ internal static partial class Filter
                 finally
                 {
                     if (hasUpstreamLock)
-                        Monitor.Exit(UpstreamSynchronizationGate);
+                        _upstreamSynchronizationGate.Exit();
 
                     if (hasDownstreamLock)
-                        Monitor.Exit(DownstreamSynchronizationGate);
+                        _downstreamSynchronizationGate.Exit();
                 }
             }
 
@@ -304,7 +311,8 @@ internal static partial class Filter
                 var hasDownstreamLock = false;
                 try
                 {
-                    Monitor.Enter(UpstreamSynchronizationGate, ref hasUpstreamLock);
+                    _upstreamSynchronizationGate.Enter();
+                    hasUpstreamLock = true;
 
                     foreach (var change in upstreamChanges)
                     {
@@ -350,12 +358,13 @@ internal static partial class Filter
 
                     if ((downstreamChanges.Count is not 0) || !_suppressEmptyChangeSets)
                     {
-                        Monitor.Enter(DownstreamSynchronizationGate, ref hasDownstreamLock);
+                        _downstreamSynchronizationGate.Enter();
+                        hasDownstreamLock = true;
 
                         if (hasUpstreamLock)
                         {
-                            Monitor.Exit(UpstreamSynchronizationGate);
                             hasUpstreamLock = false;
+                            _upstreamSynchronizationGate.Exit();
                         }
 
                         _downstreamObserver.OnNext(downstreamChanges);
@@ -364,10 +373,10 @@ internal static partial class Filter
                 finally
                 {
                     if (hasUpstreamLock)
-                        Monitor.Exit(UpstreamSynchronizationGate);
+                        _upstreamSynchronizationGate.Exit();
 
                     if (hasDownstreamLock)
-                        Monitor.Exit(DownstreamSynchronizationGate);
+                        _downstreamSynchronizationGate.Exit();
                 }
             }
 

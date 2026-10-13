@@ -238,8 +238,8 @@ public static class SumEx
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<int> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, int> valueSelector)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
 
         return source.Accumulate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
     }
@@ -262,8 +262,8 @@ public static class SumEx
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<long> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, long> valueSelector)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
 
         return source.Accumulate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
     }
@@ -277,8 +277,8 @@ public static class SumEx
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<long> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, long?> valueSelector)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
 
         return source.Accumulate(0L, t => valueSelector(t).ValueOr(0), (current, value) => current + value, (current, value) => current - value);
     }
@@ -292,8 +292,8 @@ public static class SumEx
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<double> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, double> valueSelector)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
 
         return source.Accumulate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
     }
@@ -307,8 +307,8 @@ public static class SumEx
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<double> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, double?> valueSelector)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
 
         return source.Accumulate(0D, t => valueSelector(t).ValueOr(0), (current, value) => current + value, (current, value) => current - value);
     }
@@ -322,8 +322,8 @@ public static class SumEx
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<decimal> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, decimal> valueSelector)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
 
         return source.Accumulate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
     }
@@ -337,8 +337,8 @@ public static class SumEx
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<decimal> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, decimal?> valueSelector)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
 
         return source.Accumulate(0M, t => valueSelector(t).ValueOr(0), (current, value) => current + value, (current, value) => current - value);
     }
@@ -352,8 +352,8 @@ public static class SumEx
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<float> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, float> valueSelector)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
 
         return source.Accumulate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
     }
@@ -367,8 +367,8 @@ public static class SumEx
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<float> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, float?> valueSelector)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
 
         return source.Accumulate(0F, t => valueSelector(t).ValueOr(0), (current, value) => current + value, (current, value) => current - value);
     }

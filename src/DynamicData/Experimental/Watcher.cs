@@ -10,11 +10,7 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
 {
     private readonly IDisposable _disposer;
 
-#if NET9_0_OR_GREATER
     private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
 
     [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly IObservableCache<TObject, TKey> _source;

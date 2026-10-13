@@ -13,7 +13,7 @@ internal static class ToObservableChangeSet<TObject>
         int limitSizeTo,
         IScheduler? scheduler)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return Observable.Create<IChangeSet<TObject>>(downstreamObserver =>
         {
@@ -39,7 +39,7 @@ internal static class ToObservableChangeSet<TObject>
         int limitSizeTo,
         IScheduler? scheduler)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return Observable.Create<IChangeSet<TObject>>(downstreamObserver => new Subscription(
             downstreamObserver: downstreamObserver,
@@ -59,11 +59,7 @@ internal static class ToObservableChangeSet<TObject>
         private readonly int _limitSizeTo;
         private readonly IScheduler _scheduler;
         private readonly IDisposable _sourceSubscription;
-        #if NET9_0_OR_GREATER
         private readonly Lock _synchronizationGate;
-        #else
-        private readonly object _synchronizationGate;
-        #endif
 
         private bool _hasInitialized;
         private bool _hasSourceCompleted;

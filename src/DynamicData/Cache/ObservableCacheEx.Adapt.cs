@@ -33,8 +33,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        adaptor.ThrowArgumentNullExceptionIfNull(nameof(adaptor));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(adaptor);
 
         return source.Do(adaptor.Adapt);
     }
@@ -47,8 +47,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        adaptor.ThrowArgumentNullExceptionIfNull(nameof(adaptor));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(adaptor);
 
         return source.Do(adaptor.Adapt);
     }

@@ -21,8 +21,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(subscribe);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return Create(
             cache =>
@@ -45,8 +45,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(subscribe);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
@@ -79,8 +79,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(subscribe);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return Create(async (cache, _) => await subscribe(cache).ConfigureAwait(false), keySelector);
     }
@@ -97,8 +97,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(subscribe);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             async (observer, ct) =>
@@ -132,8 +132,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(subscribe);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return Create((cache, _) => subscribe(cache), keySelector);
     }
@@ -150,8 +150,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(subscribe);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             async (observer, ct) =>
@@ -194,8 +194,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(subscribe);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             async observer =>
@@ -228,8 +228,8 @@ public static class ObservableChangeSet
         where TObject : notnull
         where TKey : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(subscribe);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             async (observer, ct) =>
@@ -259,7 +259,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Action> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentNullException.ThrowIfNull(subscribe);
 
         return Create<T>(
             list =>
@@ -278,7 +278,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, IDisposable> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentNullException.ThrowIfNull(subscribe);
 
         return Observable.Create<IChangeSet<T>>(
             observer =>
@@ -316,7 +316,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task<IDisposable>> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentNullException.ThrowIfNull(subscribe);
 
         return Create<T>((list, _) => subscribe(list));
     }
@@ -330,7 +330,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task<IDisposable>> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentNullException.ThrowIfNull(subscribe);
 
         return Observable.Create<IChangeSet<T>>(
             async (observer, ct) =>
@@ -371,7 +371,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task<Action>> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentNullException.ThrowIfNull(subscribe);
 
         return Create<T>(async (list, _) => await subscribe(list).ConfigureAwait(false));
     }
@@ -385,7 +385,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task<Action>> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentNullException.ThrowIfNull(subscribe);
 
         return Observable.Create<IChangeSet<T>>(
             async (observer, ct) =>
@@ -425,7 +425,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentNullException.ThrowIfNull(subscribe);
 
         return Observable.Create<IChangeSet<T>>(
             async observer =>
@@ -455,7 +455,7 @@ public static class ObservableChangeSet
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task> subscribe)
         where T : notnull
     {
-        subscribe.ThrowArgumentNullExceptionIfNull(nameof(subscribe));
+        ArgumentNullException.ThrowIfNull(subscribe);
 
         return Observable.Create<IChangeSet<T>>(
             async (observer, ct) =>

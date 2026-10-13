@@ -9,12 +9,6 @@ namespace DynamicData.Kernel;
 /// </summary>
 public static class InternalEx
 {
-#if NET9_0_OR_GREATER
-    internal static Lock NewLock() => new();
-#else
-    internal static object NewLock() => new();
-#endif
-
     /// <summary>
     /// Retries the with back off.
     /// </summary>
@@ -79,7 +73,7 @@ public static class InternalEx
     /// <returns>A disposable that will stop the schedule.</returns>
     public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, Func<TimeSpan> interval, Action action)
     {
-        interval.ThrowArgumentNullExceptionIfNull(nameof(interval));
+        ArgumentNullException.ThrowIfNull(interval);
 
         return scheduler.Schedule(
             interval(),

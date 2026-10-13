@@ -22,11 +22,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     private readonly Lazy<SuspensionTracker> _suspensionTracker;
 
-#if NET9_0_OR_GREATER
     private readonly Lock _locker = new();
-#else
-    private readonly object _locker = new();
-#endif
 
     private readonly ReaderWriter<TObject, TKey> _readerWriter;
 
@@ -142,7 +138,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     internal void UpdateFromIntermediate(Action<ICacheUpdater<TObject, TKey>> updateAction)
     {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentNullException.ThrowIfNull(updateAction);
 
         using var notifications = _notifications.AcquireLock();
 
@@ -179,7 +175,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction)
     {
-        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        ArgumentNullException.ThrowIfNull(updateAction);
 
         using var notifications = _notifications.AcquireLock();
 
