@@ -42,8 +42,8 @@ public static partial class ObservableListEx
     /// <listheader><term>Event</term><description>Behavior</description></listheader>
     /// <item><term>Add</term><description>Item inserted at the specified index in the target collection.</description></item>
     /// <item><term>AddRange</term><description>Items inserted as a range. If the count exceeds <paramref name="resetThreshold"/>, the collection is cleared and repopulated.</description></item>
-    /// <item><term>Replace</term><description>Item at the specified index is replaced.</description></item>
-    /// <item><term>Remove</term><description>Item at the specified index is removed.</description></item>
+    /// <item><term>Replace</term><description>Item at the specified index is replaced. When the index is unspecified, the first item equal to the previous value is replaced in place.</description></item>
+    /// <item><term>Remove</term><description>Item at the specified index is removed. When the index is unspecified, the first equal item is removed.</description></item>
     /// <item><term>RemoveRange/Clear</term><description>Items removed from the collection.</description></item>
     /// <item><term>Moved</term><description>Item is moved between positions in the collection.</description></item>
     /// <item><term>Refresh</term><description>Depends on the adaptor implementation.</description></item>

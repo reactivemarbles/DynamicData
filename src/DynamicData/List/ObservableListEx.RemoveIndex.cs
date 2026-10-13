@@ -32,6 +32,14 @@ public static partial class ObservableListEx
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     /// <remarks>
     /// <para>Removes index positions from every change in each changeset. This is useful when downstream operators do not require or support index-based operations.</para>
+    /// <list type="table">
+    /// <listheader><term>Event</term><description>Behavior</description></listheader>
+    /// <item><term>Add / AddRange / Remove / RemoveRange / Replace / Clear</term><description>Emitted with the same reason and an unspecified index of -1.</description></item>
+    /// <item><term>Refresh</term><description>Emitted as a <b>Replace</b> of the item with itself, with unspecified indexes, because a <b>Refresh</b> must carry an index.</description></item>
+    /// <item><term>Moved</term><description>Dropped, since a move has no meaning without its indexes.</description></item>
+    /// <item><term>OnError / OnCompleted</term><description>Forwarded.</description></item>
+    /// </list>
+    /// <para><b>Worth noting:</b> because a refresh arrives downstream as a <b>Replace</b>, operators that treat refreshes specially (such as <see cref="SuppressRefresh{T}(IObservable{IChangeSet{T}})"/>, or <c>Transform</c> without <c>transformOnRefresh</c>) handle it as a replacement instead.</para>
     /// </remarks>
     /// <seealso cref="ChangeSetEx.YieldWithoutIndex{T}(IEnumerable{Change{T}})"/>
     public static IObservable<IChangeSet<T>> RemoveIndex<T>(this IObservable<IChangeSet<T>> source)

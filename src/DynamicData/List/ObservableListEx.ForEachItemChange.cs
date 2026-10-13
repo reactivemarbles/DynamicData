@@ -37,6 +37,10 @@ public static partial class ObservableListEx
     /// Unlike <see cref="ForEachChange{TObject}(IObservable{IChangeSet{TObject}}, Action{Change{TObject}})"/>, this operator flattens
     /// <b>AddRange</b>, <b>RemoveRange</b>, and <b>Clear</b> into individual <see cref="ItemChange{TObject}"/> entries before invoking the callback.
     /// </para>
+    /// <para>
+    /// Flattened range items are numbered from the range index, or carry an unspecified index of -1 when the range has none.
+    /// <b>Clear</b> items are numbered from 0, their positions in the cleared list.
+    /// </para>
     /// </remarks>
     /// <seealso cref="ForEachChange{TObject}(IObservable{IChangeSet{TObject}}, Action{Change{TObject}})"/>
     public static IObservable<IChangeSet<TObject>> ForEachItemChange<TObject>(this IObservable<IChangeSet<TObject>> source, Action<ItemChange<TObject>> action)

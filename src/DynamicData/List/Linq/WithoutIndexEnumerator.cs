@@ -14,6 +14,20 @@ namespace DynamicData.List.Linq;
 internal sealed class WithoutIndexEnumerator<T>(IEnumerable<Change<T>> changeSet) : IEnumerable<Change<T>>
     where T : notnull
 {
+    /// <summary>
+    /// Copies an Add, AddRange, Replace, Remove, RemoveRange or Clear change without its indexes. A Refresh must carry an
+    /// index, so it becomes an unindexed Replace of the item with itself, as RemoveKey emits for a cache Refresh.
+    /// </summary>
+    /// <param name="change">The change to copy. Moved changes cannot be unindexed.</param>
+    /// <returns>The unindexed copy.</returns>
+    public static Change<T> WithoutIndex(Change<T> change)
+        => change.Reason switch
+        {
+            ListChangeReason.Refresh => new Change<T>(ListChangeReason.Replace, change.Item.Current, Optional.Some(change.Item.Current)),
+            _ when change.Type == ChangeType.Item => new Change<T>(change.Reason, change.Item.Current, change.Item.Previous),
+            _ => new Change<T>(change.Reason, change.Range),
+        };
+
     public IEnumerator<Change<T>> GetEnumerator()
     {
         foreach (var change in changeSet)
@@ -24,14 +38,7 @@ internal sealed class WithoutIndexEnumerator<T>(IEnumerable<Change<T>> changeSet
                 continue;
             }
 
-            if (change.Type == ChangeType.Item)
-            {
-                yield return new Change<T>(change.Reason, change.Item.Current, change.Item.Previous);
-            }
-            else
-            {
-                yield return new Change<T>(change.Reason, change.Range);
-            }
+            yield return WithoutIndex(change);
         }
     }
 

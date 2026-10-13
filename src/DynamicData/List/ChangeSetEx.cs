@@ -20,6 +20,11 @@ public static class ChangeSetEx
     /// <param name="source">The source.</param>
     /// <returns>An enumerable of change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
+    /// <remarks>
+    /// <b>AddRange</b> and <b>RemoveRange</b> become <b>Add</b> and <b>Remove</b> item changes numbered from the range index, or with an
+    /// unspecified index of -1 when the range has none. <b>Clear</b> items become <b>Remove</b> item changes numbered from 0, their
+    /// positions in the cleared list. Item changes are returned unchanged.
+    /// </remarks>
     public static IEnumerable<ItemChange<T>> Flatten<T>(this IChangeSet<T> source)
         where T : notnull
     {
@@ -80,6 +85,11 @@ public static class ChangeSetEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An enumerable of changes.</returns>
+    /// <remarks>
+    /// <b>Moved</b> changes are dropped, since a move has no meaning without its indexes. A <b>Refresh</b> must carry an index,
+    /// so it becomes an unindexed <b>Replace</b> of the item with itself, the same change
+    /// <see cref="ObservableCacheEx.RemoveKey{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/> emits for a cache refresh.
+    /// </remarks>
     public static IEnumerable<Change<T>> YieldWithoutIndex<T>(this IEnumerable<Change<T>> source)
         where T : notnull
     {

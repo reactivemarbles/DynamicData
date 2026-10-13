@@ -33,6 +33,8 @@ internal sealed class TransformAsync<TSource, TDestination>
 
     public IObservable<IChangeSet<TDestination>> Run() => Observable.Defer(RunImpl);
 
+    private static TSource SelectSource(Transformer<TSource, TDestination>.TransformedItemContainer container) => container.Source;
+
     private IObservable<IChangeSet<TDestination>> RunImpl()
     {
         return Observable.Using(
@@ -134,24 +136,15 @@ internal sealed class TransformAsync<TSource, TDestination>
                 case ListChangeReason.Refresh:
                     {
                         var change = item.Item;
-                        var index = change.CurrentIndex;
-
-                        if (index < 0)
-                        {
-                            index = transformed.FindItemIndex(change.Current);
-                            if (index < 0)
-                                break;
-                        }
-
                         if (_transformOnRefresh)
                         {
-                            var container = await _containerFactory(change.Current, transformed[index].Destination, index, cancel)
-                                .ConfigureAwait(false);
-                            transformed[index] = container;
+                            Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
+                            var container = await _containerFactory(change.Current, previous, change.CurrentIndex, cancel).ConfigureAwait(false);
+                            transformed[change.CurrentIndex] = container;
                         }
                         else
                         {
-                            transformed.RefreshAt(index);
+                            transformed.RefreshAt(change.CurrentIndex);
                         }
 
                         break;
@@ -159,24 +152,17 @@ internal sealed class TransformAsync<TSource, TDestination>
 
                 case ListChangeReason.Replace:
                     {
-                        var change = item.Item;
-                        var currentIndex = change.CurrentIndex;
-                        var previousIndex = change.PreviousIndex;
+                        var change = item.Item.ResolveIndexes(transformed, SelectSource);
 
-                        if (previousIndex < 0)
-                            previousIndex = transformed.FindItemIndex(change.Previous.Value);
-
-                        if (currentIndex < 0)
-                            currentIndex = previousIndex;
-
-                        if (currentIndex == previousIndex)
+                        Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
+                        if (change.CurrentIndex == change.PreviousIndex)
                         {
-                            transformed[currentIndex] = await _containerFactory(change.Current, transformed[previousIndex].Destination, currentIndex, cancel);
+                            transformed[change.CurrentIndex] = await _containerFactory(change.Current, previous, change.CurrentIndex, cancel).ConfigureAwait(false);
                         }
                         else
                         {
-                            transformed.RemoveAt(previousIndex);
-                            transformed.Insert(currentIndex, await _containerFactory(change.Current, Optional<TDestination>.None, currentIndex, cancel));
+                            transformed.RemoveAt(change.PreviousIndex);
+                            transformed.Insert(change.CurrentIndex, await _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex, cancel).ConfigureAwait(false));
                         }
 
                         break;
@@ -184,17 +170,12 @@ internal sealed class TransformAsync<TSource, TDestination>
 
                 case ListChangeReason.Remove:
                     {
-                        var change = item.Item;
-                        var index = change.CurrentIndex;
-
-                        if (index < 0)
+                        var index = item.Item.ResolveIndexes(transformed, SelectSource).CurrentIndex;
+                        if (index >= 0)
                         {
-                            index = transformed.FindItemIndex(change.Current);
-                            if (index < 0)
-                                break;
+                            transformed.RemoveAt(index);
                         }
 
-                        transformed.RemoveAt(index);
                         break;
                     }
 
@@ -206,13 +187,13 @@ internal sealed class TransformAsync<TSource, TDestination>
                         }
                         else
                         {
-                            foreach (var current in item.Range)
+                            foreach (var source in item.Range)
                             {
-                                var index = transformed.FindItemIndex(current);
-                                if (index < 0)
-                                    continue;
-
-                                transformed.RemoveAt(index);
+                                var index = transformed.IndexOf(source, SelectSource);
+                                if (index >= 0)
+                                {
+                                    transformed.RemoveAt(index);
+                                }
                             }
                         }
 
