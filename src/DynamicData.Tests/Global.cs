@@ -38,8 +38,10 @@ global using VerifyXunit;
 
 global using DynamicData.Binding;
 global using DynamicData.Cache.Internal;
+global using DynamicData.Experimental;
 global using DynamicData.Internal;
 global using DynamicData.Kernel;
+global using DynamicData.PLinq;
 
 global using DynamicData.Tests.Domain;
 global using DynamicData.Tests.Utilities;

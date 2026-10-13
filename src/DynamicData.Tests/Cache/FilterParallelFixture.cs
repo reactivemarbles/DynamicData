@@ -1,5 +1,3 @@
-using DynamicData.PLinq;
-
 namespace DynamicData.Tests.Cache;
 
 public class FilterParallelFixture : IDisposable
