@@ -206,19 +206,13 @@ internal sealed class TransformAsync<TSource, TDestination>
                         }
                         else
                         {
-                            foreach (var removedItem in item.Range)
+                            foreach (var current in item.Range)
                             {
-                                var manyToRemove = new List<Transformer<TSource, TDestination>.TransformedItemContainer>(capacity: item.Range.Count);
-                                foreach (var current in item.Range)
-                                {
-                                    var index = transformed.FindItemIndex(current);
-                                    if (index < 0)
-                                        continue;
+                                var index = transformed.FindItemIndex(current);
+                                if (index < 0)
+                                    continue;
 
-                                    manyToRemove.Add(transformed[index]);
-                                }
-
-                                transformed.RemoveMany(manyToRemove);
+                                transformed.RemoveAt(index);
                             }
                         }
 

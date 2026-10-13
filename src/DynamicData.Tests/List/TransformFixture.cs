@@ -115,7 +115,7 @@ public class TransformFixture : IDisposable
             {
                 new Change<int>(
                     reason: ListChangeReason.AddRange,
-                    items:  Enumerable.Range(1, 5))
+                    items:  new[] { 1, 2, 3, 4, 5, 4, 3, 2, 1 })
             })
             .Append(new ChangeSet<int>()
             {
@@ -132,7 +132,7 @@ public class TransformFixture : IDisposable
 
         results.Error.Should().BeNull("no errors should have occurred");
         results.RecordedChangeSets.Count.Should().Be(2, "2 source operations were performed");
-        results.RecordedItems.Should().BeEquivalentTo(new[] { "2", "4" }, static options => options.WithStrictOrdering(), "The odd-numbered items in the list should have been removed");
+        results.RecordedItems.Should().BeEquivalentTo(new[] { "2", "4", "4", "3", "2", "1" }, static options => options.WithStrictOrdering(), "The first occurrence of each odd-numbered item in the list should have been removed");
         results.HasCompleted.Should().BeTrue("the source, and all asynchronous operations, have completed");
     }
 
@@ -145,7 +145,7 @@ public class TransformFixture : IDisposable
             {
                 new Change<int>(
                     reason: ListChangeReason.AddRange,
-                    items:  Enumerable.Range(1, 3))
+                    items:  new[] { 1, 2, 3, 2, 1 })
             })
             .Append(new ChangeSet<int>()
             {
@@ -162,7 +162,7 @@ public class TransformFixture : IDisposable
 
         results.Error.Should().BeNull("no errors should have occurred");
         results.RecordedChangeSets.Count.Should().Be(2, "2 source operations were performed");
-        results.RecordedItems.Should().BeEquivalentTo(new[] { "1", "3" }, static options => options.WithStrictOrdering(), "The middle item in the list should have been removed");
+        results.RecordedItems.Should().BeEquivalentTo(new[] { "1", "3", "2", "1" }, static options => options.WithStrictOrdering(), "The first occurrence of the given item should have been removed");
         results.HasCompleted.Should().BeTrue("the source, and all asynchronous operations, have completed");
     }
     
