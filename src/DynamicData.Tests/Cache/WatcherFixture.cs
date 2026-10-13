@@ -208,4 +208,26 @@ public class WatcherFixture : IDisposable
         received.Should().ContainSingle("the watch starts with the current value").Which.Current.Should().Be(person);
         isCompleted.Should().BeTrue("a watch on a finished source can never receive anything more");
     }
+
+    [Fact]
+    public void WatchJoiningAKeyWhoseWatchesHaveEndedReceivesTheLastValueThenEnds()
+    {
+        using var source = new TestSourceCache<Person, string>(p => p.Key);
+        using var watcher = source.Connect().AsWatcher(_scheduler);
+
+        var person = new Person("Adult1", 50);
+        source.AddOrUpdate(person);
+        using var first = watcher.Watch(person.Key).Subscribe(static _ => { }, static _ => { });
+
+        var expectedError = new Exception("Test Exception");
+        source.SetError(expectedError);
+        _scheduler.Start();
+
+        var received = new List<Change<Person, string>>();
+        var actualError = default(Exception);
+        using var second = watcher.Watch(person.Key).Subscribe(received.Add, error => actualError = error);
+
+        received.Should().ContainSingle("the watch starts with the last value").Which.Current.Should().Be(person);
+        actualError.Should().BeSameAs(expectedError, "the key's watches have already failed with the source");
+    }
 }
