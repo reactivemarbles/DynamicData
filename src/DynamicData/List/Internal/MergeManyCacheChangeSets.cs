@@ -51,7 +51,7 @@ internal sealed class MergeManyCacheChangeSets<TObject, TDestination, TDestinati
                     changeTracker.EmitChanges(observer);
                     parentUpdate = false;
                 })
-                .Subscribe();
+                .Subscribe(static _ => { }, static _ => { });
 
             return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove);
         });
