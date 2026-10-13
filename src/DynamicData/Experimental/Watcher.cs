@@ -12,28 +12,37 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
 
     private readonly Lock _locker = new();
 
-    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly IObservableCache<TObject, TKey> _source;
+    // Kept by the same subscription that hands out the changes, under the same lock, so a new watch's first value is
+    // never out of step with the changes already handed out.
+    private readonly Cache<TObject, TKey> _source = new();
 
     [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly IntermediateCache<SubjectWithRefCount<Change<TObject, TKey>>, TKey> _subscribers = new();
 
+    // Applies the source's terminal event to a watch's subject, so that a subject created after the source has ended
+    // starts out ended. Does nothing until then.
+    private Action<SubjectWithRefCount<Change<TObject, TKey>>> _terminate = static _ => { };
+
     public Watcher(IObservable<IChangeSet<TObject, TKey>> source, IScheduler scheduler)
     {
-        _source = source.AsObservableCache();
-
         var onCompletePublisher = _subscribers.Connect().Synchronize(_locker).ObserveOn(scheduler).SubscribeMany((t, _) => Disposable.Create(t.OnCompleted)).Subscribe();
 
         var sourceSubscriber = source.Synchronize(_locker).Subscribe(
-            updates => updates.ForEach(
-                update =>
-                {
-                    var subscriber = _subscribers.Lookup(update.Key);
-                    if (subscriber.HasValue)
+            updates =>
+            {
+                _source.Clone(updates);
+                updates.ForEach(
+                    update =>
                     {
-                        scheduler.Schedule(() => subscriber.Value.OnNext(update));
-                    }
-                }));
+                        var subscriber = _subscribers.Lookup(update.Key);
+                        if (subscriber.HasValue)
+                        {
+                            scheduler.Schedule(() => subscriber.Value.OnNext(update));
+                        }
+                    });
+            },
+            error => Terminate(subject => subject.OnError(error)),
+            () => Terminate(static subject => subject.OnCompleted()));
 
         _disposer = Disposable.Create(
             () =>
@@ -41,9 +50,15 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
                 onCompletePublisher.Dispose();
                 sourceSubscriber.Dispose();
 
-                _source.Dispose();
                 _subscribers.Dispose();
             });
+
+        // The terminal event reaches existing watches through the scheduler, the same way their changes do.
+        void Terminate(Action<SubjectWithRefCount<Change<TObject, TKey>>> terminate)
+        {
+            _terminate = terminate;
+            _subscribers.Items.ForEach(subject => scheduler.Schedule(() => terminate(subject)));
+        }
     }
 
     public void Dispose() => _disposer.Dispose();
@@ -71,6 +86,7 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
                             subject.OnNext(update);
                         }
 
+                        _terminate(subject);
                         _subscribers.Edit(updater => updater.AddOrUpdate(subject, key));
                     }
 
