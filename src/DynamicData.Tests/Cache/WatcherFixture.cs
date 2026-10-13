@@ -110,6 +110,43 @@ public class WatcherFixture : IDisposable
     }
 
     [Fact]
+    public void WatchCompletesAfterPendingChangesWhenTheSourceCompletes()
+    {
+        using var source = new TestSourceCache<Person, string>(p => p.Key);
+        using var watcher = source.Connect().AsWatcher(_scheduler);
+
+        var received = new List<Change<Person, string>>();
+        var receivedAtCompletion = 0;
+        var isCompleted = false;
+        using var subscription = watcher.Watch("Adult1").Subscribe(received.Add, () => { isCompleted = true; receivedAtCompletion = received.Count; });
+
+        source.AddOrUpdate(new Person("Adult1", 50));
+        source.Complete();
+        _scheduler.Start();
+
+        isCompleted.Should().BeTrue("the source completed");
+        receivedAtCompletion.Should().Be(1, "the change was scheduled ahead of the completion, so it should arrive first");
+    }
+
+    [Fact]
+    public void WatchFailsWhenTheSourceFails()
+    {
+        using var source = new TestSourceCache<Person, string>(p => p.Key);
+        using var watcher = source.Connect().AsWatcher(_scheduler);
+
+        var actualError = default(Exception);
+        var isCompleted = false;
+        using var subscription = watcher.Watch("Adult1").Subscribe(static _ => { }, error => actualError = error, () => isCompleted = true);
+
+        var expectedError = new Exception("Test Exception");
+        source.SetError(expectedError);
+        _scheduler.Start();
+
+        actualError.Should().BeSameAs(expectedError, "a watch should be told when the source fails");
+        isCompleted.Should().BeFalse("the source failed, it did not complete");
+    }
+
+    [Fact]
     public void WatchMany()
     {
         _source.AddOrUpdate(new Person("Adult1", 50));
@@ -151,5 +188,24 @@ public class WatcherFixture : IDisposable
         watch1.Dispose();
         watch2.Dispose();
         watch3.Dispose();
+    }
+
+    [Fact]
+    public void WatchStartedAfterTheSourceCompletedReceivesTheCurrentValueThenCompletes()
+    {
+        using var source = new TestSourceCache<Person, string>(p => p.Key);
+        using var watcher = source.Connect().AsWatcher(_scheduler);
+
+        var person = new Person("Adult1", 50);
+        source.AddOrUpdate(person);
+        source.Complete();
+        _scheduler.Start();
+
+        var received = new List<Change<Person, string>>();
+        var isCompleted = false;
+        using var subscription = watcher.Watch(person.Key).Subscribe(received.Add, () => isCompleted = true);
+
+        received.Should().ContainSingle("the watch starts with the current value").Which.Current.Should().Be(person);
+        isCompleted.Should().BeTrue("a watch on a finished source can never receive anything more");
     }
 }

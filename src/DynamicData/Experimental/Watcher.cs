@@ -18,6 +18,10 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
     [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly IntermediateCache<SubjectWithRefCount<Change<TObject, TKey>>, TKey> _subscribers = new();
 
+    // Carries only the source's terminal event, which a Subject replays to any watch that starts afterwards.
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Completed rather than disposed, because a terminal event scheduled before disposal may still arrive")]
+    private readonly Subject<Change<TObject, TKey>> _termination = new();
+
     public Watcher(IObservable<IChangeSet<TObject, TKey>> source, IScheduler scheduler)
     {
         _source = source.AsObservableCache();
@@ -33,7 +37,9 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
                     {
                         scheduler.Schedule(() => subscriber.Value.OnNext(update));
                     }
-                }));
+                }),
+            error => scheduler.Schedule(() => _termination.OnError(error)),
+            () => scheduler.Schedule(_termination.OnCompleted));
 
         _disposer = Disposable.Create(
             () =>
@@ -43,6 +49,7 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
 
                 _source.Dispose();
                 _subscribers.Dispose();
+                _termination.OnCompleted();
             });
     }
 
@@ -76,6 +83,7 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
 
                     // set up subscription
                     var subscriber = subject.SubscribeSafe(observer);
+                    var terminationSubscriber = _termination.SubscribeSafe(observer);
 
                     return Disposable.Create(
                         () =>
@@ -84,6 +92,7 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
                             // to whilst disposal is taking place
                             lock (_locker)
                             {
+                                terminationSubscriber.Dispose();
                                 subscriber.Dispose();
                                 if (subject.RefCount == 0)
                                 {
