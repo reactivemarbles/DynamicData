@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-using DynamicData.Binding;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class TransformTreeWithRefreshFixture : IDisposable
 {
@@ -96,7 +87,7 @@ public class TransformTreeWithRefreshFixture : IDisposable
         node1.Value.IsRoot.Should().BeTrue();
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
     private IEnumerable<EmployeeDto> CreateEmployees()
     {
         yield return new EmployeeDto(1)

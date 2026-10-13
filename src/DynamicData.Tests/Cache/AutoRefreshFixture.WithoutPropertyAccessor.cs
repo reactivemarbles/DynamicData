@@ -1,12 +1,3 @@
-using System;
-using System.Linq;
-using System.Reactive.Concurrency;
-
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
 namespace DynamicData.Tests.Cache;
 
 public static partial class AutoRefreshFixture

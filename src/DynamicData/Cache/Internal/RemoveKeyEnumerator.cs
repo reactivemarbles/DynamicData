@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections;
-
 namespace DynamicData.Cache.Internal;
 
 /// <summary>Initializes a new instance of the <see cref="RemoveKeyEnumerator{TObject, TKey}"/> class.Converts a <see cref="Change{TObject, TKey}"/> to <see cref="ChangeSet{TObject}"/>.</summary>

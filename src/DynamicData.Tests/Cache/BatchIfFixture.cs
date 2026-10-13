@@ -1,16 +1,3 @@
-﻿using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
-using Xunit.Abstractions;
-
 namespace DynamicData.Tests.Cache;
 
 public partial class BatchIfFixture : IDisposable

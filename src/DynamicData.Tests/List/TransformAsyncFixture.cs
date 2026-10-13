@@ -1,14 +1,3 @@
-using System;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-
 namespace DynamicData.Tests.List;
 
 [Obsolete("Not obsolete - test commented out due to test run freezing on Appveyor")]

@@ -1,6 +1,4 @@
-﻿using Xunit;
-
-namespace DynamicData.Tests;
+﻿namespace DynamicData.Tests;
 
 [Collection(CollectionName)]
 [CollectionDefinition(CollectionName, DisableParallelization = true)]

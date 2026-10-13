@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Subjects;
-using BenchmarkDotNet.Attributes;
-using DynamicData.Binding;
-
-namespace DynamicData.Benchmarks.Cache;
+﻿namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]

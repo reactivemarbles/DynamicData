@@ -106,7 +106,9 @@ public static class EnumerableEx
         }
     }
 
+    #if !NET9_0_OR_GREATER
     internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => new(source);
+    #endif
 
     /// <summary>
     /// Returns an object with it's current index.

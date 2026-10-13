@@ -1,15 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
-
-using FluentAssertions;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 internal static class ObservableExtensions
 {
@@ -402,7 +391,7 @@ internal static class ObservableExtensions
         // This allows the operator to be combined with other operators that might be testing for things that the safeguards normally prevent.
         => RawAnonymousObservable.Create<T>(observer =>
         {
-            var inFlightNotification = null as Notification<T>;
+            var inFlightNotification = null as System.Reactive.Notification<T>;
             var synchronizationGate = new object();
 
             // Not using .Do() so we can track the *entire* in-flight period of a notification, including all synchronous downstream processing.
@@ -411,7 +400,7 @@ internal static class ObservableExtensions
                 onError: error => ProcessIncomingNotification(Notification.CreateOnError<T>(error)),
                 onCompleted: () => ProcessIncomingNotification(Notification.CreateOnCompleted<T>())));
 
-            void ProcessIncomingNotification(Notification<T> incomingNotification)
+            void ProcessIncomingNotification(System.Reactive.Notification<T> incomingNotification)
             {
                 try
                 {

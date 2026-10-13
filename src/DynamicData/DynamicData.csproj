@@ -4,7 +4,6 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsAotCompatible>true</IsAotCompatible>
     <IsPackable>true</IsPackable>
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,11 +24,6 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="DynamicData.Kernel" />
-    <Using Include="DynamicData.Internal" />
   </ItemGroup>
 
   <PropertyGroup>

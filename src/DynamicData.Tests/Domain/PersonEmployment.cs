@@ -1,6 +1,6 @@
 namespace DynamicData.Tests.Domain;
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1066:Implement IEquatable when overriding Object.Equals", Justification = "Acceptable in a test.")]
+[SuppressMessage("Design", "CA1066:Implement IEquatable when overriding Object.Equals", Justification = "Acceptable in a test.")]
 public readonly struct PersonEmpKey
 {
     private readonly string _name;
@@ -13,7 +13,7 @@ public readonly struct PersonEmpKey
         _company = company;
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Acceptable in a test.")]
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Acceptable in a test.")]
     public PersonEmpKey(PersonEmployment personEmployment)
     {
         _name = personEmployment.Name;
@@ -90,6 +90,6 @@ public class PersonEmployment : IKey<PersonEmpKey>
 
     public override string ToString() => string.Format("Name: {0}, Company: {1}", Name, Company);
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Acceptable in a test.")]
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Acceptable in a test.")]
     protected bool Equals(PersonEmployment other) => string.Equals(Name, other.Name) && string.Equals(Company, other.Company);
 }

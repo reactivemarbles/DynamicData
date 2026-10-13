@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reactive.Linq;
-
-namespace DynamicData.Tests.Domain;
+﻿namespace DynamicData.Tests.Domain;
 
 public class SelfObservingPerson : IDisposable
 {

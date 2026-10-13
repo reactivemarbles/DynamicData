@@ -2,19 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Bogus;
-
-using DynamicData.Internal;
-using FluentAssertions;
-using Xunit;
-
 namespace DynamicData.Tests.Internal;
 
 public class SharedDeliveryQueueFixture

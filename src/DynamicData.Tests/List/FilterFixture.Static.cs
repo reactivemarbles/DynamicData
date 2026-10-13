@@ -1,19 +1,4 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using Randomizer = Bogus.Randomizer;
-using FluentAssertions;
-using Xunit;
-
-using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-
-using Person = DynamicData.Tests.Domain.Person;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public static partial class FilterFixture
 {
