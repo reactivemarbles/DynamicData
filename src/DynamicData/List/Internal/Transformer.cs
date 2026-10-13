@@ -6,6 +6,24 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
+internal static class Transformer
+{
+    public static int FindItemIndex<TSource, TDestination>(
+            this ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer> transformations,
+            TSource sourceItem)
+        where TSource : notnull
+        where TDestination : notnull
+    {
+        for (var i = 0; i < transformations.Count; ++i)
+        {
+            if (EqualityComparer<TSource>.Default.Equals(transformations[i].Source, sourceItem))
+                return i;
+        }
+
+        return -1;
+    }
+}
+
 internal sealed class Transformer<TSource, TDestination>
     where TSource : notnull
     where TDestination : notnull
@@ -79,13 +97,9 @@ internal sealed class Transformer<TSource, TDestination>
                         var index = change.CurrentIndex;
                         if (index < 0)
                         {
-                            // Find the corresponding index
-                            var current = transformed.FirstOrDefault(x => x.Source.Equals(change.Current));
-                            index = current switch
-                            {
-                                { } tic when transformed.IndexOf(tic) is int i and (>= 0) => i,
-                                _ => throw new UnspecifiedIndexException($"Cannot find index of {change.Current}"),
-                            };
+                            index = transformed.FindItemIndex(change.Current);
+                            if (index < 0)
+                                throw new UnspecifiedIndexException($"Cannot find index of {change.Current}");
                         }
 
                         if (_transformOnRefresh)
