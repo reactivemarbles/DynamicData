@@ -34,7 +34,7 @@
 
   <!-- Build tooling and analyzers, referenced by every matching project as private assets -->
   <ItemGroup>
-    <GlobalPackageReference Include="Nerdbank.GitVersioning" Version="3.9.50" />
+    <GlobalPackageReference Include="Nerdbank.GitVersioning" Version="3.10.94" />
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject)">
     <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
