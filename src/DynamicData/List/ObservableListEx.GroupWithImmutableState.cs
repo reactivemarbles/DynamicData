@@ -47,9 +47,9 @@ public static partial class ObservableListEx
         where TObject : notnull
         where TGroupKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
-        groupSelectorKey.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKey));
+        ArgumentNullException.ThrowIfNull(groupSelectorKey);
 
         return new GroupOnImmutable<TObject, TGroupKey>(source, groupSelectorKey, regrouper).Run();
     }

@@ -25,7 +25,7 @@ internal sealed class LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
     public IObservable<IChangeSet<TDestination, TLeftKey>> Run() => Observable.Create<IChangeSet<TDestination, TLeftKey>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var locker = new Lock();
                 var queue = new SharedDeliveryQueue(locker);
 
                 // create local backing stores

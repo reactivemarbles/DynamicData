@@ -24,7 +24,7 @@ internal sealed class MergeMany<TObject, TKey, TDestination>
 
     public MergeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
     {
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentNullException.ThrowIfNull(observableSelector);
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _observableSelector = (t, _) => observableSelector(t);

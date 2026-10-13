@@ -29,8 +29,8 @@ public static class EnumerableEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             obs =>
@@ -59,7 +59,7 @@ public static class EnumerableEx
     public static IObservable<IChangeSet<TObject>> AsObservableChangeSet<TObject>(this IEnumerable<TObject> source, bool completable = false)
         where TObject : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return Observable.Create<IChangeSet<TObject>>(
             obs =>

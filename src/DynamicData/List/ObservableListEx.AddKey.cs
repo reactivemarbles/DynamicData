@@ -43,8 +43,8 @@ public static partial class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         return source.Select(changes => new ChangeSet<TObject, TKey>(new AddKeyEnumerator<TObject, TKey>(changes, keySelector)));
     }

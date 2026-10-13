@@ -84,8 +84,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pauseIfTrueSelector.ThrowArgumentNullExceptionIfNull(nameof(pauseIfTrueSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(pauseIfTrueSelector);
 
         return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, timeOut, initialPauseState, scheduler: scheduler).Run();
     }

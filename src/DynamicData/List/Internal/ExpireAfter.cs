@@ -19,8 +19,8 @@ internal sealed class ExpireAfter<T>
         TimeSpan? pollingInterval = null,
         IScheduler? scheduler = null)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(timeSelector);
 
         return Observable.Create<IEnumerable<T>>(observer => (pollingInterval is { } pollingIntervalValue)
             ? new PollingSubscription(
@@ -46,6 +46,7 @@ internal sealed class ExpireAfter<T>
         private readonly IScheduler _scheduler;
         private readonly ISourceList<T> _source;
         private readonly IDisposable _sourceSubscription;
+        private readonly Lock _synchronizationGate;
         private readonly Func<T, TimeSpan?> _timeSelector;
 
         private bool _hasSourceCompleted;
@@ -62,6 +63,7 @@ internal sealed class ExpireAfter<T>
             _timeSelector = timeSelector;
 
             _scheduler = scheduler ?? GlobalConfig.DefaultScheduler;
+            _synchronizationGate = new();
 
             _onEditingSource = OnEditingSource;
 
@@ -72,7 +74,7 @@ internal sealed class ExpireAfter<T>
                 .Connect()
                 // It's important to set this flag outside the context of a lock, because it'll be read outside of lock as well.
                 .Finally(() => _hasSourceCompleted = true)
-                .Synchronize(SynchronizationGate)
+                .Synchronize(_synchronizationGate)
                 .SubscribeSafe(
                     onNext: OnSourceNext,
                     onError: OnSourceError,
@@ -81,7 +83,7 @@ internal sealed class ExpireAfter<T>
 
         public void Dispose()
         {
-            lock (SynchronizationGate)
+            lock (_synchronizationGate)
             {
                 _sourceSubscription.Dispose();
 
@@ -91,10 +93,6 @@ internal sealed class ExpireAfter<T>
 
         protected IScheduler Scheduler
             => _scheduler;
-
-        // Instead of using a dedicated _synchronizationGate object, we can save an allocation by using any object that is never exposed to public consumers.
-        protected object SynchronizationGate
-            => _expirationDueTimes;
 
         protected abstract DateTimeOffset? GetNextManagementDueTime();
 
@@ -131,7 +129,7 @@ internal sealed class ExpireAfter<T>
 
         private void OnEditingSource(IExtendedList<T> updater)
         {
-            lock (SynchronizationGate)
+            lock (_synchronizationGate)
             {
                 // The scheduler only promises "best effort" to cancel scheduled operations, so we need to make sure.
                 if (_nextScheduledManagement is not { } thisScheduledManagement)

@@ -222,11 +222,11 @@ public static class StdDevEx
         Func<StdDev<TValue>, TValue, StdDev<TValue>> removeAction,
         Func<StdDev<TValue>, TResult> resultAction)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
-        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
-        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
-        resultAction.ThrowArgumentNullExceptionIfNull(nameof(resultAction));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
+        ArgumentNullException.ThrowIfNull(addAction);
+        ArgumentNullException.ThrowIfNull(removeAction);
+        ArgumentNullException.ThrowIfNull(resultAction);
 
         return source
             .Scan(

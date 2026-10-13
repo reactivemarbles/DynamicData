@@ -13,8 +13,8 @@ internal static class OnItemRefreshed<T>
         IObservable<IChangeSet<T>> source,
         Action<T> refreshAction)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        refreshAction.ThrowArgumentNullExceptionIfNull(nameof(refreshAction));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(refreshAction);
 
         return source.Do(changeSet =>
         {

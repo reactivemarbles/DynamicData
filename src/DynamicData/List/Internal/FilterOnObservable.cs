@@ -17,7 +17,7 @@ internal sealed class FilterOnObservable<TObject>(IObservable<IChangeSet<TObject
     public IObservable<IChangeSet<TObject>> Run() => Observable.Create<IChangeSet<TObject>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var locker = new Lock();
 
                 var allItems = new List<ObjWithFilterValue>();
 
@@ -49,9 +49,9 @@ internal sealed class FilterOnObservable<TObject>(IObservable<IChangeSet<TObject
 
     private static IEnumerable<TResult> IndexOfMany<TObj, TObjectProp, TResult>(IEnumerable<TObj> source, IEnumerable<TObj> itemsToFind, Func<TObj, TObjectProp> objectPropertyFunc, Func<TObj, int, TResult> resultSelector)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        itemsToFind.ThrowArgumentNullExceptionIfNull(nameof(itemsToFind));
-        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(itemsToFind);
+        ArgumentNullException.ThrowIfNull(resultSelector);
 
         var indexed = source.Select((element, index) => new { Element = element, Index = index });
         return itemsToFind.Join(indexed, objectPropertyFunc, right => objectPropertyFunc(right.Element), (left, right) => resultSelector(left, right.Index));
