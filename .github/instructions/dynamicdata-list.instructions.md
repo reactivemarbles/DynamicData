@@ -234,7 +234,7 @@ Applies `Func<T, TDest>` to produce a parallel list of transformed items.
 
 ### TransformAsync
 
-Async version — `Func<T, Task<TDest>>`.
+Async version — `Func<T, Task<TDest>>`. Handles every change reason, including unspecified indexes, exactly as `Transform` does.
 
 ### TransformMany
 

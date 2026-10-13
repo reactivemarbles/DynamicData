@@ -6,24 +6,6 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
-internal static class Transformer
-{
-    public static int FindItemIndex<TSource, TDestination>(
-            this ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer> transformations,
-            TSource sourceItem)
-        where TSource : notnull
-        where TDestination : notnull
-    {
-        for (var i = 0; i < transformations.Count; ++i)
-        {
-            if (EqualityComparer<TSource>.Default.Equals(transformations[i].Source, sourceItem))
-                return i;
-        }
-
-        return -1;
-    }
-}
-
 internal sealed class Transformer<TSource, TDestination>
     where TSource : notnull
     where TDestination : notnull
@@ -94,22 +76,14 @@ internal sealed class Transformer<TSource, TDestination>
                 case ListChangeReason.Refresh:
                     {
                         var change = item.Item;
-                        var index = change.CurrentIndex;
-                        if (index < 0)
-                        {
-                            index = transformed.FindItemIndex(change.Current);
-                            if (index < 0)
-                                throw new UnspecifiedIndexException($"Cannot find index of {change.Current}");
-                        }
-
                         if (_transformOnRefresh)
                         {
-                            Optional<TDestination> previous = transformed[index].Destination;
-                            transformed[index] = _containerFactory(change.Current, previous, index);
+                            Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
+                            transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
                         }
                         else
                         {
-                            transformed.RefreshAt(index);
+                            transformed.RefreshAt(change.CurrentIndex);
                         }
 
                         break;

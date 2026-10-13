@@ -64,6 +64,58 @@ public sealed partial class UnspecifiedIndexFixture
     }
 
     [Fact]
+    public void RemoveKeyThenTransform_AddValueTypeToUnsortedCache_AppendsItem()
+    {
+        // Arrange
+        using var source = new SourceCache<Entry, int>(static entry => entry.Id);
+        var entries = GenerateEntries();
+        var added = _randomizer.ArrayElement(entries);
+        source.AddOrUpdate(entries.Where(entry => entry != added));
+
+        using var subscription = source.Connect()
+            .RemoveKey()
+            .Transform(static entry => entry.Value)
+            .ValidateSynchronization()
+            .ValidateChangeSets()
+            .RecordListItems(out var results);
+
+        var expected = results.RecordedItems.Append(added.Value).ToArray();
+
+        // Act
+        source.AddOrUpdate(added);
+
+        // Assert
+        results.Error.Should().BeNull();
+        results.RecordedItems.Should().Equal(expected);
+    }
+
+    [Fact]
+    public void RemoveKeyThenTransform_RefreshInUnsortedCache_KeepsItemInPlace()
+    {
+        // Arrange
+        using var source = new SourceCache<Entry, int>(static entry => entry.Id);
+        var entries = GenerateEntries();
+        source.AddOrUpdate(entries);
+        var refreshed = _randomizer.ArrayElement(entries);
+
+        using var subscription = source.Connect()
+            .RemoveKey()
+            .Transform(static entry => entry.Value)
+            .ValidateSynchronization()
+            .ValidateChangeSets()
+            .RecordListItems(out var results);
+
+        var expected = results.RecordedItems.ToArray();
+
+        // Act
+        source.Refresh(refreshed);
+
+        // Assert
+        results.Error.Should().BeNull();
+        results.RecordedItems.Should().Equal(expected);
+    }
+
+    [Fact]
     public void UnindexedRemove_Transform_RemovesFirstEqualValue()
     {
         // Arrange
@@ -133,6 +185,30 @@ public sealed partial class UnspecifiedIndexFixture
         // Assert
         results.Error.Should().BeNull();
         results.RecordedItems.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void UnindexedReplace_Transform_ReplacesFirstEqualPreviousValueInPlace()
+    {
+        // Arrange
+        var values = GenerateDistinctValues(3);
+        var (duplicated, other, replacement) = (values[0], values[1], values[2]);
+
+        using var source = new Subject<IChangeSet<int>>();
+        using var subscription = source
+            .Transform(static item => item)
+            .ValidateSynchronization()
+            .ValidateChangeSets()
+            .RecordListItems(out var results);
+
+        source.OnNext(new ChangeSet<int> { Add(other), Add(duplicated), Add(duplicated) });
+
+        // Act
+        source.OnNext(new ChangeSet<int> { Replace(duplicated, replacement) });
+
+        // Assert
+        results.Error.Should().BeNull();
+        results.RecordedItems.Should().Equal(other, replacement, duplicated);
     }
 
     [Fact]
