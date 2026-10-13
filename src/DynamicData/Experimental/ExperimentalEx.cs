@@ -24,7 +24,7 @@ public static class ExperimentalEx
     /// <item><term>OnError</term><description>Delivered to every watch through <paramref name="scheduler"/>, the same way as changes. A watch started afterwards receives the current value, if there is one, and then fails.</description></item>
     /// <item><term>OnCompleted</term><description>Delivered to every watch through <paramref name="scheduler"/>, the same way as changes. A watch started afterwards receives the current value, if there is one, and then completes.</description></item>
     /// </list>
-    /// <para><b>Worth noting:</b> Disposing the watcher completes every watch.</para>
+    /// <para><b>Worth noting:</b> Disposing the watcher completes every watch. The watcher subscribes to <paramref name="source"/> once, when it is created.</para>
     /// </remarks>
     public static IWatcher<TObject, TKey> AsWatcher<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IScheduler? scheduler = null)
         where TObject : notnull

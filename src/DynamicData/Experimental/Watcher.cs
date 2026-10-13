@@ -12,8 +12,9 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
 
     private readonly Lock _locker = new();
 
-    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly IObservableCache<TObject, TKey> _source;
+    // Kept by the same subscription that hands out the changes, under the same lock, so a new watch's first value is
+    // never out of step with the changes already handed out.
+    private readonly Cache<TObject, TKey> _source = new();
 
     [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly IntermediateCache<SubjectWithRefCount<Change<TObject, TKey>>, TKey> _subscribers = new();
@@ -24,20 +25,22 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
 
     public Watcher(IObservable<IChangeSet<TObject, TKey>> source, IScheduler scheduler)
     {
-        _source = source.AsObservableCache();
-
         var onCompletePublisher = _subscribers.Connect().Synchronize(_locker).ObserveOn(scheduler).SubscribeMany((t, _) => Disposable.Create(t.OnCompleted)).Subscribe();
 
         var sourceSubscriber = source.Synchronize(_locker).Subscribe(
-            updates => updates.ForEach(
-                update =>
-                {
-                    var subscriber = _subscribers.Lookup(update.Key);
-                    if (subscriber.HasValue)
+            updates =>
+            {
+                _source.Clone(updates);
+                updates.ForEach(
+                    update =>
                     {
-                        scheduler.Schedule(() => subscriber.Value.OnNext(update));
-                    }
-                }),
+                        var subscriber = _subscribers.Lookup(update.Key);
+                        if (subscriber.HasValue)
+                        {
+                            scheduler.Schedule(() => subscriber.Value.OnNext(update));
+                        }
+                    });
+            },
             error => Terminate(subject => subject.OnError(error)),
             () => Terminate(static subject => subject.OnCompleted()));
 
@@ -47,7 +50,6 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
                 onCompletePublisher.Dispose();
                 sourceSubscriber.Dispose();
 
-                _source.Dispose();
                 _subscribers.Dispose();
             });
 

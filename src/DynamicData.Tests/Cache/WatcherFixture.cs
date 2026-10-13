@@ -72,6 +72,17 @@ public class WatcherFixture : IDisposable
     }
 
     [Fact]
+    public void SubscribesToTheSourceOnce()
+    {
+        var subscriptions = 0;
+        using var source = new Subject<IChangeSet<Person, string>>();
+
+        using var watcher = Observable.Defer(() => { subscriptions++; return source; }).AsWatcher(_scheduler);
+
+        subscriptions.Should().Be(1, "a cold source runs once for every subscription");
+    }
+
+    [Fact]
     public void Update()
     {
         var first = new Person("Adult1", 50);
@@ -229,5 +240,29 @@ public class WatcherFixture : IDisposable
 
         received.Should().ContainSingle("the watch starts with the last value").Which.Current.Should().Be(person);
         actualError.Should().BeSameAs(expectedError, "the key's watches have already failed with the source");
+    }
+
+    [Fact]
+    public void WatchStartedWhileTheSourceIsDeliveringAChangeReceivesItOnce()
+    {
+        // A hot source hands each change to its subscribers one after another, so a watch can start part way through.
+        var observers = new List<IObserver<IChangeSet<Person, string>>>();
+        using var watcher = Observable.Create<IChangeSet<Person, string>>(observer => { observers.Add(observer); return Disposable.Empty; }).AsWatcher(_scheduler);
+
+        var person = new Person("Adult1", 50);
+        var changes = new ChangeSet<Person, string> { new(ChangeReason.Add, person.Key, person) };
+        observers[0].OnNext(changes);
+
+        var received = new List<Change<Person, string>>();
+        using var subscription = watcher.Watch(person.Key).Subscribe(received.Add);
+
+        foreach (var observer in observers.Skip(1))
+        {
+            observer.OnNext(changes);
+        }
+
+        _scheduler.Start();
+
+        received.Should().ContainSingle("the person was added once").Which.Current.Should().Be(person);
     }
 }
