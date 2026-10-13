@@ -57,7 +57,7 @@ internal static class UnspecifiedIndexEx
     /// The resolved change. A <see cref="ListChangeReason.Remove"/> of an item that is not present keeps an index of -1,
     /// and the caller ignores it, as <see cref="ListEx.Clone{T}(IList{T}, IChangeSet{T})"/> does.
     /// </returns>
-    /// <exception cref="InvalidOperationException">An unindexed <see cref="ListChangeReason.Replace"/> names a previous item that is not present.</exception>
+    /// <exception cref="UnspecifiedIndexException">An unindexed <see cref="ListChangeReason.Replace"/> names a previous item that is not present.</exception>
     public static ItemChange<T> ResolveIndexes<TElement, T>(this ItemChange<T> change, IList<TElement> upstream, Func<TElement, T> selectItem)
         where T : notnull
         => change.Reason switch
@@ -71,6 +71,6 @@ internal static class UnspecifiedIndexEx
     private static ItemChange<T> ResolveReplace<T>(ItemChange<T> change, int previousIndex)
         where T : notnull
         => (previousIndex < 0)
-            ? throw new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list")
+            ? throw new UnspecifiedIndexException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list")
             : new(ListChangeReason.Replace, change.Current, change.Previous, (change.CurrentIndex < 0) ? previousIndex : change.CurrentIndex, previousIndex);
 }

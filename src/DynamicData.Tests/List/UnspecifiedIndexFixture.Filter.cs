@@ -133,4 +133,26 @@ public sealed partial class UnspecifiedIndexFixture
         results.Error.Should().BeNull();
         results.RecordedItems.Should().Equal(replacement, other, duplicated);
     }
+
+    [Fact]
+    public void UnindexedReplaceOfAbsentItem_Filter_ThrowsUnspecifiedIndexException()
+    {
+        // Arrange
+        var values = GenerateDistinctValues(3);
+        var (present, absent, replacement) = (values[0], values[1], values[2]);
+
+        using var source = new Subject<IChangeSet<int>>();
+        using var subscription = source
+            .Filter(static _ => true)
+            .ValidateSynchronization()
+            .RecordListItems(out var results);
+
+        source.OnNext(new ChangeSet<int> { Add(present) });
+
+        // Act
+        source.OnNext(new ChangeSet<int> { Replace(absent, replacement) });
+
+        // Assert
+        results.Error.Should().BeOfType<UnspecifiedIndexException>();
+    }
 }

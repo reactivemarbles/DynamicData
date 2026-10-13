@@ -157,7 +157,7 @@ Every operator must accept them. An operator that keeps a positional copy of its
 | **Add** / **AddRange** | Append. |
 | **Remove** | First item equal under `EqualityComparer<T>.Default`. Ignored when absent, as `ListEx.Clone` does. |
 | **RemoveRange** | Each item in turn, as an individual **Remove**. |
-| **Replace** | A known `PreviousIndex` is used; otherwise the first item equal to `Previous`. An unknown `CurrentIndex` takes that position, so the replacement is in place. When `Previous` is absent, operators throw `InvalidOperationException`, while `ListEx.Clone` adds the current item instead. |
+| **Replace** | A known `PreviousIndex` is used; otherwise the first item equal to `Previous`. An unknown `CurrentIndex` takes that position, so the replacement is in place. When `Previous` is absent, operators throw `UnspecifiedIndexException`, while `ListEx.Clone` adds the current item instead. |
 
 `UnspecifiedIndexEx.IndexOf` reads through the indexer with a projection, so it allocates nothing and never enumerates a `ChangeAwareList<T>` (whose enumerator copies the list). An operator that only maps indexes without keeping state (such as `Reverse`) passes `-1` through instead of doing arithmetic on it, except where the result is known (an unindexed append becomes index 0 when reversed).
 
