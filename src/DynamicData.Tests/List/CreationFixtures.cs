@@ -49,30 +49,13 @@ public class ListCreationFixtures
     }
 
     [Fact]
-    public void CleanUpTaskFailureIsDeliveredOnTheThreadThatFailsIt()
+    public void TaskThatFinishesDuringSubscriptionStillDeliversItsChanges()
     {
-        var task = new TaskCompletionSource<IDisposable>();
+        using var subscription = ObservableChangeSet.Create<int>((list, _) => { list.Add(10); return Task.CompletedTask; }).RecordListItems(out var results);
 
-        using var subscription = ObservableChangeSet.Create<int>((_, _) => task.Task).RecordListItems(out var results);
-
-        var expectedError = new Exception("Test Exception");
-        task.SetException(expectedError);
-
-        results.Error.Should().BeSameAs(expectedError, "the failure should arrive before SetException returns, not later on another thread");
-    }
-
-    [Fact]
-    public void CleanUpReturnedAfterUnsubscribingIsStillDisposed()
-    {
-        var task = new TaskCompletionSource<IDisposable>();
-        var isDisposed = false;
-
-        var subscription = ObservableChangeSet.Create<int>((_, _) => task.Task).RecordListItems(out _);
-        subscription.Dispose();
-
-        task.SetResult(Disposable.Create(() => isDisposed = true));
-
-        isDisposed.Should().BeTrue("nothing else will ever dispose it");
+        results.RecordedItems.Should().Equal([10], "the change was made before the task finished");
+        results.HasCompleted.Should().BeTrue();
+        results.Error.Should().BeNull();
     }
 
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]

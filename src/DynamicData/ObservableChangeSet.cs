@@ -79,14 +79,6 @@ public static class ObservableChangeSet
     /// <param name="subscribe">  Implementation of the resulting observable cache's Subscribe method. </param>
     /// <param name="keySelector">The key selector.</param>
     /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
-    /// <remarks>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>OnError</term><description>Emitted when <paramref name="subscribe"/> throws or its task fails.</description></item>
-    /// <item><term>OnCompleted</term><description>Never emitted. The stream stays open until the subscription is disposed, which also disposes the <see cref="IDisposable"/> returned by the task.</description></item>
-    /// </list>
-    /// <para><b>Worth noting:</b> An <see cref="IDisposable"/> returned after the subscription has been disposed is disposed as soon as it arrives.</para>
-    /// </remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Task<IDisposable>> subscribe, Func<TObject, TKey> keySelector)
         where TObject : notnull
         where TKey : notnull
@@ -94,7 +86,7 @@ public static class ObservableChangeSet
         ArgumentNullException.ThrowIfNull(subscribe);
         ArgumentNullException.ThrowIfNull(keySelector);
 
-        return Create((cache, _) => subscribe(cache), keySelector);
+        return Create(async (cache, _) => await subscribe(cache).ConfigureAwait(false), keySelector);
     }
 
     /// <summary>
@@ -105,14 +97,6 @@ public static class ObservableChangeSet
     /// <param name="subscribe">  Implementation of the resulting observable cache's Subscribe method. </param>
     /// <param name="keySelector">The key selector.</param>
     /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
-    /// <remarks>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>OnError</term><description>Emitted when <paramref name="subscribe"/> throws or its task fails.</description></item>
-    /// <item><term>OnCompleted</term><description>Never emitted. The stream stays open until the subscription is disposed, which also disposes the <see cref="IDisposable"/> returned by the task.</description></item>
-    /// </list>
-    /// <para><b>Worth noting:</b> An <see cref="IDisposable"/> returned after the subscription has been disposed is disposed as soon as it arrives.</para>
-    /// </remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, CancellationToken, Task<IDisposable>> subscribe, Func<TObject, TKey> keySelector)
         where TObject : notnull
         where TKey : notnull
@@ -120,7 +104,24 @@ public static class ObservableChangeSet
         ArgumentNullException.ThrowIfNull(subscribe);
         ArgumentNullException.ThrowIfNull(keySelector);
 
-        return CreateFromTask<ISourceCache<TObject, TKey>, IChangeSet<TObject, TKey>, IDisposable>(() => new SourceCache<TObject, TKey>(keySelector), static cache => cache.Connect(), subscribe, static disposable => disposable);
+        return Observable.Create<IChangeSet<TObject, TKey>>(
+            async (observer, ct) =>
+            {
+                var cache = new SourceCache<TObject, TKey>(keySelector);
+                var disposable = new SingleAssignmentDisposable();
+                var responder = cache.Connect().SubscribeSafe(observer);
+
+                try
+                {
+                    disposable.Disposable = await subscribe(cache, ct).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    observer.OnError(e);
+                }
+
+                return new CompositeDisposable(responder, cache, disposable, Disposable.Create(observer.OnCompleted));
+            });
     }
 
     /// <summary>
@@ -131,14 +132,6 @@ public static class ObservableChangeSet
     /// <param name="subscribe">  Implementation of the resulting observable cache's Subscribe method. </param>
     /// <param name="keySelector">The key selector.</param>
     /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
-    /// <remarks>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>OnError</term><description>Emitted when <paramref name="subscribe"/> throws or its task fails.</description></item>
-    /// <item><term>OnCompleted</term><description>Never emitted. The stream stays open until the subscription is disposed, which also invokes the <see cref="Action"/> returned by the task.</description></item>
-    /// </list>
-    /// <para><b>Worth noting:</b> An <see cref="Action"/> returned after the subscription has been disposed is invoked as soon as it arrives.</para>
-    /// </remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Task<Action>> subscribe, Func<TObject, TKey> keySelector)
         where TObject : notnull
         where TKey : notnull
@@ -157,14 +150,6 @@ public static class ObservableChangeSet
     /// <param name="subscribe">  Implementation of the resulting observable cache's Subscribe method. </param>
     /// <param name="keySelector">The key selector.</param>
     /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
-    /// <remarks>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>OnError</term><description>Emitted when <paramref name="subscribe"/> throws or its task fails.</description></item>
-    /// <item><term>OnCompleted</term><description>Never emitted. The stream stays open until the subscription is disposed, which also invokes the <see cref="Action"/> returned by the task.</description></item>
-    /// </list>
-    /// <para><b>Worth noting:</b> An <see cref="Action"/> returned after the subscription has been disposed is invoked as soon as it arrives.</para>
-    /// </remarks>
     public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, CancellationToken, Task<Action>> subscribe, Func<TObject, TKey> keySelector)
         where TObject : notnull
         where TKey : notnull
@@ -172,7 +157,33 @@ public static class ObservableChangeSet
         ArgumentNullException.ThrowIfNull(subscribe);
         ArgumentNullException.ThrowIfNull(keySelector);
 
-        return CreateFromTask<ISourceCache<TObject, TKey>, IChangeSet<TObject, TKey>, Action>(() => new SourceCache<TObject, TKey>(keySelector), static cache => cache.Connect(), subscribe, static action => Disposable.Create(() => action?.Invoke()));
+        return Observable.Create<IChangeSet<TObject, TKey>>(
+            async (observer, ct) =>
+            {
+                var cache = new SourceCache<TObject, TKey>(keySelector);
+                var responder = cache.Connect().SubscribeSafe(observer);
+
+                Action? disposeAction = null;
+
+                try
+                {
+                    disposeAction = await subscribe(cache, ct).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    observer.OnError(e);
+                }
+
+                return new CompositeDisposable(
+                    responder,
+                    cache,
+                    Disposable.Create(
+                        () =>
+                        {
+                            observer.OnCompleted();
+                            disposeAction?.Invoke();
+                        }));
+            });
     }
 
     /// <summary>
@@ -222,7 +233,9 @@ public static class ObservableChangeSet
         ArgumentNullException.ThrowIfNull(subscribe);
         ArgumentNullException.ThrowIfNull(keySelector);
 
-        return CreateFromTask<ISourceCache<TObject, TKey>, IChangeSet<TObject, TKey>>(() => new SourceCache<TObject, TKey>(keySelector), static cache => cache.Connect(), subscribe);
+        // Publish starts the task only once TakeUntil is subscribed to the cache, so a task that finishes during
+        // subscription still delivers its changes.
+        return Observable.Using(() => new SourceCache<TObject, TKey>(keySelector), cache => Observable.FromAsync(cancellationToken => subscribe(cache, cancellationToken), TaskObservation).Publish(loaded => cache.Connect().TakeUntil(loaded)));
     }
 
     /// <summary>
@@ -288,14 +301,6 @@ public static class ObservableChangeSet
     /// <typeparam name="T">The type of the elements contained in the observable list.</typeparam>
     /// <param name="subscribe">  Implementation of the resulting observable list's Subscribe method. </param>
     /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
-    /// <remarks>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>OnError</term><description>Emitted when <paramref name="subscribe"/> throws or its task fails.</description></item>
-    /// <item><term>OnCompleted</term><description>Never emitted. The stream stays open until the subscription is disposed, which also disposes the <see cref="IDisposable"/> returned by the task.</description></item>
-    /// </list>
-    /// <para><b>Worth noting:</b> An <see cref="IDisposable"/> returned after the subscription has been disposed is disposed as soon as it arrives.</para>
-    /// </remarks>
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task<IDisposable>> subscribe)
         where T : notnull
     {
@@ -310,20 +315,39 @@ public static class ObservableChangeSet
     /// <typeparam name="T">The type of the elements contained in the observable list.</typeparam>
     /// <param name="subscribe">  Implementation of the resulting observable list's Subscribe method. </param>
     /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
-    /// <remarks>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>OnError</term><description>Emitted when <paramref name="subscribe"/> throws or its task fails.</description></item>
-    /// <item><term>OnCompleted</term><description>Never emitted. The stream stays open until the subscription is disposed, which also disposes the <see cref="IDisposable"/> returned by the task.</description></item>
-    /// </list>
-    /// <para><b>Worth noting:</b> An <see cref="IDisposable"/> returned after the subscription has been disposed is disposed as soon as it arrives.</para>
-    /// </remarks>
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task<IDisposable>> subscribe)
         where T : notnull
     {
         ArgumentNullException.ThrowIfNull(subscribe);
 
-        return CreateFromTask<ISourceList<T>, IChangeSet<T>, IDisposable>(static () => new SourceList<T>(), static list => list.Connect(), subscribe, static disposable => disposable);
+        return Observable.Create<IChangeSet<T>>(
+            async (observer, ct) =>
+            {
+                var list = new SourceList<T>();
+                IDisposable? disposeAction = null;
+                SingleAssignmentDisposable actionDisposable = new();
+                var responder = list.Connect().SubscribeSafe(observer);
+
+                try
+                {
+                    disposeAction = await subscribe(list, ct).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    observer.OnError(e);
+                }
+
+                return new CompositeDisposable(
+                    responder,
+                    list,
+                    actionDisposable,
+                    Disposable.Create(
+                        () =>
+                        {
+                            observer.OnCompleted();
+                            disposeAction?.Dispose();
+                        }));
+            });
     }
 
     /// <summary>
@@ -332,20 +356,12 @@ public static class ObservableChangeSet
     /// <typeparam name="T">The type of the elements contained in the observable list.</typeparam>
     /// <param name="subscribe">  Implementation of the resulting observable list's Subscribe method. </param>
     /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
-    /// <remarks>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>OnError</term><description>Emitted when <paramref name="subscribe"/> throws or its task fails.</description></item>
-    /// <item><term>OnCompleted</term><description>Never emitted. The stream stays open until the subscription is disposed, which also invokes the <see cref="Action"/> returned by the task.</description></item>
-    /// </list>
-    /// <para><b>Worth noting:</b> An <see cref="Action"/> returned after the subscription has been disposed is invoked as soon as it arrives.</para>
-    /// </remarks>
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task<Action>> subscribe)
         where T : notnull
     {
         ArgumentNullException.ThrowIfNull(subscribe);
 
-        return Create<T>((list, _) => subscribe(list));
+        return Create<T>(async (list, _) => await subscribe(list).ConfigureAwait(false));
     }
 
     /// <summary>
@@ -354,20 +370,38 @@ public static class ObservableChangeSet
     /// <typeparam name="T">The type of the elements contained in the observable list.</typeparam>
     /// <param name="subscribe">  Implementation of the resulting observable list's Subscribe method. </param>
     /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
-    /// <remarks>
-    /// <list type="table">
-    /// <listheader><term>Event</term><description>Behavior</description></listheader>
-    /// <item><term>OnError</term><description>Emitted when <paramref name="subscribe"/> throws or its task fails.</description></item>
-    /// <item><term>OnCompleted</term><description>Never emitted. The stream stays open until the subscription is disposed, which also invokes the <see cref="Action"/> returned by the task.</description></item>
-    /// </list>
-    /// <para><b>Worth noting:</b> An <see cref="Action"/> returned after the subscription has been disposed is invoked as soon as it arrives.</para>
-    /// </remarks>
     public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task<Action>> subscribe)
         where T : notnull
     {
         ArgumentNullException.ThrowIfNull(subscribe);
 
-        return CreateFromTask<ISourceList<T>, IChangeSet<T>, Action>(static () => new SourceList<T>(), static list => list.Connect(), subscribe, static action => Disposable.Create(() => action?.Invoke()));
+        return Observable.Create<IChangeSet<T>>(
+            async (observer, ct) =>
+            {
+                var list = new SourceList<T>();
+                var responder = list.Connect().SubscribeSafe(observer);
+
+                Action? disposeAction = null;
+
+                try
+                {
+                    disposeAction = await subscribe(list, ct).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    observer.OnError(e);
+                }
+
+                return new CompositeDisposable(
+                    responder,
+                    list,
+                    Disposable.Create(
+                        () =>
+                        {
+                            observer.OnCompleted();
+                            disposeAction?.Invoke();
+                        }));
+            });
     }
 
     /// <summary>
@@ -409,37 +443,8 @@ public static class ObservableChangeSet
     {
         ArgumentNullException.ThrowIfNull(subscribe);
 
-        return CreateFromTask<ISourceList<T>, IChangeSet<T>>(static () => new SourceList<T>(), static list => list.Connect(), subscribe);
+        // Publish starts the task only once TakeUntil is subscribed to the list, so a task that finishes during
+        // subscription still delivers its changes.
+        return Observable.Using(static () => new SourceList<T>(), list => Observable.FromAsync(cancellationToken => subscribe(list, cancellationToken), TaskObservation).Publish(loaded => list.Connect().TakeUntil(loaded)));
     }
-
-    // The task is the whole lifetime of the stream, the way it is for Observable.Create: the stream ends when the task does.
-    private static IObservable<TChangeSet> CreateFromTask<TCollection, TChangeSet>(Func<TCollection> createCollection, Func<TCollection, IObservable<TChangeSet>> connect, Func<TCollection, CancellationToken, Task> subscribe)
-        where TCollection : IDisposable =>
-        Observable.Create<TChangeSet>(
-            observer =>
-            {
-                var collection = createCollection();
-                var changes = connect(collection).SubscribeSafe(observer);
-                var loader = Observable.FromAsync(cancellationToken => subscribe(collection, cancellationToken), TaskObservation).SubscribeSafe(observer.OnError, observer.OnCompleted);
-
-                return new CompositeDisposable(loader, changes, collection);
-            });
-
-    // The task only sets the stream up, so the stream stays open after it succeeds, until the subscription is disposed.
-    private static IObservable<TChangeSet> CreateFromTask<TCollection, TChangeSet, TCleanUp>(Func<TCollection> createCollection, Func<TCollection, IObservable<TChangeSet>> connect, Func<TCollection, CancellationToken, Task<TCleanUp>> subscribe, Func<TCleanUp, IDisposable> toDisposable)
-        where TCollection : IDisposable =>
-        Observable.Create<TChangeSet>(
-            observer =>
-            {
-                var collection = createCollection();
-                var cancellation = new CancellationDisposable();
-                var cleanUp = new SingleAssignmentDisposable();
-                var changes = connect(collection).SubscribeSafe(observer);
-
-                // Deliberately not disposed with the subscription, so that clean-up which arrives after unsubscribing is
-                // still disposed. It ends when the task does, and by then nothing it delivers reaches the observer.
-                _ = Observable.FromAsync(() => subscribe(collection, cancellation.Token), TaskObservation).SubscribeSafe(result => cleanUp.Disposable = toDisposable(result), observer.OnError);
-
-                return new CompositeDisposable(cancellation, changes, cleanUp, collection);
-            });
 }

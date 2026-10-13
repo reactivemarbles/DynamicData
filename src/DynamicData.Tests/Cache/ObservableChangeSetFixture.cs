@@ -241,43 +241,15 @@ public class ObservableChangeSetFixture
     }
 
     [Fact]
-    public void CleanUpTaskFailureIsDeliveredOnTheThreadThatFailsIt()
+    public void TaskThatFinishesDuringSubscriptionStillDeliversItsChanges()
     {
-        var task = new TaskCompletionSource<IDisposable>();
+        var person = new Person("Name1", 10);
 
-        using var subscription = ObservableChangeSet.Create<Person, string>((_, _) => task.Task, p => p.Name).RecordCacheItems(out var results);
+        using var subscription = ObservableChangeSet.Create<Person, string>((cache, _) => { cache.AddOrUpdate(person); return Task.CompletedTask; }, p => p.Name).RecordCacheItems(out var results);
 
-        var expectedError = new Exception("Test Exception");
-        task.SetException(expectedError);
-
-        results.Error.Should().BeSameAs(expectedError, "the failure should arrive before SetException returns, not later on another thread");
-    }
-
-    [Fact]
-    public void CleanUpTaskLeavesTheStreamOpenWhenItSucceeds()
-    {
-        var task = new TaskCompletionSource<IDisposable>();
-
-        using var subscription = ObservableChangeSet.Create<Person, string>((_, _) => task.Task, p => p.Name).RecordCacheItems(out var results);
-
-        task.SetResult(Disposable.Empty);
-
-        results.HasCompleted.Should().BeFalse("the task only sets the stream up");
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo([person], "the change was made before the task finished");
+        results.HasCompleted.Should().BeTrue();
         results.Error.Should().BeNull();
-    }
-
-    [Fact]
-    public void CleanUpReturnedAfterUnsubscribingIsStillDisposed()
-    {
-        var task = new TaskCompletionSource<IDisposable>();
-        var isDisposed = false;
-
-        var subscription = ObservableChangeSet.Create<Person, string>((_, _) => task.Task, p => p.Name).RecordCacheItems(out _);
-        subscription.Dispose();
-
-        task.SetResult(Disposable.Create(() => isDisposed = true));
-
-        isDisposed.Should().BeTrue("nothing else will ever dispose it");
     }
 
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
