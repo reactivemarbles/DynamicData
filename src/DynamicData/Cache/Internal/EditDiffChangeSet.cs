@@ -14,8 +14,13 @@ internal sealed class EditDiffChangeSet<TObject, TKey>(IObservable<IEnumerable<T
 
     private readonly Func<TObject, TKey> _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
 
-    public IObservable<IChangeSet<TObject, TKey>> Run() =>
-        ObservableChangeSet.Create(
-            cache => _source.Subscribe(items => cache.EditDiff(items, _equalityComparer), () => cache.Dispose()),
-            _keySelector);
+    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
+            observer =>
+            {
+                var cache = new SourceCache<TObject, TKey>(_keySelector);
+                var changes = cache.Connect().SubscribeSafe(observer);
+                var loader = _source.SubscribeSafe(items => cache.EditDiff(items, _equalityComparer), observer.OnError, observer.OnCompleted);
+
+                return new CompositeDisposable(loader, changes, cache);
+            });
 }

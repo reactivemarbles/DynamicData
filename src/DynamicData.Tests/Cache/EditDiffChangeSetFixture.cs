@@ -81,7 +81,7 @@ public class EditDiffChangeSetFixture
         bool completed = false;
 
         // when
-        using var results = enumObservable.Subscribe(_ => { }, () => completed = true);
+        using var results = enumObservable.EditDiff(p => p.Id).Subscribe(_ => { }, () => completed = true);
 
         // then
         completed.Should().Be(completeSource);
@@ -103,10 +103,27 @@ public class EditDiffChangeSetFixture
         var receivedError = default(Exception);
 
         // when
-        using var results = enumObservable.Subscribe(_ => { }, err => receivedError = err);
+        using var results = enumObservable.EditDiff(p => p.Id).Subscribe(_ => { }, err => receivedError = err);
 
         // then
         receivedError.Should().Be(failSource ? testException : default);
+    }
+
+    [Fact]
+    public void ResultFailsWhenSourceFailsAfterSubscription()
+    {
+        // having
+        using var source = new Subject<IEnumerable<Person>>();
+        var testException = new Exception("Test");
+        var receivedError = default(Exception);
+
+        // when
+        using var results = source.EditDiff(p => p.Id).Subscribe(_ => { }, err => receivedError = err);
+        source.OnNext(CreatePeople(0, MaxItems, "Name"));
+        source.OnError(testException);
+
+        // then
+        receivedError.Should().Be(testException);
     }
 
     private static Person CreatePerson(int id, string name) => new(id, name);
