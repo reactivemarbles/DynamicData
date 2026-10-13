@@ -26,10 +26,9 @@ public class VirtualChangeSetAggregator<TObject, TKey> : IDisposable
     {
         var published = source.Publish();
 
-        var error = published.Subscribe(_ => { }, ex => Error = ex);
-        var results = published.Subscribe(updates => Messages.Add(updates));
+        var results = published.Subscribe(updates => Messages.Add(updates), ex => Error = ex);
         Data = published.AsObservableCache();
-        var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary);
+        var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary, static _ => { });
 
         var connected = published.Connect();
         _disposer = Disposable.Create(
@@ -38,7 +37,6 @@ public class VirtualChangeSetAggregator<TObject, TKey> : IDisposable
                 connected.Dispose();
                 summariser.Dispose();
                 results.Dispose();
-                error.Dispose();
             });
     }
 
