@@ -830,13 +830,25 @@ Computes sample standard deviation as `sqrt(sum((value - mean)^2) / (count - 1))
 
 | Input | Behavior |
 |-------|----------|
-| **Add** | Includes the selected value and emits the updated result. |
-| **Update** | Removes the previous selected value, includes the current value, and emits the updated result. |
-| **Remove** | Removes the selected value and emits the updated result or fallback. |
-| **Refresh / Moved** | Does not adjust the aggregate; the current result is emitted for the changeset. |
+| **Add** | Stores and includes the selected value, and emits the updated result. |
+| **Update / Refresh** | Excludes the stored value, includes the re-selected current value, and emits the updated result. |
+| **Remove** | Excludes the stored value and emits the updated result or fallback. |
+| **Moved** | Does not adjust the aggregate. |
 | **OnError / OnCompleted** | Forwards the terminal notification. |
 
-In-place property mutations require recomputation, such as `InvalidateWhen`, rather than a Refresh alone.
+### Sum / Avg / StdDev / Maximum / Minimum (refresh-aware aggregates)
+
+The changeset overloads share one internal operator, `AggregateProjections`, which stores the last selected value per key and folds it into an accumulator. Memory per subscription is O(n).
+
+| Input | Behavior |
+|-------|----------|
+| **Add** | Stores and includes the selected value. |
+| **Update / Refresh** | Excludes the stored value and includes the re-selected current value. |
+| **Remove** | Excludes the stored value. An item mutated without a Refresh is removed with the value last observed. |
+| **Maximum / Minimum** | Recompute from the stored values when the item holding the extreme is removed or moves inward; emit only distinct values. |
+| **Malformed changesets** | Adding an existing key, or updating, refreshing or removing an unknown key, faults the stream. |
+
+`ForAggregation()` overloads (`IAggregateChangeSet<T>`) and `SumImmutable` stay stateless and ignore Refresh. `Count`, `IsEmpty` and `IsNotEmpty` have no selector, so Refresh cannot change them.
 
 ### Property Observation
 

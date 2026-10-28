@@ -230,6 +230,95 @@ public sealed class StdDevFixture
         results.RecordedValues[^1].Should().Be(fallback, because: "sample variance is not calculated for fewer than two items");
     }
 
+    /// <summary>Verifies that refreshing a mutated cache item re-evaluates its value and that a later removal excludes the refreshed value.</summary>
+    [Theory]
+    [InlineData(nameof(Int32))]
+    [InlineData(nameof(Int64))]
+    [InlineData(nameof(Single))]
+    [InlineData(nameof(Double))]
+    [InlineData(nameof(Decimal))]
+    public void Cache_ItemIsRefreshedThenRemoved_TracksStoredValues(string numericType)
+    {
+        // Arrange
+        var ages = Enumerable.Range(0, 4).Select(_ => _randomizer.Int(1, 100)).ToArray();
+        var people = ages.Select((age, index) => new Person($"P{index}", age)).ToArray();
+        var refreshedAge = _randomizer.Int(1, 100);
+        var fallback = _randomizer.Int(1, 100);
+        using var source = new TestSourceCache<Person, string>(static person => person.Name);
+        source.AddOrUpdate(people);
+        using var subscription = StdDevOfAges(source.Connect(), numericType, fallback)
+            .ValidateSynchronization()
+            .RecordValues(out var results);
+
+        // Act
+        people[0].Age = refreshedAge;
+        source.Refresh(people[0]);
+        people[1].Age = _randomizer.Int(1, 100);
+        source.Remove(people[1]);
+
+        // Assert
+        results.Error.Should().BeNull(because: "all values are within the supported numeric ranges");
+        results.RecordedValues.Should().HaveCount(3, because: "the initial population, the refresh and the removal each produce one aggregate");
+        results.RecordedValues[0].Should().BeApproximately(SampleStandardDeviation(ages), Precision(numericType), because: "the initial population is aggregated as given");
+        results.RecordedValues[1].Should().BeApproximately(SampleStandardDeviation(refreshedAge, ages[1], ages[2], ages[3]), Precision(numericType), because: "a refresh re-evaluates the selector");
+        results.RecordedValues[2].Should().BeApproximately(SampleStandardDeviation(refreshedAge, ages[2], ages[3]), Precision(numericType), because: "a removal excludes the stored value, not the unrefreshed mutation");
+    }
+
+    /// <summary>Verifies that refreshing a mutated list item at its moved index re-evaluates its value.</summary>
+    [Theory]
+    [InlineData(nameof(Int32))]
+    [InlineData(nameof(Int64))]
+    [InlineData(nameof(Single))]
+    [InlineData(nameof(Double))]
+    [InlineData(nameof(Decimal))]
+    public void List_MovedItemIsRefreshed_ReevaluatesItsValue(string numericType)
+    {
+        // Arrange
+        var ages = Enumerable.Range(0, 3).Select(_ => _randomizer.Int(1, 100)).ToArray();
+        var people = ages.Select((age, index) => new Person($"P{index}", age)).ToArray();
+        var refreshedAge = _randomizer.Int(1, 100);
+        var fallback = _randomizer.Int(1, 100);
+        using var source = new TestSourceList<Person>();
+        source.AddRange(people);
+        using var subscription = StdDevOfAges(source.Connect(), numericType, fallback)
+            .ValidateSynchronization()
+            .RecordValues(out var results);
+
+        // Act
+        source.Move(0, 2);
+        people[0].Age = refreshedAge;
+        source.Refresh(2);
+        source.Clear();
+
+        // Assert
+        results.Error.Should().BeNull(because: "all values are within the supported numeric ranges");
+        results.RecordedValues[^2].Should().BeApproximately(SampleStandardDeviation(refreshedAge, ages[1], ages[2]), Precision(numericType), because: "a refresh re-evaluates the selector at the moved index");
+        results.RecordedValues[^1].Should().Be(fallback, because: "clearing the list leaves fewer than two items");
+    }
+
+    /// <summary>Single precision accumulates its moments in <see cref="float"/>, so its results carry less precision.</summary>
+    private static double Precision(string numericType) => numericType is nameof(Single) ? 1e-4 : 1e-9;
+
+    private static IObservable<double> StdDevOfAges(IObservable<IChangeSet<Person, string>> source, string numericType, int fallback) => numericType switch
+    {
+        nameof(Int32) => source.StdDev(static person => person.Age, fallback),
+        nameof(Int64) => source.StdDev(static person => (long)person.Age, fallback),
+        nameof(Single) => source.StdDev(static person => (float)person.Age, fallback),
+        nameof(Double) => source.StdDev(static person => (double)person.Age, fallback),
+        nameof(Decimal) => source.StdDev(static person => (decimal)person.Age, fallback).Select(static value => (double)value),
+        _ => throw new ArgumentOutOfRangeException(nameof(numericType))
+    };
+
+    private static IObservable<double> StdDevOfAges(IObservable<IChangeSet<Person>> source, string numericType, int fallback) => numericType switch
+    {
+        nameof(Int32) => source.StdDev(static person => person.Age, fallback),
+        nameof(Int64) => source.StdDev(static person => (long)person.Age, fallback),
+        nameof(Single) => source.StdDev(static person => (float)person.Age, fallback),
+        nameof(Double) => source.StdDev(static person => (double)person.Age, fallback),
+        nameof(Decimal) => source.StdDev(static person => (decimal)person.Age, fallback).Select(static value => (double)value),
+        _ => throw new ArgumentOutOfRangeException(nameof(numericType))
+    };
+
     /// <summary>Calculates the reference sample standard deviation, centring the values so the reference itself is not subject to the cancellation under test.</summary>
     private static double SampleStandardDeviation(params int[] values)
     {

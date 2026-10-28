@@ -504,13 +504,28 @@ Computes sample standard deviation as `sqrt(sum((value - mean)^2) / (count - 1))
 
 | Input | Behavior |
 |-------|----------|
-| **Add / AddRange** | Includes the selected values and emits the updated result. |
-| **Replace** | Removes the previous selected value, includes the current value, and emits the updated result. |
-| **Remove / RemoveRange / Clear** | Removes the selected values and emits the updated result or fallback. |
-| **Refresh / Moved** | Does not adjust the aggregate; the current result is emitted for the changeset. |
+| **Add / AddRange** | Stores and includes the selected values, and emits the updated result. |
+| **Replace / Refresh** | Excludes the stored value, includes the re-selected current value, and emits the updated result. |
+| **Remove / RemoveRange** | Excludes the stored values and emits the updated result or fallback. |
+| **Clear** | Resets the aggregate and emits the fallback. |
+| **Moved** | Reorders the stored values; does not adjust the aggregate. |
 | **OnError / OnCompleted** | Forwards the terminal notification. |
 
-In-place property mutations require recomputation, such as `InvalidateWhen`, rather than a Refresh alone.
+### Sum / Avg / StdDev / Maximum / Minimum (refresh-aware aggregates)
+
+The changeset overloads share one internal operator, `AggregateProjections`, which stores the last selected value of each item in list order and folds it into an accumulator. Memory per subscription is O(n).
+
+| Input | Behavior |
+|-------|----------|
+| **Add / AddRange** | Stores and includes the selected values at their indexes. |
+| **Replace / Refresh** | Excludes the stored value and includes the re-selected current value. |
+| **Remove / RemoveRange** | Excludes the stored values. Changes without an index are matched by reference, then by default equality. |
+| **Clear** | Resets the aggregate to its empty state. |
+| **Moved** | Reorders the stored values so later indexed changes address the right item. |
+| **Maximum / Minimum** | Recompute from the stored values when the item holding the extreme is removed or moves inward; emit only distinct values. |
+| **Malformed changesets** | Removing or refreshing an item that is not in the list faults the stream. |
+
+`ForAggregation()` overloads (`IAggregateChangeSet<T>`) and `SumImmutable` stay stateless and ignore Refresh. `Count`, `IsEmpty` and `IsNotEmpty` have no selector, so Refresh cannot change them.
 
 ### Property Observation
 

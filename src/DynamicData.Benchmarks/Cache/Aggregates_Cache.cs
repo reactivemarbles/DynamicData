@@ -4,8 +4,16 @@ namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
-public class Sum_Cache
+public class Aggregates_Cache
 {
+    public enum AggregateOperator
+    {
+        Sum,
+        Avg,
+        StdDev,
+        Maximum
+    }
+
     private IReadOnlyList<IChangeSet<Item, int>> _addChangeSets = null!;
     private IReadOnlyList<IChangeSet<Item, int>> _replaceChangeSets = null!;
     private IReadOnlyList<IChangeSet<Item, int>> _removeChangeSets = null!;
@@ -17,6 +25,9 @@ public class Sum_Cache
 
     [Params(100, 500, 1_000, 10_000)]
     public int Count { get; set; }
+
+    [ParamsAllValues]
+    public AggregateOperator Operator { get; set; }
 
     [GlobalSetup]
     public void Setup()
@@ -106,13 +117,11 @@ public class Sum_Cache
         return seed.CaptureChanges();
     }
 
-    private static void Run(IChangeSet<Item, int>? seed, IReadOnlyList<IChangeSet<Item, int>> changeSets)
+    private void Run(IChangeSet<Item, int>? seed, IReadOnlyList<IChangeSet<Item, int>> changeSets)
     {
         using var source = new Subject<IChangeSet<Item, int>>();
 
-        using var subscription = source
-            .Sum(static item => item.Value)
-            .Subscribe();
+        using var subscription = Subscribe(source);
 
         if (seed is not null)
             source.OnNext(seed);
@@ -122,6 +131,15 @@ public class Sum_Cache
 
         source.OnCompleted();
     }
+
+    private IDisposable Subscribe(IObservable<IChangeSet<Item, int>> source) => Operator switch
+    {
+        AggregateOperator.Sum => source.Sum(static item => item.Value).Subscribe(),
+        AggregateOperator.Avg => source.Avg(static item => item.Value).Subscribe(),
+        AggregateOperator.StdDev => source.StdDev(static item => item.Value, 0).Subscribe(),
+        AggregateOperator.Maximum => source.Maximum(static item => item.Value).Subscribe(),
+        _ => throw new ArgumentOutOfRangeException(nameof(Operator))
+    };
 
     private sealed class Item
     {

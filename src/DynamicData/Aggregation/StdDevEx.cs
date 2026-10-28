@@ -20,8 +20,14 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored, and updates and removals exclude that stored value
+    /// rather than re-evaluating the previous item, so memory grows with the number of items.
+    /// Calling <c>ForAggregation().StdDev(...)</c> instead computes the deviation without that state, but ignores refreshes.
+    /// </remarks>
     public static IObservable<double> StdDev<T>(this IObservable<IChangeSet<T>> source, Func<T, int> valueSelector, int fallbackValue)
-        where T : notnull => source.ForAggregation().StdDev(valueSelector, fallbackValue);
+        where T : notnull => source.StdDev(Widen(valueSelector), fallbackValue);
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -31,8 +37,14 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored, and updates and removals exclude that stored value
+    /// rather than re-evaluating the previous item, so memory grows with the number of items.
+    /// Calling <c>ForAggregation().StdDev(...)</c> instead computes the deviation without that state, but ignores refreshes.
+    /// </remarks>
     public static IObservable<double> StdDev<T>(this IObservable<IChangeSet<T>> source, Func<T, long> valueSelector, long fallbackValue)
-        where T : notnull => source.ForAggregation().StdDev(valueSelector, fallbackValue);
+        where T : notnull => source.AggregateProjections(valueSelector, new InvertibleAccumulator<long, StdDev<long>>(default, Include, Exclude), accumulator => accumulator.State.Count < 2 ? fallbackValue : Deviation(accumulator.State));
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -42,8 +54,14 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored, and updates and removals exclude that stored value
+    /// rather than re-evaluating the previous item, so memory grows with the number of items.
+    /// Calling <c>ForAggregation().StdDev(...)</c> instead computes the deviation without that state, but ignores refreshes.
+    /// </remarks>
     public static IObservable<double> StdDev<T>(this IObservable<IChangeSet<T>> source, Func<T, double> valueSelector, double fallbackValue)
-        where T : notnull => source.ForAggregation().StdDev(valueSelector, fallbackValue);
+        where T : notnull => source.AggregateProjections(valueSelector, new InvertibleAccumulator<double, StdDev<double>>(default, Include, Exclude), accumulator => accumulator.State.Count < 2 ? fallbackValue : Deviation(accumulator.State));
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -53,8 +71,14 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored, and updates and removals exclude that stored value
+    /// rather than re-evaluating the previous item, so memory grows with the number of items.
+    /// Calling <c>ForAggregation().StdDev(...)</c> instead computes the deviation without that state, but ignores refreshes.
+    /// </remarks>
     public static IObservable<decimal> StdDev<T>(this IObservable<IChangeSet<T>> source, Func<T, decimal> valueSelector, decimal fallbackValue)
-        where T : notnull => source.ForAggregation().StdDev(valueSelector, fallbackValue);
+        where T : notnull => source.AggregateProjections(valueSelector, new InvertibleAccumulator<decimal, StdDev<decimal>>(default, Include, Exclude), accumulator => accumulator.State.Count < 2 ? fallbackValue : Deviation(accumulator.State));
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -64,8 +88,14 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored, and updates and removals exclude that stored value
+    /// rather than re-evaluating the previous item, so memory grows with the number of items.
+    /// Calling <c>ForAggregation().StdDev(...)</c> instead computes the deviation without that state, but ignores refreshes.
+    /// </remarks>
     public static IObservable<double> StdDev<T>(this IObservable<IChangeSet<T>> source, Func<T, float> valueSelector, float fallbackValue = 0)
-        where T : notnull => source.ForAggregation().StdDev(valueSelector, fallbackValue);
+        where T : notnull => source.AggregateProjections(valueSelector, new InvertibleAccumulator<float, StdDev<float>>(default, Include, Exclude), accumulator => accumulator.State.Count < 2 ? fallbackValue : Deviation(accumulator.State));
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -76,9 +106,15 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored, and updates and removals exclude that stored value
+    /// rather than re-evaluating the previous item, so memory grows with the number of items.
+    /// Calling <c>ForAggregation().StdDev(...)</c> instead computes the deviation without that state, but ignores refreshes.
+    /// </remarks>
     public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, int> valueSelector, int fallbackValue)
         where TObject : notnull
-        where TKey : notnull => source.ForAggregation().StdDev(valueSelector, fallbackValue);
+        where TKey : notnull => source.StdDev(Widen(valueSelector), fallbackValue);
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -89,9 +125,15 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored, and updates and removals exclude that stored value
+    /// rather than re-evaluating the previous item, so memory grows with the number of items.
+    /// Calling <c>ForAggregation().StdDev(...)</c> instead computes the deviation without that state, but ignores refreshes.
+    /// </remarks>
     public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, long> valueSelector, long fallbackValue)
         where TObject : notnull
-        where TKey : notnull => source.ForAggregation().StdDev(valueSelector, fallbackValue);
+        where TKey : notnull => source.AggregateProjections(valueSelector, new InvertibleAccumulator<long, StdDev<long>>(default, Include, Exclude), accumulator => accumulator.State.Count < 2 ? fallbackValue : Deviation(accumulator.State));
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -102,9 +144,15 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored, and updates and removals exclude that stored value
+    /// rather than re-evaluating the previous item, so memory grows with the number of items.
+    /// Calling <c>ForAggregation().StdDev(...)</c> instead computes the deviation without that state, but ignores refreshes.
+    /// </remarks>
     public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, double> valueSelector, double fallbackValue)
         where TObject : notnull
-        where TKey : notnull => source.ForAggregation().StdDev(valueSelector, fallbackValue);
+        where TKey : notnull => source.AggregateProjections(valueSelector, new InvertibleAccumulator<double, StdDev<double>>(default, Include, Exclude), accumulator => accumulator.State.Count < 2 ? fallbackValue : Deviation(accumulator.State));
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -115,9 +163,15 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored, and updates and removals exclude that stored value
+    /// rather than re-evaluating the previous item, so memory grows with the number of items.
+    /// Calling <c>ForAggregation().StdDev(...)</c> instead computes the deviation without that state, but ignores refreshes.
+    /// </remarks>
     public static IObservable<decimal> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, decimal> valueSelector, decimal fallbackValue)
         where TObject : notnull
-        where TKey : notnull => source.ForAggregation().StdDev(valueSelector, fallbackValue);
+        where TKey : notnull => source.AggregateProjections(valueSelector, new InvertibleAccumulator<decimal, StdDev<decimal>>(default, Include, Exclude), accumulator => accumulator.State.Count < 2 ? fallbackValue : Deviation(accumulator.State));
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -128,9 +182,15 @@ public static class StdDevEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored, and updates and removals exclude that stored value
+    /// rather than re-evaluating the previous item, so memory grows with the number of items.
+    /// Calling <c>ForAggregation().StdDev(...)</c> instead computes the deviation without that state, but ignores refreshes.
+    /// </remarks>
     public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, float> valueSelector, float fallbackValue = 0)
         where TObject : notnull
-        where TKey : notnull => source.ForAggregation().StdDev(valueSelector, fallbackValue);
+        where TKey : notnull => source.AggregateProjections(valueSelector, new InvertibleAccumulator<float, StdDev<float>>(default, Include, Exclude), accumulator => accumulator.State.Count < 2 ? fallbackValue : Deviation(accumulator.State));
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -141,12 +201,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, int> valueSelector, int fallbackValue = 0) =>
-        source.StdDevCalc(
-            t => (long)valueSelector(t),
-            fallbackValue,
-            (current, item) => new StdDev<long>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
-            (current, item) => new StdDev<long>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
-            IntegralStdDev);
+        source.StdDevCalc(Widen(valueSelector), fallbackValue, Include, Exclude, Deviation);
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -157,12 +212,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, long> valueSelector, long fallbackValue = 0) =>
-        source.StdDevCalc(
-            valueSelector,
-            fallbackValue,
-            (current, item) => new StdDev<long>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
-            (current, item) => new StdDev<long>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
-            IntegralStdDev);
+        source.StdDevCalc(valueSelector, fallbackValue, Include, Exclude, Deviation);
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -173,12 +223,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<decimal> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, decimal> valueSelector, decimal fallbackValue = 0M) =>
-        source.StdDevCalc(
-            valueSelector,
-            fallbackValue,
-            (current, item) => new StdDev<decimal>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
-            (current, item) => new StdDev<decimal>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
-            values => Sqrt((values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1)));
+        source.StdDevCalc(valueSelector, fallbackValue, Include, Exclude, Deviation);
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -189,12 +234,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, double> valueSelector, double fallbackValue = 0) =>
-        source.StdDevCalc(
-            valueSelector,
-            fallbackValue,
-            (current, item) => new StdDev<double>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
-            (current, item) => new StdDev<double>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
-            values => Math.Sqrt((values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1)));
+        source.StdDevCalc(valueSelector, fallbackValue, Include, Exclude, Deviation);
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -205,12 +245,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, float> valueSelector, float fallbackValue = 0) =>
-        source.StdDevCalc(
-            valueSelector,
-            fallbackValue,
-            (current, item) => new StdDev<float>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
-            (current, item) => new StdDev<float>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
-            values => Math.Sqrt((values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1)));
+        source.StdDevCalc(valueSelector, fallbackValue, Include, Exclude, Deviation);
 
     private static IObservable<TResult> StdDevCalc<TObject, TValue, TResult>(
         this IObservable<IAggregateChangeSet<TObject>> source,
@@ -237,7 +272,36 @@ public static class StdDevEx
             .Select(values => values.Count < 2 ? fallbackValue : resultAction(values));
     }
 
-    private static double IntegralStdDev(StdDev<long> values)
+    private static Func<T, long> Widen<T>(Func<T, int> valueSelector)
+    {
+        ArgumentNullException.ThrowIfNull(valueSelector);
+
+        return item => valueSelector(item);
+    }
+
+    private static StdDev<long> Include(StdDev<long> current, long value) => new(current.Count + 1, current.SumOfItems + value, current.SumOfSquares + (value * value));
+
+    private static StdDev<double> Include(StdDev<double> current, double value) => new(current.Count + 1, current.SumOfItems + value, current.SumOfSquares + (value * value));
+
+    private static StdDev<decimal> Include(StdDev<decimal> current, decimal value) => new(current.Count + 1, current.SumOfItems + value, current.SumOfSquares + (value * value));
+
+    private static StdDev<float> Include(StdDev<float> current, float value) => new(current.Count + 1, current.SumOfItems + value, current.SumOfSquares + (value * value));
+
+    private static StdDev<long> Exclude(StdDev<long> current, long value) => new(current.Count - 1, current.SumOfItems - value, current.SumOfSquares - (value * value));
+
+    private static StdDev<double> Exclude(StdDev<double> current, double value) => new(current.Count - 1, current.SumOfItems - value, current.SumOfSquares - (value * value));
+
+    private static StdDev<decimal> Exclude(StdDev<decimal> current, decimal value) => new(current.Count - 1, current.SumOfItems - value, current.SumOfSquares - (value * value));
+
+    private static StdDev<float> Exclude(StdDev<float> current, float value) => new(current.Count - 1, current.SumOfItems - value, current.SumOfSquares - (value * value));
+
+    private static double Deviation(StdDev<double> values) => Math.Sqrt((values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1));
+
+    private static double Deviation(StdDev<float> values) => Math.Sqrt((values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1));
+
+    private static decimal Deviation(StdDev<decimal> values) => Sqrt((values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) / (values.Count - 1));
+
+    private static double Deviation(StdDev<long> values)
     {
         // Cross-multiplying keeps the moment subtraction in integer arithmetic. Converting the moments to double first
         // collapses the difference to zero once they exceed the exactly representable integer range, and dividing before
