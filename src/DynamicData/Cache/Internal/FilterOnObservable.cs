@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -15,7 +15,7 @@ internal sealed class FilterOnObservable<TObject, TKey>(IObservable<IChangeSet<T
             onSourceChange: static (cache, change) =>
             {
                 // Drop the entry upfront on Add/Update/Remove. Synchronous emissions from the new inner
-                // observable collapse with this Remove inside the same drain cycle, so a passing item
+                // observable collapse with this Remove inside the same delivery frame, so a passing item
                 // immediately re-adds. Refresh is propagated as-is.
                 if (change.Reason is ChangeReason.Add or ChangeReason.Update or ChangeReason.Remove)
                 {

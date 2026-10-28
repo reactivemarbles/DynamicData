@@ -1,4 +1,4 @@
-namespace DynamicData.Tests.Binding;
+﻿namespace DynamicData.Tests.Binding;
  
 public static partial class WhenPropertyChangedFixture
 {
@@ -11,7 +11,7 @@ public static partial class WhenPropertyChangedFixture
         private static void WaitForCondition(Func<bool> condition, TimeSpan? timeout = null) =>
             SpinWait.SpinUntil(condition, timeout ?? ConditionTimeout);
 
-        [Fact(Skip = "AutoRefresh has a separate concurrency bug; tracked separately")]
+        [Fact]
         public async Task AutoRefreshThenFilter_ConcurrentAddsAndPropertyActivation_AllItemsObserved()
         {
             // One adder thread sequentially adds items to the cache while a single flipper thread
@@ -65,7 +65,7 @@ public static partial class WhenPropertyChangedFixture
             }
         }
 
-        [Fact(Skip = "AutoRefresh has a separate concurrency bug; tracked separately")]
+        [Fact]
         public async Task AutoRefreshThenFilter_DualSubscribers_AllItemsObserved()
         {
             // Two independent cache subscribers running on the ThreadPool:

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -16,10 +16,10 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
     where TDestinationKey : notnull
 {
     public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() =>
-        source.OrchestrateSubscriptions<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>, Orchestrator>(
+        source.OrchestrateSubscriptions<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>(
             (context, emitter) => new Orchestrator(context, emitter, transformer, equalityComparer, comparer, errorHandler));
 
-    internal sealed class Orchestrator : CacheOrchestratorBase<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
+    internal sealed class Orchestrator : CacheOrchestrator<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>>
     {
         private readonly Cache<ChangeSetMirror<TDestination, TDestinationKey>, TKey> _cache = new();
         private readonly ChangeSetMergeTracker<TDestination, TDestinationKey> _tracker;
@@ -27,7 +27,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
         private readonly Action<Error<TSource, TKey>>? _errorHandler;
 
         public Orchestrator(
-                ICacheOrchestratorContext<TKey, IChangeSet<TDestination, TDestinationKey>> context,
+                CacheOrchestration<TSource, TKey, IChangeSet<TDestination, TDestinationKey>, IChangeSet<TDestination, TDestinationKey>> context,
                 IObserver<IChangeSet<TDestination, TDestinationKey>> emitter,
                 Func<TSource, TKey, Task<IObservable<IChangeSet<TDestination, TDestinationKey>>>> transformer,
                 IEqualityComparer<TDestination>? equalityComparer,
@@ -50,7 +50,7 @@ internal sealed class TransformManyAsync<TSource, TKey, TDestination, TDestinati
             _tracker.ProcessChangeSet(child, null);
         }
 
-        public override void OnDrainComplete(bool isFinal, bool wasReentrant) => _tracker.EmitChanges(Emitter);
+        public override void OnFrameEnded(bool isFinal) => _tracker.EmitChanges(Emitter);
 
         protected override void OnItemAdded(TSource item, TKey key) => SubscribeChild(item, key);
 

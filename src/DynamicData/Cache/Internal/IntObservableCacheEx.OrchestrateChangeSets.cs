@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -9,7 +9,7 @@ internal static partial class IntObservableCacheEx
     /// <summary>
     /// Orchestrates per-key inner observables that drive mutations to a shared
     /// <see cref="ChangeAwareCache{TOutput, TKey}"/>. Source events and inner emissions are
-    /// coalesced into a single downstream changeset per drain cycle. For the mirror-manipulator
+    /// coalesced into a single downstream changeset per delivery frame. For the mirror-manipulator
     /// shape (filter, per-key transform) where each source key contributes 0 or 1 items to the
     /// output.
     /// </summary>
@@ -21,7 +21,7 @@ internal static partial class IntObservableCacheEx
     /// <param name="innerFactory">Builds the per-key inner observable from the source item and its key.</param>
     /// <param name="onSourceChange">Invoked once per source change with the output cache. The caller decides how the source event mutates the cache. Invoked before the corresponding inner subscription is created or torn down.</param>
     /// <param name="onItemSourceNext">Invoked once per inner emission with the output cache, source key, source item, and emitted value.</param>
-    /// <returns>An observable changeset where every emission is the captured changes from one drain cycle.</returns>
+    /// <returns>An observable changeset where every emission is the captured changes from one delivery frame.</returns>
     public static IObservable<IChangeSet<TOutput, TKey>> OrchestrateChangeSets<TSource, TKey, TInner, TOutput>(
             this IObservable<IChangeSet<TSource, TKey>> source,
             Func<TSource, TKey, IObservable<TInner>> innerFactory,
@@ -31,16 +31,16 @@ internal static partial class IntObservableCacheEx
         where TKey : notnull
         where TInner : notnull
         where TOutput : notnull =>
-        source.OrchestrateSubscriptions<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>, ChangeSetOrchestrator<TSource, TKey, TInner, TOutput>>(
+        source.OrchestrateSubscriptions<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>>(
             (context, emitter) => new ChangeSetOrchestrator<TSource, TKey, TInner, TOutput>(context, emitter, innerFactory, onSourceChange, onItemSourceNext));
 
     internal sealed class ChangeSetOrchestrator<TSource, TKey, TInner, TOutput>(
-            ICacheOrchestratorContext<TKey, (TSource Item, TInner Value)> context,
+            CacheOrchestration<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>> context,
             IObserver<IChangeSet<TOutput, TKey>> emitter,
             Func<TSource, TKey, IObservable<TInner>> innerFactory,
             Action<ChangeAwareCache<TOutput, TKey>, Change<TSource, TKey>> onSourceChange,
             Action<ChangeAwareCache<TOutput, TKey>, TKey, TSource, TInner> onItemSourceNext)
-        : CacheOrchestratorBase<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>>(context, emitter)
+        : CacheOrchestrator<TSource, TKey, (TSource Item, TInner Value), IChangeSet<TOutput, TKey>>(context, emitter)
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull
@@ -50,7 +50,7 @@ internal static partial class IntObservableCacheEx
 
         public override void OnItemSourceNext((TSource Item, TInner Value) value, TKey key) => onItemSourceNext(_cache, key, value.Item, value.Value);
 
-        public override void OnDrainComplete(bool isFinal, bool wasReentrant)
+        public override void OnFrameEnded(bool isFinal)
         {
             var captured = _cache.CaptureChanges();
             if (captured.Count != 0)

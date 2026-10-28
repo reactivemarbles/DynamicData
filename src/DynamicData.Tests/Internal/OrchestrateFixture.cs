@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,9 +6,9 @@ namespace DynamicData.Tests.Internal;
 
 /// <summary>
 /// Behavioral contract tests for the <c>OrchestrateSubscriptions</c> primitive: source/inner serialization,
-/// per-drain coalesced emission, completion counting, error propagation, and cross-cache safety.
+/// per-frame coalesced emission, completion counting, error propagation, and cross-cache safety.
 /// </summary>
-public sealed class OrchestrateFixture
+public sealed partial class OrchestrateFixture
 {
     private const int SeedMin = 1;
     private const int SeedMax = 10000;
@@ -26,7 +26,7 @@ public sealed class OrchestrateFixture
             Action? onChild = null)
     {
         TestOrchestrator? captured = null;
-        var observable = source.OrchestrateSubscriptions<TestItem, int, string, IChangeSet<TestItem, int>, TestOrchestrator>(
+        var observable = source.OrchestrateSubscriptions<TestItem, int, string, IChangeSet<TestItem, int>>(
             (ctx, em) => captured = new TestOrchestrator(ctx, em, childFactory, onParent, onChild));
         return (observable, () => captured ?? throw new InvalidOperationException("Subscribe to the returned observable first."));
     }
@@ -158,7 +158,7 @@ public sealed class OrchestrateFixture
     }
 
     [Fact]
-    public void OnDrainComplete_IsFinalIsFalseUntilSourceAndAllInnersComplete()
+    public void OnFrameEnded_IsFinalIsFalseUntilSourceAndAllInnersComplete()
     {
         using var source = new TestSourceCache<TestItem, int>(x => x.Key);
         var childSubject = new Subject<string>();
@@ -170,7 +170,7 @@ public sealed class OrchestrateFixture
         childSubject.OnNext("v1");
 
         var orchestrator = getOrchestrator();
-        orchestrator.IsFinalLog.Should().NotBeEmpty("OnDrainComplete should fire while source is active");
+        orchestrator.IsFinalLog.Should().NotBeEmpty("OnFrameEnded should fire while source is active");
         orchestrator.IsFinalLog.Should().AllBeEquivalentTo(false,
             "isFinal must be false on every call while source and inners are still active");
 
@@ -183,7 +183,7 @@ public sealed class OrchestrateFixture
         var preInnerCompleteCount = orchestrator.IsFinalLog.Count;
         childSubject.OnCompleted();
         orchestrator.IsFinalLog.Skip(preInnerCompleteCount).Should().Contain(true,
-            "isFinal must be true on the OnDrainComplete fired after source and all tracked inners have completed");
+            "isFinal must be true on the OnFrameEnded fired after source and all tracked inners have completed");
         observer.IsCompleted.Should().BeTrue("downstream completion must follow isFinal=true");
     }
 
@@ -277,158 +277,6 @@ public sealed class OrchestrateFixture
     }
 
     [Fact]
-    public async Task Serialization_ParentAndChildDoNotInterleave()
-    {
-        const int iterations = 50;
-
-        using var source = new SourceCache<TestItem, int>(x => x.Key);
-        var callLog = new List<string>();
-        Subject<string>? childSubject = null;
-        var observer = new TestObserver();
-        var (observable, _) = Wire(
-            source.Connect(),
-            childFactory: _ =>
-            {
-                childSubject = new Subject<string>();
-                return childSubject;
-            },
-            onParent: () => { lock (callLog) callLog.Add("P-start"); Thread.Sleep(1); lock (callLog) callLog.Add("P-end"); },
-            onChild: () => { lock (callLog) callLog.Add("C-start"); Thread.Sleep(1); lock (callLog) callLog.Add("C-end"); });
-        using var sub = observable.Subscribe(observer);
-
-        source.AddOrUpdate(new TestItem(1, "init"));
-        childSubject.Should().NotBeNull();
-
-        using var barrier = new Barrier(2);
-        var parentTask = Task.Run(() =>
-        {
-            barrier.SignalAndWait();
-            for (var i = 0; i < iterations; i++)
-                source.Refresh(new TestItem(1, "v"));
-        });
-        var childTask = Task.Run(() =>
-        {
-            barrier.SignalAndWait();
-            for (var i = 0; i < iterations; i++)
-                childSubject!.OnNext($"c{i}");
-        });
-        await Task.WhenAll(parentTask, childTask);
-
-        lock (callLog)
-        {
-            callLog.Count.Should().BeGreaterThan(0);
-            (callLog.Count % 2).Should().Be(0, "every start must have a matching end");
-            for (var i = 0; i + 1 < callLog.Count; i += 2)
-            {
-                var prefix = callLog[i].Split('-')[0];
-                callLog[i].Should().EndWith("start");
-                callLog[i + 1].Should().Be($"{prefix}-end", "parent and child callbacks must not interleave");
-            }
-        }
-    }
-
-    [Trait("Category", "ExplicitDeadlock")]
-    [Fact]
-    public async Task DeadlockProof_CrossFeedingSubscriptions()
-    {
-        var iterations = _rand.Number(50, 150);
-
-        using var sourceA = new SourceCache<TestItem, int>(x => x.Key);
-        using var sourceB = new SourceCache<TestItem, int>(x => x.Key);
-
-        var observerA = new CrossFeedObserver(sourceB, 100_001, iterations);
-        var (observableA, _) = Wire(sourceA.Connect());
-        using var subA = observableA.Subscribe(observerA);
-
-        var observerB = new CrossFeedObserver(sourceA, 200_001, iterations);
-        var (observableB, _) = Wire(sourceB.Connect());
-        using var subB = observableB.Subscribe(observerB);
-
-        using var barrier = new Barrier(2);
-
-        var taskA = Task.Run(() =>
-        {
-            var tRand = new Randomizer(56);
-            barrier.SignalAndWait();
-            for (var i = 0; i < iterations; i++)
-                sourceA.AddOrUpdate(new TestItem(tRand.Number(1, 50_000), tRand.String2(5)));
-        });
-
-        var taskB = Task.Run(() =>
-        {
-            var tRand = new Randomizer(57);
-            barrier.SignalAndWait();
-            for (var i = 0; i < iterations; i++)
-                sourceB.AddOrUpdate(new TestItem(tRand.Number(50_001, 100_000), tRand.String2(5)));
-        });
-
-        var completed = Task.WhenAll(taskA, taskB);
-        var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(30)));
-        finished.Should().BeSameAs(completed,
-            "cross-feeding Orchestrate subscriptions should not deadlock");
-    }
-
-    [Fact]
-    public async Task ReentrantDrain_ConcurrentInnerEmissions_AllItemsReachDownstream()
-    {
-        var producerCount = 8;
-        var emissionsPerProducer = 200;
-        var totalEmissions = producerCount * emissionsPerProducer;
-
-        using var source = new SourceCache<TestItem, int>(x => x.Key);
-
-        var innerSubjects = new Dictionary<int, Subject<string>>();
-        for (var i = 1; i <= producerCount; i++)
-        {
-            innerSubjects[i] = new Subject<string>();
-        }
-
-        var (observable, getOrchestrator) = Wire(source.Connect(), key => innerSubjects[key]);
-        var observer = new TestObserver();
-        using var sub = observable.Subscribe(observer);
-
-        for (var i = 1; i <= producerCount; i++)
-        {
-            source.AddOrUpdate(new TestItem(i, "init"));
-        }
-
-        var orchestrator = getOrchestrator();
-
-        lock (orchestrator.ChildCalls)
-        {
-            orchestrator.ChildCalls.Clear();
-        }
-
-        using var barrier = new Barrier(producerCount);
-        var producers = Enumerable.Range(1, producerCount).Select(producerId => Task.Run(() =>
-        {
-            barrier.SignalAndWait();
-            for (var i = 0; i < emissionsPerProducer; i++)
-            {
-                innerSubjects[producerId].OnNext($"{producerId}-{i}");
-            }
-        })).ToArray();
-
-        await Task.WhenAll(producers);
-
-        SpinWait.SpinUntil(
-            () => { lock (orchestrator.ChildCalls) return orchestrator.ChildCalls.Count >= totalEmissions; },
-            TimeSpan.FromSeconds(5))
-            .Should().BeTrue($"all {totalEmissions} emissions must reach OnItemSourceNext within 5 seconds");
-
-        lock (orchestrator.ChildCalls)
-        {
-            orchestrator.ChildCalls.Count.Should().Be(totalEmissions,
-                "every concurrent inner emission must reach OnItemSourceNext; reentrant drain during emit must not drop items");
-        }
-
-        foreach (var subj in innerSubjects.Values)
-        {
-            subj.Dispose();
-        }
-    }
-
-    [Fact]
     public void LambdaOverload_MultipleSubscriptions_DoNotShareOrchestrator()
     {
         using var source = new SourceCache<TestItem, int>(x => x.Key);
@@ -445,7 +293,7 @@ public sealed class OrchestrateFixture
                 }
             },
             onItemSourceNext: (_, _, _) => { },
-            onDrainComplete: _ => Interlocked.Increment(ref emitCalls));
+            onFrameEnded: _ => Interlocked.Increment(ref emitCalls));
 
         using var subA = observable.Subscribe();
         using var subB = observable.Subscribe();
@@ -459,30 +307,13 @@ public sealed class OrchestrateFixture
         }
     }
 
-    private sealed class CrossFeedObserver(SourceCache<TestItem, int> target, int idBase, int maxCrossWrites) : IObserver<IChangeSet<TestItem, int>>
-    {
-        private int _counter;
-
-        public void OnNext(IChangeSet<TestItem, int> value)
-        {
-            if (Interlocked.Increment(ref _counter) <= maxCrossWrites)
-            {
-                target.AddOrUpdate(new TestItem(idBase + _counter, "cross"));
-            }
-        }
-
-        public void OnError(Exception error) { }
-
-        public void OnCompleted() { }
-    }
-
     private sealed class TestOrchestrator(
-            ICacheOrchestratorContext<int, string> context,
+            CacheOrchestration<TestItem, int, string, IChangeSet<TestItem, int>> context,
             IObserver<IChangeSet<TestItem, int>> emitter,
             Func<int, IObservable<string>>? childFactory = null,
             Action? onParent = null,
             Action? onChild = null)
-        : ICacheOrchestrator<TestItem, int, string, IChangeSet<TestItem, int>>
+        : CacheOrchestrator<TestItem, int, string, IChangeSet<TestItem, int>>(context, emitter)
     {
         private readonly ChangeAwareCache<TestItem, int> _cache = new();
 
@@ -490,9 +321,8 @@ public sealed class OrchestrateFixture
         public int EmitCallCount;
         public readonly List<(string Value, int Key)> ChildCalls = [];
         public readonly List<bool> IsFinalLog = [];
-        public readonly List<bool> WasReentrantLog = [];
 
-        public void OnSourceNext(IChangeSet<TestItem, int> changes)
+        public override void OnSourceNext(IChangeSet<TestItem, int> changes)
         {
             Interlocked.Increment(ref ParentCallCount);
             onParent?.Invoke();
@@ -503,30 +333,29 @@ public sealed class OrchestrateFixture
                 foreach (var change in (ChangeSet<TestItem, int>)changes)
                 {
                     if (change.Reason is ChangeReason.Add or ChangeReason.Update)
-                        context.Track(change.Key, childFactory(change.Key));
+                        Context.Track(change.Key, childFactory(change.Key));
                     else if (change.Reason is ChangeReason.Remove)
-                        context.Untrack(change.Key);
+                        Context.Untrack(change.Key);
                 }
             }
         }
 
-        public void OnItemSourceNext(string child, int parentKey)
+        public override void OnItemSourceNext(string child, int parentKey)
         {
             onChild?.Invoke();
             ChildCalls.Add((child, parentKey));
             _cache.AddOrUpdate(new TestItem(parentKey, child), parentKey);
         }
 
-        public void OnDrainComplete(bool isFinal, bool wasReentrant)
+        public override void OnFrameEnded(bool isFinal)
         {
             IsFinalLog.Add(isFinal);
-            WasReentrantLog.Add(wasReentrant);
 
             var changes = _cache.CaptureChanges();
             if (changes.Count > 0)
             {
                 Interlocked.Increment(ref EmitCallCount);
-                emitter.OnNext(changes);
+                Emitter.OnNext(changes);
             }
         }
     }

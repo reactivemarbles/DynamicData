@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -34,5 +34,5 @@ internal sealed class GroupOnObservable<TObject, TKey, TGroupKey>(IObservable<IC
                     }
                 },
                 onItemSourceNext: (value, parentKey, _) => grouper.AddOrUpdate(parentKey, value.GroupKey, value.Item),
-                onDrainComplete: observer => grouper.EmitChanges(observer)));
+                onFrameEnded: observer => grouper.EmitChanges(observer)));
 }

@@ -4,84 +4,71 @@
 
 namespace DynamicData.Tests.Internal;
 
-public sealed class ChangeSetOrchestratorFixture
+public sealed class ChangeSetOrchestratorFixture : IDisposable
 {
+    private readonly Subject<IChangeSet<Source, int>> _source = new();
+    private readonly Dictionary<int, Subject<string>> _inners = [];
+    private readonly CollectingObserver<IChangeSet<string, int>> _results = new();
+
     private sealed record Source(int Id);
+
+    public void Dispose()
+    {
+        _source.Dispose();
+        foreach (var inner in _inners.Values)
+            inner.Dispose();
+    }
 
     [Fact]
     public void OnSourceNext_InvokesOnSourceChangeForEachChange()
     {
-        var context = new FakeOrchestratorContext<int, (Source Item, string Value)>();
-        var emitter = new CollectingObserver<IChangeSet<string, int>>();
-        var reasons = new System.Collections.Generic.List<ChangeReason>();
+        var reasons = new List<ChangeReason>();
+        using var subscription = Orchestrate((_, change) => reasons.Add(change.Reason), (cache, key, _, value) => cache.AddOrUpdate(value, key));
 
-        var orchestrator = new IntObservableCacheEx.ChangeSetOrchestrator<Source, int, string, string>(
-            context, emitter,
-            innerFactory: (item, key) => Observable.Empty<string>(),
-            onSourceChange: (cache, change) => reasons.Add(change.Reason),
-            onItemSourceNext: (cache, key, item, value) => cache.AddOrUpdate(value, key));
+        _source.OnNext(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, new Source(1)), new(ChangeReason.Refresh, 2, new Source(2)) });
 
-        orchestrator.OnSourceNext(new ChangeSet<Source, int>
-        {
-            new(ChangeReason.Add, 1, new Source(1)),
-            new(ChangeReason.Refresh, 2, new Source(2)),
-        });
-
-        reasons.Should().Equal(new[] { ChangeReason.Add, ChangeReason.Refresh });
+        reasons.Should().Equal(ChangeReason.Add, ChangeReason.Refresh);
     }
 
     [Fact]
-    public void OnInner_RoutesValueAndDrainCaptures()
+    public void OnItemSourceNext_RoutesValueAndFrameEndCaptures()
     {
-        var context = new FakeOrchestratorContext<int, (Source Item, string Value)>();
-        var emitter = new CollectingObserver<IChangeSet<string, int>>();
-        var source = new Source(1);
+        using var subscription = Orchestrate((_, _) => { }, (cache, key, _, value) => cache.AddOrUpdate(value, key));
 
-        var orchestrator = new IntObservableCacheEx.ChangeSetOrchestrator<Source, int, string, string>(
-            context, emitter,
-            innerFactory: (item, key) => Observable.Empty<string>(),
-            onSourceChange: (cache, change) => { },
-            onItemSourceNext: (cache, key, item, value) => cache.AddOrUpdate(value, key));
+        _source.OnNext(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, new Source(1)) });
+        _inners[1].OnNext("v");
 
-        orchestrator.OnSourceNext(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, source) });
-        orchestrator.OnItemSourceNext((source, "v"), 1);
-        orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
-
-        emitter.Values.Should().HaveCount(1);
-        emitter.Values[0].Should().ContainSingle(c => c.Key == 1 && c.Current == "v");
+        _results.Values.Should().ContainSingle().Which.Should().ContainSingle(c => c.Key == 1 && c.Current == "v");
     }
 
     [Fact]
     public void OnItemRemoved_UntracksKey()
     {
-        var context = new FakeOrchestratorContext<int, (Source Item, string Value)>();
-        var emitter = new CollectingObserver<IChangeSet<string, int>>();
-        var orchestrator = new IntObservableCacheEx.ChangeSetOrchestrator<Source, int, string, string>(
-            context, emitter,
-            innerFactory: (item, key) => Observable.Empty<string>(),
-            onSourceChange: (cache, change) => { },
-            onItemSourceNext: (cache, key, item, value) => { });
+        using var subscription = Orchestrate((_, _) => { }, (_, _, _, _) => { });
 
-        orchestrator.OnSourceNext(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, new Source(1)) });
-        orchestrator.OnSourceNext(new ChangeSet<Source, int> { new(ChangeReason.Remove, 1, new Source(1)) });
+        _source.OnNext(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, new Source(1)) });
+        _inners[1].HasObservers.Should().BeTrue();
 
-        context.UntrackCalls.Should().Equal(new[] { 1 });
+        _source.OnNext(new ChangeSet<Source, int> { new(ChangeReason.Remove, 1, new Source(1)) });
+
+        _inners[1].HasObservers.Should().BeFalse("removing the source item must dispose its inner subscription");
     }
 
     [Fact]
-    public void OnDrainComplete_EmptyChangeSet_NoEmission()
+    public void OnFrameEnded_EmptyChangeSet_NoEmission()
     {
-        var context = new FakeOrchestratorContext<int, (Source Item, string Value)>();
-        var emitter = new CollectingObserver<IChangeSet<string, int>>();
-        var orchestrator = new IntObservableCacheEx.ChangeSetOrchestrator<Source, int, string, string>(
-            context, emitter,
-            innerFactory: (item, key) => Observable.Empty<string>(),
-            onSourceChange: (cache, change) => { },
-            onItemSourceNext: (cache, key, item, value) => { });
+        using var subscription = Orchestrate((_, _) => { }, (_, _, _, _) => { });
 
-        orchestrator.OnSourceNext(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, new Source(1)) });
-        orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
+        _source.OnNext(new ChangeSet<Source, int> { new(ChangeReason.Add, 1, new Source(1)) });
 
-        emitter.Values.Should().BeEmpty("drain end with an empty ChangeAwareCache must not emit");
+        _results.Values.Should().BeEmpty("a frame that leaves the ChangeAwareCache unchanged must not emit");
     }
+
+    private IDisposable Orchestrate(Action<ChangeAwareCache<string, int>, Change<Source, int>> onSourceChange, Action<ChangeAwareCache<string, int>, int, Source, string> onItemSourceNext) =>
+        _source
+            .OrchestrateChangeSets(
+                innerFactory: (_, key) => _inners[key] = new Subject<string>(),
+                onSourceChange,
+                onItemSourceNext)
+            .Subscribe(_results);
 }

@@ -4,90 +4,71 @@
 
 namespace DynamicData.Tests.Internal;
 
-public sealed class TransformManyAsyncOrchestratorFixture
+public sealed class TransformManyAsyncOrchestratorFixture : IDisposable
 {
+    private readonly Subject<IChangeSet<Item, int>> _source = new();
+    private readonly Dictionary<int, Subject<IChangeSet<string, string>>> _inners = [];
+    private readonly CollectingObserver<IChangeSet<string, string>> _results = new();
+
     private sealed record Item(int Id);
+
+    public void Dispose()
+    {
+        _source.Dispose();
+        foreach (var inner in _inners.Values)
+            inner.Dispose();
+    }
 
     [Fact]
     public void OnItemAdded_TracksTransformedObservable()
     {
-        var context = new FakeOrchestratorContext<int, IChangeSet<string, string>>();
-        var emitter = new CollectingObserver<IChangeSet<string, string>>();
-        var orchestrator = new TransformManyAsync<Item, int, string, string>.Orchestrator(
-            context, emitter,
-            transformer: (item, key) => Task.FromResult<IObservable<IChangeSet<string, string>>>(
-                Observable.Empty<IChangeSet<string, string>>()),
-            equalityComparer: null,
-            comparer: null,
-            errorHandler: null);
+        using var subscription = Transform().Subscribe(_results);
 
-        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
+        _source.OnNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
 
-        context.TrackCalls.Should().HaveCount(1);
-        context.TrackCalls[0].Key.Should().Be(1);
+        _inners.Keys.Should().Equal(1);
+        _inners[1].HasObservers.Should().BeTrue();
     }
 
     [Fact]
     public void OnItemRemoved_UntracksAndDropsFromTracker()
     {
-        var context = new FakeOrchestratorContext<int, IChangeSet<string, string>>();
-        var emitter = new CollectingObserver<IChangeSet<string, string>>();
-        var orchestrator = new TransformManyAsync<Item, int, string, string>.Orchestrator(
-            context, emitter,
-            transformer: (item, key) => Task.FromResult<IObservable<IChangeSet<string, string>>>(
-                Observable.Empty<IChangeSet<string, string>>()),
-            equalityComparer: null,
-            comparer: null,
-            errorHandler: null);
+        using var subscription = Transform().Subscribe(_results);
 
-        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
-        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Remove, 1, new Item(1)) });
+        _source.OnNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
+        _inners[1].OnNext(new ChangeSet<string, string> { new(ChangeReason.Add, "x", "value-x") });
+        _source.OnNext(new ChangeSet<Item, int> { new(ChangeReason.Remove, 1, new Item(1)) });
 
-        context.UntrackCalls.Should().Equal(new[] { 1 });
+        _inners[1].HasObservers.Should().BeFalse();
+        _results.Values.Should().HaveCount(2);
+        _results.Values[1].Should().ContainSingle(c => c.Key == "x" && c.Reason == ChangeReason.Remove);
     }
 
     [Fact]
-    public void OnDrainComplete_EmitsAccumulatedTrackerState()
+    public void OnFrameEnded_EmitsAccumulatedTrackerState()
     {
-        var context = new FakeOrchestratorContext<int, IChangeSet<string, string>>();
-        var emitter = new CollectingObserver<IChangeSet<string, string>>();
-        var orchestrator = new TransformManyAsync<Item, int, string, string>.Orchestrator(
-            context, emitter,
-            transformer: (item, key) => Task.FromResult<IObservable<IChangeSet<string, string>>>(
-                Observable.Empty<IChangeSet<string, string>>()),
-            equalityComparer: null,
-            comparer: null,
-            errorHandler: null);
+        using var subscription = Transform().Subscribe(_results);
 
-        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
-        orchestrator.OnItemSourceNext(new ChangeSet<string, string> { new(ChangeReason.Add, "x", "value-x") }, 1);
+        _source.OnNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
+        _inners[1].OnNext(new ChangeSet<string, string> { new(ChangeReason.Add, "x", "value-x") });
 
-        orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
-
-        emitter.Values.Should().HaveCount(1);
-        emitter.Values[0].Should().ContainSingle(c => c.Key == "x");
+        _results.Values.Should().ContainSingle().Which.Should().ContainSingle(c => c.Key == "x");
     }
 
     [Fact]
-    public async Task TransformerThrows_RoutesThroughErrorHandler()
+    public void TransformerThrows_RoutesThroughErrorHandler()
     {
-        var context = new FakeOrchestratorContext<int, IChangeSet<string, string>>();
-        var emitter = new CollectingObserver<IChangeSet<string, string>>();
         Error<Item, int>? capturedError = null;
+        var transform = new TransformManyAsync<Item, int, string, string>(_source, (_, _) => throw new InvalidOperationException("transformer-broke"), null, null, error => capturedError = error);
+        using var subscription = transform.Run().Subscribe(_results);
 
-        var orchestrator = new TransformManyAsync<Item, int, string, string>.Orchestrator(
-            context, emitter,
-            transformer: (item, key) => throw new InvalidOperationException("transformer-broke"),
-            equalityComparer: null,
-            comparer: null,
-            errorHandler: err => capturedError = err);
-
-        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
-
-        var trackedObs = context.Tracked[1];
-        await trackedObs.DefaultIfEmpty().LastOrDefaultAsync();
+        _source.OnNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
 
         capturedError.Should().NotBeNull();
         capturedError!.Exception!.Message.Should().Be("transformer-broke");
+        _results.Error.Should().BeNull("a handled transformer error must not terminate the stream");
     }
+
+    private IObservable<IChangeSet<string, string>> Transform() =>
+        new TransformManyAsync<Item, int, string, string>(_source, (_, key) => Task.FromResult<IObservable<IChangeSet<string, string>>>(_inners[key] = new Subject<IChangeSet<string, string>>()), null, null).Run();
 }

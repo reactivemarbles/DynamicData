@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -30,7 +30,7 @@ internal static partial class IntObservableCacheEx
         where TKey : notnull
         where TDest : notnull
         where TDestKey : notnull =>
-        source.OrchestrateSubscriptions<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>, MergedOrchestrator<TSource, TKey, TDest, TDestKey>>(
+        source.OrchestrateSubscriptions<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>>(
             (context, emitter) => new MergedOrchestrator<TSource, TKey, TDest, TDestKey>(context, emitter, changeSetSelector, equalityComparer, comparer, reevalOnRefresh));
 
     /// <summary>
@@ -51,10 +51,10 @@ internal static partial class IntObservableCacheEx
         where TSource : notnull
         where TKey : notnull
         where TDest : notnull =>
-        source.OrchestrateSubscriptions<TSource, TKey, IChangeSet<TDest>, IChangeSet<TDest>, MergedListOrchestrator<TSource, TKey, TDest>>(
+        source.OrchestrateSubscriptions<TSource, TKey, IChangeSet<TDest>, IChangeSet<TDest>>(
             (context, emitter) => new MergedListOrchestrator<TSource, TKey, TDest>(context, emitter, changeSetSelector, equalityComparer));
 
-    internal sealed class MergedOrchestrator<TSource, TKey, TDest, TDestKey> : CacheOrchestratorBase<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>>
+    internal sealed class MergedOrchestrator<TSource, TKey, TDest, TDestKey> : CacheOrchestrator<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>>
         where TSource : notnull
         where TKey : notnull
         where TDest : notnull
@@ -66,7 +66,7 @@ internal static partial class IntObservableCacheEx
         private readonly bool _reevalOnRefresh;
 
         public MergedOrchestrator(
-                ICacheOrchestratorContext<TKey, IChangeSet<TDest, TDestKey>> context,
+                CacheOrchestration<TSource, TKey, IChangeSet<TDest, TDestKey>, IChangeSet<TDest, TDestKey>> context,
                 IObserver<IChangeSet<TDest, TDestKey>> emitter,
                 Func<TSource, TKey, IObservable<IChangeSet<TDest, TDestKey>>> changeSetSelector,
                 IEqualityComparer<TDest>? equalityComparer,
@@ -89,7 +89,7 @@ internal static partial class IntObservableCacheEx
             _tracker.ProcessChangeSet(child, null);
         }
 
-        public override void OnDrainComplete(bool isFinal, bool wasReentrant) => _tracker.EmitChanges(Emitter);
+        public override void OnFrameEnded(bool isFinal) => _tracker.EmitChanges(Emitter);
 
         protected override void OnItemAdded(TSource item, TKey key) => SubscribeChild(item, key);
 
@@ -132,7 +132,7 @@ internal static partial class IntObservableCacheEx
         }
     }
 
-    internal sealed class MergedListOrchestrator<TSource, TKey, TDest> : CacheOrchestratorBase<TSource, TKey, IChangeSet<TDest>, IChangeSet<TDest>>
+    internal sealed class MergedListOrchestrator<TSource, TKey, TDest> : CacheOrchestrator<TSource, TKey, IChangeSet<TDest>, IChangeSet<TDest>>
         where TSource : notnull
         where TKey : notnull
         where TDest : notnull
@@ -143,7 +143,7 @@ internal static partial class IntObservableCacheEx
         private readonly IEqualityComparer<TDest>? _equalityComparer;
 
         public MergedListOrchestrator(
-                ICacheOrchestratorContext<TKey, IChangeSet<TDest>> context,
+                CacheOrchestration<TSource, TKey, IChangeSet<TDest>, IChangeSet<TDest>> context,
                 IObserver<IChangeSet<TDest>> emitter,
                 Func<TSource, TKey, IObservable<IChangeSet<TDest>>> changeSetSelector,
                 IEqualityComparer<TDest>? equalityComparer)
@@ -163,7 +163,7 @@ internal static partial class IntObservableCacheEx
             _tracker.ProcessChangeSet(child, null);
         }
 
-        public override void OnDrainComplete(bool isFinal, bool wasReentrant) => _tracker.EmitChanges(Emitter);
+        public override void OnFrameEnded(bool isFinal) => _tracker.EmitChanges(Emitter);
 
         protected override void OnItemAdded(TSource item, TKey key) => SubscribeChild(item, key);
 

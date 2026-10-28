@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -16,12 +16,12 @@ namespace DynamicData.Cache.Internal;
 /// <list type="table">
 ///   <listheader><term>Operator shape</term><description>Use</description></listheader>
 ///   <item>
-///     <term>Single value type (TResult), needs explicit orchestrator class</term>
-///     <description><see cref="Orchestrate{TSource, TKey, TInner, TResult, TOrch}"/> + custom <see cref="ICacheOrchestrator{TSource, TKey, TInner, TResult}"/> (or subclass <see cref="CacheOrchestratorBase{TSource, TKey, TInner, TResult}"/>).</description>
+///     <term>Needs an explicit orchestrator class</term>
+///     <description><see cref="OrchestrateSubscriptions{TSource, TKey, TInner, TResult}(IObservable{IChangeSet{TSource, TKey}}, Func{CacheOrchestration{TSource, TKey, TInner, TResult}, IObserver{TResult}, CacheOrchestrator{TSource, TKey, TInner, TResult}})"/> with a subclass of <see cref="CacheOrchestrator{TSource, TKey, TInner, TResult}"/>.</description>
 ///   </item>
 ///   <item>
 ///     <term>Stateless, simple per-reason logic, value output</term>
-///     <description><see cref="Orchestrate{TSource, TKey, TInner, TResult}(IObservable{IChangeSet{TSource, TKey}}, Action{IChangeSet{TSource, TKey}, ICacheOrchestratorContext{TKey, TInner}}, Action{TInner, TKey, IObserver{TResult}}, Action{IObserver{TResult}}?)"/> lambda overload.</description>
+///     <description>The lambda overload of <c>OrchestrateSubscriptions</c>.</description>
 ///   </item>
 ///   <item>
 ///     <term>Output is a cache changeset, you mutate a ChangeAwareCache per source/inner event</term>
@@ -42,68 +42,65 @@ internal static partial class IntObservableCacheEx
     /// <summary>
     /// Orchestrates a keyed source changeset and a dynamic set of per-key inner observables into a
     /// single result stream. The supplied <paramref name="factory"/> is invoked on every subscription
-    /// with the per-subscription <see cref="ICacheOrchestratorContext{TKey, TInner}"/> and downstream
-    /// emitter; the orchestrator instance it returns owns its per-subscription state for the lifetime
-    /// of the subscription.
-    /// </summary>
-    /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
-    /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
-    /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
-    /// <typeparam name="TResult">Type delivered downstream.</typeparam>
-    /// <typeparam name="TOrch">Concrete orchestrator type returned by the factory. Generic-typed so dispatch sites devirtualize.</typeparam>
-    /// <param name="source">The keyed source changeset stream.</param>
-    /// <param name="factory">Builds the per-subscription orchestrator from its runtime context and emitter.</param>
-    /// <returns>An observable that orchestrates source and inner activity into a single result stream.</returns>
-    public static IObservable<TResult> OrchestrateSubscriptions<TSource, TKey, TInner, TResult, TOrch>(
-            this IObservable<IChangeSet<TSource, TKey>> source,
-            Func<ICacheOrchestratorContext<TKey, TInner>, IObserver<TResult>, TOrch> factory)
-        where TSource : notnull
-        where TKey : notnull
-        where TInner : notnull
-        where TOrch : ICacheOrchestrator<TSource, TKey, TInner, TResult> =>
-        new CacheOrchestration<TSource, TKey, TInner, TResult, TOrch>(source, factory).Run();
-
-    /// <summary>
-    /// Convenience overload of <see cref="Orchestrate{TSource, TKey, TInner, TResult, TOrch}"/>
-    /// for stateless orchestrators or those with state small enough to capture in closures. The
-    /// source-change lambda receives the runtime context (for <c>Track</c>/<c>Untrack</c>/
-    /// <c>Serialize</c>); the inner lambda receives the downstream emitter directly.
+    /// with that subscription's <see cref="CacheOrchestration{TSource, TKey, TInner, TResult}"/> and the
+    /// downstream observer; the orchestrator instance it returns owns its per-subscription state for the
+    /// lifetime of the subscription.
     /// </summary>
     /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
     /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
     /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
     /// <typeparam name="TResult">Type delivered downstream.</typeparam>
     /// <param name="source">The keyed source changeset stream.</param>
-    /// <param name="onSourceNext">Invoked for each source changeset with the runtime context.</param>
-    /// <param name="onItemSourceNext">Invoked for each value emitted by a tracked inner observable, with its key and the downstream emitter.</param>
-    /// <param name="onDrainComplete">Optional. Invoked once per drain cycle to flush aggregated state to the emitter. Defaults to a no-op.</param>
+    /// <param name="factory">Builds the per-subscription orchestrator from its orchestration and the downstream observer.</param>
     /// <returns>An observable that orchestrates source and inner activity into a single result stream.</returns>
     public static IObservable<TResult> OrchestrateSubscriptions<TSource, TKey, TInner, TResult>(
             this IObservable<IChangeSet<TSource, TKey>> source,
-            Action<IChangeSet<TSource, TKey>, ICacheOrchestratorContext<TKey, TInner>> onSourceNext,
-            Action<TInner, TKey, IObserver<TResult>> onItemSourceNext,
-            Action<IObserver<TResult>>? onDrainComplete = null)
+            Func<CacheOrchestration<TSource, TKey, TInner, TResult>, IObserver<TResult>, CacheOrchestrator<TSource, TKey, TInner, TResult>> factory)
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull =>
-        source.OrchestrateSubscriptions<TSource, TKey, TInner, TResult, LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>>(
-            (context, emitter) => new LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(context, emitter, onSourceNext, onItemSourceNext, onDrainComplete));
+        Observable.Create<TResult>(observer => new CacheOrchestration<TSource, TKey, TInner, TResult>(source, observer, factory));
+
+    /// <summary>
+    /// Convenience overload for orchestrators that are stateless, or whose state is small enough to
+    /// capture in closures. The source lambda receives the orchestration (for <c>Track</c>,
+    /// <c>Untrack</c> and <c>Serialize</c>); the inner lambda receives the downstream observer directly.
+    /// </summary>
+    /// <typeparam name="TSource">Type of items in the source changeset.</typeparam>
+    /// <typeparam name="TKey">Type of the source changeset key.</typeparam>
+    /// <typeparam name="TInner">Type of values emitted by the per-key inner observables.</typeparam>
+    /// <typeparam name="TResult">Type delivered downstream.</typeparam>
+    /// <param name="source">The keyed source changeset stream.</param>
+    /// <param name="onSourceNext">Invoked for each source changeset with the orchestration.</param>
+    /// <param name="onItemSourceNext">Invoked for each value emitted by a tracked inner observable, with its key and the downstream observer.</param>
+    /// <param name="onFrameEnded">Optional. Invoked at the end of each delivery frame to emit accumulated state. Defaults to a no-op.</param>
+    /// <returns>An observable that orchestrates source and inner activity into a single result stream.</returns>
+    public static IObservable<TResult> OrchestrateSubscriptions<TSource, TKey, TInner, TResult>(
+            this IObservable<IChangeSet<TSource, TKey>> source,
+            Action<IChangeSet<TSource, TKey>, CacheOrchestration<TSource, TKey, TInner, TResult>> onSourceNext,
+            Action<TInner, TKey, IObserver<TResult>> onItemSourceNext,
+            Action<IObserver<TResult>>? onFrameEnded = null)
+        where TSource : notnull
+        where TKey : notnull
+        where TInner : notnull =>
+        source.OrchestrateSubscriptions<TSource, TKey, TInner, TResult>(
+            (context, emitter) => new LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(context, emitter, onSourceNext, onItemSourceNext, onFrameEnded));
 
     internal sealed class LambdaCacheOrchestrator<TSource, TKey, TInner, TResult>(
-            ICacheOrchestratorContext<TKey, TInner> context,
+            CacheOrchestration<TSource, TKey, TInner, TResult> context,
             IObserver<TResult> emitter,
-            Action<IChangeSet<TSource, TKey>, ICacheOrchestratorContext<TKey, TInner>> onSourceNext,
+            Action<IChangeSet<TSource, TKey>, CacheOrchestration<TSource, TKey, TInner, TResult>> onSourceNext,
             Action<TInner, TKey, IObserver<TResult>> onItemSourceNext,
-            Action<IObserver<TResult>>? onDrainComplete)
-        : ICacheOrchestrator<TSource, TKey, TInner, TResult>
+            Action<IObserver<TResult>>? onFrameEnded)
+        : CacheOrchestrator<TSource, TKey, TInner, TResult>(context, emitter)
         where TSource : notnull
         where TKey : notnull
         where TInner : notnull
     {
-        public void OnSourceNext(IChangeSet<TSource, TKey> changes) => onSourceNext(changes, context);
+        public override void OnSourceNext(IChangeSet<TSource, TKey> changes) => onSourceNext(changes, Context);
 
-        public void OnItemSourceNext(TInner value, TKey key) => onItemSourceNext(value, key, emitter);
+        public override void OnItemSourceNext(TInner value, TKey key) => onItemSourceNext(value, key, Emitter);
 
-        public void OnDrainComplete(bool isFinal, bool wasReentrant) => onDrainComplete?.Invoke(emitter);
+        public override void OnFrameEnded(bool isFinal) => onFrameEnded?.Invoke(Emitter);
     }
 }

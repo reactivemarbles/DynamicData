@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -15,23 +15,23 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
     public IObservable<IChangeSet<TObject, TKey>> Run()
     {
         var sched = buffer is null ? null : scheduler ?? GlobalConfig.DefaultScheduler;
-        return source.OrchestrateSubscriptions<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>, Orchestrator>(
+        return source.OrchestrateSubscriptions<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>(
             (context, emitter) => new Orchestrator(context, emitter, reEvaluator, buffer, sched));
     }
 
     /// <summary>
     /// Forwards each source changeset immediately. Refresh notifications from per-key reevaluators
-    /// are coalesced (latest wins) and flushed at drain end (unbuffered) or via a Timer armed by
+    /// are coalesced (latest wins) and flushed at frame end (unbuffered) or via a Timer armed by
     /// the first pending refresh (buffered). Source events drop any pending refresh for the same
-    /// key; reevaluator emissions for source-touched keys in the same drain are suppressed.
+    /// key; reevaluator emissions for source-touched keys in the same frame are suppressed.
     /// </summary>
     internal sealed class Orchestrator(
-            ICacheOrchestratorContext<TKey, Change<TObject, TKey>> context,
+            CacheOrchestration<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>> context,
             IObserver<IChangeSet<TObject, TKey>> emitter,
             Func<TObject, TKey, IObservable<TAny>> reEvaluator,
             TimeSpan? buffer,
             IScheduler? scheduler)
-        : CacheOrchestratorBase<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>(context, emitter), IDisposable
+        : CacheOrchestrator<TObject, TKey, Change<TObject, TKey>, IChangeSet<TObject, TKey>>(context, emitter), IDisposable
     {
         private readonly Dictionary<TKey, Change<TObject, TKey>> _pendingRefreshes = new();
         private readonly HashSet<TKey> _sourceTouched = [];
@@ -64,11 +64,11 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
             }
         }
 
-        public override void OnDrainComplete(bool isFinal, bool wasReentrant)
+        public override void OnFrameEnded(bool isFinal)
         {
             _sourceTouched.Clear();
 
-            // Flush when unbuffered, or on the final drain (the timer would otherwise be cancelled
+            // Flush when unbuffered, or on the final frame (the timer would otherwise be cancelled
             // by stream termination).
             if (isFinal || buffer is null)
             {
@@ -99,7 +99,7 @@ internal sealed class AutoRefresh<TObject, TKey, TAny>(
         {
             _sourceTouched.Add(key);
 
-            // Source is forwarding its own Refresh; drop any pending from a prior drain so the
+            // Source is forwarding its own Refresh; drop any pending from a prior frame so the
             // consumer doesn't see two Refresh notifications back-to-back.
             DropPending(key);
         }

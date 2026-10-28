@@ -4,98 +4,76 @@
 
 namespace DynamicData.Tests.Internal;
 
-public sealed class LambdaCacheOrchestratorFixture
+public sealed class LambdaCacheOrchestratorFixture : IDisposable
 {
+    private readonly Subject<IChangeSet<Item, int>> _source = new();
+    private readonly Subject<string> _inner = new();
+    private readonly CollectingObserver<int> _results = new();
+
     private sealed record Item(int Id);
+
+    public void Dispose()
+    {
+        _source.Dispose();
+        _inner.Dispose();
+    }
 
     [Fact]
     public void OnSourceNext_ForwardsChangesToLambda()
     {
-        var context = new FakeOrchestratorContext<int, string>();
-        var emitter = new CollectingObserver<int>();
-        var receivedChanges = new List<IChangeSet<Item, int>>();
-
-        var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
-            context, emitter,
-            onSourceNext: (changes, _) => receivedChanges.Add(changes),
-            onItemSourceNext: (value, key, _) => { },
-            onDrainComplete: obs => { });
+        var received = new List<IChangeSet<Item, int>>();
+        using var subscription = _source.OrchestrateSubscriptions<Item, int, string, int>((changes, _) => received.Add(changes), (_, _, _) => { }).Subscribe(_results);
 
         var changeset = new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) };
-        orchestrator.OnSourceNext(changeset);
+        _source.OnNext(changeset);
 
-        receivedChanges.Should().ContainSingle().Which.Should().BeSameAs(changeset);
+        received.Should().ContainSingle().Which.Should().BeSameAs(changeset);
     }
 
     [Fact]
-    public void OnSourceNext_ForwardsContextToLambda()
+    public void OnSourceNext_ForwardsOrchestrationToLambda()
     {
-        var context = new FakeOrchestratorContext<int, string>();
-        var emitter = new CollectingObserver<int>();
-        ICacheOrchestratorContext<int, string>? receivedContext = null;
-
-        var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
-            context, emitter,
-            onSourceNext: (_, ctx) => receivedContext = ctx,
-            onItemSourceNext: (value, key, _) => { },
-            onDrainComplete: obs => { });
-
-        orchestrator.OnSourceNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
-
-        receivedContext.Should().BeSameAs(context, "the lambda overload forwards the captured context as-is");
-    }
-
-    [Fact]
-    public void OnInner_ForwardsValueAndKeyToLambda()
-    {
-        var context = new FakeOrchestratorContext<int, string>();
-        var emitter = new CollectingObserver<int>();
         var received = new List<(string Value, int Key)>();
+        using var subscription = _source.OrchestrateSubscriptions<Item, int, string, int>((_, orchestration) => orchestration.Track(1, _inner), (value, key, _) => received.Add((value, key))).Subscribe(_results);
 
-        var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
-            context, emitter,
-            onSourceNext: (_, _) => { },
-            onItemSourceNext: (v, k, _) => received.Add((v, k)),
-            onDrainComplete: _ => { });
+        _source.OnNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
+        _inner.OnNext("tracked");
 
-        orchestrator.OnItemSourceNext("hello", 42);
-
-        received.Should().Equal(new[] { ("hello", 42) });
+        received.Should().Equal([("tracked", 1)], "an inner observable tracked through the lambda's orchestration must reach onItemSourceNext");
     }
 
     [Fact]
-    public void OnInner_ForwardsEmitterToLambda()
+    public void OnItemSourceNext_ForwardsValueAndKeyToLambda()
     {
-        var context = new FakeOrchestratorContext<int, string>();
-        var emitter = new CollectingObserver<int>();
-        IObserver<int>? receivedEmitter = null;
+        var received = new List<(string Value, int Key)>();
+        using var subscription = _source.OrchestrateSubscriptions<Item, int, string, int>((_, orchestration) => orchestration.Track(42, _inner), (value, key, _) => received.Add((value, key))).Subscribe(_results);
 
-        var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
-            context, emitter,
-            onSourceNext: (_, _) => { },
-            onItemSourceNext: (_, _, em) => receivedEmitter = em,
-            onDrainComplete: _ => { });
+        _source.OnNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 42, new Item(42)) });
+        _inner.OnNext("hello");
 
-        orchestrator.OnItemSourceNext("hello", 42);
-
-        receivedEmitter.Should().BeSameAs(emitter, "the lambda overload forwards the emitter as-is to onItemSourceNext");
+        received.Should().Equal([("hello", 42)]);
     }
 
     [Fact]
-    public void OnDrainComplete_ForwardsEmitterToLambda()
+    public void OnItemSourceNext_ForwardsEmitterToLambda()
     {
-        var context = new FakeOrchestratorContext<int, string>();
-        var emitter = new CollectingObserver<int>();
-        IObserver<int>? receivedObserver = null;
+        using var subscription = _source.OrchestrateSubscriptions<Item, int, string, int>((_, orchestration) => orchestration.Track(1, _inner), (value, _, emitter) => emitter.OnNext(value.Length)).Subscribe(_results);
 
-        var orchestrator = new IntObservableCacheEx.LambdaCacheOrchestrator<Item, int, string, int>(
-            context, emitter,
-            onSourceNext: (_, _) => { },
-            onItemSourceNext: (_, _, _) => { },
-            onDrainComplete: obs => receivedObserver = obs);
+        _source.OnNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
+        _inner.OnNext("hello");
 
-        orchestrator.OnDrainComplete(isFinal: false, wasReentrant: false);
+        _results.Values.Should().Equal(["hello".Length], "values emitted through onItemSourceNext's emitter must reach the subscriber");
+    }
 
-        receivedObserver.Should().BeSameAs(emitter, "the lambda overload forwards the emitter as-is to onDrainComplete");
+    [Fact]
+    public void OnFrameEnded_ForwardsEmitterToLambda()
+    {
+        var frameCount = 0;
+        using var subscription = _source.OrchestrateSubscriptions<Item, int, string, int>((_, _) => { }, (_, _, _) => { }, emitter => emitter.OnNext(++frameCount)).Subscribe(_results);
+
+        _source.OnNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 1, new Item(1)) });
+        _source.OnNext(new ChangeSet<Item, int> { new(ChangeReason.Add, 2, new Item(2)) });
+
+        _results.Values.Should().Equal([1, 2], "each source notification is its own frame, and onFrameEnded's emitter must reach the subscriber");
     }
 }

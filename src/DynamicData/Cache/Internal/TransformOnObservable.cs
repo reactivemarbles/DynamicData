@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -45,7 +45,7 @@ internal sealed class TransformOnObservable<TSource, TKey, TDestination>(IObserv
                 }
             },
             onItemSourceNext: (value, key, _) => cache.AddOrUpdate(value, key),
-            onDrainComplete: observer =>
+            onFrameEnded: observer =>
             {
                 var captured = cache.CaptureChanges();
                 if (captured.Count != 0)
