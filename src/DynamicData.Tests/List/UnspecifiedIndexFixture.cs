@@ -1,11 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using Bogus;
-
-using DynamicData.Kernel;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 /// <summary>
 /// List changes may carry an unspecified index (-1). An operator that keeps a positional copy of its upstream list locates

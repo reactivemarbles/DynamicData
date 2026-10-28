@@ -1,17 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-
-using  DynamicData.Binding;
-using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
-
-namespace DynamicData.Tests.Binding;
+﻿namespace DynamicData.Tests.Binding;
 
 public class AvaloniaDictionaryFixture
 {

@@ -1,13 +1,4 @@
-﻿using System.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-
-using Xunit;
-
-using DynamicData.Tests.Utilities;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public sealed partial class UnspecifiedIndexFixture
 {

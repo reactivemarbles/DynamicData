@@ -1,20 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-
-using Xunit;
-
-using DynamicData.Binding;
-using DynamicData.Tests.Utilities;
-
-using Person = DynamicData.Tests.Domain.Person;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public sealed partial class UnspecifiedIndexFixture
 {

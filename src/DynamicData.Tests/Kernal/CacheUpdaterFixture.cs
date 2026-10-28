@@ -1,13 +1,4 @@
-﻿using System.Linq;
-
-using DynamicData.Cache.Internal;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Kernal;
+﻿namespace DynamicData.Tests.Kernal;
 
 public class CacheUpdaterFixture
 {

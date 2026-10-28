@@ -1,9 +1,4 @@
-﻿using System;
-using System.Linq;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class SourceListPreviewFixture : IDisposable
 {

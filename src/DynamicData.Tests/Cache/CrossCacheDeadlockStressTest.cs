@@ -2,26 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Reactive.Threading.Tasks;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Bogus;
-
-using DynamicData.Binding;
-using DynamicData.Kernel;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 /// <summary>
@@ -235,7 +215,7 @@ public sealed class CrossCacheDeadlockStressTest
         using var subs = new CompositeDisposable();
 
         // Helpers
-        IObservableCache<TObj, TKey> TrackCache<TObj, TKey>(IObservable<IChangeSet<TObj, TKey>> pipeline, [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(pipeline))] string? name = null)
+        IObservableCache<TObj, TKey> TrackCache<TObj, TKey>(IObservable<IChangeSet<TObj, TKey>> pipeline, [CallerArgumentExpression(nameof(pipeline))] string? name = null)
             where TObj : notnull where TKey : notnull
         {
             var pub = pipeline.Publish();
@@ -251,7 +231,7 @@ public sealed class CrossCacheDeadlockStressTest
         using var forwardTarget = new SourceCache<StressMarket, int>(m => m.Id);
         using var reverseTarget = new SourceCache<StressMarket, int>(m => m.Id);
 
-        void TrackIntoCache(IObservable<IChangeSet<StressMarket, int>> pipeline, SourceCache<StressMarket, int> target, [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(pipeline))] string? name = null)
+        void TrackIntoCache(IObservable<IChangeSet<StressMarket, int>> pipeline, SourceCache<StressMarket, int> target, [CallerArgumentExpression(nameof(pipeline))] string? name = null)
         {
             var pub = pipeline.Publish();
             completionTasks.Add(pub.LastOrDefaultAsync().ToTask());

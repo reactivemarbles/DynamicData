@@ -1,15 +1,3 @@
-using System;
-using System.Linq;
-
-using Bogus;
-
-using FluentAssertions;
-
-using Xunit;
-
-using DynamicData.Binding;
-using DynamicData.Tests.Utilities;
-
 namespace DynamicData.Tests.Binding;
  
 public static partial class WhenPropertyChangedFixture
