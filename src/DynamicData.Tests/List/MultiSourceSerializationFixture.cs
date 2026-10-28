@@ -11,6 +11,7 @@ namespace DynamicData.Tests.List;
 /// set rather than as a visible race.
 /// </summary>
 public class MultiSourceSerializationFixture
+    : IntegrationTestFixtureBase
 {
     private const int Seed = 0x1147;
 
