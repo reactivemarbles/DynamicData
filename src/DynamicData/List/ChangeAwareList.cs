@@ -453,35 +453,18 @@ public class ChangeAwareList<T> : IExtendedList<T>
         }
         else if (last.HasValue && last.Value.Reason == ListChangeReason.AddRange)
         {
-            // check whether the new item is in the specified range
+            // The pending range occupies [range.Index, range.Index + range.Count), so the item extends it only when it
+            // lands inside that span or directly after it. A range without a known index cannot be extended by position.
             var range = last.Value.Range;
+            var offset = index - range.Index;
 
-            var minimum = Math.Max(range.Index - 1, 0);
-            var maximum = range.Index + range.Count;
-            var isPartOfRange = index >= minimum && index <= maximum;
-
-            if (!isPartOfRange)
+            if (range.Index >= 0 && offset >= 0 && offset <= range.Count)
             {
-                _changes.Add(new Change<T>(ListChangeReason.Add, item, index));
+                range.Insert(offset, item);
             }
             else
             {
-                var insertPosition = index - range.Index;
-                if (insertPosition < 0)
-                {
-                    insertPosition = 0;
-                }
-                else if (insertPosition >= range.Count)
-                {
-                    insertPosition = range.Count;
-                }
-
-                range.Insert(insertPosition, item);
-
-                if (index < range.Index)
-                {
-                    range.SetStartingIndex(index);
-                }
+                _changes.Add(new Change<T>(ListChangeReason.Add, item, index));
             }
         }
         else

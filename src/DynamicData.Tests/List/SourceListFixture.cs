@@ -2,6 +2,10 @@
 
 public class SourceListFixture
 {
+    private const int Seed = 0x50C1_1167;
+
+    private readonly Randomizer _randomizer = new(Seed);
+
     // Covers https://github.com/reactivemarbles/DynamicData/issues/1129
     [Fact]
     public void ConnectDuringEditDoesNotDuplicate()
@@ -77,5 +81,25 @@ public class SourceListFixture
 
         results.Error.Should().BeNull("new subscribers should not receive previous errors");
         results.RecordedChangeSets.Should().ContainSingle("an initial changeset should have been published.");
+    }
+
+    [Fact]
+    public void EditInsertingImmediatelyBeforeAnAppendedRange_IsMirroredByAsObservableList()
+    {
+        int[] NextValues() => Enumerable.Range(0, _randomizer.Int(1, 5)).Select(_ => _randomizer.Int()).ToArray();
+
+        using var source = new SourceList<int>();
+        source.AddRange(NextValues());
+
+        using var mirror = source.Connect().AsObservableList();
+
+        source.Edit(list =>
+        {
+            var appendedAt = list.Count;
+            list.AddRange(NextValues());
+            list.Insert(appendedAt - 1, _randomizer.Int());
+        });
+
+        mirror.Items.Should().Equal(source.Items);
     }
 }
