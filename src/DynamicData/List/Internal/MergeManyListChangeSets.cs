@@ -43,7 +43,7 @@ internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable
                     changeTracker.EmitChanges(observer);
                     parentUpdate = false;
                 })
-                .Subscribe();
+                .Subscribe(static _ => { }, static _ => { });
 
             return new CompositeDisposable(shared.Connect(), subMergeMany, subRemove);
         });

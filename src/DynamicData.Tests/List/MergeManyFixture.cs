@@ -106,7 +106,7 @@ public class MergeManyFixture : IDisposable
     /// Stream completes even if one of the children fails.
     /// </summary>
     [Fact]
-    public void MergedStreamCompletesIfLastItemFails()
+    public void MergedStreamFailsIfLastItemFails()
     {
         var receivedError = default(Exception);
         var streamCompleted = false;
@@ -121,9 +121,9 @@ public class MergeManyFixture : IDisposable
         _source.Dispose();
         item.FailObservable(new Exception("Test exception"));
 
-        receivedError.Should().Be(default);
         sourceCompleted.Should().BeTrue();
-        streamCompleted.Should().BeTrue();
+        receivedError.Should().NotBeNull("Merge propagates a failure from any inner stream");
+        streamCompleted.Should().BeFalse("a failure and a completion are mutually exclusive");
     }
 
     /// <summary>
@@ -165,5 +165,20 @@ public class MergeManyFixture : IDisposable
             _value = value;
             _changed.OnNext(value);
         }
+    }
+
+    [Fact]
+    public void DeliversAnErrorRaisedByAChild()
+    {
+        Exception? error = null;
+
+        using var source = new SourceList<Person>();
+        using var child = new Subject<int>();
+        using var subscription = source.Connect().MergeMany(_ => child).Subscribe(_ => { }, ex => error = ex, () => { });
+
+        source.Add(new Person("a", 1));
+        child.OnError(new InvalidOperationException("boom"));
+
+        error.Should().BeOfType<InvalidOperationException>("Merge propagates a failure from any inner stream");
     }
 }

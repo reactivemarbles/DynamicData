@@ -17,4 +17,32 @@ public class ToCollectionFixture
         res1?.Count.Should().Be(2);
         res2?.Count.Should().Be(2);
     }
+
+    [Fact]
+    public void CompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var subscription = source.ToCollection().Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue("ToCollection is built on QueryWhenChanged");
+    }
+
+    [Fact]
+    public void ToSortedCollectionCompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var subscription = source
+            .ToSortedCollection(SortExpressionComparer<Person>.Ascending(p => p.Name))
+            .Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue();
+    }
 }

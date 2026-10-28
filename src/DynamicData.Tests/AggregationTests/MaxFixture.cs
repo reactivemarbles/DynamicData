@@ -63,4 +63,30 @@ public class MaxFixture : IDisposable
         result.Should().Be(20, "Max value should be 20 after remove");
         accumulator.Dispose();
     }
+
+    [Fact]
+    public void MaximumCompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var subscription = source.Maximum(p => p.Age).Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue("Maximum is built on QueryWhenChanged");
+    }
+
+    [Fact]
+    public void MaximumDeliversTheErrorWithoutThrowing()
+    {
+        Exception? error = null;
+
+        using var source = new Subject<IChangeSet<Person>>();
+        using var subscription = source.Maximum(p => p.Age).Subscribe(_ => { }, ex => error = ex, () => { });
+
+        source.OnError(new InvalidOperationException("boom"));
+
+        error.Should().BeOfType<InvalidOperationException>();
+    }
 }
