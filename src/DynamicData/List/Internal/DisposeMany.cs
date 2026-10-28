@@ -10,11 +10,13 @@ internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
     public IObservable<IChangeSet<T>> Run()
         => Observable.Create<IChangeSet<T>>(observer =>
         {
-            var synchronizationGate = new Lock();
             var cachedItems = new List<T>();
 
+            // SynchronizeSafe with queue-first disposal: the DeliveryQueue is terminated and
+            // drained before the source subscription is disposed, ensuring no notifications
+            // can fire while the teardown (per-item Dispose) is in progress.
             var sourceSubscription = source
-                .Synchronize(synchronizationGate)
+                .SynchronizeSafe()
                 .SubscribeSafe(Observer.Create<IChangeSet<T>>(
                     onNext: changeSet =>
                     {
@@ -72,11 +74,7 @@ internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
             return Disposable.Create(() =>
             {
                 sourceSubscription.Dispose();
-
-                lock (synchronizationGate)
-                {
-                    ProcessFinalization(cachedItems);
-                }
+                ProcessFinalization(cachedItems);
             });
         });
 

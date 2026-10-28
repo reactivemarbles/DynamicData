@@ -36,7 +36,7 @@ public static partial class ObservableListEx
             observer =>
             {
                 var locker = new Lock();
-                return source.Synchronize(locker).Select(
+                return source.SynchronizeSafe(locker).Select(
                     changes =>
                     {
                         adaptor.Adapt(changes);
