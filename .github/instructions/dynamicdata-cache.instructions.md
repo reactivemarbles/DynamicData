@@ -848,7 +848,7 @@ The changeset overloads share one internal operator, `AggregateProjections`, whi
 | **Maximum / Minimum** | Recompute from the stored values when the item holding the extreme is removed or moves inward; emit only distinct values. |
 | **Malformed changesets** | Adding an existing key, or updating, refreshing or removing an unknown key, faults the stream. |
 
-`ForAggregation()` overloads (`IAggregateChangeSet<T>`) and `SumImmutable` stay stateless and ignore Refresh. `Count`, `IsEmpty` and `IsNotEmpty` have no selector, so Refresh cannot change them.
+The stateless path is `ForAggregation()` followed by `Sum`, `Avg` or `StdDev` (the `IAggregateChangeSet<T>` overloads): no per-item state, but Refresh is ignored. There are no `*Immutable` variants. `Count`, `IsEmpty` and `IsNotEmpty` have no selector, so Refresh cannot change them.
 
 ### Property Observation
 
