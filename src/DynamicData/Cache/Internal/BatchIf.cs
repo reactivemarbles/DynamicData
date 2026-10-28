@@ -70,7 +70,8 @@ internal sealed class BatchIf<TObject, TKey>
                             {
                                 paused = true;
                             }
-                        });
+                        },
+                        observer.OnError);
 
                 if (_intervalTimer is not null)
                 {
@@ -98,9 +99,11 @@ internal sealed class BatchIf<TObject, TKey>
                                 {
                                     paused = false;
                                     ResumeAction();
-                                });
+                                },
+                                observer.OnError);
                         }
-                    });
+                    },
+                    observer.OnError);
 
                 var publisher = _source.SynchronizeSafe(queue).Subscribe(
                     changes =>
@@ -112,6 +115,13 @@ internal sealed class BatchIf<TObject, TKey>
                         {
                             ResumeAction();
                         }
+                    },
+                    observer.OnError,
+                    () =>
+                    {
+                        // Anything still held back would otherwise be lost, so flush before finishing.
+                        ResumeAction();
+                        observer.OnCompleted();
                     });
 
                 return new CompositeDisposable(publisher, pausedHandler, timeoutDisposer, intervalTimerDisposer, queue);

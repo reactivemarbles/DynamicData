@@ -52,4 +52,30 @@ public class DeferAnsdSkipFixture
         updateReceived.Should().BeTrue();
         deferStream.Dispose();
     }
+
+    [Fact]
+    public void DeferUntilLoadedCompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source.DeferUntilLoaded().Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void SkipInitialCompletesWhenTheSourceCompletes()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source.SkipInitial().Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue("SkipInitial is built on DeferUntilLoaded");
+    }
 }

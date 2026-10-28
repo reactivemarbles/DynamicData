@@ -74,7 +74,7 @@ public class MergeManyWithKeyOverloadFixture : IDisposable
     }
 
     [Fact]
-    public void SingleItemFailWillNotFailMergedStream()
+    public void SingleItemFailWillFailMergedStream()
     {
         var failed = false;
         var stream = _source.Connect().MergeMany((o, key) => o.Observable).Subscribe(_ => { }, ex => failed = true);
@@ -86,7 +86,7 @@ public class MergeManyWithKeyOverloadFixture : IDisposable
 
         stream.Dispose();
 
-        failed.Should().BeFalse();
+        failed.Should().BeTrue("Merge propagates a failure from any inner stream");
     }
 
     /// <summary>
@@ -136,7 +136,7 @@ public class MergeManyWithKeyOverloadFixture : IDisposable
     /// Stream completes even if one of the children fails.
     /// </summary>
     [Fact]
-    public void MergedStreamCompletesIfLastItemFails()
+    public void MergedStreamFailsIfLastItemFails()
     {
         var receivedError = default(Exception);
         var streamCompleted = false;
@@ -151,9 +151,9 @@ public class MergeManyWithKeyOverloadFixture : IDisposable
         _source.Dispose();
         item.FailObservable(new Exception("Test exception"));
 
-        receivedError.Should().Be(default);
         sourceCompleted.Should().BeTrue();
-        streamCompleted.Should().BeTrue();
+        receivedError.Should().NotBeNull("Merge propagates a failure from any inner stream");
+        streamCompleted.Should().BeFalse("a failure and a completion are mutually exclusive");
     }
 
     /// <summary>
