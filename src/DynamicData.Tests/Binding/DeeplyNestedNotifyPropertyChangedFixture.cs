@@ -1,16 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reactive.Linq;
-
-using DynamicData.Binding;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Binding;
+﻿namespace DynamicData.Tests.Binding;
 
 public class DeeplyNestedNotifyPropertyChangedFixture
 {
@@ -251,8 +239,8 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
     //  [Fact]
     //  [Trait("Manual run for benchmarking","xx")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Manual run for benchmarking")]
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Manual run for benchmarking")]
     private void StressIt()
     {
         var list = new SourceList<ClassA>();

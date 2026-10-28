@@ -1,9 +1,4 @@
-﻿using System;
-using System.Linq;
-using Bogus;
-using DynamicData.Tests.Utilities;
-
-namespace DynamicData.Tests.Domain;
+﻿namespace DynamicData.Tests.Domain;
 
 internal static class Fakers
 {

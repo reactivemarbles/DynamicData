@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Internal;
-
 namespace DynamicData.List.Internal;
 
 /// <summary>
@@ -18,7 +14,7 @@ internal sealed class MergeManyListChangeSets<TObject, TDestination>(IObservable
     public IObservable<IChangeSet<TDestination>> Run() => Observable.Create<IChangeSet<TDestination>>(
         observer =>
         {
-            var locker = InternalEx.NewLock();
+            var locker = new Lock();
             var parentUpdate = false;
 
             // This is manages all of the changes

@@ -1,12 +1,3 @@
-using System;
-using System.Linq;
-
-using DynamicData.Kernel;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public class FullJoinFixture : IDisposable

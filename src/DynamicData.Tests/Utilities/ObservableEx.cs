@@ -1,8 +1,4 @@
-﻿using System;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 /// <summary>
 /// Extra Observable Tools for Testing

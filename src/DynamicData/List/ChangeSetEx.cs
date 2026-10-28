@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
@@ -23,7 +20,7 @@ public static class ChangeSetEx
     public static IEnumerable<ItemChange<T>> Flatten<T>(this IChangeSet<T> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return new ItemChangeEnumerator<T>(source);
     }
@@ -57,8 +54,8 @@ public static class ChangeSetEx
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformer.ThrowArgumentNullExceptionIfNull(nameof(transformer));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(transformer);
 
         var changes = source.Select(
             change =>
@@ -83,7 +80,7 @@ public static class ChangeSetEx
     public static IEnumerable<Change<T>> YieldWithoutIndex<T>(this IEnumerable<Change<T>> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return new WithoutIndexEnumerator<T>(source);
     }
@@ -98,7 +95,7 @@ public static class ChangeSetEx
     internal static IEnumerable<UnifiedChange<T>> Unified<T>(this IChangeSet<T> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return new UnifiedChangeEnumerator<T>(source);
     }

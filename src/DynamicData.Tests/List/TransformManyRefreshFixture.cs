@@ -1,13 +1,3 @@
-using System;
-using System.Collections.Generic;
-
-using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.List;
 
 public class TransformManyRefreshFixture : IDisposable

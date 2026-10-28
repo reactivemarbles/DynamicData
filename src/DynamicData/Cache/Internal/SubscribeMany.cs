@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class SubscribeMany<TObject, TKey>
@@ -18,7 +14,7 @@ internal sealed class SubscribeMany<TObject, TKey>
 
     public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
     {
-        subscriptionFactory.ThrowArgumentNullExceptionIfNull(nameof(subscriptionFactory));
+        ArgumentNullException.ThrowIfNull(subscriptionFactory);
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _subscriptionFactory = (t, _) => subscriptionFactory(t);

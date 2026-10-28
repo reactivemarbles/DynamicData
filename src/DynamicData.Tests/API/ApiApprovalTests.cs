@@ -1,8 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using Xunit;
-
-namespace DynamicData.APITests
+﻿namespace DynamicData.APITests
 {
     /// <summary>
     /// Tests for handling API approval.

@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<(TLeftKey leftKey, TRightKey rightKey), TLeft, TRight, TDestination> resultSelector)
@@ -25,7 +22,7 @@ internal sealed class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination
     public IObservable<IChangeSet<TDestination, (TLeftKey leftKey, TRightKey rightKey)>> Run() => Observable.Create<IChangeSet<TDestination, (TLeftKey leftKey, TRightKey rightKey)>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var locker = new Lock();
                 var queue = new SharedDeliveryQueue(locker);
 
                 // create local backing stores

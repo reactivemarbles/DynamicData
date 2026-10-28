@@ -1,14 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-using Xunit;
-using Xunit.Abstractions;
-
-using DynamicData.Tests.Utilities;
-
 namespace DynamicData.Tests.Cache;
 
 public class ToCollectionFixture

@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Reactive.Disposables;
-
 namespace DynamicData.Cache.Internal;
 
 [DebuggerDisplay("AnonymousObservableCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
@@ -12,13 +9,13 @@ internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache
     where TObject : notnull
     where TKey : notnull
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed through _cleanUp")]
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed through _cleanUp")]
     private readonly IObservableCache<TObject, TKey> _cache;
     private readonly IDisposable _cleanUp;
 
     public AnonymousObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         _cache = new ObservableCache<TObject, TKey>(source);
 

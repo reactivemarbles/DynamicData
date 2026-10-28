@@ -1,13 +1,3 @@
-using System;
-using System.Linq;
-
-using DynamicData.PLinq;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public class FilterParallelFixture : IDisposable

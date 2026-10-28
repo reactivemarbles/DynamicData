@@ -1,12 +1,4 @@
-﻿using System;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests;
+﻿namespace DynamicData.Tests;
 
 public class EnumerableExFixtures
 {

@@ -1,14 +1,3 @@
-using System;
-using System.Reactive.Linq;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
-
 namespace DynamicData.Tests.List;
 
 public class BufferFixture : IDisposable

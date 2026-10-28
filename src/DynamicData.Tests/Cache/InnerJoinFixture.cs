@@ -1,11 +1,3 @@
-using System;
-
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public class InnerJoinFixture : IDisposable
@@ -430,7 +422,7 @@ public class InnerJoinFixture : IDisposable
                 return true;
             }
 
-            return string.Equals(Key, other.Key);
+            return Equals(Key, other.Key);
         }
 
         public override bool Equals(object? obj)

@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Linq;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? comparer, SortOptions sortOptions, IObservable<Unit>? resort, IObservable<IComparer<T>>? comparerObservable, int resetThreshold)
@@ -19,7 +16,7 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var locker = new Lock();
                 var original = new List<T>();
                 var target = new ChangeAwareList<T>();
 

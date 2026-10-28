@@ -1,26 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class ObservableChangeSetFixture
 {
 
    // [Fact] //Disabled due to test failing when run with a test runner. Run locally in isolation and it works
     [Description("See https://github.com/reactivemarbles/DynamicData/issues/383")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Acceptable for test.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Disabled due to test failing when run with a test runner")]
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Acceptable for test.")]
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Disabled due to test failing when run with a test runner")]
     private async Task AsyncSubscriptionCanReceiveMultipleResults()
     {
 
@@ -211,7 +197,7 @@ public class ObservableChangeSetFixture
         isDisposed.Should().BeTrue();
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
     private void SubscribeAndAssert<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> observableChangeset, bool expectsError = false, Action<IObservableCache<TObject, TKey>>? checkContentAction = null)
         where TKey : notnull
         where TObject : notnull

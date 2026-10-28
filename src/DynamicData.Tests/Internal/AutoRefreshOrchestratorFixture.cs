@@ -2,20 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Cache.Internal;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Microsoft.Reactive.Testing;
-
-using Xunit;
-
 namespace DynamicData.Tests.Internal;
 
 public sealed class AutoRefreshOrchestratorFixture

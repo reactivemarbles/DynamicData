@@ -1,12 +1,4 @@
-﻿using System;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.List;
+﻿namespace DynamicData.Tests.List;
 
 public class ListCreationFixtures
 {
@@ -25,7 +17,7 @@ public class ListCreationFixtures
                 }));
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
     private void SubscribeAndAssert<T>(IObservable<IChangeSet<T>> observableChangeset, bool expectsError = false)
         where T : notnull
     {

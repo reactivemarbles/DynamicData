@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class EditDiffChangeSetOptional<TObject, TKey>(IObservable<Optional<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer)
@@ -17,35 +15,35 @@ internal sealed class EditDiffChangeSetOptional<TObject, TKey>(IObservable<Optio
     private readonly Func<TObject, TKey> _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
 
     public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-                                                                {
-                                                                    var previous = Optional.None<ValueContainer>();
+    {
+        var previous = Optional.None<ValueContainer>();
 
-                                                                    return _source.Synchronize().Subscribe(
-                                                                        nextValue =>
-                                                                        {
-                                                                            var current = nextValue.Convert(val => new ValueContainer(val, _keySelector(val)));
+        return _source.Subscribe(
+            nextValue =>
+            {
+                var current = nextValue.Convert(val => new ValueContainer(val, _keySelector(val)));
 
-                                                                            // Determine the changes
-                                                                            var changes = (previous.HasValue, current.HasValue) switch
-                                                                            {
-                                                                                (true, true) => CreateUpdateChanges(previous.Value, current.Value),
-                                                                                (false, true) => [new Change<TObject, TKey>(ChangeReason.Add, current.Value.Key, current.Value.Object)],
-                                                                                (true, false) => [new Change<TObject, TKey>(ChangeReason.Remove, previous.Value.Key, previous.Value.Object)],
-                                                                                (false, false) => [],
-                                                                            };
+                // Determine the changes
+                var changes = (previous.HasValue, current.HasValue) switch
+                {
+                    (true, true) => CreateUpdateChanges(previous.Value, current.Value),
+                    (false, true) => [new Change<TObject, TKey>(ChangeReason.Add, current.Value.Key, current.Value.Object)],
+                    (true, false) => [new Change<TObject, TKey>(ChangeReason.Remove, previous.Value.Key, previous.Value.Object)],
+                    (false, false) => [],
+                };
 
-                                                                            // Save the value for the next round
-                                                                            previous = current;
+                // Save the value for the next round
+                previous = current;
 
-                                                                            // If there are changes, emit as a ChangeSet
-                                                                            if (changes.Length > 0)
-                                                                            {
-                                                                                observer.OnNext(new ChangeSet<TObject, TKey>(changes));
-                                                                            }
-                                                                        },
-                                                                        observer.OnError,
-                                                                        observer.OnCompleted);
-                                                                });
+                // If there are changes, emit as a ChangeSet
+                if (changes.Length > 0)
+                {
+                    observer.OnNext(new ChangeSet<TObject, TKey>(changes));
+                }
+            },
+            observer.OnError,
+            observer.OnCompleted);
+    });
 
     private Change<TObject, TKey>[] CreateUpdateChanges(in ValueContainer prev, in ValueContainer curr)
     {

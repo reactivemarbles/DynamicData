@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class MergeManyItems<TObject, TKey, TDestination>
@@ -21,7 +19,7 @@ internal sealed class MergeManyItems<TObject, TKey, TDestination>
 
     public MergeManyItems(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
     {
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        ArgumentNullException.ThrowIfNull(observableSelector);
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _observableSelector = (t, _) => observableSelector(t);

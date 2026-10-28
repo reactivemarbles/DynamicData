@@ -16,11 +16,7 @@ internal sealed class KeyedDisposable<TKey> : IDisposable
 {
     private readonly Dictionary<TKey, IDisposable> _disposables = [];
 
-#if NET9_0_OR_GREATER
     private readonly Lock _gate = new();
-#else
-    private readonly object _gate = new();
-#endif
 
     private bool _disposedValue;
 

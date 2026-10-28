@@ -2,12 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-
-using DynamicData.Internal;
-
 namespace DynamicData.Cache.Internal;
 
 internal static class ToObservableChangeSet<TObject, TKey>
@@ -65,11 +59,7 @@ internal static class ToObservableChangeSet<TObject, TKey>
         private readonly int _limitSizeTo;
         private readonly IScheduler _scheduler;
         private readonly IDisposable _sourceSubscription;
-        #if NET9_0_OR_GREATER
         private readonly Lock _synchronizationGate;
-        #else
-        private readonly object _synchronizationGate;
-        #endif
 
         private bool _hasInitialized;
         private bool _hasSourceCompleted;

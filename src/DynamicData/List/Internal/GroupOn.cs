@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class GroupOn<TObject, TGroupKey>(IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelector, IObservable<Unit>? regrouper)
@@ -27,7 +23,7 @@ internal sealed class GroupOn<TObject, TGroupKey>(IObservable<IChangeSet<TObject
                 // capture the grouping up front which has the benefit that the group key is only selected once
                 var itemsWithGroup = _source.Transform<TObject, ItemWithGroupKey>((t, previous) => new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p => p.Group)), true);
 
-                var locker = InternalEx.NewLock();
+                var locker = new Lock();
                 var shared = itemsWithGroup.Synchronize(locker).Publish();
 
                 var grouper = shared.Select(changes => Process(groupings, groupCache, changes));

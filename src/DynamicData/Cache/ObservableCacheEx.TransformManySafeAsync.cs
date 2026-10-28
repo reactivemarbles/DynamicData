@@ -2,20 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 // ReSharper disable once CheckNamespace
 
 namespace DynamicData;
@@ -50,9 +36,9 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TSourceKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(manySelector);
+        ArgumentNullException.ThrowIfNull(errorHandler);
 
         return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector, keySelector), equalityComparer, comparer, errorHandler).Run();
     }
@@ -77,9 +63,9 @@ public static partial class ObservableCacheEx
         where TSourceKey : notnull
         where TCollection : INotifyCollectionChanged, IEnumerable<TDestination>
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(manySelector);
+        ArgumentNullException.ThrowIfNull(errorHandler);
 
         return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector, keySelector), equalityComparer, comparer, errorHandler).Run();
     }
@@ -104,9 +90,9 @@ public static partial class ObservableCacheEx
         where TSource : notnull
         where TSourceKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
-        errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(manySelector);
+        ArgumentNullException.ThrowIfNull(errorHandler);
 
         return new TransformManyAsync<TSource, TSourceKey, TDestination, TDestinationKey>(source, CreateChangeSetTransformer(manySelector), equalityComparer, comparer, errorHandler).Run();
     }

@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
-
 namespace DynamicData.Experimental;
 
 /// <summary>
@@ -24,7 +22,7 @@ public static class ExperimentalEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return new Watcher<TObject, TKey>(source, scheduler ?? GlobalConfig.DefaultScheduler);
     }

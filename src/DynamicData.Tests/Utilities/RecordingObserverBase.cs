@@ -1,19 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reactive.Concurrency;
-using System.Reactive;
-using System.Threading.Tasks;
-
-using Microsoft.Reactive.Testing;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 // Using a custom implementing of IObserver<> to bypass normal RX safeguards, allowing invalid behaviors to be potentially tested for.
 public abstract class RecordingObserverBase<T>
     : IObserver<T>
 {
     private readonly TaskCompletionSource _whenFinalizedSource;
-    private readonly List<Recorded<Notification<T>>> _notifications;
+    private readonly List<Recorded<System.Reactive.Notification<T>>> _notifications;
     private readonly IScheduler _scheduler;
 
     private Exception? _error;
@@ -35,7 +27,7 @@ public abstract class RecordingObserverBase<T>
     public bool HasFinalized
         => _hasCompleted || (_error is not null);
 
-    public IReadOnlyList<Recorded<Notification<T>>> Notifications
+    public IReadOnlyList<Recorded<System.Reactive.Notification<T>>> Notifications
         => _notifications;
 
     public Task WhenFinalized

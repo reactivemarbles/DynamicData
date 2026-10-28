@@ -2,20 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 // ReSharper disable once CheckNamespace
 
 namespace DynamicData;
@@ -63,9 +49,9 @@ public static partial class ObservableCacheEx
         where TKey : notnull
         where TValue : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
-        equalityCondition.ThrowArgumentNullExceptionIfNull(nameof(equalityCondition));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(observableSelector);
+        ArgumentNullException.ThrowIfNull(equalityCondition);
 
         return source.TrueFor(observableSelector, items => items.Any(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value)));
     }

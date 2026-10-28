@@ -1,11 +1,4 @@
-﻿using BenchmarkDotNet.Attributes;
-using System;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Subjects;
-using DynamicData.Binding;
-
-namespace DynamicData.Benchmarks.Cache;
+﻿namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]

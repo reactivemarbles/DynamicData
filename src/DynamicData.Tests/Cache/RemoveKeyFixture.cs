@@ -1,27 +1,10 @@
-#region
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive.Disposables;
-
-using DynamicData.Binding;
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
-#endregion
-
 namespace DynamicData.Tests.Cache;
 
 public class RemoveKeyFixture : IDisposable
 {
     private readonly RandomPersonGenerator _generator = new();
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Handled with CompositeDisposable")]
+    [SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Handled with CompositeDisposable")]
     private readonly ISourceCache<Person, string> _source;
 
     private readonly CompositeDisposable _cleanup = new();

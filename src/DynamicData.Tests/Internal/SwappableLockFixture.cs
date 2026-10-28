@@ -2,11 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Threading;
-using FluentAssertions;
-using Xunit;
-
 namespace DynamicData.Tests.Internal;
 
 public sealed class SwappableLockFixture
@@ -84,7 +79,7 @@ public sealed class SwappableLockFixture
         try
         {
             swappable.SwapTo(gate);
-            throw new Xunit.Sdk.XunitException("Expected InvalidOperationException");
+            throw new XunitException("Expected InvalidOperationException");
         }
         catch (InvalidOperationException)
         {

@@ -2,20 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 // ReSharper disable once CheckNamespace
 
 namespace DynamicData;
@@ -56,7 +42,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return new ToObservableOptional<TObject, TKey>(source, key, equalityComparer).Run();
     }
@@ -73,7 +59,9 @@ public static partial class ObservableCacheEx
     /// <returns>An observable optional.</returns>
     /// <exception cref="ArgumentNullException">source is null.</exception>
     /// <remarks>
-    /// <para><b>Worth noting:</b> Uses lock-based coordination. If the key exists synchronously on <c>Connect()</c>, the initial <c>None</c> may or may not be emitted depending on timing.</para>
+    /// <para>An initial <c>None</c> is emitted only if no value from the source has been delivered first.
+    /// Synchronous initial values therefore suppress it; asynchronous values may be preceded by an initial
+    /// <c>None</c>, but are never followed by the initialization <c>None</c>.</para>
     /// </remarks>
     public static IObservable<Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, bool initialOptionalWhenMissing, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
@@ -83,12 +71,19 @@ public static partial class ObservableCacheEx
         {
             return Observable.Defer(() =>
             {
-                var seenValue = false;
+                var isFirstNotification = true;
                 return source.ToObservableOptional(key, equalityComparer)
-                    .Do(_ => seenValue = true)
-                    .Merge(Observable.Defer(() => seenValue
-                        ? Observable.Empty<Optional<TObject>>()
-                        : Observable.Return(Optional.None<TObject>())));
+                    .Select(static value => (Value: value, IsInitial: false))
+                    .Merge(Observable.Return((Value: Optional.None<TObject>(), IsInitial: true)))
+                    .Where(notification =>
+                    {
+                        // Decide only after Merge serializes both inputs. Updating before delivery also
+                        // handles reentrant input, without an unbounded notification index.
+                        var shouldEmit = !notification.IsInitial || isFirstNotification;
+                        isFirstNotification = false;
+                        return shouldEmit;
+                    })
+                    .Select(static notification => notification.Value);
             });
         }
 

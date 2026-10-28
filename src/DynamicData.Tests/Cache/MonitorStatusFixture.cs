@@ -1,14 +1,4 @@
-﻿using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Kernel;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
+﻿namespace DynamicData.Tests.Cache;
 
 public class MonitorStatusFixture
 {

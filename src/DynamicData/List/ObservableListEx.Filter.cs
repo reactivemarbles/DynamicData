@@ -2,20 +2,10 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
-
 // ReSharper disable once CheckNamespace
+
+using Filter = DynamicData.List.Internal.Filter;
+
 namespace DynamicData;
 
 /// <summary>
@@ -60,7 +50,8 @@ public static partial class ObservableListEx
                 this IObservable<IChangeSet<T>> source,
                 Func<T, bool> predicate)
             where T : notnull
-        => List.Internal.Filter.Static<T>.Create(
+        =>
+            List.Internal.Filter.Static<T>.Create(
             source: source,
             predicate: predicate,
             suppressEmptyChangesets: true);
@@ -97,11 +88,11 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate, ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
-        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+        ArgumentNullException.ThrowIfNull(predicate);
 
-        return new List.Internal.Filter.Dynamic<T>(source, predicate, filterPolicy).Run();
+        return new Filter.Dynamic<T>(source, predicate, filterPolicy).Run();
     }
 
     /// <summary>
@@ -141,7 +132,8 @@ public static partial class ObservableListEx
                 ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff,
                 bool suppressEmptyChangeSets = true)
             where T : notnull
-        => List.Internal.Filter.WithPredicateState<T, TState>.Create(
+        =>
+            List.Internal.Filter.WithPredicateState<T, TState>.Create(
             source: source,
             predicateState: predicateState,
             predicate: predicate,

@@ -2,26 +2,10 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.ComponentModel;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reflection;
-
 namespace DynamicData.Binding;
 
 internal static class ExpressionBuilder
 {
-    public static IEnumerable<MemberExpression> GetMembers<TObject, TProperty>(this Expression<Func<TObject, TProperty>> source)
-    {
-        var memberExpression = source.Body as MemberExpression;
-        while (memberExpression is not null)
-        {
-            yield return memberExpression;
-            memberExpression = memberExpression.Expression as MemberExpression;
-        }
-    }
-
     internal static Func<object, IObservable<Unit>> CreatePropertyChangedFactory(this Expression source)
     {
         if ((source is not MemberExpression { Member: PropertyInfo property })
@@ -39,6 +23,8 @@ internal static class ExpressionBuilder
 
     internal static Func<object, object?> CreateInvoker(this Expression source)
     {
+        ArgumentNullException.ThrowIfNull(source);
+
         switch (source)
         {
             case MemberExpression memberExpression:
@@ -53,14 +39,19 @@ internal static class ExpressionBuilder
 
                 return property.GetValue;
 
-            // I.E. cast operations. Since we're just dealing with everything as `object`, there's really nothing for us
-            // to do. If we cast from `object` to the desired type, we'll just immediately cast back to `object` to
-            // return. The runtime has to resolve and do the correct cast anyway, regardless of what we do here.
-            case UnaryExpression { NodeType: ExpressionType.Convert }:
-                return static target => target;
+            case UnaryExpression { NodeType: ExpressionType.Convert } conversion:
+                // Built-in reference casts and boxing/unboxing preserve a non-null chain target.
+                // Numeric and user-defined conversions must produce the target used by the next step.
+                if (conversion.Method is null && (!conversion.Operand.Type.IsValueType || !conversion.Type.IsValueType))
+                {
+                    return static target => target;
+                }
 
-            case null:
-                throw new ArgumentNullException(nameof(source));
+                var parameter = Expression.Parameter(typeof(object), "target");
+                var operand = Expression.Convert(parameter, conversion.Operand.Type);
+                var converted = conversion.Update(operand);
+
+                return Expression.Lambda<Func<object, object?>>(Expression.Convert(converted, typeof(object)), parameter).Compile();
 
             default:
                 throw new ArgumentException($"Unable to parse expression: Node type {source.NodeType} not supported", nameof(source));
@@ -121,26 +112,6 @@ internal static class ExpressionBuilder
         }
 
         return property;
-    }
-
-    internal static string ToCacheKey<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
-        where TObject : INotifyPropertyChanged
-    {
-        var members = expression.GetMembers();
-
-        IEnumerable<string?> GetNames()
-        {
-            var type = typeof(TObject);
-
-            yield return type.Assembly.FullName;
-            yield return type.FullName;
-            foreach (var member in members.Reverse())
-            {
-                yield return member.Member.Name;
-            }
-        }
-
-        return string.Join(".", GetNames());
     }
 
     private static MemberInfo GetMemberInfo(LambdaExpression lambda)

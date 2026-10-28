@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using DynamicData.Binding;
-
-namespace DynamicData.Tests.Domain;
+﻿namespace DynamicData.Tests.Domain;
 
 public enum AnimalFamily
 {

@@ -1,13 +1,3 @@
-using System;
-using System.Linq;
-
-using DynamicData.Kernel;
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public class RightJoinFixture : IDisposable
@@ -448,7 +438,7 @@ public class RightJoinFixture : IDisposable
                 return true;
             }
 
-            return string.Equals(Key, other.Key);
+            return Equals(Key, other.Key);
         }
 
         public override bool Equals(object? obj)

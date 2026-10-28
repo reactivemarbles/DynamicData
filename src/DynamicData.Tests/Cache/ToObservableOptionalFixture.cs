@@ -1,17 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
-using DynamicData.Kernel;
-using FluentAssertions;
+﻿namespace DynamicData.Tests.Cache;
 
-using Xunit;
-
-namespace DynamicData.Tests.Cache;
-
-public class ToObservableOptionalFixture : IDisposable
+public partial class ToObservableOptionalFixture : IDisposable
 {
     private const string Key1 = "Key1";
     private const string Key2 = "Key2";
@@ -22,7 +11,11 @@ public class ToObservableOptionalFixture : IDisposable
     private readonly ISourceCache<KeyValuePair, string> _source = new SourceCache<KeyValuePair, string>(kvp => kvp.Key);
     private readonly ChangeSetAggregator<KeyValuePair, string> _results;
 
-    public ToObservableOptionalFixture() => _results = _source.Connect().AsAggregator();
+    public ToObservableOptionalFixture(ITestOutputHelper output)
+    {
+        _output = output;
+        _results = _source.Connect().AsAggregator();
+    }
 
     public void Dispose()
     {
@@ -306,4 +299,3 @@ public class ToObservableOptionalFixture : IDisposable
         public string Value { get; } = value;
     }
 }
-

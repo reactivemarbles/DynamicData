@@ -2,9 +2,25 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
-
 namespace DynamicData.List.Internal;
+
+internal static class Transformer
+{
+    public static int FindItemIndex<TSource, TDestination>(
+            this ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer> transformations,
+            TSource sourceItem)
+        where TSource : notnull
+        where TDestination : notnull
+    {
+        for (var i = 0; i < transformations.Count; ++i)
+        {
+            if (EqualityComparer<TSource>.Default.Equals(transformations[i].Source, sourceItem))
+                return i;
+        }
+
+        return -1;
+    }
+}
 
 internal sealed class Transformer<TSource, TDestination>
     where TSource : notnull
@@ -18,7 +34,7 @@ internal sealed class Transformer<TSource, TDestination>
 
     public Transformer(IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
     {
-        factory.ThrowArgumentNullExceptionIfNull(nameof(factory));
+        ArgumentNullException.ThrowIfNull(factory);
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _transformOnRefresh = transformOnRefresh;
@@ -40,7 +56,7 @@ internal sealed class Transformer<TSource, TDestination>
 
     private void Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentNullException.ThrowIfNull(changes);
 
         foreach (var item in changes)
         {
@@ -77,13 +93,9 @@ internal sealed class Transformer<TSource, TDestination>
                         var index = change.CurrentIndex;
                         if (index < 0)
                         {
-                            // Find the corresponding index
-                            var current = transformed.FirstOrDefault(x => x.Source.Equals(change.Current));
-                            index = current switch
-                            {
-                                { } tic when transformed.IndexOf(tic) is int i and (>= 0) => i,
-                                _ => throw new UnspecifiedIndexException($"Cannot find index of {change.Current}"),
-                            };
+                            index = transformed.FindItemIndex(change.Current);
+                            if (index < 0)
+                                throw new UnspecifiedIndexException($"Cannot find index of {change.Current}");
                         }
 
                         if (_transformOnRefresh)
@@ -103,30 +115,29 @@ internal sealed class Transformer<TSource, TDestination>
                     {
                         var change = item.Item;
 
-                        if (change.CurrentIndex == -1 || change.PreviousIndex == -1)
-                        {
-                            // Find the original, with it's corresponding index
-                            var previous = transformed.First(x => x.Source.Equals(change.Previous.Value));
-                            var index = transformed.IndexOf(previous);
-                            if (index == -1)
-                            {
-                                throw new UnspecifiedIndexException($"Cannot find index of {change.Previous.Value}");
-                            }
+                        var currentIndex = change.CurrentIndex;
+                        var previousIndex = change.PreviousIndex;
 
-                            transformed[index] = _containerFactory(change.Current, previous.Destination, index);
+                        if (change.PreviousIndex < 0)
+                        {
+                            previousIndex = transformed.FindItemIndex(change.Previous.Value);
+                            if (previousIndex < 0)
+                                throw new UnspecifiedIndexException($"Cannot find index of {change.Previous.Value}");
+                        }
+
+                        if (currentIndex < 0)
+                        {
+                            currentIndex = previousIndex;
+                        }
+
+                        if (currentIndex == previousIndex)
+                        {
+                            transformed[currentIndex] = _containerFactory(change.Current, transformed[previousIndex].Destination, currentIndex);
                         }
                         else
                         {
-                            Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
-                            if (change.CurrentIndex == change.PreviousIndex)
-                            {
-                                transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
-                            }
-                            else
-                            {
-                                transformed.RemoveAt(change.PreviousIndex);
-                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex));
-                            }
+                            transformed.RemoveAt(previousIndex);
+                            transformed.Insert(currentIndex, _containerFactory(change.Current, Optional<TDestination>.None, currentIndex));
                         }
 
                         break;
@@ -135,22 +146,16 @@ internal sealed class Transformer<TSource, TDestination>
                 case ListChangeReason.Remove:
                     {
                         var change = item.Item;
-                        var hasIndex = change.CurrentIndex >= 0;
+                        var index = change.CurrentIndex;
 
-                        if (hasIndex)
+                        if (index < 0)
                         {
-                            transformed.RemoveAt(change.CurrentIndex);
-                        }
-                        else
-                        {
-                            var toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
-
-                            if (toRemove is not null)
-                            {
-                                transformed.Remove(toRemove);
-                            }
+                            index = transformed.FindItemIndex(change.Current);
+                            if (index < 0)
+                                break;
                         }
 
+                        transformed.RemoveAt(index);
                         break;
                     }
 
@@ -162,8 +167,17 @@ internal sealed class Transformer<TSource, TDestination>
                         }
                         else
                         {
-                            var toRemove = transformed.Where(t => item.Range.Any(current => ReferenceEquals(t.Source, current)));
-                            transformed.RemoveMany(toRemove);
+                            var manyToRemove = new List<TransformedItemContainer>(capacity: item.Range.Count);
+                            foreach (var current in item.Range)
+                            {
+                                var index = transformed.FindItemIndex(current);
+                                if (index < 0)
+                                    continue;
+
+                                manyToRemove.Add(transformed[index]);
+                            }
+
+                            transformed.RemoveMany(manyToRemove);
                         }
 
                         break;
