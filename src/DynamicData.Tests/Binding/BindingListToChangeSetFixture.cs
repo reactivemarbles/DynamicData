@@ -1,14 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-using System.Linq;
-
-using DynamicData.Binding;
-
-using FluentAssertions;
-
-using Xunit;
-
-namespace DynamicData.Tests.Binding;
+﻿namespace DynamicData.Tests.Binding;
 
 public class BindingListToChangeSetFixture : IDisposable
 {

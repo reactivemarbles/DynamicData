@@ -2,11 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
 namespace DynamicData.Cache.Internal;
 
 #if SUPPORTS_ASYNC_DISPOSABLE
@@ -18,8 +13,8 @@ internal static class AsyncDisposeMany<TObject, TKey>
         IObservable<IChangeSet<TObject, TKey>> source,
         Action<IObservable<Unit>> disposalsCompletedAccessor)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        disposalsCompletedAccessor.ThrowArgumentNullExceptionIfNull(nameof(disposalsCompletedAccessor));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(disposalsCompletedAccessor);
 
         return Observable
             .Create<IChangeSet<TObject, TKey>>(downstreamObserver =>

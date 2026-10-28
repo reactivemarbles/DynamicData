@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 #if P_LINQ
-using System.Reactive.Linq;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
 {
@@ -25,7 +23,7 @@ namespace DynamicData.PLinq
                 return transformer.NotEmpty().SubscribeSafe(observer);
             });
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "A collection initializer is not equivalent to a .ToArray() call for a ParallelQuery<T>. This change actually introduces a race-condition exception.")]
+        [SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "A collection initializer is not equivalent to a .ToArray() call for a ParallelQuery<T>. This change actually introduces a race-condition exception.")]
         private ChangeSet<TDestination, TKey> DoTransform(ChangeAwareCache<TDestination, TKey> cache, IChangeSet<TSource, TKey> changes)
         {
             var transformed = changes.ShouldParallelise(parallelisationOptions)

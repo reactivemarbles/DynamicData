@@ -2,19 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
@@ -40,8 +27,8 @@ public static partial class ObservableListEx
     public static IDisposable PopulateInto<T>(this IObservable<IChangeSet<T>> source, ISourceList<T> destination)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(destination);
 
         return source.Subscribe(changes => destination.Edit(updater => updater.Clone(changes)));
     }

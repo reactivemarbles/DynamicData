@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
-
 namespace DynamicData.List.Internal;
 
 internal static class OnItemAdded<T>
@@ -13,8 +11,8 @@ internal static class OnItemAdded<T>
         IObservable<IChangeSet<T>> source,
         Action<T> addAction)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(addAction);
 
         return source.Do(changeSet =>
         {

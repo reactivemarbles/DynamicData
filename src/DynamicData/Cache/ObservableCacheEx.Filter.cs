@@ -2,20 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 // ReSharper disable once CheckNamespace
 
 namespace DynamicData;
@@ -54,7 +40,8 @@ public static partial class ObservableCacheEx
                 bool suppressEmptyChangeSets = true)
             where TObject : notnull
             where TKey : notnull
-        => Cache.Internal.Filter.Static<TObject, TKey>.Create(
+        =>
+            Cache.Internal.Filter.Static<TObject, TKey>.Create(
             source: source,
             filter: filter,
             suppressEmptyChangeSets: suppressEmptyChangeSets);
@@ -110,7 +97,8 @@ public static partial class ObservableCacheEx
                 bool suppressEmptyChangeSets = true)
             where TObject : notnull
             where TKey : notnull
-        => Cache.Internal.Filter.Dynamic<TObject, TKey, TState>.Create(
+        =>
+            Cache.Internal.Filter.Dynamic<TObject, TKey, TState>.Create(
             source: source,
             predicateState: predicateState,
             predicate: predicate,
@@ -136,7 +124,8 @@ public static partial class ObservableCacheEx
             where TObject : notnull
             where TKey : notnull
 
-        => Cache.Internal.Filter.Dynamic<TObject, TKey, Func<TObject, bool>>.Create(
+        =>
+            Cache.Internal.Filter.Dynamic<TObject, TKey, Func<TObject, bool>>.Create(
             source: source,
             predicateState: predicateChanged,
             predicate: static (predicate, item) => predicate.Invoke(item),

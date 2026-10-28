@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Reactive.Concurrency;
-
-namespace DynamicData.Tests.Utilities;
+﻿namespace DynamicData.Tests.Utilities;
 
 public sealed class CacheItemRecordingObserver<TObject, TKey>
         : RecordingObserverBase<IChangeSet<TObject, TKey>>

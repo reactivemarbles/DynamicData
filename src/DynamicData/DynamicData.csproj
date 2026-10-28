@@ -4,16 +4,26 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsAotCompatible>true</IsAotCompatible>
     <IsPackable>true</IsPackable>
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="6.1.0" />
+    <PackageReference Include="Polyfill">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Reactive" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Using Include="DynamicData.Kernel" />
-    <Using Include="DynamicData.Internal" />
+  <!-- Polyfill config -->
+  <PropertyGroup>
+    <!-- Enables polyfills upon static classes, E.G. ArgumentNullExceptions.ThrowIfNull() -->
+    <PolyArgumentExceptions>true</PolyArgumentExceptions>
+    <!-- Attaches [EmbeddedAttribute] to all polyfills, so test and benchmark projects don't get them via [InternalsVisibleTo] -->
+    <PolyUseEmbeddedAttribute>true</PolyUseEmbeddedAttribute>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -23,6 +33,11 @@ Bring the power of Rx to collections using Dynamic Data.
 Dynamic Data is a comprehensive caching and data manipulation solution which introduces domain centric observable collections.
       Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more.
     </Description>
+  </PropertyGroup>
+
+  <!-- For targets that don't support System.Threading.Lock, disable the "Lock cast to object" warning, as this is actually the desired behavior for our partial Lock polyfill -->
+  <PropertyGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">
+    <NoWarn>$(NoWarn);CS9216</NoWarn>
   </PropertyGroup>
 
   <!-- AsyncDisposeMany is only supported on platforms that have IAsyncDisposable. -->

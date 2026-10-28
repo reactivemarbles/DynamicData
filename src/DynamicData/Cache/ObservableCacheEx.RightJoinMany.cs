@@ -2,20 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 // ReSharper disable once CheckNamespace
 
 namespace DynamicData;
@@ -38,10 +24,10 @@ public static partial class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        left.ThrowArgumentNullExceptionIfNull(nameof(left));
-        right.ThrowArgumentNullExceptionIfNull(nameof(right));
-        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
-        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
+        ArgumentNullException.ThrowIfNull(rightKeySelector);
+        ArgumentNullException.ThrowIfNull(resultSelector);
 
         return left.RightJoinMany(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
     }
@@ -97,10 +83,10 @@ public static partial class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        left.ThrowArgumentNullExceptionIfNull(nameof(left));
-        right.ThrowArgumentNullExceptionIfNull(nameof(right));
-        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
-        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
+        ArgumentNullException.ThrowIfNull(rightKeySelector);
+        ArgumentNullException.ThrowIfNull(resultSelector);
 
         return new RightJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
     }

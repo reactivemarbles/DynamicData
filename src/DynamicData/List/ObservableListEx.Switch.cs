@@ -2,19 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
@@ -38,7 +25,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservableList<T>> sources)
         where T : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentNullException.ThrowIfNull(sources);
 
         return sources.Select(cache => cache.Connect()).Switch();
     }
@@ -59,7 +46,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservable<IChangeSet<T>>> sources)
         where T : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentNullException.ThrowIfNull(sources);
 
         return new Switch<T>(sources).Run();
     }

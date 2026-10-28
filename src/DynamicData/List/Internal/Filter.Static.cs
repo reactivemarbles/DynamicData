@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
-
 namespace DynamicData.List.Internal;
 
 internal static partial class Filter
@@ -16,8 +14,8 @@ internal static partial class Filter
             Func<T, bool> predicate,
             bool suppressEmptyChangesets)
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(predicate);
 
             return Observable.Create<IChangeSet<T>>(downstreamObserver =>
             {

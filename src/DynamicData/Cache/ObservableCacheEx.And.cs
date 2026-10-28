@@ -2,20 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 // ReSharper disable once CheckNamespace
 
 namespace DynamicData;
@@ -35,15 +21,17 @@ public static partial class ObservableCacheEx
     /// <param name="others">The additional <see cref="IObservable{IChangeSet{TObject, TKey}}"/> streams to combine with.</param>
     /// <returns>An observable which emits change sets.</returns>
     /// <exception cref="ArgumentNullException">source or others.</exception>
+    /// <exception cref="ArgumentException">Throws if <paramref name="others"/> is empty.</exception>
     /// <seealso cref="ObservableListEx.And"/>
     public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params IObservable<IChangeSet<TObject, TKey>>[] others)
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(others);
 
-        return others is null || others.Length == 0
-            ? throw new ArgumentNullException(nameof(others))
+        return others.Length == 0
+            ? throw new ArgumentException("At least one additional stream must be supplied", nameof(others))
             : source.Combine(CombineOperator.And, others);
     }
 
@@ -63,7 +51,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentNullException.ThrowIfNull(sources);
 
         return sources.Combine(CombineOperator.And);
     }
@@ -80,7 +68,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentNullException.ThrowIfNull(sources);
 
         return sources.Combine(CombineOperator.And);
     }
@@ -97,7 +85,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentNullException.ThrowIfNull(sources);
 
         return sources.Combine(CombineOperator.And);
     }
@@ -114,7 +102,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentNullException.ThrowIfNull(sources);
 
         return sources.Combine(CombineOperator.And);
     }

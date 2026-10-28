@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
-
 namespace DynamicData.Aggregation;
 
 /// <summary>
@@ -409,11 +407,11 @@ public static class AvgEx
 
     private static IObservable<TResult> AvgCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, Func<TObject, TValue> valueSelector, TResult fallbackValue, Func<Avg<TValue>, TValue, Avg<TValue>> addAction, Func<Avg<TValue>, TValue, Avg<TValue>> removeAction, Func<Avg<TValue>, TResult> resultAction)
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
-        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
-        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
-        resultAction.ThrowArgumentNullExceptionIfNull(nameof(resultAction));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
+        ArgumentNullException.ThrowIfNull(addAction);
+        ArgumentNullException.ThrowIfNull(removeAction);
+        ArgumentNullException.ThrowIfNull(resultAction);
 
         return source.Scan(default(Avg<TValue>), (state, changes) =>
             changes.Aggregate(state, (current, aggregateItem) =>

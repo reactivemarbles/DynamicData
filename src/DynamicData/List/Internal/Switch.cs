@@ -2,12 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using DynamicData.Internal;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
@@ -18,37 +12,107 @@ internal sealed class Switch<T>(IObservable<IObservable<IChangeSet<T>>> sources)
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var queue = new SharedDeliveryQueue();
-                var destination = new SourceList<T>();
-                var errors = new Subject<IChangeSet<T>>();
-                var innerSubscription = new SerialDisposable();
+                // Switching is done by hand rather than with Observable.Switch, which holds its gate for
+                // the whole of downstream delivery. The queue enqueues and returns instead, so a producer
+                // is never held up by whatever a subscriber does with the notification, and a pipeline
+                // crossing into another collection cannot deadlock against it.
+                var queue = new DeliveryQueue<IChangeSet<T>>(observer);
 
-                // The outer (sources) and every inner are routed through the same SharedDeliveryQueue.
-                // Both the per-source clear and the per-changeset destination write happen on the drain
-                // thread, so destination.Connect() emissions and any errors.OnError calls also originate
-                // from inside the drain. The downstream merge therefore sees pre-serialized inputs and
-                // uses UnsynchronizedMerge to avoid the ABBA-prone Observable.Merge gate. Inlines what
-                // Observable.Switch would have done (whose own gate would itself be ABBA-prone).
-                var sourcesSubscription = _sources
-                    .SynchronizeSafe(queue)
-                    .SubscribeSafe(
-                        onNext: newSource =>
+                // What the current source has contributed, so that switching away can take it back out.
+                var current = new List<T>();
+                var subscription = new SerialDisposable();
+
+                // Identifies the current source. A superseded one may still be mid-delivery, and anything
+                // it produces after this point belongs to a source that has already been switched away from.
+                var active = 0;
+                var isSourceRunning = false;
+                var areSourcesComplete = false;
+
+                var outer = _sources.SubscribeSafe(
+                    source =>
+                    {
+                        int id;
+
+                        using (var scope = queue.AcquireLock())
                         {
-                            destination.Clear();
-                            innerSubscription.Disposable = newSource
-                                .SynchronizeSafe(queue)
-                                .SubscribeSafe(
-                                    onNext: changes => destination.Edit(updater => updater.Clone(changes)),
-                                    onError: errors.OnError);
-                        },
-                        onError: errors.OnError);
+                            id = ++active;
+                            isSourceRunning = true;
 
-                return new CompositeDisposable(
-                    destination,
-                    errors,
-                    sourcesSubscription,
-                    innerSubscription,
-                    destination.Connect().UnsynchronizedMerge(errors).SubscribeSafe(observer),
-                    queue);
+                            if (current.Count != 0)
+                            {
+                                scope.EnqueueNext(new ChangeSet<T> { new Change<T>(ListChangeReason.Clear, current.ToArray()) });
+                                current.Clear();
+                            }
+                        }
+
+                        // Subscribed outside the lock. The source may deliver synchronously, and that
+                        // delivery takes the lock for itself.
+                        subscription.Disposable = source.SubscribeSafe(
+                            changes =>
+                            {
+                                using var scope = queue.AcquireLock();
+
+                                if (id != active)
+                                {
+                                    return;
+                                }
+
+                                current.Clone(changes);
+
+                                if (changes.Count != 0)
+                                {
+                                    scope.EnqueueNext(changes);
+                                }
+                            },
+                            error =>
+                            {
+                                using var scope = queue.AcquireLock();
+
+                                if (id != active)
+                                {
+                                    return;
+                                }
+
+                                scope.EnqueueError(error);
+                            },
+                            () =>
+                            {
+                                using var scope = queue.AcquireLock();
+
+                                if (id != active)
+                                {
+                                    return;
+                                }
+
+                                isSourceRunning = false;
+
+                                if (areSourcesComplete)
+                                {
+                                    scope.EnqueueCompleted();
+                                }
+                            });
+                    },
+                    queue.OnError,
+                    () =>
+                    {
+                        using var scope = queue.AcquireLock();
+
+                        areSourcesComplete = true;
+
+                        // The current source may still be running, and the result ends only once both have.
+                        if (!isSourceRunning)
+                        {
+                            scope.EnqueueCompleted();
+                        }
+                    });
+
+                // Disposal order matters and CompositeDisposable does not specify one. The queue goes first
+                // so that any delivery in flight is finished before the subscriptions feeding it are torn down.
+                return Disposable.Create(() =>
+                {
+                    queue.Dispose();
+                    outer.Dispose();
+                    subscription.Dispose();
+                });
             });
 }

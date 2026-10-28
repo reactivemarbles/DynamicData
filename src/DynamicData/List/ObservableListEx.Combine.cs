@@ -2,19 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
@@ -26,7 +13,7 @@ public static partial class ObservableListEx
     private static IObservable<IChangeSet<T>> Combine<T>(this ICollection<IObservable<IChangeSet<T>>> sources, CombineOperator type)
         where T : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentNullException.ThrowIfNull(sources);
 
         return new Combiner<T>(sources, type).Run();
     }
@@ -34,8 +21,8 @@ public static partial class ObservableListEx
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservable<IChangeSet<T>> source, CombineOperator type, params IObservable<IChangeSet<T>>[] others)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        others.ThrowArgumentNullExceptionIfNull(nameof(others));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(others);
 
         if (others.Length == 0)
         {
@@ -49,7 +36,7 @@ public static partial class ObservableListEx
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservableList<ISourceList<T>> sources, CombineOperator type)
         where T : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentNullException.ThrowIfNull(sources);
 
         return Observable.Create<IChangeSet<T>>(
             observer =>
@@ -63,7 +50,7 @@ public static partial class ObservableListEx
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservableList<IObservableList<T>> sources, CombineOperator type)
         where T : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentNullException.ThrowIfNull(sources);
 
         return Observable.Create<IChangeSet<T>>(
             observer =>
@@ -77,7 +64,7 @@ public static partial class ObservableListEx
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservableList<IObservable<IChangeSet<T>>> sources, CombineOperator type)
         where T : notnull
     {
-        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
+        ArgumentNullException.ThrowIfNull(sources);
 
         return new DynamicCombiner<T>(sources, type).Run();
     }
