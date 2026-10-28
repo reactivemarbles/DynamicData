@@ -24,7 +24,7 @@
     <PackageVersion Include="Bogus" Version="35.*" />
     <PackageVersion Include="coverlet.collector" Version="10.*" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.*" />
-    <PackageVersion Include="Microsoft.Reactive.Testing" Version="6.*" />
+    <PackageVersion Include="Microsoft.Reactive.Testing" Version="7.*" />
     <PackageVersion Include="PublicApiGenerator" Version="11.*" />
     <PackageVersion Include="Verify.Xunit" Version="30.*" />
     <PackageVersion Include="xunit" Version="2.*" />
