@@ -3,11 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 #if SUPPORTS_BINDINGLIST
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 namespace DynamicData.Binding;
 
 /// <summary>
@@ -28,7 +23,7 @@ public class BindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAccessedM
     /// <inheritdoc />
     public void Adapt(IChangeSet<T> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentNullException.ThrowIfNull(changes);
 
         if (changes.TotalChanges - changes.Refreshes > refreshThreshold || !_loaded)
         {
@@ -68,7 +63,7 @@ public class BindingListAdaptor<[DynamicallyAccessedMembers(DynamicallyAccessedM
     /// <inheritdoc />
     public void Adapt(IChangeSet<TObject, TKey> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentNullException.ThrowIfNull(changes);
         _cache.Clone(changes);
 
         if (changes.Count - changes.Refreshes > refreshThreshold || !_loaded)

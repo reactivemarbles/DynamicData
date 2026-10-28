@@ -1,8 +1,4 @@
-﻿using System;
-
-using DynamicData.Kernel;
-
-namespace DynamicData.Tests.Domain;
+﻿namespace DynamicData.Tests.Domain;
 
 public class ParentAndChildren : IEquatable<ParentAndChildren>
 {

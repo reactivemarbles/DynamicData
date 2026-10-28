@@ -2,20 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using DynamicData.Binding;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 // ReSharper disable once CheckNamespace
 
 namespace DynamicData;
@@ -84,11 +70,37 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        pauseIfTrueSelector.ThrowArgumentNullExceptionIfNull(nameof(pauseIfTrueSelector));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(pauseIfTrueSelector);
 
         return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, timeOut, initialPauseState, scheduler: scheduler).Run();
     }
+
+    /// <inheritdoc cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
+    /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to conditionally buffer.</param>
+    /// <param name="pauseIfTrueSelector">An <see cref="IObservable{bool}"/> that controls buffering: <see langword="true"/> begins buffering, <see langword="false"/> flushes the buffer.</param>
+    /// <param name="scheduler">
+    /// An optional <see cref="IScheduler"/>, retained only for source compatibility. It does not schedule any work on this
+    /// overload: the operator schedules work solely to honour a <see cref="TimeSpan"/> timeout, and this overload always
+    /// forwards a null timeout, so the value is unused whether or not <paramref name="timer"/> is supplied. A supplied
+    /// <paramref name="timer"/> controls its own scheduling. Use <see cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/> for scheduler-driven timing.
+    /// </param>
+    /// <param name="timer">An optional <see cref="IObservable{Unit}"/> timer. The buffer is flushed each time the timer produces a value, and buffering ceases when it completes.</param>
+    /// <remarks>
+    /// <para>This overload starts unpaused. It exists so that a named <c>timer</c> argument, with or without a named <c>scheduler</c>, is a supported call shape without supplying an initial pause state.</para>
+    /// <para>
+    /// The parameter order and the absence of an <c>initialPauseState</c> parameter are both deliberate, and changing either
+    /// reintroduces a compile error in previously valid code. Declaring <paramref name="scheduler"/> before <paramref name="timer"/>
+    /// keeps the fourth positional parameter incompatible with <see cref="IScheduler"/>, so <c>BatchIf(pauseIfTrueSelector, null, scheduler)</c>
+    /// still binds unambiguously to the <see cref="TimeSpan"/> timeout overload. Omitting <c>initialPauseState</c> keeps a fully named
+    /// call that supplies an initial pause state bound unambiguously to the overload that accepts one.
+    /// </para>
+    /// <para>Supply an initial pause state through <see cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, IObservable{Unit}, IScheduler)"/>.</para>
+    /// </remarks>
+    /// <seealso cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, IObservable{Unit}, IScheduler)"/>
+    public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, IScheduler? scheduler = null, IObservable<Unit>? timer = null)
+        where TObject : notnull
+        where TKey : notnull => BatchIf(source, pauseIfTrueSelector, false, timer, scheduler);
 
     /// <inheritdoc cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, bool, TimeSpan?, IScheduler?)"/>
     /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to conditionally buffer.</param>
@@ -97,6 +109,7 @@ public static partial class ObservableCacheEx
     /// <param name="timer">An optional <see cref="IObservable{Unit}"/> timer. The buffer is flushed each time the timer produces a value, and buffering ceases when it completes.</param>
     /// <param name="scheduler">An optional <see cref="IScheduler"/> for scheduling work.</param>
     /// <remarks>This overload accepts an explicit timer observable instead of a <see cref="TimeSpan"/> timeout.</remarks>
+    /// <seealso cref="BatchIf{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IObservable{bool}, IScheduler, IObservable{Unit})"/>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, IObservable<Unit>? timer, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull => new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, initialPauseState, timer, scheduler).Run();

@@ -1,11 +1,3 @@
-using System;
-
-using DynamicData.Tests.Domain;
-
-using FluentAssertions;
-
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 public class QueryWhenChangedFixture : IDisposable

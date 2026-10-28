@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-using DynamicData.Binding;
-
-namespace DynamicData.Tests.Domain;
+﻿namespace DynamicData.Tests.Domain;
 
 public enum Color
 {

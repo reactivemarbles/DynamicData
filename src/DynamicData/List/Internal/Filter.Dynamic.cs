@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
-
 namespace DynamicData.List.Internal;
 
 internal static partial class Filter
@@ -36,7 +34,7 @@ internal static partial class Filter
         public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
                 observer =>
                 {
-                    var locker = InternalEx.NewLock();
+                    var locker = new Lock();
 
                     Func<T, bool> predicate = _ => false;
                     var all = new List<ItemWithMatch>();

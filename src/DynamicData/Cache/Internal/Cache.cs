@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-
 namespace DynamicData.Cache.Internal;
 
 [DebuggerDisplay("Cache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
@@ -36,7 +34,7 @@ internal sealed class Cache<TObject, TKey> : ICache<TObject, TKey>
 
     public void Clone(IChangeSet<TObject, TKey> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentNullException.ThrowIfNull(changes);
 
         foreach (var item in changes.ToConcreteType())
         {

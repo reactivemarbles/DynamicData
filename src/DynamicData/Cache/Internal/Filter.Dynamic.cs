@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Linq;
-using DynamicData.Internal;
-
 namespace DynamicData.Cache.Internal;
 
 internal static partial class Filter
@@ -21,10 +17,10 @@ internal static partial class Filter
             IObservable<Unit> reapplyFilter,
             bool suppressEmptyChangeSets)
         {
-            source.ThrowArgumentNullExceptionIfNull(nameof(source));
-            predicateState.ThrowArgumentNullExceptionIfNull(nameof(predicateState));
-            predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
-            reapplyFilter.ThrowArgumentNullExceptionIfNull(nameof(reapplyFilter));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(predicateState);
+            ArgumentNullException.ThrowIfNull(predicate);
+            ArgumentNullException.ThrowIfNull(reapplyFilter);
 
             return Observable.Create<IChangeSet<TObject, TKey>>(downstreamObserver => new Subscription(
                 downstreamObserver: downstreamObserver,
@@ -40,17 +36,14 @@ internal static partial class Filter
         {
             private readonly List<Change<TObject, TKey>> _downstreamChangesBuffer;
             private readonly IObserver<IChangeSet<TObject, TKey>> _downstreamObserver;
+            private readonly Lock _downstreamSynchronizationGate;
             private readonly Dictionary<TKey, ItemState> _itemStatesByKey;
             private readonly Func<TState, TObject, bool> _predicate;
             private readonly IDisposable? _predicateStateSubscription;
             private readonly IDisposable? _reapplyFilterSubscription;
             private readonly IDisposable? _sourceSubscription;
             private readonly bool _suppressEmptyChangeSets;
-
-#if NET9_0_OR_GREATER
-            private readonly Lock _downstreamGate = new();
-            private readonly Lock _upstreamGate = new();
-#endif
+            private readonly Lock _upstreamSynchronizationGate;
 
             private bool _hasInitialized;
             private bool _hasPredicateStateCompleted;
@@ -71,6 +64,9 @@ internal static partial class Filter
                 _predicate = predicate;
                 _suppressEmptyChangeSets = suppressEmptyChangeSets;
 
+                _downstreamSynchronizationGate = new();
+                _upstreamSynchronizationGate = new();
+
                 _downstreamChangesBuffer = [];
                 _itemStatesByKey = [];
 
@@ -78,7 +74,7 @@ internal static partial class Filter
 
                 var onError = new Action<Exception>(OnError);
 
-                using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
+                using var @lock = SwappableLock.CreateAndEnter(_upstreamSynchronizationGate);
 
                 _predicateStateSubscription = predicateState
                     .SubscribeSafe(
@@ -108,7 +104,7 @@ internal static partial class Filter
 
                 if (needToComplete)
                 {
-                    @lock.SwapTo(DownstreamSynchronizationGate);
+                    @lock.SwapTo(_downstreamSynchronizationGate);
 
                     _downstreamObserver.OnCompleted();
                 }
@@ -120,20 +116,6 @@ internal static partial class Filter
                 _reapplyFilterSubscription?.Dispose();
                 _sourceSubscription?.Dispose();
             }
-
-#if NET9_0_OR_GREATER
-            private Lock DownstreamSynchronizationGate
-                => _downstreamGate;
-
-            private Lock UpstreamSynchronizationGate
-                => _upstreamGate;
-#else
-            private object DownstreamSynchronizationGate
-                => _downstreamChangesBuffer;
-
-            private object UpstreamSynchronizationGate
-                => _itemStatesByKey;
-#endif
 
             private ChangeSet<TObject, TKey> AssembleDownstreamChanges()
             {
@@ -148,19 +130,19 @@ internal static partial class Filter
 
             private void OnError(Exception error)
             {
-                using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
+                using var @lock = SwappableLock.CreateAndEnter(_upstreamSynchronizationGate);
 
                 _predicateStateSubscription?.Dispose();
                 _sourceSubscription?.Dispose();
 
-                @lock.SwapTo(DownstreamSynchronizationGate);
+                @lock.SwapTo(_downstreamSynchronizationGate);
 
                 _downstreamObserver.OnError(error);
             }
 
             private void OnPredicateStateCompleted()
             {
-                using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
+                using var @lock = SwappableLock.CreateAndEnter(_upstreamSynchronizationGate);
 
                 _hasPredicateStateCompleted = true;
 
@@ -170,7 +152,7 @@ internal static partial class Filter
                     && ((_hasReapplyFilterCompleted && _hasSourceCompleted)
                         || (!_isLatestPredicateStateValid && _suppressEmptyChangeSets)))
                 {
-                    @lock.SwapTo(DownstreamSynchronizationGate);
+                    @lock.SwapTo(_downstreamSynchronizationGate);
 
                     _downstreamObserver.OnCompleted();
                 }
@@ -178,7 +160,7 @@ internal static partial class Filter
 
             private void OnPredicateStateNext(TState predicateState)
             {
-                using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
+                using var @lock = SwappableLock.CreateAndEnter(_upstreamSynchronizationGate);
 
                 _latestPredicateState = predicateState;
                 _isLatestPredicateStateValid = true;
@@ -188,7 +170,7 @@ internal static partial class Filter
                 var downstreamChanges = AssembleDownstreamChanges();
                 if (((downstreamChanges.Count is not 0) || !_suppressEmptyChangeSets) && _hasInitialized)
                 {
-                    @lock.SwapTo(DownstreamSynchronizationGate);
+                    @lock.SwapTo(_downstreamSynchronizationGate);
 
                     _downstreamObserver.OnNext(downstreamChanges);
                 }
@@ -196,14 +178,14 @@ internal static partial class Filter
 
             private void OnReapplyFilterCompleted()
             {
-                using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
+                using var @lock = SwappableLock.CreateAndEnter(_upstreamSynchronizationGate);
 
                 _hasReapplyFilterCompleted = true;
 
                 // If the other two sources have also completed, there's no chance of us ever needing to emit further changesets.
                 if (_hasPredicateStateCompleted && _hasSourceCompleted)
                 {
-                    @lock.SwapTo(DownstreamSynchronizationGate);
+                    @lock.SwapTo(_downstreamSynchronizationGate);
 
                     _downstreamObserver.OnCompleted();
                 }
@@ -211,7 +193,7 @@ internal static partial class Filter
 
             private void OnReapplyFilterNext(Unit value)
             {
-                using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
+                using var @lock = SwappableLock.CreateAndEnter(_upstreamSynchronizationGate);
 
                 if (_isLatestPredicateStateValid)
                     ReFilter(_latestPredicateState);
@@ -219,7 +201,7 @@ internal static partial class Filter
                 var downstreamChanges = AssembleDownstreamChanges();
                 if (((downstreamChanges.Count is not 0) || !_suppressEmptyChangeSets) && _hasInitialized)
                 {
-                    @lock.SwapTo(DownstreamSynchronizationGate);
+                    @lock.SwapTo(_downstreamSynchronizationGate);
 
                     _downstreamObserver.OnNext(downstreamChanges);
                 }
@@ -227,7 +209,7 @@ internal static partial class Filter
 
             private void OnSourceCompleted()
             {
-                using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
+                using var @lock = SwappableLock.CreateAndEnter(_upstreamSynchronizationGate);
 
                 _hasSourceCompleted = true;
 
@@ -238,7 +220,7 @@ internal static partial class Filter
                        && ((_itemStatesByKey.Count is 0)
                            || (_hasPredicateStateCompleted && !_isLatestPredicateStateValid))))
                 {
-                    @lock.SwapTo(DownstreamSynchronizationGate);
+                    @lock.SwapTo(_downstreamSynchronizationGate);
 
                     _downstreamObserver.OnCompleted();
                 }
@@ -246,7 +228,7 @@ internal static partial class Filter
 
             private void OnSourceNext(IChangeSet<TObject, TKey> upstreamChanges)
             {
-                using var @lock = SwappableLock.CreateAndEnter(UpstreamSynchronizationGate);
+                using var @lock = SwappableLock.CreateAndEnter(_upstreamSynchronizationGate);
 
                 foreach (var change in upstreamChanges.ToConcreteType())
                 {
@@ -370,7 +352,7 @@ internal static partial class Filter
                 var downstreamChanges = AssembleDownstreamChanges();
                 if ((downstreamChanges.Count is not 0) || !_suppressEmptyChangeSets)
                 {
-                    @lock.SwapTo(DownstreamSynchronizationGate);
+                    @lock.SwapTo(_downstreamSynchronizationGate);
 
                     _downstreamObserver.OnNext(downstreamChanges);
                 }

@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using DynamicData.Cache;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
@@ -87,7 +85,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// Create a change set from recorded changes and clears known changes.
     /// </summary>
     /// <returns>A change set with the key/value changes.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0301:Simplify collection initialization", Justification = "This would result in differing operation")]
+    [SuppressMessage("Style", "IDE0301:Simplify collection initialization", Justification = "This would result in differing operation")]
     public ChangeSet<TObject, TKey> CaptureChanges()
     {
         if (_changes.Count == 0)
@@ -111,7 +109,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <inheritdoc />
     public void Clone(IChangeSet<TObject, TKey> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentNullException.ThrowIfNull(changes);
 
         foreach (var change in changes.ToConcreteType())
         {
@@ -146,7 +144,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <param name="keys">The keys to refresh.</param>
     public void Refresh(IEnumerable<TKey> keys)
     {
-        keys.ThrowArgumentNullExceptionIfNull(nameof(keys));
+        ArgumentNullException.ThrowIfNull(keys);
 
         if (keys is IList<TKey> list)
         {
@@ -187,7 +185,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <param name="keys">The keys.</param>
     public void Remove(IEnumerable<TKey> keys)
     {
-        keys.ThrowArgumentNullExceptionIfNull(nameof(keys));
+        ArgumentNullException.ThrowIfNull(keys);
 
         if (keys is IList<TKey> list)
         {

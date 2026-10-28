@@ -22,7 +22,7 @@ public sealed class OptionElse
     /// <exception cref="ArgumentNullException">action.</exception>
     public void Else(Action action)
     {
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentNullException.ThrowIfNull(action);
 
         if (_shouldRunAction)
         {

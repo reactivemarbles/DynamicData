@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
@@ -14,11 +10,11 @@ internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
     public IObservable<IChangeSet<T>> Run()
         => Observable.Create<IChangeSet<T>>(observer =>
         {
-            // Will be locking on cachedItems directly, instead of using an anonymous gate object. This is acceptable, since it's a privately-held object, there's no risk of deadlock from other consumers locking on it.
+            var synchronizationGate = new Lock();
             var cachedItems = new List<T>();
 
             var sourceSubscription = source
-                .Synchronize(cachedItems)
+                .Synchronize(synchronizationGate)
                 .SubscribeSafe(Observer.Create<IChangeSet<T>>(
                     onNext: changeSet =>
                     {
@@ -77,7 +73,7 @@ internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
             {
                 sourceSubscription.Dispose();
 
-                lock (cachedItems)
+                lock (synchronizationGate)
                 {
                     ProcessFinalization(cachedItems);
                 }
