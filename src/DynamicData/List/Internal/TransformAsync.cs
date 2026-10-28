@@ -168,7 +168,7 @@ internal sealed class TransformAsync<TSource, TDestination>
 
                 case ListChangeReason.Remove:
                     {
-                        var index = item.Item.ResolveIndexes(transformed, SelectSource).CurrentIndex;
+                        var index = (item.Item.CurrentIndex >= 0) ? item.Item.CurrentIndex : transformed.IndexOf(item.Item.Current, SelectSource);
                         if (index >= 0)
                         {
                             transformed.RemoveAt(index);

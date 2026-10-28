@@ -16,6 +16,23 @@ public sealed partial class UnspecifiedIndexFixture
 
     private readonly Randomizer _randomizer = new(Seed);
 
+    // Operators resolve unindexed Remove, Replace and Add, but not Refresh: they rely on this rejection, and index
+    // stripping operators convert a Refresh into an unindexed Replace of the item with itself.
+    [Fact]
+    public void UnindexedRefresh_CannotBeConstructed()
+    {
+        // Arrange
+        var item = _randomizer.Int();
+
+        // Act
+        var withoutPrevious = () => new Change<int>(ListChangeReason.Refresh, item);
+        var withPrevious = () => new Change<int>(ListChangeReason.Refresh, item, Optional.Some(item));
+
+        // Assert
+        withoutPrevious.Should().Throw<ArgumentException>();
+        withPrevious.Should().Throw<ArgumentException>();
+    }
+
     private static Change<T> Add<T>(T item)
             where T : notnull
         => new(ListChangeReason.Add, item);

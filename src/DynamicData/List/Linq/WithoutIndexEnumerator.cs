@@ -12,12 +12,8 @@ namespace DynamicData.List.Linq;
 internal sealed class WithoutIndexEnumerator<T>(IEnumerable<Change<T>> changeSet) : IEnumerable<Change<T>>
     where T : notnull
 {
-    /// <summary>
-    /// Copies an Add, AddRange, Replace, Remove, RemoveRange or Clear change without its indexes. A Refresh must carry an
-    /// index, so it becomes an unindexed Replace of the item with itself, as RemoveKey emits for a cache Refresh.
-    /// </summary>
-    /// <param name="change">The change to copy. Moved changes cannot be unindexed.</param>
-    /// <returns>The unindexed copy.</returns>
+    // A Refresh must carry an index, so it becomes an unindexed Replace of the item with itself, as RemoveKey emits for a
+    // cache Refresh. A Moved change cannot be unindexed; callers drop it.
     public static Change<T> WithoutIndex(Change<T> change)
         => change.Reason switch
         {

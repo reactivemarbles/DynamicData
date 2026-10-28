@@ -4,34 +4,17 @@
 
 namespace DynamicData.List.Internal;
 
-/// <summary>
-/// Resolves unspecified (-1) list change indexes against an operator's positional copy of its upstream list.
-/// </summary>
-/// <remarks>
-/// <para>
-/// An unspecified index locates an existing item by <see cref="EqualityComparer{T}.Default"/>, taking the first match.
-/// An unspecified insertion index appends. A <see cref="ListChangeReason.Replace"/> with an unspecified previous index
-/// locates its previous item that way, and an unspecified current index takes the previous item's position, so the
-/// replacement happens in place. <see cref="ListEx.Clone{T}(IList{T}, IChangeSet{T})"/> applies the same rules, so every
-/// positional copy of a list agrees on where an unindexed change lands.
-/// </para>
-/// <para>
-/// The upstream copy is read through its indexer and a projection, so a lookup allocates nothing and does not
-/// enumerate a <see cref="ChangeAwareList{T}"/>, whose enumerator copies the list.
-/// </para>
-/// </remarks>
+// Resolves unspecified (-1) list change indexes against an operator's positional copy of its upstream list.
+//
+// An unspecified index locates an existing item by EqualityComparer<T>.Default, taking the first match. An unspecified
+// insertion index appends. A Replace with an unspecified previous index locates its previous item that way, and an
+// unspecified current index takes the previous item's position, so the replacement happens in place. ListEx.Clone
+// applies the same rules, so every positional copy of a list agrees on where an unindexed change lands.
+//
+// The upstream copy is read through its indexer and a projection, so a lookup allocates nothing and does not enumerate
+// a ChangeAwareList<T>, whose enumerator copies the list.
 internal static class UnspecifiedIndexEx
 {
-    /// <summary>
-    /// Finds the first element of <paramref name="upstream"/> whose projected item equals <paramref name="item"/>.
-    /// </summary>
-    /// <typeparam name="TElement">The type of element held for each upstream item.</typeparam>
-    /// <typeparam name="T">The type of the upstream item.</typeparam>
-    /// <param name="upstream">The operator's positional copy of its upstream list.</param>
-    /// <param name="item">The item to locate.</param>
-    /// <param name="selectItem">Projects an element to the upstream item it holds.</param>
-    /// <param name="comparer">The <see cref="IEqualityComparer{T}"/> that matches items, or <see langword="null"/> for <see cref="EqualityComparer{T}.Default"/>.</param>
-    /// <returns>The index of the first match, or -1 when no element matches.</returns>
     public static int IndexOf<TElement, T>(this IList<TElement> upstream, T item, Func<TElement, T> selectItem, IEqualityComparer<T>? comparer = null)
     {
         comparer ??= EqualityComparer<T>.Default;
@@ -45,19 +28,8 @@ internal static class UnspecifiedIndexEx
         return -1;
     }
 
-    /// <summary>
-    /// Returns <paramref name="change"/> with every unspecified index replaced by the position it refers to in <paramref name="upstream"/>.
-    /// </summary>
-    /// <typeparam name="TElement">The type of element held for each upstream item.</typeparam>
-    /// <typeparam name="T">The type of the upstream item.</typeparam>
-    /// <param name="change">The change to resolve, before it has been applied to <paramref name="upstream"/>.</param>
-    /// <param name="upstream">The operator's positional copy of its upstream list.</param>
-    /// <param name="selectItem">Projects an element to the upstream item it holds.</param>
-    /// <returns>
-    /// The resolved change. A <see cref="ListChangeReason.Remove"/> of an item that is not present keeps an index of -1,
-    /// and the caller ignores it, as <see cref="ListEx.Clone{T}(IList{T}, IChangeSet{T})"/> does.
-    /// </returns>
-    /// <exception cref="UnspecifiedIndexException">An unindexed <see cref="ListChangeReason.Replace"/> names a previous item that is not present.</exception>
+    // Call before the change is applied to upstream. An unindexed Remove of an absent item keeps an index of -1 for the
+    // caller to ignore, as ListEx.Clone does. An unindexed Replace of an absent item throws UnspecifiedIndexException.
     public static ItemChange<T> ResolveIndexes<TElement, T>(this ItemChange<T> change, IList<TElement> upstream, Func<TElement, T> selectItem)
         where T : notnull
         => change.Reason switch

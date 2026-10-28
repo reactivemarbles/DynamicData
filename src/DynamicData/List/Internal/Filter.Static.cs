@@ -175,7 +175,7 @@ internal static partial class Filter
 
                             case ListChangeReason.Remove:
                                 {
-                                    var index = change.Item.ResolveIndexes(upstreamItemsStates, SelectItem).CurrentIndex;
+                                    var index = (change.Item.CurrentIndex >= 0) ? change.Item.CurrentIndex : upstreamItemsStates.IndexOf(change.Item.Current, SelectItem);
                                     if (index >= 0)
                                         RemoveAt(index);
                                 }
