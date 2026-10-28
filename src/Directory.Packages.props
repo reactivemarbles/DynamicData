@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.13" />
     <PackageVersion Include="Polyfill" Version="11.4.3" />
     <PackageVersion Include="System.Reactive" Version="6.1.0" />
   </ItemGroup>
@@ -37,7 +37,7 @@
     <GlobalPackageReference Include="Nerdbank.GitVersioning" Version="3.10.94" />
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject)">
-    <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+    <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.402" />
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
     <GlobalPackageReference Include="Roslynator.Analyzers" Version="4.15.0" />
