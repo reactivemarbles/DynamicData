@@ -11,17 +11,17 @@ namespace DynamicData.Tests.Cache;
 ///   Thread A: sourceA._locker -> operator lock -> PopulateInto -> sourceB._locker
 ///   Thread B: sourceB._locker -> operator lock -> PopulateInto -> sourceA._locker
 ///
-/// On main (Synchronize(lock)): deadlocks reliably within seconds.
-/// On the PR branch (SynchronizeSafe queue-drain): no deadlock possible.
+/// Writers run on dedicated threads, so a starved thread pool cannot stall them, and a deadlock is reported
+/// by the Timeout attribute rather than by a timer inside the test.
 /// </summary>
 public sealed class DeadlockTortureTest
     : IntegrationTestFixtureBase
 {
     private const int ItemCount = 200;
     private const int Iterations = 50;
-    private const int TimeoutSeconds = 60;
+    private const int TimeoutMilliseconds = 60_000;
 
-    private static async Task<bool> RunBidirectionalDeadlockTest(
+    private static async Task RunBidirectionalDeadlockTest(
         Func<IObservable<IChangeSet<Person, string>>, IObservable<IChangeSet<Person, string>>> pipeline,
         Action? subjectPusher = null,
         int iterations = Iterations)
@@ -36,42 +36,39 @@ public sealed class DeadlockTortureTest
 
             var participants = subjectPusher is null ? 2 : 3;
             using var barrier = new Barrier(participants);
-            var taskA = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceA.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); });
-            var taskB = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceB.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); });
-            var taskC = subjectPusher is null ? null : Task.Run(() => { barrier.SignalAndWait(); subjectPusher(); });
+            var taskA = DedicatedThread.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceA.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); });
+            var taskB = DedicatedThread.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceB.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); });
+            var taskC = subjectPusher is null ? null : DedicatedThread.Run(() => { barrier.SignalAndWait(); subjectPusher(); });
 
-            var completed = taskC is null ? Task.WhenAll(taskA, taskB) : Task.WhenAll(taskA, taskB, taskC);
-            if (await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds))) != completed)
-                return false;
+            await (taskC is null ? Task.WhenAll(taskA, taskB) : Task.WhenAll(taskA, taskB, taskC));
         }
-        return true;
     }
 
-    [Fact] public async Task Sort_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)))).Should().BeTrue();
+    [Fact(Timeout = TimeoutMilliseconds)] public Task Sort_DoesNotDeadlock() =>
+        RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)));
 
-    [Fact] public async Task AutoRefresh_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.AutoRefresh(p => p.Age))).Should().BeTrue();
+    [Fact(Timeout = TimeoutMilliseconds)] public Task AutoRefresh_DoesNotDeadlock() =>
+        RunBidirectionalDeadlockTest(s => s.AutoRefresh(p => p.Age));
 
-    [Fact] public async Task GroupOn_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.Group(p => p.Age % 3).MergeMany(g => g.Cache.Connect()))).Should().BeTrue();
+    [Fact(Timeout = TimeoutMilliseconds)] public Task GroupOn_DoesNotDeadlock() =>
+        RunBidirectionalDeadlockTest(s => s.Group(p => p.Age % 3).MergeMany(g => g.Cache.Connect()));
 
-    [Fact] public async Task GroupWithImmutableState_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.GroupWithImmutableState(p => p.Age % 3).TransformMany(g => g.Items, p => p.UniqueKey))).Should().BeTrue();
+    [Fact(Timeout = TimeoutMilliseconds)] public Task GroupWithImmutableState_DoesNotDeadlock() =>
+        RunBidirectionalDeadlockTest(s => s.GroupWithImmutableState(p => p.Age % 3).TransformMany(g => g.Items, p => p.UniqueKey));
 
-    [Fact] public async Task GroupOnWithRegrouper_DoesNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task GroupOnWithRegrouper_DoesNotDeadlock()
     {
         using var regrouper = new System.Reactive.Subjects.Subject<System.Reactive.Unit>();
-        (await RunBidirectionalDeadlockTest(
+        await RunBidirectionalDeadlockTest(
             s => s.Group(p => p.Age % 3, regrouper).MergeMany(g => g.Cache.Connect()),
-            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) regrouper.OnNext(System.Reactive.Unit.Default); })).Should().BeTrue();
+            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) regrouper.OnNext(System.Reactive.Unit.Default); });
     }
 
-    [Fact] public async Task GroupOnDynamicSelector_DoesNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task GroupOnDynamicSelector_DoesNotDeadlock()
     {
         using var selector = new BehaviorSubject<Func<Person, string, int>>((p, _) => p.Age % 3);
         using var regrouper = new System.Reactive.Subjects.Subject<System.Reactive.Unit>();
-        (await RunBidirectionalDeadlockTest(
+        await RunBidirectionalDeadlockTest(
             s => s.Group(selector, regrouper).MergeMany(g => g.Cache.Connect()),
             subjectPusher: () =>
             {
@@ -80,50 +77,50 @@ public sealed class DeadlockTortureTest
                     selector.OnNext((p, _) => p.Age % (2 + (j % 4)));
                     regrouper.OnNext(System.Reactive.Unit.Default);
                 }
-            })).Should().BeTrue();
+            });
     }
 
-    [Fact] public async Task TransformAsyncWithForce_DoesNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task TransformAsyncWithForce_DoesNotDeadlock()
     {
         using var force = new System.Reactive.Subjects.Subject<Func<Person, string, bool>>();
-        (await RunBidirectionalDeadlockTest(
+        await RunBidirectionalDeadlockTest(
             s => s.TransformAsync(p => Task.FromResult(new Person("T-" + p.Name, p.Age)), force),
-            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) force.OnNext(static (_, _) => true); })).Should().BeTrue();
+            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) force.OnNext(static (_, _) => true); });
     }
 
-    [Fact] public async Task Page_DoesNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task Page_DoesNotDeadlock()
     {
         using var req = new BehaviorSubject<IPageRequest>(new PageRequest(1, 50));
-        (await RunBidirectionalDeadlockTest(
+        await RunBidirectionalDeadlockTest(
             s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Page(req),
-            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) req.OnNext(new PageRequest(1 + (j % 4), 25 + (j % 4) * 25)); })).Should().BeTrue();
+            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) req.OnNext(new PageRequest(1 + (j % 4), 25 + (j % 4) * 25)); });
     }
 
-    [Fact] public async Task SortAndPage_DoesNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task SortAndPage_DoesNotDeadlock()
     {
         using var req = new BehaviorSubject<IPageRequest>(new PageRequest(1, 50));
-        (await RunBidirectionalDeadlockTest(
+        await RunBidirectionalDeadlockTest(
             s => s.SortAndPage(SortExpressionComparer<Person>.Ascending(p => p.Age), req),
-            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) req.OnNext(new PageRequest(1 + (j % 4), 25 + (j % 4) * 25)); })).Should().BeTrue();
+            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) req.OnNext(new PageRequest(1 + (j % 4), 25 + (j % 4) * 25)); });
     }
 
-    [Fact] public async Task Virtualise_DoesNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task Virtualise_DoesNotDeadlock()
     {
         using var req = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 50));
-        (await RunBidirectionalDeadlockTest(
+        await RunBidirectionalDeadlockTest(
             s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).Virtualise(req),
-            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) req.OnNext(new VirtualRequest(j * 5, 25 + (j % 4) * 25)); })).Should().BeTrue();
+            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) req.OnNext(new VirtualRequest(j * 5, 25 + (j % 4) * 25)); });
     }
 
-    [Fact] public async Task SortAndVirtualize_DoesNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task SortAndVirtualize_DoesNotDeadlock()
     {
         using var req = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 50));
-        (await RunBidirectionalDeadlockTest(
+        await RunBidirectionalDeadlockTest(
             s => s.SortAndVirtualize(SortExpressionComparer<Person>.Ascending(p => p.Age), req),
-            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) req.OnNext(new VirtualRequest(j * 5, 25 + (j % 4) * 25)); })).Should().BeTrue();
+            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) req.OnNext(new VirtualRequest(j * 5, 25 + (j % 4) * 25)); });
     }
 
-    [Fact] public async Task QueryWhenChanged_DoesNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task QueryWhenChanged_DoesNotDeadlock()
     {
         for (var iter = 0; iter < Iterations; iter++)
         {
@@ -143,42 +140,41 @@ public sealed class DeadlockTortureTest
                 .Subscribe(_ => sourceA.AddOrUpdate(new Person("B-marker", 0)));
 
             using var barrier = new Barrier(2);
-            var taskA = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceA.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); });
-            var taskB = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceB.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); });
+            var taskA = DedicatedThread.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceA.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); });
+            var taskB = DedicatedThread.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceB.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); });
 
-            var completed = Task.WhenAll(taskA, taskB);
-            (await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds)))).Should().BeSameAs(completed, "iteration " + iter);
+            await Task.WhenAll(taskA, taskB);
         }
     }
 
-    [Fact] public async Task TransformWithForce_DoesNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task TransformWithForce_DoesNotDeadlock()
     {
         using var force = new Subject<Func<Person, string, bool>>();
-        (await RunBidirectionalDeadlockTest(
+        await RunBidirectionalDeadlockTest(
             s => s.Transform((p, k) => new Person("T-" + p.Name, p.Age), force),
-            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) force.OnNext(static (p, _) => true); })).Should().BeTrue();
+            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) force.OnNext(static (p, _) => true); });
     }
 
-    [Fact] public async Task BatchIf_DoesNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task BatchIf_DoesNotDeadlock()
     {
         using var pause = new BehaviorSubject<bool>(false);
-        (await RunBidirectionalDeadlockTest(
+        await RunBidirectionalDeadlockTest(
             s => s.BatchIf(pause, false, (TimeSpan?)null),
-            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) pause.OnNext(j % 2 == 0); })).Should().BeTrue();
+            subjectPusher: () => { for (var j = 0; j < ItemCount; j++) pause.OnNext(j % 2 == 0); });
     }
 
-    [Fact] public async Task DisposeMany_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.DisposeMany())).Should().BeTrue();
+    [Fact(Timeout = TimeoutMilliseconds)] public Task DisposeMany_DoesNotDeadlock() =>
+        RunBidirectionalDeadlockTest(s => s.DisposeMany());
 
-    [Fact] public async Task OnItemRemoved_DoesNotDeadlock() =>
-        (await RunBidirectionalDeadlockTest(s => s.OnItemRemoved(_ => { }))).Should().BeTrue();
+    [Fact(Timeout = TimeoutMilliseconds)] public Task OnItemRemoved_DoesNotDeadlock() =>
+        RunBidirectionalDeadlockTest(s => s.OnItemRemoved(_ => { }));
 
-    [Fact] public async Task AllDangerous_Stacked_DoNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task AllDangerous_Stacked_DoNotDeadlock()
     {
         using var pageReq = new BehaviorSubject<IPageRequest>(new PageRequest(1, 100));
         using var virtReq = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 100));
         using var force = new Subject<Func<Person, string, bool>>();
-        (await RunBidirectionalDeadlockTest(
+        await RunBidirectionalDeadlockTest(
             s => s.GroupWithImmutableState(p => p.Age % 3)
                   .TransformMany(g => g.Items, p => p.UniqueKey)
                   .AutoRefresh(p => p.Age)
@@ -198,17 +194,17 @@ public sealed class DeadlockTortureTest
                     virtReq.OnNext(new VirtualRequest(j * 5, 50 + (j % 4) * 50));
                 }
             },
-            iterations: Iterations * 2)).Should().BeTrue();
+            iterations: Iterations * 2);
     }
 
-    [Fact] public async Task MultiplePairs_Simultaneous_NoDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task MultiplePairs_Simultaneous_NoDeadlock()
     {
         using var pageReq = new BehaviorSubject<IPageRequest>(new PageRequest(1, 50));
         using var pageReq2 = new BehaviorSubject<IPageRequest>(new PageRequest(1, 50));
         using var virtReq = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 50));
         using var virtReq2 = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 50));
         using var pause = new BehaviorSubject<bool>(false);
-        var results = await Task.WhenAll(
+        await Task.WhenAll(
             RunBidirectionalDeadlockTest(s => s.Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)), iterations: 30),
             RunBidirectionalDeadlockTest(s => s.AutoRefresh(p => p.Age), iterations: 30),
             RunBidirectionalDeadlockTest(s => s.Group(p => p.Age % 3).MergeMany(g => g.Cache.Connect()), iterations: 30),
@@ -235,10 +231,9 @@ public sealed class DeadlockTortureTest
                 s => s.BatchIf(pause, false, (TimeSpan?)null),
                 subjectPusher: () => { for (var j = 0; j < ItemCount; j++) pause.OnNext(j % 2 == 0); },
                 iterations: 30));
-        results.Should().AllSatisfy(r => r.Should().BeTrue());
     }
 
-    [Fact] public async Task ThreeWayCircular_DoesNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task ThreeWayCircular_DoesNotDeadlock()
     {
         for (var iter = 0; iter < Iterations; iter++)
         {
@@ -253,16 +248,15 @@ public sealed class DeadlockTortureTest
             using var barrier = new Barrier(3);
             var tasks = new[]
             {
-                Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) a.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); }),
-                Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) b.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); }),
-                Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) c.AddOrUpdate(new Person("CC-" + iter + "-" + i, i)); }),
+                DedicatedThread.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) a.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); }),
+                DedicatedThread.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) b.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); }),
+                DedicatedThread.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) c.AddOrUpdate(new Person("CC-" + iter + "-" + i, i)); }),
             };
-            var completed = Task.WhenAll(tasks);
-            (await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds)))).Should().BeSameAs(completed, "iteration " + iter);
+            await Task.WhenAll(tasks);
         }
     }
 
-    [Fact] public async Task TransformToTree_DoesNotDeadlock()
+    [Fact(Timeout = TimeoutMilliseconds)] public async Task TransformToTree_DoesNotDeadlock()
     {
         // Cross-cache cycle is closed via a side-channel Subscribe that writes a marker
         // into the other cache for every tree changeset.
@@ -281,16 +275,15 @@ public sealed class DeadlockTortureTest
                 .Subscribe(_ => sourceA.AddOrUpdate(new Person("from-b-tree-" + iter, 0)));
 
             using var barrier = new Barrier(2);
-            var taskA = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceA.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); });
-            var taskB = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceB.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); });
+            var taskA = DedicatedThread.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceA.AddOrUpdate(new Person("A-" + iter + "-" + i, i)); });
+            var taskB = DedicatedThread.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < ItemCount; i++) sourceB.AddOrUpdate(new Person("B-" + iter + "-" + i, i)); });
 
-            var completed = Task.WhenAll(taskA, taskB);
-            (await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(TimeoutSeconds)))).Should().BeSameAs(completed, "iteration " + iter);
+            await Task.WhenAll(taskA, taskB);
         }
     }
 
-    [Fact] public async Task Switch_DoesNotDeadlock() =>
+    [Fact(Timeout = TimeoutMilliseconds)] public Task Switch_DoesNotDeadlock() =>
         // Observable.Return(s).Switch() drives exactly one outer notification, which is enough
         // to wire up the destination cache and exercise its inner-change delivery path.
-        (await RunBidirectionalDeadlockTest(s => System.Reactive.Linq.Observable.Return(s).Switch())).Should().BeTrue();
+        RunBidirectionalDeadlockTest(s => System.Reactive.Linq.Observable.Return(s).Switch());
 }
