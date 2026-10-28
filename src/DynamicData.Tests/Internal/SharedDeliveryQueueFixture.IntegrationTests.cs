@@ -50,7 +50,7 @@ public partial class SharedDeliveryQueueFixture
 
             child = queue.CreateQueue(new TestObserver<string>(value => Record(delivered, $"child:{value}")));
 
-            var drainer = Task.Factory.StartNew(() => parent.OnNext(first), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            var drainer = DedicatedThread.Run(() => parent.OnNext(first));
             await parked.Task;
             parent.OnNext(second);
 
@@ -91,7 +91,7 @@ public partial class SharedDeliveryQueueFixture
                 Record(delivered, $"{value}:end");
             }));
 
-            var drainer = Task.Factory.StartNew(() => source.OnNext(first), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            var drainer = DedicatedThread.Run(() => source.OnNext(first));
             await parked.Task;
             source.OnNext(second);
 
@@ -135,7 +135,7 @@ public partial class SharedDeliveryQueueFixture
 
             child = queue.CreateQueue(new TestObserver<string>(value => Record(delivered, $"child:{value}")));
 
-            var drainer = Task.Factory.StartNew(() => parent.OnNext(first), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            var drainer = DedicatedThread.Run(() => parent.OnNext(first));
             await parked.Task;
             parent.OnNext(second);
             child.OnNext(queuedChildValue);
@@ -186,7 +186,7 @@ public partial class SharedDeliveryQueueFixture
 
             // The child's first two notifications are delivered inline, leaving their places in the receipt order
             // behind. The child's next notification has to wait for its own place, after the parent's third.
-            var drainer = Task.Factory.StartNew(() => parent.OnNext(first), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            var drainer = DedicatedThread.Run(() => parent.OnNext(first));
             await parked.Task;
             parent.OnNext(second);
             child.OnNext(queuedChildValue);
@@ -207,6 +207,159 @@ public partial class SharedDeliveryQueueFixture
                     $"parent:{second}:start", $"parent:{second}:end", $"parent:{third}:start", $"parent:{third}:end", $"child:{laterChildValue}",
                 },
                 "notifications delivered inline must not hand their places in the receipt order to later ones");
+        }
+
+        [Fact(Timeout = 10_000)]
+        public async Task ReceiptOrderIsPreservedAcrossSubQueues()
+        {
+            var queue = new SharedDeliveryQueue(_gate);
+            var delivered = new List<string>();
+            var blockFirst = new ManualResetEventSlim(false);
+            var firstIsDelivering = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            var sub1 = queue.CreateQueue(new TestObserver<int>(i =>
+            {
+                lock (delivered) { delivered.Add($"int:{i}"); }
+
+                if (i == 1)
+                {
+                    firstIsDelivering.SetResult();
+                    blockFirst.Wait();
+                }
+            }));
+
+            var sub2 = queue.CreateQueue(new TestObserver<string>(s =>
+            {
+                lock (delivered) { delivered.Add($"str:{s}"); }
+            }));
+
+            // Park a drain part-way through, so the notifications below get queued rather than
+            // delivered inline.
+            var drainer = DedicatedThread.Run(() =>
+            {
+                using var scope = sub1.AcquireLock();
+                scope.EnqueueNext(1);
+            });
+
+            await firstIsDelivering.Task;
+
+            using (var scope = sub1.AcquireLock())
+            {
+                scope.EnqueueNext(2);
+            }
+
+            using (var scope = sub2.AcquireLock())
+            {
+                scope.EnqueueNext("hello");
+            }
+
+            blockFirst.Set();
+            await drainer;
+
+            delivered.Should().Equal(new[] { "int:1", "int:2", "str:hello" }, "delivery should follow the order the notifications were received, not the order the sub-queues were created");
+        }
+
+        [Fact(Timeout = 10_000)]
+        public async Task InterleavedSubQueuesDeliverInReceiptOrder()
+        {
+            var queue = new SharedDeliveryQueue(_gate);
+            var delivered = new List<string>();
+            var block = new ManualResetEventSlim(false);
+            var parked = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            var sub1 = queue.CreateQueue(new TestObserver<int>(i =>
+            {
+                lock (delivered) { delivered.Add($"int:{i}"); }
+
+                if (i == 0)
+                {
+                    parked.SetResult();
+                    block.Wait();
+                }
+            }));
+
+            var sub2 = queue.CreateQueue(new TestObserver<string>(s =>
+            {
+                lock (delivered) { delivered.Add($"str:{s}"); }
+            }));
+
+            var drainer = DedicatedThread.Run(() =>
+            {
+                using var scope = sub1.AcquireLock();
+                scope.EnqueueNext(0);
+            });
+
+            await parked.Task;
+
+            using (var scope = sub2.AcquireLock())
+            {
+                scope.EnqueueNext("a");
+            }
+
+            using (var scope = sub1.AcquireLock())
+            {
+                scope.EnqueueNext(2);
+            }
+
+            using (var scope = sub2.AcquireLock())
+            {
+                scope.EnqueueNext("b");
+            }
+
+            using (var scope = sub1.AcquireLock())
+            {
+                scope.EnqueueNext(4);
+            }
+
+            block.Set();
+            await drainer;
+
+            delivered.Should().Equal("int:0", "str:a", "int:2", "str:b", "int:4");
+        }
+
+        [Fact(Timeout = 10_000)]
+        public async Task DisposedSubQueueDoesNotDeliverQueuedItems()
+        {
+            var queue = new SharedDeliveryQueue(_gate);
+            var delivered = new List<string>();
+            var block = new ManualResetEventSlim(false);
+            var parked = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            var sub1 = queue.CreateQueue(new TestObserver<int>(i =>
+            {
+                lock (delivered) { delivered.Add($"int:{i}"); }
+
+                if (i == 0)
+                {
+                    parked.SetResult();
+                    block.Wait();
+                }
+            }));
+
+            var sub2 = queue.CreateQueue(new TestObserver<string>(s =>
+            {
+                lock (delivered) { delivered.Add($"str:{s}"); }
+            }));
+
+            var drainer = DedicatedThread.Run(() =>
+            {
+                using var scope = sub1.AcquireLock();
+                scope.EnqueueNext(0);
+            });
+
+            await parked.Task;
+
+            using (var scope = sub2.AcquireLock())
+            {
+                scope.EnqueueNext("dropped");
+            }
+
+            sub2.Dispose();
+
+            block.Set();
+            await drainer;
+
+            delivered.Should().Equal(new[] { "int:0" }, "a disposed sub-queue should not deliver what it had queued");
         }
     }
 }

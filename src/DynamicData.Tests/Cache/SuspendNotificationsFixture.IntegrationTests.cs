@@ -5,8 +5,8 @@ public static partial class SuspendNotificationsFixture
     public sealed class IntegrationTests
         : IntegrationTestFixtureBase
     {
-        [Fact]
-        public void ResumeDeliversPendingChangesWithoutHoldingTheLock()
+        [Fact(Timeout = 10_000)]
+        public async Task ResumeDeliversPendingChangesWithoutHoldingTheLock()
         {
             // On resume, the changes accumulated while suspended must be delivered to
             // subscribers WITHOUT the cache lock held. A subscriber that blocks mid-delivery
@@ -17,9 +17,9 @@ public static partial class SuspendNotificationsFixture
             // Dedicated threads are used (rather than the thread pool) so the test is immune
             // to pool starvation when run alongside other test collections.
             using var cache = new SourceCache<int, int>(static x => x);
-            using var deliveryStarted = new ManualResetEventSlim(false);
+            var deliveryStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             using var releaseDelivery = new ManualResetEventSlim(false);
-            using var concurrentOpDone = new ManualResetEventSlim(false);
+            var concurrentOpDone = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
             // An active subscriber (connected before suspension) that blocks on its first delivery.
             var blockOnce = true;
@@ -28,8 +28,8 @@ public static partial class SuspendNotificationsFixture
                 if (blockOnce)
                 {
                     blockOnce = false;
-                    deliveryStarted.Set();
-                    releaseDelivery.Wait(TimeSpan.FromSeconds(30));
+                    deliveryStarted.SetResult();
+                    releaseDelivery.Wait();
                 }
             });
 
@@ -38,33 +38,29 @@ public static partial class SuspendNotificationsFixture
 
             // Resume on a background thread: the accumulated changes are delivered to the
             // slow subscriber, which blocks partway through.
-            var resumeThread = new Thread(suspend.Dispose) { IsBackground = true };
-            resumeThread.Start();
-            deliveryStarted.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue("delivery of pending changes should have started");
+            var resumeThread = DedicatedThread.Run(suspend.Dispose);
+            await deliveryStarted.Task;
 
-            // While delivery is blocked, a concurrent lock-requiring operation must complete
-            // promptly. It cannot if the delivery is happening under the cache lock. The
-            // distinguishing gap is large (milliseconds if the lock is free, ~30s if held),
-            // so a generous threshold stays reliable under cold-start JIT and heavy load.
-            var concurrentThread = new Thread(() =>
+            // While delivery is blocked, a concurrent lock-requiring operation must complete.
+            // It cannot if the delivery is happening under the cache lock: the delivery is only
+            // released once the operation has completed, so a held lock leaves the test hanging
+            // until its timeout fails it.
+            var concurrentThread = DedicatedThread.Run(() =>
             {
                 cache.SuspendNotifications().Dispose();
-                concurrentOpDone.Set();
-            }) { IsBackground = true };
-            concurrentThread.Start();
+                concurrentOpDone.SetResult();
+            });
 
-            var completedWhileBlocked = concurrentOpDone.Wait(TimeSpan.FromSeconds(10));
+            await concurrentOpDone.Task;
 
             releaseDelivery.Set();
-            resumeThread.Join(TimeSpan.FromSeconds(30)).Should().BeTrue("resume should complete");
-            concurrentThread.Join(TimeSpan.FromSeconds(30)).Should().BeTrue("concurrent operation should complete");
+            await Task.WhenAll(resumeThread, concurrentThread);
 
-            completedWhileBlocked.Should().BeTrue("a concurrent operation must not block while pending changes are delivered; the lock must not be held during delivery");
             cache.Count.Should().Be(10, "all items should be present after resume");
         }
 
-        [Fact]
-        public void StaleResumeSignalIsSuppressedByConcurrentReSuspend()
+        [Fact(Timeout = 10_000)]
+        public async Task StaleResumeSignalIsSuppressedByConcurrentReSuspend()
         {
             // Deterministic reproduction of the suspend/resume state-divergence race (#1131).
             // Resume decrements the suspend count in one step and emits its resume signal in a
@@ -79,7 +75,7 @@ public static partial class SuspendNotificationsFixture
             using var cache = new SourceCache<int, int>(static x => x);
             var dataSet = Enumerable.Range(0, 50).ToList();
 
-            using var deliveryStarted = new ManualResetEventSlim(false);
+            var deliveryStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             using var releaseDelivery = new ManualResetEventSlim(false);
 
             var blockOnce = true;
@@ -88,8 +84,8 @@ public static partial class SuspendNotificationsFixture
                 if (blockOnce)
                 {
                     blockOnce = false;
-                    deliveryStarted.Set();
-                    releaseDelivery.Wait(TimeSpan.FromSeconds(30));
+                    deliveryStarted.SetResult();
+                    releaseDelivery.Wait();
                 }
             });
 
@@ -98,9 +94,8 @@ public static partial class SuspendNotificationsFixture
 
             // Resume on a background thread: it decrements the count to zero and, while delivering
             // the accumulated changes to the blocking subscriber, parks BEFORE the resume signal.
-            var resumeThread = new Thread(suspend1.Dispose) { IsBackground = true };
-            resumeThread.Start();
-            deliveryStarted.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue("delivery should have started");
+            var resumeThread = DedicatedThread.Run(suspend1.Dispose);
+            await deliveryStarted.Task;
 
             // The resume thread is parked after decrementing the count but before signalling
             // resume. Re-suspend and connect a new subscriber while the count is transiently zero.
@@ -109,7 +104,7 @@ public static partial class SuspendNotificationsFixture
 
             // Let the resume thread proceed to its now-stale resume signal.
             releaseDelivery.Set();
-            resumeThread.Join(TimeSpan.FromSeconds(30)).Should().BeTrue("resume should complete");
+            await resumeThread;
 
             // The late subscriber connected while re-suspended: it must NOT have activated,
             // because notifications ARE suspended (suspend2 is active). The stale resume signal
@@ -123,7 +118,7 @@ public static partial class SuspendNotificationsFixture
             lateResults.Messages.Count.Should().Be(1, "a single changeset on the real resume");
         }
 
-            [Fact]
+            [Fact(Timeout = 30_000)]
             public async Task ResumeSignalUnderLockPreventsStaleSnapshotFromReSuspend()
             {
                 // Verifies that a deferred Connect subscriber never sees data written during
@@ -162,8 +157,8 @@ public static partial class SuspendNotificationsFixture
                 results.Messages.Count.Should().Be(0, "no messages during suspension");
 
                 // Resume on background thread — delivery blocks on slow subscriber
-                var resumeTask = Task.Run(() => suspend1.Dispose());
-                (await delivering.WaitAsync(TimeSpan.FromSeconds(5))).Should().BeTrue("delivery should have started");
+                var resumeTask = DedicatedThread.Run(() => suspend1.Dispose());
+                await delivering.WaitAsync();
 
                 // Re-suspend and write second batch while delivery is blocked
                 var suspend2 = cache.SuspendNotifications();
@@ -206,7 +201,7 @@ public static partial class SuspendNotificationsFixture
                 results.IsCompleted.Should().BeFalse();
             }
 
-        [Fact]
+        [Fact(Timeout = 10_000)]
         public async Task SuspensionsAreThreadSafe()
         {
             // Arrange
@@ -228,7 +223,7 @@ public static partial class SuspendNotificationsFixture
             results.Messages[0].Adds.Should().Be(100, "Should have 100 adds");
         }
 
-        [Fact]
+        [Fact(Timeout = 10_000)]
         public async Task ConcurrentSuspendDuringResumeDoesNotCorrupt()
         {
             // Stress test: races resume against re-suspend on two threads.
@@ -248,23 +243,23 @@ public static partial class SuspendNotificationsFixture
                 using var results = cache.Connect().AsAggregator();
 
                 using var barrier = new Barrier(2);
-                var resumeTask = Task.Run(() =>
+                var resumeTask = DedicatedThread.Run(() =>
                 {
                     barrier.SignalAndWait();
                     suspend1.Dispose();
                 });
 
-                var reSuspendTask = Task.Run(() =>
+                IDisposable? suspend2 = null;
+                var reSuspendTask = DedicatedThread.Run(() =>
                 {
                     barrier.SignalAndWait();
-                    return cache.SuspendNotifications();
+                    suspend2 = cache.SuspendNotifications();
                 });
 
                 await Task.WhenAll(resumeTask, reSuspendTask);
-                var suspend2 = await reSuspendTask;
 
                 cache.AddOrUpdate(dataSet2);
-                suspend2.Dispose();
+                suspend2!.Dispose();
 
                 results.Summary.Overall.Adds.Should().Be(allData.Count, $"iteration {iter}: exactly {allData.Count} adds");
                 results.Summary.Overall.Removes.Should().Be(0, $"iteration {iter}: no removes");

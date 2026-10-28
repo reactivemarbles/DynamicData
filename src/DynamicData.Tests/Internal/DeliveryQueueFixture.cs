@@ -1,6 +1,6 @@
 namespace DynamicData.Tests.Internal;
 
-public class DeliveryQueueFixture
+public partial class DeliveryQueueFixture
 {
 #if NET9_0_OR_GREATER
     private readonly Lock _gate = new();
@@ -90,70 +90,6 @@ public class DeliveryQueueFixture
         TriggerDelivery(queue);
 
         observer.Items.Should().BeEmpty();
-    }
-
-    [Fact]
-    public async Task OnlyOneDelivererAtATime()
-    {
-        var concurrentCount = 0;
-        var maxConcurrent = 0;
-        var deliveryCount = 0;
-        var delivered = new ConcurrentBag<int>();
-        using var firstDeliveryStarted = new ManualResetEventSlim(false);
-        using var allowFirstDeliveryToContinue = new ManualResetEventSlim(false);
-        using var startContenders = new ManualResetEventSlim(false);
-
-        var observer = new BlockingObserver<int>(
-            onNextAction: item =>
-            {
-                var current = Interlocked.Increment(ref concurrentCount);
-                int snapshot;
-                do
-                {
-                    snapshot = maxConcurrent;
-                    if (current <= snapshot) break;
-                }
-                while (Interlocked.CompareExchange(ref maxConcurrent, current, snapshot) != snapshot);
-
-                delivered.Add(item);
-
-                if (Interlocked.Increment(ref deliveryCount) == 1)
-                {
-                    firstDeliveryStarted.Set();
-                    allowFirstDeliveryToContinue.Wait();
-                }
-
-                Thread.SpinWait(1000);
-                Interlocked.Decrement(ref concurrentCount);
-            });
-
-        var queue = new DeliveryQueue<int>(_gate, observer);
-
-        var firstDelivery = Task.Run(() => EnqueueAndDeliver(queue, -1));
-        firstDeliveryStarted.Wait();
-
-        var enqueueTasks = Enumerable.Range(0, 100)
-            .Select(i => Task.Run(() =>
-            {
-                startContenders.Wait();
-                EnqueueAndDeliver(queue, i);
-            }));
-
-        var triggerTasks = Enumerable.Range(0, 4)
-            .Select(_ => Task.Run(() =>
-            {
-                startContenders.Wait();
-                TriggerDelivery(queue);
-            }));
-
-        var tasks = enqueueTasks.Concat(triggerTasks).ToArray();
-        startContenders.Set();
-        allowFirstDeliveryToContinue.Set();
-
-        await Task.WhenAll(tasks.Append(firstDelivery));
-
-        maxConcurrent.Should().Be(1, "only one thread should be delivering at a time");
-        delivered.Should().HaveCount(101);
     }
 
     [Fact]
@@ -450,63 +386,6 @@ public class DeliveryQueueFixture
         // Only "A" should be delivered — "B" and "C" were cleared by Dispose
         observer.Items.Should().Equal("A");
         queue.IsTerminated.Should().BeTrue();
-    }
-
-    [Fact]
-    public void DisposeFromDrainThreadDoesNotDeadlock()
-    {
-        var observer = new ListObserver<string>();
-        DeliveryQueue<string>? q = null;
-
-        var terminatingObserver = new DelegateObserver<string>(_ =>
-        {
-            // Called from drain thread — Dispose must detect
-            // re-entrancy via _drainThreadId and skip the spin-wait
-            q!.Dispose();
-        });
-
-        var queue = new DeliveryQueue<string>(_gate, terminatingObserver);
-        q = queue;
-
-        // This should NOT deadlock
-        var completed = Task.Run(() => EnqueueAndDeliver(queue, "A"));
-        var finished = Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(5))).Result;
-        finished.Should().BeSameAs(completed, "Dispose from drain thread should not deadlock");
-    }
-
-    [Fact]
-    public async Task DisposeWaitsForInFlightDelivery()
-    {
-        var observer = new ListObserver<int>();
-        using var deliveryStarted = new ManualResetEventSlim(false);
-        using var allowDeliveryToFinish = new ManualResetEventSlim(false);
-
-        var slowObserver = new DelegateObserver<int>(item =>
-        {
-            observer.OnNext(item);
-            deliveryStarted.Set();
-            allowDeliveryToFinish.Wait();
-        });
-
-        var queue = new DeliveryQueue<int>(_gate, slowObserver);
-
-        // Start delivering — will block in observer
-        var deliverTask = Task.Run(() => EnqueueAndDeliver(queue, 42));
-        deliveryStarted.Wait();
-
-        // Drain thread is blocked in observer callback. Dispose should spin.
-        var terminateTask = Task.Run(() => queue.Dispose());
-
-        // Give terminate a moment to enter spin-wait
-        await Task.Delay(100);
-        terminateTask.IsCompleted.Should().BeFalse("should be spinning waiting for delivery");
-
-        // Release the delivery
-        allowDeliveryToFinish.Set();
-
-        await Task.WhenAll(deliverTask, terminateTask);
-        queue.IsTerminated.Should().BeTrue();
-        observer.Items.Should().Equal(42);
     }
 
     [Fact]

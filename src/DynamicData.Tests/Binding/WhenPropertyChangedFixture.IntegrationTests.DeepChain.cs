@@ -4,7 +4,7 @@ public static partial class WhenPropertyChangedFixture
 {
     public partial class IntegrationTests
     {
-        [Fact]
+        [Fact(Timeout = 10_000)]
         public async Task DeepChain_ConcurrentLeafMutationDuringInitialEmit_NotDropped()
         {
             // Deep-chain version of the above. The observer blocks inside its OnNext for the initial
@@ -25,21 +25,21 @@ public static partial class WhenPropertyChangedFixture
             var source = parent.WhenPropertyChanged(static p => p.Child!.Age, notifyOnInitialValue: true);
 
             await Task.WhenAll(
-                Task.Run(() =>
+                DedicatedThread.Run(() =>
                 {
                     using var subscription = source.Subscribe(observer);
                 }),
-                Task.Run(() =>
+                DedicatedThread.Run(() =>
                 {
                     whenSubscribing.Wait();
                     parent.Child!.Age = 20;
                     whenValueChanged.Set();
-                })).WaitAsync(ConditionTimeout);
+                }));
 
             emissions.Should().Equal(new[] { 10, 20 });
         }
 
-        [Fact]
+        [Fact(Timeout = 10_000)]
         public async Task DeepChain_ConcurrentParentSwap_LeafEventOnWinnerNotDropped()
         {
             // Two threads concurrently swap parent.Child. After both swaps complete, a leaf mutation
@@ -61,9 +61,9 @@ public static partial class WhenPropertyChangedFixture
                 var newChild2 = new ChildModel { Age = 2 };
 
                 using var barrier = new Barrier(2);
-                var taskA = Task.Run(() => { barrier.SignalAndWait(); parent.Child = newChild1; });
-                var taskB = Task.Run(() => { barrier.SignalAndWait(); parent.Child = newChild2; });
-                await Task.WhenAll(taskA, taskB).WaitAsync(ConditionTimeout);
+                var taskA = DedicatedThread.Run(() => { barrier.SignalAndWait(); parent.Child = newChild1; });
+                var taskB = DedicatedThread.Run(() => { barrier.SignalAndWait(); parent.Child = newChild2; });
+                await Task.WhenAll(taskA, taskB);
 
                 var winner = parent.Child;
                 if (winner is null)
@@ -87,7 +87,7 @@ public static partial class WhenPropertyChangedFixture
             losses.Should().Be(0, $"out of {iterations} iterations, {losses} dropped the leaf event on the post-swap winner");
         }
 
-        [Fact]
+        [Fact(Timeout = 10_000)]
         public async Task DeepChain_FiveLevels_AllLevelsMutatedConcurrently_FinalEmissionMatchesActual()
         {
             // Torture: five worker threads each mutating at a different level of a 5-level chain.
@@ -119,7 +119,7 @@ public static partial class WhenPropertyChangedFixture
                 var iterSeed = iter * 10_000;
                 var tasks = new[]
                 {
-                    Task.Run(() =>
+                    DedicatedThread.Run(() =>
                     {
                         barrier.SignalAndWait();
                         for (var i = 0; i < mutationsPerThread; i++)
@@ -127,7 +127,7 @@ public static partial class WhenPropertyChangedFixture
                             root.Child = NewDeep2(iterSeed + 40_000 + i);
                         }
                     }),
-                    Task.Run(() =>
+                    DedicatedThread.Run(() =>
                     {
                         barrier.SignalAndWait();
                         for (var i = 0; i < mutationsPerThread; i++)
@@ -136,7 +136,7 @@ public static partial class WhenPropertyChangedFixture
                             if (l2 is not null) l2.Child = NewDeep3(iterSeed + 30_000 + i);
                         }
                     }),
-                    Task.Run(() =>
+                    DedicatedThread.Run(() =>
                     {
                         barrier.SignalAndWait();
                         for (var i = 0; i < mutationsPerThread; i++)
@@ -145,7 +145,7 @@ public static partial class WhenPropertyChangedFixture
                             if (l3 is not null) l3.Child = NewDeep4(iterSeed + 20_000 + i);
                         }
                     }),
-                    Task.Run(() =>
+                    DedicatedThread.Run(() =>
                     {
                         barrier.SignalAndWait();
                         for (var i = 0; i < mutationsPerThread; i++)
@@ -154,7 +154,7 @@ public static partial class WhenPropertyChangedFixture
                             if (l4 is not null) l4.Child = new Deep5 { Leaf = iterSeed + 10_000 + i };
                         }
                     }),
-                    Task.Run(() =>
+                    DedicatedThread.Run(() =>
                     {
                         barrier.SignalAndWait();
                         for (var i = 0; i < mutationsPerThread; i++)
@@ -165,7 +165,7 @@ public static partial class WhenPropertyChangedFixture
                     }),
                 };
 
-                await Task.WhenAll(tasks).WaitAsync(ConditionTimeout);
+                await Task.WhenAll(tasks);
 
                 var actualFinal = root.Child!.Child!.Child!.Child!.Leaf;
 
