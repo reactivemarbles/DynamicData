@@ -19,7 +19,7 @@
     <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
   </PropertyGroup>
   <ItemGroup Condition="$(IsTestProject) OR $(IsBenchmarkProject)">
-    <PackageVersion Include="AwesomeAssertions" Version="8.*" />
+    <PackageVersion Include="AwesomeAssertions" Version="9.*" />
     <PackageVersion Include="BenchmarkDotNet" Version="*" />
     <PackageVersion Include="Bogus" Version="35.*" />
     <PackageVersion Include="coverlet.collector" Version="10.*" />
