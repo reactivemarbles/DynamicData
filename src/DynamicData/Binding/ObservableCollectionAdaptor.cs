@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
-using DynamicData.Cache;
-using DynamicData.Cache.Internal;
-
 namespace DynamicData.Binding;
 
 /// <summary>
@@ -56,7 +52,7 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
     /// <param name="changes">The changes.</param>
     public void Adapt(IChangeSet<T> changes)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        ArgumentNullException.ThrowIfNull(changes);
 
         if (changes.TotalChanges - changes.Refreshes > refreshThreshold || (!_loaded && resetOnFirstTimeLoad))
         {
@@ -110,8 +106,8 @@ public class ObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 2
     /// <param name="collection">The collection.</param>
     public void Adapt(IChangeSet<TObject, TKey> changes, IObservableCollection<TObject> collection)
     {
-        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
-        collection.ThrowArgumentNullExceptionIfNull(nameof(collection));
+        ArgumentNullException.ThrowIfNull(changes);
+        ArgumentNullException.ThrowIfNull(collection);
 
         _cache.Clone(changes);
 

@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Linq;
-
 namespace DynamicData.Kernel;
 
 /// <summary>
@@ -26,8 +24,8 @@ public static class OptionObservableExtensions
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(converter);
 
         return source.Select(optional => optional.HasValue ? converter(optional.Value) : Optional.None<TDestination>());
     }
@@ -47,8 +45,8 @@ public static class OptionObservableExtensions
         where TSource : notnull
         where TDestination : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(converter);
 
         return source.Select(optional => optional.HasValue ? converter(optional.Value) : Optional.None<TDestination>());
     }
@@ -73,9 +71,9 @@ public static class OptionObservableExtensions
     public static IObservable<TDestination?> ConvertOr<TSource, TDestination>(this IObservable<Optional<TSource>> source, Func<TSource, TDestination?> converter, Func<TDestination?> fallbackConverter)
         where TSource : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
-        fallbackConverter.ThrowArgumentNullExceptionIfNull(nameof(fallbackConverter));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(converter);
+        ArgumentNullException.ThrowIfNull(fallbackConverter);
 
         return source.Select(optional => optional.HasValue ? converter(optional.Value) : fallbackConverter());
     }
@@ -96,8 +94,8 @@ public static class OptionObservableExtensions
     public static IObservable<Optional<T>> OrElse<T>(this IObservable<Optional<T>> source, Func<Optional<T>> fallbackOperation)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        fallbackOperation.ThrowArgumentNullExceptionIfNull(nameof(fallbackOperation));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(fallbackOperation);
 
         return source.Select(optional => optional.HasValue ? optional : fallbackOperation());
     }
@@ -114,8 +112,8 @@ public static class OptionObservableExtensions
     public static IObservable<Optional<T>> OnHasValue<T>(this IObservable<Optional<T>> source, Action<T> action, Action? elseAction = null)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(action);
 
         return source.Do(optional => optional.IfHasValue(action).Else(() => elseAction?.Invoke()));
     }
@@ -131,8 +129,8 @@ public static class OptionObservableExtensions
     public static IObservable<Optional<T>> OnHasNoValue<T>(this IObservable<Optional<T>> source, Action action, Action<T>? elseAction = null)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        action.ThrowArgumentNullExceptionIfNull(nameof(action));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(action);
 
         return source.Do(optional => optional.IfHasValue(val => elseAction?.Invoke(val)).Else(action));
     }
@@ -161,7 +159,7 @@ public static class OptionObservableExtensions
     public static IObservable<T> ValueOr<T>(this IObservable<Optional<T>> source, Func<T> valueSelector)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return source.Select(optional => optional.HasValue ? optional.Value : valueSelector());
     }
@@ -176,7 +174,7 @@ public static class OptionObservableExtensions
     public static IObservable<T?> ValueOrDefault<T>(this IObservable<Optional<T>> source)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return source.Select(optional => optional.ValueOrDefault());
     }
@@ -194,9 +192,9 @@ public static class OptionObservableExtensions
     public static IObservable<T> ValueOrThrow<T>(this IObservable<Optional<T>> source, Func<Exception> exceptionGenerator)
         where T : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
-        exceptionGenerator.ThrowArgumentNullExceptionIfNull(nameof(exceptionGenerator));
+        ArgumentNullException.ThrowIfNull(exceptionGenerator);
 
         return Observable.Create<T>(observer =>
             source.Subscribe(

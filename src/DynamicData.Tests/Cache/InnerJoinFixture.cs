@@ -1,17 +1,3 @@
-﻿using System;
-
-using DynamicData.Tests.Utilities;
-
-using FluentAssertions;
-
-using Xunit;
-using System.Collections.Generic;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using DynamicData.Tests.Domain;
-
 namespace DynamicData.Tests.Cache;
 
 public class InnerJoinFixture : IDisposable
@@ -436,7 +422,7 @@ public class InnerJoinFixture : IDisposable
                 return true;
             }
 
-            return string.Equals(Key, other.Key);
+            return Equals(Key, other.Key);
         }
 
         public override bool Equals(object? obj)

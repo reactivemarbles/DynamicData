@@ -51,6 +51,10 @@ jobs:
         "SemVer2=$env:NBGV_SemVer2" >> $env:GITHUB_OUTPUT
         "PrereleaseVersion=$env:NBGV_PrereleaseVersion" >> $env:GITHUB_OUTPUT
 
+    - name: Verify release-note invocation
+      shell: pwsh
+      run: .\.github\scripts\Test-ReleaseNotesInvocation.ps1
+
     - name: NuGet Restore
       run: dotnet restore DynamicData.sln
       working-directory: src

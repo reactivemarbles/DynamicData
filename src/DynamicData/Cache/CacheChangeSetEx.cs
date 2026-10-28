@@ -2,7 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace DynamicData.Cache;
+namespace DynamicData;
 
 internal static class CacheChangeSetEx
 {
@@ -44,8 +44,8 @@ internal static class CacheChangeSetEx
         where TDestination : notnull
         where TKey : notnull
     {
-        source.ThrowArgumentNullExceptionIfNull(nameof(source));
-        transformer.ThrowArgumentNullExceptionIfNull(nameof(transformer));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(transformer);
 
         var changes = source.Select(change =>
             new Change<TDestination, TKey>(change.Reason, change.Key, transformer(change.Current), change.Previous.Convert(transformer), change.CurrentIndex, change.PreviousIndex));

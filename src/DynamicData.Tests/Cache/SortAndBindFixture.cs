@@ -1,16 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Disposables;
-using DynamicData.Binding;
-using DynamicData.Tests.Domain;
-using FluentAssertions;
-using Xunit;
-
 namespace DynamicData.Tests.Cache;
 
 // Bind to a list

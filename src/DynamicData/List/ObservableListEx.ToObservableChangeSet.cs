@@ -2,19 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using DynamicData.Binding;
-using DynamicData.Cache.Internal;
-using DynamicData.List.Internal;
-using DynamicData.List.Linq;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
@@ -46,7 +33,8 @@ public static partial class ObservableListEx
                 this IObservable<T> source,
                 IScheduler? scheduler = null)
             where T : notnull
-        => List.Internal.ToObservableChangeSet<T>.Create(
+        =>
+            List.Internal.ToObservableChangeSet<T>.Create(
             source: source,
             expireAfter: null,
             limitSizeTo: -1,
@@ -65,7 +53,8 @@ public static partial class ObservableListEx
                 Func<T, TimeSpan?> expireAfter,
                 IScheduler? scheduler = null)
             where T : notnull
-        => List.Internal.ToObservableChangeSet<T>.Create(
+        =>
+            List.Internal.ToObservableChangeSet<T>.Create(
             source: source,
             expireAfter: expireAfter,
             limitSizeTo: -1,
@@ -84,7 +73,8 @@ public static partial class ObservableListEx
                 int limitSizeTo,
                 IScheduler? scheduler = null)
             where T : notnull
-        => List.Internal.ToObservableChangeSet<T>.Create(
+        =>
+            List.Internal.ToObservableChangeSet<T>.Create(
             source: source,
             expireAfter: null,
             limitSizeTo: limitSizeTo,
@@ -104,7 +94,8 @@ public static partial class ObservableListEx
                 int limitSizeTo,
                 IScheduler? scheduler = null)
             where T : notnull
-        => List.Internal.ToObservableChangeSet<T>.Create(
+        =>
+            List.Internal.ToObservableChangeSet<T>.Create(
             source: source,
             expireAfter: expireAfter,
             limitSizeTo: limitSizeTo,
@@ -121,7 +112,8 @@ public static partial class ObservableListEx
                 this IObservable<IEnumerable<T>> source,
                 IScheduler? scheduler = null)
             where T : notnull
-        => List.Internal.ToObservableChangeSet<T>.Create(
+        =>
+            List.Internal.ToObservableChangeSet<T>.Create(
             source: source,
             expireAfter: null,
             limitSizeTo: -1,
@@ -139,7 +131,8 @@ public static partial class ObservableListEx
                 int limitSizeTo,
                 IScheduler? scheduler = null)
             where T : notnull
-        => List.Internal.ToObservableChangeSet<T>.Create(
+        =>
+            List.Internal.ToObservableChangeSet<T>.Create(
             source: source,
             expireAfter: null,
             limitSizeTo: limitSizeTo,
@@ -157,7 +150,8 @@ public static partial class ObservableListEx
                 Func<T, TimeSpan?> expireAfter,
                 IScheduler? scheduler = null)
             where T : notnull
-        => List.Internal.ToObservableChangeSet<T>.Create(
+        =>
+            List.Internal.ToObservableChangeSet<T>.Create(
             source: source,
             expireAfter: expireAfter,
             limitSizeTo: -1,
@@ -177,7 +171,8 @@ public static partial class ObservableListEx
                 int limitSizeTo,
                 IScheduler? scheduler = null)
             where T : notnull
-        => List.Internal.ToObservableChangeSet<T>.Create(
+        =>
+            List.Internal.ToObservableChangeSet<T>.Create(
             source: source,
             expireAfter: expireAfter,
             limitSizeTo: limitSizeTo,

@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-
 namespace DynamicData.Cache.Internal;
 
 internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit>? regrouper)
@@ -27,11 +23,11 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
                 var queue = new SharedDeliveryQueue();
                 var grouper = new Grouper(_groupSelectorKey);
 
-                var groups = _source.SynchronizeSafe(queue).Select(grouper.Update).Where(changes => changes.Count != 0);
+                var groups = _source.SynchronizeSafe(queue).Select(grouper.Update);
 
-                var regroup = _regrouper.SynchronizeSafe(queue).Select(_ => grouper.Regroup()).Where(changes => changes.Count != 0);
+                var regroup = _regrouper.SynchronizeSafe(queue).Select(_ => grouper.Regroup());
 
-                return new CompositeDisposable(groups.Merge(regroup).SubscribeSafe(observer), queue);
+                return new CompositeDisposable(groups.UnsynchronizedMerge(regroup).Where(changes => changes.Count != 0).SubscribeSafe(observer), queue);
             });
 
     private sealed class Grouper(Func<TObject, TGroupKey> groupSelectorKey)

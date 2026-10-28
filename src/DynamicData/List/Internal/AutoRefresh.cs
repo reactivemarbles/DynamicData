@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-
 namespace DynamicData.List.Internal;
 
 internal sealed class AutoRefresh<TObject, TAny>(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
@@ -17,7 +13,7 @@ internal sealed class AutoRefresh<TObject, TAny>(IObservable<IChangeSet<TObject>
     public IObservable<IChangeSet<TObject>> Run() => Observable.Create<IChangeSet<TObject>>(
             observer =>
             {
-                var locker = InternalEx.NewLock();
+                var locker = new Lock();
 
                 var allItems = new List<TObject>();
 

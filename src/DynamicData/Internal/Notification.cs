@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using DynamicData.Kernel;
-
 namespace DynamicData.Internal;
 
 /// <summary>
@@ -29,7 +27,7 @@ internal readonly struct Notification<T>
     /// <summary>Creates an OnError notification (terminal).</summary>
     public static Notification<T> CreateError(Exception error)
     {
-        error.ThrowArgumentNullExceptionIfNull(nameof(error));
+        ArgumentNullException.ThrowIfNull(error);
         return new(Optional.None<T>(), error);
     }
 

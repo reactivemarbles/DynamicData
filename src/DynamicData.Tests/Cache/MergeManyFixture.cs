@@ -1,15 +1,3 @@
-﻿using System;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-
-using FluentAssertions;
-
-using Xunit;
-using System.Collections.Generic;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using DynamicData.Tests.Domain;
-
 namespace DynamicData.Tests.Cache;
 
 public class MergeManyFixture : IDisposable
