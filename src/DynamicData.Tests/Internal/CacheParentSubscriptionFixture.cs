@@ -8,7 +8,7 @@ namespace DynamicData.Tests.Internal;
 /// Tests for <see cref="CacheParentSubscription{TParent,TKey,TChild,TObserver}"/>
 /// behavioral contracts using a minimal concrete subclass.
 /// </summary>
-public sealed class CacheParentSubscriptionFixture
+public sealed partial class CacheParentSubscriptionFixture
 {
     private const int SeedMin = 1;
     private const int SeedMax = 10000;
@@ -212,75 +212,9 @@ public sealed class CacheParentSubscriptionFixture
         }
     }
 
-    /// <summary>
-    /// Proves CPS delivery runs without holding the lock. Two TestSubscription instances
-    /// whose EmitChanges callbacks write into each other's source cache — creating a
-    /// cross-cache cycle. Deadlocks on unfixed code, passes after the fix.
-    /// </summary>
-    [Trait("Category", "ExplicitDeadlock")]
-    [Fact]
-    public async Task DeadlockProof_CrossFeedingSubscriptions()
-    {
-        var iterations = _rand.Number(50, 150);
-
-        using var sourceA = new SourceCache<TestItem, int>(x => x.Key);
-        using var sourceB = new SourceCache<TestItem, int>(x => x.Key);
-
-        // Each TestSubscription's EmitChanges writes into the OTHER source (limited to prevent infinite loops)
-        var observerA = new CrossFeedObserver(sourceB, 100_001, iterations);
-        using var subA = new TestSubscription(observerA);
-        subA.ExposeCreateParent(sourceA.Connect());
-
-        var observerB = new CrossFeedObserver(sourceA, 200_001, iterations);
-        using var subB = new TestSubscription(observerB);
-        subB.ExposeCreateParent(sourceB.Connect());
-
-        using var barrier = new Barrier(2);
-
-        var taskA = Task.Run(() =>
-        {
-            var tRand = new Randomizer(56);
-            barrier.SignalAndWait();
-            for (var i = 0; i < iterations; i++)
-                sourceA.AddOrUpdate(new TestItem(tRand.Number(1, 50_000), tRand.String2(5)));
-        });
-
-        var taskB = Task.Run(() =>
-        {
-            var tRand = new Randomizer(57);
-            barrier.SignalAndWait();
-            for (var i = 0; i < iterations; i++)
-                sourceB.AddOrUpdate(new TestItem(tRand.Number(50_001, 100_000), tRand.String2(5)));
-        });
-
-        var completed = Task.WhenAll(taskA, taskB);
-        var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(30)));
-        finished.Should().BeSameAs(completed,
-            "cross-feeding CacheParentSubscriptions should not deadlock");
-    }
-
     // ═══════════════════════════════════════════════════════════════
     // Test Infrastructure
     // ═══════════════════════════════════════════════════════════════
-
-    /// <summary>Observer that writes into another cache on every emission — creates cross-cache cycle.</summary>
-    private sealed class CrossFeedObserver(SourceCache<TestItem, int> target, int idBase, int maxCrossWrites) : IObserver<IChangeSet<TestItem, int>>
-    {
-        private int _counter;
-
-        public void OnNext(IChangeSet<TestItem, int> value)
-        {
-            // Limit cross-writes to prevent infinite feedback loops
-            if (Interlocked.Increment(ref _counter) <= maxCrossWrites)
-            {
-                target.AddOrUpdate(new TestItem(idBase + _counter, "cross"));
-            }
-        }
-
-        public void OnError(Exception error) { }
-
-        public void OnCompleted() { }
-    }
 
     /// <summary>
     /// Minimal concrete CacheParentSubscription for testing.
