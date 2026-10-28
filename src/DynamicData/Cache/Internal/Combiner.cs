@@ -6,6 +6,8 @@ namespace DynamicData.Cache.Internal;
 
 /// <summary>
 ///     Combines multiple caches using logical operators.
+///     Every source is routed through one <see cref="SharedDeliveryQueue"/>, so updates from different sources are
+///     applied and delivered one at a time, and no lock is held while <paramref name="updatedCallback"/> runs.
 /// </summary>
 internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChangeSet<TObject, TKey>> updatedCallback)
     where TObject : notnull
@@ -13,24 +15,18 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
 {
     private readonly ChangeAwareCache<TObject, TKey> _combinedCache = new();
 
-    private readonly Lock _locker = new();
-
     private readonly IList<Cache<TObject, TKey>> _sourceCaches = [];
 
     public IDisposable Subscribe(IObservable<IChangeSet<TObject, TKey>>[] source)
     {
-        // subscribe
-        var disposable = new CompositeDisposable();
-        lock (_locker)
-        {
-            var caches = Enumerable.Range(0, source.Length).Select(_ => new Cache<TObject, TKey>());
-            _sourceCaches.AddRange(caches);
+        var queue = new SharedDeliveryQueue();
+        var disposable = new CompositeDisposable(queue);
 
-            foreach (var pair in source.Zip(_sourceCaches, (item, cache) => new { Item = item, Cache = cache }))
-            {
-                var subscription = pair.Item.Subscribe(updates => Update(pair.Cache, updates));
-                disposable.Add(subscription);
-            }
+        _sourceCaches.AddRange(Enumerable.Range(0, source.Length).Select(_ => new Cache<TObject, TKey>()));
+
+        foreach (var pair in source.Zip(_sourceCaches, (item, cache) => new { Item = item, Cache = cache }))
+        {
+            disposable.Add(pair.Item.SynchronizeSafe(queue).Subscribe(updates => Update(pair.Cache, updates)));
         }
 
         return disposable;
@@ -69,16 +65,11 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
 
     private void Update(Cache<TObject, TKey> cache, IChangeSet<TObject, TKey> updates)
     {
-        ChangeSet<TObject, TKey> notifications;
+        // update cache for the individual source
+        cache.Clone(updates);
 
-        lock (_locker)
-        {
-            // update cache for the individual source
-            cache.Clone(updates);
-
-            // update combined
-            notifications = UpdateCombined(updates);
-        }
+        // update combined
+        var notifications = UpdateCombined(updates);
 
         if (notifications.Count != 0)
         {
