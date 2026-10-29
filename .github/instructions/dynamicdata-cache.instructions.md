@@ -599,6 +599,8 @@ Each item produces its own `IObservable<IChangeSet>`. All are merged into a sing
 | **Remove** | Disposes child subscription. Emits Remove for all child items. |
 | **Refresh** | No effect on child subscriptions. |
 
+When the children are list changesets (`IObservable<IChangeSet<TDest>>`), child changes are merged by value: child indexes are ignored, a child **Refresh** becomes a **Refresh** of the first equal merged item, and a child **Moved** is dropped.
+
 ### MergeManyItems
 
 Like MergeMany but wraps each value with its parent item.
@@ -813,6 +815,19 @@ Converts `IChangeSet<T,K>` into `IObservable<Change<T,K>>` — one emission per 
 ### RemoveKey
 
 Converts `IChangeSet<T,K>` to `IChangeSet<T>` — drops the key to produce a list changeset.
+
+Stateless: each changeset is projected on its own. Indexes supplied by a sorted source are passed through; changes from an unsorted source carry an unspecified index (`-1`), which list operators resolve by equality (first match). See "Unspecified Indexes" in `dynamicdata-list.instructions.md`.
+
+| Input | Output |
+|-------|--------|
+| **Add** | **Add** at the source index, or `-1`. |
+| **Update** | **Remove** of the previous item, then **Add** of the current item, each at the source index or `-1`. |
+| **Remove** | **Remove** at the source index, or `-1`. |
+| **Refresh** | **Replace** of the item with itself, both indexes `-1` (a list Refresh requires an index). |
+| **Moved** | **Moved** with the source indexes. |
+| **OnError / OnCompleted** | Forwarded. |
+
+Once the key is gone, items are identified only by equality, so keep `Equals` consistent with the key and filter, transform or refresh in the cache before `RemoveKey()` where possible.
 
 ### EnsureUniqueKeys
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2025 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -127,10 +127,10 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
                         return result.CaptureChanges();
                     });
 
-                var subsequentSelection = subsequent.RemoveIndex().Select(
+                var subsequentSelection = subsequent.Select(
                     changes =>
                     {
-                        result.Clone(changes, _equalityComparer);
+                        ApplyChildChanges(result, changes, _equalityComparer);
                         return result.CaptureChanges();
                     });
 
@@ -138,6 +138,33 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
 
                 return new CompositeDisposable(allChanges.SubscribeSafe(observer), transformed.Connect());
             });
+    }
+
+    // A child's positions have no bearing on the merged result, so child changes are applied without their indexes, a
+    // refresh locates its item by equality, and a move is ignored.
+    private static void ApplyChildChanges(ChangeAwareList<TDestination> result, IChangeSet<TDestination> changes, IEqualityComparer<TDestination> equalityComparer)
+    {
+        foreach (var change in changes)
+        {
+            switch (change.Reason)
+            {
+                case ListChangeReason.Moved:
+                    break;
+
+                case ListChangeReason.Refresh:
+                    {
+                        var index = result.IndexOf(change.Item.Current, static item => item, equalityComparer);
+                        if (index >= 0)
+                            result.RefreshAt(index);
+                    }
+
+                    break;
+
+                default:
+                    result.Clone(WithoutIndexEnumerator<TDestination>.WithoutIndex(change), equalityComparer);
+                    break;
+            }
+        }
     }
 
     // make this an instance

@@ -131,7 +131,7 @@ internal static partial class Filter
 
             protected abstract void PerformAdd(ItemChange<T> change);
 
-            protected abstract void PerformAddRange(RangeChange<T> change);
+            protected abstract void PerformAddRange(RangeChange<T> change, int index);
 
             protected abstract void PerformClear();
 
@@ -319,11 +319,11 @@ internal static partial class Filter
                         switch (change.Reason)
                         {
                             case ListChangeReason.Add:
-                                PerformAdd(change.Item);
+                                PerformAdd(change.Item.ResolveIndexes(_itemStates, SelectItem));
                                 break;
 
                             case ListChangeReason.AddRange:
-                                PerformAddRange(change.Range);
+                                PerformAddRange(change.Range, (change.Range.Index < 0) ? _itemStates.Count : change.Range.Index);
                                 break;
 
                             case ListChangeReason.Clear:
@@ -341,7 +341,20 @@ internal static partial class Filter
                                 break;
 
                             case ListChangeReason.Remove:
-                                PerformRemove(change.Item);
+                                {
+                                    var item = change.Item.ResolveIndexes(_itemStates, SelectItem);
+                                    if (item.CurrentIndex >= 0)
+                                        PerformRemove(item);
+                                }
+                                break;
+
+                            case ListChangeReason.RemoveRange when change.Range.Index < 0:
+                                foreach (var item in change.Range)
+                                {
+                                    var index = _itemStates.IndexOf(item, SelectItem);
+                                    if (index >= 0)
+                                        PerformRemove(new(ListChangeReason.Remove, item, index));
+                                }
                                 break;
 
                             case ListChangeReason.RemoveRange:
@@ -349,7 +362,7 @@ internal static partial class Filter
                                 break;
 
                             case ListChangeReason.Replace:
-                                PerformReplace(change.Item);
+                                PerformReplace(change.Item.ResolveIndexes(_itemStates, SelectItem));
                                 break;
                         }
                     }
@@ -379,6 +392,8 @@ internal static partial class Filter
                         _downstreamSynchronizationGate.Exit();
                 }
             }
+
+            private static T SelectItem(ItemState itemState) => itemState.Item;
 
             protected readonly struct ItemState
             {
@@ -446,10 +461,10 @@ internal static partial class Filter
                 }
             }
 
-            protected override void PerformAddRange(RangeChange<T> change)
+            protected override void PerformAddRange(RangeChange<T> change, int index)
             {
                 var nextFilteredIndex = 0;
-                for (var i = change.Index - 1; i >= 0; --i)
+                for (var i = index - 1; i >= 0; --i)
                 {
                     if (ItemStates[i].FilteredIndex is int priorFilteredIndex)
                     {
@@ -479,10 +494,10 @@ internal static partial class Filter
 
                 if (ItemStatesBuffer.Count is not 0)
                 {
-                    ItemStates.InsertRange(change.Index, ItemStatesBuffer);
+                    ItemStates.InsertRange(index, ItemStatesBuffer);
                     ItemStatesBuffer.Clear();
 
-                    for (var i = change.Index + change.Count; i < ItemStates.Count; ++i)
+                    for (var i = index + change.Count; i < ItemStates.Count; ++i)
                     {
                         var otherItemState = ItemStates[i];
                         if (otherItemState.FilteredIndex is int otherFilteredIndex)
@@ -944,7 +959,7 @@ internal static partial class Filter
                     });
             }
 
-            protected override void PerformAddRange(RangeChange<T> change)
+            protected override void PerformAddRange(RangeChange<T> change, int index)
             {
                 var priorFilteredCount = _filteredCount;
 
@@ -968,7 +983,7 @@ internal static partial class Filter
 
                 if (ItemStatesBuffer.Count is not 0)
                 {
-                    ItemStates.InsertRange(change.Index, ItemStatesBuffer);
+                    ItemStates.InsertRange(index, ItemStatesBuffer);
                     ItemStatesBuffer.Clear();
 
                     if (ItemsBuffer.Count is not 0)

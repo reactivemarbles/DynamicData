@@ -17,7 +17,7 @@ internal sealed class Reverser<T>
             {
                 case ListChangeReason.Add:
                     {
-                        yield return new Change<T>(ListChangeReason.Add, change.Item.Current, _length - change.Item.CurrentIndex);
+                        yield return new Change<T>(ListChangeReason.Add, change.Item.Current, (change.Item.CurrentIndex < 0) ? 0 : _length - change.Item.CurrentIndex);
                         _length++;
                         break;
                     }
@@ -33,21 +33,21 @@ internal sealed class Reverser<T>
 
                 case ListChangeReason.Replace:
                     {
-                        var newIndex = _length - change.Item.CurrentIndex - 1;
+                        var newIndex = (change.Item.CurrentIndex < 0) ? -1 : _length - change.Item.CurrentIndex - 1;
                         yield return new Change<T>(ListChangeReason.Replace, change.Item.Current, change.Item.Previous.Value, newIndex, newIndex);
                         break;
                     }
 
                 case ListChangeReason.Remove:
                     {
-                        yield return new Change<T>(ListChangeReason.Remove, change.Item.Current, _length - change.Item.CurrentIndex - 1);
+                        yield return new Change<T>(ListChangeReason.Remove, change.Item.Current, (change.Item.CurrentIndex < 0) ? -1 : _length - change.Item.CurrentIndex - 1);
                         _length--;
                         break;
                     }
 
                 case ListChangeReason.RemoveRange:
                     {
-                        var offset = _length - change.Range.Index - change.Range.Count;
+                        var offset = (change.Range.Index < 0) ? -1 : _length - change.Range.Index - change.Range.Count;
                         yield return new Change<T>(ListChangeReason.RemoveRange, change.Range.Reverse(), offset);
                         _length -= change.Range.Count;
 
