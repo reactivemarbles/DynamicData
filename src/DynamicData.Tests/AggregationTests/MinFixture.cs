@@ -4,9 +4,67 @@ namespace DynamicData.Tests.AggregationTests;
 
 public class MinFixture : IDisposable
 {
+    private readonly Randomizer _randomizer = new(0x4D69_6E46);
+
     private readonly SourceCache<Person, string> _source;
 
     public MinFixture() => _source = new SourceCache<Person, string>(p => p.Name);
+
+    [Fact]
+    public void Cache_ItemIsRefreshedBelowMinimum_MinimumFollowsIt()
+    {
+        var (low, middle, high) = CreateAscendingAges();
+        var person = new Person("C", high);
+        _source.AddOrUpdate(new[] { new Person("A", low), new Person("B", middle), person });
+        using var subscription = _source.Connect().Minimum(p => p.Age).ValidateSynchronization().RecordValues(out var results);
+
+        person.Age = low - 1;
+        _source.Refresh(person);
+
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().Equal(new[] { low, low - 1 }, "refreshing an item below the minimum makes it the minimum");
+    }
+
+    [Fact]
+    public void Cache_MinimumHolderIsRefreshedHigher_MinimumIsRecomputed()
+    {
+        var (low, middle, high) = CreateAscendingAges();
+        var holder = new Person("A", low);
+        _source.AddOrUpdate(new[] { holder, new Person("B", middle), new Person("C", high) });
+        using var subscription = _source.Connect().Minimum(p => p.Age).ValidateSynchronization().RecordValues(out var results);
+
+        holder.Age = high + 1;
+        _source.Refresh(holder);
+
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().Equal(new[] { low, middle }, "the minimum is recomputed from the remaining values once its holder rises");
+    }
+
+    [Fact]
+    public void List_MinimumHolderIsRefreshedHigherThenRemoved_MinimumIsRecomputed()
+    {
+        var (low, middle, high) = CreateAscendingAges();
+        var emptyValue = -_randomizer.Int(1, 100);
+        var holder = new Person("A", low);
+        using var source = new TestSourceList<Person>();
+        source.AddRange(new[] { holder, new Person("B", middle), new Person("C", high) });
+        using var subscription = source.Connect().Minimum(p => p.Age, emptyValue).ValidateSynchronization().RecordValues(out var results);
+
+        holder.Age = high + 1;
+        source.Refresh(0);
+        source.RemoveRange(1, 2);
+        source.RemoveAt(0);
+
+        results.Error.Should().BeNull();
+        results.RecordedValues.Should().Equal(new[] { low, middle, high + 1, emptyValue }, "each change recomputes the minimum from the stored values");
+    }
+
+    private (int Low, int Middle, int High) CreateAscendingAges()
+    {
+        var low = _randomizer.Int(1, 100);
+        var middle = low + _randomizer.Int(1, 100);
+        return (low, middle, middle + _randomizer.Int(1, 100));
+    }
 
     [Fact]
     public void AddedItemsContributeToSum()

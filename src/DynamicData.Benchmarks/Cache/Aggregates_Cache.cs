@@ -4,8 +4,16 @@ namespace DynamicData.Benchmarks.Cache;
 
 [MemoryDiagnoser]
 [MarkdownExporterAttribute.GitHub]
-public class Sum_Cache
+public class Aggregates_Cache
 {
+    public enum AggregateOperator
+    {
+        Sum,
+        Avg,
+        StdDev,
+        Maximum
+    }
+
     private IReadOnlyList<IChangeSet<Item, int>> _addChangeSets = null!;
     private IReadOnlyList<IChangeSet<Item, int>> _replaceChangeSets = null!;
     private IReadOnlyList<IChangeSet<Item, int>> _removeChangeSets = null!;
@@ -13,9 +21,13 @@ public class Sum_Cache
 
     private IChangeSet<Item, int> _seedAfterAdds = null!;
     private IChangeSet<Item, int> _seedAfterReplaces = null!;
+    private IChangeSet<Item, int> _seedAfterRefreshes = null!;
 
     [Params(100, 500, 1_000, 10_000)]
     public int Count { get; set; }
+
+    [ParamsAllValues]
+    public AggregateOperator Operator { get; set; }
 
     [GlobalSetup]
     public void Setup()
@@ -39,6 +51,11 @@ public class Sum_Cache
 
         var addedItems = (Item[])items.Clone();
 
+        // Each non-add benchmark only forms a valid sequence for a stateful operator after it has seen
+        // the preceding population. Seed snapshots are collapsed into one change set so their cost stays
+        // outside the measured sequence as far as possible.
+        _seedAfterAdds = BuildSeed(addedItems);
+
         var replaceChangeSets = new List<IChangeSet<Item, int>>(capacity: Count);
         for (var id = 1; id <= Count; ++id)
         {
@@ -52,6 +69,7 @@ public class Sum_Cache
             replaceChangeSets.Add(source.CaptureChanges());
         }
         _replaceChangeSets = replaceChangeSets;
+        _seedAfterReplaces = BuildSeed(items);
 
         var refreshChangeSets = new List<IChangeSet<Item, int>>(capacity: Count);
         for (var id = 1; id <= Count; ++id)
@@ -62,6 +80,7 @@ public class Sum_Cache
             refreshChangeSets.Add(source.CaptureChanges());
         }
         _refreshChangeSets = refreshChangeSets;
+        _seedAfterRefreshes = BuildSeed(items);
 
         var removeChangeSets = new List<IChangeSet<Item, int>>(capacity: Count);
         for (var id = 1; id <= Count; ++id)
@@ -70,14 +89,6 @@ public class Sum_Cache
             removeChangeSets.Add(source.CaptureChanges());
         }
         _removeChangeSets = removeChangeSets;
-
-        // Replaces, refreshes, and removes only form a valid sequence for an operator that has already
-        // seen the items they refer to, so each of those runs gets seeded with the population as it stood
-        // beforehand. Collapsing the seed into a single change set keeps its cost off the measurement as
-        // far as possible: replaces follow on from the items that were added, while refreshes and removes
-        // follow on from the items that replaced them.
-        _seedAfterAdds = BuildSeed(addedItems);
-        _seedAfterReplaces = BuildSeed(items);
     }
 
     [Benchmark]
@@ -90,25 +101,27 @@ public class Sum_Cache
     public void Refreshes() => Run(_seedAfterReplaces, _refreshChangeSets);
 
     [Benchmark]
-    public void Removes() => Run(_seedAfterReplaces, _removeChangeSets);
+    public void Removes() => Run(_seedAfterRefreshes, _removeChangeSets);
 
     private static IChangeSet<Item, int> BuildSeed(Item[] items)
     {
         var seed = new ChangeAwareCache<Item, int>(capacity: items.Length - 1);
 
         for (var id = 1; id < items.Length; ++id)
-            seed.Add(items[id], key: id);
+            seed.Add(new Item()
+            {
+                Id = items[id].Id,
+                Value = items[id].Value
+            }, key: id);
 
         return seed.CaptureChanges();
     }
 
-    private static void Run(IChangeSet<Item, int>? seed, IReadOnlyList<IChangeSet<Item, int>> changeSets)
+    private void Run(IChangeSet<Item, int>? seed, IReadOnlyList<IChangeSet<Item, int>> changeSets)
     {
         using var source = new Subject<IChangeSet<Item, int>>();
 
-        using var subscription = source
-            .Sum(static item => item.Value)
-            .Subscribe();
+        using var subscription = Subscribe(source);
 
         if (seed is not null)
             source.OnNext(seed);
@@ -118,6 +131,15 @@ public class Sum_Cache
 
         source.OnCompleted();
     }
+
+    private IDisposable Subscribe(IObservable<IChangeSet<Item, int>> source) => Operator switch
+    {
+        AggregateOperator.Sum => source.Sum(static item => item.Value).Subscribe(),
+        AggregateOperator.Avg => source.Avg(static item => item.Value).Subscribe(),
+        AggregateOperator.StdDev => source.StdDev(static item => item.Value, 0).Subscribe(),
+        AggregateOperator.Maximum => source.Maximum(static item => item.Value).Subscribe(),
+        _ => throw new ArgumentOutOfRangeException(nameof(Operator))
+    };
 
     private sealed class Item
     {

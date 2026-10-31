@@ -224,8 +224,8 @@ public partial class AvgFixture
                 results.RecordedValues.Should().ContainSingle().Which.Should().Be(10.5);
             }
 
-            [Fact(Skip = "Existing defect: the legacy aggregate adapter discards Refresh details. Re-enable once the operator has been rewritten and fixed.")]
-            public void ItemIsRefreshed_AverageReevaluatesMutatedValue()
+            [Fact]
+            public void ItemIsRefreshed_AverageIgnoresRefresh()
             {
                 using var source = new TestSourceCache<Person, string>(person => person.Name);
                 var person = new Person("A", 10);
@@ -238,7 +238,7 @@ public partial class AvgFixture
                 person.Age = 40;
                 source.Refresh(person);
 
-                results.RecordedValues.Should().Equal(10.0, 40.0);
+                results.RecordedValues.Should().Equal(new[] { 10.0, 10.0 }, "aggregate change sets carry no refreshes, so this overload keeps the value first observed");
             }
 
             [Theory]

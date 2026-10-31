@@ -504,13 +504,28 @@ Computes sample standard deviation as `sqrt(sum((value - mean)^2) / (count - 1))
 
 | Input | Behavior |
 |-------|----------|
-| **Add / AddRange** | Includes the selected values and emits the updated result. |
-| **Replace** | Removes the previous selected value, includes the current value, and emits the updated result. |
-| **Remove / RemoveRange / Clear** | Removes the selected values and emits the updated result or fallback. |
-| **Refresh / Moved** | Does not adjust the aggregate; the current result is emitted for the changeset. |
+| **Add / AddRange** | Stores and includes the selected values, and emits the updated result. |
+| **Replace / Refresh** | Excludes the stored value, includes the re-selected current value, and emits the updated result. |
+| **Remove / RemoveRange** | Excludes the stored values and emits the updated result or fallback. |
+| **Clear** | Resets the aggregate and emits the fallback. |
+| **Moved** | Reorders the stored values; does not adjust the aggregate. |
 | **OnError / OnCompleted** | Forwards the terminal notification. |
 
-In-place property mutations require recomputation, such as `InvalidateWhen`, rather than a Refresh alone.
+### Avg / StdDev / Maximum / Minimum (refresh-aware aggregates)
+
+These follow the same model as `Sum` (see below). All five changeset overloads share one internal operator, `AggregateProjections`, which stores the last selected value of each item in list order and folds it into an accumulator. Memory per subscription is O(n).
+
+| Input | Behavior |
+|-------|----------|
+| **Add / AddRange** | Stores and includes the selected values at their indexes. |
+| **Replace / Refresh** | Excludes the stored value and includes the re-selected current value. |
+| **Remove / RemoveRange** | Excludes the stored values. Changes without an index are matched by reference, then by default equality. |
+| **Clear** | Resets the aggregate to its empty state. |
+| **Moved** | Reorders the stored values so later indexed changes address the right item. |
+| **Maximum / Minimum** | Recompute from the stored values when the item holding the extreme is removed or moves inward; emit only distinct values. |
+| **Malformed changesets** | Removing or refreshing an item that is not in the list faults the stream. |
+
+The stateless path is `ForAggregation()` followed by `Sum`, `Avg` or `StdDev` (the `IAggregateChangeSet<T>` overloads): no per-item state, but Refresh is ignored. There are no `*Immutable` variants. `Count`, `IsEmpty` and `IsNotEmpty` have no selector, so Refresh cannot change them.
 
 ### Property Observation
 
@@ -547,6 +562,22 @@ cache.Connect()
 ```
 
 ---
+
+## Sum — Refresh-Aware Numeric Aggregation
+
+`Sum(valueSelector)` emits the current sum after each changeset. Each subscription stores one projection per list position, requiring O(n) memory. Nullable projections contribute zero.
+
+| Change reason | Behavior |
+|---|---|
+| Add / AddRange | Evaluate and store each projection at its inserted position and add it to the sum |
+| Replace | Subtract the stored projection, then evaluate and store the replacement at its current index |
+| Remove / RemoveRange | Subtract the stored projections and remove their positions |
+| Refresh | Re-evaluate the selector and replace the stored contribution |
+| Moved | Reorder projection state without changing the sum |
+| Clear | Reset the sum to zero and clear projection state without evaluating or subtracting individual items |
+| OnError / OnCompleted | Forward the terminal notification |
+
+Indexless removals and replacements prefer reference identity, then equality. Operations that cannot identify an existing item and selector exceptions fault the stream. An item mutated without a refresh still has its last observed projection subtracted when replaced or removed. Use `ForAggregation().Sum(valueSelector)` for the stateless path when items never mutate in place; that path ignores refreshes.
 
 ## Writing a New List Operator
 

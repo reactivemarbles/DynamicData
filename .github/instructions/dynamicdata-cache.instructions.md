@@ -830,13 +830,25 @@ Computes sample standard deviation as `sqrt(sum((value - mean)^2) / (count - 1))
 
 | Input | Behavior |
 |-------|----------|
-| **Add** | Includes the selected value and emits the updated result. |
-| **Update** | Removes the previous selected value, includes the current value, and emits the updated result. |
-| **Remove** | Removes the selected value and emits the updated result or fallback. |
-| **Refresh / Moved** | Does not adjust the aggregate; the current result is emitted for the changeset. |
+| **Add** | Stores and includes the selected value, and emits the updated result. |
+| **Update / Refresh** | Excludes the stored value, includes the re-selected current value, and emits the updated result. |
+| **Remove** | Excludes the stored value and emits the updated result or fallback. |
+| **Moved** | Does not adjust the aggregate. |
 | **OnError / OnCompleted** | Forwards the terminal notification. |
 
-In-place property mutations require recomputation, such as `InvalidateWhen`, rather than a Refresh alone.
+### Avg / StdDev / Maximum / Minimum (refresh-aware aggregates)
+
+These follow the same model as `Sum` (see below). All five changeset overloads share one internal operator, `AggregateProjections`, which stores the last selected value per key and folds it into an accumulator. Memory per subscription is O(n).
+
+| Input | Behavior |
+|-------|----------|
+| **Add** | Stores and includes the selected value. |
+| **Update / Refresh** | Excludes the stored value and includes the re-selected current value. |
+| **Remove** | Excludes the stored value. An item mutated without a Refresh is removed with the value last observed. |
+| **Maximum / Minimum** | Recompute from the stored values when the item holding the extreme is removed or moves inward; emit only distinct values. |
+| **Malformed changesets** | Adding an existing key, or updating, refreshing or removing an unknown key, faults the stream. |
+
+The stateless path is `ForAggregation()` followed by `Sum`, `Avg` or `StdDev` (the `IAggregateChangeSet<T>` overloads): no per-item state, but Refresh is ignored. There are no `*Immutable` variants. `Count`, `IsEmpty` and `IsNotEmpty` have no selector, so Refresh cannot change them.
 
 ### Property Observation
 
@@ -850,6 +862,21 @@ Property paths used by `WhenPropertyChanged` and `WhenValueChanged` evaluate num
 Cached factories distinguish the complete member and conversion sequence, including source/result types and conversion methods. Equivalent paths share a factory regardless of lambda parameter names; distinct paths retain independent values and notification sources.
 
 ---
+
+## Sum — Refresh-Aware Numeric Aggregation
+
+`Sum(valueSelector)` emits the current sum after each changeset. Each subscription stores one projection per key, requiring O(n) memory. Nullable projections contribute zero.
+
+| Change reason | Behavior |
+|---|---|
+| Add | Evaluate, store, and add the new key's projection |
+| Update | Subtract the stored projection, then evaluate, store, and add the current projection |
+| Remove | Subtract the stored projection and forget the key; do not re-evaluate the removed instance |
+| Refresh | Re-evaluate the selector and replace the stored contribution |
+| Moved | Leave the sum unchanged |
+| OnError / OnCompleted | Forward the terminal notification |
+
+Duplicate adds, operations on unknown keys, and selector exceptions fault the stream. An item mutated without a refresh still has its last observed projection subtracted when updated or removed. Use `ForAggregation().Sum(valueSelector)` for the stateless path when items never mutate in place; that path ignores refreshes.
 
 ## Writing a New Cache Operator
 

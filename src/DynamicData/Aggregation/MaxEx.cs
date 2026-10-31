@@ -9,13 +9,6 @@ namespace DynamicData.Aggregation;
 /// </summary>
 public static class MaxEx
 {
-    private enum MaxOrMin
-    {
-        Max,
-
-        Min
-    }
-
     /// <summary>
     /// Continually calculates the maximum value from the underlying data source.
     /// </summary>
@@ -27,9 +20,15 @@ public static class MaxEx
     /// <returns>
     /// A distinct observable of the maximum item.
     /// </returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored. When the item holding the maximum is removed, or
+    /// is updated or refreshed to a lower value, the maximum is recomputed from the stored values, so memory grows with
+    /// the number of items.
+    /// </remarks>
     public static IObservable<TResult> Maximum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
         where TObject : notnull
-        where TResult : struct, IComparable<TResult> => source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
+        where TResult : struct, IComparable<TResult> => source.AggregateProjections(valueSelector, ExtremeAccumulator<TResult>.CreateMaximum(), accumulator => accumulator.Extreme ?? emptyValue).DistinctUntilChanged();
 
     /// <summary>
     /// Continually calculates the maximum value from the underlying data source.
@@ -43,10 +42,16 @@ public static class MaxEx
     /// <returns>
     /// A distinct observable of the maximum item.
     /// </returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored. When the item holding the maximum is removed, or
+    /// is updated or refreshed to a lower value, the maximum is recomputed from the stored values, so memory grows with
+    /// the number of items.
+    /// </remarks>
     public static IObservable<TResult> Maximum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
         where TObject : notnull
         where TKey : notnull
-        where TResult : struct, IComparable<TResult> => source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
+        where TResult : struct, IComparable<TResult> => source.AggregateProjections(valueSelector, ExtremeAccumulator<TResult>.CreateMaximum(), accumulator => accumulator.Extreme ?? emptyValue).DistinctUntilChanged();
 
     /// <summary>
     /// Continually calculates the minimum value from the underlying data source.
@@ -57,9 +62,15 @@ public static class MaxEx
     /// <param name="valueSelector">The value selector.</param>
     /// <param name="emptyValue">The value to use when the underlying collection is empty.</param>
     /// <returns>A distinct observable of the minimums item.</returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored. When the item holding the minimum is removed, or
+    /// is updated or refreshed to a higher value, the minimum is recomputed from the stored values, so memory grows with
+    /// the number of items.
+    /// </remarks>
     public static IObservable<TResult> Minimum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
         where TObject : notnull
-        where TResult : struct, IComparable<TResult> => source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
+        where TResult : struct, IComparable<TResult> => source.AggregateProjections(valueSelector, ExtremeAccumulator<TResult>.CreateMinimum(), accumulator => accumulator.Extreme ?? emptyValue).DistinctUntilChanged();
 
     /// <summary>
     /// Continually calculates the minimum value from the underlying data source.
@@ -73,107 +84,14 @@ public static class MaxEx
     /// <returns>
     /// A distinct observable of the minimums item.
     /// </returns>
+    /// <remarks>
+    /// A refresh re-evaluates <paramref name="valueSelector"/> for the refreshed item, so the result follows items that
+    /// change in place. The value last selected for each item is stored. When the item holding the minimum is removed, or
+    /// is updated or refreshed to a higher value, the minimum is recomputed from the stored values, so memory grows with
+    /// the number of items.
+    /// </remarks>
     public static IObservable<TResult> Minimum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
         where TObject : notnull
         where TKey : notnull
-        where TResult : struct, IComparable<TResult> => source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
-
-    private static IObservable<TResult> Calculate<TObject, TResult>(this IObservable<ChangesAndCollection<TObject>> source, Func<TObject, TResult> valueSelector, MaxOrMin maxOrMin, TResult emptyValue = default)
-        where TResult : struct, IComparable<TResult>
-    {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(valueSelector);
-
-        return source.Scan(
-            default(TResult?),
-            (state, latest) =>
-            {
-                var current = state;
-                var requiresReset = false;
-
-                foreach (var change in latest.Changes)
-                {
-                    var value = valueSelector(change.Item);
-                    current ??= value;
-
-                    if (change.Type == AggregateType.Add)
-                    {
-                        if (maxOrMin is MaxOrMin.Max)
-                        {
-                            if (value.CompareTo(current.Value) > 0)
-                            {
-                                current = value;
-                            }
-                        }
-                        else if (value.CompareTo(current.Value) < 0)
-                        {
-                            current = value;
-                        }
-                    }
-                    else
-                    {
-                        // check whether the max / min has been removed. If so we need to look
-                        // up the latest from the underlying collection
-                        if (value.CompareTo(current.Value) != 0)
-                        {
-                            continue;
-                        }
-
-                        requiresReset = true;
-                        break;
-                    }
-                }
-
-                if (requiresReset)
-                {
-                    var collection = latest.Collection;
-                    if (collection.Count == 0)
-                    {
-                        current = default;
-                    }
-                    else
-                    {
-                        current = maxOrMin == MaxOrMin.Max ? collection.Max(valueSelector) : collection.Min(valueSelector);
-                    }
-                }
-
-                return current;
-            }).Select(t => t ?? emptyValue).DistinctUntilChanged();
-    }
-
-    private static IObservable<ChangesAndCollection<TObject>> ToChangesAndCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        ArgumentNullException.ThrowIfNull(source);
-
-        return source.Publish(
-            shared =>
-            {
-                var changes = shared.ForAggregation();
-                var data = shared.ToCollection();
-                return data.Zip(changes, (d, c) => new ChangesAndCollection<TObject>(c, d));
-            });
-    }
-
-    private static IObservable<ChangesAndCollection<TObject>> ToChangesAndCollection<TObject>(this IObservable<IChangeSet<TObject>> source)
-        where TObject : notnull
-    {
-        ArgumentNullException.ThrowIfNull(source);
-
-        return source.Publish(
-            shared =>
-            {
-                var changes = shared.ForAggregation();
-                var data = shared.ToCollection();
-                return data.Zip(changes, (d, c) => new ChangesAndCollection<TObject>(c, d));
-            });
-    }
-
-    private sealed class ChangesAndCollection<T>(IAggregateChangeSet<T> changes, IReadOnlyCollection<T> collection)
-    {
-        public IAggregateChangeSet<T> Changes { get; } = changes;
-
-        public IReadOnlyCollection<T> Collection { get; } = collection;
-    }
+        where TResult : struct, IComparable<TResult> => source.AggregateProjections(valueSelector, ExtremeAccumulator<TResult>.CreateMinimum(), accumulator => accumulator.Extreme ?? emptyValue).DistinctUntilChanged();
 }

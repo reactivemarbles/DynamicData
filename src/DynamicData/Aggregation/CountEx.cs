@@ -16,6 +16,9 @@ public static class CountEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
+    /// <remarks>
+    /// Refresh changes do not alter the count.
+    /// </remarks>
     public static IObservable<int> Count<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull => source.ForAggregation().Count();
@@ -26,6 +29,9 @@ public static class CountEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
+    /// <remarks>
+    /// Refresh changes do not alter the count.
+    /// </remarks>
     public static IObservable<int> Count<TObject>(this IObservable<IChangeSet<TObject>> source)
         where TObject : notnull => source.ForAggregation().Count();
 
@@ -54,6 +60,9 @@ public static class CountEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
+    /// <remarks>
+    /// Refresh changes do not alter the count.
+    /// </remarks>
     public static IObservable<bool> IsEmpty<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull => source.ForAggregation().Count().StartWith(0).Select(count => count == 0);
@@ -65,6 +74,9 @@ public static class CountEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
+    /// <remarks>
+    /// Refresh changes do not alter the count.
+    /// </remarks>
     public static IObservable<bool> IsEmpty<TObject>(this IObservable<IChangeSet<TObject>> source)
         where TObject : notnull => source.ForAggregation().Count().StartWith(0).Select(count => count == 0);
 
@@ -76,6 +88,9 @@ public static class CountEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
+    /// <remarks>
+    /// Refresh changes do not alter the count.
+    /// </remarks>
     public static IObservable<bool> IsNotEmpty<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull => source.ForAggregation().Count().StartWith(0).Select(count => count > 0);
@@ -87,6 +102,9 @@ public static class CountEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
+    /// <remarks>
+    /// Refresh changes do not alter the count.
+    /// </remarks>
     public static IObservable<bool> IsNotEmpty<TObject>(this IObservable<IChangeSet<TObject>> source)
         where TObject : notnull => source.ForAggregation().Count().StartWith(0).Select(count => count > 0);
 }
