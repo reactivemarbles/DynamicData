@@ -1,6 +1,5 @@
 using DynamicData.Aggregation;
 
-
 namespace DynamicData.Tests.AggregationTests;
 
 public partial class SumFixture
@@ -112,6 +111,32 @@ public partial class SumFixture
             results.HasCompleted.Should().BeFalse("the source can still publish notifications");
             results.RecordedValues.Should().HaveCount(2, "one additional sum value should have been emitted after clearing");
             results.RecordedValues[^1].Should().Be(0, "all items were removed so the sum should return to zero");
+        }
+
+        [Fact]
+        public void ItemsAreClearedAfterMoves_FloatingPointSumsResetExactly()
+        {
+            using var source = new TestSourceList<double>();
+            using var doubleSubscription = source.Connect()
+                .Sum(value => value)
+                .RecordValues(out var doubleResults);
+            using var floatSubscription = source.Connect()
+                .Sum(value => (float)value)
+                .RecordValues(out var floatResults);
+
+            source.AddRange(new[] { 0.1, 0.2, 0.3 });
+            source.Move(0, 2);
+            source.Clear();
+
+            doubleResults.Error.Should().BeNull();
+            floatResults.Error.Should().BeNull();
+            doubleResults.RecordedValues[^1].Should().Be(0D);
+            floatResults.RecordedValues[^1].Should().Be(0F);
+
+            source.Add(7);
+
+            doubleResults.RecordedValues[^1].Should().Be(7D);
+            floatResults.RecordedValues[^1].Should().Be(7F);
         }
 
         [Fact]
@@ -300,22 +325,208 @@ public partial class SumFixture
             results.RecordedValues.Should().Equal(30, 30, 60);
         }
 
-        [Fact]
-        public void ItemIsRefreshed_SumImmutableDoesNotReevaluateMutatedValue()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void ItemIsMutatedWithoutRefresh_ReplaceOrRemovalSubtractsStoredValue(bool replace)
         {
             using var source = new TestSourceList<Person>();
+            using var subscription = source.Connect()
+                .Sum(person => person.Age)
+                .RecordValues(out var results);
             var person = new Person("A", 10);
-
             source.Add(person);
 
+            person.Age = 100;
+            if (replace)
+            {
+                source.ReplaceAt(0, new Person("A", 25));
+                results.RecordedValues[^1].Should().Be(25);
+            }
+
+            source.RemoveAt(0);
+
+            results.Error.Should().BeNull();
+            results.RecordedValues.Should().Equal(replace ? new[] { 10, 25, 0 } : new[] { 10, 0 });
+        }
+
+        [Fact]
+        public void ItemsAreInsertedAndRemovedInTheMiddle_RefreshUsesShiftedPositions()
+        {
+            using var source = new TestSourceList<Person>();
             using var subscription = source.Connect()
-                .SumImmutable(p => p.Age)
+                .Sum(person => person.Age)
                 .RecordValues(out var results);
+            var first = new Person("A", 10);
+            var last = new Person("E", 40);
+            source.AddRange(new[] { first, last });
 
-            person.Age = 40;
-            source.Refresh(0);
+            source.Edit(items => items.Insert(1, new Person("B", 20)));
+            results.RecordedValues[^1].Should().Be(70);
 
-            results.RecordedValues.Should().Equal(10, 10);
+            source.Edit(items => items.InsertRange(new[] { new Person("C", 25), new Person("D", 35) }, 2));
+            results.RecordedValues[^1].Should().Be(130);
+
+            last.Age = 50;
+            source.Refresh(4);
+            results.RecordedValues[^1].Should().Be(140);
+
+            source.Edit(items => items.RemoveRange(1, 3));
+            results.RecordedValues[^1].Should().Be(60);
+
+            last.Age = 70;
+            source.Refresh(1);
+            results.Error.Should().BeNull();
+            results.RecordedValues[^1].Should().Be(80);
+        }
+
+        [Fact]
+        public void ReplacementChangesIndex_SubsequentRefreshAndRemovalUseNewPositions()
+        {
+            using var source = new Subject<IChangeSet<Person>>();
+            using var subscription = source
+                .Sum(person => person.Age)
+                .RecordValues(out var results);
+            var first = new Person("A", 10);
+            var previous = new Person("B", 20);
+            var last = new Person("C", 30);
+            source.OnNext(new ChangeSet<Person>
+            {
+                new(ListChangeReason.AddRange, new[] { first, previous, last }, 0)
+            });
+
+            previous.Age = 100;
+            var replacement = new Person("D", 5);
+            source.OnNext(new ChangeSet<Person>
+            {
+                new(ListChangeReason.Replace, replacement, previous, currentIndex: 0, previousIndex: 1)
+            });
+            results.RecordedValues[^1].Should().Be(45);
+
+            last.Age = 60;
+            source.OnNext(new ChangeSet<Person> { new(ListChangeReason.Refresh, last, 2) });
+            results.RecordedValues[^1].Should().Be(75);
+
+            source.OnNext(new ChangeSet<Person> { new(ListChangeReason.Remove, first, 1) });
+            results.Error.Should().BeNull();
+            results.RecordedValues[^1].Should().Be(65);
+        }
+
+        [Theory]
+        [InlineData(ListChangeReason.Remove, false, 40, 45)]
+        [InlineData(ListChangeReason.Remove, true, 50, 55)]
+        [InlineData(ListChangeReason.RemoveRange, false, 10, 15)]
+        [InlineData(ListChangeReason.RemoveRange, true, 20, 25)]
+        public void IndexlessRemoval_PrefersIdentityThenEqualityAndSubtractsStoredValues(
+            ListChangeReason reason, bool equalInstance, int expectedAfterRemoval, int expectedAfterRefresh)
+        {
+            using var source = new Subject<IChangeSet<Person>>();
+            using var subscription = source
+                .Sum(person => person.Age)
+                .RecordValues(out var results);
+            var first = new Person("A", 10);
+            var second = new Person("A", 20);
+            var last = new Person("C", 30);
+            source.OnNext(new ChangeSet<Person>
+            {
+                new(ListChangeReason.AddRange, new[] { first, second, last })
+            });
+            second.Age = 200;
+            var removed = equalInstance ? new Person("A", 999) : second;
+
+            source.OnNext(new ChangeSet<Person>
+            {
+                reason == ListChangeReason.Remove
+                    ? new Change<Person>(reason, removed)
+                    : new Change<Person>(reason, new[] { removed, last })
+            });
+            results.RecordedValues[^1].Should().Be(expectedAfterRemoval);
+
+            var remaining = equalInstance ? second : first;
+            remaining.Age = equalInstance ? 25 : 15;
+            source.OnNext(new ChangeSet<Person> { new(ListChangeReason.Refresh, remaining, 0) });
+
+            results.Error.Should().BeNull();
+            results.RecordedValues[^1].Should().Be(expectedAfterRefresh);
+        }
+
+        public class IntegrationTests
+        {
+            [Fact]
+            public void MixedEdits_SumMatchesLinqAfterEveryChangeset()
+            {
+                var randomizer = new Randomizer(1167);
+                var editCount = randomizer.Int(200, 400);
+                var expected = new List<Person>();
+                using var source = new TestSourceList<Person>();
+                using var subscription = source.Connect()
+                    .Sum(person => person.Age)
+                    .ValidateSynchronization()
+                    .RecordValues(out var results);
+
+                for (var edit = 0; edit < editCount; ++edit)
+                {
+                    // Each edit is delivered separately. Do not batch an Insert with a pending AddRange:
+                    // ChangeAwareList's range coalescing for that case is a separate, known issue.
+                    var operation = expected.Count == 0 ? 0 : randomizer.Int(0, 7);
+                    var index = randomizer.Int(0, expected.Count);
+                    switch (operation)
+                    {
+                        case 0:
+                            var item = new Person(edit.ToString(), randomizer.Int(1, 100));
+                            expected.Insert(index, item);
+                            source.Edit(items => items.Insert(index, item));
+                            break;
+                        case 1:
+                            var added = Enumerable.Range(0, randomizer.Int(2, 5))
+                                .Select(offset => new Person($"{edit}:{offset}", randomizer.Int(1, 100)))
+                                .ToArray();
+                            expected.InsertRange(index, added);
+                            source.Edit(items => items.InsertRange(added, index));
+                            break;
+                        case 2:
+                            index = randomizer.Int(0, expected.Count - 1);
+                            var replacement = new Person(edit.ToString(), randomizer.Int(1, 100));
+                            expected[index] = replacement;
+                            source.ReplaceAt(index, replacement);
+                            break;
+                        case 3:
+                            index = randomizer.Int(0, expected.Count - 1);
+                            expected.RemoveAt(index);
+                            source.RemoveAt(index);
+                            break;
+                        case 4:
+                            index = randomizer.Int(0, expected.Count - 1);
+                            var destination = randomizer.Int(0, expected.Count - 1);
+                            var moved = expected[index];
+                            expected.RemoveAt(index);
+                            expected.Insert(destination, moved);
+                            source.Move(index, destination);
+                            break;
+                        case 5:
+                            index = randomizer.Int(0, expected.Count - 1);
+                            expected[index].Age = randomizer.Int(1, 100);
+                            source.Refresh(index);
+                            break;
+                        case 6:
+                            index = randomizer.Int(0, expected.Count - 1);
+                            var count = randomizer.Int(1, expected.Count - index);
+                            expected.RemoveRange(index, count);
+                            source.Edit(items => items.RemoveRange(index, count));
+                            break;
+                        case 7:
+                            expected.Clear();
+                            source.Clear();
+                            break;
+                    }
+
+                    results.Error.Should().BeNull($"edit {edit} must preserve a valid stream");
+                    results.RecordedValues[^1].Should().Be(expected.Sum(person => person.Age), $"after edit {edit}");
+                }
+
+                source.Complete();
+                results.HasCompleted.Should().BeTrue();
+            }
         }
 
         [Theory]

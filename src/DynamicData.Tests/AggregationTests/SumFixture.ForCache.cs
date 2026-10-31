@@ -380,22 +380,29 @@ public partial class SumFixture
             results.RecordedValues.Should().Equal(10, 0);
         }
 
-        [Fact]
-        public void ItemIsRefreshed_SumImmutableDoesNotReevaluateMutatedValue()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void ItemIsMutatedWithoutRefresh_UpdateOrRemovalSubtractsStoredValue(bool update)
         {
-            using var source = new TestSourceCache<Person, string>(p => p.Name);
+            using var source = new TestSourceCache<Person, string>(person => person.Name);
+            using var subscription = source.Connect()
+                .Sum(person => person.Age)
+                .RecordValues(out var results);
             var person = new Person("A", 10);
-
             source.AddOrUpdate(person);
 
-            using var subscription = source.Connect()
-                .SumImmutable(p => p.Age)
-                .RecordValues(out var results);
+            person.Age = 100;
+            if (update)
+            {
+                source.AddOrUpdate(new Person("A", 25));
+                results.RecordedValues[^1].Should().Be(25);
+            }
 
-            person.Age = 40;
-            source.Refresh(person);
+            source.Remove("A");
 
-            results.RecordedValues.Should().Equal(10, 10);
+            results.Error.Should().BeNull();
+            results.RecordedValues.Should().Equal(update ? new[] { 10, 25, 0 } : new[] { 10, 0 });
         }
 
         [Theory]
