@@ -340,6 +340,71 @@ public partial class SumFixture
                 .Which.Should().Be(40, "null values should be treated as zero, so the sum should be 10 + 0 + 30 = 40");
         }
 
+        [Fact]
+        public void ItemIsRefreshed_SumReflectsMutatedValue()
+        {
+            using var source = new TestSourceCache<Person, string>(p => p.Name);
+            var person = new Person("A", 10);
+
+            source.AddOrUpdate(person);
+
+            using var subscription = source.Connect()
+                .Sum(p => p.Age)
+                .RecordValues(out var results);
+
+            person.Age = 40;
+            source.Refresh(person);
+
+            results.RecordedValues.Should().Equal(10, 40);
+
+            source.Remove(person.Name);
+
+            results.RecordedValues[^1].Should().Be(0, "removal should subtract the value captured by the refresh");
+        }
+
+        [Fact]
+        public void NullableItemIsRefreshed_SumReflectsMutatedValue()
+        {
+            using var source = new TestSourceCache<Person, string>(p => p.Name);
+            var person = new Person("A", new int?(10));
+
+            source.AddOrUpdate(person);
+
+            using var subscription = source.Connect()
+                .Sum(p => p.AgeNullable)
+                .RecordValues(out var results);
+
+            person.AgeNullable = null;
+            source.Refresh(person);
+
+            results.RecordedValues.Should().Equal(10, 0);
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void ItemIsMutatedWithoutRefresh_UpdateOrRemovalSubtractsStoredValue(bool update)
+        {
+            using var source = new TestSourceCache<Person, string>(person => person.Name);
+            using var subscription = source.Connect()
+                .Sum(person => person.Age)
+                .RecordValues(out var results);
+            var person = new Person("A", 10);
+            source.AddOrUpdate(person);
+
+            person.Age = 100;
+            if (update)
+            {
+                source.AddOrUpdate(new Person("A", 25));
+                results.RecordedValues[^1].Should().Be(25);
+            }
+
+            source.Remove("A");
+
+            results.Error.Should().BeNull();
+            results.RecordedValues.Should().Equal(update ? new[] { 10, 25, 0 } : new[] { 10, 0 });
+        }
+
         [Theory]
         [InlineData(new[] { 10, 20, 30 }, 60)]
         [InlineData(new[] { int.MaxValue }, int.MaxValue)]

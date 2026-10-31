@@ -851,6 +851,21 @@ Cached factories distinguish the complete member and conversion sequence, includ
 
 ---
 
+## Sum — Refresh-Aware Numeric Aggregation
+
+`Sum(valueSelector)` emits the current sum after each changeset. Each subscription stores one projection per key, requiring O(n) memory. Nullable projections contribute zero.
+
+| Change reason | Behavior |
+|---|---|
+| Add | Evaluate, store, and add the new key's projection |
+| Update | Subtract the stored projection, then evaluate, store, and add the current projection |
+| Remove | Subtract the stored projection and forget the key; do not re-evaluate the removed instance |
+| Refresh | Re-evaluate the selector and replace the stored contribution |
+| Moved | Leave the sum unchanged |
+| OnError / OnCompleted | Forward the terminal notification |
+
+Duplicate adds, operations on unknown keys, and selector exceptions fault the stream. An item mutated without a refresh still has its last observed projection subtracted when updated or removed. Use `ForAggregation().Sum(valueSelector)` for the stateless path when items never mutate in place; that path ignores refreshes.
+
 ## Writing a New Cache Operator
 
 ### Step 1: Extension Method (Public API)
