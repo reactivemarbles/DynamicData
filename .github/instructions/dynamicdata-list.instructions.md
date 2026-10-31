@@ -511,9 +511,9 @@ Computes sample standard deviation as `sqrt(sum((value - mean)^2) / (count - 1))
 | **Moved** | Reorders the stored values; does not adjust the aggregate. |
 | **OnError / OnCompleted** | Forwards the terminal notification. |
 
-### Sum / Avg / StdDev / Maximum / Minimum (refresh-aware aggregates)
+### Avg / StdDev / Maximum / Minimum (refresh-aware aggregates)
 
-The changeset overloads share one internal operator, `AggregateProjections`, which stores the last selected value of each item in list order and folds it into an accumulator. Memory per subscription is O(n).
+These follow the same model as `Sum` (see below). All five changeset overloads share one internal operator, `AggregateProjections`, which stores the last selected value of each item in list order and folds it into an accumulator. Memory per subscription is O(n).
 
 | Input | Behavior |
 |-------|----------|
