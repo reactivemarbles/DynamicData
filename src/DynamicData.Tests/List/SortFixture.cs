@@ -41,9 +41,13 @@ public class SortChangedFixture
 
 public class SortFixture : IDisposable
 {
+    private const int Seed = 0x5047_1167;
+
     private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 
     private readonly RandomPersonGenerator _generator = new();
+
+    private readonly Randomizer _randomizer = new(Seed);
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -73,6 +77,36 @@ public class SortFixture : IDisposable
         _results.Data.Count.Should().Be(101, "Should be 100 people in the cache");
 
         _results.Data.Items[0].Should().Be(shouldbefirst);
+    }
+
+    [Fact]
+    public void InsertSortingImmediatelyBeforeAJustSortedRange_EmitsChangesThatReplayToTheSortedList()
+    {
+        // The edit produces [AddRange, Add] without any source-side merging. Sorting places the range at the end and the
+        // single item one slot before the range, so only the sort's own change tracking decides the emitted indexes.
+        var values = new SortedSet<int>();
+        while (values.Count < 5)
+        {
+            values.Add(_randomizer.Int());
+        }
+
+        if (values.ToArray() is not [var lowest, var inserted, var middle, var rangeFirst, var rangeSecond])
+        {
+            throw new InvalidOperationException("Expected exactly five unique values.");
+        }
+
+        using var source = new SourceList<int>();
+        source.AddRange([middle, lowest]);
+
+        using var results = source.Connect().Sort(Comparer<int>.Default).AsAggregator();
+
+        source.Edit(list =>
+        {
+            list.AddRange([rangeFirst, rangeSecond]);
+            list.Insert(0, inserted);
+        });
+
+        results.Data.Items.Should().Equal(lowest, inserted, middle, rangeFirst, rangeSecond);
     }
 
     [Fact]
