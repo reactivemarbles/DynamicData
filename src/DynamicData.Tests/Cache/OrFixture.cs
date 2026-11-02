@@ -1,6 +1,6 @@
 namespace DynamicData.Tests.Cache;
 
-public class OrFixture : OrFixtureBase
+public partial class OrFixture : OrFixtureBase
 {
     protected override IObservable<IChangeSet<Person, string>> CreateObservable() => _source1.Connect().Or(_source2.Connect());
 }
