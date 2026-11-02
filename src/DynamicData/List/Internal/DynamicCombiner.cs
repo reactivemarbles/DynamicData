@@ -7,22 +7,25 @@ namespace DynamicData.List.Internal;
 internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<T>>> source, CombineOperator type)
     where T : notnull
 {
-    private readonly Lock _locker = new();
-
     private readonly IObservableList<IObservable<IChangeSet<T>>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
+                // SharedDeliveryQueue + SynchronizeSafe replaces Synchronize(_locker) so the
+                // gate is released before downstream OnNext. Closes the cross-cache deadlock
+                // window.
+                var queue = new SharedDeliveryQueue();
+
                 // this is the resulting list which produces all notifications
                 var resultList = new ChangeAwareListWithRefCounts<T>();
 
                 // Transform to a merge container.
                 // This populates a RefTracker when the original source is subscribed to
-                var sourceLists = _source.Connect().Synchronize(_locker).Transform(changeSet => new MergeContainer(changeSet)).AsObservableList();
+                var sourceLists = _source.Connect().SynchronizeSafe(queue).Transform(changeSet => new MergeContainer(changeSet)).AsObservableList();
 
                 // merge the items back together
-                var allChanges = sourceLists.Connect().MergeMany(mc => mc.Source).Synchronize(_locker).Subscribe(
+                var allChanges = sourceLists.Connect().MergeMany(mc => mc.Source).SynchronizeSafe(queue).Subscribe(
                     changes =>
                     {
                         // Populate result list and check for changes
@@ -77,7 +80,7 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
                         }
                     }).Subscribe();
 
-                return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged);
+                return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged, queue);
             });
 
     private bool MatchesConstraint(MergeContainer[] sourceLists, T item)

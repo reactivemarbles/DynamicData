@@ -34,7 +34,10 @@ internal static partial class Filter
         public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
                 observer =>
                 {
-                    var locker = new Lock();
+                    // SharedDeliveryQueue + SynchronizeSafe replaces Synchronize(locker) so
+                    // the gate lock is released before downstream OnNext. Closes the cross-
+                    // cache deadlock window.
+                    var queue = new SharedDeliveryQueue();
 
                     Func<T, bool> predicate = _ => false;
                     var all = new List<ItemWithMatch>();
@@ -55,7 +58,7 @@ internal static partial class Filter
                             throw new InvalidOperationException("The predicates is not set and the change is not a immutableFilter.");
                         }
 
-                        predicateChanged = _predicates.Synchronize(locker).Select(
+                        predicateChanged = _predicates.SynchronizeSafe(queue).Select(
                             newPredicate =>
                             {
                                 predicate = newPredicate;
@@ -70,7 +73,7 @@ internal static partial class Filter
                      */
 
                     // Need to get item by index and store it in the transform
-                    var filteredResult = _source.Synchronize(locker).Transform<T, ItemWithMatch>(
+                    var filteredResult = _source.SynchronizeSafe(queue).Transform<T, ItemWithMatch>(
                         (t, previous) =>
                             {
                                 var wasMatch = previous.ConvertOr(p => p!.IsMatch, () => false);
@@ -88,9 +91,11 @@ internal static partial class Filter
                             return Process(filtered, changes);
                         });
 
-                    return predicateChanged.Merge(filteredResult).NotEmpty()
+                    var publisher = predicateChanged.UnsynchronizedMerge(filteredResult).NotEmpty()
                         .Select(changes => changes.Transform(iwm => iwm.Item)) // use convert, not transform
                         .SubscribeSafe(observer);
+
+                    return new System.Reactive.Disposables.CompositeDisposable(publisher, queue);
                 });
 
         private static IChangeSet<ItemWithMatch> Process(ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
