@@ -65,9 +65,7 @@ public sealed class CrossCacheDeadlockStressTest
     // ID range spacing (generous gaps to prevent overlap)
     private const int IdRangeSpacing = 10_000;
 
-    // Timeout
-    private const int TimeoutSecondsMin = 30;
-    private const int TimeoutSecondsMax = 60;
+    private const int TimeoutMilliseconds = 60_000;
 
     // ════════════════════════════════════════════════════════════════
     // Domain types
@@ -157,7 +155,7 @@ public sealed class CrossCacheDeadlockStressTest
     // The Test
     // ════════════════════════════════════════════════════════════════
 
-    [Fact]
+    [Fact(Timeout = TimeoutMilliseconds)]
     public async Task AllOperators_CrossCache_NoDeadlock_CorrectResults()
     {
         // ── Derive ALL test parameters from seeded Randomizer ────────
@@ -176,7 +174,6 @@ public sealed class CrossCacheDeadlockStressTest
         var writerThreads = rand.Number(WriterThreadCountMin, WriterThreadCountMax);
         var ratingMutations = rand.Number(RatingMutationsMin, RatingMutationsMax);
         var regionMutations = rand.Number(RegionMutationsMin, RegionMutationsMax);
-        var timeoutSeconds = rand.Number(TimeoutSecondsMin, TimeoutSecondsMax);
 
         // ID ranges (non-overlapping, derived from spacing)
         var idA = rand.Number(1, IdRangeSpacing / 2);
@@ -211,16 +208,14 @@ public sealed class CrossCacheDeadlockStressTest
 
         // ── Completion tracking ─────────────────────────────────────
         var completionTasks = new List<Task>();
-        var completionNames = new List<string>();
         using var subs = new CompositeDisposable();
 
         // Helpers
-        IObservableCache<TObj, TKey> TrackCache<TObj, TKey>(IObservable<IChangeSet<TObj, TKey>> pipeline, [CallerArgumentExpression(nameof(pipeline))] string? name = null)
+        IObservableCache<TObj, TKey> TrackCache<TObj, TKey>(IObservable<IChangeSet<TObj, TKey>> pipeline)
             where TObj : notnull where TKey : notnull
         {
             var pub = pipeline.Publish();
             completionTasks.Add(pub.LastOrDefaultAsync().ToTask());
-            completionNames.Add(name ?? "?");
             var cache = pub.AsObservableCache();
             subs.Add(cache);
             subs.Add(pub.Connect());
@@ -231,11 +226,10 @@ public sealed class CrossCacheDeadlockStressTest
         using var forwardTarget = new SourceCache<StressMarket, int>(m => m.Id);
         using var reverseTarget = new SourceCache<StressMarket, int>(m => m.Id);
 
-        void TrackIntoCache(IObservable<IChangeSet<StressMarket, int>> pipeline, SourceCache<StressMarket, int> target, [CallerArgumentExpression(nameof(pipeline))] string? name = null)
+        void TrackIntoCache(IObservable<IChangeSet<StressMarket, int>> pipeline, SourceCache<StressMarket, int> target)
         {
             var pub = pipeline.Publish();
             completionTasks.Add(pub.LastOrDefaultAsync().ToTask());
-            completionNames.Add(name ?? "?");
             subs.Add(pub.PopulateInto(target));
             subs.Add(pub.Connect());
         }
@@ -308,7 +302,6 @@ public sealed class CrossCacheDeadlockStressTest
             .QueryWhenChanged()                                                // QueryWhenChanged [1]
             .Subscribe(q => lastQuery = q, ex => qwcTcs.TrySetException(ex), () => qwcTcs.TrySetResult()));
         completionTasks.Add(qwcTcs.Task);
-        completionNames.Add("QueryWhenChanged-B");
 
         // ════════════════════════════════════════════════════════════
         // FLOW 3 — Joins: sourceA × sourceB
@@ -516,7 +509,6 @@ public sealed class CrossCacheDeadlockStressTest
             .QueryWhenChanged()                                                // QueryWhenChanged [2]
             .Subscribe(q => lastQueryA = q, ex => qwcATcs.TrySetException(ex), () => qwcATcs.TrySetResult()));
         completionTasks.Add(qwcATcs.Task);
-        completionNames.Add("QueryWhenChanged-A");
 
         // Second Switch + GroupOnImmutable + GroupOnObservable
         using var switchSource2 = new BehaviorSubject<IObservable<IChangeSet<StressMarket, int>>>(sourceB.Connect());
@@ -586,7 +578,7 @@ public sealed class CrossCacheDeadlockStressTest
         {
             var slice = slicesA[t];
             var tRand = new Randomizer(Seed + t + 1);
-            writerTasks.Add(Task.Run(() =>
+            writerTasks.Add(DedicatedThread.Run(() =>
             {
                 barrier.SignalAndWait();
                 sourceA.Edit(updater => { foreach (var m in slice) updater.AddOrUpdate(m); });
@@ -602,7 +594,7 @@ public sealed class CrossCacheDeadlockStressTest
         {
             var slice = slicesB[t];
             var tRand = new Randomizer(Seed + writerThreads + t + 1);
-            writerTasks.Add(Task.Run(() =>
+            writerTasks.Add(DedicatedThread.Run(() =>
             {
                 barrier.SignalAndWait();
                 sourceB.Edit(updater => { foreach (var m in slice) updater.AddOrUpdate(m); });
@@ -661,17 +653,8 @@ public sealed class CrossCacheDeadlockStressTest
         //    that don't propagate OnCompleted naturally)
         subs.Dispose();
 
-        // 4. Wait for all completion tasks with timeout (deadlock detector)
-        var allCompleted = Task.WhenAll(completionTasks);
-        var timeout = Task.Delay(TimeSpan.FromSeconds(timeoutSeconds));
-        var finished = await Task.WhenAny(allCompleted, timeout);
-        if (!ReferenceEquals(finished, allCompleted))
-        {
-            var pending = completionTasks.Select((t2, i) => new { Index = i, t2.Status, Name = completionNames[i] })
-                .Where(x => x.Status != TaskStatus.RanToCompletion)
-                .Select(x => $"[{x.Index}] {x.Name} ({x.Status})").ToList();
-            pending.Should().BeEmpty($"all {completionTasks.Count} tasks should finish within {timeoutSeconds}s. Pending: {string.Join(", ", pending)}");
-        }
+        // 4. Wait for every pipeline to complete. A deadlock is reported by the Timeout attribute.
+        await Task.WhenAll(completionTasks);
 
         // ════════════════════════════════════════════════════════════
         // Verification — exact contents with BeEquivalentTo

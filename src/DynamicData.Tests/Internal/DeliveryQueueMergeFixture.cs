@@ -9,7 +9,7 @@ namespace DynamicData.Tests.Internal;
 /// Verifies the Rx Merge-compatible terminal semantics and the queue's serialization guarantee
 /// for concurrent producers.
 /// </summary>
-public sealed class DeliveryQueueMergeFixture
+public sealed partial class DeliveryQueueMergeFixture
 {
     [Fact]
     public void OnNext_FromAllSources_IsForwardedInArrivalOrder()
@@ -126,47 +126,6 @@ public sealed class DeliveryQueueMergeFixture
         using var sub = immediate.DeliveryQueueMerge(live).Subscribe(_ => { }, e => captured = e);
 
         captured.Should().BeSameAs(error);
-    }
-
-    [Fact]
-    public async Task ConcurrentOnNext_FromManyProducers_IsSerializedToObserver()
-    {
-        // The queue's contract is that the downstream observer never sees concurrent OnNext calls,
-        // regardless of how many producers are racing on the inputs. Subscribe to two sources via
-        // two concurrent tasks, push interleaved items, and verify that no two OnNext calls overlap
-        // and every item is delivered exactly once.
-        const int itemsPerProducer = 1_000;
-
-        using var a = new Subject<int>();
-        using var b = new Subject<int>();
-
-        var inFlight = 0;
-        var maxInFlight = 0;
-        var received = new ConcurrentQueue<int>();
-
-        using var sub = a.DeliveryQueueMerge(b).Subscribe(v =>
-        {
-            var now = Interlocked.Increment(ref inFlight);
-            var prev = Volatile.Read(ref maxInFlight);
-            while (now > prev && Interlocked.CompareExchange(ref maxInFlight, now, prev) != prev)
-            {
-                prev = Volatile.Read(ref maxInFlight);
-            }
-            received.Enqueue(v);
-            Interlocked.Decrement(ref inFlight);
-        });
-
-        using var barrier = new Barrier(2);
-        var taskA = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < itemsPerProducer; i++) a.OnNext(i); });
-        var taskB = Task.Run(() => { barrier.SignalAndWait(); for (var i = 0; i < itemsPerProducer; i++) b.OnNext(itemsPerProducer + i); });
-
-        await Task.WhenAll(taskA, taskB);
-
-        received.Count.Should().Be(itemsPerProducer * 2);
-        maxInFlight.Should().Be(1, "concurrent OnNext to the observer must be serialized by the queue");
-
-        var expected = Enumerable.Range(0, itemsPerProducer * 2).ToHashSet();
-        received.Should().BeEquivalentTo(expected);
     }
 
     [Fact]

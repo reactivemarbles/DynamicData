@@ -43,8 +43,8 @@ public sealed partial class CacheParentSubscriptionFixture
             subB.ExposeCreateParent(sourceB.Connect());
 
             // Act: the writers get threads of their own, so they never wait on a starved thread pool.
-            var writerA = Task.Factory.StartNew(() => sourceA.AddOrUpdate(seedA), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-            var writerB = Task.Factory.StartNew(() => sourceB.AddOrUpdate(seedB), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            var writerA = DedicatedThread.Run(() => sourceA.AddOrUpdate(seedA));
+            var writerB = DedicatedThread.Run(() => sourceB.AddOrUpdate(seedB));
             await Task.WhenAll(writerA, writerB);
 
             // Assert

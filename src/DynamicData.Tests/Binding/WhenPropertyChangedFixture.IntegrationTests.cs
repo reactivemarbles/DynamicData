@@ -11,7 +11,7 @@ public static partial class WhenPropertyChangedFixture
         private static void WaitForCondition(Func<bool> condition, TimeSpan? timeout = null) =>
             SpinWait.SpinUntil(condition, timeout ?? ConditionTimeout);
 
-        [Fact(Skip = "AutoRefresh has a separate concurrency bug; tracked separately")]
+        [Fact(Skip = "AutoRefresh has a separate concurrency bug; tracked separately", Timeout = 60_000)]
         public async Task AutoRefreshThenFilter_ConcurrentAddsAndPropertyActivation_AllItemsObserved()
         {
             // One adder thread sequentially adds items to the cache while a single flipper thread
@@ -42,19 +42,19 @@ public static partial class WhenPropertyChangedFixture
 
                 using var barrier = new Barrier(2);
 
-                var adder = Task.Run(() =>
+                var adder = DedicatedThread.Run(() =>
                 {
                     barrier.SignalAndWait();
                     foreach (var item in items) cache.AddOrUpdate(item);
                 });
 
-                var flipper = Task.Run(() =>
+                var flipper = DedicatedThread.Run(() =>
                 {
                     barrier.SignalAndWait();
                     foreach (var item in items) item.Activated = true;
                 });
 
-                await Task.WhenAll(adder, flipper).WaitAsync(ConditionTimeout);
+                await Task.WhenAll(adder, flipper);
 
                 var expected = items.Select(x => x.Id).ToHashSet();
                 WaitForCondition(() => results.Data.Keys.ToHashSet().SetEquals(expected));
@@ -65,7 +65,7 @@ public static partial class WhenPropertyChangedFixture
             }
         }
 
-        [Fact(Skip = "AutoRefresh has a separate concurrency bug; tracked separately")]
+        [Fact(Skip = "AutoRefresh has a separate concurrency bug; tracked separately", Timeout = 60_000)]
         public async Task AutoRefreshThenFilter_DualSubscribers_AllItemsObserved()
         {
             // Two independent cache subscribers running on the ThreadPool:

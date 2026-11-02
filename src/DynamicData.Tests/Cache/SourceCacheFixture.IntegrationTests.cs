@@ -5,8 +5,8 @@ public static partial class SourceCacheFixture
     public sealed class IntegrationTests
         : IntegrationTestFixtureBase
     {
-        [Fact]
-        public void ConnectDuringDeliveryDoesNotDuplicate()
+        [Fact(Timeout = 10_000)]
+        public async Task ConnectDuringDeliveryDoesNotDuplicate()
         {
             // Exploits the dequeue-to-OnNext window. Thread A writes two items in
             // separate batches. The first delivery is held by a slow subscriber.
@@ -16,8 +16,8 @@ public static partial class SourceCacheFixture
             // via OnNext — producing a duplicate if not guarded by a generation counter.
             using var cache = new SourceCache<TestItem, string>(static x => x.Key);
 
-            using var delivering = new ManualResetEventSlim(false);
-            using var item2Written = new ManualResetEventSlim(false);
+            var delivering = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var item2Written = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             using var connectDone = new ManualResetEventSlim(false);
 
             var firstDelivery = true;
@@ -28,31 +28,31 @@ public static partial class SourceCacheFixture
                 if (firstDelivery)
                 {
                     firstDelivery = false;
-                    delivering.Set();
+                    delivering.SetResult();
 
                     // Wait until item2 has been written and the Connect has subscribed
-                    connectDone.Wait(TimeSpan.FromSeconds(5));
+                    connectDone.Wait();
                 }
             });
 
             // Write item1 on a background thread — delivery starts, slow subscriber blocks
-            var writeTask = Task.Run(() =>
+            var writeTask = DedicatedThread.Run(() =>
             {
                 cache.AddOrUpdate(new TestItem("k1", "v1"));
             });
 
             // Wait for delivery of item1 to be in progress (slow sub is blocking)
-            delivering.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("delivery should have started");
+            await delivering.Task;
 
             // Now write item2 on another thread. It will acquire the lock, commit to
             // ReaderWriter, enqueue a notification, and return. The notification sits
             // in the queue because the deliverer (Thread A) is blocked by the slow sub.
-            var writeTask2 = Task.Run(() =>
+            var writeTask2 = DedicatedThread.Run(() =>
             {
                 cache.AddOrUpdate(new TestItem("k2", "v2"));
-                item2Written.Set();
+                item2Written.SetResult();
             });
-            item2Written.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("item2 should have been written");
+            await item2Written.Task;
 
             // Now Connect on the main thread. The snapshot from ReaderWriter includes
             // BOTH k1 and k2. The subscription to _changes is added. When the slow
@@ -73,15 +73,14 @@ public static partial class SourceCacheFixture
 
             // Unblock the slow subscriber — delivery resumes, item2 delivered
             connectDone.Set();
-            writeTask.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("writeTask should complete");
-            writeTask2.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("writeTask2 should complete");
+            await Task.WhenAll(writeTask, writeTask2);
 
             // Each key should appear exactly once in the new subscriber's view
             addCounts.GetValueOrDefault("k1").Should().Be(1, "k1 should appear once (snapshot only)");
             addCounts.GetValueOrDefault("k2").Should().Be(1, "k2 should appear once, not duplicated from snapshot + queued delivery");
         }
 
-        [Fact]
+        [Fact(Timeout = 30_000)]
         public async Task DirectCrossWriteDoesNotDeadlock()
         {
             const int iterations = 50;
@@ -105,7 +104,7 @@ public static partial class SourceCacheFixture
 
                 using var barrier = new Barrier(2);
 
-                var taskA = Task.Run(() =>
+                var taskA = DedicatedThread.Run(() =>
                 {
                     barrier.SignalAndWait();
                     for (var i = 0; i < 1000; i++)
@@ -114,7 +113,7 @@ public static partial class SourceCacheFixture
                     }
                 });
 
-                var taskB = Task.Run(() =>
+                var taskB = DedicatedThread.Run(() =>
                 {
                     barrier.SignalAndWait();
                     for (var i = 0; i < 1000; i++)
@@ -123,14 +122,11 @@ public static partial class SourceCacheFixture
                     }
                 });
 
-                var completed = Task.WhenAll(taskA, taskB);
-                var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(60)));
-
-                finished.Should().BeSameAs(completed, $"iteration {iter}: bidirectional cross-cache writes should not deadlock");
+                await Task.WhenAll(taskA, taskB);
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 10_000)]
         public async Task MultiCacheFanInDoesNotDeadlock()
         {
             const int itemCount = 100;
@@ -158,10 +154,8 @@ public static partial class SourceCacheFixture
                 }
             });
 
-            var completed = Task.WhenAll(taskA, taskB);
-            var finished = await Task.WhenAny(completed, Task.Delay(TimeSpan.FromSeconds(10)));
+            await Task.WhenAll(taskA, taskB);
 
-            finished.Should().BeSameAs(completed, "concurrent edits with cross-cache subscribers should not deadlock");
             results.Error.Should().BeNull();
             results.Data.Count.Should().Be(itemCount * 2, "all items from both caches should arrive in the destination");
             results.Data.Items.Should().BeEquivalentTo([.. cacheA.Items, .. cacheB.Items], "all items should be in the destination");
