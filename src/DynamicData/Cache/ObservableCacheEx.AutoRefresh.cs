@@ -59,6 +59,7 @@ public static partial class ObservableCacheEx
         where TKey : notnull
     {
         ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(propertyAccessor);
 
         return source.AutoRefreshOnObservable(
             (t, _) =>

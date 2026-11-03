@@ -4,7 +4,7 @@
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCache<TObject, TKey>>> selectCaches, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
+internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetMirror<TObject, TKey>>> selectCaches, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
     where TObject : notnull
     where TKey : notnull
 {
@@ -129,7 +129,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
-    private void OnItemRemoved(ChangeSetCache<TObject, TKey>[] sourceCaches, TObject item, TKey key)
+    private void OnItemRemoved(ChangeSetMirror<TObject, TKey>[] sourceCaches, TObject item, TKey key)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -141,7 +141,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
-    private void OnItemUpdated(ChangeSetCache<TObject, TKey>[] sources, TObject item, TKey key, in Optional<TObject> prev)
+    private void OnItemUpdated(ChangeSetMirror<TObject, TKey>[] sources, TObject item, TKey key, in Optional<TObject> prev)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -185,7 +185,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
-    private void OnItemRefreshed(ChangeSetCache<TObject, TKey>[] sources, TObject item, TKey key)
+    private void OnItemRefreshed(ChangeSetMirror<TObject, TKey>[] sources, TObject item, TKey key)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -205,7 +205,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         }
     }
 
-    private void ForceEvaluate(ChangeSetCache<TObject, TKey>[] sources, TKey key)
+    private void ForceEvaluate(ChangeSetMirror<TObject, TKey>[] sources, TKey key)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -219,7 +219,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         UpdateToBestValue(sources, key, cached);
     }
 
-    private bool UpdateToBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key, in Optional<TObject> current)
+    private bool UpdateToBestValue(ChangeSetMirror<TObject, TKey>[] sources, TKey key, in Optional<TObject> current)
     {
         // Determine which value should be the one seen downstream
         var candidate = LookupBestValue(sources, key);
@@ -248,7 +248,7 @@ internal sealed class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<Chan
         return true;
     }
 
-    private Optional<TObject> LookupBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key)
+    private Optional<TObject> LookupBestValue(ChangeSetMirror<TObject, TKey>[] sources, TKey key)
     {
         if (sources.Length == 0)
         {
