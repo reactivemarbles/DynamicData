@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.13" />
-    <PackageVersion Include="Polyfill" Version="11.4.3" />
+    <PackageVersion Include="Polyfill" Version="11.4.5" />
     <PackageVersion Include="System.Reactive" Version="6.1.0" />
   </ItemGroup>
 
