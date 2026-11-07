@@ -484,18 +484,28 @@ public class SharedDeliveryQueueFixture
 
         // The child's first two notifications are delivered inline, leaving their places in the receipt order
         // behind. The child's next notification has to wait for its own place, after the parent's third.
-        var drainer = Task.Run(() => parent.OnNext(first));
-        await parked.Task;
-        parent.OnNext(second);
-        child.OnNext(queuedChildValue);
-        parent.OnNext(third);
-        release.Set();
-        await parkedAgain.Task;
-        child.OnNext(laterChildValue);
-
-        // Act
-        releaseAgain.Set();
-        await drainer;
+        // The observer blocks at both handshakes, so do not occupy a shared thread-pool worker.
+        var drainer = Task.Factory.StartNew(
+            () => parent.OnNext(first),
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
+        try
+        {
+            await parked.Task.ConfigureAwait(false);
+            parent.OnNext(second);
+            child.OnNext(queuedChildValue);
+            parent.OnNext(third);
+            release.Set();
+            await parkedAgain.Task.ConfigureAwait(false);
+            child.OnNext(laterChildValue);
+        }
+        finally
+        {
+            release.Set();
+            releaseAgain.Set();
+            await drainer.ConfigureAwait(false);
+        }
 
         // Assert
         delivered.Should().Equal(
