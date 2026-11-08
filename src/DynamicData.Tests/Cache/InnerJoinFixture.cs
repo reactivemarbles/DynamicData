@@ -449,4 +449,19 @@ public class InnerJoinFixture : IDisposable
 
         public override string ToString() => $"{Key}: {Device} ({MetaData})";
     }
+
+    [Fact]
+    public void InnerJoinManyCompletesWhenBothSidesComplete()
+    {
+        var completed = false;
+
+        using var left = new Subject<IChangeSet<Person, string>>();
+        using var subscription = left
+            .InnerJoinMany(Observable.Empty<IChangeSet<Person, string>>(), p => p.Name, (_, person, _) => person)
+            .Subscribe(_ => { }, () => completed = true);
+
+        left.OnCompleted();
+
+        completed.Should().BeTrue("the grouping it is built on must not hold the result open");
+    }
 }

@@ -1020,4 +1020,30 @@ public class SortFixture : IDisposable
             public int Compare(ViewModel? x, ViewModel? y) => StringComparer.OrdinalIgnoreCase.Compare(x?.Name, y?.Name);
         }
     }
+
+    [Fact]
+    public void CompletesWhenGivenAComparerObservable()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source.Sort(Observable.Return(_comparer)).Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue("an absent resort signal can never fire and so must not hold the result open");
+    }
+
+    [Fact]
+    public void CompletesWhenGivenAResorter()
+    {
+        var completed = false;
+
+        using var source = new Subject<IChangeSet<Person, string>>();
+        using var subscription = source.Sort(_comparer, Observable.Never<Unit>().Take(0)).Subscribe(_ => { }, () => completed = true);
+
+        source.OnCompleted();
+
+        completed.Should().BeTrue("an absent comparer stream can never fire and so must not hold the result open");
+    }
 }
