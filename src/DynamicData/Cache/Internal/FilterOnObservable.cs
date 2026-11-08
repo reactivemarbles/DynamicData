@@ -8,22 +8,43 @@ internal sealed class FilterOnObservable<TObject, TKey>(IObservable<IChangeSet<T
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly Func<TObject, TKey, IObservable<bool>> _filterFactory = filterFactory ?? throw new ArgumentNullException(nameof(filterFactory));
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
-
-    public IObservable<IChangeSet<TObject, TKey>> Run() =>
-        _source
-            .Transform((val, key) => new FilterProxy(val, _filterFactory(val, key)))
-            .AutoRefreshOnObservable(proxy => proxy.FilterObservable, buffer, scheduler)
-            .Filter(proxy => proxy.PassesFilter)
-            .TransformImmutable(proxy => proxy.Value);
-
-    private sealed class FilterProxy(TObject obj, IObservable<bool> observable)
+    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Defer(() =>
     {
-        public TObject Value { get; } = obj;
+        var changes = source.OrchestrateChangeSets<TObject, TKey, bool, TObject>(
+            innerFactory: (item, key) => filterFactory(item, key).DistinctUntilChanged(),
+            onSourceChange: static (cache, change) =>
+            {
+                // Drop the entry upfront on Add/Update/Remove. Synchronous emissions from the new inner
+                // observable collapse with this Remove inside the same delivery frame, so a passing item
+                // immediately re-adds. Refresh is propagated as-is.
+                if (change.Reason is ChangeReason.Add or ChangeReason.Update or ChangeReason.Remove)
+                {
+                    cache.Remove(change.Key);
+                }
+                else if (change.Reason is ChangeReason.Refresh)
+                {
+                    cache.Refresh(change.Key);
+                }
+            },
+            onItemSourceNext: static (cache, key, item, passes) =>
+            {
+                if (passes)
+                {
+                    cache.AddOrUpdate(item, key);
+                }
+                else
+                {
+                    cache.Remove(key);
+                }
+            });
 
-        public bool PassesFilter { get; private set; }
+        if (buffer is { } window)
+        {
+            var sched = scheduler ?? GlobalConfig.DefaultScheduler;
+            changes = changes.Publish(published => published.Buffer(() => published.Take(1).Delay(window, sched)))
+                             .FlattenBufferResult();
+        }
 
-        public IObservable<bool> FilterObservable => observable.DistinctUntilChanged().Do(filterValue => PassesFilter = filterValue);
-    }
+        return changes;
+    });
 }

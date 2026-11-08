@@ -4,13 +4,16 @@
 
 namespace DynamicData.List.Internal;
 
-internal sealed class ClonedListChangeSet<TObject>
+/// <summary>
+/// Holds an observable list changeset alongside an aggregated mirror list.
+/// <see cref="Process"/> applies a changeset to <see cref="List"/>.
+/// </summary>
+internal sealed class ClonedListChangeSet<TObject>(IObservable<IChangeSet<TObject>> source, IEqualityComparer<TObject>? equalityComparer)
     where TObject : notnull
 {
-    public ClonedListChangeSet(IObservable<IChangeSet<TObject>> source, IEqualityComparer<TObject>? equalityComparer) =>
-        Source = source.Do(changeSet => List.Clone(changeSet, equalityComparer));
-
     public List<TObject> List { get; } = [];
 
-    public IObservable<IChangeSet<TObject>> Source { get; }
+    public IObservable<IChangeSet<TObject>> Source { get; } = source;
+
+    public void Process(IChangeSet<TObject> changes) => List.Clone(changes, equalityComparer);
 }
