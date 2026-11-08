@@ -79,6 +79,8 @@ public static partial class ObservableCacheEx
     /// <item><term>Update</term><description>Items present in both snapshots that differ (per <paramref name="equalityComparer"/>) produce an <b>Update</b>.</description></item>
     /// <item><term>Remove</term><description>Items in the previous snapshot whose key is absent from the new snapshot produce a <b>Remove</b>.</description></item>
     /// <item><term>Refresh</term><description>Not produced by this operator.</description></item>
+    /// <item><term>OnError</term><description>Forwarded, after the changes from every snapshot that preceded it.</description></item>
+    /// <item><term>OnCompleted</term><description>Forwarded.</description></item>
     /// </list>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>

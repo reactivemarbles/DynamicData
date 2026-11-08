@@ -41,6 +41,19 @@ DynamicData operators compose — the output of one is the input of the next. If
 
 See `.github/instructions/rx.instructions.md` for the DynamicData-flavored practical guide (hot/cold, schedulers, disposable helpers, custom operator patterns, common pitfalls), and `.github/instructions/rx-design-guide.instructions.md` for the canonical rule reference (a complete distillation of the Microsoft Rx Design Guidelines, with stable `§X.Y` IDs to cite in PRs, code reviews, and commit messages, e.g. "§6.6", "§5.2").
 
+## Compose Rx Before Writing Observable.Create
+
+**Read `.github/instructions/rx.instructions.md` before writing or changing any `Observable.Create` or `ObservableChangeSet.Create` body.** Its "Composition First" section is the rule. In short:
+
+- Build behaviour by composing existing operators: `Defer` for per-subscription state, `Using` for anything with a lifetime, `FromAsync` for tasks, `Publish(selector)` to control subscription order, `TakeUntil` and `Switch` to end and supersede. Use `Observable.Create` only when no composition expresses it (§6.1).
+- Where an Rx operator would hold a lock during delivery (`Merge`, `CombineLatest`), compose with `SynchronizeSafe` and `UnsynchronizedMerge` instead. See `.github/instructions/rx-gate-holding-operators.instructions.md`.
+- Work with DynamicData's own primitives the same way. `ObservableChangeSet.Create` is DynamicData's `Observable.Create`: if it falls short, fix it or the way it is used, and never route around it.
+- Each of these means a composition was missed:
+  - forwarding `observer.OnError` or `observer.OnCompleted` from a second subscription
+  - subscribing several streams to one observer by hand
+  - a subscription that the returned disposable does not own, such as `_ = source.Subscribe(...)` (§6.13)
+  - an `await` between a source and its observer, which moves delivery to the thread pool whenever the completing thread has a `SynchronizationContext` (§6.12)
+
 ## Breaking Changes
 
 DynamicData follows [Semantic Versioning (SemVer)](https://semver.org/). Breaking changes **are possible** in major version bumps, but they are never done lightly. This library has thousands of downstream consumers — every breaking change has a blast radius.
@@ -131,8 +144,8 @@ internal sealed class Transform<TDest, TSource, TKey>
 **Key points:**
 - The extension method is the **public API surface** — keep it thin
 - The internal class holds constructor parameters and implements `Run()`
-- `Run()` returns `Observable.Create<T>` which **defers subscription** (cold observable)
-- Inside `Create`, operators subscribe to sources and wire up changeset processing
+- `Run()` returns a cold observable, so nothing happens until subscription. Compose it from existing operators where they can express it, and use `Observable.Create<T>` only where they can't (see "Compose Rx Before Writing Observable.Create" above)
+- When `Create` is needed, operators subscribe to sources inside it and wire up changeset processing
 - `ChangeAwareCache<T,K>` tracks incremental changes and produces immutable snapshots via `CaptureChanges()`
 - Operators must handle all change reasons: `Add`, `Update`, `Remove`, `Refresh`
 

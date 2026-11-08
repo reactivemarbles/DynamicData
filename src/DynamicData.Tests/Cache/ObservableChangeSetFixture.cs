@@ -197,6 +197,61 @@ public class ObservableChangeSetFixture
         isDisposed.Should().BeTrue();
     }
 
+    [Fact]
+    public void TaskCompletesTheStreamAfterItsChanges()
+    {
+        var task = new TaskCompletionSource();
+        ISourceCache<Person, string>? captured = null;
+        var person = new Person("Name1", 10);
+
+        using var subscription = ObservableChangeSet.Create<Person, string>((cache, _) => { captured = cache; return task.Task; }, p => p.Name).RecordCacheItems(out var results);
+
+        captured!.AddOrUpdate(person);
+        results.HasCompleted.Should().BeFalse("the task has not completed yet");
+
+        task.SetResult();
+
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo([person], "changes made by the task arrive ahead of completion");
+        results.HasCompleted.Should().BeTrue("nothing can follow the end of the task");
+        results.Error.Should().BeNull();
+    }
+
+    [Fact]
+    public void TaskFailureIsDeliveredOnTheThreadThatFailsIt()
+    {
+        var task = new TaskCompletionSource();
+
+        using var subscription = ObservableChangeSet.Create<Person, string>((_, _) => task.Task, p => p.Name).RecordCacheItems(out var results);
+
+        var expectedError = new Exception("Test Exception");
+        task.SetException(expectedError);
+
+        results.Error.Should().BeSameAs(expectedError, "the failure should arrive before SetException returns, not later on another thread");
+    }
+
+    [Fact]
+    public void DisposingTheSubscriptionCancelsTheTask()
+    {
+        var token = CancellationToken.None;
+
+        var subscription = ObservableChangeSet.Create<Person, string>((_, cancellationToken) => { token = cancellationToken; return new TaskCompletionSource().Task; }, p => p.Name).RecordCacheItems(out _);
+        subscription.Dispose();
+
+        token.IsCancellationRequested.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TaskThatFinishesDuringSubscriptionStillDeliversItsChanges()
+    {
+        var person = new Person("Name1", 10);
+
+        using var subscription = ObservableChangeSet.Create<Person, string>((cache, _) => { cache.AddOrUpdate(person); return Task.CompletedTask; }, p => p.Name).RecordCacheItems(out var results);
+
+        results.RecordedItemsByKey.Values.Should().BeEquivalentTo([person], "the change was made before the task finished");
+        results.HasCompleted.Should().BeTrue();
+        results.Error.Should().BeNull();
+    }
+
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
     private void SubscribeAndAssert<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> observableChangeset, bool expectsError = false, Action<IObservableCache<TObject, TKey>>? checkContentAction = null)
         where TKey : notnull
