@@ -45,6 +45,18 @@ public class SubscribeManyFixture : IDisposable
     }
 
     [Fact]
+    public void ParallelisedSubscribeManyFailsWhenTheSourceFails()
+    {
+        using var source = new TestSourceCache<SubscribeableObject, int>(p => p.Id);
+        using var results = source.Connect().SubscribeMany(_ => Disposable.Empty, ParallelisationOptions.Default).AsAggregator();
+
+        var expectedError = new Exception("Test Exception");
+        source.SetError(expectedError);
+
+        results.Error.Should().BeSameAs(expectedError, "the failure should reach the subscriber rather than be rethrown");
+    }
+
+    [Fact]
     public void RemoveIsUnsubscribed()
     {
         _source.AddOrUpdate(new SubscribeableObject(1));
