@@ -14,13 +14,16 @@ internal sealed class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IP
     public IObservable<IPageChangeSet<T>> Run() => Observable.Create<IPageChangeSet<T>>(
             observer =>
             {
-                var locker = new Lock();
+                // SharedDeliveryQueue + SynchronizeSafe replaces Synchronize(locker) so the
+                // gate lock is released before downstream OnNext. Closes the cross-cache
+                // deadlock window.
+                var queue = new SharedDeliveryQueue();
                 var all = new List<T>();
                 var paged = new ChangeAwareList<T>();
 
                 IPageRequest parameters = new PageRequest(0, 25);
 
-                var requestStream = _requests.Synchronize(locker).Select(
+                var requestStream = _requests.SynchronizeSafe(queue).Select(
                     request =>
                     {
                         parameters = request;
@@ -28,14 +31,16 @@ internal sealed class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IP
                     });
 
                 var dataChanged = _source
-                    .Synchronize(locker)
+                    .SynchronizeSafe(queue)
                     .Select(changes => Page(all, paged, parameters, changes));
 
-                return requestStream
-                    .Merge(dataChanged)
+                var publisher = requestStream
+                    .UnsynchronizedMerge(dataChanged)
                     .Where(changes => changes is not null && changes.Count != 0)
                     .Select(x => x!)
                     .SubscribeSafe(observer);
+
+                return new CompositeDisposable(publisher, queue);
             });
 
     private static int CalculatePages(ICollection all, IPageRequest? request)

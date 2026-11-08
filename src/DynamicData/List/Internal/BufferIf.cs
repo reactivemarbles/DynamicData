@@ -18,13 +18,16 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                var locker = new Lock();
+                // SharedDeliveryQueue + SynchronizeSafe replaces Synchronize(locker) so the
+                // gate lock is released before downstream OnNext. Closes the cross-cache
+                // deadlock window.
+                var queue = new SharedDeliveryQueue();
                 var paused = initialPauseState;
                 var buffer = new ChangeSet<T>();
                 var timeoutSubscriber = new SerialDisposable();
                 var timeoutSubject = new Subject<bool>();
 
-                var bufferSelector = Observable.Return(initialPauseState).Concat(_pauseIfTrueSelector.Merge(timeoutSubject)).ObserveOn(_scheduler).Synchronize(locker).Publish();
+                var bufferSelector = Observable.Return(initialPauseState).Concat(_pauseIfTrueSelector.DeliveryQueueMerge(timeoutSubject)).ObserveOn(_scheduler).SynchronizeSafe(queue).Publish();
 
                 var pause = bufferSelector.Where(state => state).Subscribe(
                     _ =>
@@ -56,7 +59,7 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
                         timeoutSubscriber.Disposable = Disposable.Empty;
                     });
 
-                var updateSubscriber = _source.Synchronize(locker).Subscribe(
+                var updateSubscriber = _source.SynchronizeSafe(queue).Subscribe(
                     updates =>
                     {
                         if (paused)
@@ -80,6 +83,7 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
                         updateSubscriber.Dispose();
                         timeoutSubject.OnCompleted();
                         timeoutSubscriber.Dispose();
+                        queue.Dispose();
                     });
             });
 }

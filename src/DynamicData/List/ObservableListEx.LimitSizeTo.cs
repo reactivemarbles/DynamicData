@@ -41,9 +41,18 @@ public static partial class ObservableListEx
             throw new ArgumentException("sizeLimit cannot be zero", nameof(sizeLimit));
         }
 
-        var locker = new Lock();
-        var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? GlobalConfig.DefaultScheduler, locker);
+        var effectiveScheduler = scheduler ?? GlobalConfig.DefaultScheduler;
 
-        return limiter.Run().Synchronize(locker).Do(source.RemoveMany);
+        // The shared queue must be created per subscription, not per call. Sharing one queue
+        // across all subscribers couples them and never disposes the queue.
+        return Observable.Create<IEnumerable<T>>(observer =>
+        {
+            var queue = new SharedDeliveryQueue();
+            var limiter = new LimitSizeTo<T>(source, sizeLimit, effectiveScheduler, queue);
+
+            var subscription = limiter.Run().SynchronizeSafe(queue).Do(source.RemoveMany).SubscribeSafe(observer);
+
+            return new CompositeDisposable(subscription, queue);
+        });
     }
 }
