@@ -98,4 +98,34 @@ public abstract class ExceptFixtureBase : IDisposable
     }
 
     protected abstract IObservable<IChangeSet<int>> CreateObservable();
+
+    [Fact]
+    public void CompletesOnlyWhenEverySourceCompletes()
+    {
+        var completed = false;
+
+        using var first = new Subject<IChangeSet<Person>>();
+        using var second = new Subject<IChangeSet<Person>>();
+        using var subscription = first.Except(second).Subscribe(_ => { }, () => completed = true);
+
+        first.OnCompleted();
+        completed.Should().BeFalse("the second source is still live");
+
+        second.OnCompleted();
+        completed.Should().BeTrue("every source has now finished");
+    }
+
+    [Fact]
+    public void DeliversAnErrorFromAnySource()
+    {
+        Exception? error = null;
+
+        using var first = new Subject<IChangeSet<Person>>();
+        using var second = new Subject<IChangeSet<Person>>();
+        using var subscription = first.Except(second).Subscribe(_ => { }, ex => error = ex, () => { });
+
+        second.OnError(new InvalidOperationException("boom"));
+
+        error.Should().BeOfType<InvalidOperationException>();
+    }
 }
