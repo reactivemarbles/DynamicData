@@ -2,6 +2,10 @@
 
 public class TransformFixture : IDisposable
 {
+    private const int Seed = 0x7A4F_1167;
+
+    private readonly Randomizer _randomizer = new(Seed);
+
     private readonly ChangeSetAggregator<PersonWithGender> _results;
 
     private readonly ISourceList<Person> _source;
@@ -61,6 +65,22 @@ public class TransformFixture : IDisposable
     {
         _source.Dispose();
         _results.Dispose();
+    }
+
+    [Fact]
+    public void EditInsertingImmediatelyBeforeAnAppendedRange_TransformsInSourceOrder()
+    {
+        var faker = Fakers.Person.Clone().WithSeed(_randomizer);
+        _source.AddRange(faker.Generate(_randomizer.Int(1, 5)));
+
+        _source.Edit(list =>
+        {
+            var appendedAt = list.Count;
+            list.AddRange(faker.Generate(_randomizer.Int(1, 5)));
+            list.Insert(appendedAt - 1, faker.Generate());
+        });
+
+        _results.Data.Items.Should().Equal(_source.Items.Select(_transformFactory));
     }
 
     [Fact]
