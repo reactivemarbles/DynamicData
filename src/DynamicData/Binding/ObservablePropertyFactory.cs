@@ -17,11 +17,19 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
         {
             var subscription = new DeepChainSubscription(observer, source, rootToLeaf, valueAccessor, notifyInitial);
 
-            // The scope owns initialization; only successful activation hands a dependent lease to Rx.
-            using var lifetime = new RefCountDisposable(subscription);
-            subscription.Start();
+            try
+            {
+                subscription.Start();
+            }
+            catch
+            {
+                // Make sure we still clean up, in the event of failed initialization.
+                subscription.Dispose();
 
-            return lifetime.GetDisposable();
+                throw;
+            }
+
+            return subscription;
         });
     }
 
@@ -36,11 +44,19 @@ internal sealed class ObservablePropertyFactory<TObject, TProperty>
         {
             var subscription = new SinglePropertySubscription(observer, source, memberName, accessor);
 
-            // The scope releases the handler if activation throws before Rx can receive its lease.
-            using var lifetime = new RefCountDisposable(subscription);
-            subscription.Start(notifyInitial);
+            try
+            {
+                subscription.Start(notifyInitial);
+            }
+            catch
+            {
+                // Make sure we still clean up, in the event of failed initialization.
+                subscription.Dispose();
 
-            return lifetime.GetDisposable();
+                throw;
+            }
+
+            return subscription;
         });
     }
 
