@@ -34,8 +34,11 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     /// Initializes a new instance of the <see cref="LockFreeObservableCache{TObject, TKey}"/> class.
     /// </summary>
     /// <param name="source">The source.</param>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     public LockFreeObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
+        ArgumentNullException.ThrowIfNull(source);
+
         _updater = new CacheUpdater<TObject, TKey>(_innerCache);
 
         var loader = source.Select(

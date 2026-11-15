@@ -19,7 +19,7 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to filter by excluding change reasons.</param>
     /// <param name="reasons">The <see cref="ChangeReason"/> values to filter by.</param>
     /// <returns>An observable which emits a change set with items not matching the reasons.</returns>
-    /// <exception cref="ArgumentNullException">reasons.</exception>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="reasons"/>.</exception>
     /// <exception cref="ArgumentException">Must select at least on reason.</exception>
     /// <remarks>
     /// <para><b>Worth noting:</b> Filtering out <b>Remove</b> changes will cause memory leaks in downstream caches, since items are never cleaned up.</para>
@@ -28,6 +28,7 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
+        ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(reasons);
 
         if (reasons.Length == 0)
@@ -37,6 +38,8 @@ public static partial class ObservableCacheEx
 
         var hashed = new HashSet<ChangeReason>(reasons);
 
-        return source.Select(updates => new ChangeSet<TObject, TKey>(updates.Where(u => !hashed.Contains(u.Reason)))).NotEmpty();
+        return source
+            .Select(updates => new ChangeSet<TObject, TKey>(updates.Where(u => !hashed.Contains(u.Reason))))
+            .NotEmpty();
     }
 }

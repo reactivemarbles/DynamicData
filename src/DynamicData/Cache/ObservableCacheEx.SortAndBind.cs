@@ -205,6 +205,7 @@ public static partial class ObservableCacheEx
     /// <param name="comparer">The <see cref="IComparer{TObject}"/> that determines sort order.</param>
     /// <param name="options">The <see cref="SortAndBindOptions"/> controlling reset threshold and initial capacity.</param>
     /// <returns>An observable which will emit change sets.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>, <paramref name="targetList"/>, and <paramref name="comparer"/>.</exception>
     /// <remarks>
     /// <para>
     /// This operator is the preferred replacement for the <c>.Sort().Bind()</c> chain.
@@ -223,13 +224,19 @@ public static partial class ObservableCacheEx
     /// </remarks>
     /// <seealso cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IList{TObject}, IObservable{IComparer{TObject}}, SortAndBindOptions)"/>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
-        this IObservable<IChangeSet<TObject, TKey>> source,
-        IList<TObject> targetList,
-        IComparer<TObject> comparer,
-        SortAndBindOptions options)
+            this IObservable<IChangeSet<TObject, TKey>> source,
+            IList<TObject> targetList,
+            IComparer<TObject> comparer,
+            SortAndBindOptions options)
         where TObject : notnull
-        where TKey : notnull =>
-        new SortAndBind<TObject, TKey>(source, comparer, options, targetList).Run();
+        where TKey : notnull
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(targetList);
+        ArgumentNullException.ThrowIfNull(comparer);
+
+        return new SortAndBind<TObject, TKey>(source, comparer, options, targetList).Run();
+    }
 
     /// <inheritdoc cref="SortAndBind{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, IList{TObject}, IObservable{IComparer{TObject}}, SortAndBindOptions)"/>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
@@ -310,6 +317,7 @@ public static partial class ObservableCacheEx
     /// <param name="readOnlyObservableCollection">The output <see cref="ReadOnlyObservableCollection{TObject}"/> that will be populated with the sorted results.</param>
     /// <param name="comparer">The <see cref="IComparer{TObject}"/> that determines sort order.</param>
     /// <param name="options">The <see cref="SortAndBindOptions"/> controlling reset threshold and initial capacity.</param>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> SortAndBind<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TObject, TKey>(
         this IObservable<IChangeSet<TObject, TKey>> source,
         out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection,
@@ -318,6 +326,8 @@ public static partial class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
+        ArgumentNullException.ThrowIfNull(source);
+
         // allow options to set initial capacity for efficiency
         var observableCollection = options.InitialCapacity > 0
             ? new ObservableCollectionExtended<TObject>(new List<TObject>(options.InitialCapacity))

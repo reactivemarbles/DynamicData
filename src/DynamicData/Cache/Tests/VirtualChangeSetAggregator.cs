@@ -22,8 +22,11 @@ public class VirtualChangeSetAggregator<TObject, TKey> : IDisposable
     /// Initializes a new instance of the <see cref="VirtualChangeSetAggregator{TObject, TKey}"/> class.
     /// </summary>
     /// <param name="source">The source.</param>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     public VirtualChangeSetAggregator(IObservable<IVirtualChangeSet<TObject, TKey>> source)
     {
+        ArgumentNullException.ThrowIfNull(source);
+
         var published = source.Publish();
 
         var error = published.Subscribe(_ => { }, ex => Error = ex);

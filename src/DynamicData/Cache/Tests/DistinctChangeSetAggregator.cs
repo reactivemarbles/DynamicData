@@ -20,8 +20,11 @@ public class DistinctChangeSetAggregator<TValue> : IDisposable
     /// Initializes a new instance of the <see cref="DistinctChangeSetAggregator{TValue}"/> class.
     /// </summary>
     /// <param name="source">The source.</param>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     public DistinctChangeSetAggregator(IObservable<IDistinctChangeSet<TValue>> source)
     {
+        ArgumentNullException.ThrowIfNull(source);
+
         var published = source.Publish();
 
         var error = published.Subscribe(_ => { }, ex => Error = ex);

@@ -20,8 +20,11 @@ public sealed class ChangeSetAggregator<TObject, TKey, TContext> : IDisposable
     /// Initializes a new instance of the <see cref="ChangeSetAggregator{TObject, TKey, IContext}"/> class.
     /// </summary>
     /// <param name="source">The source.</param>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     public ChangeSetAggregator(IObservable<IChangeSet<TObject, TKey, TContext>> source)
     {
+        ArgumentNullException.ThrowIfNull(source);
+
         var published = source.Publish();
 
         Data = published.AsObservableCache();
@@ -101,8 +104,11 @@ public sealed class ChangeSetAggregator<TObject, TKey> : IDisposable
     /// Initializes a new instance of the <see cref="ChangeSetAggregator{TObject, TKey}"/> class.
     /// </summary>
     /// <param name="source">The source.</param>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     public ChangeSetAggregator(IObservable<IChangeSet<TObject, TKey>> source)
     {
+        ArgumentNullException.ThrowIfNull(source);
+
         var published = source.Publish();
 
         Data = published.AsObservableCache();

@@ -20,9 +20,17 @@ public static partial class ObservableCacheEx
     /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to selectively suppress updates in.</param>
     /// <param name="ignoreFunction">The <see cref="Func{TObject, TObject, bool}"/> ignore function (current,previous)=>{ return true to ignore }.</param>
     /// <returns>An observable which emits change sets and ignores updates equal to the lambda.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> IgnoreUpdateWhen<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TObject, bool> ignoreFunction)
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="ignoreFunction"/>.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> IgnoreUpdateWhen<TObject, TKey>(
+            this IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject, TObject, bool> ignoreFunction)
         where TObject : notnull
-        where TKey : notnull => source.Select(
+        where TKey : notnull
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(ignoreFunction);
+
+        return source.Select(
             updates =>
             {
                 var result = updates.Where(
@@ -37,4 +45,5 @@ public static partial class ObservableCacheEx
                     });
                 return new ChangeSet<TObject, TKey>(result);
             }).NotEmpty();
+    }
 }

@@ -19,17 +19,20 @@ public static partial class ObservableCacheEx
     /// <param name="source">The <see cref="ISourceCache{TObject, TKey}"/> to operate on.</param>
     /// <param name="observable">The <see cref="IObservable{IEnumerable{TObject}}"/> that emits batches of items.</param>
     /// <returns>An <see cref="IDisposable"/> that, when disposed, unsubscribes from <paramref name="observable"/>.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="observable"/>.</exception>
     /// <remarks>
     /// <para>Each emission from <paramref name="observable"/> is passed to <see cref="AddOrUpdate{TObject, TKey}(ISourceCache{TObject, TKey}, IEnumerable{TObject})"/>, producing one changeset per emission containing <b>Add</b> or <b>Update</b> events for each item. Errors from <paramref name="observable"/> propagate and terminate the subscription. Completion ends the subscription; the cache retains all items.</para>
     /// </remarks>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observable"/> is <see langword="null"/>.</exception>
     /// <seealso cref="PopulateInto{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}}, ISourceCache{TObject, TKey})"/>
     /// <seealso cref="ToObservableChangeSet{TObject, TKey}(IObservable{IEnumerable{TObject}}, Func{TObject, TKey}, Func{TObject, TimeSpan?}, int, IScheduler?)"/>
-    public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<IEnumerable<TObject>> observable)
+    public static IDisposable PopulateFrom<TObject, TKey>(
+            this ISourceCache<TObject, TKey> source,
+            IObservable<IEnumerable<TObject>> observable)
         where TObject : notnull
         where TKey : notnull
     {
         ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(observable);
 
         return observable.Subscribe(source.AddOrUpdate);
     }
@@ -42,12 +45,15 @@ public static partial class ObservableCacheEx
     /// <param name="source">The <see cref="ISourceCache{TObject, TKey}"/> to operate on.</param>
     /// <param name="observable">The <see cref="IObservable{TObject}"/> that emits individual items.</param>
     /// <returns>An <see cref="IDisposable"/> that, when disposed, unsubscribes from <paramref name="observable"/>.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> or <paramref name="observable"/> is <see langword="null"/>.</exception>
-    public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<TObject> observable)
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="observable"/>.</exception>
+    public static IDisposable PopulateFrom<TObject, TKey>(
+            this ISourceCache<TObject, TKey> source,
+            IObservable<TObject> observable)
         where TObject : notnull
         where TKey : notnull
     {
         ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(observable);
 
         return observable.Subscribe(source.AddOrUpdate);
     }

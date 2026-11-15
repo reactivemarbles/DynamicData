@@ -22,8 +22,11 @@ public class PagedChangeSetAggregator<TObject, TKey> : IDisposable
     /// Initializes a new instance of the <see cref="PagedChangeSetAggregator{TObject, TKey}"/> class.
     /// </summary>
     /// <param name="source">The source.</param>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     public PagedChangeSetAggregator(IObservable<IPagedChangeSet<TObject, TKey>> source)
     {
+        ArgumentNullException.ThrowIfNull(source);
+
         var published = source.Publish();
 
         var error = published.Subscribe(_ => { }, ex => Error = ex);

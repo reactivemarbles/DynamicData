@@ -123,6 +123,42 @@ public class SortAndBindBinarySearch_ForSameKeyAndObjectValues: IDisposable
 
         _target.SequenceEqual(items).Should().BeTrue();
     }
+    
+    [Fact]
+    public void ThrowsExceptionWhenComparerIsNull()
+    {
+        FluentActions.Invoking(() => ObservableCacheEx.SortAndBind(
+                source:     Observable.Empty<IChangeSet<string, string>>(),
+                targetList: new List<string>(),
+                comparer:   null!,
+                options:    default))
+            .Should().Throw<ArgumentNullException>()
+            .WithParameterName("comparer");
+    }
+
+    [Fact]
+    public void ThrowsExceptionWhenSourceIsNull()
+    {
+        FluentActions.Invoking(() => ObservableCacheEx.SortAndBind<string, string>(
+                source:     null!,
+                targetList: new List<string>(),
+                comparer:   StringComparer.Ordinal,
+                options:    default))
+            .Should().Throw<ArgumentNullException>()
+            .WithParameterName("source");
+    }
+
+    [Fact]
+    public void ThrowsExceptionWhenTargetListIsNull()
+    {
+        FluentActions.Invoking(() => ObservableCacheEx.SortAndBind(
+                source:     Observable.Empty<IChangeSet<string, string>>(),
+                targetList: null!,
+                comparer:   StringComparer.Ordinal,
+                options:    default))
+            .Should().Throw<ArgumentNullException>()
+            .WithParameterName("targetList");
+    }
 
     public void Dispose() => _strings.Dispose();
 }

@@ -20,8 +20,11 @@ public class ChangeSetAggregator<TObject> : IDisposable
     /// Initializes a new instance of the <see cref="ChangeSetAggregator{TObject}"/> class.
     /// </summary>
     /// <param name="source">The source.</param>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     public ChangeSetAggregator(IObservable<IChangeSet<TObject>> source)
     {
+        ArgumentNullException.ThrowIfNull(source);
+
         var published = source.Publish();
 
         Data = published.AsObservableList();

@@ -18,7 +18,7 @@ public static partial class ObservableListEx
     /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to filter by change reason.</param>
     /// <param name="reasons">The <see cref="ListChangeReason"/> change reasons to include. Must specify at least one.</param>
     /// <returns>A list changeset stream containing only changes with the specified reasons.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="reasons"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/> and <paramref name="reasons"/>.</exception>
     /// <exception cref="ArgumentException"><paramref name="reasons"/> is empty.</exception>
     /// <remarks>
     /// <para>Filters individual changes within each changeset. If filtering removes all changes from a changeset, the empty changeset is suppressed via <see cref="NotEmpty{T}(IObservable{IChangeSet{T}})"/>.</para>
@@ -30,6 +30,7 @@ public static partial class ObservableListEx
     public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
         where T : notnull
     {
+        ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(reasons);
 
         if (reasons.Length == 0)

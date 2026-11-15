@@ -23,8 +23,11 @@ public class GroupChangeSetAggregator<TObject, TKey, TGroupKey> : IDisposable
     /// Initializes a new instance of the <see cref="GroupChangeSetAggregator{TObject, TKey, TGroupKey}"/> class.
     /// </summary>
     /// <param name="source">The source.</param>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     public GroupChangeSetAggregator(IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> source)
     {
+        ArgumentNullException.ThrowIfNull(source);
+
         var published = source.Publish();
 
         Data = published.AsObservableCache();
