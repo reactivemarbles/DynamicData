@@ -13,7 +13,7 @@ namespace DynamicData;
 public sealed class SourceList<T> : ISourceList<T>
     where T : notnull
 {
-    private readonly ISubject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();
+    private readonly Subject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();
 
     private readonly Subject<IChangeSet<T>> _changesPreview = new();
 
@@ -95,6 +95,7 @@ public sealed class SourceList<T> : ISourceList<T>
     public void Dispose()
     {
         _cleanUp.Dispose();
+        _changes.Dispose();
         _changesPreview.Dispose();
         // Intentionally skipping disposal for _isEditInProgress, as it's technically redundant after _cleanUp.Dispose()
         // calls .OnCompleted(), and doing disposal anyway causes a whole bunch of test failures. That really suggests
