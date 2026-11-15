@@ -21,9 +21,12 @@ public static class InternalEx
     /// <param name="source">The source.</param>
     /// <param name="backOffStrategy">The back off strategy.</param>
     /// <returns>An observable which will emit the value.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     public static IObservable<TSource> RetryWithBackOff<TSource, TException>(this IObservable<TSource> source, Func<TException, int, TimeSpan?> backOffStrategy)
         where TException : Exception
     {
+        ArgumentNullException.ThrowIfNull(source);
+
         IObservable<TSource> Retry(int failureCount) =>
             source.Catch<TSource, TException>(
                 error =>

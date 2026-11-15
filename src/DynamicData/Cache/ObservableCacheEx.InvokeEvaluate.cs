@@ -19,6 +19,7 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{IChangeSet{TObject, TKey}}"/> to trigger re-evaluation on.</param>
     /// <returns>An observable that emits the same changesets as <paramref name="source"/>, unchanged.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     /// <remarks>
     /// <list type="table">
     ///   <listheader><term>Event</term><description>Behavior</description></listheader>
@@ -30,5 +31,12 @@ public static partial class ObservableCacheEx
     /// </remarks>
     public static IObservable<IChangeSet<TObject, TKey>> InvokeEvaluate<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : IEvaluateAware
-        where TKey : notnull => source.Do(changes => changes.Where(u => u.Reason == ChangeReason.Refresh).ForEach(u => u.Current.Evaluate()));
+        where TKey : notnull
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return source.Do(changes => changes
+            .Where(u => u.Reason == ChangeReason.Refresh)
+            .ForEach(u => u.Current.Evaluate()));
+    }
 }

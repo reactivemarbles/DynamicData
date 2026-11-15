@@ -142,9 +142,17 @@ public static class OptionObservableExtensions
     /// <typeparam name="T">The type of item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An Observable with the Values.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     /// <remarks>Observable version of <seealso cref="OptionExtensions.SelectValues{T}(IEnumerable{Optional{T}})"/>.</remarks>
     public static IObservable<T> SelectValues<T>(this IObservable<Optional<T>> source)
-        where T : notnull => source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
+        where T : notnull
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return source
+            .Where(t => t.HasValue && t.Value is not null)
+            .Select(t => t.Value!);
+    }
 
     /// <summary>
     /// Converts an Observable of <see cref="Optional{T}"/> into an IObservable of <typeparamref name="T"/> by extracting the

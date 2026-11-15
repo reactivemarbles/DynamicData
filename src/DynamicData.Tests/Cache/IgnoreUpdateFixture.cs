@@ -29,4 +29,24 @@ public class IgnoreUpdateFixture : IDisposable
         _results.Messages.Count.Should().Be(1, "Should be 1 updates");
         _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
     }
+    
+    [Fact]
+    public void ThrowsExceptionWhenIgnoreFunctionIsNull()
+    {
+        FluentActions.Invoking(() => ObservableCacheEx.IgnoreUpdateWhen(
+                source:         Observable.Empty<IChangeSet<int, string>>(),
+                ignoreFunction: null!))
+            .Should().Throw<ArgumentNullException>()
+            .WithParameterName("ignoreFunction");
+    }
+
+    [Fact]
+    public void ThrowsExceptionWhenSourceIsNull()
+    {
+        FluentActions.Invoking(() => ObservableCacheEx.IgnoreUpdateWhen<int, string>(
+                source:         null!,
+                ignoreFunction: static (_, _) => false))
+            .Should().Throw<ArgumentNullException>()
+            .WithParameterName("source");
+    }
 }

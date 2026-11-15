@@ -19,7 +19,15 @@ public static partial class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source <see cref="IObservable{ISortedChangeSet{TObject, TKey}}"/> to update index positions in.</param>
     /// <returns>An observable that emits the sorted changesets after updating item indices.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     public static IObservable<ISortedChangeSet<TObject, TKey>> UpdateIndex<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
         where TObject : IIndexAware
-        where TKey : notnull => source.Do(changes => changes.SortedItems.Select((update, index) => new { update, index }).ForEach(u => u.update.Value.Index = u.index));
+        where TKey : notnull
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return source.Do(changes => changes.SortedItems
+            .Select((update, index) => new { update, index })
+            .ForEach(u => u.update.Value.Index = u.index));
+    }
 }

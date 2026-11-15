@@ -16,9 +16,15 @@ public static partial class ObservableListEx
     /// <typeparam name="T">The type of item.</typeparam>
     /// <param name="source">The source <see cref="IObservable{IChangeSet{T}}"/> to prepend an empty changeset to.</param>
     /// <returns>A list changeset stream that begins with an empty changeset.</returns>
+    /// <exception cref="ArgumentNullException">Throws for <paramref name="source"/>.</exception>
     /// <seealso cref="DeferUntilLoaded{T}(IObservable{IChangeSet{T}})"/>
     /// <seealso cref="SkipInitial{T}(IObservable{IChangeSet{T}})"/>
     /// <seealso cref="ObservableCacheEx.StartWithEmpty{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>
     public static IObservable<IChangeSet<T>> StartWithEmpty<T>(this IObservable<IChangeSet<T>> source)
-        where T : notnull => source.StartWith(ChangeSet<T>.Empty);
+        where T : notnull
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        return source.StartWith(ChangeSet<T>.Empty);
+    }
 }
