@@ -33,5 +33,32 @@ public static partial class WhenPropertyChangedFixture
                 where T : IHasAge
                 => source.WhenValueChanged(source => source.Age);
         }
+
+        // https://github.com/reactivemarbles/DynamicData/issues/1156
+        [Fact]
+        public void PropertyIsDeclaredOnInterfaceWithoutNotification_ChangesAreStillObserved()
+        {
+            var child = new NotifyingChildModel()
+            {
+                Age = 10
+            };
+
+            using var subscription = ObserveAge(child)
+                .RecordValues(out var results);
+
+            results.Error.Should().BeNull("no errors should have occurred");
+            results.RecordedValues.Should().ContainSingle("the initial value of the observed expression should have been published");
+            results.RecordedValues[0].Should().Be(child.Age, "the initial value of the observed expression should have been published");
+
+            ++child.Age;
+
+            results.Error.Should().BeNull("no errors should have occurred");
+            results.RecordedValues.Skip(1).Should().ContainSingle("the value of the observed expression changed once, and the object notifies of it at runtime");
+            results.RecordedValues[1].Should().Be(child.Age, "the correct value should have been published");
+
+            static IObservable<int> ObserveAge<T>(T source)
+                where T : INotifyPropertyChanged, IHasPlainAge
+                => source.WhenValueChanged(source => source.Age);
+        }
     }
 }

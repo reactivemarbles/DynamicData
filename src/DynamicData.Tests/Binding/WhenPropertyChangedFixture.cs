@@ -129,6 +129,29 @@ public static partial class WhenPropertyChangedFixture
         public bool WasSubscribed { get; private set; }
     }
     
+    private interface IHasPlainAge
+    {
+        int Age { get; }
+    }
+
+    private sealed class NotifyingChildModel
+        : IHasPlainAge, INotifyPropertyChanged
+    {
+        private int _age;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public int Age
+        {
+            get => _age;
+            set
+            {
+                _age = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Age)));
+            }
+        }
+    }
+
     private interface IHasAge
         : INotifyPropertyChanged
     {
