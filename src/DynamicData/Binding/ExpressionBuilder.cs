@@ -8,17 +8,19 @@ internal static class ExpressionBuilder
 {
     internal static Func<object, IObservable<Unit>> CreatePropertyChangedFactory(this Expression source)
     {
-        if ((source is not MemberExpression { Member: PropertyInfo property })
-            || !typeof(INotifyPropertyChanged).IsAssignableFrom(property.DeclaringType))
+        if (source is not MemberExpression { Member: PropertyInfo property })
         {
             return static _ => Observable.Never<Unit>();
         }
 
-        return target => Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
-                addHandler: handler => ((INotifyPropertyChanged)target).PropertyChanged += handler,
-                removeHandler: handler => ((INotifyPropertyChanged)target).PropertyChanged -= handler)
-            .Where(pattern => pattern.EventArgs.PropertyName == property.Name)
-            .Select(static _ => Unit.Default);
+        // The declaring type may not implement INotifyPropertyChanged (e.g. a plain interface), even though the target does at runtime.
+        return target => target is INotifyPropertyChanged notifier
+            ? Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+                    addHandler: handler => notifier.PropertyChanged += handler,
+                    removeHandler: handler => notifier.PropertyChanged -= handler)
+                .Where(pattern => pattern.EventArgs.PropertyName == property.Name)
+                .Select(static _ => Unit.Default)
+            : Observable.Never<Unit>();
     }
 
     internal static Func<object, object?> CreateInvoker(this Expression source)
