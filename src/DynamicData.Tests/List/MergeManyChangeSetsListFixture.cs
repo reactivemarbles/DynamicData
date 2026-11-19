@@ -46,25 +46,29 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         TimeSpan? GetRemoveTime() => _randomizer.Bool() ? _randomizer.TimeSpan(MaxRemoveTime) : null;
 
         IObservable<Unit> AddRemoveAnimalsStress(int ownerCount, int animalCount, int parallel, IScheduler scheduler) =>
-            Observable.Create<Unit>(observer => new CompositeDisposable
-                (
+            Observable.Create<Unit>(observer =>
+            {
+                var animalsCompleted = new Subject<Unit>();
+                
+                return new CompositeDisposable(
                     AddRemoveOwners(ownerCount, parallel, scheduler)
+                        .Finally(() => animalsCompleted.OnNext(default))
                         .Subscribe(
                             onNext: static _ => { },
                             onError: observer.OnError),
-
                     _animalOwners.Connect()
+                        .TakeUntil(animalsCompleted)
                         .MergeMany(owner => AddRemoveAnimals(owner, animalCount, parallel, scheduler))
                         .Subscribe(
                             onNext: static _ => { },
                             onError: observer.OnError,
-                            onCompleted: observer.OnCompleted)
-                ));
+                            onCompleted: observer.OnCompleted),
+                    animalsCompleted);
+                });
 
         IObservable<AnimalOwner> AddRemoveOwners(int ownerCount, int parallel, IScheduler scheduler) =>
             _animalOwnerFaker.IntervalGenerate(_randomizer, MaxAddTime, scheduler)
-                .Parallelize(ownerCount, parallel, obs => obs.StressAddRemove(_animalOwners, _ => GetRemoveTime(), scheduler))
-                .Finally(_animalOwners.Dispose);
+                .Parallelize(ownerCount, parallel, obs => obs.StressAddRemove(_animalOwners, _ => GetRemoveTime(), scheduler));
 
         IObservable<Animal> AddRemoveAnimals(AnimalOwner owner, int animalCount, int parallel, IScheduler scheduler) =>
             _animalFaker.IntervalGenerate(_randomizer, MaxAddTime, scheduler)

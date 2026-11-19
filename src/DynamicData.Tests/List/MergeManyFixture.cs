@@ -146,9 +146,10 @@ public class MergeManyFixture : IDisposable
         receivedError.Should().Be(expectedError);
     }
 
-    private class ObjectWithObservable(int id)
+    private sealed class ObjectWithObservable(int id)
+        : IDisposable
     {
-        private readonly ISubject<bool> _changed = new Subject<bool>();
+        private readonly Subject<bool> _changed = new();
 
         private bool _value;
 
@@ -157,6 +158,9 @@ public class MergeManyFixture : IDisposable
         public IObservable<bool> Observable => _changed;
 
         public void CompleteObservable() => _changed.OnCompleted();
+
+        public void Dispose()
+            => _changed.Dispose();
 
         public void FailObservable(Exception ex) => _changed.OnError(ex);
 

@@ -6,7 +6,7 @@ public class SwitchFixture : IDisposable
 
     private readonly ISourceList<int> _source;
 
-    private readonly ISubject<ISourceList<int>> _switchable;
+    private readonly BehaviorSubject<ISourceList<int>> _switchable;
 
     public SwitchFixture()
     {
@@ -40,6 +40,7 @@ public class SwitchFixture : IDisposable
     {
         _source.Dispose();
         _results.Dispose();
+        _switchable.Dispose();
     }
 
     [Fact]

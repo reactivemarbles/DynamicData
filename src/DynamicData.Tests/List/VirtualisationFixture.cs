@@ -4,7 +4,7 @@ public class VirtualisationFixture : IDisposable
 {
     private readonly RandomPersonGenerator _generator = new();
 
-    private readonly ISubject<VirtualRequest> _requestSubject = new BehaviorSubject<VirtualRequest>(new VirtualRequest(0, 25));
+    private readonly BehaviorSubject<VirtualRequest> _requestSubject = new(new VirtualRequest(0, 25));
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -20,6 +20,7 @@ public class VirtualisationFixture : IDisposable
     {
         _source.Dispose();
         _results.Dispose();
+        _requestSubject.Dispose();
     }
 
     [Fact]

@@ -2,7 +2,7 @@ namespace DynamicData.Tests.List;
 
 public class BatchIfFixture : IDisposable
 {
-    private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
+    private readonly Subject<bool> _pausingSubject = new();
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -86,6 +86,7 @@ public class BatchIfFixture : IDisposable
     {
         _results.Dispose();
         _source.Dispose();
+        _pausingSubject.Dispose();
     }
 
     [Fact]

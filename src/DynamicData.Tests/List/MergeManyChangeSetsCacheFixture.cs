@@ -49,28 +49,33 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
         TimeSpan? GetRemoveTime() => _randomizer.Bool() ? _randomizer.TimeSpan(MaxRemoveTime) : null;
 
         IObservable<Unit> AddRemoveStress(int marketCount, int priceCount, int parallel, IScheduler scheduler) =>
-            Observable.Create<Unit>(observer => new CompositeDisposable
-                (
+            Observable.Create<Unit>(observer => 
+            {
+                var marketsCompleted = new Subject<Unit>(); 
+            
+                return new CompositeDisposable(
                     AddRemoveMarkets(marketCount, parallel, scheduler)
+                        .Finally(() => marketsCompleted.OnNext(default))
                         .Subscribe(
                             onNext: static _ => { },
                             onError: observer.OnError),
-
                     _marketList.Connect()
+                        .TakeUntil(marketsCompleted)
                         .MergeMany(market => AddRemovePrices((Market)market, priceCount, parallel, scheduler))
                         .Subscribe(
                             onNext: static _ => { },
                             onError: observer.OnError,
-                            onCompleted: observer.OnCompleted)
-                ));
+                            onCompleted: observer.OnCompleted),
+                    marketsCompleted);
+            });
 
         IObservable<IMarket> AddRemoveMarkets(int ownerCount, int parallel, IScheduler scheduler) =>
             _marketFaker.IntervalGenerate(MaxAddTime, scheduler)
-                .Parallelize(ownerCount, parallel, obs => obs.StressAddRemove(_marketList, _ => GetRemoveTime(), scheduler))
-                .Finally(_marketList.Dispose);
+                .Parallelize(ownerCount, parallel, obs => obs.StressAddRemove(_marketList, _ => GetRemoveTime(), scheduler));
 
         IObservable<MarketPrice> AddRemovePrices(Market market, int priceCount, int parallel, IScheduler scheduler) =>
-            _randomizer.Interval(MaxAddTime, scheduler).Select(_ => market.CreateUniquePrice(_ => GetRandomPrice()))
+            _randomizer.Interval(MaxAddTime, scheduler)
+                .Select(_ => market.CreateUniquePrice(_ => GetRandomPrice()))
                 .Parallelize(priceCount, parallel, obs => obs.StressAddRemove(market.PricesCache, _ => GetRemoveTime(), scheduler))
                 .Finally(market.PricesCache.Dispose);
 
@@ -826,7 +831,6 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
     {
         _marketList.Items.ForEach(m => (m as IDisposable)?.Dispose());
         _marketList.Dispose();
-        _marketList.Clear();
     }
 
     private decimal GetRandomPrice() => MarketPrice.RandomPrice(_randomizer, BasePrice, PriceOffset);

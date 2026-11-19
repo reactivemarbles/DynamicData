@@ -89,15 +89,19 @@ public class TrueForAnyFixture : IDisposable
         results.RecordedValues[0].Should().Be(true, because: "One of the two items in the source has a true value");
     }
 
-    private class ObjectWithObservable(int id)
+    private sealed class ObjectWithObservable(int id)
+        : IDisposable
     {
-        private readonly ISubject<bool> _changed = new Subject<bool>();
+        private readonly Subject<bool> _changed = new();
 
         public int Id { get; } = id;
 
         public IObservable<bool> Observable => _changed;
 
         public bool Value { get; private set; }
+
+        public void Dispose()
+            => _changed.Dispose();
 
         public void InvokeObservable(bool value)
         {

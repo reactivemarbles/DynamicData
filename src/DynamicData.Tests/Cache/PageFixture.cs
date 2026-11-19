@@ -8,9 +8,9 @@ public class PageFixture : IDisposable
 
     private readonly RandomPersonGenerator _generator = new();
 
-    private readonly ISubject<IPageRequest> _pager;
+    private readonly BehaviorSubject<IPageRequest> _pager;
 
-    private readonly ISubject<IComparer<Person>> _sort;
+    private readonly BehaviorSubject<IComparer<Person>> _sort;
 
     private readonly ISourceCache<Person, string> _source;
 
@@ -56,6 +56,8 @@ public class PageFixture : IDisposable
     {
         _source.Dispose();
         _aggregators.Dispose();
+        _pager.Dispose();
+        _sort.Dispose();
     }
 
     [Fact]

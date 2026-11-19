@@ -4,7 +4,7 @@ public class PageFixture : IDisposable
 {
     private readonly RandomPersonGenerator _generator = new();
 
-    private readonly ISubject<PageRequest> _requestSubject = new BehaviorSubject<PageRequest>(new PageRequest(1, 25));
+    private readonly BehaviorSubject<PageRequest> _requestSubject = new(new PageRequest(1, 25));
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -21,6 +21,7 @@ public class PageFixture : IDisposable
         _requestSubject.OnCompleted();
         _source.Dispose();
         _results.Dispose();
+        _requestSubject.Dispose();
     }
 
     [Fact]
