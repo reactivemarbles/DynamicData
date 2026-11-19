@@ -2,13 +2,13 @@ namespace DynamicData.Tests.List;
 
 public class SortMutableFixture : IDisposable
 {
-    private readonly ISubject<IComparer<Person>> _changeComparer;
+    private readonly BehaviorSubject<IComparer<Person>> _changeComparer;
 
     private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
 
     private readonly RandomPersonGenerator _generator = new();
 
-    private readonly ISubject<Unit> _resort;
+    private readonly Subject<Unit> _resort;
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -45,6 +45,8 @@ public class SortMutableFixture : IDisposable
     {
         _results.Dispose();
         _source.Dispose();
+        _resort.Dispose();
+        _changeComparer.Dispose();
     }
 
     [Fact]

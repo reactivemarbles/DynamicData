@@ -2,7 +2,7 @@ namespace DynamicData.Tests.List;
 
 public class FilterControllerFixtureWithClearAndReplace : IDisposable
 {
-    private readonly ISubject<Func<Person, bool>> _filter;
+    private readonly BehaviorSubject<Func<Person, bool>> _filter;
 
     private readonly ChangeSetAggregator<Person> _results;
 
@@ -139,6 +139,7 @@ public class FilterControllerFixtureWithClearAndReplace : IDisposable
     {
         _source.Dispose();
         _results.Dispose();
+        _filter.Dispose();
     }
 
     [Fact]

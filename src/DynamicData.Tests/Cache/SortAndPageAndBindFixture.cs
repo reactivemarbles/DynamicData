@@ -65,7 +65,7 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
 
     protected readonly SourceCache<Person, string> Source = new(p => p.Name);
     protected readonly IComparer<Person> Comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
-    protected readonly ISubject<IPageRequest> PageRequests = new BehaviorSubject<IPageRequest>(new PageRequest(0, 25));
+    protected readonly BehaviorSubject<IPageRequest> PageRequests = new(new PageRequest(0, 25));
 
     protected readonly ChangeSetAggregator<Person, string> Aggregator;
     protected readonly IList<Person> List;
@@ -375,5 +375,6 @@ public abstract class SortAndPageAndBindFixtureBase : IDisposable
         Source.Dispose();
         Aggregator.Dispose();
         PageRequests.OnCompleted();
+        PageRequests.Dispose();
     }
 }

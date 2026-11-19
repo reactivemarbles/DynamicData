@@ -2,7 +2,7 @@
 
 public class GroupImmutableFixture : IDisposable
 {
-    private readonly ISubject<Unit> _regrouper;
+    private readonly Subject<Unit> _regrouper;
 
     private readonly ChangeSetAggregator<DynamicData.List.IGrouping<Person, int>> _results;
 
@@ -55,6 +55,7 @@ public class GroupImmutableFixture : IDisposable
     {
         _source.Dispose();
         _results.Dispose();
+        _regrouper.Dispose();
     }
 
     [Fact]

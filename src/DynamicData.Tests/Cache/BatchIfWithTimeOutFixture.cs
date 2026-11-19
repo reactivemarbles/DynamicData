@@ -75,7 +75,7 @@ public class BatchIfWithTimeoutFixture : IDisposable
 
 public class BatchIfWithTimeOutFixture : IDisposable
 {
-    private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
+    private readonly Subject<bool> _pausingSubject = new();
 
     private readonly ChangeSetAggregator<Person, string> _results;
 
@@ -115,6 +115,7 @@ public class BatchIfWithTimeOutFixture : IDisposable
         _results.Dispose();
         _source.Dispose();
         _pausingSubject.OnCompleted();
+        _pausingSubject.Dispose();
     }
 
     [Fact]

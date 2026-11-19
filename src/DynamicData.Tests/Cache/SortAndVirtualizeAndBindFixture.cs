@@ -65,7 +65,7 @@ public abstract class SortAndVirtualizeAndBindFixtureBase : IDisposable
 
     protected readonly SourceCache<Person, string> Source = new(p => p.Name);
     protected readonly IComparer<Person> Comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
-    protected readonly ISubject<IVirtualRequest> VirtualRequests = new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 25));
+    protected readonly BehaviorSubject<IVirtualRequest> VirtualRequests = new(new VirtualRequest(0, 25));
 
     protected readonly ChangeSetAggregator<Person, string> Aggregator;
     protected readonly IList<Person> List;
@@ -381,5 +381,6 @@ public abstract class SortAndVirtualizeAndBindFixtureBase : IDisposable
         Source.Dispose();
         Aggregator.Dispose();
         VirtualRequests.OnCompleted();
+        VirtualRequests.Dispose();
     }
 }

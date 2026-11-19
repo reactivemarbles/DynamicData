@@ -14,7 +14,7 @@ public class GroupControllerFixture : IDisposable
         return p.Age <= 60 ? AgeBracket.Adult : AgeBracket.Pensioner;
     };
 
-    private readonly ISubject<Unit> _refresher;
+    private readonly Subject<Unit> _refresher;
 
     private readonly ISourceCache<Person, string> _source;
 
@@ -38,6 +38,7 @@ public class GroupControllerFixture : IDisposable
     {
         _source?.Dispose();
         _grouped?.Dispose();
+        _refresher.Dispose();
     }
 
     [Fact]

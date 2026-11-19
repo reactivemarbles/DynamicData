@@ -59,15 +59,19 @@ public class MergeManyFixture : IDisposable
         stream.Dispose();
     }
 
-    private class ObjectWithObservable(int id)
+    private sealed class ObjectWithObservable(int id)
+        : IDisposable
     {
-        private readonly ISubject<bool> _changed = new Subject<bool>();
+        private readonly Subject<bool> _changed = new();
 
         private bool _value;
 
         public int Id { get; } = id;
 
         public IObservable<bool> Observable => _changed.AsObservable();
+
+        public void Dispose()
+            => _changed.Dispose();
 
         public void InvokeObservable(bool value)
         {
