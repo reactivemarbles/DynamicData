@@ -15,13 +15,13 @@ jobs:
     steps:        
        
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0
         lfs: true
 
     - name: Setup .NET (With cache)
-      uses: actions/setup-dotnet@v5.3.0
+      uses: actions/setup-dotnet@v5.4.0
       with:
         dotnet-version: |
             6.0.x
@@ -72,7 +72,7 @@ jobs:
       working-directory: src
 
     - name: Create NuGet Artifacts
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v7.0.2
       with:
         name: nuget
         path: 'src/**/bin/Release/*.nupkg'

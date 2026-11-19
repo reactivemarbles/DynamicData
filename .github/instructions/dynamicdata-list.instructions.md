@@ -548,6 +548,22 @@ cache.Connect()
 
 ---
 
+## Sum — Refresh-Aware Numeric Aggregation
+
+`Sum(valueSelector)` emits the current sum after each changeset. Each subscription stores one projection per list position, requiring O(n) memory. Nullable projections contribute zero.
+
+| Change reason | Behavior |
+|---|---|
+| Add / AddRange | Evaluate and store each projection at its inserted position and add it to the sum |
+| Replace | Subtract the stored projection, then evaluate and store the replacement at its current index |
+| Remove / RemoveRange | Subtract the stored projections and remove their positions |
+| Refresh | Re-evaluate the selector and replace the stored contribution |
+| Moved | Reorder projection state without changing the sum |
+| Clear | Reset the sum to zero and clear projection state without evaluating or subtracting individual items |
+| OnError / OnCompleted | Forward the terminal notification |
+
+Indexless removals and replacements prefer reference identity, then equality. Operations that cannot identify an existing item and selector exceptions fault the stream. An item mutated without a refresh still has its last observed projection subtracted when replaced or removed. Use `ForAggregation().Sum(valueSelector)` for the stateless path when items never mutate in place; that path ignores refreshes.
+
 ## Writing a New List Operator
 
 Same two-part pattern as cache operators:
